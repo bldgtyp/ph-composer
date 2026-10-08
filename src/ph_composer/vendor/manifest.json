@@ -101,14 +101,14 @@
       "sha256": "3c1e4123e68b07c5ef5f5c32d0f63160e36732c4dbb0ef5805e985b3be6881de"
     },
     "html/features/windows/cards.js": {
-      "bytes": 28218,
+      "bytes": 27552,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "5a548ce5ccb7ca1fa38a3413932e28d277f0d2319abceafd754f6e64ce6a6cd0"
+      "sha256": "d92a4d63e789c9f9169e6d70538ea530a6f47ec9e1e3b8b3ffb94aba8df8b70f"
     },
     "html/features/windows/editor.js": {
-      "bytes": 29344,
+      "bytes": 29217,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "cb944b0b84bde517e75c12aca5a31219491bb81f2fe4a461a2acbfc4cc5bcb0a"
+      "sha256": "c964819b11d82c0451ead356b19cc512c2fbf1baa8884e4622c5e8a6373c7fc5"
     },
     "html/features/windows/editor_shared.js": {
       "bytes": 2972,
@@ -126,9 +126,9 @@
       "sha256": "63b8d32eb8abdd9f5b6e48fabb3bb91e1f6b51101052a9a388c4dce3ee42faa8"
     },
     "html/features/windows/inventory.js": {
-      "bytes": 16093,
+      "bytes": 14658,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "6eb80cd2a2cb7bdd8b2a5d95698f7e85ffddd589033a38d9fcbc62e7349a76f7"
+      "sha256": "777e448a0beaf31d016f549a2e79aad222168268e5ca469752bee089843b4e59"
     },
     "html/features/windows/library.js": {
       "bytes": 2831,
@@ -421,9 +421,9 @@
       "sha256": "6e166290e44905826f16ed56e5ff865ec6c2f853c8ea12a9c2dd8a0863929e4c"
     },
     "html/unit_field.js": {
-      "bytes": 7922,
+      "bytes": 11373,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "b90c5eed439e46016e0126a8e4410cee99efd8a191fa4243d16d4058355d773a"
+      "sha256": "a90a705ea9fe2712d47b0138d962f46be3eaad6be75d1ffe26c3bd27791eee34"
     },
     "html/unit_numbers.js": {
       "bytes": 4112,

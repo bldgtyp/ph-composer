@@ -155,5 +155,77 @@ PhComposerUI.define("unit_field", ["unit_preferences", "units", "workspace"], fu
     return bubble;
   }
 
-  return { UnitField: Field, DimensionFormatControl: DimensionFormatControl };
+  /* One quantity draft in an anchored bubble. Owners retain the command and its pending state;
+     all entry/leave routes share commit, and only an accepted callback releases the draft. */
+  function ValueBubble(options) {
+    var self = this;
+    this.options = options; this.sequence = 0; this.disposed = false;
+    this.bubble = options.bubble || new ui.Bubble(options.trigger, options.title, options.bubbleOptions);
+    this.originalClose = this.bubble.close;
+    this.field = new Field({ field: options.field, value: options.value, onCancel: function () {
+      if (self.disposed) return;
+      if (options.onCancel) options.onCancel(); self.close(true);
+    } });
+    this.field.input.setAttribute("aria-label", options.title);
+    this.field.commit = function () { return self.commit(true); };
+    this.field.input.addEventListener("blur", function () {
+      if (self.field.input.isConnected) self.commit(Boolean(options.blurFocus));
+    });
+    this.bubble.close = function (focus) { return self.close(focus); };
+    this.bubble.content.appendChild(this.field.root);
+  }
+  ValueBubble.prototype.busy = function () { return Boolean(this.options.busy && this.options.busy()); };
+  ValueBubble.prototype.active = function () {
+    return !this.disposed && (!this.options.active || this.options.active());
+  };
+  ValueBubble.prototype.refuse = function (message, focus) {
+    if (!this.active()) return;
+    this.field.error.textContent = message; this.field.error.hidden = false;
+    this.field.input.setAttribute("aria-invalid", "true"); this.field.setDisabled(this.busy());
+    if (focus) this.field.input.focus();
+  };
+  ValueBubble.prototype.accept = function (value, focus) {
+    if (!this.active()) return;
+    this.field.editing = false; this.field.startProfile = null;
+    this.field.setValue(value); this.field.setDisabled(false);
+    this.finish(focus);
+  };
+  ValueBubble.prototype.commit = function (focus) {
+    if (!this.active() || this.busy()) return false;
+    var field = this.field;
+    if (!field.editing || field.input.value === field.seed) {
+      this.accept(field.baseline, focus); return true;
+    }
+    var parsed = field.parse();
+    if (!parsed.ok) { this.refuse(parsed.message); return false; }
+    if (parsed.value === field.baseline) { this.accept(field.baseline, focus); return true; }
+    var self = this, sequence = ++this.sequence;
+    try {
+      this.options.apply(parsed.value, function () {
+        if (sequence === self.sequence) self.accept(parsed.value, focus);
+      });
+    } catch (error) { this.refuse(error.message); return false; }
+    if (this.active()) field.setDisabled(this.busy());
+    return !field.editing;
+  };
+  ValueBubble.prototype.close = function (focus) {
+    if (this.disposed) return false;
+    if (!this.active()) return this.finish(focus);
+    if (this.busy()) return false;
+    if (this.field.editing) return this.commit(focus);
+    return this.finish(focus);
+  };
+  ValueBubble.prototype.finish = function (focus) {
+    var closed = this.originalClose.call(this.bubble, focus);
+    if (closed && this.options.once) this.dispose();
+    if (closed && this.options.onClose) this.options.onClose();
+    return closed;
+  };
+  ValueBubble.prototype.dispose = function () {
+    if (this.disposed) return;
+    this.disposed = true; this.sequence += 1; this.field.editing = false; this.field.dispose();
+    this.originalClose.call(this.bubble, false);
+  };
+
+  return { UnitField: Field, ValueBubble: ValueBubble, DimensionFormatControl: DimensionFormatControl };
 });

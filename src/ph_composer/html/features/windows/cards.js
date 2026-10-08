@@ -92,26 +92,13 @@ PhComposerUI.define("features/windows/cards", ["panel", "unit_field", "units", "
     // */
   methods.editQuantity = function (trigger, title, descriptor, value, apply, extra) {
     var self = this; if (this.guard() || this.disposed) return;
-    var bubble = this.openBubble(trigger, title), original = bubble.close;
-    var field = new unitFields.UnitField({ field: descriptor, value: value,
-      onCancel: function () { bubble.close(true); } });
-    this.dimensionField = field;
-    field.commit = function () {
-      if (self.requests.busy()) return;
-      if (!field.editing) { bubble.close(true); return; }
-      var parsed = field.parse();
-      if (!parsed.ok) { field.error.textContent = parsed.message; field.error.hidden = false; return; }
-      if (parsed.value === value) { field.editing = false; bubble.close(true); return; }
-      apply(parsed.value, function () { field.editing = false; bubble.close(true); });
-    };
-    field.input.setAttribute("aria-label", title);
-    field.input.addEventListener("blur", function () { if (field.input.isConnected) field.commit(); });
-    bubble.close = function (focus) {
-      if (self.requests.busy() && !self.disposed) return;
-      if (field.editing && !self.disposed) { self.notice.show("Apply or cancel the dimension draft."); return; }
-      field.dispose(); self.dimensionField = null; original.call(bubble, focus);
-    };
-    bubble.content.appendChild(field.root);
+    var bubble = this.openBubble(trigger, title);
+    var edit = new unitFields.ValueBubble({ bubble: bubble, title: title, field: descriptor, value: value,
+      apply: apply, busy: function () { return self.requests.busy(); }, once: true, blurFocus: true,
+      active: function () { return !self.disposed && self.enabled; },
+      onClose: function () { if (self.dimensionField === edit.field) self.dimensionField = null; } });
+    this.valueEditor = edit; this.dimensionField = edit.field;
+    var field = edit.field;
     bubble.content.appendChild(ui.button("Cancel edit", function () { field.cancel(); }));
     if (extra) extra(bubble, field);
     bubble.open(); field.input.focus(); field.input.select();

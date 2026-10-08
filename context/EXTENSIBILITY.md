@@ -126,6 +126,15 @@ refuses activation. Otherwise it reveals, focuses and selects the input. It retu
 closes after acceptance or cancellation. The kit owns presentation only. Owners retain UnitField
 parsing, units, blur/Enter/Escape policy, pending/refused drafts and resize operations.
 
+`unit_field.ValueBubble` wraps one `UnitField` in an anchored Bubble. Supply a trigger/title or an
+existing Bubble, the field descriptor and SI value, an `apply(value, accepted)` callback, and the
+owner's `busy`/`active` predicates. Enter, blur and outside close share one commit path. Invalid or
+refused drafts stay open; `refuse(message, focus)` shows the owner's refusal, and `accept(value, focus)`
+settles a snapshot-driven request. Acceptance callbacks are invalidated by retries and disposal.
+Escape restores and closes; a pending request holds the surface until the owner settles it.
+Persistent fields remain subscribed until `dispose`; `once: true` disposes after closing a one-use
+editor. Owners retain exact mutation parameters, transaction rules and snapshot authority.
+
 For a drawing editor, `new ui.Bubble(trigger, title, { detachedTrigger: true })` leaves the
 trigger in its original drawing parent. Mount `bubble.root` outside the drawing's scrollport
 and any transformed ancestor. The Bubble retains trigger activation, focus, hover and dismissal;

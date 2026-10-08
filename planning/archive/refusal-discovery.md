@@ -1,7 +1,7 @@
 # Refusal metadata discovery
 
 DATE: 2026-10-07
-STATUS: Complete; full offline gate, coverage and review passed; remote delivery pending
+STATUS: Merged in PR #93; full offline gate, coverage, review and dual-Ruby CI passed
 ISSUE: [#52](https://github.com/bldgtyp/ph-composer/issues/52)
 
 Use the issue's option (a): all operation refusal entries have `code`, `owner` and `description`.
@@ -19,4 +19,5 @@ a second foundation-description table. The change is additive metadata; dispatch
 - Independent public-interface/architecture review passed with no findings.
 - Final `make ci` and coverage passed: Ruby 97.0%, JavaScript 96.3%, Python 95.60%.
 - Native/human actions: none required; no host behavior changed.
-- Next: PR, dual-Ruby CI, merge and verified branch cleanup, then #47.
+- Delivered: [PR #93](https://github.com/bldgtyp/ph-composer/pull/93), squash `a4c45b5`;
+  merge ancestry verified and local/remote branches removed.
