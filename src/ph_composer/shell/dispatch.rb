@@ -153,8 +153,10 @@ module PhComposer
       Outcome.completed(:revision => session.revision, :value => value, :affected => proposal.affected,
                         :findings => proposal.findings, :proposal_digest => proposal.digest,
                         :message => "Preview only.")
-    rescue CodedError => error
-      coded_outcome(error, session)
+    rescue UserError => error
+      return coded_outcome(error, session) if error.is_a?(CodedError)
+
+      Outcome.refused("validation.failed", error.message, :revision => session&.revision)
     rescue StandardError => error
       unexpected_outcome(error, session, name)
     end
