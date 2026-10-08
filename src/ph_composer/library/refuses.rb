@@ -11,10 +11,12 @@ module PhComposer
       PROVIDERS = %w[library.provider_ambiguous library.provider_failed library.provider_invalid].freeze
       LOAD = (PROVIDERS + %w[library.kind_unavailable library.provider_unavailable]).freeze
       CATALOG = (LOAD + PAGE + %w[library.catalog_stale]).freeze
-      IN_FILE = (CATALOG + %w[library.adapter_invalid library.callback_invalid record.unreadable]).freeze
+      IN_FILE = (CATALOG + %w[library.adapter_invalid library.callback_invalid library.row_semantic_invalid
+                              record.unreadable]).freeze
       COPY = (LOAD + %w[copy.rule_missing extension.invalid geometry.invalid identity.conflict library.adapter_invalid
                         library.callback_invalid library.catalog_stale library.local_choice_required
-                        library.mutation_owner library.review_required library.row_unavailable record.unreadable
+                        library.mutation_owner library.review_required library.row_semantic_invalid
+                        library.row_unavailable record.unreadable
                         reference.invalid target.ambiguous target.changed target.locked target.not_found
                         target.shared_definition target.wrong_hierarchy target.wrong_kind target.wrong_zone
                         validation.failed]).freeze
