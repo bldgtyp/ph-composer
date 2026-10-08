@@ -1,7 +1,7 @@
 # Windows preview repaint wait
 
 DATE: 2026-10-07
-STATUS: Complete; acceptance passed; remote delivery pending
+STATUS: Merged to main through PR #88
 ISSUE: [#44](https://github.com/bldgtyp/ph-composer/issues/44)
 
 The existing check waits for two animation frames after the full-page screenshot, before
@@ -19,5 +19,7 @@ predates it. No additional code change was needed.
 - Verification: source/document consistency review passed. Reuse #42's full offline gate and
   coverage because code, tests, manifest and dependencies are unchanged. Browser acceptance is
   bounded to these observations; it does not prove native acceptance or all scheduling conditions.
-- Delivery: signed evidence-only commit and PR pending; required dual-Ruby GitHub CI still applies.
-- Next: PR, green CI, merge and verified branch cleanup, then issue #48.
+- Delivery: signed evidence-only [PR #88](https://github.com/bldgtyp/ph-composer/pull/88)
+  merged at `139ccee` after both remote Ruby jobs passed on `7964c96`. Main synchronized; local
+  branch removed after merge verification; remote branch automatically removed by GitHub.
+- Next: issue #48 in the sequential queue.
