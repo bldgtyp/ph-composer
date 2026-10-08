@@ -107,6 +107,11 @@ function (panel, inventories, forms, Form, shared, fields, request, snapshot, un
       }
       byElement[key].sides.push(split < 0 ? use.side : use.name.slice(split + 3));
     });
+    rows.forEach(function (row) {
+      row.sides.sort(function (a, b) {
+        return shared.sides.indexOf(a.split(" ")[0]) - shared.sides.indexOf(b.split(" ")[0]);
+      });
+    });
     return rows;
   }
   /* The Model's installation defaults, as two action-bar controls: a choice list for the default Psi-Install

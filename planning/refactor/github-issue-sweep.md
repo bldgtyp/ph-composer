@@ -18,8 +18,8 @@ Required remote CI covers Ruby 2.7.2 and 3.2.2. Rank reflects importance, effort
 | Order | Issue | Scope | State |
 | --- | --- | --- | --- |
 | 0 | [#78](https://github.com/bldgtyp/ph-composer/issues/78) | Managed Zone options | Closed against merged PR #80 and archived acceptance |
-| 1 | [#53](https://github.com/bldgtyp/ph-composer/issues/53) | Preview validation refusal | Offline verification/review passed; PR/CI pending |
-| 2 | [#42](https://github.com/bldgtyp/ph-composer/issues/42) | Product-side reading order | Queued |
+| 1 | [#53](https://github.com/bldgtyp/ph-composer/issues/53) | Preview validation refusal | Merged in PR #86 as `80bc4aa`; branches cleaned |
+| 2 | [#42](https://github.com/bldgtyp/ph-composer/issues/42) | Product-side reading order | Offline gate/review passed; PR pending |
 | 3 | [#44](https://github.com/bldgtyp/ph-composer/issues/44) | Preview check reliability | Queued |
 | 4 | [#48](https://github.com/bldgtyp/ph-composer/issues/48) | Tab action guidance | Queued |
 | 5 | [#43](https://github.com/bldgtyp/ph-composer/issues/43) | Library picker hierarchy | Queued; native look required |
@@ -29,7 +29,15 @@ Required remote CI covers Ruby 2.7.2 and 3.2.2. Rank reflects importance, effort
 | 9 | [#47](https://github.com/bldgtyp/ph-composer/issues/47) | Shared single-value editor | Queued |
 | 10 | [#51](https://github.com/bldgtyp/ph-composer/issues/51) | Callback refusal declarations | Queued |
 
-Source: `codex/issue-53-preview-validation`, based on `main@bd8c559`.
-Evidence: [preview validation](../archive/preview-user-error.md).
-Human actions: none identified. Next: finish #53 CI, PR, merge and cleanup, then #42.
+Source: `codex/issue-42-product-side-order`, based on `main@80bc4aa`.
+Evidence: [preview validation](../archive/preview-user-error.md),
+[product-use side order](../archive/product-use-side-order.md).
+Human actions: none identified. Next: finish #42 verification, review and delivery, then #44.
 Release, SketchUp 2023 native proof, Windows support and certification remain separate gates.
+
+### Issue #42 checkpoint
+
+The out-of-order fixture reproduced `Bottom, left, right, top (default)` before the fix.
+The view now reuses the editor's canonical side order. All 14 inventory tests pass, preserving
+inheritance labels, first-use navigation and snapshot data. JS lint and coverage (96.3%) pass;
+final `make ci` and independent architecture/UI review passed with no findings. No human or native gate is specified for #42.

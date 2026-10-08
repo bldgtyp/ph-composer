@@ -173,3 +173,19 @@ test("a Psi-Install Type that is also the Model default lists that row and says 
   record.uses = [record.uses[1]]; record.use_count = 1; record.element_use_count = 0;
   assert.strictEqual(bubble(o, record).heading, "Used as the Model default");
 });
+
+test("product uses sort sides clockwise while preserving inherited markers and first-use navigation", function () {
+  var o = setup("psi_install_types"),
+    record = o.state.sections["ph_composer.windows.psi_install_types"].value.records[0], navigated = [];
+  record.uses = ["bottom", "left", "right", "top"].map(function (side) {
+    return { kind: "window_element", type_id: "wnt_a", element_id: "wel_a", side: side,
+      name: "R11 type / Element A / " + side + (side === "top" ? " (default)" : "") };
+  });
+  record.use_count = 4; record.element_use_count = 1;
+  var before = JSON.stringify(record.uses), view = bubble(o, record);
+  assert.deepStrictEqual(view.rows, [["R11 type / Element A", "Top (default), right, bottom, left"]]);
+  assert.strictEqual(JSON.stringify(record.uses), before, "presentation does not reorder the snapshot");
+  o.modules.panel.navigate = function (name, intent) { navigated.push(intent.use); };
+  view.td._uses.content.children[1].children[1].listeners.click({});
+  assert.deepStrictEqual(navigated, [record.uses[0]], "navigation keeps the first-use target");
+});
