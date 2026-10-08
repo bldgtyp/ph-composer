@@ -185,10 +185,12 @@ mirror of this table, and
 `common_refusals`; `describe` returns an operation's own codes as `refuses` with that uniform metadata,
 and the sets it answers as `common_refusal_sets`. A refusal
 outside an operation's declared and common codes is a defect: dispatch reports every refusal to
-`Refusals.audit`, which production leaves unset and the offline suite fails on. One gap is known: a
-foundation operation that runs a feature's callbacks, such as `ph_composer.library.copy` running a
-library kind's create and assign, cannot list the codes those callbacks raise under the feature's
-own noun, because the foundation names no feature.
+`Refusals.audit`, which production leaves unset and the offline suite fails on.
+Library kind local callbacks declare validated `refuses:` lists under their own owner's vocabulary.
+The effective list for `ph_composer.library.copy` includes installed kinds' local read, create,
+replace and assignment callbacks; `ph_composer.library.in_file` includes local read only. Discovery,
+the generated reference and the offline audit share this projection, excluding duplicate and
+caller-common codes. The foundation coordinates the calls without naming a receiving feature.
 
 ## Revisions, transactions and host execution
 
