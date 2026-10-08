@@ -1,7 +1,7 @@
 # Library callback refusal declarations
 
 DATE: 2026-10-07
-STATUS: Implemented; focused checks passed; full gates, review and remote delivery pending
+STATUS: Implemented and verified; full offline gate, coverage and review passed; remote delivery pending
 ISSUE: [#51](https://github.com/bldgtyp/ph-composer/issues/51)
 
 An outside Widget kind reproduced the contract gap: its callback refused with its declared
@@ -37,4 +37,9 @@ Contributor and agent contracts describe the completed seam and remove the forme
 - Deterministic cyclomatic complexity: shared refusal validation 16, callback projection 5,
   effective-list projection 1. The validation method centralizes the existing operation policy;
   no new runtime branching is introduced. Method/class size limits pass.
-- Next: full gates, coverage, independent architecture review and delivery.
+- Independent architecture review passed. Its stale canonical contract finding was corrected
+  and verified; no remaining findings.
+- Final `make ci` passed: 1,461 Ruby tests / 18,085 assertions, 496 JS tests, 195 Python tests,
+  generated references, hostkit, lint, runtime checks and a verified 390-file RBZ.
+- Coverage passed: Ruby 97.0%, JS 96.3%, Python 95.60%.
+- Next: PR, green dual-Ruby remote CI, merge and verified branch cleanup.

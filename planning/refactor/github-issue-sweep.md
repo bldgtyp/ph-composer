@@ -27,7 +27,7 @@ Required remote CI covers Ruby 2.7.2 and 3.2.2. Rank reflects importance, effort
 | 7 | [#54](https://github.com/bldgtyp/ph-composer/issues/54) | Catalog note codes | Merged in PR #92 as `aec762b`; branches cleaned |
 | 8 | [#52](https://github.com/bldgtyp/ph-composer/issues/52) | Foundation refusal meanings | Merged in PR #93 as `a4c45b5`; branches cleaned |
 | 9 | [#47](https://github.com/bldgtyp/ph-composer/issues/47) | Shared single-value editor | Merged in PR #94 as `c82a945`; branches cleaned; DesignSystem synced |
-| 10 | [#51](https://github.com/bldgtyp/ph-composer/issues/51) | Callback refusal declarations | Implemented; focused checks passed; final gates and review pending |
+| 10 | [#51](https://github.com/bldgtyp/ph-composer/issues/51) | Callback refusal declarations | Full offline gate, coverage and review passed; remote delivery pending |
 
 Source: `codex/issue-51-library-callback-refusals`, based on `main@c82a945`.
 Evidence: [preview validation](../archive/preview-user-error.md),
