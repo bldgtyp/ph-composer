@@ -9,7 +9,7 @@ reached.
 
 | Slug | Date | Outcome | Issue or PR |
 | --- | --- | --- | --- |
-| [refusal-discovery](refusal-discovery.md) | 2026-10-07 | Uniform refusal metadata and public discovery pointer; focused checks pass, final gates pending | [#52](https://github.com/bldgtyp/ph-composer/issues/52) |
+| [refusal-discovery](refusal-discovery.md) | 2026-10-07 | Uniform refusal metadata and public discovery pointer; full offline gate, coverage and review pass; remote delivery pending | [#52](https://github.com/bldgtyp/ph-composer/issues/52) |
 | [catalog-note-contract](catalog-note-contract.md) | 2026-10-07 | Raised catalog semantic code is legally declarable; admission remains unchanged; full offline gate, coverage and review pass; PR #92 merged as `aec762b`, branches cleaned | [#54](https://github.com/bldgtyp/ph-composer/issues/54) |
 | [export-result-vocabulary](export-result-vocabulary.md) | 2026-10-07 | Export findings name authored Materials, Assemblies and Layers; focused/full gates, coverage, review and native export pass; PR #91 merged as `dd4aa89`, branches cleaned | [#41](https://github.com/bldgtyp/ph-composer/issues/41) |
 | [library-picker-actions](library-picker-actions.md) | 2026-10-07 | Existing equal file/folder routes accepted in readable/unreadable native dialogs; fresh normal restoration preserves preferences; nine setup tests and focused review pass; PR #90 merged as `d5e7843`, branches cleaned | [#43](https://github.com/bldgtyp/ph-composer/issues/43) |

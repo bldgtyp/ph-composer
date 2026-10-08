@@ -1,7 +1,7 @@
 # Refusal metadata discovery
 
 DATE: 2026-10-07
-STATUS: Implemented; focused checks pass; final gates pending
+STATUS: Complete; full offline gate, coverage and review passed; remote delivery pending
 ISSUE: [#52](https://github.com/bldgtyp/ph-composer/issues/52)
 
 Use the issue's option (a): all operation refusal entries have `code`, `owner` and `description`.
@@ -16,6 +16,7 @@ a second foundation-description table. The change is additive metadata; dispatch
 - Focused: API reference 7 tests/3921 assertions, API 44/236, fixtures and Ruby lint pass.
   Every installed operation kind has uniform metadata; feature descriptions and mutation-isolated
   pointer verified. Generated reference documents the same API pointer.
-- Independent review, full offline gate and coverage pending before PR.
+- Independent public-interface/architecture review passed with no findings.
+- Final `make ci` and coverage passed: Ruby 97.0%, JavaScript 96.3%, Python 95.60%.
 - Native/human actions: none required; no host behavior changed.
-- Next: finish gates, PR, dual-Ruby CI, merge and verified branch cleanup, then #47.
+- Next: PR, dual-Ruby CI, merge and verified branch cleanup, then #47.
