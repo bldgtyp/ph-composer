@@ -74,8 +74,34 @@ class ApiReferenceTest < PhComposerTestCase
     assert_includes type_update.fetch("refuses"),
                     { "code" => "window.overlap", "owner" => "ph_composer.windows",
                       "description" => PhComposer::Registry.current.codes.fetch("window.overlap").description }
-    assert_includes type_update.fetch("refuses"), { "code" => "target.changed", "owner" => "foundation" }
+    assert_includes type_update.fetch("refuses"),
+                    { "code" => "target.changed", "owner" => "foundation", "description" => nil }
     refute_includes type_update.fetch("refuses").map { |row| row.fetch("code") }, "revision.stale"
+  end
+
+  def test_refusal_metadata_has_uniform_keys_and_discovery_points_to_the_foundation_authority
+    found = API.discover
+    pointer = found.fetch("refusal_documentation")
+    assert_equal "https://github.com/bldgtyp/ph-composer/blob/main/context/CONTRACTS.md#outcomes-and-codes", pointer
+    assert_includes File.read(File.expand_path("../context/CONTRACTS.md", __dir__)), "## Outcomes and codes"
+    seen_owners = []
+    %w[queries actions view_commands setup_commands file_exports].each do |group|
+      found.fetch(group).each do |operation|
+        API.describe(:name => operation.fetch("name")).fetch("refuses").each do |refusal|
+          assert_equal %w[code description owner], refusal.keys.sort
+          seen_owners << refusal.fetch("owner")
+          if refusal.fetch("owner") == "foundation"
+            assert_nil refusal.fetch("description")
+          else
+            refute_empty refusal.fetch("description")
+          end
+        end
+      end
+    end
+    assert_includes seen_owners, "foundation"
+    assert_includes seen_owners, "ph_composer.windows"
+    pointer.replace("changed by caller")
+    refute_equal pointer, API.discover.fetch("refusal_documentation")
   end
 
   def test_quantities_carry_their_units

@@ -177,10 +177,13 @@ repeated: `Refusals::COMMON` (`shell/refusals.rb`) holds one set per kind (`quer
 approval also answers. `refuses: []` says the operation answers nothing beyond its common sets.
 Registration refuses an entry that is neither listed here nor declared by the operation's feature or
 one it requires, a repeat, a common code, and a code only dispatch gives (`request.unknown_operation`
-and the `approval` set). `Declarations::FOUNDATION_CODES` is the checked mirror of this table, and
+and the `approval` set). Refusal metadata always has `code`, `owner` and `description`;
+foundation descriptions are null. `discover.refusal_documentation` links to this section instead
+of duplicating foundation descriptions in code. `Declarations::FOUNDATION_CODES` is the checked
+mirror of this table, and
 `tests/outcome_codes_test.rb` keeps the two equal. `discover` publishes the common sets once as
-`common_refusals`; `describe` returns an operation's own codes as `refuses`, each with its owner and,
-for a feature code, its description, and the sets it answers as `common_refusal_sets`. A refusal
+`common_refusals`; `describe` returns an operation's own codes as `refuses` with that uniform metadata,
+and the sets it answers as `common_refusal_sets`. A refusal
 outside an operation's declared and common codes is a defect: dispatch reports every refusal to
 `Refusals.audit`, which production leaves unset and the offline suite fails on. One gap is known: a
 foundation operation that runs a feature's callbacks, such as `ph_composer.library.copy` running a

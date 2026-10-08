@@ -52,7 +52,10 @@ Expose a bounded capability description with:
 
 Each operation publishes the codes it can refuse with: `describe` returns its own as `refuses` and
 names the common sets it also answers as `common_refusal_sets`, which `discover` returns once as
-`common_refusals`. A client plans recovery from these lists rather than learning codes by trying.
+`common_refusals`. Every `refuses` entry has `code`, `owner` and `description`. Feature descriptions
+are declared text; foundation descriptions are null, and discovery's `refusal_documentation` URL
+points to the public [Outcomes and codes](CONTRACTS.md#outcomes-and-codes) authority.
+A client plans recovery from these lists rather than learning codes by trying.
 
 Do not make a client infer action names or capabilities from private file paths or the current UI.
 Reject incompatible API versions explicitly and document deprecations. New features register
