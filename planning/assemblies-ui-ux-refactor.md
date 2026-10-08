@@ -1,7 +1,7 @@
 # Assemblies UI and UX refactor
 
 DATE: 2026-10-07
-STATUS: Implemented and verified on `codex/assemblies-ui-ux-refactor`; prepared for PR review
+STATUS: Implemented and verified; [PR #85](https://github.com/bldgtyp/ph-composer/pull/85) open for review
 ISSUE: none (local planning draft)
 
 Ed requested incremental Assemblies refinements from notes and screenshots. Evaluate each from
@@ -13,6 +13,9 @@ The requested refactor slices are complete. Final source passed `make ci`, `make
 fresh-process lifecycle, SketchUp 2023 floor and release acceptance are not claimed. Actual drag
 reordering remains requested in its separate packet. The dated sections below preserve each
 slice's evidence and local delivery state at the time it was completed.
+
+Delivery: implementation committed with DCO sign-off and pushed to
+`codex/assemblies-ui-ux-refactor`; PR #85 targets `main`. Merge and release remain pending.
 
 ## Toolbar layout
 

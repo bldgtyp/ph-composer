@@ -19,7 +19,7 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
-| n/a | Assemblies UI and UX refactor | refactor | Implemented and verified; prepared for PR review. Centered drawing/toolbar, stable hover/selection, inline dimensions and contextual Layer tools; duplicate toolbar actions removed | none (local planning draft) | [assemblies-ui-ux-refactor.md](assemblies-ui-ux-refactor.md) |
+| n/a | Assemblies UI and UX refactor | refactor | Implemented and verified; [PR #85](https://github.com/bldgtyp/ph-composer/pull/85) open for review. Centered drawing/toolbar, stable hover/selection, inline dimensions and contextual Layer tools; duplicate toolbar actions removed | none (local planning draft) | [assemblies-ui-ux-refactor.md](assemblies-ui-ux-refactor.md) |
 | 3a | Spaces | feature | Scoped; planned 2026-10-03 as stages P3a-01 to P3a-12, twelve decisions open, none authorized | none (local planning draft) | [features/phase-03a-spaces/](features/phase-03a-spaces/README.md); stage ledger in its [STATUS](features/phase-03a-spaces/STATUS.md) |
 | 3b | Thermal bridges | feature | Scoped, interviewed 2026-10-03; planned as P3b-01 to P3b-09, none authorized | none (local planning draft) | [features/phase-03b-thermal-bridges/](features/phase-03b-thermal-bridges/README.md); tracked in its [ledger](features/phase-03b-thermal-bridges/STATUS.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
