@@ -476,6 +476,32 @@ class ApiTest < PhComposerTestCase
     assert_equal expected, @undeclared_refusals.slice!(0..)
   end
 
+  def test_a_user_error_refuses_preview_and_invoke_with_the_same_validation_message
+    feature = Module.new do
+      def self.install(registry)
+        scope = registry.feature("probe.validation", :contract_version => 1)
+        scope.action("probe.validation.change", :description => "Validate a change.",
+                                                :params => { "type" => "object" }, :result => { "type" => "object" },
+                                                :refuses => ["validation.failed"], :undo_name => "Change",
+                                                :side_effects => "None.") do
+          raise PhComposer::UserError, "Choose a valid value."
+        end
+      end
+    end
+    PhComposer::Registry.install([feature])
+
+    preview = API.preview(:context => @context, :name => "probe.validation.change")
+    invoked = invoke("probe.validation.change", {}, 1)
+
+    [preview, invoked].each do |outcome|
+      assert_equal %w[refused validation.failed none], outcome.values_at("status", "code", "effect")
+      assert_equal @session.revision, outcome.fetch("revision")
+      assert_includes outcome.fetch("message"), "Choose a valid value."
+    end
+    assert_empty @model.operations
+    assert_empty @undeclared_refusals
+  end
+
   # ------------------------------------------------------------------ Models and lifecycle
 
   def test_two_models_with_identical_record_ids_stay_isolated
