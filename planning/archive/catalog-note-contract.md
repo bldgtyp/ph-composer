@@ -1,7 +1,7 @@
 # Catalog-note refusal contract
 
 DATE: 2026-10-07
-STATUS: Implemented; focused verification and review passed; full gates pending
+STATUS: Complete; full offline gate, coverage and review passed; remote delivery pending
 ISSUE: [#54](https://github.com/bldgtyp/ph-composer/issues/54)
 
 `library.row_semantic_invalid` is a foundation outcome code that can be legally declared in
@@ -18,6 +18,7 @@ No dispatch, admission, data or callback behavior changed.
 - Focused: outcome-code 5 tests/598 assertions, registry 32/213, admission 5/26, fixtures 13/803;
   Ruby lint passes. API reference regenerated from the declarations.
 - Independent architecture/contract review passed with no findings.
-- Full gate and coverage pending after the generated-reference checkpoint commit.
+- Final `make ci` passed after correcting refusal-list formatting; no lint rules changed.
+  Coverage: Ruby 97.0%, JavaScript 96.3%, Python 95.60%.
 - Native/human actions: none required; no host behavior changed.
-- Next: finish gates, PR, dual-Ruby CI, merge and verified branch cleanup, then #52.
+- Next: PR, dual-Ruby CI, merge and verified branch cleanup, then #52.
