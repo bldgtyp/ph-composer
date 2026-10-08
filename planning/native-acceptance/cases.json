@@ -1206,6 +1206,20 @@
         "tests/library_setup_test.js"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "GH41",
+      "label": "Export result names authored Materials and Layers",
+      "mode": "mixed",
+      "authority": "planning/archive/export-result-vocabulary.md",
+      "paths": [
+        "src/ph_composer/html/sections/export.js",
+        "src/ph_composer/features/assemblies/export.rb",
+        "src/ph_composer/python/ph_composer_translation/constructions.py",
+        "src/ph_composer/python/ph_composer_translation/contract/assembly_records.py",
+        "tests/fixtures/assemblies/display_findings.json"
+      ],
+      "native_control_required": true
     }
   ]
 }
