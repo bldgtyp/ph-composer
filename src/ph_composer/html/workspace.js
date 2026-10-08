@@ -1,8 +1,9 @@
 /* The shared presentation toolkit as one facade. Each part has its own module and owner: dom (elements, text,
    memoised paints), icons, overlay (bubbles, menus, dialogs, notices, tooltips) and page_header. Callers take `ui` from
    here. The record table and inventory controls join when the first screen with a record table lands. */
-PhComposerUI.define("workspace", ["dom", "icons", "overlay", "table_contributions", "page_header"],
-  function (dom, icons, overlay, contributions, header) {
+PhComposerUI.define("workspace", ["dom", "icons", "overlay", "table_contributions", "page_header",
+  "drawing_dimensions"],
+  function (dom, icons, overlay, contributions, header, dimensions) {
   "use strict";
   return {
     element: dom.element, svg: dom.svg, button: dom.button, option: dom.option, titleCase: dom.titleCase,
@@ -14,6 +15,8 @@ PhComposerUI.define("workspace", ["dom", "icons", "overlay", "table_contribution
     reasonButton: overlay.reasonButton,
     placeNear: overlay.placeNear, attachTooltip: overlay.attachTooltip,
     pageHeader: header.pageHeader,
+    dimensionRule: dimensions.rule, dimensionValue: dimensions.value,
+    inlineDimension: dimensions.inline,
     contributeTable: contributions.register, composeTable: contributions.compose
   };
 });

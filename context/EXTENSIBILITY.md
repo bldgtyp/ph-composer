@@ -111,6 +111,27 @@ pane, its provider sidebar and the library export); each feature's screens are u
 `html/features/<feature>/`, matching the Ruby feature of the same name. A module outside
 `features/` depends on no feature module and names no feature id (`tests/panel_layout_test.js`).
 
+Drawing dimensions use the kit's `workspace` facade: `ui.dimensionRule` renders a graphic SVG
+rule from `{ axis, from, to, at, extension, points, scale }` in drawing coordinates;
+`ui.dimensionValue` renders an HTML button or an accessible SVG value from
+`{ text, label, svg, activate, className }`. Omit `svg` for an HTML button. Owners format units,
+validate drafts and invoke their existing resize operations. `drawing_dimensions.css` owns the
+shared rule weight, dots, value typography and drawing feedback; `--phc-dimension-scale` keeps
+SVG text legible when its owner scales the drawing.
+
+`ui.inlineDimension({ trigger, editor, input, compact, active, begin })` places an HTML dimension
+value and its owner-supplied unit-bearing input in one slot. A click runs `begin`; returning `false`
+refuses activation. Otherwise it reveals, focuses and selects the input. It returns
+`{ root, trigger, show(active, focusTrigger) }`; the owner restores active state on repaint and
+closes after acceptance or cancellation. The kit owns presentation only. Owners retain UnitField
+parsing, units, blur/Enter/Escape policy, pending/refused drafts and resize operations.
+
+For a drawing editor, `new ui.Bubble(trigger, title, { detachedTrigger: true })` leaves the
+trigger in its original drawing parent. Mount `bubble.root` outside the drawing's scrollport
+and any transformed ancestor. The Bubble retains trigger activation, focus, hover and dismissal;
+use `ownTrigger: true` when an SVG value's owner already handles activation. This avoids a CSS
+transform making a fixed editor use label-relative coordinates instead of viewport coordinates.
+
 The panel has three contribution seams. `panel.section(name, render, { pane })` registers a
 feature's section renderer in a pane ([TECH_STACK.md](TECH_STACK.md), "Panel"). The top-level tabs
 and their panes are static markup in `index.html`, so a feature that needs a new top-level pane

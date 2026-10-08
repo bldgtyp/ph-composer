@@ -4,7 +4,7 @@ PhComposerUI.define("features/assemblies/canvas", ["workspace"], function (ui) {
   var SVG_NS = "http://www.w3.org/2000/svg";
   var MEMBRANE_BAND_HEIGHT_MM = 9;
   var ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2, 3];
-  /* Matches the dimension column width in assembly.css (.assembly-stage, .assembly-dimensions). */
+  /* Matches each balanced gutter in assembly.css (.assembly-canvas-frame, .assembly-dimensions). */
   var ASSEMBLY_CANVAS_ORIGIN_X_PX = 104;
 
   function materialById(materials, id) { return materials && materials[id]; }
@@ -58,7 +58,7 @@ PhComposerUI.define("features/assemblies/canvas", ["workspace"], function (ui) {
   }
 
   function fitZoom(widthMm, availablePx) {
-    var drawable = availablePx - ASSEMBLY_CANVAS_ORIGIN_X_PX;
+    var drawable = availablePx - 2 * ASSEMBLY_CANVAS_ORIGIN_X_PX;
     var maximum = widthMm > 0 && drawable > 0 ? Math.min(1, drawable / widthMm) : ZOOM_STEPS[0];
     var index;
     for (index = ZOOM_STEPS.length - 1; index >= 0; index -= 1) {

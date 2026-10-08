@@ -34,10 +34,9 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await writes(), baseline + 1);
     await page.keyboard.press("Escape");
     await editor.getByRole("button", { name: "Layer 2 thickness", exact: true }).click();
-    const thickness = editor.getByRole("dialog", { name: "Layer 2 thickness", exact: true })
-      .getByRole("textbox", { name: "Layer 2 thickness", exact: true });
+    const thickness = editor.getByRole("textbox", { name: "Layer 2 thickness", exact: true });
     await thickness.fill("160");
-    // A single-value bubble applies its draft when the user leaves it, in the units it was typed in: switching
+    // An inline dimension applies its draft when the user leaves it, in the units it was typed in: switching
     // the display units is leaving it, and the value stays 160 mm.
     await page.getByRole("button", { name: "Set display units to IP", exact: true }).click();
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].thickness_mm === 160);
@@ -51,7 +50,6 @@ fs.mkdirSync(output, { recursive: true });
       .getAttribute("aria-invalid") === "true");
     assert.equal(await thickness.inputValue(), "170");
     await thickness.press("Escape");
-    await page.keyboard.press("Escape");
     const beforeDrop = await writes();
     const row = editor.locator("[data-library-row='mat_b']"), target = editor.locator(
       "[data-segment-id='seg_stud_0'].assembly-hit-target");
@@ -69,7 +67,11 @@ fs.mkdirSync(output, { recursive: true });
     await page.mouse.move(15, 15, { steps: 8 });
     await page.mouse.up();
     assert.equal(await writes(), beforeInvalid, "outside drop writes nothing");
-    await editor.locator("[data-builder-action='segments.add']").click();
+    assert.equal(await editor.locator(".assembly-toolbar").getByRole("button",
+      { name: "Insert Layer-Segment right", exact: true }).count(), 0);
+    const insertBounds = await target.boundingBox();
+    await page.mouse.move(insertBounds.x + insertBounds.width - 1, insertBounds.y + insertBounds.height / 2);
+    await editor.getByRole("button", { name: "Insert Layer-Segment right", exact: true }).click();
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].segments.length === 3);
     // What the insert made is selected; it has no Material, so deleting it needs no confirmation.
     const added = await page.evaluate(() => window.previewHost.assemblies.records[0].values.layers[1].segments
@@ -92,9 +94,23 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.rse_m2k_w), 0.13);
     assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.u_construction_w_m2k), 0.21);
     await page.keyboard.press("Escape");
-    for (const width of [1280, 900, 420, 280]) {
+    for (const width of [1600, 1280, 900, 420, 280]) {
       await page.setViewportSize({ width, height: 900 });
       await editor.getByRole("button", { name: "Material Library", exact: true }).last().click();
+      await page.keyboard.press("Escape");
+      const toolbar = editor.locator(".assembly-toolbar");
+      const emptyToolbar = await toolbar.boundingBox();
+      const drawingBefore = await editor.locator(".assembly-canvas-block").boundingBox();
+      await editor.locator("[data-segment-id='seg_stud_0'].assembly-hit-target").click();
+      const selectedToolbar = await toolbar.boundingBox();
+      const drawingAfter = await editor.locator(".assembly-canvas-block").boundingBox();
+      assert.equal(selectedToolbar.height, emptyToolbar.height, `selection keeps toolbar height at ${width}px`);
+      // Clicking a drawing below the fold can scroll the pane; measure its position relative to the toolbar.
+      assert.equal(drawingAfter.y - selectedToolbar.y, drawingBefore.y - emptyToolbar.y,
+        `selection keeps drawing position at ${width}px`);
+      const main = await editor.locator(".assembly-editor-main").boundingBox();
+      assert.ok(Math.abs(selectedToolbar.x + selectedToolbar.width / 2 - main.x - main.width / 2) < 1,
+        `toolbar is centered on the work surface at ${width}px`);
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
         `Builder at ${width}px must scroll the drawing internally`);
       await page.screenshot({ path: path.join(output, `builder-${width}.png`) });

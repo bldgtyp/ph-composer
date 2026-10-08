@@ -20,62 +20,67 @@
 .assembly-header-metric small { color: var(--muted); }
 .assembly-header-metric strong { white-space: nowrap; font-size: 15px; font-weight: 600; }
 .assembly-incomplete { flex: 1 1 100%; margin: 0; color: var(--muted); }
-.assembly-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-height: 50px;
-  padding: 9px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); box-sizing: border-box; }
+.phc-workspace .assembly-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center; gap: 6px 10px; width: 100%; max-width: 1040px; min-height: 56px;
+  margin: 0 auto; padding: 9px 12px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+  box-shadow: 0 2px 5px #22343c12; box-sizing: border-box; }
 .assembly-tool-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .assembly-tool-group + .assembly-tool-group { border-left: 1px solid var(--line); padding-left: 10px; }
-.assembly-toolbar .assembly-selection-tools { margin-left: auto; border-left: 0; padding-left: 0; }
-.assembly-selection-label { font-size: 12px; margin-right: 4px; white-space: nowrap; }
+.assembly-toolbar .assembly-selection-tools { min-width: 0; min-height: 32px; }
+.assembly-selection-label { font-size: 12px; margin-right: 4px; padding-right: 10px;
+  border-right: 1px solid var(--line); white-space: nowrap; }
 .phc-workspace .assembly-material-chip { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Where the selection's tools cannot share the first row they always take the second, selected or not, so
+/* Where the selection's tools cannot share the first row they always take their own row, selected or not, so
    selecting a Layer-Segment never moves the drawing it was clicked in. */
 @media (max-width: 1000px) {
-  .assembly-toolbar { min-height: 92px; align-content: flex-start; }
-  .assembly-toolbar .assembly-selection-tools { flex: 1 1 100%; margin-left: 0; min-height: 32px; }
+  .phc-workspace .assembly-toolbar { grid-template-columns: minmax(0, 1fr) max-content; min-height: 92px; }
+  .assembly-toolbar .assembly-selection-tools { grid-column: 1 / -1; }
+  .assembly-tool-group + .assembly-tool-group { border-left: 0; padding-left: 0; }
+  .assembly-tool-group:last-child { border-left: 1px solid var(--line); padding-left: 10px; }
 }
 .assembly-inline-field { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
 .assembly-inline-field input[type="checkbox"] { width: auto; align-self: flex-start; }
 .assembly-dimension-editor .phc-unit-field { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
 .assembly-dimension-editor input { width: 100px; }
+.phc-dimension-inline .assembly-dimension-editor .phc-unit-field { flex-wrap: nowrap; }
 .assembly-dimension-editor .phc-unit-error { flex: 1 1 100%; }
 .assembly-bubble-choices { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 10px; }
 .assembly-bubble-choices > small { flex: 1 1 100%; }
 .assembly-canvas-block { margin-top: 18px; min-width: 0; }
-.assembly-boundary { color: var(--muted); font-size: 10px; letter-spacing: .03em; padding: 8px 0 8px 104px; }
-.assembly-stage-scroll { overflow: auto; max-height: 55vh; padding: 5px 4px 5px 0; }
-.assembly-stage { display: flex; align-items: flex-start; width: max-content; min-width: 100%; }
+.assembly-boundary { color: var(--muted); font-size: 10px; letter-spacing: .03em; padding: 8px 0; }
+.assembly-stage-scroll { overflow: auto; max-height: 55vh; padding: 5px 4px; }
+/* Equal gutters center the geometry, rather than the geometry plus its left-hand dimensions. Auto margins
+   become zero when the frame outgrows the viewport, leaving both ends reachable by the scroll bar. */
+.assembly-canvas-frame { margin: 0 auto; padding: 0 104px; box-sizing: content-box; }
+.assembly-stage { display: flex; align-items: flex-start; width: max-content; margin-left: -104px; }
 /* Dimension lines: a light rule beside each axis with a dot and a short extension at every boundary, purely
    graphic; the value beside it is the button that opens its editor. */
 .assembly-dimensions { position: relative; width: 104px; min-width: 104px; }
 .assembly-dimension { position: relative; display: flex; align-items: center; justify-content: flex-end;
-  padding-right: 20px; box-sizing: border-box; }
-.assembly-dimension::before { content: ""; position: absolute; top: 0; bottom: 0; right: 12px; border-left: 1px solid #b7c2c6; }
-.assembly-dimension::after, .assembly-dimensions::after { content: ""; position: absolute; right: 4px; width: 16px;
-  border-top: 1px solid #b7c2c6; }
-.assembly-dimension::after { top: 0; }
-.assembly-dimensions::after { bottom: 0; }
-.assembly-dimension > .phc-bubble-anchor > button { border: 0; padding: 2px 4px; white-space: nowrap;
-  background: #fff; font-size: 11px; }
-.assembly-width-row { padding: 14px 0 10px 104px; }
-.assembly-width-track { position: relative; height: 30px; }
-.assembly-width-dimension { position: absolute; top: 18px; height: 0; border-top: 1px solid #b7c2c6; pointer-events: none; }
-.assembly-width-dimension::before, .assembly-width-dimension::after { content: ""; position: absolute; top: -8px;
-  height: 16px; border-left: 1px solid #b7c2c6; }
-.assembly-width-dimension::before { left: 0; }
-.assembly-width-dimension::after { right: 0; }
-.assembly-width-dimension > .phc-bubble-anchor { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
-  pointer-events: auto; }
-.assembly-width-dimension.is-narrow > .phc-bubble-anchor { left: calc(100% + 6px); transform: none; }
-.assembly-width-dimension .phc-bubble-anchor > button { border: 0; padding: 1px 4px; white-space: nowrap;
-  background: #fff; font-size: 11px; }
+  padding-right: 22px; box-sizing: border-box; }
+.assembly-dimension-graphic { position: absolute; top: 0; left: 0; overflow: visible; pointer-events: none; }
+.assembly-width-row { padding: 0 0 10px; }
+.assembly-width-track { position: relative; height: 40px; }
+/* Flex keeps the value and its inline input centered in the measured span. */
+.assembly-width-dimension { position: absolute; top: 0; height: 40px; padding-top: 18px; box-sizing: border-box;
+  display: flex; justify-content: center; align-items: flex-start; pointer-events: none; }
+.assembly-width-dimension > .phc-dimension-inline { flex: 0 0 auto; pointer-events: auto; }
+.assembly-width-dimension.is-narrow { justify-content: flex-start; }
+.assembly-width-dimension.is-narrow > .phc-dimension-inline { margin-left: calc(100% + 6px); }
 /* The edge insert control: one at a time, above every hit target, centred on the edge it acts on. */
-.phc-workspace .assembly-insert { position: absolute; z-index: 3; width: 22px; height: 22px; min-height: 22px;
+.phc-workspace .assembly-insert { position: absolute; z-index: 4; width: 22px; height: 22px; min-height: 22px;
   margin: -11px 0 0 -11px; padding: 3px; border: 1.5px solid var(--drawing-highlight); border-radius: 50%;
   background: #fff; color: var(--drawing-highlight); }
 .phc-workspace .assembly-insert:hover:enabled { background: #fff; color: var(--drawing-highlight-hover);
   box-shadow: 0 0 0 3px var(--drawing-highlight-halo); }
 .phc-workspace .assembly-insert.is-blocked { border-color: #8a979c; color: #8a979c; cursor: not-allowed; }
-.assembly-insert svg { display: block; }
+.assembly-insert svg { display: block; pointer-events: none; }
+/* One edge cue above every segment, without changing which segment receives pointer events. */
+.assembly-edge-highlight { position: absolute; z-index: 3; pointer-events: none;
+  background: var(--drawing-highlight); transform: translateX(-50%); }
+.assembly-edge-highlight.is-horizontal { transform: translateY(-50%); }
+.assembly-edge-highlight.is-blocked { background: #8a979c; }
 /* The type and exterior hints are the app's tinted pills, so an Assembly reads like its row in the table. */
 .assembly-hint select.phc-enum-cell { width: 100%; height: 26px; min-height: 26px; padding: 0 30px 0 10px; border: 0;
   border-radius: 13px; font-size: 12px; background-color: var(--category-fill, #edf1f2); }
@@ -83,19 +88,48 @@
 .assembly-drawing { position: relative; flex: 0 0 auto; }
 .assembly-drawing svg { display: block; overflow: visible; }
 .assembly-segment { transition: stroke .1s; }
-.assembly-segment.is-selected { stroke: var(--interaction-highlight); stroke-width: 3; }
 .assembly-segment.is-membrane { stroke-width: 3; }
 .assembly-segment.is-air-barrier, .assembly-air-barrier { stroke: var(--drawing-highlight); stroke-width: 3; }
-.assembly-editor .assembly-hit-target { position: absolute; z-index: 1; padding: 0; border: 0; border-radius: 0; background: transparent; }
-.assembly-hit-target:hover, .assembly-hit-target:focus-visible, .assembly-hit-target.is-drop-target {
-  background: var(--drawing-highlight-halo); outline: 2px solid var(--drawing-highlight); outline-offset: -2px; }
-/* Selection is teal; the red above is the pointer and keyboard focus. */
-.assembly-hit-target[aria-pressed="true"] { outline: 2px solid var(--interaction-highlight); outline-offset: -2px; }
+.assembly-editor .assembly-hit-target { position: absolute; z-index: 1; min-height: 0; padding: 0;
+  border: 0; border-radius: 0; background: transparent; outline: none; }
+.assembly-hit-target:hover:not([data-hover-edge]), .assembly-hit-target:focus-visible,
+.assembly-hit-target.is-drop-target {
+  background: var(--drawing-highlight-halo); outline: 2px solid var(--drawing-highlight); outline-offset: -1px; }
+.assembly-editor .assembly-hit-target[data-hover-edge]:hover { background: transparent; }
+/* Center the 2 px feedback perimeter over the SVG's 1 px base stroke, covering it evenly on every side.
+   A light descending selection hatch preserves the Material below it, crossing the unassigned hatch.
+   Override the shared pressed-button fill on hover and focus as well as at rest. */
+.phc-workspace .assembly-editor button.assembly-hit-target[aria-pressed="true"] {
+  z-index: 2; background: transparent; outline: 2px solid var(--interaction-highlight); outline-offset: -1px; }
+.assembly-hit-target[aria-pressed="true"]::before { content: ""; position: absolute; inset: 0;
+  pointer-events: none; opacity: .22;
+  background: repeating-linear-gradient(45deg, transparent 0, transparent 7px,
+    var(--interaction-highlight) 7px, var(--interaction-highlight) 8px, transparent 8px, transparent 12px); }
+/* Selection remains in the hatch while pointer/focus cues take over the perimeter. */
+.phc-workspace .assembly-editor button.assembly-hit-target[aria-pressed="true"]:hover,
+.phc-workspace .assembly-editor button.assembly-hit-target[aria-pressed="true"]:focus-visible {
+  outline-color: var(--drawing-highlight); }
+.phc-workspace .assembly-editor button.assembly-hit-target[aria-pressed="true"][data-hover-edge]:not(:focus-visible) {
+  outline: none; }
 @media (max-width: 700px) {
   .assembly-editor { flex-direction: column; gap: 10px; }
   .assembly-header-metrics { gap: 12px; }
   .assembly-selection-tools strong.assembly-selection-label { display: none; }
+  .phc-workspace .assembly-toolbar { min-height: 128px; }
+  .assembly-toolbar .assembly-selection-tools { min-height: 68px; align-content: center; }
+  .assembly-selection-label { white-space: normal; }
 }
 .assembly-material-facts { display: grid; gap: 4px; margin: 10px 0; }
 .assembly-information { align-self: center; }
 .assembly-information-notes { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+/* Keep contextual Layer access in its reserved gutter; revealing it never moves a dimension. */
+.phc-workspace .assembly-layer-gear { position: absolute; left: 1px; top: calc(50% - 12px);
+  width: 24px; height: 24px; min-height: 24px; padding: 3px; border: 0; background: transparent;
+  opacity: 0; pointer-events: none; z-index: 2; }
+.assembly-dimension.is-layer-hovered .assembly-layer-gear,
+.assembly-dimension:focus-within .assembly-layer-gear,
+.assembly-dimension.has-open-tools .assembly-layer-gear { opacity: 1; pointer-events: auto; }
+.phc-workspace .assembly-layer-gear[aria-expanded="true"] { background: var(--interaction-highlight-halo);
+  color: var(--interaction-highlight); }
+/* The compact inline input uses this gutter while editing; keep its text and pointer access clear. */
+.assembly-dimension .phc-dimension-inline.is-editing ~ .assembly-layer-gear { opacity: 0; pointer-events: none; }

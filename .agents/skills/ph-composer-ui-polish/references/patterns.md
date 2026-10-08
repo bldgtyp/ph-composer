@@ -6,6 +6,16 @@ Paths under **Local** are in this repository at `src/ph_composer/html/`. The UI 
 
 ## Shared primitives (local)
 
+- Drawing dimensions (`drawing_dimensions.js`, `drawing_dimensions.css`, exposed by `workspace.js`):
+  `ui.dimensionRule` supplies the light rule, boundary dots and short extensions;
+  `ui.dimensionValue` supplies matching HTML/SVG values and SVG click/Enter/Space activation.
+  Assemblies and Window Types share these parts; owners retain unit formatting, guarded UnitFields
+  and resize operations. `ui.inlineDimension` swaps an HTML value for an owner-supplied UnitField
+  in place, preserving owner parsing, draft guards and Model writes. Drawing Bubbles use `detachedTrigger: true`, with their root outside the
+  drawing scrollport and transformed ancestors. Keep labels in place and center them with layout,
+  not transforms that relocate fixed editors. Check actual popup bounds and pointer access as well
+  as Model readback; an offscreen input can still pass a programmatic fill check.
+
 - Choice chips (`base.css`, `table.css`): selects use the shared inset chevron with reserved text
   space. Dark Assembly chips switch the chevron to light along with their label. Read-only table
   chips fill the column like editable ones and share their height, with a quiet hatch and lock
@@ -60,8 +70,50 @@ Paths under **Local** are in this repository at `src/ph_composer/html/`. The UI 
 - Column-scoped Face painting: `features/zones/classify.js` contributes paint icons beside values in the Type, Boundary and Assembly column menus. The checkbox/name is the visibility control; the sibling paint icon starts a reset field intent and closes the menu. Include all declared choices and local Assemblies even when unused. Surface, Attached zone and Assembly None have no direct paint icon; the Boundary menu has an inline Attached zone select and New route. There is no separate paint picker. An active intent has a persistent pressed header paint glyph, whose tooltip names the value; clicking it stops the whole tool. External multifield intents show each active column. A concrete paint choice activates and remembers its matching Colour-by mode (Attached zone uses Boundary); stopping leaves that mode active. Bare native tool activation keeps its temporary fallback. Escape closes menu/dialog before stopping the native tool. Attached zone carries its boundary/reference together and retains Save/Cancel, refusal, focus and model-switch protection. Checked-Face and Solve controls remain independent. Accepted and refined by Ed on 2026-10-05.
 - Colour-by: `sections/colour_by.js`. A column header's palette toggle (`HeaderToggle`) turns its mode on and releases any other; pressing it again turns Colour by off; a group binding with several modes opens a menu of them. The panel legend strip is removed (accepted 2026-10-05). The active mode's colour key is disclosed as swatches beside its column's Show choices. Column filters combine to narrow the table and mute excluded viewport geometry, including partial Zones; Clear filter restores that column's scope. Text search and collapsed rows remain table-only. The palette and filter glyphs keep active state visible in the header. Modes and rows come from the shared service's legend; a mode no column offers is reached from the screen's Table options.
 - Export: `sections/export.js`. A running export locks tab changes through the navigation guard and keeps its progress and Cancel visible.
-- Assembly Builder: `features/assemblies/editor.js`, `features/assemblies/canvas.js`, `features/assemblies/stage.js`, `features/assemblies/assembly.css`. Use for compact toolbars, header metrics, contextual inspectors, crisp drawings, insertion controls, and anchored editors. One edge insert control for the whole drawing moves to the edge the pointer is near (layers on top and bottom edges, Layer-Segments on side edges), is named by its result ("Insert layer above"), refuses on a membrane's side edges with the reason, inserts at a round unit-aware default and selects what it made; it hides while a Material is dragged. Thickness and width are dimension lines (rule, end ticks, value button) and each value opens a single-value bubble: Enter or leaving applies, Escape restores and Escape again closes, an invalid entry keeps the bubble open; a reopened bubble keeps the draft's text, and its close stays live while the draft it applied is pending. The width line spans exactly the selected Layer-Segment. A second click on the selected Layer-Segment lets it go. The type and exterior hints are the tinted pills, and the exterior film note names the exterior condition. A thickness bubble also opens on hover (taking no focus until clicked), holds the air-barrier choices, and ends with Delete Layer. The Layer-Segment properties bubble lists its Material's conductivity, density, specific heat and emissivity read only. An info icon beside the metrics explains the U-value: the films used, both results, and any warnings or findings. `Bubble.openedWithFocus` tells an owner's `onOpen` a deliberate open from a hover or a repaint's reopen.
+- Assembly Builder: `features/assemblies/editor.js`, `features/assemblies/canvas.js`, `features/assemblies/stage.js`, `features/assemblies/assembly.css`. Use for compact toolbars, header metrics, contextual inspectors, crisp drawings, insertion controls, and anchored editors. One edge insert control for the whole drawing moves to the edge the pointer is near (layers on top and bottom edges, Layer-Segments on side edges), is named by its result ("Insert layer above"), refuses on a membrane's side edges with the reason, inserts at a round unit-aware default and selects what it made; it hides while a Material is dragged. Thickness and width use the shared light rules and boundary dots; clicking a value swaps it for an inline UnitField with its unit beside it. Enter or leaving applies; one Escape restores and closes while preserving selection. Invalid or refused edits stay visible, and drafts survive repaint. Enter returns focus to the value after acceptance; blur keeps focus on the next control. The width line spans exactly the selected Layer-Segment. A second click on the selected Layer-Segment lets it go. The type and exterior hints are the tinted pills, and the exterior film note names the exterior condition. Hover never opens a dimension input. Layer tools holds the air-barrier choices and ends with Delete Layer; a membrane's label selects its Layer for those tools without offering numeric thickness. The Layer-Segment properties bubble lists its Material's conductivity, density, specific heat and emissivity read only. An info icon beside the metrics explains the U-value: the films used, both results, and any warnings or findings. `Bubble.openedWithFocus` tells an owner's `onOpen` a deliberate open from a hover or a repaint's reopen.
+- Assembly Builder toolbar (`features/assemblies/inspector.js`, `assembly.css`): centered on the
+  drawing work surface with a white background, rounded border and subtle shadow. Selection and
+  Material context comes first, then divided view and Assembly action groups using shared icon
+  buttons and tooltips. Add Layers through drawing edges or the contextual Layer menu, without a
+  duplicate toolbar Add Layer button. Keep Material Library available without a selection. At narrow widths,
+  reserve the selection row's height so selecting a Layer-Segment does not move the drawing.
+  Insert Layer-Segments through their drawing side edges; omit the duplicate toolbar insert icon.
+- Assembly cross-section (`features/assemblies/stage.js`, `assembly.css`): center geometry itself
+  with balanced dimension gutters, keeping film labels and width dimensions in the same frame.
+  Width edits grow from the center while the drawing fits and retain zoom; larger drawings scroll
+  with both ends reachable. A drawing hit target uses the rendered height, without a standard
+  button minimum height that would overlap a thin neighbouring Layer or dimension control.
+- Assembly insertion hover (`features/assemblies/stage.js`, `assembly.css`): the active edge line
+  and plus control are one hover state. Moving over the button's SVG or paths retains that edge;
+  decorative strokes never receive pointer events. Edge hover replaces the center's full-segment
+  wash, and repeated moves on the same edge do not reset its state. Top and bottom cues span the
+  Layer with a stable midpoint; side cues span the Layer-Segment. Preserve selection and drop/focus
+  feedback separately, and clear the edge on exit or a busy/draft/Material-drag guard. Reset the
+  generic button outline on drawing hit targets, so an unselected neighbor near an insertion edge
+  cannot inherit a teal hover border; only explicit drawing states provide their outlines.
+- Assembly selection (`features/assemblies/assembly.css`): a light, pointer-transparent teal hatch
+  descends from upper left to lower right, crossing the unassigned hatch while preserving the
+  Material fill. Center the 2 px feedback outline over the SVG's 1 px base stroke (`outline-offset: -1px`),
+  covering it on both sides so shared and exterior edges read evenly. Keep the selection perimeter teal at
+  rest; center hover/focus uses the red drawing perimeter, and active insertion edges suppress
+  the selected perimeter while retaining the hatch. Drawing hit targets must override the shared
+  pressed-button fill through hover and focus so they never obscure the Material. Stack selected
+  hit targets above their neighbors, with the pointer-transparent insertion edge and plus above
+  selection, so later segments cannot overpaint a shared selected boundary.
 - Library and library sidebar: `library/section.js`, `library/sidebar.js`, `library/library.css`. Use for browsing density, source status, filters, row selection, and collapsible sidebar behavior. The sidebar is provider-agnostic: it shows a provider's name and connection state, never its address.
+- Assembly contextual Layer tools (`features/assemblies/layer_tools.js`, `stage.js`, `assembly.css`):
+  reveal a gear beside the thickness on Layer hover or keyboard focus and keep it visible while its
+  menu is open. Reserve gutter space so the value and drawing stay stationary; preserve hover while
+  crossing to a protruding icon beside a thin Layer. Hide the gear while an inline thickness field
+  owns that space. The gear targets its explicit Layer without changing Layer-Segment selection.
+  The drawing gear is the sole Layer tools entry point; keep the toolbar focused on segment actions.
+  Mount the feature-owned menu outside the scrollport, retain stable Layer identity
+  across repaint/reordering, and return focus on Escape. Actual drag grips require an implemented
+  reorder gesture and atomic Model operation; never show an inert grip as decoration.
+- Assembly thickness applicability: if a Material category snapshot makes a Layer a membrane during
+  an unfinished thickness edit, retain the draft visibly with a reason and require Escape to cancel.
+  Keep Enter/blur writes and navigation blocked. A clean membrane has no numeric editor; cancellation
+  returns focus to its membrane label. Restoring the original category must not silently accept the draft.
 - Library tabs: `library/section.js` and `features/windows/inventory.js`. One page heading for every tab, holding the active tab's "+ New" beside Export library; each tab body opens with the shared action bar (view controls, then tab settings) and keeps it to one line at 1280 px. Tab settings sit at the end of the action bar through the kit `Inventory`'s `settings` option, as compact controls that open a choice list (the current choice `aria-pressed`) or a single-value bubble; the Psi-Install Types Model defaults are the example. Record forms use `formDialog`; a record's uses open in a bubble anchored to its row action.
 - Window Types: `features/windows/editor.js`, `features/windows/canvas.js`, `features/windows/windows.css`. Use for the page-header action hierarchy, title and metrics, floating notices, contextual drawing tools, selection treatment, edge inserts, single-value dimension bubbles and the adapted collapsible sidebar. Its drawing toolbar groups by job, each group one outline: View (viewing side, zoom, fit), Window Type (flip, eyedropper, Undo help), Assign (the library's product kind and, for frames, the side), and the selected elements' edits at the right while something is selected. Choices between named states in a toolbar are `select.phc-choice-pill`.
 

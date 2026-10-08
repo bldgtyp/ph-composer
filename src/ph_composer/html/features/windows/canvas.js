@@ -31,6 +31,7 @@ PhComposerUI.define("features/windows/canvas", ["workspace"], function (ui) {
     this.root.style.width = (w + 150 * type) * view.zoom + "px";
     this.root.style.height = (h + 120 * type) * view.zoom + "px";
     this.root.style.setProperty("--window-type", type);
+    this.root.style.setProperty("--phc-dimension-scale", type);
     this.root.style.maxWidth = "none";
     this.root.replaceChildren();
     var background = svg("rect", { width: "100%", height: "100%", fill: "transparent" });
@@ -136,21 +137,16 @@ PhComposerUI.define("features/windows/canvas", ["workspace"], function (ui) {
     this.root.appendChild(svg("rect", { x: margin, y: top, width: w, height: h, "class": "window-unit-outline" }));
     // Dimension lines: a light rule per axis with a dot at every row and column boundary.
     // Graphic only.
-    var ruleX = margin - 14 * type, ruleY = top + h + 14 * type, rules = svg("g", {
-      "class": "window-dimension-lines" });
-    rules.appendChild(svg("line", { x1: ruleX, y1: top, x2: ruleX, y2: top + h }));
-    rules.appendChild(svg("line", { x1: margin, y1: ruleY, x2: margin + w, y2: ruleY }));
+    var ruleX = margin - 14 * type, ruleY = top + h + 14 * type;
     [record.rows_m, record.columns_m].forEach(function (values, axis) {
-      var at = 0;
-      [0].concat(values).forEach(function (value, i) {
+      var at = 0, points = [0].concat(values).map(function (value, i) {
         at += i ? (value || 1) * scale : 0;
-        var px = axis ? margin + (view.interior ? w - at : at) : ruleX, py = axis ? ruleY : top + at;
-        rules.appendChild(axis ? svg("line", { x1: px, y1: top + h + 3 * type, x2: px, y2: ruleY }) : svg("line", {
-          x1: ruleX, y1: py, x2: margin - 3 * type, y2: py }));
-        rules.appendChild(svg("circle", { cx: px, cy: py, r: 2.5 * type }));
+        return axis ? margin + (view.interior ? w - at : at) : top + at;
       });
+      self.root.appendChild(ui.dimensionRule({ axis: axis ? "horizontal" : "vertical",
+        from: axis ? margin : top, to: axis ? margin + w : top + h, at: axis ? ruleY : ruleX,
+        extension: axis ? top + h + 3 * type : margin - 3 * type, points: points, scale: type }));
     });
-    this.root.appendChild(rules);
     [["columns_m", record.columns_m], ["rows_m", record.rows_m]].forEach(function (entry) {
       var axis = entry[0], values = entry[1], horizontal = axis === "columns_m";
       values.forEach(function (value, i) {
@@ -165,14 +161,15 @@ PhComposerUI.define("features/windows/canvas", ["workspace"], function (ui) {
           ui.tooltip(label, "Set " + name);
           label.appendChild(svg("rect", { x: cx - 12 * type, y: cy - 9 * type, width: 24 * type, height: 18 * type,
             rx: 9 * type, "class": "window-dimension-missing" }));
-          label.appendChild(svg("text", { x: cx, y: cy + 4 * type, "text-anchor": "middle",
-            "class": "window-dimension is-missing" }, "?"));
+          label.appendChild(ui.dimensionValue({ text: "?", className: "window-dimension is-missing",
+            svg: { x: cx, y: cy + 4 * type, "text-anchor": "middle" } }));
           action(label, "Set " + name, function () { view.dimension(axis, i, label); });
         } else {
-          label = svg("text", { x: horizontal ? margin + offset : ruleX - 8 * type, y: horizontal ? ruleY +
-            16 * type : top + offset + 4 * type, "text-anchor": horizontal ? "middle" : "end",
-            "class": "window-dimension" }, view.length(value));
-          action(label, ui.titleCase(name), function () { view.dimension(axis, i, label); });
+          label = ui.dimensionValue({ text: view.length(value), label: ui.titleCase(name),
+            className: "window-dimension", svg: { x: horizontal ? margin + offset : ruleX - 8 * type,
+              y: horizontal ? ruleY + 16 * type : top + offset + 4 * type,
+              "text-anchor": horizontal ? "middle" : "end" },
+            activate: function () { view.dimension(axis, i, label); } });
         }
         self.root.appendChild(label);
       });
