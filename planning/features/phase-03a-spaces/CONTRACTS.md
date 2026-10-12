@@ -1,6 +1,6 @@
 # Phase 3a contract bindings: Spaces
 
-DATE: 2026-10-03
+DATE: 2026-10-12
 STATUS: Scoped. Proposed bindings, drafted from source at `70c340f`. P3a-01 confirms or corrects every table against the code with the architecture review before any feature stage starts. Rows that depend on an open decision say so.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
@@ -75,6 +75,14 @@ authoritative and the Group name is presentation, rewritten by the reconciler. P
 reverses this against how `Zones::Names` treats the Zone Group name, where the native name wins.
 
 ## 3. Operations
+
+Confirmed behavior [D3a-13](DECISIONS.md#confirmed-copy-decision-d3a-13) adds a P3a-04 binding
+requirement: Spaces contributes child-copy planning/application to a proven Zone-copy proposal.
+Each copied Space and its authored descendants get independent storage and identities, new Zone
+stamps and remapped declared internal references. The parent gesture owns atomicity and Undo;
+Zones never writes Space dictionaries. The contribution point and exact schema remain unbound
+until P3a-04 resolves them against the then-current copied-Zone implementation and D3a-3.
+This is separate from standalone `make_independent` and grants no implementation authorization.
 
 Every name starts with `ph_composer.spaces.`. Each query, action and view command is registered
 with schemas and an example, so `docs/API_REFERENCE.md` regenerates and the reference test covers

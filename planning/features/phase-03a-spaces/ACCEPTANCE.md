@@ -1,6 +1,6 @@
 # Phase 3a acceptance register: Spaces
 
-DATE: 2026-10-03
+DATE: 2026-10-12
 STATUS: Scoped. No row has evidence.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
@@ -29,6 +29,14 @@ Ids use the prefix S. `A`, `R`, `E`, `UXK`, `R11H`, `HGUI` and `PTAB` are taken 
 | S12 | Integration, P3a-12 | Both offline Ruby gates, coverage, browser and runtime checks; packaged inventory and footprint against the 22 MB target and 24 MB ceiling; the PRD's host gate from a fresh process on the reference model, with nested edit paths, two Models, Undo/Redo, save and reopen inside an open Volume, and export | Open |
 
 ## Synthetic reference model
+
+**S04/S12 addition, D3a-13 (2026-10-12):** native-copy a Zone containing Spaces with authored
+Volumes/Floor Segments and Window Units. Prove independent Space-child storage/identities,
+copied Zone stamps and typed internal reference remapping, unchanged original children, and
+Windows' existing Type/Unit protocol. Check whole-gesture refusal/failure, one Undo/Redo, repeated
+reconciliation and save/reopen. S10 must reload actual copied Spaces attached to the copied Room
+from HBJSON, with distinct identifiers and matching iCFA/net volume/airflows. Counts alone are
+insufficient. These added gates have no evidence yet.
 
 Extend the Phase 2 reference: adjacent boxes, Zone A 5 x 4 x 3 m and Zone B 4 x 4 x 3 m. Floor
 outlines are separate faces drawn inside each Zone's edit context, never the envelope Floor (Q1).
@@ -59,6 +67,8 @@ Expected, by hand:
 - Export. 101 writes `_v_sup` 60 / 3600 = 0.016667 m3/s and explicit zeros for the other two.
   201 writes none of the three.
 - Copies. One native copy each of Space 102, of 103's Volume 2 and of 101's segment, for S04.
+- Parent copy. A native copy of Zone A with its Spaces and representative cutting/glued Window
+  Units for D3a-13. Window Types remain the existing definitions; copied Spaces are independent.
 - A second Zone-A-sized Space group left at the model root, for `space.outside_zone`.
 
 Keep the hand calculation beside the fixture. Compare actual identifiers and reference targets

@@ -1,11 +1,17 @@
 # Phase 3a delivery plan: Spaces
 
-DATE: 2026-10-03
+DATE: 2026-10-12
 STATUS: Scoped. Stages P3a-01 to P3a-12 planned; none authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 ## Outcome and scope
+
+Owner-confirmed addition, 2026-10-12: [D3a-13](DECISIONS.md#confirmed-copy-decision-d3a-13)
+requires independent Space children when a Zone is copied. P3a-04 binds the owner contribution
+to the copied-Zone proposal; S04/S12 cover host state/Undo and S10 verifies HBJSON ownership.
+Window Units stay instances of their existing Type under the Windows protocol. The twelve earlier
+decisions remain open; no stage is authorized.
 
 On the Phase 2 two-Zone reference model: draw room outlines inside a Zone, make Spaces from them,
 mark which floor counts toward iCFA, set heights and see the volumes in the viewport, enter

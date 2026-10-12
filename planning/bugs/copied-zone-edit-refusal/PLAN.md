@@ -5,25 +5,40 @@ STATUS: Scoped. No phase authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
-The defect, evidence and decision D-1 are in [README.md](README.md). Paths below are relative to
+The defect and evidence are in [README.md](README.md); accepted behavior is recorded in
+[DECISIONS.md](DECISIONS.md), D-1 to D-6. Paths below are relative to
 `src/ph_composer/` unless they start with `tests/`, `tools/`, `context/`, `docs/` or `planning/`.
 
 Every implementing phase loads `.agents/skills/ph-composer-architecture-review/SKILL.md` first, and
 P1 also loads `.agents/skills/ph-composer-ui-polish/SKILL.md`, per `AGENTS.md`.
 
+Before authorizing a phase, reconcile the [2026-10-12 planning review](REVIEW.md) with its scope.
+Ed accepted the review's behavioral corrections on 2026-10-12. The mechanism remains proposed;
+native failure safety and the final-reference/preview contract still need proof. No phase is authorized.
+
 ## The behaviour to reach
 
-1. The user copies a Zone Group by any native route. Before they next touch the panel, the copy has
+1. The user copies a Zone Group within the same Model, without a shared ancestor requiring recursive
+   isolation. Before they next touch the panel, the copy has
    its own Group definition, Zone id, Face ids and stamps. The original is unchanged.
 2. Copied Surface pairs on the copy's Faces are retired (the copy is not adjacent to the original's
    neighbours). The user gets one notice naming what was dropped, so Solve can be run again.
 3. One native Undo removes the copy and its repair together; Redo brings both back. Neither Undo
    nor Redo triggers a second repair.
-4. Anything the automatic path declines (a Zone inside a component, a nested Zone, a locked parent,
+4. Anything the automatic path declines (a Zone inside a component, a Zone inside a Zone, a shared parent,
+   a locked parent,
    copied extension data whose copy rules refuse, a duplicate that predates this session) is left
-   as it is and shown on the Zone row with the explicit command.
+   as it is. Its row offers the explicit command where eligible, or names the recovery prerequisite.
 5. No refusal anywhere on Zones / Faces leaves a draft that blocks the screen without a visible way
    to cancel it.
+6. A same-Model copy retains model-owned definitions, including Window Types, under their owner's
+   protocol. Copied Window Units are new instances of the Type. When Spaces is built, a Zone copy
+   also makes its Spaces and their authored descendants independent through the Spaces owner.
+
+Cross-Model automatic independence and recursive floor-copy isolation are outside the first cut.
+Destination adoption/missing-reference workflows remain explicit. P2 measures those routes without
+promising that they become automatically editable. A failed post-write repair must preserve
+consistent state through a proven mechanism; automatic rewriting stays gated if none is proven.
 
 ## Phases
 
@@ -43,17 +58,20 @@ Fixes Defect 2 and stops the screen inviting edits that must refuse. No Ruby beh
 | File | Change |
 | --- | --- |
 | `html/features/zones/zone_cells.js` | A refused Segment/Level choice drops its draft, repaints the Model's value and shows the refusal inline until the next interaction; `active()` is then false. The two deliberate held-conflict branches ("Changed in the Model", "The Model differs from this choice") get a visible Cancel control, and a new choice in the select clears the error and retries instead of being ignored |
-| `html/features/zones/overview.js` | `draftReason` refusals that come from a held cell offer the same Cancel in the toast. `ZONE_STATES`: badge text that fits the column and says what happened ("copy, not independent"), tooltips rewritten for a copied Group, and (from P3) the command. Rows in `shared_definition` or `ambiguous` render Zone cells and their Faces' cells read only, using the read-only pattern `zone_cells.js` already has for choices that need adoption |
-| Face cell owners (`assembly_assignment.js`, the Face type and boundary chips, `selection_assignment.js`) | Honour the same read-only state for Faces of a gated Zone, so a bulk assignment cannot include them |
+| `html/record_edits.js` and the Zone editor owner | Visible Cancel for Zone Name/Ground depth invalid, refused and held-conflict drafts; preserve typed text until cancellation, restore the latest Model value and release the guard without writing. Keep unrelated consumers' behavior intact |
+| `html/features/zones/overview.js` | Held-cell guard notices offer Cancel. Use a neutral badge such as "Shared Zone", because both occurrences can be flagged, with a specific reason and (from P3) an eligible command or recovery prerequisite. Gated Zone/Face cells are read only; retained drafts remain visible with Cancel |
+| Face cell and action owners (`assembly_assignment.js`, type/boundary chips, `selection_assignment.js`, Suggest and Solve) | Preserve checked scope. If any target is gated, disable/refuse the whole mutation with a reason; never silently exclude checked Faces. Keep Locate, inspection and cancellation available |
 | Panel refusal text for `target.ambiguous` and `target.shared_definition` on a Zone write | User words that name the route out. Ruby resolver messages and codes are unchanged |
 | `tests/overview_panel_test.js` or a new `tests/zone_cells_panel_test.js` | Refused choice reverts and unlocks; held conflict clears by Cancel and by a new choice; guard toast offers Cancel; gated rows render no editable cell |
 
 Host check: on `_private/host/copied-zone-bug/error-original.skp`, force a refusal and confirm the
 screen stays usable with the mouse alone.
 
-Follow-up candidate, not in this phase: `html/record_edits.js` (Name, Ground depth) keeps a refused
-typed draft with status `error` and exits only by Escape. Keeping typed text is right; it needs the
-same visible Cancel. Track separately unless Ed folds it in.
+Include mouse cancellation for Name/Ground depth in this phase (D-4). Test Enter/blur, held-draft
+visibility after a gating snapshot, retry using the current reference/values/revision, and choosing
+the current value to cancel without a request. An uncertain failed outcome requires authoritative
+refresh and an accurate warning; it is not an ordinary no-effect refusal. Pending cancellation
+does not retract an already-sent request.
 
 ### P2: host spike
 
@@ -66,13 +84,15 @@ no evidence for a user copy.
 | # | Question | Why it matters |
 | --- | --- | --- |
 | S1 | For Option-drag Move/Copy, Edit > Copy then Paste, Paste in Place, an array copy (`x5`), and a paste into a second Model: which callbacks fire (`onElementAdded`, `onTransactionCommit`), in what order, and is the Zone dictionary already on the new Group when `onElementAdded` fires? For each gesture, does the pre-existing persistent id stay on the Group that stays in place (transformation unchanged), with the new id on the one that moved? | How the copy is detected, and whether "the occurrence in the baseline is the original" holds. If SketchUp ever gives the old persistent id to the moved Group, the neighbours' Surface pairs would follow the Zone that left, and detection needs a transformation check too. `Names::ContainersObserver` already sees clipboard pastes with their dictionary; Move/Copy and arrays are unmeasured |
-| S2 | Cut then Paste, and Move without copy: confirm no duplicate id ever exists, so nothing triggers | The automatic path must be a no-op for moves |
+| S2 | Same-Model Cut then Paste, and Move without copy: confirm no duplicate id ever exists, so nothing triggers; separately observe cross-Model cut/paste provenance | The in-scope automatic path must be a no-op for moves; foreign clipboard behavior is not assumed identical |
 | S3 | A deferred transparent operation, started from the coalesced timer after each S1 gesture, that runs `make_unique` and writes records: does one Undo remove the copy and the repair together, does Redo restore both, and which host events arrive on each? | Behaviour 3. `Names` restore proves a timer-started transparent operation joins a rename; a Move/Copy source is unmeasured |
-| S4 | If that transparent operation raises after `make_unique`, what do commit and abort each do to the user's copy? | Sets the failure policy. `context/TECH_STACK.md` says aborting a transparent operation can abort the source; confirm for this case |
-| S5 | Copy a parent Group holding two Zones (a floor). After `make_unique` on the parent copy, are the inner Zone Groups still shared, and does `make_unique` on each inner Group then leave the original floor untouched? | The multifamily case. Decides whether independence recurses or refuses nested copies in the first cut |
+| S4 | Inject failures after `make_unique`, after the Zone write, between Face/stamp writes, midway through members, and at start/commit. What do commit, abort and any proposed restoration do to the copy, source and references? | Prove consistent failure recovery while preserving the native copy; commit-on-failure alone is insufficient. If no safe mechanism is proven, automatic rewriting remains gated |
+| S5 | Copy a parent Group holding two Zones (a floor). After `make_unique` on the parent copy, are the inner Zone Groups still shared, and does `make_unique` on each inner Group then leave the original floor untouched? | Establish a future recursive-isolation design and an accurate current recovery prerequisite; automatic floor-copy isolation is deferred by D-3 |
 | S6 | A Zone Group inside a ComponentInstance placed twice, and a component copied: confirm it reads `shared_definition` and stays untouched | Limit in D-1 |
 | S7 | Time a full Zones walk on a synthetic model with 300 Zones and 3,000 Faces | Whether the check can run on every commit or only when a Group/ComponentInstance was added |
 | S8 | Already measured 2026-10-12: `make_unique` on the copy keeps the original's definition and Face entities; the copy gets new Face entities carrying copied records | Record as a host-behaviour row and a stub rule |
+| S9 | Array copy with an unsafe member; copy followed immediately by another native transaction, Undo, original deletion, export, Model switch or close before the timer | Prove batch refusal, source-gesture association, baseline and suppression cleanup; measure full reconciliation cost, not only the walk |
+| S10 | Copy a Zone containing glued/cutting Window Units; inspect definitions, Unit records, glue, openings and export findings | New Units follow the existing Type/identity protocol; Zone independence does not by itself establish Unit or export readiness |
 
 Exit: Ed reads the evidence. Any answer that contradicts P3 or P4 below is resolved in this plan
 before they start.
@@ -91,9 +111,11 @@ apply. Options:
 - **A, a feature-owned compound step (recommended).** `MakeIndependentStep` in
   `features/zones/zone/steps.rb` runs `make_unique` and then `Repair.identity_plan` and the
   existing writes inside `apply`. The handler checks feasibility before anything opens: it runs the
-  identity plan against the shared occurrence with the shared-storage check waived. That gives the
-  same answer as after Make Unique, because S8 shows the copy's Faces carry the same records, and
-  extension copy rules depend only on records. No core code change: `Dispatch#commit` already
+  identity plan against the shared occurrence with the shared-storage check waived. Equivalence
+  with the post-Make-Unique plan is not yet proven: new native paths affect derived IDs, remapped
+  payload validation and typed references. Bind an immutable logical member mapping and intended
+  identities to preview, then resolve and validate the final occurrences without weakening copy
+  rules. The exact mechanism must satisfy R8 and D-2 before P3 starts. `Dispatch#commit` already
   reads `proposal.affected` after `ModelOperation.perform` returns, so a step that fills its
   `affected` during `apply` reports the final Face ids on commit. `proposal_preview` reads
   `affected` before apply, so a preview reports the step's inputs (zone path, old id, the
@@ -110,7 +132,7 @@ apply. Options:
 | `features/zones/zone/operations.rb` | `Zones.make_independent(request, proposal, zone_path:)` |
 | `features/zones/declarations/repair.rb`, `refuses.rb`, `codes.rb` | Register `ph_composer.zones.make_independent` (undo name "Make Zone Independent"), its refusal list and code text. `repair_identity` stays for scripts and keeps refusing shared storage |
 | Native menu: a sibling of `split_identity_menu.rb` | "Make Zone independent" on a selected Zone Group that is a copy |
-| Panel: `overview.js` row state | The command on rows in `shared_definition` or `ambiguous`, offered on each row; the tooltip says the row acted on takes the new identity |
+| Panel: `overview.js` row state | Offer the command on eligible duplicate rows, otherwise show the prerequisite. Preview/Locate identify the chosen occurrence and the effect on Surface data and incoming references; the acted-on occurrence takes the new identity |
 | `tests/support/sketchup/entities.rb` | `Group#make_unique` in the stub, behaving as S8 measured: new definition and new Face entities with copied dictionaries for the receiver, the other instance untouched |
 | `tests/zone_repair_test.rb` | Independence of a two-instance copy; original untouched (definition, Face entities, ids, pairs); copied pairs retired; component, nested and locked refusals; abort leaves both unchanged; one Undo |
 | `docs/API_REFERENCE.md` | Regenerated; the fixture gate fails until it is |
@@ -120,25 +142,32 @@ apply. Options:
 | File | Change |
 | --- | --- |
 | New `features/zones/zone/copy_watch.rb` (name open) | Per-session state from `session.feature_state`. It keeps a baseline of Zone occurrence paths and ids. On `transaction_committed` that follows an added Group or ComponentInstance (per S1 and S7), the coalesced pass finds ids now held by more than one occurrence where exactly one occurrence is in the baseline: the others are the copies. On `transaction_undone` and `transaction_redone` it only rebaselines and never repairs. A duplicate set with no baseline member, or more than one, is left alone |
-| The same file | Each copy runs P3's action through the dispatcher's follow-up route (below), in a transparent operation, and the session posts one notice: "Copy made independent" plus retired pairs, or the reason it was declined |
-| `shell/dispatch.rb` | A follow-up entry for automatic work caused by a host action: the same handler, validation and outcome, but a transparent operation that commits on failure instead of aborting (S4 confirms the policy). It is reachable only from a host-event subscriber, never from the panel or the API, and runs while the session reports pending deferred work, so no panel write races it |
-| The same file | Implements `pending?` and `settle`, as `Names::State` does, so `busy_reason` blocks panel writes during the pass and an export started right after a copy settles it first. Recognises the commit of its own follow-up operation and does not schedule from it (the `@restoring` guard in `Names::State`) |
+| The same file | Preflight the complete detected gesture; reuse P3's domain planner in one all-or-nothing proposal/follow-up and post one aggregate notice with retired relationships or the decline reason |
+| `shell/dispatch.rb` | A generic follow-up entry for automatic host-caused work, with the same validation and truthful outcomes. Its transaction/failure policy is selected only after S4 proves consistent recovery that preserves the source copy; it must not merely commit partial writes. It is internal to host follow-up work, never panel/API-accessible |
+| Watcher state | Implements `pending?` and `settle` through session feature state; panel writes wait and export settles pending work. Suppress its own commits, Undo and Redo repairs, and clear timers/guards on every exception or detach; source-gesture association must also handle native transactions that occur before the timer |
 | `features/zones/zone/names.rb` | Shares discovery with the new watcher instead of a second set of `EntitiesObserver`s on every container. Either extract the container tracking `Names::State` already owns into one Zones host-tracking object both consume, or have the watcher subscribe to it. Architecture review picks |
 | `features/zones/install.rb` | Install the watcher |
 | Pattern reference | The watcher is a Zones reconciler. `context/TECH_STACK.md` says Phase 3a Spaces adopts the predecessor's `features/spaces/reconciler.rb` shape (`Baseline`, `PendingWork`, `UndoLedger`). Architecture review checks the two do not become two shapes for one idea |
-| `tests/` | Offline: one copy, array of five, cut/paste no-op, Undo and Redo no-op, pre-existing duplicate untouched, component untouched, extension-data refusal declined with notice, nested per S5. Session tests that the follow-up transparent operation commits on failure |
+| `tests/` | Offline: one copy, one atomic array of five including an unsafe-member refusal, same-Model cut/paste no-op, Undo/Redo no repeat repair, existing duplicate/component untouched, extension-data refusal, shared-parent decline, and truthful outcomes/consistent state for every S4 failure. Window integration follows S10; future Spaces integration is assigned to P3a-04 |
 
-Nested floor copies follow S5: either the watcher makes the parent copy and each inner Zone
-independent in one follow-up, or the first cut declines nested copies and leaves them to the
-explicit command, with recursion as its own later phase.
+Shared-parent floor copies are measured by S5 but automatic recursive isolation is deferred in
+the first cut (D-3). Name the prerequisite or unsupported topology; do not offer an inner-Zone
+command that cannot isolate its ancestor. Zone-inside-Zone invalid nesting is a different case.
+Future Spaces child-copy participation follows [D3a-13](../../features/phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13);
+Zones does not rewrite child dictionaries or treat a parent-only repair as complete independence.
 
 ### P5: acceptance and canon
 
 - Host, fresh process, native gestures, on `_private/host/copied-zone-bug/error-original.skp`
-  and a synthetic floor model: each S1 gesture yields an independent copy; Ed's sequence (copy,
+  and synthetic fixtures: each in-scope same-Model S1 gesture yields an independent copy;
+  out-of-scope foreign/shared-parent cases retain their declared recovery state. Ed's sequence (copy,
   change the copy's Level, name and one Face Assembly) works without touching the original; one
   Undo removes copy and repair; Redo restores; save and reopen keep both identities; export gives
   two Rooms with distinct identifiers.
+- Include cutting/glued Window Units: new Unit instances retain their existing Type under the
+  Windows protocol; original glue/openings remain unchanged and export findings are accurate.
+  Spaces child independence is a future integration gate in P3a-04, not a claim closed here.
+- Update affected canon as P1/P3 contracts land, rather than postponing every update until P5.
 - Canon: supersede Q25 in the archived Zones PRD with a dated note pointing here;
   `context/CONTRACTS.md` (copied Zone rule; the Zones reconciliation rule, which today says the
   deferred pass "never ... rebinds identity"; follow-up operations; `affected` completed during
@@ -152,9 +181,9 @@ explicit command, with recursion as its own later phase.
 
 ## Risks carried into implementation
 
-- **A transparent operation that fails partway** cannot be safely aborted. The step validates
-  everything before its first write and resolves every target before writing
-  (`RepairIdentityStep#apply` already does). S4 decides what remains.
+- **A transparent operation that fails partway** may not be safely aborted, and committing it
+  can retain partial repair. Preflight does not eliminate setter failures. S4 must prove the
+  recovery mechanism; no accepted partial-success exception exists.
 - **References from other features** (attached zones, later Spaces and thermal bridges) point at
   the original's ids and keep doing so; copied references on the copy follow the extension copy
   rules, which can refuse and leave the copy for the explicit command.

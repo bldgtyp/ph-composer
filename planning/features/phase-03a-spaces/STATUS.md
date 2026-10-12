@@ -1,6 +1,6 @@
 # Phase 3a: Spaces, tracking ledger
 
-DATE: 2026-10-07
+DATE: 2026-10-12
 STATUS: Scoped. No Spaces stage authorized or implemented. Standalone Ruby units groundwork is tracked separately.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
@@ -19,8 +19,14 @@ behavior sections. Shared understanding reached, pending Ed's confirmation of th
 
 Planned in detail on 2026-10-03: twelve stages, P3a-01 to P3a-12. A review of the PRD against
 `main` at `70c340f` found twenty-two differences and raised twelve decisions, D3a-1 to D3a-12, all
-open. The PRD is unchanged until Ed answers; the amendments that follow each answer are listed in
+open. Amendments for those twelve questions wait for Ed's answers and are listed in
 [DECISIONS](DECISIONS.md).
+
+Ed confirmed [D3a-13](DECISIONS.md#confirmed-copy-decision-d3a-13) on 2026-10-12: Spaces included
+in a Zone copy become independent authored instances, including their descendants and membership
+references; Window Units follow their existing Type protocol. This qualifies PRD Q20 and adds
+P3a-04/S04/S10/S12 integration requirements. The twelve earlier decisions remain open. No Spaces
+stage or child-copy mechanism is authorized or implemented.
 
 ## Next step
 
@@ -91,6 +97,7 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | D3a-10 | Code | A blocked run still reports its schedules, labelled | P3a-10 | Open |
 | D3a-11 | UI | Keep saved column layout; drop the Level rail | P3a-07 | Open |
 | D3a-12 | UI | What the 10 percent imbalance is measured against | P3a-08 | Open |
+| D3a-13 | Behavior | Independent Space children in a proven Zone copy; Windows follow their Type protocol | P3a-04; acceptance S04/S10/S12 | Confirmed 2026-10-12; mechanism/evidence pending |
 
 ## Owed from elsewhere, allocated here
 

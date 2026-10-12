@@ -1,7 +1,7 @@
 # Phase 3a: Spaces
 
-DATE: 2026-10-03
-STATUS: Scoped. Interviewed 2026-09-18; planned in detail as stages P3a-01 to P3a-12; decisions D3a-1 to D3a-12 open; no stage authorized.
+DATE: 2026-10-12
+STATUS: Scoped. Interviewed 2026-09-18; P3a-01 to P3a-12 planned; decisions D3a-1 to D3a-12 open; D3a-13 confirmed; no stage authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -77,6 +77,12 @@ nested-container rule and R05 items 1 and 2), and
   thermal-bridge section the first optional attaching section (D3b-20).
 
 ## Rules for every stage
+
+Confirmed copy behavior, 2026-10-12: [D3a-13](DECISIONS.md#confirmed-copy-decision-d3a-13)
+requires Spaces included in a Zone copy to become independent authored instances. P3a-04 owns
+the participation binding; S04/S12 prove the host state and S10 verifies HBJSON ownership.
+Windows remain new instances of their existing Type under their protocol. The twelve earlier
+decisions and all implementation gates remain open.
 
 - The PRD owns behavior, CONTRACTS binds names, the stage document sequences the work. A stage
   that needs a behavior the PRD does not state stops and records the question in DECISIONS.
