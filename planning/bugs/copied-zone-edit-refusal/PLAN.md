@@ -2,7 +2,7 @@
 
 DATE: 2026-10-12
 STATUS: In progress on `fix/copied-zone-edit-refusal`, authorized by Ed 2026-10-12. P1 implemented on
-branch; P2 to P5 open.
+branch; P2 measured and waiting for Ed's read, the gate before P3 and P4.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -140,6 +140,30 @@ no evidence for a user copy.
 
 Exit: Ed reads the evidence. Any answer that contradicts P3 or P4 below is resolved in this plan
 before they start.
+
+#### P2 outcome
+
+Measured 2026-10-12; evidence in [`evidence/p2-host-spike.md`](evidence/p2-host-spike.md), host rows
+in `context/SKETCHUP_HOST_BEHAVIOR.md`. Answers S1 to S9 except S9's unsafe-member and pre-timer
+cases; S10 needs a Window Unit fixture. What it changes below, pending Ed's read:
+
+- **P4 trigger.** A native copy's Group arrives in `onElementAdded` *after* `onTransactionCommit`,
+  dictionary attached. The watcher schedules from the addition (as `Names::State#added` does) as well
+  as from a following commit, and detects in the timer.
+- **P4 failure policy (D-2), proven.** Aborting the transparent follow-up removes the user's copy;
+  committing keeps partial writes. The follow-up captures every record it may write on each copy
+  after storage isolation, writes them back on any failure, then commits. The copy survives with
+  distinct storage and its copied identity (the explicit command's eligible state) and the notice
+  says so. A failed write-back is `failed` with effect `unknown`.
+- **P3 is unchanged.** The explicit command runs in its own non-transparent operation, where abort is
+  safe and rolls back `make_unique` too.
+- **Batch.** An array arrives as one transaction of N Groups after SketchUp undoes the first copy and
+  any follow-up joined to it; rebaseline on Undo and repair the N together.
+- **Declines.** Any path through a ComponentInstance (S6). Floor copies need parent-then-inner
+  isolation (S5) and stay deferred: the prerequisite is "Make the copied parent Group unique, then each
+  Zone in it", after which each inner Zone is eligible for the explicit command.
+- **Cost.** A full Zones walk over 306 Zones is about 26 ms (33 ms with Faces); run it only after an
+  added Group or ComponentInstance.
 
 ### P3: Make Zone independent, the explicit command
 
