@@ -21,7 +21,10 @@ remains for every duplicate the automatic path cannot settle.
 This supersedes Q25 in the archived [Zones PRD](../../archive/phase-01-zones-and-adjacency/PRD.md)
 ("A copied Zone is shared storage, and Make Unique comes first") and the matching entry in the
 [Phase 1 DECISIONS](../../archive/phase-01-faces-and-zones/DECISIONS.md), both confirmed on
-2026-09-20. It also reverses the rule that Zone repairs never run from an observer. The reasons:
+2026-09-20. It also changes the Zones reconciliation rule in `context/CONTRACTS.md`, which says the
+deferred pass never rebinds identity, and the header of `features/zones/zone/repair.rb`. The
+mechanism itself is the established one in `context/TECH_STACK.md` ("Observers report; deferred
+work mutates", "Join the user's Undo step"), already used by Zone name restoration. The reasons:
 
 - No authoring case was found where a copied Zone Group should keep sharing its Faces and id with
   the original. SketchUp itself makes a copied Group unique the first time the user opens it to
