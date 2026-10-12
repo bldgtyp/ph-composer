@@ -1,7 +1,7 @@
 # P5 host acceptance: copied Zone independence
 
 DATE: 2026-10-12
-STATUS: Zone cases passed. D-7 confirmed by Ed after the run. Window Units (S10) remain open.
+STATUS: Zone cases and Window Units (S10) passed. D-7 confirmed by Ed. One notice gap recorded for Ed below.
 AUTHOR: Ed May, BLDGTYP, with Claude
 
 ## Run
@@ -31,9 +31,32 @@ AUTHOR: Ed May, BLDGTYP, with Claude
 | 9a | Make independent from the panel row, existing duplicate | Passed. The wrench on the second row opened the dialog (focus on Cancel, Locate offered); Make independent gave that occurrence (48911) a new id and definition 48912; the original unchanged |
 | 9b | Make Zone independent… from the right-click Repair menu | Passed, same outcome. The review's wording assumed the selected occurrence was the copy; changed afterwards to name the selected Zone and say the other keeps the current identity |
 
+## S10: Window Units in a copied Zone
+
+Same host and build, fresh process on `s10-run.skp` from `spike-base.skp`. Arrangement through public
+actions: two Window Types (`types.create`) and three Units placed on two walls of Zone 1
+(`units.place`, glued and cutting). The copy was a native Option Move/Copy.
+
+| Check | Result |
+| --- | --- |
+| Glue | The copy's Units are new instances (48964 to 48966), each glued to one of the copy's own new walls (48958, 48960). The original's Units stay glued to the original's walls |
+| Window Types | Shared: both Zones' Units are placements of the same Type definitions, as D-6 intends. Every definition still cuts an opening |
+| Unit identity | The copies kept the original Unit ids, so all six Units read `window.copy_id_pending`, originals included. Export preflight blocks with that code and offers Locate. This is the existing Windows protocol; D-6 left its timing unchanged |
+| Windows repair | `units.repair_copied_identities` kept the originals' ids (first by entity path), gave the copies new ones, and cleared every finding |
+| Host references | Each copy Unit's host names the copy's Zone id and its new Face id; each original Unit names the original's |
+| Undo and Redo | Undoing the Windows repair brought the pending state back; undoing to before the copy left the original exactly as it was (three Units, own walls, no findings). Redo of all three steps restored the repaired state |
+| Save and reopen | Zones, glue and Unit ids identical after reopen |
+
+Not done: an HBJSON aperture read-back. Freshly created Types are not export-ready (no frames, glazing or
+Psi-Install Types: "The top edge has no Psi-Install Type"), which blocks export for both Zones and is
+unrelated to copying. The host references above are what export places apertures by.
+
+**Gap for Ed.** The Zone notice says "Made the copied Zone independent." while the copied Windows still
+share their identities and block export until a Windows action or Repair Copied Windows runs. The Windows
+feature reports it (findings, export preflight with Locate), but the copy's notice does not mention it.
+
 ## Not covered here
 
-- Window Units inside a copied Zone (S10), which P5 lists: no fixture yet.
 - D-7 (component copies left shared without a notice), observed in case 8b, was confirmed by Ed after the run.
 - SketchUp 2023 floor and Windows: their own gates.
 
