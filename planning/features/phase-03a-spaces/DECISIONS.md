@@ -116,7 +116,7 @@ references remapped within the copied collection. The original Zone and its Spac
 
 Window Units in that same Zone follow Windows' protocol: new instances reference their existing
 Window Type. Copying the Zone does not create new Window Type definitions in the same Model.
-See [copied-Zone D-2 to D-6](../../bugs/copied-zone-edit-refusal/DECISIONS.md).
+See [copied-Zone D-2 to D-6](../../archive/copied-zone-edit-refusal/DECISIONS.md).
 
 This qualifies PRD Q20's "no silent reissue" rule: the standalone Spaces reconciler still cannot
 guess which occurrence to rewrite, and standalone Space/Volume/Floor Segment copies retain their

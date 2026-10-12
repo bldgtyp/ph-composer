@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Development only; never shipped (tools/ is outside the RBZ). P2 host spike for
-# planning/bugs/copied-zone-edit-refusal/PLAN.md. Load it through the bridge:
+# planning/archive/copied-zone-edit-refusal/PLAN.md. Load it through the bridge:
 #
 #   eval 'load "<repo>/tools/spikes/copied-zone-independence/spike.rb"'
 #   eval 'CopiedZoneSpike.install'          # start recording host events

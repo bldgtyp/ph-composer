@@ -590,7 +590,7 @@ this foundation when their feature lands.
 - No refusal leaves a screen behind an invisible draft. A refused choice that wrote nothing returns
   to the Model's value and keeps its reason; a draft that is held (refused typed text, a conflict)
   shows a visible Cancel, and a guard notice blocked by it offers that Cancel too
-  (`planning/bugs/copied-zone-edit-refusal/`, D-4). A bulk change with any read-only target is
+  (`planning/archive/copied-zone-edit-refusal/`, D-4). A bulk change with any read-only target is
   refused whole, never narrowed to the writable part of the checked set (D-5).
 - `RecordForm.required(label, control)` marks a field a record form waits for, and a disabled Create
   says why in the form's status line. New acts at once where the record draws something to work on;

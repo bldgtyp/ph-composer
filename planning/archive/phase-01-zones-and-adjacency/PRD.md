@@ -237,7 +237,7 @@ records name the same two endpoints. Geometry stamps check freshness and never i
 - Preserve Zone UUIDs for the same logical Zone when the foundation can establish continuity.
   Path or persistent-id changes invalidate the old adjacency reference until an explicit solve
   creates a new pair. Never recover a face reference by name, proximity or coincident geometry.
-- **A copied Zone is shared storage, and Make Unique comes first (Q25).** *Superseded 2026-10-12 by D-1 of [copied-zone-edit-refusal](../../bugs/copied-zone-edit-refusal/README.md): a native copy of a Zone is made independent automatically, and Make Zone independent makes the copy's Group unique itself. Make Unique was measured to change only the receiving placement.* Measured on 26.1.188,
+- **A copied Zone is shared storage, and Make Unique comes first (Q25).** *Superseded 2026-10-12 by D-1 of [copied-zone-edit-refusal](../../archive/copied-zone-edit-refusal/README.md): a native copy of a Zone is made independent automatically, and Make Zone independent makes the copy's Group unique itself. Make Unique was measured to change only the receiving placement.* Measured on 26.1.188,
   2026-09-20: copying a Group makes both Groups instances of one definition sharing every Face,
   while each keeps its own Zone record. So a plain copy is ambiguous and shared at once, and
   identity repair refuses it, because giving the copy new Face ids would rewrite the original's.

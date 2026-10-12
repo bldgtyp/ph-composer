@@ -1,9 +1,8 @@
 # Plan: automatic Zone independence on copy, and a panel that is never stuck
 
 DATE: 2026-10-12
-STATUS: In progress on `fix/copied-zone-edit-refusal`, authorized by Ed 2026-10-12. P1 implemented on
-branch; P2 measured and read by Ed, who authorized P3 and P4 on 2026-10-12. P3 and P4 implemented on
-branch; P5 open.
+STATUS: Complete 2026-10-12 on `fix/copied-zone-edit-refusal`, PR bldgtyp/ph-composer#97 (merges after review
+and CI).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 

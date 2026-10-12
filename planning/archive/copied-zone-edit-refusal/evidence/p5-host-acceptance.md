@@ -1,7 +1,8 @@
 # P5 host acceptance: copied Zone independence
 
 DATE: 2026-10-12
-STATUS: Zone cases and Window Units (S10) passed. D-7 confirmed by Ed. One notice gap recorded for Ed below.
+STATUS: Zone cases and Window Units (S10) passed; D-7 confirmed; the copied-Windows notice gap became D-8
+and the follow-up packet copied-zone-windows.
 AUTHOR: Ed May, BLDGTYP, with Claude
 
 ## Run
@@ -51,9 +52,11 @@ Not done: an HBJSON aperture read-back. Freshly created Types are not export-rea
 Psi-Install Types: "The top edge has no Psi-Install Type"), which blocks export for both Zones and is
 unrelated to copying. The host references above are what export places apertures by.
 
-**Gap for Ed.** The Zone notice says "Made the copied Zone independent." while the copied Windows still
+**Gap, decided as D-8.** The Zone notice says "Made the copied Zone independent." while the copied Windows still
 share their identities and block export until a Windows action or Repair Copied Windows runs. The Windows
 feature reports it (findings, export preflight with Locate), but the copy's notice does not mention it.
+Ed kept D-6's timing for this packet; repairing them in the same gesture is the follow-up packet
+[copied-zone-windows](../../../features/unscheduled/copied-zone-windows/README.md).
 
 ## Not covered here
 

@@ -1,6 +1,6 @@
 # Planning archive
 
-DATE: 2026-10-07
+DATE: 2026-10-12
 STATUS: Index of completed and superseded planning work, newest first.
 AUTHOR: Ed May, BLDGTYP
 
@@ -9,6 +9,7 @@ reached.
 
 | Slug | Date | Outcome | Issue or PR |
 | --- | --- | --- | --- |
+| [copied-zone-edit-refusal](copied-zone-edit-refusal/README.md) | 2026-10-12 | A refused Zone edit no longer locks Zones / Faces (visible Cancel, revert on refusal, shared Zones read only, whole-set refusals). Make Zone independent (row and Repair menu) and automatic independence on a native copy, joined to the copy as a transparent follow-up that restores rather than aborts. Host spike (P2), independent Opus review of P3/P4, and P5 host acceptance on SketchUp 26.1.188 including arrays, Undo/Redo, reopen, export and Window Units passed. D-1 to D-8; follow-up copied-zone-windows | [PR #97](https://github.com/bldgtyp/ph-composer/pull/97) |
 | [github-issue-sweep](github-issue-sweep.md) | 2026-10-07 | All eleven open issues closed; prioritized sequential delivery, PRs #86 through #95 reviewed and merged with green CI, local/remote branches cleaned; no manual steps | [PR #95](https://github.com/bldgtyp/ph-composer/pull/95) |
 | [library-callback-refusals](library-callback-refusals.md) | 2026-10-07 | Kind-owned callback refusal lists, registration validation and shared discovery/reference/audit projection; full offline gate, coverage and review pass; PR #95 merged, branches cleaned | [#51](https://github.com/bldgtyp/ph-composer/issues/51) |
 | [single-value-bubble](single-value-bubble.md) | 2026-10-07 | Shared UnitField/Bubble lifecycle; offline, browser, fresh native and review pass; PR #94 merged, branches cleaned and private DesignSystem synced | [#47](https://github.com/bldgtyp/ph-composer/issues/47) |

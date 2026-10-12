@@ -1,7 +1,7 @@
 # Copied Zone independence: planning review
 
 DATE: 2026-10-12
-STATUS: Review complete; behavioral decisions accepted 2026-10-12. Mechanism and host gates remain open.
+STATUS: Review complete; behavioral decisions accepted 2026-10-12; every mechanism gate closed by P2 to P5.
 ISSUE: none (local planning draft)
 
 Reviewed [README](README.md) and [PLAN](PLAN.md) against `main@ff49569`, current Zone/Face,

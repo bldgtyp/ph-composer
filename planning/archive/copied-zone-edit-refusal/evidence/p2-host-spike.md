@@ -1,7 +1,7 @@
 # P2 host spike: copied Zone independence
 
 DATE: 2026-10-12
-STATUS: Measured. Awaiting Ed's read (the P2 exit gate in [PLAN](../PLAN.md#p2-host-spike)).
+STATUS: Measured 2026-10-12; read and accepted by Ed, who authorized P3 and P4.
 AUTHOR: Ed May, BLDGTYP, with Claude
 
 ## Run

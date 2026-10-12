@@ -1,7 +1,7 @@
 # Copied Zone independence: owner decisions
 
 DATE: 2026-10-12
-STATUS: D-1 to D-6 confirmed by Ed. Mechanism and host gates remain open; no phase authorized.
+STATUS: D-1 to D-8 confirmed by Ed 2026-10-12. Mechanisms proven in P2 and accepted on the host in P5.
 ISSUE: none (local planning draft)
 
 D-1 is recorded with its rationale in [README](README.md). Following the
@@ -21,6 +21,7 @@ These decisions establish behavior and implementation bounds, not implementation
 | ID | Subject | Direction, confirmed by Ed 2026-10-12 |
 | --- | --- | --- |
 | D-7 | Component copies | A copy whose path crosses a ComponentInstance is dropped from the automatic gesture silently: a component's placements share its contents by design, so a notice on every component copy would be noise. Other declined copies (a still-shared parent Group, a lock, extension data whose copy rule refuses) leave the whole gesture shared and post one warning naming the reason. Proposed by Claude while implementing, observed on the host in P5 (case 8b), confirmed by Ed. |
+| D-8 | Copied Windows after a Zone copy | Ed, 2026-10-12, after S10: keep D-6's Windows timing in this packet. Copied Units keep the original Unit ids until a Windows action or Repair Copied Windows; the Windows feature reports it and export says why. Repairing them in the same gesture is the follow-up packet [copied-zone-windows](../../features/unscheduled/copied-zone-windows/README.md). |
 
 ## Child copy semantics
 

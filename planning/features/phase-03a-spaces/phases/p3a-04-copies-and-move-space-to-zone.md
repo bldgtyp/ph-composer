@@ -11,7 +11,7 @@ Requires P3a-03 and D3a-3. Owns the two operations that change identity or paren
 `duplicate_identity` finding with its Make independent repair, and Move Space to Zone. Also
 carries the Space half of Restore Zone and the confirmed Zone-child copy behavior
 [D3a-13](../DECISIONS.md#confirmed-copy-decision-d3a-13). M1 closes here. Reconcile the then-current
-[copied-Zone plan](../../../bugs/copied-zone-edit-refusal/PLAN.md) before binding participation;
+[copied-Zone plan](../../../archive/copied-zone-edit-refusal/PLAN.md) before binding participation;
 this stage cannot close with parent-only independence leaving shared Space storage or IDs.
 
 Behavior owner: [Spaces PRD](../PRD.md), Records "Copies (Q20)" and "`user_data`",
