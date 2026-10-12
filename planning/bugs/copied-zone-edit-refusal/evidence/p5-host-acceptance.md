@@ -1,7 +1,7 @@
 # P5 host acceptance: copied Zone independence
 
 DATE: 2026-10-12
-STATUS: Zone cases passed. Window Units (S10) and D-7 remain open; the packet is not archived.
+STATUS: Zone cases passed. D-7 confirmed by Ed after the run. Window Units (S10) remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 
 ## Run
@@ -34,7 +34,7 @@ AUTHOR: Ed May, BLDGTYP, with Claude
 ## Not covered here
 
 - Window Units inside a copied Zone (S10), which P5 lists: no fixture yet.
-- D-7 (component copies left shared without a notice) is implemented and observed, awaiting Ed.
+- D-7 (component copies left shared without a notice), observed in case 8b, was confirmed by Ed after the run.
 - SketchUp 2023 floor and Windows: their own gates.
 
 Raw screenshots stay in the session; nothing from Ed's model enters the repository beyond ids.

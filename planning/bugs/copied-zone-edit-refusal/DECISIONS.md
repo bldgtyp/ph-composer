@@ -16,11 +16,11 @@ These decisions establish behavior and implementation bounds, not implementation
 | D-5 | Checked and gesture scope | Preserve the full checked set; disable/refuse a bulk mutation if any checked target is gated. Do not silently skip targets. A detected copy gesture uses one all-or-nothing batch, one follow-up operation and one aggregate notice; native Undo/Redo must cover the gesture and its repair together. |
 | D-6 | Recovery prerequisites and children | Offer Make Zone independent only where it can succeed; explain prerequisites for other cases. Zones can contain Window Units and, when built, Spaces. Child data follows its owner's copy protocol: copied Window Units are new instances of their existing Window Type; copied Spaces are independent authored instances. |
 
-## Implementation decision for Ed's confirmation
+## Implementation decision confirmed after P5
 
-| ID | Subject | Direction taken in P4, 2026-10-12 |
+| ID | Subject | Direction, confirmed by Ed 2026-10-12 |
 | --- | --- | --- |
-| D-7 | Component copies | A copy whose path crosses a ComponentInstance is dropped from the automatic gesture silently: a component's placements share its contents by design, so a notice on every component copy would be noise. Other declined copies (a still-shared parent Group, a lock, extension data whose copy rule refuses) leave the whole gesture shared and post one warning naming the reason. Proposed by Claude while implementing; Ed to confirm or reverse. |
+| D-7 | Component copies | A copy whose path crosses a ComponentInstance is dropped from the automatic gesture silently: a component's placements share its contents by design, so a notice on every component copy would be noise. Other declined copies (a still-shared parent Group, a lock, extension data whose copy rule refuses) leave the whole gesture shared and post one warning naming the reason. Proposed by Claude while implementing, observed on the host in P5 (case 8b), confirmed by Ed. |
 
 ## Child copy semantics
 

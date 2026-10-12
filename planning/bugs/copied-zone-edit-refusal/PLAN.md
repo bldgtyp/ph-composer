@@ -265,8 +265,8 @@ Implemented on branch 2026-10-12.
   Zone id another occurrence already holds schedules a coalesced pass; nothing else makes the session
   wait. Detection keeps no stored baseline: in the pass, every occurrence whose path holds none of the
   gesture's added persistent ids is an original, and an id with exactly one original has copies,
-  the added occurrences. Copies through a ComponentInstance are dropped silently (D-7, for Ed to
-  confirm). Undo and Redo drop a pending pass and never repair. While a pass is pending, `pending?`
+  the added occurrences. Copies through a ComponentInstance are dropped silently (D-7, confirmed
+  by Ed after P5). Undo and Redo drop a pending pass and never repair. While a pass is pending, `pending?`
   makes panel writes and export wait (`session.busy`); `ModelSession#settle` runs it. Once a pass is
   due, further additions only add ids, with no further walk.
 - `shell/host_follow_up.rb`: `HostFollowUp.run`, internal, runs a registered action's handler per

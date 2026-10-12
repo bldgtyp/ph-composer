@@ -4,7 +4,7 @@ DATE: 2026-10-12
 STATUS: In progress. Reproduced and root-caused 2026-10-12; direction decided by Ed (D-1 to D-6).
 Ed authorized the packet on 2026-10-12 (implement-loop on `fix/copied-zone-edit-refusal`). P1
 implemented on that branch; P2 measured and accepted; P3 and P4 implemented; P5 (host acceptance
-and canon) in progress: Zone host cases passed, S10 and D-7 open. Phases in [PLAN.md](PLAN.md).
+and canon) in progress: Zone host cases passed, D-7 confirmed, S10 open. Phases in [PLAN.md](PLAN.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -158,4 +158,4 @@ refused choice (a stale revision, a locked Group) still locks the screen until i
 | [P2](PLAN.md#p2-host-spike) | Measured 2026-10-12; read and accepted by Ed | [Evidence](evidence/p2-host-spike.md); gates P3 and P4 |
 | [P3](PLAN.md#p3-make-zone-independent-the-explicit-command) | Implemented on branch | See [P3 outcome](PLAN.md#p3-outcome) |
 | [P4](PLAN.md#p4-automatic-independence-on-copy) | Implemented on branch | See [P4 outcome](PLAN.md#p4-outcome); D-7 awaits Ed |
-| [P5](PLAN.md#p5-acceptance-and-canon) | In progress | Zone cases passed on the host ([evidence](evidence/p5-host-acceptance.md)); canon updated; Window Units (S10) and D-7 open; not archived |
+| [P5](PLAN.md#p5-acceptance-and-canon) | In progress | Zone cases passed on the host ([evidence](evidence/p5-host-acceptance.md)); canon updated; D-7 confirmed; Window Units (S10) open; not archived |
