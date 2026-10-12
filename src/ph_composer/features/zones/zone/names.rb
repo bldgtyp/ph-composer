@@ -72,6 +72,14 @@ module PhComposer
           @seen_native = {}
           @blank = {}
           @restoring = false
+          @listeners = []
+        end
+
+        # Another Zones reconciler that needs to know a Group or ComponentInstance was added to an
+        # observed container (copy_watch.rb) subscribes here, so one set of container observers serves
+        # both. A listener answers `container_added(entity)`; it records and schedules, nothing more.
+        def subscribe(listener)
+          @listeners << listener unless @listeners.include?(listener)
         end
 
         def schedule
@@ -107,6 +115,9 @@ module PhComposer
         # Native clipboard-pasted Groups carry their instance dictionary when added. Observing that
         # one new Group immediately preserves a subsequent rename/clear pair before discovery.
         def added(entity)
+          if entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+            @listeners.each { |listener| notify(listener, entity) }
+          end
           record = stored_record(entity) if entity.is_a?(Sketchup::Group)
           if record && Names.valid?(record["name"])
             @last_valid[entity.persistent_id] ||= record.fetch("name")
@@ -149,6 +160,7 @@ module PhComposer
           @last_valid.clear
           @seen_native.clear
           @blank.clear
+          @listeners.clear
         end
 
         private
@@ -186,6 +198,13 @@ module PhComposer
               scan(entity.definition.entities, found, containers)
             end
           end
+        end
+
+        # A listener's failure is its own; it never stops name preservation.
+        def notify(listener, entity)
+          listener.container_added(entity)
+        rescue StandardError => error
+          Diagnostics.exception("zone_container_listener", error)
         end
 
         def stored_record(entity)

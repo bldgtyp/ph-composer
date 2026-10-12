@@ -155,6 +155,7 @@ class ZoneRepairTest < PhComposerTestCase
     definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([group]), :name => "copied")
     instance = @model.entities.add_instance(definition, Geom::Transformation.new)
     @model.entities.add_instance(definition, Geom::Transformation.new)
+    treat_duplicates_as_existing(@model)
 
     result = invoke("ph_composer.zones.repair_identity",
                     { "zone_path" => [instance.persistent_id, group.persistent_id] })
@@ -173,6 +174,7 @@ class ZoneRepairTest < PhComposerTestCase
     twin = Sketchup::Group.new(260, group.entities)
     twin.set_attribute("ph_composer.zone", "record", group.get_attribute("ph_composer.zone", "record"))
     @model.entities << twin
+    treat_duplicates_as_existing(@model)
 
     states = zones_value.fetch("zones").map { |zone| zone.fetch("state") }
 
@@ -188,6 +190,7 @@ class ZoneRepairTest < PhComposerTestCase
     twin = Sketchup::Group.new(280, group.entities)
     twin.set_attribute("ph_composer.zone", "record", group.get_attribute("ph_composer.zone", "record"))
     @model.entities << twin
+    treat_duplicates_as_existing(@model)
 
     result = invoke("ph_composer.zones.repair_identity", { "zone_path" => [280] })
 
@@ -380,6 +383,7 @@ class ZoneRepairTest < PhComposerTestCase
     copy = Sketchup::Group.new(915, right.entities)
     copy.set_attribute("ph_composer.zone", "record", right.get_attribute("ph_composer.zone", "record"))
     @model.entities << copy
+    treat_duplicates_as_existing(@model)
 
     result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
 
@@ -423,6 +427,7 @@ class ZoneRepairTest < PhComposerTestCase
     ZONE_STORE.write(zone, zone_record("zon_#{'f' * 12}"))
     twin = Sketchup::Group.new(795, floor.entities)
     @model.entities << twin
+    treat_duplicates_as_existing(@model)
 
     result = invoke(MAKE_INDEPENDENT, { "zone_path" => [795, 780] })
 
@@ -436,6 +441,7 @@ class ZoneRepairTest < PhComposerTestCase
     definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([group]), :name => "unit")
     instance = @model.entities.add_instance(definition, Geom::Transformation.new)
     @model.entities.add_instance(definition, Geom::Transformation.new)
+    treat_duplicates_as_existing(@model)
 
     result = invoke(MAKE_INDEPENDENT, { "zone_path" => [instance.persistent_id, group.persistent_id] })
 
@@ -476,6 +482,17 @@ class ZoneRepairTest < PhComposerTestCase
 
     assert_equal "refused", result.fetch("status")
     assert_equal "none", result.fetch("effect")
+  end
+
+  def test_the_zones_read_does_not_offer_what_the_copy_rules_would_refuse
+    _original, copy = shared_copy(960)
+    envelope = COPY_EXTENSION.envelope("external_id" => "atz_000000000001")
+    ZONE_STORE.write(copy, ZONE_STORE.read(copy).merge("extension_data" => { COPY_EXTENSION.namespace => envelope }))
+
+    row = zones_value.fetch("zones").find { |zone| zone.dig("reference", "zone_path") == [copy.persistent_id] }
+
+    refute row.dig("independence", "available")
+    assert_equal "copy.rule_missing", row.dig("independence", "code")
   end
 
   def test_the_zones_read_says_whether_make_independent_applies
@@ -526,6 +543,7 @@ class ZoneRepairTest < PhComposerTestCase
     copy = Sketchup::Group.new(base + 50, original.entities)
     copy.set_attribute("ph_composer.zone", "record", original.get_attribute("ph_composer.zone", "record"))
     @model.entities << copy
+    treat_duplicates_as_existing(@model)
     [original, copy]
   end
 
@@ -586,6 +604,7 @@ class ZoneRepairTest < PhComposerTestCase
     copy = Sketchup::Group.new(base, Sketchup::Entities.new(faces))
     copy.set_attribute("ph_composer.zone", "record", group.get_attribute("ph_composer.zone", "record"))
     @model.entities << copy
+    treat_duplicates_as_existing(@model)
     copy
   end
 

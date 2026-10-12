@@ -44,6 +44,14 @@ module PhComposer
         "storage_isolated" => Occurrences.shared_storage?(zone.entity) }
     end
 
+    def plan_refusal(request, zone)
+      Repair.identity_plan(request.model, zone, request.revision, request.registry.catalog, request.engine,
+                           :isolating => true)
+      nil
+    rescue CodedError => error
+      error
+    end
+
     def retired_pairs(plan)
       plan.fetch(:faces).count { |face| face.fetch(:before)&.fetch("boundary_condition", nil) == "Surface" }
     end
@@ -73,12 +81,13 @@ module PhComposer
       params = request.params
       zones = Occurrences.zones(request.model)
       duplicates = duplicate_ids(zones)
+      counts = zones.map { |zone| zone.record.fetch("id") }.tally
       zones = zones.select { |zone| params["ids"].include?(zone.record.fetch("id")) } if params.key?("ids")
       zones = zones.select { |zone| params["paths"].include?(zone.path) } if params.key?("paths")
       zones = zones.sort_by(&:path)
       page, next_cursor = Pages.slice(request, "#{FEATURE_ID}.list", zones, :key => :path.to_proc)
       rows = page.map do |zone|
-        row = zone_view(zone, duplicates.include?(zone.record.fetch("id")), request.engine, request.model)
+        row = zone_view(zone, duplicates.include?(zone.record.fetch("id")), request, counts)
         params.key?("fields") ? project_row(row, params["fields"]) : row
       end
       overview(request.model, rows).merge("next_cursor" => next_cursor, "total" => zones.length)
@@ -88,9 +97,9 @@ module PhComposer
     def all(request)
       zones = Occurrences.zones(request.model)
       duplicates = duplicate_ids(zones)
+      counts = zones.map { |zone| zone.record.fetch("id") }.tally
       overview(request.model, zones.map { |zone|
-                                zone_view(zone, duplicates.include?(zone.record.fetch("id")), request.engine,
-                                          request.model)
+                                zone_view(zone, duplicates.include?(zone.record.fetch("id")), request, counts)
                               })
     end
 
@@ -163,21 +172,22 @@ module PhComposer
       { "zone_id" => after.fetch("id") }
     end
 
-    def zone_view(zone, ambiguous, engine, model)
+    def zone_view(zone, ambiguous, request, counts)
       state = zone_state(zone, ambiguous)
       Schema.view(zone.record).merge(
-        "display" => Options.display(engine, zone.record),
+        "display" => Options.display(request.engine, zone.record),
         "reference" => zone.reference,
         "state" => state,
         "face_count" => Occurrences.faces(zone).length,
-        "independence" => state == "found" ? nil : independence(model, zone)
+        "independence" => state == "found" ? nil : independence(request, zone, counts.fetch(zone.record.fetch("id")))
       )
     end
 
     # Whether Make Zone independent can act on this occurrence and, when it cannot, why, in the words
-    # the panel shows. `retired_pairs` is what acting would cost in Surface pairs.
-    def independence(model, zone)
-      refusal = Repair.independence_refusal(model, zone)
+    # the panel shows. Availability runs the same plan the action does, so a copy rule or a duplicated
+    # Face id that would refuse is never offered (D-6). `retired_pairs` is what acting would cost.
+    def independence(request, zone, id_count)
+      refusal = Repair.independence_refusal(request.model, zone, :id_count => id_count) || plan_refusal(request, zone)
       surface = Occurrences.faces(zone).count do |face|
         Faces::FACE_STORE.read(face.entity)&.fetch("boundary_condition", nil) == "Surface"
       end
@@ -250,6 +260,6 @@ module PhComposer
       "found"
     end
     private_class_method :zone_view, :validate_make_target!, :zone_state, :overview, :duplicate_ids,
-                         :project_row, :independence, :retired_pairs
+                         :project_row, :independence, :retired_pairs, :plan_refusal
   end
 end

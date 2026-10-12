@@ -1,0 +1,236 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+
+# A native copy of a Zone becomes independent automatically, joined to the user's copy (D-1). The
+# copy here is a second Group over the same definition carrying the Zone record, added just after its
+# operation commits, the order measured on the host (P2, S1); the deferred pass runs on `UI.run_timers`.
+class ZoneCopyWatchTest < PhComposerTestCase
+  API = PhComposer::API
+  ZONE_STORE = PhComposer::Zones::ZONE_STORE
+  FACE_STORE = PhComposer::Zones::Faces::FACE_STORE
+  UNREGISTERED = PhComposer::Records::Extension.new(
+    :namespace => "test.fixture.watch", :schema_version => 1,
+    :references => [{ "path" => "$.external_id", "target_kind" => "ph_composer.zones.faces.attached_zone",
+                      "cardinality" => "one" }]
+  )
+
+  def setup
+    super
+    @model = Sketchup.active_model
+    @session = PhComposer::Sessions.for(@model)
+    @context = API.connect(:session_id => @session.id)
+    @sequence = 0
+    @notices = []
+    PhComposer::Sessions.on_notice { |_session, message, tone| @notices << [message, tone] }
+    @original = zone(300)
+  end
+
+  def test_a_native_copy_is_made_independent_after_the_copy_and_the_original_is_untouched
+    before = [ZONE_STORE.read(@original), @original.entities.to_a, faces(@original)]
+    copy = native_copy(@original, 400)
+
+    assert watcher.pending?, "the copy is waiting for its deferred pass"
+    UI.run_timers
+
+    refute watcher.pending?
+    assert_equal before, [ZONE_STORE.read(@original), @original.entities.to_a, faces(@original)]
+    refute_equal ZONE_STORE.read(@original).fetch("id"), ZONE_STORE.read(copy).fetch("id")
+    refute_equal @original.definition.persistent_id, copy.definition.persistent_id
+    assert_equal %w[found found], states
+    assert_equal ["Make Zone Independent", true, false, true], @model.operation_starts.last
+    assert_equal [["Made the copied Zone independent.", :success]], @notices
+  end
+
+  def test_one_undo_removes_the_copy_and_its_repair_and_redo_repeats_no_repair
+    native_copy(@original, 400)
+    UI.run_timers
+    starts = @model.operation_starts.length
+
+    assert @model.undo
+    UI.run_timers
+    assert_equal 1, zone_groups.length, "one Undo removes the copy with its repair"
+    assert @model.redo
+    UI.run_timers
+
+    assert_equal %w[found found], states
+    assert_equal starts, @model.operation_starts.length, "Undo and Redo only rebaseline"
+    assert_equal 1, @notices.length
+  end
+
+  def test_an_array_copy_is_made_independent_as_one_batch_with_one_notice
+    copies = native_copies(@original, [400, 500, 600, 700, 800])
+    UI.run_timers
+
+    ids = ([@original] + copies).map { |group| ZONE_STORE.read(group).fetch("id") }
+    assert_equal 6, ids.uniq.length
+    assert_equal 1, @model.operation_starts.count { |start| start.first == "Make Zone Independent" }
+    assert_equal [["Made the 5 copied Zones independent.", :success]], @notices
+  end
+
+  def test_an_array_with_a_member_whose_data_cannot_be_copied_stays_shared_whole
+    copies = native_copies(@original, [400, 500, 600]) do |copy, index|
+      next unless index == 1
+
+      ZONE_STORE.write(copy, ZONE_STORE.read(copy).merge("extension_data" => {
+        UNREGISTERED.namespace => UNREGISTERED.envelope("external_id" => "atz_000000000001")
+      }))
+    end
+    UI.run_timers
+
+    assert(copies.all? { |copy| copy.definition.persistent_id == @original.definition.persistent_id })
+    refute(@model.operation_starts.any? { |start| start.first == "Make Zone Independent" })
+    assert_equal 1, @notices.length
+    assert_match(/^The 3 copied Zones stay shared: /, @notices.first.first)
+    assert_equal :warning, @notices.first.last
+  end
+
+  def test_a_failure_partway_restores_what_was_written_commits_and_never_aborts
+    copies = native_copies(@original, [400, 500])
+    copied_id = ZONE_STORE.read(@original).fetch("id")
+    writes = 0
+    FACE_STORE.singleton_class.send(:alias_method, :__watch_write, :write)
+    FACE_STORE.define_singleton_method(:write) do |entity, record|
+      writes += 1
+      raise IOError, "injected" if writes == 5 && record["id"] != copied_id
+
+      __watch_write(entity, record)
+    end
+
+    UI.run_timers
+
+    refute(@model.operations.any? { |_name, _disable, result| result == :aborted })
+    copies.each do |copy|
+      refute_equal @original.definition.persistent_id, copy.definition.persistent_id, "storage isolation remains"
+      assert_equal copied_id, ZONE_STORE.read(copy).fetch("id"), "every record is as it was copied"
+      assert(faces(copy).all? { |record| faces(@original).include?(record) })
+    end
+    assert_equal ["The 2 copied Zones could not be made independent; their records are as copied. All of them " \
+                  "now have Faces of their own. Use Make Zone independent on their rows.", :warning], @notices.last
+  ensure
+    FACE_STORE.singleton_class.send(:remove_method, :write)
+    FACE_STORE.singleton_class.send(:alias_method, :write, :__watch_write)
+    FACE_STORE.singleton_class.send(:remove_method, :__watch_write)
+  end
+
+  def test_a_duplicate_that_was_already_there_is_left_for_the_explicit_command
+    twin = Sketchup::Group.new(400, @original.entities)
+    twin.set_attribute("ph_composer.zone", "record", @original.get_attribute("ph_composer.zone", "record"))
+    @model.entities << twin
+    treat_duplicates_as_existing(@model)
+    zone(900)
+    UI.run_timers
+
+    assert_equal %w[shared_definition shared_definition found], states
+    assert_empty @notices
+  end
+
+  def test_moving_a_zone_and_copying_a_component_with_a_zone_inside_change_nothing
+    PhComposer::ModelOperation.perform(@model, "Move") do
+      @original.transformation = Geom::Transformation.translation([10, 0, 0])
+    end
+    @model.entities.delete(@original)
+    definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([@original]), :name => "unit")
+    place = -> { @model.entities.add_instance(definition, Geom::Transformation.new) }
+    PhComposer::ModelOperation.perform(@model, "Place", &place)
+    treat_duplicates_as_existing(@model)
+    PhComposer::ModelOperation.perform(@model, "Copy", &place)
+    UI.run_timers
+
+    refute(@model.operation_starts.any? { |start| start.first == "Make Zone Independent" })
+    assert_empty @notices
+  end
+
+  def test_a_failure_in_the_first_copy_says_the_second_still_shares_its_faces
+    copies = native_copies(@original, [400, 500])
+    writes = 0
+    FACE_STORE.singleton_class.send(:alias_method, :__watch_write, :write)
+    FACE_STORE.define_singleton_method(:write) do |entity, record|
+      writes += 1
+      raise IOError, "injected" if writes == 2
+
+      __watch_write(entity, record)
+    end
+
+    UI.run_timers
+
+    assert_equal [false, true], copies.map { |copy|
+      copy.definition.persistent_id == @original.definition.persistent_id
+    }
+    assert_match(/records are as copied\. 1 of them now has Faces of their own\./, @notices.last.first)
+  ensure
+    FACE_STORE.singleton_class.send(:remove_method, :write)
+    FACE_STORE.singleton_class.send(:alias_method, :write, :__watch_write)
+    FACE_STORE.singleton_class.send(:remove_method, :__watch_write)
+  end
+
+  def test_settling_the_session_runs_a_pending_copy_pass_and_detaching_cancels_one
+    copy = native_copy(@original, 400)
+    @session.settle
+    refute watcher.pending?
+    refute_equal ZONE_STORE.read(@original).fetch("id"), ZONE_STORE.read(copy).fetch("id")
+
+    native_copy(@original, 500)
+    assert watcher.pending?
+    watcher.detach
+    refute watcher.pending?
+  end
+
+  private
+
+  def watcher
+    PhComposer::Zones::CopyWatch.state(@session)
+  end
+
+  def native_copy(group, base)
+    native_copies(group, [base]).first
+  end
+
+  def native_copies(group, bases)
+    PhComposer::ModelOperation.perform(@model, "Paste") { true }
+    bases.each_with_index.map do |base, index|
+      copy = Sketchup::Group.new(base, group.entities)
+      copy.set_attribute("ph_composer.zone", "record", group.get_attribute("ph_composer.zone", "record"))
+      yield copy, index if block_given?
+      @model.entities << copy
+      copy
+    end
+  end
+
+  def zone(base)
+    faces = 3.times.map do |index|
+      Sketchup::Face.new(base + index + 1, {}, :points => [Geom::Point3d.new(0, 0, index),
+                                                           Geom::Point3d.new(2, 0, index),
+                                                           Geom::Point3d.new(2, 2, index)])
+    end
+    group = Sketchup::Group.new(base, Sketchup::Entities.new(faces))
+    @model.entities << group
+    invoke("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [base] })
+    rows = API.query(:context => @context, :name => "ph_composer.zones.faces.list").dig("value", "faces")
+    references = rows.select { |face| face.dig("reference", "zone_path") == [base] }.map { |face| face["reference"] }
+    invoke("ph_composer.zones.faces.classify", {
+      "faces" => references, "expected_values" => {},
+      "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
+                    "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } }
+    })
+    group
+  end
+
+  def invoke(name, params)
+    @sequence += 1
+    API.invoke(:context => @context, :name => name, :params => params,
+               :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
+  end
+
+  def faces(group)
+    group.entities.to_a.map { |face| FACE_STORE.read(face) }
+  end
+
+  def zone_groups
+    @model.entities.to_a.select { |entity| entity.is_a?(Sketchup::Group) && ZONE_STORE.read(entity) }
+  end
+
+  def states
+    API.query(:context => @context, :name => "ph_composer.zones.list").dig("value", "zones").map { |row| row["state"] }
+  end
+end

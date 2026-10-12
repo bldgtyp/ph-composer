@@ -23,6 +23,7 @@ class ZoneIndependenceMenuTest < PhComposerTestCase
     end
     @model.selection.add(@copy)
     @session = PhComposer::Sessions.for(@model)
+    treat_duplicates_as_existing(@model)
   end
 
   def test_offered_on_a_selected_zone_group

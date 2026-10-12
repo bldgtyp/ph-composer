@@ -107,6 +107,13 @@ Undo step. Direct panel or toolbar commits use named one-step Model operations. 
 editing path again immediately before commit, because the user can change context between the
 event and the deferred work.
 
+Transparent work never aborts: aborting it undoes the source step it joined (measured,
+`SKETCHUP_HOST_BEHAVIOR.md`). Zone name restoration, which writes only a native name, commits
+directly. Work that writes records runs through `HostFollowUp`, whose steps each answer `restore`:
+on a failure they write back what they wrote and the operation commits. The copy watcher
+(`features/zones/zone/copy_watch.rb`, which makes a fresh native copy of a Zone independent) is its
+first user.
+
 Zone names read from the native Group name, including export's detached snapshot. The schema-v1
 stored name is a compatibility fallback. Native valid renames cause no mirror transaction. Clearing
 an observed Zone name restores its last valid name in deferred transparent work. The restoration

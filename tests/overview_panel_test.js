@@ -731,7 +731,7 @@ test("an eligible shared Zone offers Make independent, names what it costs, and 
     "the other says what comes first");
   click(offered[0]);
   var dialog = p.query("dialog");
-  assert.match(dialog.querySelector("p").textContent, /2 Surface pairs on its Faces are retired/);
+  assert.match(dialog.querySelector("p").textContent, /2 Surface pairs on this occurrence's Faces are retired/);
   var buttons = dialog.querySelectorAll("button");
   click(buttons.filter(function (b) { return b.textContent === "Locate"; })[0]);
   assert.strictEqual(p.sent[p.sent.length - 1].payload.name, "ph_composer.zones.faces.locate");

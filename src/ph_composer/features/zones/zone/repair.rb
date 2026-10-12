@@ -116,8 +116,8 @@ module PhComposer
       # it can. It acts on a Zone whose id another occurrence also holds, whether or not its own Group
       # still shares its Faces; it never isolates storage above the Zone, because a component is shared
       # by design and a shared parent Group would make Groups unique inside the original's contents.
-      def independence_refusal(model, zone)
-        ids = Occurrences.zones(model).count { |other| other.record.fetch("id") == zone.record.fetch("id") }
+      def independence_refusal(model, zone, id_count: nil)
+        ids = id_count || Occurrences.zones(model).count { |other| other.record.fetch("id") == zone.record.fetch("id") }
         ancestors = path_entities(model, zone.path)[0...-1]
         if zone.nested
           CodedError.new("target.wrong_hierarchy",

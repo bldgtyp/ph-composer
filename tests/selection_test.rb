@@ -99,6 +99,7 @@ class SelectionTest < PhComposerTestCase
     definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([@groups.first]))
     instances = [Sketchup::ComponentInstance.new(800, definition), Sketchup::ComponentInstance.new(900, definition)]
     instances.each { |instance| @model.entities << instance }
+    treat_duplicates_as_existing(@model)
     @model.active_path = [instances.first]
     select(@groups.first)
     assert_equal "target.ambiguous", query("ph_composer.zones.selection").fetch("code")

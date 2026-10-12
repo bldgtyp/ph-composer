@@ -2,7 +2,8 @@
 
 DATE: 2026-10-12
 STATUS: In progress on `fix/copied-zone-edit-refusal`, authorized by Ed 2026-10-12. P1 implemented on
-branch; P2 measured and read by Ed, who authorized P3 and P4 on 2026-10-12. P3 implemented on branch.
+branch; P2 measured and read by Ed, who authorized P3 and P4 on 2026-10-12. P3 and P4 implemented on
+branch; P5 open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -254,6 +255,55 @@ the first cut (D-3). Name the prerequisite or unsupported topology; do not offer
 command that cannot isolate its ancestor. Zone-inside-Zone invalid nesting is a different case.
 Future Spaces child-copy participation follows [D3a-13](../../features/phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13);
 Zones does not rewrite child dictionaries or treat a parent-only repair as complete independence.
+
+#### P4 outcome
+
+Implemented on branch 2026-10-12.
+
+- `features/zones/zone/copy_watch.rb`: per-session state subscribed to `Names::State`'s container
+  additions (one set of container observers). An added Group or ComponentInstance that brings in a
+  Zone id another occurrence already holds schedules a coalesced pass; nothing else makes the session
+  wait. Detection keeps no stored baseline: in the pass, every occurrence whose path holds none of the
+  gesture's added persistent ids is an original, and an id with exactly one original has copies,
+  the added occurrences. Copies through a ComponentInstance are dropped silently (D-7, for Ed to
+  confirm). Undo and Redo drop a pending pass and never repair. While a pass is pending, `pending?`
+  makes panel writes and export wait (`session.busy`); `ModelSession#settle` runs it. Once a pass is
+  due, further additions only add ids, with no further walk.
+- `shell/host_follow_up.rb`: `HostFollowUp.run`, internal, runs a registered action's handler per
+  params into one proposal (a refusal declines the gesture whole), accepts only restorable steps,
+  applies them in one transparent operation, never aborts, restores in reverse on failure and
+  commits, and answers an internal result for the notice.
+- One aggregate notice: success, retired pairs with the Solve hint, a decline naming the reason, or a
+  failure read back from the Model (records as copied, how many copies now have their own Faces, the
+  row's command), or an error when the write-back itself failed.
+- Tests: `tests/zone_copy_watch_test.rb` (one copy, original untouched, transparent operation; one
+  Undo removes copy and repair, Redo repeats nothing; an array of five as one batch and notice; an
+  unsafe member keeps all shared with one warning; a mid-batch failure restores, commits, never
+  aborts; a failure in the first copy says the second still shares its Faces; an existing duplicate
+  and a component copy untouched; session settle runs the pass; detach cancels). Copies are added
+  after their operation commits, the measured host order.
+  Fixtures that build a duplicate standing for one already in the Model call
+  `treat_duplicates_as_existing`.
+- Canon: `CONTRACTS.md` reconciliation rule (the one identity rebind) and host follow-ups;
+  `TECH_STACK.md` "Join the user's Undo step".
+
+Review: one fresh-context Opus pass over P3 and P4 with both rubrics. Fixed: failure notices that
+claimed a state they had not checked; rows offering the command where the plan would still refuse
+(availability now runs the plan); the misnamed export test; `HostFollowUp` inheriting the dispatcher
+(now a `RequestChecks` module both include); the pass computed outside its rescue; a Names listener
+failure able to stop name preservation; a Model walk on every addition of a gesture; a closed session
+reaching the follow-up; the Face-id derivation change missing from CONTRACTS; the dialog leaking per
+rebuild, its focus, and wording that assumed the acted-on occurrence was the copy. Checked and left:
+the Group keeps its persistent id through `make_unique` (P2 S3 and the P3 host check). Follow-ups:
+a paste back into a Save-As derivative of the source Model reads as a same-Model copy and is repaired
+automatically (cross-Model scope under D-3 is unmeasured for that route); the panel invokes without a
+preview digest, so `retired_pairs` shown can lag a concurrent change; the stub's `make_unique` keeps
+non-Face members as the same objects, and Window Units in a copied Zone stay S10's open case.
+
+Host: P3 checked on SketchUp 26.1.188 through the public API on Ed's copied-Zone model (preview,
+invoke with digest, storage isolated, original definition, Face entities and ids unchanged, both rows
+`found`). The native-gesture check of P4 needs SketchUp frontmost and runs in P5's single
+full-control batch.
 
 ### P5: acceptance and canon
 

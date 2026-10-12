@@ -57,7 +57,11 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
     if (screen && screen.settings) screen.settings.dispose();
     if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
-    if (screen && screen.independenceDialog) screen.independenceDialog.closeModal();
+    if (screen && screen.independenceDialog) {
+      screen.independenceDialog.closeModal();
+      var stale = screen.independenceDialog;
+      if (stale.parentNode) stale.parentNode.removeChild(stale);
+    }
     if (screen && screen.bar) withdrawBar(screen.bar);
     screen = { session: session, expanded: Object.create(null), showAll: Object.create(null),
       columnWidths: {}, menus: Object.create(null), toggles: Object.create(null), hiddenColumns: {},
@@ -413,8 +417,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
      occurrence and nothing else on the screen tells the user there are two. */
   function marker(row) {
     var count = row.record.unclassified, trouble = ZONE_STATES[row.record.state];
-    if (trouble) return { text: trouble.text, icon: trouble.icon, tooltip: trouble.tooltip + " " +
-      independenceHint(row.record.zone && row.record.zone.independence) };
+    if (trouble) return { text: trouble.text, icon: trouble.icon, tooltip: (trouble.tooltip + " " +
+      independenceHint(row.record.zone && row.record.zone.independence)).trim() };
     if (!count) return null;
     return { text: String(count),
       tooltip: count + " unclassified Faces in this Zone have no record yet. Suggest classification writes one " +
@@ -661,8 +665,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     }
   });
 
-  /* Make Zone independent names the occurrence it acts on and what it costs before it writes: both
-     occurrences can carry the same name, so the dialog offers Locate, and the other keeps its identity. */
+  /* Make Zone independent names the occurrence it acts on and what it costs before it writes. Either
+     occurrence can be the one that takes the new identity, and both can carry the same name, so the
+     dialog offers Locate and says what the other keeps. */
   function confirmIndependent(state, row) {
     var reason = draftReason(state);
     if (reason) return refuse(reason);
@@ -671,11 +676,12 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       dialog = state.independenceDialog = ui.formDialog("", function () { dialog.closeModal(); });
       document.body.appendChild(dialog);
     }
-    var consequence = "This occurrence gets its own Faces and a new identity. The Zone it shares them with " +
-      "keeps its identity, Faces and Surface pairs." + (retired ? " " + retired + (retired === 1 ?
-        " Surface pair on its Faces is" : " Surface pairs on its Faces are") +
-        " retired; run Solve adjacencies again afterwards." : "");
-    var footer = ui.actionRow(ui.button("Cancel", function () { dialog.closeModal(); }),
+    var consequence = "This occurrence gets its own Faces and a new identity. The other occurrence keeps the " +
+      "current identity." + (retired ? " " + retired + (retired === 1 ? " Surface pair on this occurrence's " +
+        "Faces is" : " Surface pairs on this occurrence's Faces are") + " retired; run Solve adjacencies " +
+        "again afterwards." : "");
+    var cancel = ui.button("Cancel", function () { dialog.closeModal(); });
+    var footer = ui.actionRow(cancel,
       ui.button("Make independent", function () {
         dialog.closeModal();
         if (state.disposed || state.edits.busy()) return;
@@ -686,6 +692,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     dialog.replaceChildren(ui.element("h2", "", "Make " + row.record.name + " independent"),
       ui.element("p", "", consequence), footer);
     dialog.openModal();
+    cancel.focus();
   }
 
   function suggest(state, row) {
