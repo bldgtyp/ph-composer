@@ -25,6 +25,10 @@ AUTHOR: Ed May, BLDGTYP, with Claude
   `Sketchup.undo` and `Sketchup.redo`. Parent-Group and component arrangements for S5 and S6 were
   made by development eval; the copies themselves were native.
 
+The committed `spike.rb` differs from the file loaded on the host only by rewriting its one-line
+`def ... = ...` methods for the Ruby 2.7 lint floor and the blank lines between them; it was not
+reloaded afterwards.
+
 One correction during the run: the recorder first checked a misspelt dictionary name and reported
 that no copy carried its Zone dictionary at `onElementAdded`. Re-measured with the real name
 (`ph_composer.zone`) for Paste in Place, Move/Copy and Paste: every copy carries it. Other results
@@ -57,8 +61,9 @@ has committed. "One Undo" is read after the outcome.
 | Midway through Faces | One Face re-identified, five not | Copy gone | Copy kept, own storage, records as copied |
 | Before commit | Complete repair committed although the operation "failed" | Copy gone | Copy kept, own storage, records as copied |
 
-In every column the original Zone (definition, Face entities, ids, stamps) was unchanged, and one
-Undo removed whatever remained of the copy. Aborting a transparent operation undoes the gesture it
+In every column the original Zone (definition, Face entities, ids, stamps) was unchanged. In the
+commit and restore columns one Undo removed the copy and what was written to it; in the abort column
+the copy was already gone, and the extra Undo touched nothing this spike records. Aborting a transparent operation undoes the gesture it
 joined, which matches the existing row "`Model#abort_operation` fires `onTransactionUndo`" and the
 `TECH_STACK` rule that transparent work must not abort its source.
 
