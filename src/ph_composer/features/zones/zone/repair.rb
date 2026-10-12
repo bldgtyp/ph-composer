@@ -4,7 +4,9 @@ module PhComposer
   module Zones
     # The explicit repairs a Zone can need after the user copies or explodes one. None infers membership
     # from geometry: identity repair and Make Zone independent work on one occurrence the caller named
-    # by path, and Restore works only on members that carry a stamp. None runs from an observer.
+    # by path, and Restore works only on members that carry a stamp. Make Zone independent also runs on
+    # a fresh native copy, through the copy watcher (copy_watch.rb); the other two never run from an
+    # observer.
     module Repair
       module_function
 

@@ -40,7 +40,7 @@ class ZoneIndependenceMenuTest < PhComposerTestCase
 
     refute_equal ZONE_STORE.read(@original).fetch("id"), ZONE_STORE.read(@copy).fetch("id")
     refute_equal @original.definition.persistent_id, @copy.definition.persistent_id
-    assert UI.messages.any? { |message| message.include?("\"Unit A\" will get its own Faces") }
+    assert UI.messages.any? { |message| message.include?("The selected \"Unit A\" will get its own Faces") }
     assert UI.messages.any? { |message| message.include?("Make Zone Independent") }
   end
 

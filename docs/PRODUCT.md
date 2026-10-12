@@ -82,10 +82,12 @@ A Zone is one SketchUp Group, the geometry unit that becomes one honeybee Room. 
 Zone from a selected Group or from loose geometry, and tags it with a Building-Segment and an
 optional Level. Solve adjacencies pairs the faces two Zones share, cutting partial overlaps so only
 the shared region pairs, in one Undo step. It runs only when asked, and validation offers it again
-when a pairing goes stale. A copied Zone or a split face keeps its records. A copied Zone is read
-only until it is made independent: Make Zone independent, on its row or in its context menu, gives
-the copy its own faces and identity and leaves the Zone it was copied from as it was. Ambiguity is
-refused rather than guessed.
+when a pairing goes stale. A copied Zone or a split face keeps its records. Copying a Zone in
+SketchUp makes the copy independent at once: it gets its own faces and identity, the Zone it was
+copied from stays as it was, and one Undo removes both the copy and that change. A duplicate that is
+already in a file, or a copy SketchUp keeps shared (inside a component or a copied parent group), is
+read only until it is made independent with Make Zone independent, on its row or in its context
+menu. Ambiguity is refused rather than guessed.
 
 Make Zone and the Zone attributes are available from the selected geometry's native context menu.
 The Zones / Faces header has no Make Zone button; use the native context menu to create a Zone.

@@ -75,11 +75,11 @@ module PhComposer
         end
 
         def review(row, value)
-          lines = ["\"#{row.dig('values', 'name')}\" will get its own Faces and a new identity. " \
-                   "The Zone it was copied with keeps its identity, Faces and Surface pairs."]
+          lines = ["The selected \"#{row.dig('values', 'name')}\" will get its own Faces and a new identity. " \
+                   "The other occurrence keeps the current identity."]
           retired = value.fetch("retired_pairs")
-          lines << "#{retired} Surface pair(s) on its Faces will be retired; run Solve adjacencies again." if
-            retired.positive?
+          lines << "#{retired} Surface pair(s) on the selected Zone's Faces will be retired; run Solve " \
+                   "adjacencies again." if retired.positive?
           lines << "Proceed?"
           lines.join("\n\n")
         end
