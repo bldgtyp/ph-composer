@@ -718,6 +718,29 @@ test("a shared Zone's cells and its Faces' chips are read only, and Suggest says
   assert.match(suggest.getAttribute("aria-label"), /read only/);
 });
 
+test("an eligible shared Zone offers Make independent, names what it costs, and sends one action", function () {
+  var p = sharedPage(), zones = p.payload.sections["ph_composer.zones.overview"].value.zones;
+  zones[0].independence = { available: true, code: null, reason: null, retired_pairs: 2 };
+  zones[1].independence = { available: false, code: "target.locked", reason: "Unlock it first.", retired_pairs: 0 };
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  var offered = p.section.querySelectorAll("[data-row-action='independent']");
+  assert.strictEqual(offered.length, 1, "only the occurrence the command can act on");
+  assert.match(p.section.querySelectorAll(".phc-row-marker").filter(function (m) {
+    return m.classList.contains("is-icon");
+  })[1].getAttribute("aria-label"), /Unlock it first/,
+    "the other says what comes first");
+  click(offered[0]);
+  var dialog = p.query("dialog");
+  assert.match(dialog.querySelector("p").textContent, /2 Surface pairs on its Faces are retired/);
+  var buttons = dialog.querySelectorAll("button");
+  click(buttons.filter(function (b) { return b.textContent === "Locate"; })[0]);
+  assert.strictEqual(p.sent[p.sent.length - 1].payload.name, "ph_composer.zones.faces.locate");
+  click(buttons.filter(function (b) { return b.textContent === "Make independent"; })[0]);
+  var sent = p.sent[p.sent.length - 1].payload;
+  assert.strictEqual(sent.name, "ph_composer.zones.make_independent");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(sent.params)), { zone_path: [100] });
+});
+
 test("a checked Face in a shared Zone refuses the bar's assignment whole and says why", function () {
   var p = sharedPage();
   click(p.box("Floor 1")); click(p.box("Wall 1"));

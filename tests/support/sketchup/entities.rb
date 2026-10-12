@@ -834,6 +834,20 @@ module Sketchup
       GroupDefinition.new(@entities)
     end
 
+    # Measured on 26.1.188, 2026-10-12 (copied-Zone P2, S5 and S8): Make Unique gives this placement a
+    # new definition whose Faces are new entities carrying copies of the shared Faces' dictionaries.
+    # The other placement keeps its definition and entities. A nested Group becomes a new placement
+    # of its own definition, so it stays shared until it is made unique in turn.
+    def make_unique
+      return self unless definition.instances.length > 1
+
+      members = @entities.to_a.map { |entity| unique_member(entity) }
+      @entities.group_instances.delete(self)
+      @entities = Entities.new(members)
+      @entities.register_group(self)
+      self
+    end
+
     def explode
       raise ArgumentError, "group has no parent entities" unless parent_entities
 
@@ -849,6 +863,24 @@ module Sketchup
         destination << entity
       end
       members
+    end
+
+    private
+
+    def unique_member(entity)
+      dictionaries = Marshal.load(Marshal.dump(
+        (entity.attribute_dictionaries || []).to_h { |dictionary| [dictionary.name, dictionary.to_h] }
+      ))
+      id = Entities.allocate_persistent_id
+      case entity
+      when Face
+        Face.new(id, dictionaries, :points => entity.outer_loop.vertices.map(&:position), :normal => entity.normal)
+      when Group
+        Group.new(id, entity.entities, dictionaries, :transformation => entity.transformation, :name => entity.name,
+                                                     :locked => entity.locked?)
+      else
+        entity
+      end
     end
   end
 

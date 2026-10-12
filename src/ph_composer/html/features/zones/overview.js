@@ -57,6 +57,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
     if (screen && screen.settings) screen.settings.dispose();
     if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
+    if (screen && screen.independenceDialog) screen.independenceDialog.closeModal();
     if (screen && screen.bar) withdrawBar(screen.bar);
     screen = { session: session, expanded: Object.create(null), showAll: Object.create(null),
       columnWidths: {}, menus: Object.create(null), toggles: Object.create(null), hiddenColumns: {},
@@ -412,11 +413,18 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
      occurrence and nothing else on the screen tells the user there are two. */
   function marker(row) {
     var count = row.record.unclassified, trouble = ZONE_STATES[row.record.state];
-    if (trouble) return { text: trouble.text, icon: trouble.icon, tooltip: trouble.tooltip };
+    if (trouble) return { text: trouble.text, icon: trouble.icon, tooltip: trouble.tooltip + " " +
+      independenceHint(row.record.zone && row.record.zone.independence) };
     if (!count) return null;
     return { text: String(count),
       tooltip: count + " unclassified Faces in this Zone have no record yet. Suggest classification writes one " +
         "for each of them and leaves every Face that already has one alone." };
+  }
+
+  /* What the user can do about a shared Zone: the row's Make independent action, or what comes first. */
+  function independenceHint(independence) {
+    if (!independence) return "";
+    return independence.available ? "Make it independent from its row's actions." : independence.reason || "";
   }
 
   function actions(row) {
@@ -424,6 +432,10 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var locatable = row.record.face || (row.record.every || row.record.faces).length;
     var items = [{ id: "locate", icon: "locate", disabled: !locatable,
       label: locatable ? "Locate " + row.record.name : "Nothing to locate: " + row.record.name + " has no Faces" }];
+    var independence = row.depth === 0 && row.record.zone.independence;
+    if (independence && independence.available) {
+      items.push({ id: "independent", icon: "repair", label: "Make " + row.record.name + " independent" });
+    }
     if (row.depth === 0 && row.record.unclassified) {
       var shared = ZoneCells.gated(row.record.zone);
       items.push({ id: "suggest", icon: "sort", disabled: shared, label: shared ?
@@ -648,6 +660,33 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       clearLocate(screen);
     }
   });
+
+  /* Make Zone independent names the occurrence it acts on and what it costs before it writes: both
+     occurrences can carry the same name, so the dialog offers Locate, and the other keeps its identity. */
+  function confirmIndependent(state, row) {
+    var reason = draftReason(state);
+    if (reason) return refuse(reason);
+    var zone = row.record.zone, retired = zone.independence.retired_pairs, dialog = state.independenceDialog;
+    if (!dialog) {
+      dialog = state.independenceDialog = ui.formDialog("", function () { dialog.closeModal(); });
+      document.body.appendChild(dialog);
+    }
+    var consequence = "This occurrence gets its own Faces and a new identity. The Zone it shares them with " +
+      "keeps its identity, Faces and Surface pairs." + (retired ? " " + retired + (retired === 1 ?
+        " Surface pair on its Faces is" : " Surface pairs on its Faces are") +
+        " retired; run Solve adjacencies again afterwards." : "");
+    var footer = ui.actionRow(ui.button("Cancel", function () { dialog.closeModal(); }),
+      ui.button("Make independent", function () {
+        dialog.closeModal();
+        if (state.disposed || state.edits.busy()) return;
+        state.edits.run("ph_composer.zones.make_independent", { zone_path: zone.reference.zone_path });
+        panel.repaint();
+      }));
+    footer.insertBefore(ui.button("Locate", function () { locate(state, row); }), footer.firstChild);
+    dialog.replaceChildren(ui.element("h2", "", "Make " + row.record.name + " independent"),
+      ui.element("p", "", consequence), footer);
+    dialog.openModal();
+  }
 
   function suggest(state, row) {
     state.edits.run("ph_composer.zones.faces.auto_classify", { zone: row.record.zone.reference });
@@ -1000,6 +1039,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       action: function (row, item) {
         if (item.id === "locate") locate(state, row);
         if (item.id === "suggest") suggest(state, row);
+        if (item.id === "independent") confirmIndependent(state, row);
       }
     });
   }

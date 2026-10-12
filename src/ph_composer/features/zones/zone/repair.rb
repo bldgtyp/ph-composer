@@ -2,9 +2,9 @@
 
 module PhComposer
   module Zones
-    # The two explicit repairs a Zone can need after the user copies or explodes one. Neither runs
-    # from an observer and neither infers membership from geometry: identity repair works on one
-    # occurrence the caller named by path, and Restore works only on members that carry a stamp.
+    # The explicit repairs a Zone can need after the user copies or explodes one. None infers membership
+    # from geometry: identity repair and Make Zone independent work on one occurrence the caller named
+    # by path, and Restore works only on members that carry a stamp. None runs from an observer.
     module Repair
       module_function
 
@@ -22,9 +22,18 @@ module PhComposer
       end
 
       # What identity repair would change, as detached values. Raises rather than returning a partial
-      # plan: a repair that cannot be done completely must write nothing.
-      def identity_plan(model, zone, revision, catalog, engine)
-        check_repairable!(model, zone)
+      # plan: a repair that cannot be done completely must write nothing. `isolating` is Make Zone
+      # independent's feasibility read: storage is still shared because the step isolates it before it
+      # writes, so only the shared-storage refusal is waived.
+      def identity_plan(model, zone, revision, catalog, engine, isolating: false)
+        check_repairable!(model, zone, :isolating => isolating)
+        plan_with(zone, identity_mapping(model, zone, revision), catalog, engine)
+      end
+
+      # Every new id, fixed before anything is written: the Zone's from its occurrence path, each Face's
+      # from the id it was copied with. Neither reads a Face entity, so Make Unique, which replaces the
+      # copy's Faces with new entities, leaves the mapping valid between preview and apply.
+      def identity_mapping(model, zone, revision)
         old_id = zone.record.fetch("id")
         new_id = Records::Identity.derived("zon", "model" => model.guid, "revision" => revision,
                                                   "zone_path" => zone.path, "repaired" => old_id)
@@ -32,9 +41,8 @@ module PhComposer
           raise CodedError.new("target.ambiguous", "The repaired Zone identity is already present.")
         end
 
-        faces = member_entries(zone)
         mapping = { old_id => new_id }
-        faces.each do |entry|
+        member_entries(zone).each do |entry|
           face_id = entry.fetch(:before)&.fetch("id", nil)
           next unless face_id
 
@@ -43,18 +51,33 @@ module PhComposer
           end
 
           mapping[face_id] = Records::Identity.derived("fac", "model" => model.guid, "revision" => revision,
-                                                              "zone_id" => new_id,
-                                                              "entity_path" => entry.fetch(:occurrence).path)
+                                                              "zone_id" => new_id, "copied_from" => face_id)
+        end
+        mapping
+      end
+
+      # The records identity repair writes for this mapping, read from the occurrence as it is now: the
+      # remapped payloads and the typed reference plan are built against the live Face entities, so
+      # they are right after storage isolation too. A Face record the mapping does not know was added
+      # after the preview, and the repair refuses rather than guess.
+      def plan_with(zone, mapping, catalog, engine)
+        old_id = zone.record.fetch("id")
+        faces = member_entries(zone)
+        faces.each do |entry|
+          face_id = entry.fetch(:before)&.fetch("id", nil)
+          next if face_id.nil? || mapping.key?(face_id)
+
+          raise CodedError.new("target.changed", "A Face of the Zone changed after the repair was previewed.")
         end
         reference_plan = identity_reference_plan(zone, faces, mapping)
-        record = DeepCopy.call(zone.record).merge("id" => new_id)
+        record = DeepCopy.call(zone.record).merge("id" => mapping.fetch(old_id))
         record["extension_data"] = Records::Extension.copy_data(zone.record.fetch("extension_data", {}), catalog,
                                                                 "Zone", old_id, mapping,
                                                                 :engine => engine,
                                                                 :reference_plan => reference_plan)
         Schema.validate!(record)
-        plans = face_plans(faces, zone, new_id, mapping, catalog, engine, reference_plan)
-        { :old_id => old_id, :record => record, :faces => plans }
+        plans = face_plans(faces, zone, mapping.fetch(old_id), mapping, catalog, engine, reference_plan)
+        { :old_id => old_id, :record => record, :faces => plans, :mapping => mapping }
       end
 
       def identity_reference_plan(zone, faces, mapping)
@@ -74,8 +97,8 @@ module PhComposer
         Records::ReferencePlan.new(:entries => entries)
       end
 
-      def check_repairable!(model, zone)
-        if zone.shared_definition
+      def check_repairable!(model, zone, isolating: false)
+        if zone.shared_definition && !isolating
           raise CodedError.new("target.shared_definition",
                                "That Zone is inside shared component storage, so it cannot be given an " \
                                "identity of its own.")
@@ -87,6 +110,41 @@ module PhComposer
 
         raise CodedError.new("zone.identity_unique",
                              "That Zone's identity is already unique; there is nothing to repair.")
+      end
+
+      # Why Make Zone independent cannot act on this occurrence, as an unraised CodedError, or nil when
+      # it can. It acts on a Zone whose id another occurrence also holds, whether or not its own Group
+      # still shares its Faces; it never isolates storage above the Zone, because a component is shared
+      # by design and a shared parent Group would make Groups unique inside the original's contents.
+      def independence_refusal(model, zone)
+        ids = Occurrences.zones(model).count { |other| other.record.fetch("id") == zone.record.fetch("id") }
+        ancestors = path_entities(model, zone.path)[0...-1]
+        if zone.nested
+          CodedError.new("target.wrong_hierarchy",
+                         "This Zone is inside another Zone. Move it out of that Zone first.")
+        elsif ancestors.any? { |entity| entity.is_a?(Sketchup::ComponentInstance) }
+          CodedError.new("target.shared_definition",
+                         "This Zone is inside a component, whose placements share it by design. Make that " \
+                         "component unique in SketchUp first.")
+        elsif ancestors.any? { |entity| Occurrences.shared_storage?(entity) }
+          CodedError.new("target.shared_definition",
+                         "This Zone is inside a copied Group that still shares its contents. Right-click that " \
+                         "Group and choose Make Unique first.")
+        elsif zone.locked_parent || (zone.entity.respond_to?(:locked?) && zone.entity.locked?)
+          CodedError.new("target.locked", "This Zone or a Group containing it is locked. Unlock it first.")
+        elsif ids < 2
+          CodedError.new("zone.identity_unique", "This Zone already has an identity of its own.")
+        end
+      end
+
+      # The entities on a root-to-Zone path, through Groups and ComponentInstances alike.
+      def path_entities(model, path)
+        entities = model.entities
+        path.map do |persistent_id|
+          entity = Occurrences.unique_entity(entities, persistent_id)
+          entities = entity.is_a?(Sketchup::ComponentInstance) ? entity.definition.entities : entity.entities
+          entity
+        end
       end
 
       # Every member record the repair rewrites. A copied `fac_` id is ambiguous data, so each face
@@ -226,7 +284,7 @@ module PhComposer
         end
       end
       private_class_method :orphan_group, :orphan_refusal, :shared_edge?, :walk_orphans, :repaired_face, :face_plans,
-                           :member_entries
+                           :member_entries, :path_entities
     end
   end
 end

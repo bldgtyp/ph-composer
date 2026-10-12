@@ -2,7 +2,7 @@
 
 DATE: 2026-10-12
 STATUS: In progress on `fix/copied-zone-edit-refusal`, authorized by Ed 2026-10-12. P1 implemented on
-branch; P2 measured and waiting for Ed's read, the gate before P3 and P4.
+branch; P2 measured and read by Ed, who authorized P3 and P4 on 2026-10-12. P3 implemented on branch.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -204,6 +204,37 @@ apply. Options:
 | `tests/support/sketchup/entities.rb` | `Group#make_unique` in the stub, behaving as S8 measured: new definition and new Face entities with copied dictionaries for the receiver, the other instance untouched |
 | `tests/zone_repair_test.rb` | Independence of a two-instance copy; original untouched (definition, Face entities, ids, pairs); copied pairs retired; component, nested and locked refusals; abort leaves both unchanged; one Undo |
 | `docs/API_REFERENCE.md` | Regenerated; the fixture gate fails until it is |
+
+#### P3 outcome
+
+Implemented on branch 2026-10-12, Ed's go the same day after reading the P2 evidence.
+
+- `features/zones/zone/repair.rb`: the identity mapping is fixed before any write and is
+  independent of Face entities (a Face's new id derives from the id it was copied with, not its
+  path), `plan_with` rebuilds records and the typed reference plan from the live occurrence for a
+  given mapping, `identity_plan(isolating: true)` waives only the shared-storage refusal, and
+  `independence_refusal` returns the prerequisite for a component ancestor, a still-shared parent
+  Group, a nested Zone, a lock or a unique id.
+- `features/zones/zone/steps.rb`: `MakeIndependentStep` (option A). Preview and digest cover the
+  mapping and record contents without Face paths; apply re-checks eligibility, runs `make_unique`
+  when the Group shares its Faces, rebuilds the plan, refuses `target.changed` on any difference,
+  writes, and completes `affected` with the isolated Faces. `restore` writes back the records apply
+  captured after isolation, for P4's follow-up.
+- `ph_composer.zones.make_independent` (undo "Make Zone Independent", refusals
+  `Refuses::MAKE_INDEPENDENT`); each Zones row now carries `independence` (`available`, `code`,
+  `reason`, `retired_pairs`) when it is not cleanly found. `repair_identity` is unchanged for scripts.
+- Native "Make Zone independent…" under Repair on a selected Zone Group (`independence_menu.rb`):
+  public read, preview, one review, invoke with the preview's revision and digest.
+- Panel: an eligible shared row offers Make independent; a dialog names the cost (retired pairs),
+  offers Locate and sends one action. An ineligible row's marker tooltip carries the prerequisite.
+- Tests: stub `Group#make_unique` as S8 measured; `zone_repair_test.rb` (isolation with the
+  original untouched, final affected references, retired pairs, distinct storage, refusals for
+  unique, lock, shared parent and component, rollback on failure, stale preview, the read's
+  `independence`); `zone_independence_menu_test.rb`; one panel test.
+- Canon: `CONTRACTS.md` (copied Zone rule; steps that bind a logical change), glossary, `PRODUCT.md`.
+
+Gates: Ruby and JS suites, rubocop and eslint clean; `docs/API_REFERENCE.md` regenerated. The
+stronger independent review runs once over P3 and P4 together; host acceptance is P5.
 
 ### P4: automatic independence on copy
 

@@ -10096,7 +10096,8 @@ Result:
           "display",
           "reference",
           "state",
-          "face_count"
+          "face_count",
+          "independence"
         ],
         "properties": {
           "id": {
@@ -10213,6 +10214,45 @@ Result:
           "face_count": {
             "type": "integer",
             "minimum": 0
+          },
+          "independence": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "available",
+              "code",
+              "reason",
+              "retired_pairs"
+            ],
+            "properties": {
+              "available": {
+                "type": "boolean",
+                "description": "Whether make_independent can act on it."
+              },
+              "code": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The refusal make_independent would give."
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "That refusal's message: what to do first."
+              },
+              "retired_pairs": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Surface pairs acting would retire."
+              }
+            },
+            "description": "For an occurrence that is not found cleanly, whether Make Zone independent applies; null otherwise."
           }
         }
       },
@@ -12163,6 +12203,45 @@ Result:
           "face_count": {
             "type": "integer",
             "minimum": 0
+          },
+          "independence": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "available",
+              "code",
+              "reason",
+              "retired_pairs"
+            ],
+            "properties": {
+              "available": {
+                "type": "boolean",
+                "description": "Whether make_independent can act on it."
+              },
+              "code": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The refusal make_independent would give."
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "That refusal's message: what to do first."
+              },
+              "retired_pairs": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Surface pairs acting would retire."
+              }
+            },
+            "description": "For an occurrence that is not found cleanly, whether Make Zone independent applies; null otherwise."
           }
         },
         "description": "Whole without fields; with fields, id, reference, state and the named values only."
@@ -35427,6 +35506,74 @@ Example params:
   "parent_path": [],
   "entity_ids": [
     1201
+  ]
+}
+```
+
+### `ph_composer.zones.make_independent`
+
+Give a copied Zone occurrence its own Faces and identity, leaving the occurrence it shares them with untouched. Owner: `ph_composer.zones`.
+
+Undo step: Make Zone Independent. Makes the occurrence's Group unique when it shares its Faces, then reidentifies it and its Faces and retires their Surface pairs.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.identity_unique`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zone_path"
+  ],
+  "properties": {
+    "zone_path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "The root-to-Zone path of the copy to reidentify, as list returns it."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zone_id",
+    "retired_pairs",
+    "storage_isolated"
+  ],
+  "properties": {
+    "zone_id": {
+      "type": "string",
+      "description": "The occurrence's new Zone id."
+    },
+    "retired_pairs": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Surface pairs the occurrence's Faces left behind."
+    },
+    "storage_isolated": {
+      "type": "boolean",
+      "description": "Whether the occurrence's Group still shared its Faces."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "zone_path": [
+    1401
   ]
 }
 ```

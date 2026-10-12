@@ -147,5 +147,105 @@ module PhComposer
         occurrence
       end
     end
+
+    # Make Zone independent: the copy gets storage of its own, then the identity repair above, as one
+    # step. Make Unique creates the copy's Face entities, so their final references exist only during
+    # apply. The preview therefore binds the logical change: the id mapping and every record's content,
+    # keyed by the id it was copied with. Apply isolates storage, rebuilds the plan from the isolated
+    # occurrence with that same mapping, refuses if any record differs from the preview, and only then
+    # writes; `affected` carries the final references once apply has run.
+    #
+    # A host follow-up that must not abort its source gesture calls `restore` after a failure: it writes
+    # back the records apply captured after isolating storage, so the copy keeps storage of its own and
+    # the identity it was copied with, which this command can repair later.
+    class MakeIndependentStep
+      attr_reader :affected
+
+      def initialize(reference:, plan:, catalog:)
+        @reference = DeepCopy.call(reference).freeze
+        @old_id = plan.fetch(:old_id)
+        @mapping = DeepCopy.call(plan.fetch(:mapping)).freeze
+        @record = DeepCopy.call(plan.fetch(:record)).freeze
+        @contents = MakeIndependentStep.contents(plan).freeze
+        @catalog = catalog
+        @captured = nil
+        new_id = @record.fetch("id")
+        @affected = [{ "kind" => "zone", "id" => new_id, "change" => "updated",
+                       "reference" => @reference.merge("zone_id" => new_id) }]
+      end
+
+      # Every Face record change, without the Face paths that Make Unique replaces.
+      def self.contents(plan)
+        plan.fetch(:faces).map { |face| [face.fetch(:before), face.fetch(:after), face.fetch(:stamp)] }
+            .sort_by { |entry| CanonicalJson.generate(entry) }
+      end
+
+      def descriptor
+        { "name" => "make_zone_independent", "reference" => @reference, "mapping" => @mapping,
+          "record" => @record, "faces" => @contents }
+      end
+
+      def temporary_ids
+        []
+      end
+
+      def apply(model, _slots)
+        path = @reference.fetch("zone_path")
+        zone = Repair.occurrence_at(model, path)
+        unless zone.record.fetch("id") == @old_id
+          raise CodedError.new("target.changed", "The Zone identity changed after it was previewed.")
+        end
+
+        refusal = Repair.independence_refusal(model, zone)
+        raise refusal if refusal
+
+        zone.entity.make_unique if Occurrences.shared_storage?(zone.entity)
+        zone = Repair.occurrence_at(model, path)
+        live = Repair.plan_with(zone, @mapping, @catalog, Records::Engine.new(model, @catalog))
+        unless live.fetch(:record) == @record && MakeIndependentStep.contents(live) == @contents
+          raise CodedError.new("target.changed", "The Zone changed after Make Zone independent was previewed.")
+        end
+
+        write(zone, live)
+      end
+
+      # Writes back what apply captured, returning how many entities it touched; 0 before apply.
+      def restore
+        return 0 unless @captured
+
+        @captured.each do |store, entity, record|
+          record ? store.write(entity, record) : store.delete(entity)
+        end.length
+      end
+
+      private
+
+      def write(zone, live)
+        resolved = live.fetch(:faces).map do |face|
+          [Occurrences.face_at(zone, face.fetch(:reference).fetch("entity_path"), :mutable => true), face]
+        end
+        @captured = [[ZONE_STORE, zone.entity, ZONE_STORE.read(zone.entity)]]
+        resolved.each do |occurrence, _face|
+          @captured << [Faces::FACE_STORE, occurrence.entity, Faces::FACE_STORE.read(occurrence.entity)]
+          @captured << [STAMP_STORE, occurrence.entity, STAMP_STORE.read(occurrence.entity)]
+        end
+        ZONE_STORE.write(zone.entity, @record)
+        resolved.each do |occurrence, face|
+          after = face.fetch(:after)
+          Faces::FACE_STORE.write(occurrence.entity, after) if after
+          STAMP_STORE.write(occurrence.entity, face.fetch(:stamp))
+        end
+        @affected = @affected.take(1) + resolved.filter_map { |_occurrence, face| face_affected(face) }
+      end
+
+      def face_affected(face)
+        after = face.fetch(:after)
+        return nil unless after
+
+        { "kind" => "face", "id" => after.fetch("id"), "change" => "updated",
+          "reference" => face.fetch(:reference).merge("zone_id" => @record.fetch("id"),
+                                                      "entity_id" => after.fetch("id")) }
+      end
+    end
   end
 end

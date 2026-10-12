@@ -26,8 +26,26 @@ module PhComposer
       plan = Repair.identity_plan(request.model, zone, request.revision, request.registry.catalog, request.engine)
       proposal.add_step(RepairIdentityStep.new(:reference => zone.reference, :plan => plan),
                         :scopes => [Operations::EntityScope.new(zone.path[0...-1])])
-      retired = plan.fetch(:faces).count { |face| face.fetch(:before)&.fetch("boundary_condition", nil) == "Surface" }
-      { "zone_id" => plan.fetch(:record).fetch("id"), "retired_pairs" => retired }
+      { "zone_id" => plan.fetch(:record).fetch("id"), "retired_pairs" => retired_pairs(plan) }
+    end
+
+    # The explicit route out of a copied Zone: storage of its own, then a new identity, as one step.
+    # The original keeps its id, Faces and pairs; the copy's Surface pairs are retired.
+    def make_independent(request, proposal, zone_path:)
+      zone = Repair.occurrence_at(request.model, zone_path)
+      refusal = Repair.independence_refusal(request.model, zone)
+      raise refusal if refusal
+
+      catalog = request.registry.catalog
+      plan = Repair.identity_plan(request.model, zone, request.revision, catalog, request.engine, :isolating => true)
+      proposal.add_step(MakeIndependentStep.new(:reference => zone.reference, :plan => plan, :catalog => catalog),
+                        :scopes => [Operations::EntityScope.new(zone.path[0...-1])])
+      { "zone_id" => plan.fetch(:record).fetch("id"), "retired_pairs" => retired_pairs(plan),
+        "storage_isolated" => Occurrences.shared_storage?(zone.entity) }
+    end
+
+    def retired_pairs(plan)
+      plan.fetch(:faces).count { |face| face.fetch(:before)&.fetch("boundary_condition", nil) == "Surface" }
     end
 
     def restore(request, proposal, parent_path:, zone_id:)
@@ -60,7 +78,7 @@ module PhComposer
       zones = zones.sort_by(&:path)
       page, next_cursor = Pages.slice(request, "#{FEATURE_ID}.list", zones, :key => :path.to_proc)
       rows = page.map do |zone|
-        row = zone_view(zone, duplicates.include?(zone.record.fetch("id")), request.engine)
+        row = zone_view(zone, duplicates.include?(zone.record.fetch("id")), request.engine, request.model)
         params.key?("fields") ? project_row(row, params["fields"]) : row
       end
       overview(request.model, rows).merge("next_cursor" => next_cursor, "total" => zones.length)
@@ -71,7 +89,8 @@ module PhComposer
       zones = Occurrences.zones(request.model)
       duplicates = duplicate_ids(zones)
       overview(request.model, zones.map { |zone|
-                                zone_view(zone, duplicates.include?(zone.record.fetch("id")), request.engine)
+                                zone_view(zone, duplicates.include?(zone.record.fetch("id")), request.engine,
+                                          request.model)
                               })
     end
 
@@ -144,13 +163,26 @@ module PhComposer
       { "zone_id" => after.fetch("id") }
     end
 
-    def zone_view(zone, ambiguous, engine)
+    def zone_view(zone, ambiguous, engine, model)
+      state = zone_state(zone, ambiguous)
       Schema.view(zone.record).merge(
         "display" => Options.display(engine, zone.record),
         "reference" => zone.reference,
-        "state" => zone_state(zone, ambiguous),
-        "face_count" => Occurrences.faces(zone).length
+        "state" => state,
+        "face_count" => Occurrences.faces(zone).length,
+        "independence" => state == "found" ? nil : independence(model, zone)
       )
+    end
+
+    # Whether Make Zone independent can act on this occurrence and, when it cannot, why, in the words
+    # the panel shows. `retired_pairs` is what acting would cost in Surface pairs.
+    def independence(model, zone)
+      refusal = Repair.independence_refusal(model, zone)
+      surface = Occurrences.faces(zone).count do |face|
+        Faces::FACE_STORE.read(face.entity)&.fetch("boundary_condition", nil) == "Surface"
+      end
+      { "available" => refusal.nil?, "code" => refusal&.code, "reason" => refusal&.message,
+        "retired_pairs" => surface }
     end
 
     # The native menu's read-only availability check. Submission reads the same target through
@@ -218,6 +250,6 @@ module PhComposer
       "found"
     end
     private_class_method :zone_view, :validate_make_target!, :zone_state, :overview, :duplicate_ids,
-                         :project_row
+                         :project_row, :independence, :retired_pairs
   end
 end

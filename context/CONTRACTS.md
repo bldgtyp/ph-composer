@@ -452,8 +452,12 @@ pairing share one transaction. Geometry never selects an identity.
 - Split identity repair keeps one identity, using the stored original endpoint path or an explicit
   choice when that proof is absent; a choice that conflicts with stored proof refuses. It retires
   invalid envelopes on the pieces and their counterparts and creates no pairs.
-- A copied Zone is ambiguous until explicit identity repair gives it and its members new ids,
-  updates stamps and retires copied pairs, leaving the original untouched. Shared storage refuses.
+- A copied Zone is ambiguous until it is made independent. Make Zone independent
+  (`ph_composer.zones.make_independent`) makes the occurrence's own Group unique when it shares its
+  Faces, then gives it and its members new ids, updates stamps and retires copied pairs, as one
+  step; the other occurrence keeps its id, Faces and pairs. It refuses a Zone inside a component, a
+  Zone inside a still-shared parent Group, a nested Zone, a lock and an id held only once, each with
+  its prerequisite. Identity repair (`repair_identity`) remains for scripts and refuses shared storage.
 - Limited Restore regroups only stamped Faces and their bounding edges in one parent context and
   recovers only the Zone id, Building-Segment, Level and a new default name.
 
@@ -520,7 +524,11 @@ supplied preview digest no longer matches (`proposal.changed`). The order is fix
 session, capability and revision; resolve the whole scope and refuse non-unique targets;
 participants add their changes; steps validate projected records, references and geometry
 feasibility; capture the scoped pre-image; then open one operation, apply the steps in order,
-resolve created slots and commit. Each step validates its own writes.
+resolve created slots and commit. Each step validates its own writes. A step whose final references exist only
+after an earlier part of it runs (Make Unique creating a copy's Faces) binds the logical change
+instead: preview and digest cover its id mapping and record contents, keyed without those
+references; apply rebuilds the plan from the live entities with the same mapping, refuses
+`target.changed` if any record differs, and completes `affected` with the final references.
 
 The pre-image fingerprints the declared containers: kind, persistent id, parent path,
 transformation, loops and every `ph_composer.*` dictionary. Coordinates are rounded to six decimals

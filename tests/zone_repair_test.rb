@@ -8,6 +8,7 @@ require_relative "test_helper"
 class ZoneRepairTest < PhComposerTestCase
   API = PhComposer::API
   ZONE_STORE = PhComposer::Zones::ZONE_STORE
+  MAKE_INDEPENDENT = "ph_composer.zones.make_independent"
   STAMP_STORE = PhComposer::Zones::STAMP_STORE
   FACE_STORE = PhComposer::Zones::Faces::FACE_STORE
   COPY_EXTENSION = PhComposer::Records::Extension.new(
@@ -339,6 +340,157 @@ class ZoneRepairTest < PhComposerTestCase
     assert_equal %w[refused zone.identity_in_use none], result.values_at("status", "code", "effect")
   end
 
+  # Make Zone independent: the copy gets its own Faces, then its own identity, in one operation.
+  def test_make_independent_isolates_a_shared_copy_and_leaves_the_original_untouched
+    original, copy = shared_copy(700)
+    before = original_state(original)
+    params = { "zone_path" => [copy.persistent_id] }
+    preview = API.preview(:context => @context, :name => MAKE_INDEPENDENT, :params => params)
+
+    result = invoke(MAKE_INDEPENDENT, params, :digest => preview.fetch("proposal_digest"))
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    assert result.dig("value", "storage_isolated")
+    assert_equal before, original_state(original)
+    refute_equal original.definition.persistent_id, copy.definition.persistent_id
+    assert_empty copy.entities.to_a & original.entities.to_a
+    new_id = ZONE_STORE.read(copy).fetch("id")
+    assert_equal result.dig("value", "zone_id"), new_id
+    copy.entities.to_a.each { |face| assert_equal new_id, STAMP_STORE.read(face).fetch("zone_id") }
+    assert_empty copy.entities.to_a.map { |f| FACE_STORE.read(f).fetch("id") } &
+                 original.entities.to_a.map { |f| FACE_STORE.read(f).fetch("id") }
+    assert_equal %w[found found], zone_states
+  end
+
+  # The copy's Face entities exist only after Make Unique, so the outcome names those, not the shared ones.
+  def test_make_independent_reports_the_isolated_faces_it_wrote
+    original, copy = shared_copy(720)
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    faces = result.fetch("affected").select { |entry| entry.fetch("kind") == "face" }
+    assert_equal copy.entities.to_a.map(&:persistent_id).sort,
+                 faces.map { |entry| entry.dig("reference", "entity_path").last }.sort
+    refute_includes faces.map { |entry| entry.dig("reference", "entity_path").last },
+                    original.entities.to_a.first.persistent_id
+  end
+
+  def test_make_independent_retires_the_copied_pair_and_keeps_the_original_pair
+    left, right = solved_pair
+    copy = Sketchup::Group.new(915, right.entities)
+    copy.set_attribute("ph_composer.zone", "record", right.get_attribute("ph_composer.zone", "record"))
+    @model.entities << copy
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal 1, result.dig("value", "retired_pairs")
+    refute FACE_STORE.read(copy.entities.to_a.first).key?("adjacency")
+    [left, right].each do |group|
+      assert_equal "Surface", FACE_STORE.read(group.entities.to_a.first).fetch("boundary_condition")
+    end
+  end
+
+  def test_make_independent_reidentifies_a_copy_that_already_has_its_own_storage
+    _original, copy = copied_zone
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    refute result.dig("value", "storage_isolated")
+    assert_equal %w[found found], zone_states
+  end
+
+  def test_make_independent_refuses_what_it_cannot_isolate_and_says_what_to_do
+    unique = box_group(740, 2)
+    @model.entities << unique
+    make_zone(unique)
+    _original, locked = shared_copy(760)
+    locked.locked = true
+
+    assert_equal %w[refused zone.identity_unique],
+                 invoke(MAKE_INDEPENDENT, { "zone_path" => [740] }).values_at("status", "code")
+    refusal = invoke(MAKE_INDEPENDENT, { "zone_path" => [locked.persistent_id] })
+    assert_equal %w[refused target.locked none], refusal.values_at("status", "code", "effect")
+    assert_match(/Unlock it first/, refusal.fetch("message"))
+  end
+
+  # A floor copied as one Group shares its Zones through the parent: isolating only the inner Zone
+  # would make Groups unique inside the original floor's contents (P2, S5).
+  def test_make_independent_refuses_a_zone_whose_parent_group_is_still_shared
+    zone = box_group(780, 2)
+    floor = Sketchup::Group.new(790, Sketchup::Entities.new([zone]))
+    @model.entities << floor
+    ZONE_STORE.write(zone, zone_record("zon_#{'f' * 12}"))
+    twin = Sketchup::Group.new(795, floor.entities)
+    @model.entities << twin
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [795, 780] })
+
+    assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
+    assert_match(/Make Unique first/, result.fetch("message"))
+  end
+
+  def test_make_independent_refuses_inside_a_component
+    group = box_group(800, 2)
+    ZONE_STORE.write(group, zone_record("zon_#{'c' * 12}"))
+    definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([group]), :name => "unit")
+    instance = @model.entities.add_instance(definition, Geom::Transformation.new)
+    @model.entities.add_instance(definition, Geom::Transformation.new)
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [instance.persistent_id, group.persistent_id] })
+
+    assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
+    assert_match(/component/, result.fetch("message"))
+  end
+
+  def test_a_failed_make_independent_rolls_back_storage_and_records
+    original, copy = shared_copy(820)
+    before = [ZONE_STORE.read(copy), copy.definition.instances.length]
+    store = FACE_STORE
+    store.singleton_class.send(:alias_method, :__test_write, :write)
+    store.define_singleton_method(:write) { |_entity, _record| raise "disk full" }
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal "failed", result.fetch("status")
+    assert_equal "rolled_back", result.fetch("effect")
+    live = @model.entities.to_a.find { |entity| entity.persistent_id == copy.persistent_id }
+    assert_equal before, [ZONE_STORE.read(live), live.definition.instances.length]
+    assert_equal %w[shared_definition shared_definition], zone_states
+    refute_nil original
+  ensure
+    store.singleton_class.send(:remove_method, :write)
+    store.singleton_class.send(:alias_method, :write, :__test_write)
+    store.singleton_class.send(:remove_method, :__test_write)
+  end
+
+  def test_a_preview_goes_stale_when_a_copied_face_changes
+    _original, copy = shared_copy(840)
+    params = { "zone_path" => [copy.persistent_id] }
+    preview = API.preview(:context => @context, :name => MAKE_INDEPENDENT, :params => params)
+    face = copy.entities.to_a.first
+    FACE_STORE.write(face, FACE_STORE.read(face).merge("user_data" => { "note" => "changed" }))
+
+    result = invoke(MAKE_INDEPENDENT, params, :digest => preview.fetch("proposal_digest"),
+                                              :revision => preview["revision"])
+
+    assert_equal "refused", result.fetch("status")
+    assert_equal "none", result.fetch("effect")
+  end
+
+  def test_the_zones_read_says_whether_make_independent_applies
+    shared_copy(860)
+    unique = box_group(880, 2)
+    @model.entities << unique
+    make_zone(unique)
+
+    rows = zones_value.fetch("zones").to_h { |zone| [zone.dig("reference", "zone_path"), zone["independence"]] }
+
+    assert_nil rows.fetch([880])
+    assert rows.fetch([910]).fetch("available")
+    assert rows.fetch([860]).fetch("available"), "both occurrences carry the id; either can take a new one"
+  end
+
   private
 
   def register_copy_extension
@@ -357,10 +509,33 @@ class ZoneRepairTest < PhComposerTestCase
                              "name" => "Garage", "kind" => "garage", "temperature_reduction_factor" => 0.95)
   end
 
-  def invoke(name, params)
+  def invoke(name, params, digest: nil, revision: nil)
     @sequence += 1
-    API.invoke(:context => @context, :name => name, :params => params,
-               :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
+    request = { "sequence" => @sequence, "expected_revision" => revision || @session.revision }
+    request["proposal_digest"] = digest if digest
+    API.invoke(:context => @context, :name => name, :params => params, :request => request)
+  end
+
+  # A Zone with classified Faces and a copy made the way SketchUp makes one: a second Group over the
+  # same definition, carrying a copy of the Zone record.
+  def shared_copy(base)
+    original = box_group(base, 3)
+    @model.entities << original
+    make_zone(original)
+    classify_all
+    copy = Sketchup::Group.new(base + 50, original.entities)
+    copy.set_attribute("ph_composer.zone", "record", original.get_attribute("ph_composer.zone", "record"))
+    @model.entities << copy
+    [original, copy]
+  end
+
+  def original_state(group)
+    [ZONE_STORE.read(group), group.entities.to_a, group.entities.to_a.map { |face| FACE_STORE.read(face) }]
+  end
+
+  def zone_record(id)
+    { "id" => id, "schema_version" => 1, "name" => "Zone", "building_segment" => "Main Building", "level" => nil,
+      "ground_depth_mm" => 0.0, "user_data" => {}, "extension_data" => {} }
   end
 
   def zones_value
