@@ -1,8 +1,9 @@
 # A copied Zone cannot be edited, and the refused edit locks the Zones / Faces screen
 
 DATE: 2026-10-12
-STATUS: Scoped. Reproduced on the host and root-caused 2026-10-12. Direction decided by Ed
-2026-10-12 (D-1 to D-6). Phases planned in [PLAN.md](PLAN.md); none authorized.
+STATUS: In progress. Reproduced and root-caused 2026-10-12; direction decided by Ed (D-1 to D-6).
+Ed authorized the packet on 2026-10-12 (implement-loop on `fix/copied-zone-edit-refusal`). P1
+implemented on that branch; P2 next. Phases in [PLAN.md](PLAN.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -152,7 +153,7 @@ refused choice (a stale revision, a locked Group) still locks the screen until i
 
 | Phase | State | Notes |
 | --- | --- | --- |
-| [P1](PLAN.md#p1-the-panel-is-never-stuck) | Scoped | No dependency; can start first |
+| [P1](PLAN.md#p1-the-panel-is-never-stuck) | Implemented on branch `fix/copied-zone-edit-refusal` | Offline suite and host check passed 2026-10-12; see [P1 outcome](PLAN.md#p1-outcome) |
 | [P2](PLAN.md#p2-host-spike) | Scoped | Development-only; gates P3 and P4 |
 | [P3](PLAN.md#p3-make-zone-independent-the-explicit-command) | Scoped | Core contract question for architecture review |
 | [P4](PLAN.md#p4-automatic-independence-on-copy) | Scoped | Depends on P2 measurements and P3's step |

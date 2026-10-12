@@ -1,7 +1,8 @@
 # Plan: automatic Zone independence on copy, and a panel that is never stuck
 
 DATE: 2026-10-12
-STATUS: Scoped. No phase authorized.
+STATUS: In progress on `fix/copied-zone-edit-refusal`, authorized by Ed 2026-10-12. P1 implemented on
+branch; P2 to P5 open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -72,6 +73,49 @@ visibility after a gating snapshot, retry using the current reference/values/rev
 the current value to cancel without a request. An uncertain failed outcome requires authoritative
 refresh and an accurate warning; it is not an ordinary no-effect refusal. Pending cancellation
 does not retract an already-sent request.
+
+#### P1 outcome
+
+Implemented on branch 2026-10-12. What landed, by file:
+
+- `html/features/zones/zone_cells.js`: a refused choice drops its draft, shows the Model's value and
+  keeps the reason inline until the Zone changes or the user chooses again; nothing is held. A
+  completed-but-contradicted choice is held with a visible in-cell Cancel; choosing the Model's value
+  cancels without a request; a new choice retries against current values. Shared Zones
+  (`ambiguous`, `shared_definition`, `wrong_hierarchy`) render read-only pills unless a held draft
+  exists. `effect: unknown` failures say the edit may have been partly applied. The host already
+  publishes the authoritative snapshot before every action result (`shell/panel.rb`), so the value
+  shown after an uncertain failure is current; no extra refresh request was needed.
+- `html/record_edits.js`: opt-in `cancelControl` (Cancel on a refused, invalid or now-read-only
+  draft; typed text kept until then) and `refusalText(outcome)`. Inventory and Assembly editor
+  consumers unchanged.
+- `html/features/zones/overview.js`: shared Zones carry an alert-icon marker with a specific
+  tooltip (no word fits the Hierarchy column; measured on the host); their Face chips and Assembly
+  are read only; Suggest is disabled with a reason; Solve, the selection bar and the native
+  handoff refuse the whole set when any target is in a shared Zone, with a reason button. The held
+  draft guard notice, including a refused tab change, offers "Cancel the Zone edit".
+- Kit: `panel.notify(message, tone, action)`, `panel.outcomeText(translate)` (Zone writes refused
+  with `target.ambiguous` or `target.shared_definition` now name the route out), the floating
+  notice's action button, the table marker `icon`, `.phc-cell-cancel`, and error cells stacking
+  above later sticky rows (the bubble was hidden under the next rows' sticky Name cells).
+- `tests/overview_panel_test.js`: the old retain-until-Escape expectation replaced; refused,
+  uncertain, held, retry, current-value cancel, Name/Ground depth Cancel, read-only underneath a
+  typed draft, guard and tab notices, stale diagnostic, shared rows, whole-set refusal.
+
+Verification: `node tools/js_test_guard.js node --test tests/*_test.js` 507/507; `make lint-js`
+clean; runtime manifest refreshed. Review: one Sonnet pass with the architecture and UI rubrics;
+in-scope findings fixed (stranded typed draft, tab notice Cancel, stale diagnostic, handoff
+wording, Solve reason, choice-cell anchoring). Host, SketchUp 26.1.188, installed build of this
+branch, fresh process on `_private/host/copied-zone-bug/run.skp` from `error-original.skp`: shared
+pair reads read-only with the alert marker; after an API repair, a Zone under a locked parent Group
+refused a typed rename (`target.locked`), kept the text with in-cell Cancel, the filter was refused
+with "Cancel the Zone edit" on the notice, both Cancel routes restored the name and released the
+screen, all by background mouse and keyboard. Native `<select>` menus cannot be driven in the
+background, so the choice-cell paths rest on the offline tests.
+
+Left out: the notice action does not return focus anywhere after it runs, and its label is not in
+the live region (review finding 9); the PH-Composer Design System artifact was not re-synced
+because the kit change is on a branch, not `main`.
 
 ### P2: host spike
 

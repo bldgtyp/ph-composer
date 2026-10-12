@@ -78,7 +78,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     var changes = { actionResult: payload };
     if (payload.session !== previous.session) return previous;
     if (outcome.status !== "completed") {
-      changes.notice = { message: outcome.message || "The change was not applied.",
+      changes.notice = { message: outcomeWords(payload) || outcome.message || "The change was not applied.",
         tone: outcome.status === "failed" ? "error" : "warning" };
     }
     return withUI(previous, changes);
@@ -298,7 +298,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     if (current === shownNotice) return;
     shownNotice = current;
     if (!current) { notice.clear(); return; }
-    notice.show(current.message, { tone: current.tone,
+    notice.show(current.message, { tone: current.tone, action: current.action,
       persistent: current.tone === "warning" || current.tone === "error" });
   }
 
@@ -421,10 +421,23 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
     }
   }
 
-  /* A notice raised by the page itself, such as a refused navigation. It never reaches the host. */
-  function notify(message, tone) {
-    state = withUI(state, { notice: { message: message, tone: tone || "info" } });
+  /* A notice raised by the page itself, such as a refused navigation. It never reaches the host. An
+     `action` ({ label, run }) puts the way out on the notice itself, such as cancelling the held draft. */
+  function notify(message, tone, action) {
+    state = withUI(state, { notice: { message: message, tone: tone || "info", action: action || null } });
     render();
+  }
+
+  /* A view may restate a refused or failed outcome of its own request in its users' words; the host's message
+     and code stay the contract. Each translator answers text or null for `{ request_id, session, outcome }`. */
+  var translators = [];
+  function outcomeText(translate) { translators.push(translate); }
+  function outcomeWords(payload) {
+    for (var index = 0; index < translators.length; index += 1) {
+      var text = translators[index](payload);
+      if (text) return text;
+    }
+    return null;
   }
 
   /* Sent once the page has started, so the first snapshot has somewhere to render. */
@@ -438,7 +451,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   api = { receive: receive, section: section, region: region, inspectorHeld: inspectorHeld, ready: ready,
     state: state, showTab: showTab, navigate: navigate,
     send: send,
-    setPreference: setPreference, repaint: repaint, notify: notify,
+    setPreference: setPreference, repaint: repaint, notify: notify, outcomeText: outcomeText,
     // `guard(tab)` answers why the tab may not change, or null; `refused`, when given, runs after a
     // refusal is shown, so a section can point the user at the work that holds the tab.
     navigationGuard: function (name, guard, refused) { navigationGuards[name] = { guard: guard, refused: refused }; },

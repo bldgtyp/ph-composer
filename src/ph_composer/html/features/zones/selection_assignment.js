@@ -7,11 +7,13 @@ function (panel, snapshot, requests, assignment, assemblies) {
   var CLOSE = "ph_composer.zones.faces.close_attached_assignment";
 
   /* `targets`, when given, answers the Faces the Assembly control assigns to (the checked set) instead of
-     SketchUp's selection. */
-  function SelectionAssignment(session, send, guard, refused, targets) {
+     SketchUp's selection. `blocked(faces)`, when given, names why a handoff's Faces cannot be assigned
+     at all (one is read only); the handoff is then refused whole, like a held draft. */
+  function SelectionAssignment(session, send, guard, refused, targets, blocked) {
     this.session = session;
     this.send = send;
     this.guard = guard;
+    this.blocked = blocked || function () { return null; };
     this.refused = refused || function (reason) { panel.notify(reason, "warning"); };
     this.closeRequest = requests.channel(session, send, "selection_assignment_close", "view.invoke");
     this.assembly = new assemblies.Picker(session, send, guard, this.refused, targets);
@@ -28,7 +30,7 @@ function (panel, snapshot, requests, assignment, assemblies) {
     if (this.form) { this.form.consume(state); return; }
     var pending = snapshot.value(state, SECTION);
     if (!pending || !pending.token || pending.token === this.token) return;
-    var reason = this.guard();
+    var reason = this.guard() || this.blocked(pending.faces || []);
     if (reason) {
       var fresh = this.waiting !== pending.token;
       this.waiting = pending.token;

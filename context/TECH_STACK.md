@@ -557,7 +557,9 @@ this foundation when their feature lands.
 - **Panel.** Shared table, view controls and anchored bubbles present detached snapshots.
   `record_edits` is configured with an action and field list, sends `values` and
   `expected_values`, and preserves refused drafts. It confirms an edit against both its
-  correlated outcome and the authoritative snapshot. Peer subtabs share one navigation module.
+  correlated outcome and the authoritative snapshot. An owner opts into `cancelControl`, a visible
+  Cancel on a draft that needs one, and `refusalText(outcome)`, its own words for a refusal.
+  Peer subtabs share one navigation module.
 - **Export.** A feature declares its versioned extraction contributor and the metadata keys it
   permits in HBJSON. Its Python section is explicitly composed with declared requirements.
   Export reads the authored records; it never repairs or substitutes for missing definitions.
@@ -575,6 +577,14 @@ this foundation when their feature lands.
   does.
 - One floating notice, the panel's (`panel.notify`). A feature view does not build its own. An
   information notice fades on the next interaction and never blocks the control beneath it.
+  `panel.notify(message, tone, action)` may carry `{ label, run }`, the way out on the notice itself
+  (cancel the held draft). `panel.outcomeText(translate)` lets a view restate a refused or failed
+  outcome of its own request; the host's message and code stay the contract.
+- No refusal leaves a screen behind an invisible draft. A refused choice that wrote nothing returns
+  to the Model's value and keeps its reason; a draft that is held (refused typed text, a conflict)
+  shows a visible Cancel, and a guard notice blocked by it offers that Cancel too
+  (`planning/bugs/copied-zone-edit-refusal/`, D-4). A bulk change with any read-only target is
+  refused whole, never narrowed to the writable part of the checked set (D-5).
 - `RecordForm.required(label, control)` marks a field a record form waits for, and a disabled Create
   says why in the form's status line. New acts at once where the record draws something to work on;
   a record that is only numbers keeps a form.

@@ -381,7 +381,10 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
         if (!entry.marker) {
           entry.marker = element("span", "phc-row-marker"); entry.cells.hierarchy.appendChild(entry.marker);
         }
-        entry.marker.textContent = marker.text;
+        // An `icon` marker shows a glyph where a word would not fit; its words stay in tooltip and label.
+        if (marker.icon) entry.marker.replaceChildren(icons.glyph(marker.icon));
+        else entry.marker.textContent = marker.text;
+        entry.marker.classList.toggle("is-icon", Boolean(marker.icon));
         entry.marker.setAttribute("data-tooltip", marker.tooltip); entry.marker.hidden = false;
         entry.marker.setAttribute("role", "img");
         entry.marker.setAttribute("aria-label", marker.tooltip);
