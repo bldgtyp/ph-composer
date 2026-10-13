@@ -24,9 +24,10 @@
     return { quantity: "length_mm", unit: "mm", label: label, scope: SCOPE, allowZero: false };
   }
 
-  /* The New part dialog: a label and a length, sent as one create. The unit field parses on Save, so Enter,
-     the Create button and a typed suffix all reach the same submit. */
+  /* The New part dialog: a label and a length, sent as one create. The Create button, Enter in the label and
+     Enter in the length all reach the one submit, which parses the length (a typed suffix included). */
   var NewPartForm = RecordForm.extend(function (session, send, changed) {
+    var self = this;
     RecordForm.call(this, session, send, {
       title: "New part", action: ID + ".create_parts", label: "create", submitLabel: "Create",
       pendingText: "Creating...", failureText: "The part was not created.", changed: changed
@@ -40,9 +41,21 @@
     lengthRow.appendChild(this.length.root);
     this.form.appendChild(labelRow);
     this.form.appendChild(lengthRow);
+    // The unit field owns the length draft and swallows Enter on its input, so the form takes Enter while
+    // the event travels down to the input, as the Assembly builder does: a capture listener on an ancestor,
+    // because the host floor's Chromium 88 runs a target's own listeners in the order they were added.
+    this.onKeydown = function (event) {
+      if (event.key !== "Enter" || event.target !== self.length.input) return;
+      event.preventDefault();
+      event.stopPropagation();
+      self.submit();
+    };
+    this.form.addEventListener("keydown", this.onKeydown, true);
+    this.retired = false;
     this.finish();
   });
   NewPartForm.prototype.submit = function () {
+    if (this.retired || this.busy() || !this.root.isConnected) return;
     var parsed = this.length.commit();
     if (!parsed.ok) return;
     if (!this.label.value.trim()) {
@@ -50,6 +63,32 @@
       return;
     }
     this.run({ definition_label: "Example", parts: [{ label: this.label.value.trim(), length_mm: parsed.value }] });
+  };
+  /* A retired form sends nothing and opens nothing, whoever still holds a reference to it. */
+  NewPartForm.prototype.run = function (params) {
+    return !this.retired && RecordForm.prototype.run.call(this, params);
+  };
+  NewPartForm.prototype.show = function () {
+    if (this.retired) return;
+    this.submitButton.disabled = this.busy();
+    RecordForm.prototype.show.call(this);
+  };
+  /* The kit leaves Create's availability to the form: once a refused or failed create settles, the user
+     can correct the draft and create again. */
+  NewPartForm.prototype.settle = function (state) {
+    var outcome = RecordForm.prototype.settle.call(this, state);
+    if (outcome) this.submitButton.disabled = false;
+    return outcome;
+  };
+  /* Permanent: the Model this form belonged to is no longer shown. Withdraw alone forgets the request and
+     closes, and stays reusable; disposal also ends the length field's preference subscription and the
+     Enter route. A form disposes the children it built. */
+  NewPartForm.prototype.dispose = function () {
+    if (this.retired) return;
+    this.retired = true;
+    this.withdraw();
+    this.form.removeEventListener("keydown", this.onKeydown, true);
+    this.length.dispose();
   };
 
   var view = { session: null, fields: {}, rows: {}, requests: null, form: null };
@@ -59,7 +98,7 @@
      input would take the user's focus away. */
   function resetFor(root, state, send) {
     Object.keys(view.fields).forEach(function (id) { view.fields[id].dispose(); });
-    if (view.form) view.form.withdraw();
+    if (view.form) view.form.dispose();
     view.session = state.session;
     view.fields = {};
     view.rows = {};
@@ -78,7 +117,9 @@
     var current = preferences.current();
     ui.memoPaint(view.header, "header", [current.unitSystem, preferences.dimensionFormat(SCOPE, current.unitSystem)],
       function () {
-        var create = ui.button("New part", function () { view.form.show(); });
+        // The form this header was painted for, so a retained old header never opens a later Model's form.
+        var form = view.form;
+        var create = ui.button("New part", function () { form.show(); });
         create.className = "primary";
         // A section inside a pane, not a page: it keeps an h2 and borrows the header's action group.
         var actions = ui.element("div", "phc-heading-actions");

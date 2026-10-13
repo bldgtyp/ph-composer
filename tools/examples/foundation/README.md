@@ -52,6 +52,27 @@ is one extraction the export contributors produce and the result the sections tr
    the section one record at a time and declares the other sections it requires with a typed
    `Requirement`; a build lists it in `python/ph_composer_translation/composition.py`.
 
+## Keyboard and lifecycle in the editor
+
+The New part dialog shows who owns what in a form built from the kit.
+
+- **Field commit versus form submit.** The length `UnitField` owns its draft: it parses, keeps an
+  invalid entry with its message, and on Enter commits and swallows the key. The form owns submit.
+  So the form takes Enter while the event travels down to the length input, with a capture listener
+  on the form, and calls the one `submit` the Create button and Enter in the label also reach.
+  `submit` parses the length and checks the label; an invalid draft sends nothing and stays on
+  screen until it is corrected or cancelled. The Assembly builder's dimension fields are the
+  shipping precedent.
+- **Pending.** `RecordForm.run` allows one request in flight, so a repeated Enter or Create sends
+  nothing more; the result settles once and a completed create closes the dialog. The kit leaves
+  Create's availability to the form, so the form makes Create available again when a refused or
+  failed create settles, keeping its message until the user corrects the draft or cancels.
+- **Withdraw versus dispose.** `withdraw` forgets the pending request and closes the dialog; the
+  form stays usable. `dispose` is permanent and runs when the panel shows another Model: the form
+  withdraws, removes its Enter route and disposes the length field it built, which ends that
+  field's unit-preference subscription. Afterwards its `submit`, `run` and `show` do nothing, and
+  the header button opens only the form it was painted with. A form disposes the children it built.
+
 ## Try it in a host
 
 With PH-Composer installed and the development bridge running:

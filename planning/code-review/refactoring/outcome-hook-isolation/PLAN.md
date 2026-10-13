@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped; implementation ready, not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+ISSUE: [#100](https://github.com/bldgtyp/ph-composer/issues/100)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDING: [JS-02](../../sections/05-javascript.md#js-02-an-optional-outcome-translator-can-strand-an-unrelated-requesting-view)
 DEPENDS ON: nothing. Lands on its own.

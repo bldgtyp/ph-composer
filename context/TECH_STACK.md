@@ -585,8 +585,11 @@ this foundation when their feature lands.
 - One floating notice, the panel's (`panel.notify`). A feature view does not build its own. An
   information notice fades on the next interaction and never blocks the control beneath it.
   `panel.notify(message, tone, action)` may carry `{ label, run }`, the way out on the notice itself
-  (cancel the held draft). `panel.outcomeText(translate)` lets a view restate a refused or failed
-  outcome of its own request; the host's message and code stay the contract.
+  (cancel the held draft). `panel.outcomeText(translate, { owner })` lets a view restate a refused or
+  failed outcome of its own request and returns a disposer; the host's message and code stay the
+  contract. Each translator gets a detached copy and answers a string or null; one that throws or
+  answers anything else is skipped and logged under its owner, so the result is always recorded and
+  its requester settles.
 - No refusal leaves a screen behind an invisible draft. A refused choice that wrote nothing returns
   to the Model's value and keeps its reason; a draft that is held (refused typed text, a conflict)
   shows a visible Cancel, and a guard notice blocked by it offers that Cancel too

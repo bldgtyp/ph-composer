@@ -1107,7 +1107,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   panel.outcomeText(function (result) {
     if (!screen || result.session !== screen.session || !screen.zoneCells.owns(result.request_id)) return null;
     return ZoneCells.refusalText(result.outcome);
-  });
+  }, { owner: "ph_composer.zones" });
   /* Another tab can open this one with Faces checked and, with `locate: true`, framed
      (`panel.navigate("overview", { check: references, locate: true })`), as the Assemblies tab's "Select
      faces using" does. Locating here keeps the outline this screen's to clear. */
