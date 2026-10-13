@@ -19,7 +19,7 @@ module PhComposer
       # The Face as it stands, for the side a cut would not change.
       def whole(occurrence)
         Piece.new(:entity => occurrence.entity, :persistent_id => occurrence.entity.persistent_id,
-                  :geometry => FaceGeometry.capture(occurrence.entity, occurrence.transform))
+                  :geometry => FaceCapture.call(occurrence.entity, occurrence.transform))
       end
 
       def apply(occurrence, polygon_m)
@@ -34,7 +34,7 @@ module PhComposer
         end
 
         entities = container(occurrence.entity)
-        original = FaceGeometry.capture(occurrence.entity, occurrence.transform)
+        original = FaceCapture.call(occurrence.entity, occurrence.transform)
         original_persistent_id = occurrence.entity.persistent_id
         before = coplanar_faces(entities, occurrence.transform, original)
         outlines = complete ? polygons_m[0...-1] : polygons_m
@@ -58,7 +58,7 @@ module PhComposer
       # rest of its box in the same collection, and none of that is a result of this cut.
       def coplanar_faces(entities, transform, original)
         entities.to_a.grep(Sketchup::Face).filter_map do |face|
-          geometry = FaceGeometry.capture(face, transform)
+          geometry = FaceCapture.call(face, transform)
           next unless same_plane?(geometry, original)
 
           Piece.new(:entity => face, :geometry => geometry, :persistent_id => face.persistent_id)

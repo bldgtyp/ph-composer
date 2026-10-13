@@ -111,8 +111,8 @@ module AdjacencyWalkthrough
     right = named_group(right_name)
     left_face = left.entities.grep(Sketchup::Face).first
     right_face = right.entities.grep(Sketchup::Face).first
-    a = PhComposer::FaceGeometry.capture(left_face, left.transformation)
-    b = PhComposer::FaceGeometry.capture(right_face, right.transformation)
+    a = PhComposer::FaceCapture.call(left_face, left.transformation)
+    b = PhComposer::FaceCapture.call(right_face, right.transformation)
     PhComposer::FaceGeometry.equivalent_full_face?(
       a, b, :plane_tolerance_m => PhComposer::Zones::Adjacency::PLANE_TOLERANCE_M,
             :angle_tolerance_degrees => PhComposer::Zones::Adjacency::NORMAL_ANGLE_TOLERANCE_DEGREES,

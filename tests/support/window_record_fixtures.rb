@@ -41,7 +41,7 @@ module WindowRecordFixtures
                            :parent_path => located.parent_path, :transform => located.transform,
                            :reference => reference,
                            :values => values, :zone_state => "found", :locator => locator,
-                           :geometry => PhComposer::FaceGeometry.capture(located.entity, located.transform))
+                           :geometry => PhComposer::FaceCapture.call(located.entity, located.transform))
   end
 
   def thermal_proof

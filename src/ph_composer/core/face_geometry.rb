@@ -1,10 +1,14 @@
 # frozen_string_literal: true
 
+require_relative "canonical_json"
+require_relative "errors"
 require_relative "vector3"
 
 module PhComposer
   # Detached, SI geometry for one SketchUp Face occurrence. Both adjacency and export use this
   # representation, so a transform or digest cannot mean one thing to the solver and another to HBJSON.
+  # Everything here is pure over Arrays of Floats and loads without SketchUp
+  # (tests/face_geometry_pure_test.rb); FaceCapture reads a live Face into it.
   module FaceGeometry
     INCH_TO_M = 0.0254
     QUANTUM_M = 0.000001 # 0.001 mm, the geometry-stamp normalization.
@@ -31,24 +35,19 @@ module PhComposer
 
     module_function
 
-    def capture(face, transform)
-      loops = face.loops.map do |loop|
-        loop.vertices.map do |vertex|
-          point = vertex.position.transform(transform)
-          [point.x.to_f * INCH_TO_M, point.y.to_f * INCH_TO_M, point.z.to_f * INCH_TO_M]
-        end
-      end
-      normal = world_normal(face.normal, transform)
-      plane = Vector3.dot(normal, loops.fetch(0).fetch(0))
-      area = loop_area_m2(loops.fetch(0)) - loops.drop(1).sum { |loop| loop_area_m2(loop) }
+    # The detached value for one Face from explicit world loops in metres (outer first) and its
+    # world unit normal. Pure: the SketchUp read is FaceCapture's.
+    def build(loops_m:, normal:, has_glued_instances: false)
+      plane = Vector3.dot(normal, loops_m.fetch(0).fetch(0))
+      area = loop_area_m2(loops_m.fetch(0)) - loops_m.drop(1).sum { |loop| loop_area_m2(loop) }
       canonical = {
         "plane" => quantize(plane), "normal" => normal.map { |value| quantize(value) },
-        "outer" => canonical_loop(loops.fetch(0)),
-        "holes" => loops.drop(1).map { |loop| canonical_loop(loop) }.sort
+        "outer" => canonical_loop(loops_m.fetch(0)),
+        "holes" => loops_m.drop(1).map { |loop| canonical_loop(loop) }.sort
       }
-      Snapshot.new(:loops_m => loops, :normal => normal, :plane_offset_m => plane, :area_m2 => area,
+      Snapshot.new(:loops_m => loops_m, :normal => normal, :plane_offset_m => plane, :area_m2 => area,
                    :digest => "sha256:#{CanonicalJson.digest(canonical)}",
-                   :has_glued_instances => face.get_glued_instances.any?)
+                   :has_glued_instances => has_glued_instances)
     end
 
     # SDK Face.area includes visual openings cut by glued components, even when those openings
@@ -137,9 +136,10 @@ module PhComposer
       Math.sqrt(left.zip(right).sum { |a, b| (a - b)**2 })
     end
 
-    # Refuses a transform that collapses geometry (a zero scale); answers its linear determinant.
-    def check_transform!(transformation)
-      values = transformation.to_a
+    # Refuses a 4x4 column-major matrix, 16 Floats, that collapses geometry (a zero scale); answers
+    # its linear determinant.
+    def check_transform!(matrix)
+      values = matrix
       a, b, c = values[0], values[4], values[8]
       d, e, f = values[1], values[5], values[9]
       g, h, i = values[2], values[6], values[10]
@@ -149,17 +149,20 @@ module PhComposer
       determinant
     end
 
-    def world_normal(normal, transformation)
-      values = transformation.to_a
+    # The world unit normal of local `normal` ([x, y, z]) under a 4x4 column-major matrix of 16 Floats:
+    # the inverse transpose, so a non-uniform or mirrored scale keeps the normal perpendicular.
+    def world_normal(normal, matrix)
+      values = matrix
       a, b, c = values[0], values[4], values[8]
       d, e, f = values[1], values[5], values[9]
       g, h, i = values[2], values[6], values[10]
-      determinant = check_transform!(transformation)
+      determinant = check_transform!(matrix)
+      nx, ny, nz = normal
 
       vector = [
-        ((e * i - f * h) * normal.x + (f * g - d * i) * normal.y + (d * h - e * g) * normal.z) / determinant,
-        ((c * h - b * i) * normal.x + (a * i - c * g) * normal.y + (b * g - a * h) * normal.z) / determinant,
-        ((b * f - c * e) * normal.x + (c * d - a * f) * normal.y + (a * e - b * d) * normal.z) / determinant
+        ((e * i - f * h) * nx + (f * g - d * i) * ny + (d * h - e * g) * nz) / determinant,
+        ((c * h - b * i) * nx + (a * i - c * g) * ny + (b * g - a * h) * nz) / determinant,
+        ((b * f - c * e) * nx + (c * d - a * f) * ny + (a * e - b * d) * nz) / determinant
       ]
       length = Math.sqrt(vector.sum { |value| value**2 })
       raise CodedError.new("geometry.invalid", "The Face normal has no direction.") if length.zero?
@@ -179,7 +182,7 @@ module PhComposer
     end
 
     private_class_method :opposite_normals?, :same_loops?, :match_unordered,
-                         :point_close?, :minimum_edge, :distance, :world_normal, :canonical_loop, :quantize,
+                         :point_close?, :minimum_edge, :distance, :canonical_loop, :quantize,
                          :loop_area_m2
   end
 end

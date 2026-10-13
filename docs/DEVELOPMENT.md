@@ -35,7 +35,10 @@ installed extension over the manifest's 24,000,000-byte ceiling.
 `test` loads the real extension code against a stub SketchUp API and runs the Ruby and Python
 suites in one pass. JavaScript tests are discovered by the glob `tests/*_test.js` and run under
 `node --test` against a DOM double. The stubs say in comments what they support and what they
-refuse to pretend to support; see `tests/support/.index.md`.
+refuse to pretend to support; see `tests/support/.index.md`. A rule that needs no host is tested
+without the stub: `tests/face_geometry_pure_test.rb` loads only `core/face_geometry.rb` and runs in a
+bare Ruby process, and `context/EXTENSIBILITY.md`, "Organization and dependencies", lists which
+foundation files are pure and which are native adapters.
 
 ## Lint
 

@@ -73,7 +73,7 @@ module PhComposer
           end
           located = @locator.call(model, @host_reference, :mutable => true)
           entities, face, transform = located.entities, located.entity, located.transform
-          geometry = FaceGeometry.capture(face, transform)
+          geometry = FaceCapture.call(face, transform)
           unless geometry.to_h == @host_geometry && transform.to_a == @host_transform
             NativeUnit.changed!("The host Face changed after preview.")
           end

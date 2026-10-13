@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped optional improvement; implementation ready, lowest priority. Not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+ISSUE: [#120](https://github.com/bldgtyp/ph-composer/issues/120)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDING: [F03](../../sections/01-foundation.md#f03-the-common-foundation-mixes-pure-and-native-geometry-responsibilities)
 DEPENDS ON: nothing. Coordinate with [geometry contribution](../geometry-contribution-contracts/PLAN.md)
@@ -64,7 +64,7 @@ digests are identical by construction: the same arithmetic runs on the same numb
 
 ### P-01: pure build and the adapter
 
-State: Scoped.
+State: Implemented on branch.
 
 Files: `core/face_geometry.rb`, `core/face_capture.rb` (new), `extension.rb` load order (both under
 `core/`, alphabetical, `face_capture` before `face_geometry`, so `face_capture.rb` requires
@@ -86,7 +86,7 @@ Exit: the pure test passes in a bare process; `make test` passes.
 
 ### P-02: route callers and remove the shim
 
-State: Scoped.
+State: Implemented on branch.
 
 1. Rename the nineteen call sites; delete `FaceGeometry.capture`; `grep -rn "FaceGeometry.capture"`
    finds nothing.
@@ -97,7 +97,7 @@ Exit: goldens unchanged; no caller of the removed method.
 
 ### P-03: dependency map and docs
 
-State: Scoped.
+State: Implemented on branch.
 
 1. Add a short "What is pure and what is an adapter" table to `context/TECH_STACK.md` or
    `context/EXTENSIBILITY.md` "Organization and dependencies": pure values and rules

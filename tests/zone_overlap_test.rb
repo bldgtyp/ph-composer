@@ -210,7 +210,7 @@ class ZoneOverlapTest < PhComposerTestCase
     face = Sketchup::Face.new(1, {}, :points => points.map { |point| metres(point) },
                                      :holes => holes.map { |loop| loop.map { |point| metres(point) } },
                                      :normal => Geom::Vector3d.new(*normal))
-    PhComposer::FaceGeometry.capture(face, Geom::Transformation.new)
+    PhComposer::FaceCapture.call(face, Geom::Transformation.new)
   end
 
   # One vertical wall in the y-z plane at x = offset, facing east or west.

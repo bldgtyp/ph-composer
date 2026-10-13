@@ -34,7 +34,7 @@ class WindowExportTest < PhComposerTestCase
     @plan = U::DefinitionPlan.build(@type)
     @definition = U::DefinitionWriter.create(:model => @model, :type => @type, :plan => @plan)
     U::DefinitionIndex.write(@model, { @type["id"] => @definition.persistent_id }, :expected => {})
-    plane = W::Placement::Plane.new(PhComposer::FaceGeometry.capture(@face, Geom::Transformation.new))
+    plane = W::Placement::Plane.new(PhComposer::FaceCapture.call(@face, Geom::Transformation.new))
     axes = [plane.x_axis, plane.y_axis, plane.normal]
     # Local top-left is at x=1.5,z=2.5; +Z points out of the host plane.
     transform = Geom::Transformation.new(axes.flat_map { |a| a + [0] } + [1.5 / 0.0254, 0, 2.5 / 0.0254, 1])
@@ -290,12 +290,12 @@ class WindowExportTest < PhComposerTestCase
     @model.entities.clear!
     2.times { @model.entities.add_instance(foreign, Geom::Transformation.new) }
     captures = 0
-    capture = PhComposer::FaceGeometry.method(:capture)
+    capture = PhComposer::FaceCapture.method(:call)
     counter = lambda do |*args|
       captures += 1
       capture.call(*args)
     end
-    PhComposer::FaceGeometry.stub(:capture, counter) do
+    PhComposer::FaceCapture.stub(:call, counter) do
       cursor = PhComposer::Export::GeometrySnapshot::Cursor.new(@model)
       cursor.advance(:limit => 1, :budget_seconds => 0)
       assert_equal 1, cursor.count
