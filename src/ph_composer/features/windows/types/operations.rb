@@ -3,14 +3,13 @@
 module PhComposer
   module Windows
     module Types
-      # Window Type persistence. An edit that changes a Type moves its placed Windows in the same
-      # proposal (Units::Changes). Each operation takes its inputs as arguments, so a library
-      # assignment calls the same operation its action does.
+      # Window Type persistence: record proposals and nothing else. What the placed Windows must do to
+      # follow a Type is the coordinator's (Windows::Authoring), which calls these. Each operation takes
+      # its inputs as arguments, so a library assignment calls the same operation its action does.
       module Operations
         module_function
 
         def create(request, proposal, values:, user_data: nil)
-          Units::Mutation.prepare(request, proposal)
           Definitions.unique_name!(values.fetch("name"), Definitions.records(request, KIND))
           values = Types.defaults(values, :identity => Records::Identity.allocator(request, "values" => values))
           id = request.engine.propose_create(TYPE_KIND, proposal, :values => values, :user_data => user_data)
@@ -18,8 +17,7 @@ module PhComposer
         end
 
         def update(request, proposal, id:, values:, expected_values:, user_data: nil)
-          Units::Mutation.prepare(request, proposal)
-          before = request.engine.find(TYPE_KIND, id)
+          request.engine.find(TYPE_KIND, id)
           values = DeepCopy.call(values)
           if values["name"]
             values["name"] = values["name"].strip
@@ -28,11 +26,10 @@ module PhComposer
           request.engine.propose_update(TYPE_KIND, id, proposal,
                                         :values => values,
                                         :expected_values => expected_values, :user_data => user_data)
-          moved(request, proposal, before)
+          { "id" => id }
         end
 
         def duplicate(request, proposal, id:, name: nil, copy_datasheets: false)
-          Units::Mutation.prepare(request, proposal)
           rows = Definitions.records(request, KIND)
           identity = Records::Identity.allocator(request, "id" => id)
           mapping = request.engine.propose_duplicate(TYPE_KIND, [id], proposal) do |values|
@@ -48,10 +45,9 @@ module PhComposer
         end
 
         # `retarget` moves every Window of the Type to `replacement_id` first, or removes them when
-        # it is nil. Without it, the Type's own Windows go with it.
+        # it is nil, through the foundation's reference retargeting.
         def delete(request, proposal, id:, expected_values: {}, retarget: false, replacement_id: nil)
-          Units::Mutation.prepare(request, proposal)
-          current = request.engine.find(TYPE_KIND, id)
+          request.engine.find(TYPE_KIND, id)
           plan = nil
           if retarget
             raise CodedError.new("params.invalid", "Choose a different replacement record.") if replacement_id == id
@@ -61,7 +57,6 @@ module PhComposer
           end
           request.engine.propose_delete(TYPE_KIND, id, proposal,
                                         :expected_values => expected_values, :reference_plan => plan)
-          Units::TypeRetargeter.cleanup(request, proposal, current) unless retarget
           { "id" => id }
         end
 
@@ -69,21 +64,12 @@ module PhComposer
         # and returns the edited record, as a GridOperations function does. `gesture` names it in
         # the allocator's inputs, so two gestures with equal params derive different ids.
         def grid(request, proposal, gesture:, id:, values:, expected_values:)
-          Units::Mutation.prepare(request, proposal)
           before = request.engine.find(TYPE_KIND, id)
           after = yield before, Records::Identity.allocator(request, values.merge("command" => gesture, "id" => id))
           changed = KIND.values(after).select { |key, value| before[key] != value }
           request.engine.propose_update(TYPE_KIND, id, proposal, :values => changed,
                                                                  :expected_values => expected_values)
-          moved(request, proposal, before)
-        end
-
-        # The placed Windows follow the Type as the proposal leaves it.
-        def moved(request, proposal, before)
-          id = before.fetch("id")
-          after = proposal.find(TYPE_KIND, id)&.after || before
-          Units::Changes.type(request, proposal, :before => before, :after => after)
-          { "id" => id, "unit_count" => Units::Changes.count(request.model, id) }
+          { "id" => id }
         end
       end
     end

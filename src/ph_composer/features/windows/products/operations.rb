@@ -10,7 +10,6 @@ module PhComposer
         module_function
 
         def create(request, proposal, collection, values:, user_data: nil)
-          Units::Mutation.prepare(request, proposal)
           kind = KINDS.fetch(collection)
           Definitions.unique_name!(values.fetch("name"), Definitions.records(request, kind))
           id = request.engine.propose_create(kind.id, proposal, :values => Products.defaults(collection, values),
@@ -19,7 +18,6 @@ module PhComposer
         end
 
         def update(request, proposal, collection, id:, values:, expected_values:, user_data: nil)
-          Units::Mutation.prepare(request, proposal)
           kind = KINDS.fetch(collection)
           request.engine.find(kind.id, id)
           values = DeepCopy.call(values)
@@ -34,7 +32,6 @@ module PhComposer
         end
 
         def duplicate(request, proposal, collection, id:, name: nil, copy_datasheets: false)
-          Units::Mutation.prepare(request, proposal)
           kind = KINDS.fetch(collection)
           rows = Definitions.records(request, kind)
           mapping = request.engine.propose_duplicate(kind.id, [id], proposal) do |values|
@@ -50,7 +47,6 @@ module PhComposer
         # `retarget` moves every Window Type and default using the product to `replacement_id` first.
         # Without it, a remaining use refuses the delete.
         def delete(request, proposal, collection, id:, expected_values: {}, retarget: false, replacement_id: nil)
-          Units::Mutation.prepare(request, proposal)
           kind = KINDS.fetch(collection)
           current = request.engine.find(kind.id, id)
           plan = nil

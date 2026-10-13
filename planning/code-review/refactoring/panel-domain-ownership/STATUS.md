@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped; implementation ready, not authorized.
-ISSUE: none (local planning draft)
+ISSUE: [#107](https://github.com/bldgtyp/ph-composer/issues/107)
 
 The phased plan is the `## Stages` section of [PLAN.md](PLAN.md); there is no `phases/` folder.
 Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).

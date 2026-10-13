@@ -147,9 +147,9 @@ module PhComposer
                                                              "expected_values" => {})]) do |request, proposal|
             params = request.params
             values = params.reject { |key, _| %w[id expected_values].include?(key) }
-            Types::Operations.grid(request, proposal,
-                                   :gesture => name, :id => params.fetch("id"), :values => values,
-                                   :expected_values => params.fetch("expected_values")) do |record, identity|
+            Authoring.grid(request, proposal,
+                           :gesture => name, :id => params.fetch("id"), :values => values,
+                           :expected_values => params.fetch("expected_values")) do |record, identity|
               gesture.change.call(record, values, identity)
             end
           end
