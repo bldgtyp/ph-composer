@@ -71,7 +71,7 @@ when they use the same transition description and child plan.
 
 ## Child-copy contract direction
 
-The [Zone-child lifecycle plan](zone-child-lifecycle/PLAN.md) owns the concrete design. Proposed inputs
+The [Zone-child lifecycle plan](../../archive/zone-child-lifecycle/PLAN.md) owns the concrete design. Proposed inputs
 are the copied occurrence path, the old and new Zone ids, the id mapping Zones allocated, the
 revision and the execution mode (explicit or follow-up). Outputs describe owned targets, copy/reference remaps, guards,
 restorable work and affected occurrences. Contributions are synchronous and explicitly registered.

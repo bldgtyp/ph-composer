@@ -1,14 +1,14 @@
 # Zone-copy participation by child owners
 
 DATE: 2026-10-13
-STATUS: ZC-01 to ZC-04 merged to main (PRs 114 to 117); native Undo and Redo of the copy gesture outstanding, so the packet stays active.
+STATUS: Complete; merged to main and archived. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#113](https://github.com/bldgtyp/ph-composer/issues/113)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-PRODUCT REQUEST: [copied-Zone Windows](../../../features/unscheduled/copied-zone-windows/README.md)
-DEPENDS ON: [Registration reliability](../../../archive/registration-reliability/PLAN.md) RR-02 for the new
-declaration; [Windows orchestration](../../../archive/windows-orchestration/PLAN.md) for `units/identity_step.rb`
-ownership; [Cross-feature composition](../../../archive/cross-feature-composition/PLAN.md) C-02 for the owner-derived
-request pattern. [Entity customization](../entity-customization/PLAN.md) shares `Extension.copy_data`.
+PRODUCT REQUEST: [copied-Zone Windows](../../features/unscheduled/copied-zone-windows/README.md)
+DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) RR-02 for the new
+declaration; [Windows orchestration](../windows-orchestration/PLAN.md) for `units/identity_step.rb`
+ownership; [Cross-feature composition](../cross-feature-composition/PLAN.md) C-02 for the owner-derived
+request pattern. [Entity customization](../../code-review/refactoring/entity-customization/PLAN.md) shares `Extension.copy_data`.
 
 ## Goal
 
@@ -90,15 +90,15 @@ the Model. The broad next-Windows-mutation repair stays as the fallback for ever
 
 Provenance: this plan adds no new join mechanism. The follow-up joins the same transaction the Zone
 repair already joins, with the same accepted uncertainty and the same Undo notice. D-01 in
-[DECISIONS](../DECISIONS.md) becomes relevant only if ZC-01 shows the Units are not reliably present
+[DECISIONS](../../code-review/refactoring/DECISIONS.md) becomes relevant only if ZC-01 shows the Units are not reliably present
 or re-resolvable after `make_unique` on the host.
 
 ## Stages
 
 ### ZC-01: host spike (document deliverable)
 
-State: Implemented on branch. Decision: late binding as designed; D-01's decline path is not needed.
-The note is [SKETCHUP_HOST_BEHAVIOR.md, "Window Units inside a copied Zone"](../../../../context/SKETCHUP_HOST_BEHAVIOR.md#window-units-inside-a-copied-zone).
+State: Complete. Decision: late binding as designed; D-01's decline path is not needed.
+The note is [SKETCHUP_HOST_BEHAVIOR.md, "Window Units inside a copied Zone"](../../../context/SKETCHUP_HOST_BEHAVIOR.md#window-units-inside-a-copied-zone).
 Two refinements for ZC-02 and ZC-03, neither an escalation: the logical binding matches same-id
 Units by equal pre-images, so path order is only a tiebreak; and a nested copy reaches the transition
 only after the wrapper's Make Unique, because the parent refuses first. Native Undo of copy plus
@@ -174,7 +174,7 @@ still names no child.
 
 ### ZC-04: native proof, export read-back and canon
 
-State: Merged to main in PR 117; native Undo and Redo outstanding (receipt in STATUS).
+State: Complete; merged in PR 117, native receipt in STATUS.
 
 1. Native, current host, fresh process: copy a Zone with two export-ready Types (frames, glazing and
    Psi-Install Types assigned); distinct Unit ids at once; originals unchanged; one Undo and Redo;

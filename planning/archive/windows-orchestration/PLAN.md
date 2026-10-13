@@ -7,7 +7,7 @@ BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDING: [RF-02](../../code-review/sections/04-ruby-features.md#rf-02-windows-definition-operations-know-placement-internals)
 DEPENDS ON: nothing for the extraction itself. Coordinate file ownership with
 [panel domain ownership](../panel-domain-ownership/PLAN.md), which edits `types/installs.rb` and
-`snapshot.rb`, and with [zone-child lifecycle](../../code-review/refactoring/zone-child-lifecycle/PLAN.md), which edits
+`snapshot.rb`, and with [zone-child lifecycle](../zone-child-lifecycle/PLAN.md), which edits
 `units/identity_step.rb`.
 
 ## Goal

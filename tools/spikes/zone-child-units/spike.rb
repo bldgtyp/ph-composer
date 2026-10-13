@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Development only; never shipped (tools/ is outside the RBZ). ZC-01 host spike for
-# planning/code-review/refactoring/zone-child-lifecycle/PLAN.md: what happens to Window Units inside a
+# planning/archive/zone-child-lifecycle/PLAN.md: what happens to Window Units inside a
 # copied Zone when Make Unique and the nested-Group isolation run. Load it through the bridge:
 #
 #   eval 'load "<repo>/tools/spikes/zone-child-units/spike.rb"'

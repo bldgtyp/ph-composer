@@ -1,7 +1,7 @@
 # Library contracts acceptance
 
 DATE: 2026-10-13
-STATUS: Offline cases LC-A01 to LC-A20 pass on both Rubies (PR 112, `tests/library_label_test.rb`, resolver, registration, Material and copy-dialog suites). LC-04 native: copy and assign, provider removal, save and reopen pass; native Undo and Redo outstanding. Receipts in [STATUS.md](STATUS.md).
+STATUS: Complete. Offline cases LC-A01 to LC-A20 pass on both Rubies (PR 112); LC-04 native copy and assign, Undo, Redo, provider removal, save and reopen pass. Receipts in [STATUS.md](STATUS.md).
 ISSUE: [#111](https://github.com/bldgtyp/ph-composer/issues/111)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 

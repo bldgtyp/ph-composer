@@ -1,7 +1,7 @@
 # Copied Windows get their own identities in the Zone copy gesture
 
 DATE: 2026-10-12
-STATUS: Merged to main (zone-child lifecycle ZC-01 to ZC-04, PRs 114 to 117); native Undo and Redo of the copy gesture outstanding.
+STATUS: Complete. Delivered by the zone-child lifecycle (PRs 114 to 117); native copy, Undo and Redo passed 2026-10-13.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#113](https://github.com/bldgtyp/ph-composer/issues/113)
 
@@ -22,8 +22,8 @@ originals keep their ids, as Repair Copied Windows already decides (first by ent
 
 ## What it needs
 
-The detailed [shared lifecycle plan](../../../code-review/refactoring/zone-child-lifecycle/PLAN.md)
-and [acceptance matrix](../../../code-review/refactoring/zone-child-lifecycle/ACCEPTANCE.md) now own
+The detailed [shared lifecycle plan](../../../archive/zone-child-lifecycle/PLAN.md)
+and [acceptance matrix](../../../archive/zone-child-lifecycle/ACCEPTANCE.md) now own
 the proposed contributor contract, logical binding inside the child step, the ZC-01 host spike and the
 Windows adopter stages.
 The accepted [Zone-child pattern](../../../code-review/refactoring/ZONE_CHILD_PATTERN.md) records why

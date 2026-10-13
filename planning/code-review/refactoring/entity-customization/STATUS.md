@@ -41,9 +41,10 @@ development eval built a box Zone and placed two Units and loaded the foundation
 | Save, quit, reopen without the example loaded | both Zones report the namespace `unavailable`; user_data kept; the stored payload is byte-identical |
 | `zones.update_metadata` of user_data alone, namespace absent | committed; the unavailable payload is left byte-identical |
 
-Outstanding: native Undo and Redo of a metadata action. The full-screen approval needed to press
-Edit > Undo with SketchUp frontmost was not answered twice during this run; the offline suite covers
-Undo against the stub (`test_a_zone_update_replaces_user_data_and_a_payload_in_one_undo_and_reads_back`).
+Native Undo and Redo of the metadata actions passed. Source `f1d88aa` (main) installed with `make install`, SketchUp 26.1.188, Ruby 3.2.2, fresh process from `_private/host/envelope/r05-integrated.skp`, 2026-10-13, with full-screen control: native Cmd+Z and Shift+Cmd+Z with SketchUp frontmost; state read through the bridge after every keystroke. Zone, Face and Window
+metadata were written through `zones.update_metadata`, `zones.faces.update_metadata` and
+`windows.units.update_metadata` (three operations). Three Cmd+Z removed them one at a time, Window
+first, then Face, then Zone; three Shift+Cmd+Z restored them in order.
 
 First review on PR 110 (gpt-6-astra): a Unit metadata update naming a copy that the same action's
 identity repair renames now plans from the record that repair leaves (`Mutation.record`), checks the

@@ -1,6 +1,6 @@
 # Zone-child lifecycle acceptance
 
-STATUS: ZC01 to ZC09 pass offline on both Rubies (PRs 115 and 116). ZC10 to ZC15 native: single copy, 5x array, save and reopen, and export read-back pass; native Undo and Redo and the native copy gestures outstanding. ZC16 waits for the Spaces adopter. Receipts in [STATUS.md](STATUS.md).
+STATUS: Complete for this packet. ZC01 to ZC09 pass offline on both Rubies; ZC10 to ZC15 pass natively (native paste, 5x array, Undo and Redo, save and reopen, export read-back). ZC16 belongs to the Spaces adopter. Receipts in [STATUS.md](STATUS.md).
 
 | Case | Scenario | Required observation |
 | --- | --- | --- |

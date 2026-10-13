@@ -86,7 +86,7 @@ definition creation must depend on placement geometry.
 A named Repair copied identities action also exists. The separate
 [copied-Zone Windows packet](../features/unscheduled/copied-zone-windows/README.md) proposes
 repairing copied children in the Zone-copy follow-up, without Zone code naming Windows. It remains
-scoped by the [child lifecycle plan](refactoring/zone-child-lifecycle/PLAN.md), with implementation
+scoped by the [child lifecycle plan](../archive/zone-child-lifecycle/PLAN.md), with implementation
 unauthorized. It adds copied-parent repair while retaining the broad Windows fallback.
 
 ### One feature package spans definition and placement layers
@@ -221,5 +221,5 @@ does not itself authorize source implementation.
 
 The [shared Zone-child pattern](refactoring/ZONE_CHILD_PATTERN.md) records the accepted direction for
 Windows, Spaces and future entities. The [Windows plan](../archive/windows-orchestration/PLAN.md)
-and [child-lifecycle plan](refactoring/zone-child-lifecycle/PLAN.md) separate ordinary authoring from
+and [child-lifecycle plan](../archive/zone-child-lifecycle/PLAN.md) separate ordinary authoring from
 native-copy restoration and give their own acceptance gates.

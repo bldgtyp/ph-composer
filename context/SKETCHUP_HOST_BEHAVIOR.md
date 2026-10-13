@@ -177,7 +177,7 @@ distinguishes native gestures from API preparation, including Ed's native Option
 ## Window Units inside a copied Zone
 
 Measured in PH-Composer on 26.1.188, 2026-10-13, fresh process, for the
-[zone-child lifecycle](../planning/code-review/refactoring/zone-child-lifecycle/PLAN.md) ZC-01 spike
+[zone-child lifecycle](../planning/archive/zone-child-lifecycle/PLAN.md) ZC-01 spike
 (`tools/spikes/zone-child-units/spike.rb`). A box Zone held two glued cutting Units of two Types.
 The copies were made in Ruby as a native copy leaves them: new instances of the Zone Group's shared
 definition carrying the original instance's dictionaries. Clipboard and Move-copy gestures were not
