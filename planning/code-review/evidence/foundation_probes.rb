@@ -122,10 +122,9 @@ class ArchitectureReviewProbes < PhComposerTestCase
     Dir.mktmpdir do |directory|
       path = File.join(directory, "synthetic.json")
       File.write(path, text)
+      adapters = ->(_kind) { adapter }
       provider = PhComposer::Library::FileProvider.new(:id => "probe", :label => "Probe", :path => path,
-                                                       :kinds => ["synthetic_labels"], :adapters => ->(_kind) {
-                                                                                         adapter
-                                                                                       })
+                                                       :kinds => ["synthetic_labels"], :adapters => adapters)
       assert_raises(NoMethodError) { provider.list("synthetic_labels") }
     end
   end
