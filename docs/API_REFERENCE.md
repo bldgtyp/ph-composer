@@ -36212,7 +36212,7 @@ Give a copied Zone occurrence its own Faces and identity, leaving the occurrence
 
 Undo step: Make Zone Independent. Makes the occurrence's Group unique when it shares its Faces, then reidentifies it and its Faces and retires their Surface pairs.
 
-Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.identity_unique`, and the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `proposal.contribution_replaced`, `proposal.foreign_write`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.identity_unique`, and the `action` common set.
 
 Params:
 

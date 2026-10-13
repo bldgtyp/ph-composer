@@ -585,11 +585,14 @@ class ZoneRepairTest < PhComposerTestCase
   end
 
   def child_feature(id, requires: ["ph_composer.zones"], &handler)
+    part = PhComposer::Records::RecordKind.new(:id => "#{id}.part", :label => "Child part", :schema_version => 1,
+                                               :id_prefix => "cpt", :fields => [])
     Module.new do
       define_singleton_method(:install) do |registry|
-        registry.feature(id, :contract_version => 1, :requires => requires)
-                .transition_contributor("#{id}.follow_zone_copy", :transition => PhComposer::Zones::TRANSITION,
-                                        &handler)
+        scope = registry.feature(id, :contract_version => 1, :requires => requires)
+        scope.record_kind(part)
+        scope.transition_contributor("#{id}.follow_zone_copy", :transition => PhComposer::Zones::TRANSITION,
+                                     &handler)
       end
     end
   end
@@ -612,7 +615,7 @@ class ZoneRepairTest < PhComposerTestCase
       seen << [request.owner, PhComposer::DeepCopy.call(description)]
       description["zone_path"] << 0
       proposal.add_step(ChildStep.new(log, description.fetch("zone_path").first), :scopes => [])
-      [{ "kind" => "test.child.part", "id" => "part-1" }]
+      [{ "kind" => "test.child.part", "id" => "cpt_000000000001" }]
     end])
 
     result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
@@ -640,6 +643,32 @@ class ZoneRepairTest < PhComposerTestCase
 
     refute_equal "completed", result.fetch("status")
     assert_equal "none", result.fetch("effect")
+    assert_equal %w[shared_definition shared_definition], zone_states
+  end
+
+  def test_a_contributor_that_changes_an_earlier_step_refuses
+    _original, copy = shared_copy(960)
+    PhComposer::Registry.install([child_feature("test.child") do |_request, proposal, description|
+      proposal.steps.unshift(ChildStep.new([], description.fetch("zone_path").first))
+      []
+    end])
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal "proposal.contribution_replaced", result.fetch("code")
+    assert_equal %w[shared_definition shared_definition], zone_states
+  end
+
+  def test_a_contributor_reporting_malformed_or_foreign_references_refuses
+    _original, copy = shared_copy(970)
+    PhComposer::Registry.install([child_feature("test.child") do |*_args|
+      [nil, 123, { "kind" => "ph_composer.zones.zone", "id" => "zon_000000000001" }]
+    end])
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal "none", result.fetch("effect")
+    refute_equal "completed", result.fetch("status")
     assert_equal %w[shared_definition shared_definition], zone_states
   end
 

@@ -75,6 +75,7 @@ module PhComposer
               "#{caller_name} does not name #{declaration.name} in its participants.")
     end
 
+    # The catalog kinds `owner` may write while it contributes to another owner's proposal.
     def owned_kinds(registry, owner)
       registry.catalog.kinds.map(&:id).select { |kind| registry.owner_of(kind) == owner }
     end
@@ -84,6 +85,6 @@ module PhComposer
       request.proposal&.refuse(error)
       raise error
     end
-    private_class_method :run, :dependency!, :edge!, :owned_kinds, :refuse!
+    private_class_method :run, :dependency!, :edge!, :refuse!
   end
 end

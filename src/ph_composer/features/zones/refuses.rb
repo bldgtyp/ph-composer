@@ -27,8 +27,10 @@ module PhComposer
       REPAIR_IDENTITY = (ZONE_TARGET - %w[target.changed target.locked] +
                          %w[copy.rule_missing extension.invalid reference.invalid zone.identity_unique]).freeze
       # Make Zone independent resolves by path, refuses a lock and isolates storage first, so a record
-      # that changes between preview and apply is caught at apply.
-      MAKE_INDEPENDENT = (REPAIR_IDENTITY + %w[target.changed target.locked]).freeze
+      # that changes between preview and apply is caught at apply. A transition contributor's own guards
+      # are the foundation's (HandlerRequest#contribute_transition).
+      MAKE_INDEPENDENT = (REPAIR_IDENTITY + %w[target.changed target.locked proposal.foreign_write
+                                               proposal.contribution_replaced]).freeze
       RESTORE = %w[record.unreadable target.changed target.not_found target.wrong_kind validation.failed
                    zone.identity_in_use zone.restore_unsafe zone.options_adoption_required reference.invalid].freeze
       # Editing, copying and deleting an Attached zone through the record engine. An edit or copy checks

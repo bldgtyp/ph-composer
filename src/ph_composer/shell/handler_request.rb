@@ -119,24 +119,15 @@ module PhComposer
 
     # Runs every contributor registered for `transition`, in name order, under its own owner and inside
     # this request's proposal, after the caller added its own step. Each receives a detached copy of
-    # `description` and returns its affected references; every step it adds must answer `restore`, since
-    # the transition also runs inside a host follow-up. Any failure refuses the whole proposal.
+    # `description`, may write only its owner's kinds, may only add to the proposal, and returns the
+    # references it affects, each `{"kind", "id"}` of a kind it owns. Every step it adds must answer
+    # `restore`, since the transition also runs inside a host follow-up. Any failure refuses the whole
+    # proposal.
     def contribute_transition(transition, description)
       raise InternalError, "A transition needs an action proposal." unless proposal
 
       rows = registry.transition_contributors.values.select { |item| item.transition == transition }.sort_by(&:name)
-      rows.flat_map do |declaration|
-        before = proposal.steps.length
-        affected = declaration.handler.call(with(:owner => declaration.owner), proposal, DeepCopy.call(description))
-        unless affected.is_a?(Array) && JsonValue.problems(affected).empty?
-          raise InternalError, "#{declaration.name} must return its affected references."
-        end
-        unless proposal.steps.drop(before).all? { |step| step.respond_to?(:restore) }
-          raise InternalError, "#{declaration.name} added a step that cannot be restored."
-        end
-
-        DeepCopy.call(affected)
-      end
+      rows.flat_map { |declaration| contribution(declaration, description) }
     rescue StandardError => error
       proposal&.refuse(error)
       raise
@@ -150,6 +141,33 @@ module PhComposer
     end
 
     private
+
+    def contribution(declaration, description)
+      writable = ParticipantInvocation.owned_kinds(registry, declaration.owner)
+      nested = with(:owner => declaration.owner,
+                    :engine => engine.projected(proposal, :writable_kinds => writable,
+                                                          :refusal_code => "proposal.foreign_write"))
+      before = Operations::Contributions.snapshot(proposal)
+      affected = proposal.guarded(writable, "proposal.foreign_write") do
+        declaration.handler.call(nested, proposal, DeepCopy.call(description))
+      end
+      Operations::Contributions.preserved!(proposal, before)
+      unless proposal.steps.drop(before.steps.length).all? { |step| step.respond_to?(:restore) }
+        raise InternalError, "#{declaration.name} added a step that cannot be restored."
+      end
+      unless affected_references?(affected, declaration.owner)
+        raise InternalError, "#{declaration.name} must return the references it affects, each of a kind it owns."
+      end
+
+      DeepCopy.call(affected)
+    end
+
+    def affected_references?(value, owner)
+      value.is_a?(Array) && JsonValue.problems(value).empty? && value.all? do |row|
+        row.is_a?(Hash) && %w[kind id].all? { |key| row[key].is_a?(String) && !row[key].empty? } &&
+          registry.owner_of(row["kind"]) == owner
+      end
+    end
 
     def locatable_target(kind)
       target = registry.reference_targets[kind]
