@@ -22,3 +22,17 @@ can land independently of LC-01 and LC-02.
 Source `349f6ea` on `refactor/group-5-library-contracts`, rebased on `main` `4d7a5a7`, 2026-10-13:
 `make ci` on Ruby 3.2 and on Ruby 2.7.2 both pass (1566 Ruby runs, 19136 assertions; 537 JS tests;
 Python 9 runs; RBZ verified, 399 files). `make coverage` passes at 95.60% (required 92%).
+
+Review cycle 1 fixes `a633a2a`: both `make ci` runs pass again (1568 Ruby runs, 19144 assertions; 537 JS).
+
+## Native receipt (LC-04)
+
+Source `349f6ea` installed with `make install`, SketchUp 2026 (Ruby 3.2), fresh process from the blank
+template, development bridge, 2026-10-13. Scratch driver: `group5_host.rb` (not committed).
+
+| Step | Result |
+| --- | --- |
+| File library with two Materials loaded | completed; labels `group 5 BOARD`, `Group 5 wool` in label order; both `create` |
+| Copy `g5-wool` with assignment to a new Assembly's first segment | committed in one operation; local Material `Group 5 wool`, 0.035 W/mK, source `g5-wool`; segment names it |
+| Native Undo, Redo | **Outstanding.** Edit > Undo is disabled while SketchUp is in the background, and the full-screen approval went unanswered. Needs one Cmd+Z / Shift+Cmd+Z pass with SketchUp frontmost |
+| Remove the provider, save, quit, reopen | provider gone from `library.providers`; local Material intact and labelled `Group 5 wool`, source `g5-wool`, segment still assigned |
