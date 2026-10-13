@@ -1,7 +1,7 @@
 # Architecture refactoring plans
 
 DATE: 2026-10-13
-STATUS: Scoped; twelve packets reviewed against source and fleshed out for implementation handoff on 2026-10-13. Direction accepted; implementation not authorized.
+STATUS: Scoped; twelve packets reviewed against source and fleshed out for implementation handoff on 2026-10-13. Direction accepted; implementation authorized on 2026-10-13, delivered one stage per PR in the [delivery order](DELIVERY_ORDER.md).
 ISSUE: none (local planning draft)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 

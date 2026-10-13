@@ -1,7 +1,7 @@
 # Refactoring decisions
 
 DATE: 2026-10-13
-STATUS: Direction and the four 2026-10-13 deviations accepted by Ed. Implementation not authorized.
+STATUS: Direction and the four 2026-10-13 deviations accepted by Ed. Implementation authorized on 2026-10-13.
 ISSUE: none (local planning draft)
 
 ## Accepted on 2026-10-13

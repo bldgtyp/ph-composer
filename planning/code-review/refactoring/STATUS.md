@@ -1,14 +1,14 @@
 # Refactoring status
 
 DATE: 2026-10-13
-STATUS: Scoped; all twelve packets reviewed against source and fleshed out for handoff. Implementation not authorized.
+STATUS: In progress; Ed authorized implementation on 2026-10-13, one stage per PR through the pr-loop. First PR: export wording EW-01 ([#99](https://github.com/bldgtyp/ph-composer/pull/99)).
 ISSUE: none (local planning draft)
 
 Ed accepted C1, C2, W1 and the Zone-child pattern on 2026-10-13. The same day the twelve plans were
 reviewed against the baseline source and rewritten as phased implementation plans with per-packet
 stage ledgers. Four technical defaults were simplified in that review and Ed accepted them the same day; they
-are listed in [DECISIONS.md](DECISIONS.md) under "Deviations recorded 2026-10-13". No source,
-test, runtime asset, native gate, commit, issue or PR was produced by this program.
+are listed in [DECISIONS.md](DECISIONS.md) under "Deviations recorded 2026-10-13". Delivery began the same day:
+issues and PRs are linked from each packet row as they open.
 
 | Packet | Findings | Stages | State |
 | --- | --- | --- | --- |
