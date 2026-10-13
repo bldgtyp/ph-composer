@@ -243,11 +243,23 @@ module Sketchup
     end
   end
 
+  # A host Vertex has a persistent id. Here it is allocated on first read from its own sequence, so
+  # vertices never shift the ids tests expect other entities to receive.
   class Vertex
     attr_reader :position
 
+    class << self
+      def allocate_persistent_id
+        @next_persistent_id = (@next_persistent_id || 500_000_000) + 1
+      end
+    end
+
     def initialize(position)
       @position = position
+    end
+
+    def persistent_id
+      @persistent_id ||= self.class.allocate_persistent_id
     end
 
     def transform!(transformation)
