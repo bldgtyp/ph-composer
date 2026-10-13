@@ -89,10 +89,11 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     if (this.root.hidden || this.disposed) return null;
     return this.requests.busy() ? "Wait for Installs Save." : "Save or cancel the Installs session before leaving.";
   };
-  // The edge as the host classified it, or null when this Type's facts were not read.
+  // The edge as the host classified it, or null when this Type's facts were not read or are malformed.
   Editor.prototype.edge = function (cell, side) {
-    var facts = this.facts[this.active], edges = facts && facts.edges[cell.id];
-    return edges && edges[side] || null;
+    var facts = this.facts[this.active], edges = facts && facts.edges && facts.edges[cell.id];
+    var edge = edges && edges[side];
+    return edge && typeof edge.paintable === "boolean" && typeof edge.classification === "string" ? edge : null;
   };
   // This screen offers glazed elements' edges; the host decides which of those are paintable.
   Editor.prototype.eligible = function (cell, side) {
@@ -137,7 +138,8 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
   // A copy target is another Type whose copy key equals this draft's, which is when Save accepts the copy.
   Editor.prototype.compatible = function (row) {
     var facts = this.facts[this.active], other = topologyOf(row);
-    return row.id !== this.active && Boolean(facts && other && other.copy_key === facts.copy_key);
+    function key(topology) { return topology && typeof topology.copy_key === "string" && topology.copy_key; }
+    return row.id !== this.active && Boolean(key(facts)) && key(other) === key(facts);
   };
   /* Each target element's source element, joined on the host's copy slots, or null unless every element on
      both sides has a slot and the slots pair the two sides one to one. */

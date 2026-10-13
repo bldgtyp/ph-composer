@@ -561,3 +561,18 @@ test("Installs refuses a second copy to a Type changed in the Model and keeps th
   assert.ok(/changed in the Model/.test(installs.notice.textContent));
   assert.strictEqual(JSON.stringify(installs.drafts.wnt_b), staged, "the first staged copy is untouched");
 });
+test("Installs with malformed facts paints nothing and a missing copy key offers no copy", function () {
+  var o = setup(), installs = o.editor.installEditor, raw = o.editor.rawRecord();
+  var target = JSON.parse(JSON.stringify(raw)); target.id = "wnt_b"; target.values.name = "Other";
+  target.values.columns_m = [0.6, 0.5, 0.5];
+  delete raw.display.install_topology.edges; delete raw.display.install_topology.copy_key;
+  delete target.display.install_topology.copy_key;
+  o.state.sections["ph_composer.windows.types"].value.records.push(target); o.editor.render(o.state);
+  assert.doesNotThrow(function () { installs.open(raw); });
+  installs.selected = "psi_a";
+  assert.strictEqual(installs.paintEdge("wel_a", "top"), false);
+  assert.strictEqual(installs.copyTo(target), false);
+  click(installs.copyButton); assert.ok(text(installs.copyForm).includes("No compatible Window Types."));
+  installs.saveAction();
+  assert.strictEqual(o.sent[0].payload.params.types.length, 1, "only the open Type is saved");
+});

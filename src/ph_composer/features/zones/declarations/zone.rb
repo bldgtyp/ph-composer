@@ -42,6 +42,8 @@ module PhComposer
       }).merge("type" => %w[object null],
                "description" => "For an occurrence that is not found cleanly, whether Make Zone independent " \
                                 "applies; null otherwise.")
+      # A Zone read captures each Face's geometry for the area totals, so it answers what a Face read does.
+      READ = (Refuses::READ + %w[geometry.invalid]).freeze
       AREA_TOTAL = { "type" => "number", "minimum" => 0, "x-unit" => "m2",
                      "description" => "Summed over this occurrence's Faces, each through its own transform." }.freeze
       ZONE_ROW = Shapes.with(TARGET.descriptor.view_schema, "display" => DISPLAY,
@@ -104,12 +106,12 @@ module PhComposer
         ColourModes.install(feature)
         feature.query("#{FEATURE_ID}.list",
                       :description => "One page of Zone occurrences, filtered and projected, and the Make Zone target.",
-                      :refuses => Refuses::READ + Refuses::PAGE, :params => LIST_PARAMS, :result => LIST_RESULT,
+                      :refuses => READ + Refuses::PAGE, :params => LIST_PARAMS, :result => LIST_RESULT,
                       :examples => [{}, { "fields" => ["name"], "limit" => 20 }]) { |request| Zones.list(request) }
         feature.query("#{FEATURE_ID}.all",
                       :description => "Every Zone occurrence in one complete projection, for the panel. Scripts " \
                                       "page #{FEATURE_ID}.list instead.",
-                      :refuses => Refuses::READ,
+                      :refuses => READ,
                       :params => Shapes::NONE, :result => ALL_RESULT, :examples => [{}]) do |request|
           Zones.all(request)
         end

@@ -186,10 +186,11 @@ module PhComposer
 
     # The occurrence's Face area, whole and unclassified, in square metres through each Face's own
     # transform: the panel shows and sorts these and never sums Faces itself. Unclassified is the Face
-    # rows' rule, a Face with no recorded values.
+    # rows' rule, a Face with no recorded values; a stored record is validated as the Face read validates it.
     def face_totals(faces)
       areas = faces.map do |face|
         record = Faces::FACE_STORE.read(face.entity)
+        Faces::Schema.validate!(record) if record
         [Faces::Geometry.area_m2(face), record.nil? || Faces::Schema.values(record).empty?]
       end
       { "face_area_m2" => areas.sum(0.0) { |area, _| area },

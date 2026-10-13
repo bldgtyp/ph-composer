@@ -71,4 +71,18 @@ class ZoneAreaTotalsTest < PhComposerTestCase
       assert_in_delta faces_of(zone).sum { |face| face.fetch("area_m2") }, zone.fetch("face_area_m2"), 1e-9
     end
   end
+
+  def test_an_unreadable_face_or_a_singular_transform_refuses_the_zone_read_with_the_face_reads_codes
+    group, faces = assignment_zone(400, 1)
+    PhComposer::Zones::Faces::FACE_STORE.write(faces.first, "id" => "fac_Ab12Cd34Ef56", "schema_version" => 1,
+                                                            "face_type" => "Doorway")
+    result = API.query(:context => @context, :name => "#{ZONE_PREFIX}.all")
+    assert_equal "validation.failed", result.fetch("code"), result.inspect
+    assert_equal result.fetch("code"), API.query(:context => @context, :name => "#{FACE_PREFIX}.all").fetch("code")
+
+    PhComposer::Zones::Faces::FACE_STORE.delete(faces.first)
+    group.transformation = Geom::Transformation.scaling(0, 1, 1)
+    result = API.query(:context => @context, :name => "#{ZONE_PREFIX}.all")
+    assert_equal "geometry.invalid", result.fetch("code"), result.inspect
+  end
 end

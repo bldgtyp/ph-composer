@@ -10303,7 +10303,7 @@ Example params:
 
 Every Zone occurrence in one complete projection, for the panel. Scripts page ph_composer.zones.list instead. Owner: `ph_composer.zones`.
 
-Refuses: `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -12285,7 +12285,7 @@ Example params:
 
 One page of Zone occurrences, filtered and projected, and the Make Zone target. Owner: `ph_composer.zones`.
 
-Refuses: `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 

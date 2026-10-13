@@ -49,3 +49,8 @@ staged copy untouched. It also found that a change set's admitted write kept the
 records by reference (from PR 105): `put` now stores frozen copies, and the two places that edited a
 staged record afterwards (a Zone option create's `user_data`, an adopted option's remapped extension
 data) now write it at creation or through `ChangeSet#restage`, which the write guard sees.
+
+Second review on PR 108: the Zone reads now declare `geometry.invalid`, which the area totals can
+raise, and validate each stored Face record as the Face read does, so an unreadable record refuses
+with the Face read's code instead of being counted; the editor treats a topology without `edges`
+or a well-formed edge as unread, and requires a copy key on both sides before offering a copy.
