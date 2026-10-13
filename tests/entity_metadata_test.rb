@@ -15,6 +15,7 @@ class EntityMetadataTest < PhComposerTestCase
   ZONES = "ph_composer.zones"
   WINDOWS = "ph_composer.windows"
   REVIEW = "probe.notes.review"
+  LINK = "probe.notes.link"
   EMPTY = { "user_data" => {}, "extension_data" => {} }.freeze
 
   # A maintained extension at version 2, valid when its status is draft or checked, optionally naming a
@@ -27,14 +28,19 @@ class EntityMetadataTest < PhComposerTestCase
     end
 
     def install(registry)
-      registry.feature("probe.notes", :contract_version => 1, :requires => ["ph_composer.zones"]).extension(
-        PhComposer::Records::Extension.new(
-          :namespace => REVIEW, :schema_version => 2, :export_relevance => "local_only",
-          :references => [{ "path" => "$.zone", "target_kind" => "ph_composer.zones.zone", "cardinality" => "one" }],
-          :migrations => { 1 => ->(payload) { payload } },
-          :validate => ->(payload) { %w[draft checked].include?(payload["status"]) ? [] : ["status is unknown"] }
-        )
-      )
+      feature = registry.feature("probe.notes", :contract_version => 1,
+                                                :requires => ["ph_composer.zones", "ph_composer.windows"])
+      feature.extension(PhComposer::Records::Extension.new(
+        :namespace => REVIEW, :schema_version => 2, :export_relevance => "local_only",
+        :references => [{ "path" => "$.zone", "target_kind" => "ph_composer.zones.zone", "cardinality" => "one" }],
+        :migrations => { 1 => ->(payload) { payload } },
+        :validate => ->(payload) { %w[draft checked].include?(payload["status"]) ? [] : ["status is unknown"] }
+      ))
+      # A payload naming a Window, so a staged identity repair matters to its reference.
+      feature.extension(PhComposer::Records::Extension.new(
+        :namespace => LINK, :schema_version => 1, :export_relevance => "local_only",
+        :references => [{ "path" => "$.unit", "target_kind" => "ph_composer.windows.unit", "cardinality" => "one" }]
+      ))
     end
   end
 
@@ -225,5 +231,84 @@ class EntityMetadataTest < PhComposerTestCase
     assert_equal "committed", result.fetch("effect"), result.inspect
     ids = PhComposer::Windows::Units::Occurrences.all(@model).map { |item| item.record.fetch("id") }
     assert_equal 2, ids.uniq.length, "the copy got its own identity in the same step"
+  end
+
+  def copy_first_unit
+    original = PhComposer::Windows::Units::Occurrences.all(@model).first
+    copy = @group.entities.add_instance(original.entity.definition,
+                                        Geom::Transformation.translation([200, 0, 0]) * original.entity.transformation)
+    copy.glued_to = original.entity.glued_to
+    PhComposer::Windows::Units.write(copy, original.record)
+    [original, copy]
+  end
+
+  def copy_row(copy)
+    assignment_query("#{WINDOWS}.units.list").fetch("units").find do |row|
+      row.dig("reference", "entity_path").last == copy.persistent_id
+    end
+  end
+
+  def test_a_copy_being_repaired_takes_its_metadata_under_its_repaired_identity
+    _original, copy = copy_first_unit
+    read = copy_row(copy)
+    result = update("#{WINDOWS}.units.update_metadata", read.fetch("reference"), read, :user_data => { "x" => 1 })
+    assert_equal "committed", result.fetch("effect"), result.inspect
+    repaired = result.dig("value", "updates", 0, "reference")
+    refute_equal read.dig("reference", "unit_id"), repaired.fetch("unit_id")
+    assert_equal repaired, copy_row(copy).fetch("reference")
+    assert_equal({ "x" => 1 }, copy_row(copy).fetch("user_data"))
+  end
+
+  def test_a_no_op_on_a_copy_being_repaired_reports_its_repaired_reference
+    _original, copy = copy_first_unit
+    read = copy_row(copy)
+    no_op = update("#{WINDOWS}.units.update_metadata", read.fetch("reference"), read,
+                   :user_data => read.fetch("user_data"))
+    assert_equal "committed", no_op.fetch("effect"), "the repair still commits"
+    assert_equal copy_row(copy).fetch("reference"), no_op.dig("value", "updates", 0, "reference")
+  end
+
+  def test_a_payload_naming_the_retained_original_resolves_while_its_copy_is_repaired
+    original, = copy_first_unit
+    read = unit
+    id = original.record.fetch("id")
+    result = update("#{WINDOWS}.units.update_metadata", read.fetch("reference"), read,
+                    :extension_payloads => { LINK => { "unit" => id } })
+    assert_equal "committed", result.fetch("effect"), result.inspect
+  end
+
+  def test_a_batch_refused_late_or_failing_at_apply_writes_none_of_its_targets
+    original, = copy_first_unit
+    assignment_invoke("#{WINDOWS}.units.repair_copied_identities", "units" => [unit.fetch("reference")])
+    rows = assignment_query("#{WINDOWS}.units.list").fetch("units")
+    assert_equal 2, rows.length
+    entries = rows.map do |row|
+      { "reference" => row.fetch("reference"), "user_data" => { "batch" => true },
+        "expected_metadata" => row.slice("user_data", "extension_data") }
+    end
+    stale = entries.dup
+    stale[1] = stale[1].merge("expected_metadata" => { "user_data" => { "old" => true }, "extension_data" => {} })
+    assert_equal "target.changed", assignment_invoke("#{WINDOWS}.units.update_metadata", "updates" => stale)
+      .fetch("code")
+    assert(assignment_query("#{WINDOWS}.units.list").fetch("units").none? { |row| row["user_data"]["batch"] })
+
+    revision = @session.revision
+    write = PhComposer::Windows::Units.method(:write)
+    calls = 0
+    PhComposer::Windows::Units.define_singleton_method(:write) do |entity, record|
+      calls += 1
+      raise IOError, "injected second write" if calls == 2
+
+      write.call(entity, record)
+    end
+    begin
+      failed = assignment_invoke("#{WINDOWS}.units.update_metadata", "updates" => entries)
+    ensure
+      PhComposer::Windows::Units.define_singleton_method(:write, write)
+    end
+    assert_equal %w[failed rolled_back], failed.values_at("status", "effect"), failed.inspect
+    assert_equal revision, @session.revision
+    assert(assignment_query("#{WINDOWS}.units.list").fetch("units").none? { |row| row["user_data"]["batch"] })
+    assert original
   end
 end

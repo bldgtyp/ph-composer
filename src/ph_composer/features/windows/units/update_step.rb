@@ -41,15 +41,18 @@ module PhComposer
 
         # The user_data and installed extension payloads of explicit Unit occurrences, guarded by the
         # two maps as last read (context/CONTRACTS.md, "Records and extension data"). Windows::Authoring
-        # runs the copied-identity repair before this, as for every Windows action.
+        # runs the copied-identity repair before this, as for every Windows action, so a copy named here
+        # is planned from the record that repair leaves and is reported by its repaired reference.
         def update(request, proposal, updates:)
           catalog = request.registry.catalog
+          plan = Mutation.reference_plan(proposal)
           rows = Records::Metadata.distinct_updates(updates).map do |update|
-            reference = update.fetch("reference")
-            before = Occurrences.resolve(request.model, reference, :mutable => true).record
-            after = Records::Metadata.planned(request.engine, catalog, before, update, "Window")
+            item = Occurrences.resolve(request.model, update.fetch("reference"), :mutable => true)
+            before = Mutation.record(proposal, item)
+            after = Records::Metadata.planned(request.engine, catalog, before, update, "Window",
+                                              :stored => item.record, :reference_plan => plan)
             Units.validate!(after)
-            { :reference => reference, :before => before, :after => after }
+            { :reference => item.reference.merge("unit_id" => before.fetch("id")), :before => before, :after => after }
           end
           changed = rows.reject { |row| row.fetch(:before) == row.fetch(:after) }
           proposal.add_step(UpdateUnitStep.new(changed), :scopes => [MutationScope.new]) unless changed.empty?

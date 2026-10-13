@@ -44,3 +44,10 @@ development eval built a box Zone and placed two Units and loaded the foundation
 Outstanding: native Undo and Redo of a metadata action. The full-screen approval needed to press
 Edit > Undo with SketchUp frontmost was not answered twice during this run; the offline suite covers
 Undo against the stub (`test_a_zone_update_replaces_user_data_and_a_payload_in_one_undo_and_reads_back`).
+
+First review on PR 110 (gpt-6-astra): a Unit metadata update naming a copy that the same action's
+identity repair renames now plans from the record that repair leaves (`Mutation.record`), checks the
+pre-image against what the caller read, and writes and reports under the repaired reference; a
+written payload's references resolve through the staged repair (`Mutation.reference_plan`), so a
+payload naming the retained original resolves. Distinct-target batches with a late refusal and an
+injected second write are tested (nothing written; `rolled_back`).
