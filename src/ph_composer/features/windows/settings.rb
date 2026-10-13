@@ -39,8 +39,9 @@ module PhComposer
                                                :cardinality => "one")]
       )
 
+      # A record proposal only; the action and library assignment reach it through Windows::Authoring,
+      # which runs the copied-identity repair first. `retarget` runs inside an already prepared delete.
       def propose(request, proposal, values:, expected_values:)
-        Units::Mutation.prepare(request, proposal)
         if values["default_psi_install_id"]
           request.engine.find(PSI_INSTALL_KIND, values.fetch("default_psi_install_id"))
         end
@@ -79,8 +80,8 @@ module PhComposer
                        :side_effects => Shapes.side_effects("Stores installation defaults in this SKP."),
                        :examples => [{ "values" => DEFAULTS,
                                        "expected_values" => DEFAULTS }]) do |request, proposal|
-          propose(request, proposal, :values => request.params.fetch("values"),
-                                     :expected_values => request.params.fetch("expected_values"))
+          Authoring.update_settings(request, proposal, :values => request.params.fetch("values"),
+                                                       :expected_values => request.params.fetch("expected_values"))
         end
       end
     end

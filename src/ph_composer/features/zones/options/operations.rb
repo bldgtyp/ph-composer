@@ -87,11 +87,10 @@ module PhComposer
                                                                       :refusal_code => "validation.failed")
         validated = Records::Extension.copy_data(remapped, request.registry.catalog, kind.label,
                                                  portable.fetch("id"), {}, :engine => projected)
-        record = proposal.find(kind.id, id).after
-        after = record.merge("extension_data" => validated)
+        after = proposal.find(kind.id, id).after.merge("extension_data" => validated)
         problems = kind.problems(after)
         refuse("validation.failed", problems.first) unless problems.empty?
-        record["extension_data"] = validated
+        proposal.restage(kind.id, id, :after => after)
       end
 
       # Keep final-state guards, defaults and reference deletion in commit order.
@@ -151,7 +150,10 @@ module PhComposer
         options.each do |row|
           id = row.fetch("id")
           if id.start_with?("new:")
-            created[id] = create_choice(request, proposal, collection, row.fetch("name"), row.fetch("colour"))
+            # A single-option create may carry the new option's user_data, written with the record.
+            portable = row.key?("user_data") ? { "user_data" => row.fetch("user_data") } : nil
+            created[id] = create_choice(request, proposal, collection, row.fetch("name"), row.fetch("colour"),
+                                        :portable => portable)
           else
             values = { "name" => row.fetch("name").strip, "colour" => row.fetch("colour").upcase }
             request.engine.propose_update(kind.id, id, proposal, :values => values)

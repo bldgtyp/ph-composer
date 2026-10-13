@@ -45,8 +45,8 @@ module PhComposer
                        :params => Shapes.create(kind), :result => Shapes::RESULT, :undo_name => "Create #{kind.label}",
                        :side_effects => Shapes.side_effects("Creates one Model-owned definition."),
                        :examples => [{ "values" => { "name" => "Example #{kind.label}" } }]) do |request, proposal|
-          Products::Operations.create(request, proposal, collection, :values => request.params.fetch("values"),
-                                                                     :user_data => request.params["user_data"])
+          Authoring.create_product(request, proposal, collection, :values => request.params.fetch("values"),
+                                                                  :user_data => request.params["user_data"])
         end
         feature.action("#{prefix}.update",
                        :description => "Edit guarded authored values of one #{kind.label}.",
@@ -55,11 +55,11 @@ module PhComposer
                        :side_effects => Shapes.side_effects("Updates one definition and preserves its metadata."),
                        :examples => [update_example(kind)]) do |request, proposal|
           params = request.params
-          Products::Operations.update(request, proposal, collection,
-                                      :id => params.fetch("id"),
-                                      :values => params.fetch("values"),
-                                      :expected_values => params.fetch("expected_values"),
-                                      :user_data => params["user_data"])
+          Authoring.update_product(request, proposal, collection,
+                                   :id => params.fetch("id"),
+                                   :values => params.fetch("values"),
+                                   :expected_values => params.fetch("expected_values"),
+                                   :user_data => params["user_data"])
         end
         declare_product_copy_and_delete(feature, prefix, collection, kind)
       end
@@ -72,11 +72,11 @@ module PhComposer
                        :undo_name => "Duplicate #{kind.label}",
                        :side_effects => Shapes.side_effects("Copies definition metadata."),
                        :examples => [{ "id" => example_id(kind) }]) do |request, proposal|
-          Products::Operations.duplicate(request, proposal, collection,
-                                         :id => request.params.fetch("id"),
-                                         :name => request.params["name"],
-                                         :copy_datasheets => request.params.fetch("copy_datasheets",
-                                                                                  false))
+          Authoring.duplicate_product(request, proposal, collection,
+                                      :id => request.params.fetch("id"),
+                                      :name => request.params["name"],
+                                      :copy_datasheets => request.params.fetch("copy_datasheets",
+                                                                               false))
         end
         replacement = Shapes.id(kind.id_prefix, "The #{kind.label} that every Window Type and default using the " \
                                                 "deleted one takes. Needed while any uses it.")
@@ -89,11 +89,11 @@ module PhComposer
                                                             "deletes atomically."),
                        :examples => [{ "id" => example_id(kind) }]) do |request, proposal|
           params = request.params
-          Products::Operations.delete(request, proposal, collection,
-                                      :id => params.fetch("id"),
-                                      :expected_values => params.fetch("expected_values", {}),
-                                      :retarget => params.key?("replacement_id"),
-                                      :replacement_id => params["replacement_id"])
+          Authoring.delete_product(request, proposal, collection,
+                                   :id => params.fetch("id"),
+                                   :expected_values => params.fetch("expected_values", {}),
+                                   :retarget => params.key?("replacement_id"),
+                                   :replacement_id => params["replacement_id"])
         end
       end
 
@@ -109,8 +109,8 @@ module PhComposer
                        :params => Shapes.create(kind), :result => Shapes::RESULT, :undo_name => "Create #{kind.label}",
                        :side_effects => Shapes.side_effects("Creates one Model-owned definition."),
                        :examples => [{ "values" => { "name" => "Example #{kind.label}" } }]) do |request, proposal|
-          Types::Operations.create(request, proposal, :values => request.params.fetch("values"),
-                                                      :user_data => request.params["user_data"])
+          Authoring.create_type(request, proposal, :values => request.params.fetch("values"),
+                                                   :user_data => request.params["user_data"])
         end
         feature.action("#{prefix}.update",
                        :description => "Edit guarded authored values of one #{kind.label}.",
@@ -120,10 +120,10 @@ module PhComposer
                        :side_effects => Shapes.side_effects("Updates one definition and preserves its metadata."),
                        :examples => [update_example(kind)]) do |request, proposal|
           params = request.params
-          Types::Operations.update(request, proposal,
-                                   :id => params.fetch("id"), :values => params.fetch("values"),
-                                   :expected_values => params.fetch("expected_values"),
-                                   :user_data => params["user_data"])
+          Authoring.update_type(request, proposal,
+                                :id => params.fetch("id"), :values => params.fetch("values"),
+                                :expected_values => params.fetch("expected_values"),
+                                :user_data => params["user_data"])
         end
         declare_type_copy_and_delete(feature, prefix, kind)
       end
@@ -138,11 +138,11 @@ module PhComposer
                          "Copies definition metadata and retains shared products; new elements get fresh ids."
                        ),
                        :examples => [{ "id" => example_id(kind) }]) do |request, proposal|
-          Types::Operations.duplicate(request, proposal,
-                                      :id => request.params.fetch("id"),
-                                      :name => request.params["name"],
-                                      :copy_datasheets => request.params.fetch("copy_datasheets",
-                                                                               false))
+          Authoring.duplicate_type(request, proposal,
+                                   :id => request.params.fetch("id"),
+                                   :name => request.params["name"],
+                                   :copy_datasheets => request.params.fetch("copy_datasheets",
+                                                                            false))
         end
         replacement = Shapes.id(kind.id_prefix, "The Window Type every Window of the deleted one takes, or null " \
                                                 "to remove them. Needed while Windows use it.", :nullable => true)
@@ -155,11 +155,11 @@ module PhComposer
                                                             "deletes atomically."),
                        :examples => [{ "id" => example_id(kind) }]) do |request, proposal|
           params = request.params
-          Types::Operations.delete(request, proposal,
-                                   :id => params.fetch("id"),
-                                   :expected_values => params.fetch("expected_values", {}),
-                                   :retarget => params.key?("replacement_id"),
-                                   :replacement_id => params["replacement_id"])
+          Authoring.delete_type(request, proposal,
+                                :id => params.fetch("id"),
+                                :expected_values => params.fetch("expected_values", {}),
+                                :retarget => params.key?("replacement_id"),
+                                :replacement_id => params["replacement_id"])
         end
       end
     end

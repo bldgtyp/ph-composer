@@ -21,25 +21,10 @@ PhComposerUI.define("features/windows/editor_shared", ["fields", "snapshot", "un
     return value == null ? "—" : field ? units.format(value, field, units.profile(field), { showUnit: false }) :
       Number(value).toFixed(3);
   }
-  // Edge hit eligibility is topology, independent of dimensions and thermal completeness.
-  function classification(record, cell, side) {
-    var r = cell.row_span, c = cell.column_span, neighbors = [], index;
-    if (side === "top" || side === "bottom") {
-      for (index = c[0]; index <= c[1]; index++) neighbors.push([side === "top" ? r[0] - 1 : r[1] + 1, index]);
-    } else {
-      for (index = r[0]; index <= r[1]; index++) neighbors.push([index, side === "left" ? c[0] - 1 : c[1] + 1]);
-    }
-    var count = neighbors.filter(function (point) {
-      return record.elements.some(function (other) { return other.kind !== "empty" &&
-        point[0] >= other.row_span[0] && point[0] <= other.row_span[1] &&
-        point[1] >= other.column_span[0] && point[1] <= other.column_span[1]; });
-    }).length;
-    return count === 0 ? "perimeter" : count === neighbors.length ? "shared" : "partial";
-  }
   return { PREFIX: PREFIX, sides: ["top", "right", "bottom", "left"], WINDOW_DIMENSION: DIMENSION,
     VIEW_SIDES: [{ id: "exterior", label: "Exterior view" }, { id: "interior", label: "Interior view" }],
     U_VALUE: fields.U_VALUE, AREA: fields.AREA_M2, LENGTH: fields.LENGTH_M, LINEAR_PSI: fields.LINEAR_PSI,
-    HEAT_LOSS: fields.HEAT_LOSS, AUDIT_DETAIL: { precision: 6 }, classification: classification, records: records,
+    HEAT_LOSS: fields.HEAT_LOSS, AUDIT_DETAIL: { precision: 6 }, records: records,
       flat: flat,
     clone: function (value) { return JSON.parse(JSON.stringify(value)); }, format: format, bare: bare,
     windowsState: windowsState, unitless: function (value) { return bare(value); },

@@ -87,6 +87,15 @@ projections `ph_composer.zones.all` and `ph_composer.zones.faces.all`; scripts p
 reference, values and the write refusal its path shows, scanning only the collections on each path,
 for a caller that holds a path and needs no Face table.
 
+Some reads carry derived facts so no client recomputes a domain rule. Every Window Type row's
+`display.install_topology` gives each non-empty element's four edges with their classification
+(`perimeter`, `shared`, `partial`) and whether an installation can be painted there, an opaque
+`copy_key` that is equal on two Types exactly when an installation copy between them is accepted,
+and `copy_slots`, each element's slot in that copy. Every Zone row carries `face_area_m2` and
+`unclassified_face_area_m2`, the occurrence's Face area summed through its own transform, the second
+over Faces with no recorded values. Both are recomputed on each read, never stored, and never
+accepted by a write.
+
 Support explicit selection, reveal and camera operations for visual inspection, plus viewport
 capture where the host permits it. Captures identify their model session, revision, camera and
 relevant selection so the agent knows what it saw. Report unsupported or obscured capture states

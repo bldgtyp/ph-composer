@@ -91,10 +91,10 @@ module PhComposer
           params.fetch("properties").fetch("values").fetch("properties")["source"] =
             kind.values_schema.fetch("properties").fetch("source")
           callback(params, Shapes::RESULT, :refuses => Refuses::EDIT) do |request, proposal|
-            Products::Operations.update(request, proposal, @collection,
-                                        :id => request.params.fetch("id"),
-                                        :values => request.params.fetch("values"),
-                                        :expected_values => request.params.fetch("expected_values"))
+            Authoring.update_product(request, proposal, @collection,
+                                     :id => request.params.fetch("id"),
+                                     :values => request.params.fetch("values"),
+                                     :expected_values => request.params.fetch("expected_values"))
           end
         end
 
@@ -104,8 +104,8 @@ module PhComposer
             :mapped_schema => schema, :fingerprint_fields => fields, :map => method(:map), :reverse => method(:reverse),
             :fingerprint => method(:fingerprint), :local_read => local_read,
             :create => callback(Shapes.create(kind), Shapes::RESULT, :refuses => Refuses::WRITE) do |request, proposal|
-              Products::Operations.create(request, proposal, @collection, :values => request.params.fetch("values"),
-                                                                          :user_data => request.params["user_data"])
+              Authoring.create_product(request, proposal, @collection, :values => request.params.fetch("values"),
+                                                                       :user_data => request.params["user_data"])
             end,
             :replace => replace, :assign => LibraryAssignment.callback(@collection)
           )

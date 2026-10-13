@@ -344,7 +344,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       var key = JSON.stringify(["Zone", zone.reference.zone_path]);
       rows.push({ key: key, parent: null, tier: "Zone", depth: 0,
         record: { id: key, name: zone.values.name, zone: zone, faces: recorded, every: own,
-          state: zone.state, unclassified: own.length - recorded.length } });
+          state: zone.state, unclassified: own.length - recorded.length, area: zone.face_area_m2 } });
       function faceRow(face, parent, depth) {
         return { key: JSON.stringify(["Face", zone.reference.zone_path, face.reference.entity_path]),
           parent: parent, tier: "Face", depth: depth,
@@ -357,7 +357,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       var summary = JSON.stringify(["Unclassified", zone.reference.zone_path]);
       var all = Boolean(showAll && showAll[summary]) || waiting.length <= SHOWN_AT_FIRST;
       rows.push({ key: summary, parent: key, tier: "Faces", depth: 1,
-        record: { id: summary, faces: waiting, summary: true,
+        record: { id: summary, faces: waiting, summary: true, area: zone.unclassified_face_area_m2,
           name: waiting.length + (waiting.length === 1 ? " unclassified Face" : " unclassified Faces") } });
       (all ? waiting : waiting.slice(0, SHOWN_AT_FIRST)).forEach(function (face) {
         rows.push(faceRow(face, summary, 2));
@@ -389,10 +389,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var face = row.record.face;
     if (field === "name") return row.record.name;
     if (ZONE_FIELDS[field]) return "";
-    if (!face) {
-      return field === "area_m2" && !row.record.more ?
-        area(totalArea(row.record.every || row.record.faces), profile) : "";
-    }
+    // A Zone row and its unclassified summary show the totals the host published for the occurrence.
+    if (!face) return field === "area_m2" && !row.record.more ? area(row.record.area, profile) : "";
     if (field === "assembly_id") return "";
     if (field === "face_type") return words.faceType(face.values.face_type);
     if (field === "boundary_condition") {
@@ -403,10 +401,6 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
 
   var ZONE_FIELDS = { building_segment: true, level: true, ground_depth_mm: true };
   var SHARED_FACE = "Read only while this Face's Zone is shared with another occurrence.";
-
-  function totalArea(faces) {
-    return faces.reduce(function (sum, face) { return sum + face.area_m2; }, 0);
-  }
 
   function area(square_metres, profile) {
     return units.format(square_metres, AREA, profile, { showUnit: false });
@@ -960,7 +954,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var projection = state.controls.project(zoneRows.map(function (row) { return row.record; }), {
       id: function (record) { return record.id; },
       value: function (record, field) {
-        if (field === "area_m2") return totalArea(record.every);
+        if (field === "area_m2") return record.area;
         if (field === "name") return record.name;
         return FACE_FIELDS[field] ? null : field === "building_segment" || field === "level" ?
           zoneOptions.label(zoneOptions.read(state.snapshot), record.zone, field) : record.zone.values[field];

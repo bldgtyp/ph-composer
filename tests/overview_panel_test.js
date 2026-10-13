@@ -33,8 +33,10 @@ function snapshot() {
       "ph_composer.zones.overview": { status: "completed", value: {
         zones: [{ id: "zon_a", schema_version: 1, user_data: {}, extension_data: {},
           reference: { zone_id: "zon_a", zone_path: [100] }, state: "found", face_count: 2,
+          face_area_m2: 20, unclassified_face_area_m2: 8,
           values: { name: "Zone 1", building_segment: "house", level: null, ground_depth_mm: 0 } }],
-        make_zone: { parent_path: [], entity_ids: [200] }, units: { ground_depth_mm: "mm" }
+        make_zone: { parent_path: [], entity_ids: [200] },
+        units: { ground_depth_mm: "mm", face_area_m2: "m2", unclassified_face_area_m2: "m2" }
       } },
       "ph_composer.zones.faces.faces": { status: "completed", value: { units: { area_m2: "m2" }, faces: [{
         reference: { zone_id: "zon_a", zone_path: [100], entity_path: [101], entity_id: "fac_a" },
@@ -152,6 +154,8 @@ test("area headers and Zone and Face values follow the display profile together"
   additional.reference.entity_path = [103];
   additional.reference.entity_id = "fac_c";
   faces.push(additional);
+  // The host totals the occurrence's Faces; the panel shows its numbers and sums nothing.
+  payload.sections["ph_composer.zones.overview"].value.zones[0].face_area_m2 = 12;
   p.panel.receive({ type: "panel.snapshot", payload: payload });
   var section = p.query("[data-section='ph_composer.overview']");
   assert.ok(section.querySelectorAll("select").some(function (node) {

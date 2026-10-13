@@ -66,6 +66,34 @@ module PhComposer
         end.sort_by { |entry| [entry[1], entry[2]] }]
       end
 
+      # What a client needs to stage installation edits without classifying edges itself: each
+      # non-empty element's four edges with their classification and whether `paint` accepts them, the
+      # digest of what `copy` compares (equal keys mean `copy` accepts the pair; the value is opaque),
+      # and each element's slot in the join `copy` performs. Derived on every read, never stored.
+      def topology_facts(record)
+        layout = Grid.new(record)
+        edges = record.fetch("elements").each_with_object({}) do |element, rows|
+          next if element.fetch("kind") == "empty"
+
+          rows[element.fetch("id")] = Types::SIDES.zip(layout.classify(element)).to_h do |side, classification|
+            [side, { "classification" => classification.to_s, "paintable" => classification == :perimeter }]
+          end
+        end
+        slots = record.fetch("elements").to_h { |element| [element.fetch("id"), CanonicalJson.generate(slot(element))] }
+        { "edges" => edges, "copy_key" => CanonicalJson.digest(comparable(topology(record))), "copy_slots" => slots }
+      end
+
+      # The topology as `copy` compares it, with each dimension as a Float: Ruby equality takes 1 and
+      # 1.0 as one value, and the digest must too.
+      def comparable(topology)
+        rows, columns, elements = topology
+        [rows.map { |value| value&.to_f }, columns.map { |value| value&.to_f }, elements]
+      end
+
+      def slot(element)
+        [element.fetch("kind"), element.fetch("row_span"), element.fetch("column_span")]
+      end
+
       def copy(source, target)
         unless topology(source) == topology(target)
           raise CodedError.new("validation.failed", "Copy targets need an identical grid and edge topology.")
@@ -73,13 +101,9 @@ module PhComposer
 
         validate(source)
         result = DeepCopy.call(target)
-        assignments = source.fetch("elements").to_h do |element|
-          [[element.fetch("kind"), element.fetch("row_span"), element.fetch("column_span")], element.fetch("installs")]
-        end
+        assignments = source.fetch("elements").to_h { |element| [slot(element), element.fetch("installs")] }
         result.fetch("elements").each do |element|
-          element["installs"] = DeepCopy.call(assignments.fetch(
-            [element.fetch("kind"), element.fetch("row_span"), element.fetch("column_span")]
-          ))
+          element["installs"] = DeepCopy.call(assignments.fetch(slot(element)))
         end
         result
       end

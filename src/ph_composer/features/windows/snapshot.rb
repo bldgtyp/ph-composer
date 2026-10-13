@@ -84,7 +84,7 @@ module PhComposer
           "thermal" => thermal, "width_m" => dimensions(record.fetch("columns_m")),
           "height_m" => dimensions(record.fetch("rows_m")),
           "install_depth_m" => record.fetch("install_depth_m", settings.fetch("default_install_depth_m")),
-          "complete" => thermal.fetch("complete")
+          "complete" => thermal.fetch("complete"), "install_topology" => Installs.topology_facts(record)
         })
       end
 

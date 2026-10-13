@@ -8197,7 +8197,8 @@ Result:
               "width_m",
               "height_m",
               "install_depth_m",
-              "complete"
+              "complete",
+              "install_topology"
             ],
             "properties": {
               "thermal": {
@@ -8493,6 +8494,128 @@ Result:
               },
               "complete": {
                 "type": "boolean"
+              },
+              "install_topology": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "edges",
+                  "copy_key",
+                  "copy_slots"
+                ],
+                "properties": {
+                  "edges": {
+                    "type": "object",
+                    "description": "Each non-empty element's four edges, by element id.",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "top",
+                        "right",
+                        "bottom",
+                        "left"
+                      ],
+                      "properties": {
+                        "top": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "classification",
+                            "paintable"
+                          ],
+                          "properties": {
+                            "classification": {
+                              "type": "string",
+                              "enum": [
+                                "perimeter",
+                                "shared",
+                                "partial"
+                              ]
+                            },
+                            "paintable": {
+                              "type": "boolean"
+                            }
+                          }
+                        },
+                        "right": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "classification",
+                            "paintable"
+                          ],
+                          "properties": {
+                            "classification": {
+                              "type": "string",
+                              "enum": [
+                                "perimeter",
+                                "shared",
+                                "partial"
+                              ]
+                            },
+                            "paintable": {
+                              "type": "boolean"
+                            }
+                          }
+                        },
+                        "bottom": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "classification",
+                            "paintable"
+                          ],
+                          "properties": {
+                            "classification": {
+                              "type": "string",
+                              "enum": [
+                                "perimeter",
+                                "shared",
+                                "partial"
+                              ]
+                            },
+                            "paintable": {
+                              "type": "boolean"
+                            }
+                          }
+                        },
+                        "left": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "classification",
+                            "paintable"
+                          ],
+                          "properties": {
+                            "classification": {
+                              "type": "string",
+                              "enum": [
+                                "perimeter",
+                                "shared",
+                                "partial"
+                              ]
+                            },
+                            "paintable": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "copy_key": {
+                    "type": "string",
+                    "description": "Equal on two Types when an installation copy between them is accepted; opaque."
+                  },
+                  "copy_slots": {
+                    "type": "object",
+                    "description": "Each element's slot in an installation copy, by element id; equal slots receive each other's.",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
               }
             }
           }
@@ -9144,7 +9267,8 @@ Result:
               "width_m",
               "height_m",
               "install_depth_m",
-              "complete"
+              "complete",
+              "install_topology"
             ],
             "properties": {
               "thermal": {
@@ -9440,6 +9564,128 @@ Result:
               },
               "complete": {
                 "type": "boolean"
+              },
+              "install_topology": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "edges",
+                  "copy_key",
+                  "copy_slots"
+                ],
+                "properties": {
+                  "edges": {
+                    "type": "object",
+                    "description": "Each non-empty element's four edges, by element id.",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "top",
+                        "right",
+                        "bottom",
+                        "left"
+                      ],
+                      "properties": {
+                        "top": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "classification",
+                            "paintable"
+                          ],
+                          "properties": {
+                            "classification": {
+                              "type": "string",
+                              "enum": [
+                                "perimeter",
+                                "shared",
+                                "partial"
+                              ]
+                            },
+                            "paintable": {
+                              "type": "boolean"
+                            }
+                          }
+                        },
+                        "right": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "classification",
+                            "paintable"
+                          ],
+                          "properties": {
+                            "classification": {
+                              "type": "string",
+                              "enum": [
+                                "perimeter",
+                                "shared",
+                                "partial"
+                              ]
+                            },
+                            "paintable": {
+                              "type": "boolean"
+                            }
+                          }
+                        },
+                        "bottom": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "classification",
+                            "paintable"
+                          ],
+                          "properties": {
+                            "classification": {
+                              "type": "string",
+                              "enum": [
+                                "perimeter",
+                                "shared",
+                                "partial"
+                              ]
+                            },
+                            "paintable": {
+                              "type": "boolean"
+                            }
+                          }
+                        },
+                        "left": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "classification",
+                            "paintable"
+                          ],
+                          "properties": {
+                            "classification": {
+                              "type": "string",
+                              "enum": [
+                                "perimeter",
+                                "shared",
+                                "partial"
+                              ]
+                            },
+                            "paintable": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "copy_key": {
+                    "type": "string",
+                    "description": "Equal on two Types when an installation copy between them is accepted; opaque."
+                  },
+                  "copy_slots": {
+                    "type": "object",
+                    "description": "Each element's slot in an installation copy, by element id; equal slots receive each other's.",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
               }
             }
           }
@@ -10057,7 +10303,7 @@ Example params:
 
 Every Zone occurrence in one complete projection, for the panel. Scripts page ph_composer.zones.list instead. Owner: `ph_composer.zones`.
 
-Refuses: `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -10098,6 +10344,8 @@ Result:
           "reference",
           "state",
           "face_count",
+          "face_area_m2",
+          "unclassified_face_area_m2",
           "independence"
         ],
         "properties": {
@@ -10215,6 +10463,18 @@ Result:
           "face_count": {
             "type": "integer",
             "minimum": 0
+          },
+          "face_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "x-unit": "m2",
+            "description": "Summed over this occurrence's Faces, each through its own transform."
+          },
+          "unclassified_face_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "x-unit": "m2",
+            "description": "Summed over this occurrence's Faces, each through its own transform."
           },
           "independence": {
             "type": [
@@ -10366,13 +10626,27 @@ Result:
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ground_depth_mm"
+        "ground_depth_mm",
+        "face_area_m2",
+        "unclassified_face_area_m2"
       ],
       "properties": {
         "ground_depth_mm": {
           "type": "string",
           "enum": [
             "mm"
+          ]
+        },
+        "face_area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        },
+        "unclassified_face_area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
           ]
         }
       }
@@ -12011,7 +12285,7 @@ Example params:
 
 One page of Zone occurrences, filtered and projected, and the Make Zone target. Owner: `ph_composer.zones`.
 
-Refuses: `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -12205,6 +12479,18 @@ Result:
             "type": "integer",
             "minimum": 0
           },
+          "face_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "x-unit": "m2",
+            "description": "Summed over this occurrence's Faces, each through its own transform."
+          },
+          "unclassified_face_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "x-unit": "m2",
+            "description": "Summed over this occurrence's Faces, each through its own transform."
+          },
           "independence": {
             "type": [
               "object",
@@ -12356,13 +12642,27 @@ Result:
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ground_depth_mm"
+        "ground_depth_mm",
+        "face_area_m2",
+        "unclassified_face_area_m2"
       ],
       "properties": {
         "ground_depth_mm": {
           "type": "string",
           "enum": [
             "mm"
+          ]
+        },
+        "face_area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        },
+        "unclassified_face_area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
           ]
         }
       }

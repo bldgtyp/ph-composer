@@ -42,12 +42,18 @@ module PhComposer
       }).merge("type" => %w[object null],
                "description" => "For an occurrence that is not found cleanly, whether Make Zone independent " \
                                 "applies; null otherwise.")
+      # A Zone read captures each Face's geometry for the area totals, so it answers what a Face read does.
+      READ = (Refuses::READ + %w[geometry.invalid]).freeze
+      AREA_TOTAL = { "type" => "number", "minimum" => 0, "x-unit" => "m2",
+                     "description" => "Summed over this occurrence's Faces, each through its own transform." }.freeze
       ZONE_ROW = Shapes.with(TARGET.descriptor.view_schema, "display" => DISPLAY,
                                                             "reference" => ZONE_REFERENCE,
                                                             "state" => { "type" => "string",
                                                                          "enum" => %w[found ambiguous shared_definition
                                                                                       wrong_hierarchy] },
                                                             "face_count" => Shapes::COUNT,
+                                                            "face_area_m2" => AREA_TOTAL,
+                                                            "unclassified_face_area_m2" => AREA_TOTAL,
                                                             "independence" => INDEPENDENCE)
       # A row as `list` returns it: whole, or with `fields` only its identity, state and those values.
       PROJECTED_ZONE_ROW = ZONE_ROW.merge(
@@ -81,7 +87,9 @@ module PhComposer
                                          "description" => "The params Make Zone takes for the current selection, " \
                                                           "or null when the selection cannot become a Zone."),
         "restorable" => Shapes.list(RESTORABLE),
-        "units" => Shapes.object({ "ground_depth_mm" => { "type" => "string", "enum" => ["mm"] } })
+        "units" => Shapes.object({ "ground_depth_mm" => { "type" => "string", "enum" => ["mm"] },
+                                   "face_area_m2" => { "type" => "string", "enum" => ["m2"] },
+                                   "unclassified_face_area_m2" => { "type" => "string", "enum" => ["m2"] } })
       }).freeze
       LIST_RESULT = Shapes.object(
         ALL_RESULT.fetch("properties").merge(
@@ -98,12 +106,12 @@ module PhComposer
         ColourModes.install(feature)
         feature.query("#{FEATURE_ID}.list",
                       :description => "One page of Zone occurrences, filtered and projected, and the Make Zone target.",
-                      :refuses => Refuses::READ + Refuses::PAGE, :params => LIST_PARAMS, :result => LIST_RESULT,
+                      :refuses => READ + Refuses::PAGE, :params => LIST_PARAMS, :result => LIST_RESULT,
                       :examples => [{}, { "fields" => ["name"], "limit" => 20 }]) { |request| Zones.list(request) }
         feature.query("#{FEATURE_ID}.all",
                       :description => "Every Zone occurrence in one complete projection, for the panel. Scripts " \
                                       "page #{FEATURE_ID}.list instead.",
-                      :refuses => Refuses::READ,
+                      :refuses => READ,
                       :params => Shapes::NONE, :result => ALL_RESULT, :examples => [{}]) do |request|
           Zones.all(request)
         end

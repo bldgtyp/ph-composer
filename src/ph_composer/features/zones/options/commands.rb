@@ -33,12 +33,10 @@ module PhComposer
         def create(request, proposal, collection, values, user_data = nil)
           params = draft(request, collection)
           temporary = "new:option"
-          params.fetch(:options) << values.merge("id" => temporary)
+          params.fetch(:options) << values.merge("id" => temporary).merge(user_data ? { "user_data" => user_data } : {})
           params[:default_segment_id] ||= temporary if collection == "building_segment"
           result = Options.manage(request, proposal, **params)
-          id = result.fetch("created_ids").fetch(temporary)
-          proposal.find(KINDS.fetch(collection).id, id).after["user_data"] = DeepCopy.call(user_data) if user_data
-          { "id" => id }
+          { "id" => result.fetch("created_ids").fetch(temporary) }
         end
 
         def update(request, proposal, collection, id, values, expected_values)

@@ -105,6 +105,18 @@ call nothing in Zones; Window units and their placement are layer 3 and read Zon
 requires `windows`. The Assemblies inventory shows Face usage through a table contribution from
 Zones' panel module, so the inventory names no Face.
 
+A definition feature whose definitions have placed users keeps one authoring coordinator above its
+operations. In `windows` that is `Windows::Authoring` (`features/windows/authoring.rb`): every
+public command, library callback and library assignment that changes a product, a Type or the
+Window defaults goes through it, and it runs one order: the copied-identity repair the feature
+advertises on every action, the definition's record proposal, then what the placed Units must do to
+follow it (a Type change moves them; a Type delete without a replacement removes its generated
+definition). `Products::Operations`, `Types::Operations` and `Settings.propose` propose records only
+and name no Unit, so they are tested with record dictionaries alone. The coordinator owns the
+host-dependent order because only it sees both layers; it sits at the feature's top, not in the
+definition layer, so the rule above still holds. A compound command that is its own coordinator,
+such as the Installs save, runs the repair once and calls the operations directly.
+
 The panel's files follow the same layers. The UI kit sits at the top of `html/`; the foundation's
 own screens are under `html/sections/` (shell, Colour-by, Export) and `html/library/` (the Library
 pane, its provider sidebar and the library export); each feature's screens are under

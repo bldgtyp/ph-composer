@@ -178,6 +178,34 @@ class ParticipantInvocationTest < PhComposerTestCase
     expect_refused(invoke, "proposal.foreign_write")
   end
 
+  def test_a_participant_cannot_change_a_write_it_was_admitted_for
+    install(provider do |request, proposal|
+      kind = +ITEM
+      after = { "id" => "pri_Ab12Cd34Ef56", "schema_version" => 1, "label" => "own" }
+      proposal.put(kind, :before => nil, :after => after)
+      kind.replace(NOTE)
+      after["label"] = "changed"
+      written = proposal.find(ITEM, "pri_Ab12Cd34Ef56")
+      raise "admitted write changed" unless written.kind == ITEM && written.after["label"] == "own"
+
+      { "id" => "pri_Ab12Cd34Ef56", "nested" => {} }
+    end)
+    assert_equal "committed", invoke["effect"]
+    assert_equal ["pri_Ab12Cd34Ef56"], items
+  end
+
+  def test_a_participant_cannot_restage_an_earlier_write_of_another_owner
+    install(provider do |_request, proposal|
+      note = proposal.writes.find { |write| write.kind == NOTE }
+      proposal.restage(NOTE, note.id, :after => note.after.merge("label" => "theirs"))
+      { "id" => "none", "nested" => {} }
+    end, consumer do |request, proposal|
+      request.engine.propose_create(NOTE, proposal, :values => { "label" => "mine" })
+      request.participate(ADD, "label" => "One")
+    end)
+    expect_refused(invoke, "proposal.foreign_write")
+  end
+
   # A step whose payload a later contributor can reach and edit in place.
   class PayloadStep < MarkStep
     attr_reader :payload

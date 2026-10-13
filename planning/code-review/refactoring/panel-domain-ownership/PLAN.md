@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped; implementation ready, not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+ISSUE: [#107](https://github.com/bldgtyp/ph-composer/issues/107)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDINGS: [JS-01](../../sections/05-javascript.md#js-01-window-installation-eligibility-duplicates-ruby-domain-rules), [JS-05](../../sections/05-javascript.md#js-05-zone-and-unclassified-summary-area-is-calculated-in-the-panel)
 DEPENDS ON: nothing. Two independent slices: PD-01 and PD-02 (Windows), PD-03 (Zones). Coordinate

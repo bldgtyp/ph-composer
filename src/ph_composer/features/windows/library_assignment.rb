@@ -47,9 +47,9 @@ module PhComposer
 
       # The same grid gesture the action of that name makes, guarded by the target's expected values.
       def assign_grid(request, proposal, target, gesture, values, &change)
-        Types::Operations.grid(request, proposal,
-                               :gesture => gesture, :id => target.fetch("id"), :values => values,
-                               :expected_values => target.fetch("expected_values")) do |record, _identity|
+        Authoring.grid(request, proposal,
+                       :gesture => gesture, :id => target.fetch("id"), :values => values,
+                       :expected_values => target.fetch("expected_values")) do |record, _identity|
           change.call(record)
         end
       end
@@ -61,7 +61,8 @@ module PhComposer
           end
 
           values = Settings.read(request.model).merge("default_psi_install_id" => id)
-          Settings.propose(request, proposal, :values => values, :expected_values => target.fetch("expected_settings"))
+          Authoring.update_settings(request, proposal, :values => values,
+                                                       :expected_values => target.fetch("expected_settings"))
           return
         end
         unless target.keys.sort == %w[element_id expected_settings expected_values id mode side]
