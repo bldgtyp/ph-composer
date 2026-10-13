@@ -1,8 +1,8 @@
 # Zone-copy participation by child owners
 
 DATE: 2026-10-13
-STATUS: Design; ZC-01 is a host spike whose deliverable is a document. Not implementation ready beyond ZC-01. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+STATUS: ZC-01 implemented on branch: late binding confirmed on the host. ZC-02 to ZC-04 are implementation ready. Stage ledger in [STATUS.md](STATUS.md).
+ISSUE: [#113](https://github.com/bldgtyp/ph-composer/issues/113)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 PRODUCT REQUEST: [copied-Zone Windows](../../../features/unscheduled/copied-zone-windows/README.md)
 DEPENDS ON: [Registration reliability](../../../archive/registration-reliability/PLAN.md) RR-02 for the new
@@ -97,7 +97,12 @@ or re-resolvable after `make_unique` on the host.
 
 ### ZC-01: host spike (document deliverable)
 
-State: Scoped.
+State: Implemented on branch. Decision: late binding as designed; D-01's decline path is not needed.
+The note is [SKETCHUP_HOST_BEHAVIOR.md, "Window Units inside a copied Zone"](../../../../context/SKETCHUP_HOST_BEHAVIOR.md#window-units-inside-a-copied-zone).
+Two refinements for ZC-02 and ZC-03, neither an escalation: the logical binding matches same-id
+Units by equal pre-images, so path order is only a tiebreak; and a nested copy reaches the transition
+only after the wrapper's Make Unique, because the parent refuses first. Native Undo of copy plus
+repair is left to ZC-04.
 
 Extend `tools/spikes/copied-zone-independence/spike.rb` or add a sibling. On the current host, with a
 Zone holding two glued cutting Units of two Types:
