@@ -25,43 +25,52 @@ module PhComposer
 
         def contribute(request, proposal, description)
           zone_path = description.fetch("zone_path")
-          inside = Occurrences.under(request.model, zone_path)
-          held = Occurrences.held_ids(request.model, :except => zone_path)
-          copies = inside.select { |item| held.include?(item.record.fetch("id")) }.sort_by(&:path)
-          return [] if copies.empty?
+          inside = Occurrences.under(request.model, zone_path).sort_by(&:path)
+          updates = updates(request, inside, Occurrences.held_ids(request.model, :except => zone_path), description)
+          return [] if updates.empty?
 
-          step = ZoneCopyStep.new(:zone_path => zone_path, :inside => inside,
-                                  :updates => updates(request, copies, held + inside.map { |item| item.record["id"] },
-                                                      description))
+          step = ZoneCopyStep.new(:zone_path => zone_path, :inside => inside, :updates => updates)
           proposal.add_step(step, :scopes => [])
           step.affected
         end
 
-        def updates(request, copies, ids, description)
+        # Every Unit inside the occurrence whose id is also held elsewhere gets a new id; every Unit
+        # inside whose payloads name a reidentified Unit, the Zone or its Faces is remapped too. Only
+        # the changed Units are returned.
+        def updates(request, inside, held, description)
           allocator = Records::Identity.allocator(request, "transition" => Zones::TRANSITION,
                                                            "zone_id" => description.fetch("new_zone_id"))
-          updates = copies.map do |copy|
-            raise CodedError.new("target.locked", "Unlock the copied Window before making its Zone independent.") if
-              copy.locked
+          ids = held + inside.map { |item| item.record.fetch("id") }
+          updates = inside.map do |item|
+            after = DeepCopy.call(item.record)
+            if held.include?(item.record.fetch("id"))
+              after["id"] = allocator.call("wun")
+              raise CodedError.new("identity.conflict", "The allocated Window identity already exists.") if
+                ids.include?(after["id"])
 
-            id = allocator.call("wun")
-            raise CodedError.new("identity.conflict", "The allocated Window identity already exists.") if
-              ids.include?(id)
-
-            ids << id
-            IdentityPlan::Update.new(:reference => copy.reference, :before => DeepCopy.call(copy.record),
-                                     :after => DeepCopy.call(copy.record).merge("id" => id))
+              ids << after["id"]
+            end
+            IdentityPlan::Update.new(:reference => item.reference, :before => DeepCopy.call(item.record),
+                                     :after => after)
           end
           copy_extensions(request, updates, description)
-          updates.each { |update| Units.validate!(update.after) }
+          inside.zip(updates).reject { |_item, update| update.after == update.before }.map do |item, update|
+            raise CodedError.new("target.locked", "Unlock the copied Window before making its Zone independent.") if
+              item.locked
+
+            Units.validate!(update.after)
+            update
+          end
         end
 
-        # A copied Unit's structured payloads are remapped across the whole copied collection: to
-        # its sibling Units' new ids and to the Zone's and Faces' new ids, typed by the plan; anything
-        # else, such as a Type, keeps its id.
+        # Structured payloads are remapped across the whole copied collection, typed by the plan: to
+        # the Zone's and Faces' new ids and to sibling Units' new ids; anything else, such as a Type,
+        # keeps its id. An id two copied Units share maps each to its own new id, never a sibling's.
         def copy_extensions(request, updates, description)
-          mapping = description.fetch("mapping").merge(updates.to_h do |update|
-            [update.before.fetch("id"), update.after.fetch("id")]
+          counts = updates.map { |update| update.before.fetch("id") }.tally
+          shared = description.fetch("mapping").merge(updates.each_with_object({}) do |update, mapping|
+            old_id = update.before.fetch("id")
+            mapping[old_id] = update.after.fetch("id") if counts[old_id] == 1
           end)
           parent = description.fetch("references").map do |row|
             Records::ReferenceEntry.new(:kind => row.fetch("kind"), :key => row.fetch("key"),
@@ -75,10 +84,11 @@ module PhComposer
             data = update.before.fetch("extension_data", {})
             next if data.empty?
 
+            old_id = update.before.fetch("id")
+            mapping = shared.merge(old_id => update.after.fetch("id"))
             update.after["extension_data"] = Records::Extension.copy_data(data, request.registry.catalog, "Window unit",
-                                                                          update.before.fetch("id"), mapping,
-                                                                          :engine => request.engine,
-                                                                          :reference_plan => plan)
+                                                                          old_id, mapping, :engine => request.engine,
+                                                                                           :reference_plan => plan)
           end
         end
         private_class_method :updates, :copy_extensions
@@ -101,7 +111,9 @@ module PhComposer
               "before" => DeepCopy.call(update.before), "after" => DeepCopy.call(update.after) }
           end.freeze
           @affected = @bindings.map do |row|
-            { "kind" => REFERENCE_KIND, "id" => row.fetch("after").fetch("id"), "change" => "identity_repaired" }
+            renamed = row.fetch("after").fetch("id") != row.fetch("before").fetch("id")
+            { "kind" => REFERENCE_KIND, "id" => row.fetch("after").fetch("id"),
+              "change" => renamed ? "identity_repaired" : "updated" }
           end
           @captured = nil
         end
@@ -111,7 +123,9 @@ module PhComposer
         end
 
         def temporary_ids
-          @bindings.map { |row| row.fetch("after").fetch("id") }
+          @bindings.map { |row| row.fetch("after").fetch("id") }.reject do |id|
+            @bindings.any? { |row| row.fetch("before").fetch("id") == id }
+          end
         end
 
         def apply(model, _slots)
@@ -136,7 +150,7 @@ module PhComposer
 
         # Writes back the records apply replaced; nothing when apply did not reach its writes.
         def restore
-          Array(@captured).each { |entity, record| Units.write(entity, record) }.length
+          Units.restore_all(@captured)
         end
       end
     end

@@ -47,7 +47,7 @@ module PhComposer
         # Writes back what apply replaced, for a host follow-up that cannot abort. Nothing when apply
         # did not reach its writes.
         def restore
-          Array(@captured).each { |entity, record| Units.write(entity, record) }.length
+          Units.restore_all(@captured)
         end
       end
 

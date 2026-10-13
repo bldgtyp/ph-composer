@@ -110,6 +110,64 @@ class WindowZoneCopyTest < PhComposerTestCase
     assert_equal payload, units_under(@original).first.dig("extension_data", extension.namespace, "payload")
   end
 
+  def test_two_copied_units_sharing_an_id_each_keep_a_self_reference_to_themselves
+    extension = register_unit_extension
+    first, second = @original.entities.to_a.grep(Sketchup::ComponentInstance)
+    record = U.read(first)
+    payload = { "sibling" => record.fetch("id"), "zone" => ZONE_STORE.read(@original).fetch("id") }
+    shared = record.merge("extension_data" => { extension.namespace => extension.envelope(payload) })
+    [first, second].each { |unit| U.write(unit, shared) }
+    copy = shared_copy(@original, 400)
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal %w[completed committed], result.values_at("status", "effect"), result.inspect
+    units_under(copy).each do |unit|
+      assert_equal unit.fetch("id"), unit.dig("extension_data", extension.namespace, "payload", "sibling")
+    end
+  end
+
+  def test_a_copied_unit_whose_id_is_already_unique_still_follows_its_zone
+    extension = register_unit_extension
+    first, second = @original.entities.to_a.grep(Sketchup::ComponentInstance)
+    payload = { "sibling" => U.read(second).fetch("id"), "zone" => ZONE_STORE.read(@original).fetch("id") }
+    U.write(first, U.read(first).merge("extension_data" => { extension.namespace => extension.envelope(payload) }))
+    copy = shared_copy(@original, 400)
+    copy.make_unique
+    @original.entities.erase_entities(@original.entities.to_a.grep(Sketchup::ComponentInstance).first)
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal %w[completed committed], result.values_at("status", "effect"), result.inspect
+    copied_first, copied_second = units_under(copy)
+    assert_equal({ "sibling" => copied_second.fetch("id"), "zone" => ZONE_STORE.read(copy).fetch("id") },
+                 copied_first.dig("extension_data", extension.namespace, "payload"))
+  end
+
+  def test_a_failing_unit_restore_still_attempts_every_other_unit
+    PhComposer::Registry.install([fault_feature])
+    native_copy(@original, 400)
+    attempts = []
+    original_ids = units_under(@original).map { |row| row["id"] }
+    U.singleton_class.send(:alias_method, :__restore_write, :write)
+    U.define_singleton_method(:write) do |entity, record|
+      if original_ids.include?(record["id"])
+        attempts << record["id"]
+        raise IOError, "injected" if attempts.length == 1
+      end
+      __restore_write(entity, record)
+    end
+
+    UI.run_timers
+
+    assert_equal original_ids.sort, attempts.sort, "both Units were attempted"
+    assert_equal :error, @notices.last.last
+  ensure
+    U.singleton_class.send(:remove_method, :write)
+    U.singleton_class.send(:alias_method, :write, :__restore_write)
+    U.singleton_class.send(:remove_method, :__restore_write)
+  end
+
   def test_an_unreadable_unit_outside_the_copy_does_not_block_it
     stray = Sketchup::ComponentInstance.new(900, @model.definitions.add("Stray"), {})
     stray.set_attribute(U::STORE.dictionary, U::STORE.key, "{not json")

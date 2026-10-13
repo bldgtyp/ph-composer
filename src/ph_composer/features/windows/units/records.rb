@@ -31,6 +31,21 @@ module PhComposer
         raise CodedError.new("validation.failed", "The Window unit record is invalid.", "findings" => found)
       end
 
+      # Writes each captured `[entity, record]` back, attempting every one even after a failure, and
+      # raises once at the end when any could not be written. Answers how many were written.
+      def restore_all(captured)
+        failures = Array(captured).count do |entity, record|
+          write(entity, record)
+          false
+        rescue StandardError => error
+          Diagnostics.exception("window_restore", error)
+          true
+        end
+        raise InternalError, "#{failures} Window records could not be restored." if failures.positive?
+
+        Array(captured).length
+      end
+
       def read(entity)
         record = STORE.read(entity)
         return nil if record.nil? && entity.get_attribute(STORE.dictionary, STORE.key).nil?

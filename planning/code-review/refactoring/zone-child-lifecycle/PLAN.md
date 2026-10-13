@@ -146,7 +146,13 @@ Exit: tests pass; Zones source contains no child feature name.
 State: Implemented on branch. The step is `Units::ZoneCopyStep` beside `Units::ZoneCopy` rather than a
 mode of `IdentityStep`, which keeps path binding for the broad repair; `IdentityStep` still gains
 `restore`. `HostFollowUp` now asks every step to restore even after one fails. The test stub's Make
-Unique now gives nested ComponentInstances new ids and glue, as ZC-01 measured.
+Unique now gives nested ComponentInstances new ids and glue, as ZC-01 measured. Review added: the
+description carries the parent's typed reference entries so copied payloads remap to sibling Units and
+the new Zone and Faces; Units with already-unique ids are remapped too; two copied Units sharing an id
+each keep their own self-reference; enumeration is scoped to the occurrence; every captured Unit
+restore is attempted. Open follow-up: a copied payload that names a sibling Unit is checked through
+`Engine#resolve_reference`, which reads every Unit in the Model, so an unreadable Unit elsewhere still
+refuses that case. Scoping the engine's check to the staged plan is an Engine change outside ZC-03.
 
 Files: `features/windows/units/zone_copy.rb` (new), `units/identity_step.rb` (`restore`, late
 binding), `windows/install.rb`; a synthetic child feature under `tests/support/` or
