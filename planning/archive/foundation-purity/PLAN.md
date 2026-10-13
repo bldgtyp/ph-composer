@@ -1,11 +1,11 @@
 # Visible pure rules and native adapters
 
 DATE: 2026-10-13
-STATUS: Scoped optional improvement; implementation ready, lowest priority. Not authorized. Stage ledger in [STATUS.md](STATUS.md).
+STATUS: Complete. P-01 to P-03 merged to main in PR 121 and archived.
 ISSUE: [#120](https://github.com/bldgtyp/ph-composer/issues/120)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDING: [F03](../../sections/01-foundation.md#f03-the-common-foundation-mixes-pure-and-native-geometry-responsibilities)
-DEPENDS ON: nothing. Coordinate with [geometry contribution](../geometry-contribution-contracts/PLAN.md)
+FINDING: [F03](../../code-review/sections/01-foundation.md#f03-the-common-foundation-mixes-pure-and-native-geometry-responsibilities)
+DEPENDS ON: nothing. Coordinate with [geometry contribution](../../code-review/refactoring/geometry-contribution-contracts/PLAN.md)
 G-02 if both touch capture in the same period: one owner, one diff.
 
 ## Goal
@@ -64,7 +64,7 @@ digests are identical by construction: the same arithmetic runs on the same numb
 
 ### P-01: pure build and the adapter
 
-State: Implemented on branch. Deviation: the pure file is `tests/support/face_geometry_pure.rb`, not
+State: Complete; merged to main in PR 121. Deviation: the pure file is `tests/support/face_geometry_pure.rb`, not
 `tests/face_geometry_pure_test.rb`, because `tests/all_tests.rb` loads every `*_test.rb` into the
 stubbed process, where the no-SketchUp assertion cannot hold. It runs only as its own process.
 
@@ -88,7 +88,7 @@ Exit: the pure test passes in a bare process; `make test` passes.
 
 ### P-02: route callers and remove the shim
 
-State: Implemented on branch.
+State: Complete; merged to main in PR 121.
 
 1. Rename the nineteen call sites; delete `FaceGeometry.capture`; `grep -rn "FaceGeometry.capture"`
    finds nothing.
@@ -99,7 +99,7 @@ Exit: goldens unchanged; no caller of the removed method.
 
 ### P-03: dependency map and docs
 
-State: Implemented on branch.
+State: Complete; merged to main in PR 121.
 
 1. Add a short "What is pure and what is an adapter" table to `context/TECH_STACK.md` or
    `context/EXTENSIBILITY.md` "Organization and dependencies": pure values and rules

@@ -1,6 +1,6 @@
 # Foundation purity acceptance
 
-STATUS: Planned cases; none run. P01 to P04 are P-01; P05 is P-02; P06 is P-03.
+STATUS: Complete. P-01 to P-03 merged to main in PR 121 and archived.
 
 | Case | Scenario | Required result |
 | --- | --- | --- |
