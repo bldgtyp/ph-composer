@@ -87,7 +87,7 @@ class RegistryTest < PhComposerTestCase
     %i[declared_proposal_participants declared_menu_items].each do |collection|
       diagnostics = refused(feature do |registry|
         scope = registry.feature("probe.calls", :contract_version => 1)
-        scope.proposal_participant("probe.calls.participant") { |*_args| {} }
+        scope.proposal_participant("probe.calls.participant", **participant_contract) { |*_args| {} }
         scope.menu_item("probe.calls.item", :label => "Item", :menu => "Probe") { |_session| nil }
         scope.instance_variable_get(:@staging).public_send(collection).last.handler = "not callable"
       end)
@@ -361,10 +361,10 @@ class RegistryTest < PhComposerTestCase
   end
 
   def test_a_feature_can_publish_a_named_proposal_participant
-    handler = ->(_request, _proposal, _payload) {}
+    handler = ->(_request, _proposal) { {} }
     participant = feature("Participant") do |registry|
       registry.feature("test.participant", :contract_version => 1)
-              .proposal_participant("test.participant.retire", &handler)
+              .proposal_participant("test.participant.retire", **participant_contract, &handler)
     end
 
     Registry.install([participant])
@@ -558,6 +558,10 @@ class RegistryTest < PhComposerTestCase
 
   def read
     { :description => "Read.", :params => OBJECT, :result => OBJECT, :refuses => [] }
+  end
+
+  def participant_contract
+    { :description => "Probe.", :params => OBJECT, :result => OBJECT, :refuses => [] }
   end
 
   def subscriber(received = [])

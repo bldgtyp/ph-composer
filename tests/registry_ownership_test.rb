@@ -162,7 +162,8 @@ class RegistryOwnershipTest < PhComposerTestCase
       scope.menu_item("probe.owned.item", :label => strings[:item], :menu => strings[:menu]) { |_session| nil }
       scope.code("probe.refused", :description => strings[:code])
       scope.reference_retargeter("probe.owned.retarget", :target_kind => strings[:target]) { |*_args| nil }
-      scope.proposal_participant("probe.owned.participant") { |*_args| nil }
+      scope.proposal_participant("probe.owned.participant", :description => +"Probe.", :params => object,
+                                                            :result => object, :refuses => []) { |*_args| {} }
       scope.on_host_event(:selection_changed) { |_session| nil }
     end])
     strings.each_value { |text| text.replace("changed") }

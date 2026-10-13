@@ -23,7 +23,7 @@ module PhComposer
         check_snapshot_sections
         @diagnostics.concat(ExportValidation.new(@live, @staging).diagnostics)
         check_reference_retargeters
-        check_proposal_participants
+        @diagnostics.concat(ParticipantValidation.new(@live, @staging).diagnostics)
         @diagnostics.concat(LibraryValidation.new(@live, @staging).diagnostics)
         check_colour_modes
         check_menu_items
@@ -127,8 +127,9 @@ module PhComposer
         @staging.named
       end
 
+      # A participant is checked as an operation is; it answers no client, so it has no approval.
       def check_operations
-        @staging.declared_operations.each do |operation|
+        (@staging.declared_operations + @staging.declared_proposal_participants).each do |operation|
           add_schema_problems(operation, "params", operation.params)
           add_schema_problems(operation, "result", operation.result)
           unless operation.params.is_a?(Hash) && operation.params["type"] == "object"
@@ -280,14 +281,6 @@ module PhComposer
           add("registration.schema_invalid", subscription.owner, subscription.kind.to_s,
               "#{subscription.owner} subscribes to #{subscription.kind.inspect}, which needs a known host event " \
               "and a callable handler.")
-        end
-      end
-
-      def check_proposal_participants
-        @staging.declared_proposal_participants.reject { |participant| participant.handler.respond_to?(:call) }
-                .each do |participant|
-          add("registration.schema_invalid", participant.owner, participant.name,
-              "#{participant.name} needs a callable handler.")
         end
       end
 
@@ -457,6 +450,75 @@ module PhComposer
       end
     end
 
+    # The `participants:` edges of actions, queries and participants. Each named participant must be
+    # installed or in the batch, and owned by the caller's feature or one it requires; participants
+    # that name each other in a cycle are refused, since a call through one would never end.
+    class ParticipantValidation < Validation
+      def diagnostics
+        callers.each { |caller| check_edges(caller) }
+        check_cycles
+        @diagnostics
+      end
+
+      private
+
+      def callers
+        @staging.declared_queries + @staging.declared_actions + @staging.declared_proposal_participants
+      end
+
+      def participants
+        @live.proposal_participants.merge(@staging.declared_proposal_participants.to_h { |item| [item.name, item] })
+      end
+
+      def check_edges(caller)
+        names = caller.participants
+        unless names.is_a?(Array) && names.all?(String) && names.uniq.length == names.length
+          return problem(caller, "participants must be a list of distinct participant names")
+        end
+
+        names.each do |name|
+          participant = participants[name]
+          owner = participant&.owner
+          next if participant && (owner == caller.owner || requires(caller.owner).include?(owner))
+
+          message = if participant
+                      "#{caller.name} calls #{name}, which belongs to #{participant.owner}; " \
+                        "#{caller.owner} must require it."
+                    else
+                      "#{caller.name} calls #{name}, which no feature declares as a proposal participant."
+                    end
+          add("registration.missing_dependency", caller.owner, caller.name, message, owner || name)
+        end
+      end
+
+      def requires(feature_id)
+        feature = @staging.declared_features.find { |item| item.id == feature_id } || @live.features[feature_id]
+        feature ? Array(feature.requires) : []
+      end
+
+      def check_cycles
+        graph = participants
+        @staging.declared_proposal_participants.each do |start|
+          path = cycle_through(start.name, graph, [start.name])
+          next unless path
+
+          add("registration.cycle", start.owner, start.name,
+              "Proposal participants call each other in a cycle: #{path.join(' -> ')}.")
+        end
+      end
+
+      def cycle_through(name, graph, path)
+        Array(graph[name]&.participants).each do |next_name|
+          return path + [next_name] if next_name == path.first
+          next if path.include?(next_name)
+
+          found = cycle_through(next_name, graph, path + [next_name])
+          return found if found
+        end
+        nil
+      end
+    end
+
     # Feature codes are not names under a feature id, so they take their own checks.
     class CodeValidation < Validation
       CODE_PATTERN = /\A[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\z/.freeze
@@ -494,7 +556,7 @@ module PhComposer
       end
 
       def check_refusals
-        @staging.declared_operations.each do |operation|
+        (@staging.declared_operations + @staging.declared_proposal_participants).each do |operation|
           check_refusal_list(operation, operation.refuses, Refusals.common(operation))
         end
       end

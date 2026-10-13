@@ -21,7 +21,7 @@ module PhComposer
         Shapes.list(Shapes.object({ "client_id" => Shapes::TEXT, "copy" => copy_schema }))
       end
 
-      def resolve(request, proposal, imports, creates)
+      def resolve(request, imports, creates)
         rows = imports + creates
         InstallSave.duplicate_targets!(rows, "client_id")
         known = request.engine.ids(PSI_INSTALL_KIND)
@@ -30,9 +30,7 @@ module PhComposer
             raise CodedError.new("params.invalid", "A temporary identity collides with a saved product.")
           end
 
-          result = request.participant("ph_composer.library.copy_into_proposal").call(
-            request, proposal, row.fetch("copy")
-          )
+          result = request.participate("ph_composer.library.copy_into_proposal", row.fetch("copy"))
           id = result.fetch("local_id")
           raise CodedError.new("library.local_choice_required", "Choose a product for each staged import.") unless id
 

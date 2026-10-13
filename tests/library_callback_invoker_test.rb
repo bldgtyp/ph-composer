@@ -78,7 +78,7 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
     rescue PhComposer::CodedError
       {}
     end
-    assert_equal "library.mutation_owner", @proposal.refusal.code
+    assert_equal "proposal.foreign_write", @proposal.refusal.code
   end
 
   def test_a_callback_can_retarget_references_through_its_request
@@ -124,7 +124,7 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
       end
       {}
     end
-    assert_equal "library.mutation_owner", @proposal.refusal.code
+    assert_equal "proposal.foreign_write", @proposal.refusal.code
     assert_empty @engine.ids(KIND)
   end
 
@@ -143,7 +143,7 @@ class LibraryCallbackInvokerTest < PhComposerTestCase
     error = assert_raises(PhComposer::CodedError) do
       PhComposer::Library::CallbackInvoker.call(@request, @declaration, callback, {}, :readonly => true)
     end
-    assert_equal "library.mutation_owner", error.code
+    assert_equal "proposal.foreign_write", error.code
     assert_same error, @proposal.refusal
     assert_equal 1, @proposal.writes.length
     assert_empty @engine.ids(KIND)

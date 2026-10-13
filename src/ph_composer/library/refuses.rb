@@ -6,6 +6,7 @@ module PhComposer
     # each installed kind owner and projected for the operations that run those callbacks.
     module Refuses
       CALLBACKS = { "ph_composer.library.copy" => %i[local_read create replace assign],
+                    "ph_composer.library.copy_into_proposal" => %i[local_read create replace assign],
                     "ph_composer.library.in_file" => [:local_read] }.transform_values(&:freeze).freeze
 
       def self.callback_codes(registry, operation_name)
@@ -23,8 +24,8 @@ module PhComposer
                               record.unreadable]).freeze
       COPY = (LOAD + %w[copy.rule_missing extension.invalid identity.conflict library.adapter_invalid
                         library.callback_invalid library.catalog_stale library.local_choice_required
-                        library.mutation_owner library.review_required library.row_semantic_invalid
-                        library.row_unavailable record.unreadable
+                        library.review_required library.row_semantic_invalid
+                        library.row_unavailable proposal.contribution_replaced proposal.foreign_write record.unreadable
                         reference.invalid target.ambiguous target.changed target.locked target.not_found
                         target.shared_definition target.wrong_hierarchy target.wrong_kind
                         validation.failed]).freeze

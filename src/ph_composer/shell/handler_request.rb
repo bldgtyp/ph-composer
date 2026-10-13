@@ -117,12 +117,11 @@ module PhComposer
       raise
     end
 
-    def participant(name)
-      declaration = registry.proposal_participants[name]
-      raise CodedError.new("operation.participant_missing", "No proposal participant named #{name} is installed.") \
-        unless declaration
-
-      declaration.handler
+    # Calls a proposal participant inside this request's active proposal, under the same dependency
+    # rule as `query`; the calling declaration names it in `participants` (shell/participant_invocation.rb).
+    # Feature code never reaches a participant's handler directly.
+    def participate(name, params = {})
+      ParticipantInvocation.call(self, name, params)
     end
 
     private

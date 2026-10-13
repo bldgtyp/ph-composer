@@ -169,16 +169,17 @@ Codes are stable `noun.condition` strings, one per outcome:
 | Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |
 | Session | `session.unknown` (closed, reopened or never issued), `session.busy`, `session.closed`, `session.changed` (a native menu built for another Model), `session.inactive` (panel client only: its Model is no longer shown) |
 | Preconditions | `revision.stale`, `proposal.changed`, `record.unreadable` |
+| Proposal contributions | `proposal.foreign_write` (a participant or library callback staged a write to a kind its owner does not own, or into another change set), `proposal.contribution_replaced` (it removed or changed what an earlier contributor proposed) |
 | Targets | `target.not_found`, `target.changed`, `target.ambiguous`, `target.locked`, `target.wrong_kind`, `target.wrong_hierarchy`, `target.wrong_zone`, `target.same_zone`, `target.shared_definition`, `target.edit_path_changed` |
 | Validation | `params.invalid`, `validation.failed`, `reference.invalid`, `reference.in_use`, `geometry.invalid`, `geometry.failed`, `geometry.split_failed` |
 | Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_required`, `extension.migration_failed`, `extension.invalid`, `copy.rule_missing` |
 | Query | `query.limit_invalid`, `query.cursor_expired` |
-| Operation | `operation.failed`, `operation.rollback_unverified`, `operation.participant_missing`, `operation.proposal_required`, `operation.query_missing`, `operation.dependency_missing`, `operation.query_cycle`, `operation.locate_missing` |
+| Operation | `operation.failed`, `operation.rollback_unverified`, `operation.participant_missing`, `operation.proposal_required`, `operation.query_missing`, `operation.dependency_missing`, `operation.query_cycle`, `operation.locate_missing`, `operation.participant_cycle` |
 | Identity and scope | `identity.conflict`, `identity.choice_required`, `identity.choice_conflicts`, `scope.incomplete`, `selection.invalid` |
 | Registration | `registration.duplicate_id`, `registration.missing_dependency`, `registration.cycle`, `registration.contract_major`, `registration.schema_invalid` |
 | Translation | `payload.contract`, `section.missing_dependency`, `section.cycle`, `section.duplicate`, `section.version_unsupported`, `object.unavailable`, `dependency.unavailable` |
 | Export | `export.blocked`, `export.busy`, `export.cancelled`, `export.failed`, `export.refused`, `export.model_changed`, `export.destination_changed`, `export.replace_required`, `export.privacy_undeclared`, `export.relevance_unknown`, `export.metadata_omitted` (a finding), `task.expired` |
-| Library | `library.adapter_invalid`, `library.assignment_unavailable`, `library.callback_invalid`, `library.catalog_budget`, `library.catalog_stale`, `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.kind_unavailable`, `library.local_choice_required`, `library.mutation_owner`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_semantic_invalid`, `library.row_unavailable`, `library.schema_unsupported`, `library.setup_invalid`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, `library.update_destination_invalid`, `library.update_destination_required`. Catalog notes are listed in "Library providers and catalogs" |
+| Library | `library.adapter_invalid`, `library.assignment_unavailable`, `library.callback_invalid`, `library.catalog_budget`, `library.catalog_stale`, `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.kind_unavailable`, `library.local_choice_required`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_semantic_invalid`, `library.row_unavailable`, `library.schema_unsupported`, `library.setup_invalid`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, `library.update_destination_invalid`, `library.update_destination_required`. Catalog notes are listed in "Library providers and catalogs" |
 | Runtime | `runtime.asset_refused`, `runtime.boot_timeout`, `runtime.boot_failed`, `runtime.translation_failed`, `runtime.stopped`, `runtime.closed` |
 
 Shared nouns (`request`, `session`, `revision`, `proposal`, `target`, `params`, `validation`,
@@ -694,9 +695,9 @@ Its request's engine is `engine.projected(proposal, writable_kinds:, refusal_cod
 `incoming_references`, `check_identity_removal!`) answers as the proposal would leave the records,
 `find` refusing as the plain engine does (`target.not_found` for a record absent there, a staged
 delete included, `record.unreadable` for one that fails its kind), and a write into another change set or to a kind its owner did not register refuses at once with
-`library.mutation_owner`. A local read's projection accepts no write. After the callback returns,
-every write staged before it must be unchanged and every write it added must be to a record kind
-its owner registered; otherwise `library.mutation_owner`. Local reads get no proposal. Any
+`proposal.foreign_write`. A local read's projection accepts no write. After the callback returns,
+every write, step and finding staged before it must be unchanged; otherwise
+`proposal.contribution_replaced`. Local reads get no proposal. Any
 refusal inside the coordinator or a callback poisons the proposal, so a rescued error still writes
 nothing. `ph_composer.library.copy_into_proposal` applies the same rules inside another feature's
 action and refuses without that action's active proposal

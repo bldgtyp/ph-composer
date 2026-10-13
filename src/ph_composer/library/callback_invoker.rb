@@ -3,7 +3,9 @@
 module PhComposer
   module Library
     # A kind owner's callback participates in the caller's proposal. It sees validated detached
-    # inputs and the projected catalog, and can stage writes only to that owner's catalog kinds.
+    # inputs and the projected catalog, and can stage writes only to that owner's catalog kinds
+    # (`proposal.foreign_write`); it may not remove or change what was proposed before it
+    # (`proposal.contribution_replaced`).
     module CallbackInvoker
       module_function
 
@@ -11,13 +13,13 @@ module PhComposer
         validate!(params, callback.params, "params.invalid", "Library callback parameters are invalid.")
         writable = readonly ? [] : owned_kinds(request.registry, declaration.owner)
         engine = request.engine.projected(request.proposal, :writable_kinds => writable,
-                                                            :refusal_code => "library.mutation_owner")
+                                                            :refusal_code => "proposal.foreign_write")
         nested = request.with(:params => params, :owner => declaration.owner,
                               :proposal => readonly ? nil : request.proposal, :engine => engine)
-        before = DeepCopy.call(request.proposal&.writes&.map(&:to_h))
+        before = request.proposal && Operations::Contributions.snapshot(request.proposal)
         value = callback.handler.call(nested, readonly ? nil : request.proposal)
         validate!(value, callback.result, "library.callback_invalid", "Library callback returned an invalid result.")
-        validate_writes!(request, declaration.owner, before)
+        Operations::Contributions.preserved!(request.proposal, before) if before
         DeepCopy.call(value)
       rescue StandardError => error
         request.proposal&.refuse(error)
@@ -34,17 +36,7 @@ module PhComposer
         raise CodedError.new(code, message)
       end
 
-      def validate_writes!(request, owner, before)
-        return unless request.proposal
-
-        writes = request.proposal.writes
-        preserved = writes.first(before.length).map(&:to_h) == before
-        owned = writes.drop(before.length).all? { |write| request.registry.owner_of(write.kind) == owner }
-        return if preserved && owned
-
-        raise CodedError.new("library.mutation_owner", "Library callback changed another owner's proposal.")
-      end
-      private_class_method :owned_kinds, :validate!, :validate_writes!
+      private_class_method :owned_kinds, :validate!
     end
   end
 end

@@ -35,6 +35,9 @@ module PhComposer
       object(properties, :optional => %w[generation limit cursor])
     end
 
+    COPY_EXAMPLE = { "provider_id" => "example", "kind" => "example_parts", "generation" => 1,
+                     "library_id" => "synthetic", "record_id" => "one", "choice" => "create" }.freeze
+
     def copy_params
       properties = selected_params.fetch("properties").merge(
         "library_id" => described(TEXT, "The library holding the row, as the catalog row gives it."),
@@ -75,9 +78,7 @@ module PhComposer
                      :refuses => Refuses::COPY,
                      :params => copy_params, :result => Schemas.copy_result, :undo_name => "Copy Library Record",
                      :side_effects => "Copies or replaces local definitions and optional assignments in one Undo step.",
-                     :examples => [{ "provider_id" => "example", "kind" => "example_parts", "generation" => 1,
-                                     "library_id" => "synthetic", "record_id" => "one",
-                                     "choice" => "create" }]) do |request, proposal|
+                     :examples => [COPY_EXAMPLE]) do |request, proposal|
         Coordinator.copy(request, proposal)
       end
     end
@@ -110,7 +111,12 @@ module PhComposer
     end
 
     def install_commands(feature)
-      feature.proposal_participant("#{FEATURE_ID}.copy_into_proposal", &CopyParticipant.method(:call))
+      feature.proposal_participant("#{FEATURE_ID}.copy_into_proposal",
+                                   :description => "Copy or reuse one library record, with optional assignment, " \
+                                                   "inside the calling action's own proposal and Undo step.",
+                                   :refuses => Refuses::COPY - Refusals::COMMON.fetch("participant"),
+                                   :params => copy_params, :result => Schemas.copy_result,
+                                   :examples => [COPY_EXAMPLE], &CopyParticipant.method(:call))
       SetupCommands.install(feature)
       ExportRegistration.install(feature)
     end

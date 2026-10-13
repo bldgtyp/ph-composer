@@ -14,7 +14,7 @@ module PhComposer
           raise CodedError.new("target.changed", "Window defaults changed; reopen the Installs session.")
         end
 
-        mapping = LibraryImports.resolve(request, proposal, imports, psi_install_types.fetch("create"))
+        mapping = LibraryImports.resolve(request, imports, psi_install_types.fetch("create"))
         mapping.merge!(create_products(request, proposal, psi_install_types.fetch("create")))
         update_products(request, proposal, psi_install_types.fetch("update"))
         unique_final_names!(request, proposal)

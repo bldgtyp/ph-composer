@@ -33,10 +33,9 @@ module PhComposer
                              target.shared_definition target.wrong_hierarchy target.wrong_kind target.wrong_zone
                              validation.failed window.surface_host].freeze
       # Copying library rows into the Model through the library's copy participant.
-      LIBRARY_COPY = %w[library.adapter_invalid library.callback_invalid library.catalog_stale library.kind_unavailable
-                        library.local_choice_required library.mutation_owner library.provider_ambiguous
-                        library.provider_failed library.provider_invalid library.provider_unavailable
-                        library.review_required library.row_unavailable].freeze
+      # The library copy participant's own codes reach the Installs save through its `participants`
+      # edge; this is the one a staged import raises itself.
+      LIBRARY_COPY = %w[library.local_choice_required].freeze
     end
   end
 end

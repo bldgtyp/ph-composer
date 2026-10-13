@@ -36,6 +36,7 @@ module PhComposer
                                        "or imports instead of a saved id. The panel's Installs session and the " \
                                        "library assignment both use it; for one edge, list one Type with one element.",
                        :refuses => Refuses::EDIT + Refuses::LIBRARY_COPY,
+                       :participants => ["ph_composer.library.copy_into_proposal"],
                        :params => PARAMS, :result => RESULT, :undo_name => "Edit Window Installations",
                        :side_effects => Shapes.side_effects(
                          "Creates or edits installation products and updates type edges atomically."

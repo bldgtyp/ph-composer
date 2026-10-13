@@ -2,8 +2,8 @@
 
 module PhComposer
   module Zones
-    # Solve adjacencies, retire one pair, and the retirement participant Classify composes into its
-    # own step. The handlers are Zones module functions (adjacency/operations.rb).
+    # Solve adjacencies and retire one pair. The handlers are Zones module functions
+    # (adjacency/operations.rb); Classify calls `Zones.retire_pairs` directly, as the same feature.
     module AdjacencyRegistration
       # The resolved mutation set, whatever produced it: the selected Zones, or every Zone when the
       # caller is the export preflight. One Zone is allowed; it simply pairs with nothing.
@@ -47,9 +47,6 @@ module PhComposer
                        :side_effects => "Removes both endpoints and leaves their boundary condition " \
                                         "unassigned.") do |request, proposal|
           Zones.retire_adjacency(request, proposal, :face => request.params.fetch("face"))
-        end
-        feature.proposal_participant("#{FEATURE_ID}.retire_pairs") do |request, targets, index = nil|
-          Zones.retire_pairs(request, targets, index)
         end
       end
     end

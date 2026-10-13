@@ -163,9 +163,9 @@ module PhComposer
     # they are built.
     VALUE_MEMBERS = {
       Declarations::Feature => %i[id contract_version requires],
-      Declarations::Query => %i[name owner description params result examples refuses],
+      Declarations::Query => %i[name owner description params result examples refuses participants],
       Declarations::Action => %i[name owner description params result examples refuses undo_name side_effects
-                                 confirmation],
+                                 confirmation participants],
       Declarations::ViewCommand => %i[name owner description params result examples refuses],
       Declarations::SetupCommand => %i[name owner description params result examples refuses],
       Declarations::FileExport => %i[name owner description params result examples refuses],
@@ -174,7 +174,7 @@ module PhComposer
       Declarations::ColourMode => %i[name owner label entity_kind group],
       Declarations::MenuItem => %i[name owner label menu separator_after],
       Declarations::ReferenceRetargeter => %i[name owner target_kind],
-      Declarations::ProposalParticipant => %i[name owner],
+      Declarations::ProposalParticipant => %i[name owner description params result examples refuses participants],
       Declarations::LibraryProvider => %i[name owner contract_version kinds],
       Declarations::LibraryKind => %i[name owner contract_version record_kind],
       Declarations::HostEventSubscription => %i[owner kind],
@@ -327,20 +327,20 @@ module PhComposer
 
       # Every operation names `refuses:`. It defaults to nil only so validation can name each operation
       # that omits it, rather than one Ruby error ending the feature's install.
-      def query(name, description:, params:, result:, refuses: nil, examples: [], &handler)
+      def query(name, description:, params:, result:, refuses: nil, examples: [], participants: [], &handler)
         declaration = Declarations::Query.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :refuses => refuses, :handler => handler
+          :examples => examples, :refuses => refuses, :participants => participants, :handler => handler
         )
         @staging.add(:declared_queries, id, name, declaration)
       end
 
       def action(name, description:, params:, result:, undo_name:, side_effects:, examples: [],
-                 refuses: nil, confirmation: "none", &handler)
+                 refuses: nil, confirmation: "none", participants: [], &handler)
         declaration = Declarations::Action.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :undo_name => undo_name, :side_effects => side_effects,
-          :confirmation => confirmation, :handler => handler
+          :confirmation => confirmation, :participants => participants, :handler => handler
         )
         @staging.add(:declared_actions, id, name, declaration)
       end
@@ -428,8 +428,13 @@ module PhComposer
         @staging.add(:declared_reference_retargeters, id, name, declaration)
       end
 
-      def proposal_participant(name, &handler)
-        declaration = Declarations::ProposalParticipant.new(:name => name, :owner => id, :handler => handler)
+      # A participant is declared as an operation is; `participants` names the ones its handler calls.
+      def proposal_participant(name, description:, params:, result:, refuses: nil, examples: [], participants: [],
+                               &handler)
+        declaration = Declarations::ProposalParticipant.new(
+          :name => name, :owner => id, :description => description, :params => params, :result => result,
+          :examples => examples, :refuses => refuses, :participants => participants, :handler => handler
+        )
         @staging.add(:declared_proposal_participants, id, name, declaration)
       end
 
