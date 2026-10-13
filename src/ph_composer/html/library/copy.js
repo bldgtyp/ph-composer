@@ -65,8 +65,7 @@ PhComposerUI.define("library/copy", ["request", "units", "workspace"], function 
       if (!candidate.differences.length) this.comparison.appendChild(el("p", "muted", "Copied properties match."));
     }
     this.localButton.disabled = this.busy() || !candidate;
-    this.libraryButton.disabled = this.busy() || !candidate || !candidate.expected_values ||
-      !Object.keys(candidate.expected_values).length;
+    this.libraryButton.disabled = this.busy() || !candidate || !candidate.expected_values;
     this.cancel.disabled = this.busy(); this.candidates.disabled = this.busy();
   };
   Copy.prototype.use = function (row, assignment) {

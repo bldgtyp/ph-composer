@@ -50,3 +50,13 @@ test("a name-free kind's review title and local choices read the declared label"
   assert.deepStrictEqual(o.copy.candidates.children.map(function (option) { return option.textContent; }),
     ["Choose a local copy…", "Wall tag · a", "Unlabelled · b"]);
 });
+test("an empty authored guard still allows replacement; a missing one does not", function () {
+  var o = setup({ outcome: "review_required",
+    candidates: [{ id: "a", display_label: null, expected_values: {}, differences: [] }] });
+  o.copy.open(o.row);
+  assert.strictEqual(o.copy.libraryButton.disabled, false);
+  var missing = setup({ outcome: "review_required",
+    candidates: [{ id: "a", display_label: null, differences: [] }] });
+  missing.copy.open(missing.row);
+  assert.strictEqual(missing.copy.libraryButton.disabled, true);
+});

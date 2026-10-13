@@ -271,9 +271,9 @@
       "sha256": "92a7c7dddc9413bf3b48922970b101992e69d28b37d45648023ac481f86bf55c"
     },
     "html/library/copy.js": {
-      "bytes": 7191,
+      "bytes": 7135,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d7007f1f3540156773c6c1d37f58c8eddde1f95e0df5121eb04d15e0e3fa80f2"
+      "sha256": "5ea8250ac1277243f84ca2fd47c5d9186e7c1bf5e5a5c3940bba2e24b99ae124"
     },
     "html/library/drag.js": {
       "bytes": 4700,

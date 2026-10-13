@@ -39,7 +39,7 @@ A row has no label field of its own. Each kind declares how a label is read from
 Materials and Window product kinds use `name`, and a kind without a `name` uses its own words, such
 as a designation. A row whose label is missing or blank is skipped with the warning
 `library.row_label_invalid`. Rows are listed by library, then label without regard to case, then
-`id`, so equal labels with different ids are all kept.
+label as written, then `id`, so equal labels with different ids are all kept.
 
 Exporting local definitions publishes each local id as the wire record id. The optional
 `record_origins` object groups informational origins by wire kind and exported record id.

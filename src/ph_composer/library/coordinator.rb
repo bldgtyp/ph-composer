@@ -105,7 +105,8 @@ module PhComposer
       end
 
       def reviewed_values?(expected, id, resolution)
-        return false unless expected.is_a?(Hash) && !expected.empty?
+        # An empty guard is valid when the local record has no authored values to guard.
+        return false unless expected.is_a?(Hash)
 
         candidate = resolution.fetch("candidates").find { |row| row.fetch("id") == id }
         actual = candidate.fetch("expected_values")

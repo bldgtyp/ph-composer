@@ -228,4 +228,20 @@ class LibraryLabelTest < PhComposerTestCase
     assert_equal "review_required", resolved.dig("two", "outcome")
     assert_equal "Wall tag", resolved.dig("two", "candidates", 0, "display_label")
   end
+
+  def test_an_unlabelled_local_copy_can_be_replaced_from_its_source_with_an_empty_guard
+    PhComposer::Registry.install([tag_feature])
+    load_tags([tag_row("one", "Wall tag")])
+    source = { "kind" => "library", "provider_kind" => "ph_composer.library.file", "library_id" => "synthetic.one",
+               "record_kind" => "tags", "record_id" => "one" }
+    store = PhComposer::Registry.current.catalog.kind(KIND).store
+    store.write(Sketchup.active_model, { "id" => "tag_AAAAAAAAAAAA", "schema_version" => 1, "source" => source })
+    candidate = in_file.dig("value", "rows", 0, "resolution", "candidates", 0)
+    assert_nil candidate.fetch("display_label")
+    assert_equal({}, candidate.fetch("expected_values"))
+    replaced = copy("one", "use_library", :local_id => "tag_AAAAAAAAAAAA", :expected_values => {})
+    assert_equal "committed", replaced["effect"], replaced.inspect
+    assert_equal "Wall tag", store.read(Sketchup.active_model, "tag_AAAAAAAAAAAA").fetch("designation")
+    assert_equal "params.invalid", copy("one", "use_library", :local_id => "tag_AAAAAAAAAAAA")["code"]
+  end
 end
