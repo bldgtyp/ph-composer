@@ -1,7 +1,7 @@
 # Zone-copy participation by child owners
 
 DATE: 2026-10-13
-STATUS: ZC-01 implemented on branch: late binding confirmed on the host. ZC-02 to ZC-04 are implementation ready. Stage ledger in [STATUS.md](STATUS.md).
+STATUS: ZC-01 to ZC-04 merged to main (PRs 114 to 117); native Undo and Redo of the copy gesture outstanding, so the packet stays active.
 ISSUE: [#113](https://github.com/bldgtyp/ph-composer/issues/113)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 PRODUCT REQUEST: [copied-Zone Windows](../../../features/unscheduled/copied-zone-windows/README.md)
@@ -174,7 +174,7 @@ still names no child.
 
 ### ZC-04: native proof, export read-back and canon
 
-State: Implemented on branch; native Undo and Redo outstanding (receipt in STATUS).
+State: Merged to main in PR 117; native Undo and Redo outstanding (receipt in STATUS).
 
 1. Native, current host, fresh process: copy a Zone with two export-ready Types (frames, glazing and
    Psi-Install Types assigned); distinct Unit ids at once; originals unchanged; one Undo and Redo;
