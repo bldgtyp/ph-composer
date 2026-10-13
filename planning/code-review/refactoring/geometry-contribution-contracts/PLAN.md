@@ -84,7 +84,7 @@ No scene graph, no arbitrary draw callbacks, no polygon primitive until Spaces s
 
 ### G-01: confirm the shapes with the adopter
 
-State: Scoped; document deliverable.
+State: Deferred to the [phase 3b ledger](../../../features/phase-03b-thermal-bridges/STATUS.md#deferred-foundation-stages).
 
 With P3b-01 and P3b-06 of the thermal-bridge plan open, confirm: the minimum Edge facts (are
 `vertex_ids` and `face_ids` enough for run formation; is visibility needed in the entry); whether
@@ -119,7 +119,7 @@ Exit: tests pass; export goldens unchanged except added Edge rows in snapshot fi
 
 ### G-03: line primitive
 
-State: Scoped; after G-01.
+State: Deferred to the [phase 3b ledger](../../../features/phase-03b-thermal-bridges/STATUS.md#deferred-foundation-stages).
 
 Files: `colour_by/service.rb`, `overlay.rb`, `install.rb` (documentation comment); tests
 `tests/colour_by_test.rb`, `tests/colour_by_panel_test.js` if the legend shape changes.
@@ -135,7 +135,7 @@ Exit: tests pass; the shared service names no feature.
 
 ### G-04: adopter integration and native proof
 
-State: Scoped; owned by the thermal-bridge packet's stages.
+State: Deferred to the [phase 3b ledger](../../../features/phase-03b-thermal-bridges/STATUS.md#deferred-foundation-stages).
 
 The thermal-bridge P3b-06 and P3b-08 stages consume the primitives; their native checks prove lines
 are visible and runs export. This packet records the receipts by reference and closes F06 only when

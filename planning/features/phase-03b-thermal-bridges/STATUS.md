@@ -50,6 +50,26 @@ only when all three are done and its evidence file exists.
 | [P3b-08](phases/p3b-08-thermal-bridge-export.md) | Thermal-bridge export | Scoped | P3b-04, P3a-01 | | | | strong | | T08 |
 | [P3b-09](phases/p3b-09-thermal-bridge-acceptance-and-handoff.md) | Thermal-bridge acceptance and handoff | Scoped | P3b-01 to P3b-08 | | | | none; consolidation | | T09 |
 
+## Deferred foundation stages
+
+Three stages of the refactoring program's
+[geometry contribution contracts](../../code-review/refactoring/geometry-contribution-contracts/PLAN.md)
+packet ([#118](https://github.com/bldgtyp/ph-composer/issues/118)) need this track as their adopter.
+They are deferred here until the P3b stage named in "Picked up by" starts. Their plan text stays in
+that packet; this ledger owns when they run.
+
+| Stage | Scope | State | Picked up by | Note |
+| --- | --- | --- | --- | --- |
+| G-01 | Confirm the Edge facts (`vertex_ids`, `face_ids`, visibility), per-segment versus whole-run filtering, legend counting through `member`, line width | Deferred | P3b-01 | Document stage. Must also settle G-03 against D3b-11: G-03 proposes a `ColourBy::LineEntry` primitive, while D3b-11 draws Edges as P3a-05 `derived` segments with a stroke weight. One draw path, not two |
+| G-03 | `ColourBy::LineEntry`, the service branch, the overlay line pass | Deferred | P3b-06, after G-01 | Depends on the G-01 answer above |
+| G-04 | Thermal-bridge adoption: native drawing proof, export of runs, the 50,000 Edge measurement | Deferred | P3b-06 and P3b-08 | Closes F06 once G-02 and G-03 both have this adopter in use |
+
+G-02 is already on `main` ([PR #119](https://github.com/bldgtyp/ph-composer/pull/119)): the export
+`GeometrySnapshot` now has an `edge` entry for every Edge occurrence (world SI endpoints, vertex ids,
+Face ids, dictionaries), with Edges inside cutting components dropped as Faces are. That covers the
+snapshot half of F9 and H15; P3b-08 adds only its contributor, which filters edge entries by its own
+dictionary, rather than a new snapshot branch.
+
 ## Milestones
 
 | Milestone | After | Meaning |
