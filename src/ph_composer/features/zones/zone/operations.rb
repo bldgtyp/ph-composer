@@ -105,7 +105,7 @@ module PhComposer
 
     def overview(model, rows)
       { "zones" => rows, "make_zone" => make_target(model), "restorable" => Repair.orphans(model),
-        "units" => { "ground_depth_mm" => "mm" } }
+        "units" => { "ground_depth_mm" => "mm", "face_area_m2" => "m2", "unclassified_face_area_m2" => "m2" } }
     end
 
     def duplicate_ids(zones)
@@ -174,13 +174,26 @@ module PhComposer
 
     def zone_view(zone, ambiguous, request, counts)
       state = zone_state(zone, ambiguous)
-      Schema.view(zone.record).merge(
+      faces = Occurrences.faces(zone)
+      Schema.view(zone.record).merge(face_totals(faces)).merge(
         "display" => Options.display(request.engine, zone.record),
         "reference" => zone.reference,
         "state" => state,
-        "face_count" => Occurrences.faces(zone).length,
+        "face_count" => faces.length,
         "independence" => state == "found" ? nil : independence(request, zone, counts.fetch(zone.record.fetch("id")))
       )
+    end
+
+    # The occurrence's Face area, whole and unclassified, in square metres through each Face's own
+    # transform: the panel shows and sorts these and never sums Faces itself. Unclassified is the Face
+    # rows' rule, a Face with no recorded values.
+    def face_totals(faces)
+      areas = faces.map do |face|
+        record = Faces::FACE_STORE.read(face.entity)
+        [Faces::Geometry.area_m2(face), record.nil? || Faces::Schema.values(record).empty?]
+      end
+      { "face_area_m2" => areas.sum(0.0) { |area, _| area },
+        "unclassified_face_area_m2" => areas.sum(0.0) { |area, unclassified| unclassified ? area : 0.0 } }
     end
 
     # Whether Make Zone independent can act on this occurrence and, when it cannot, why, in the words

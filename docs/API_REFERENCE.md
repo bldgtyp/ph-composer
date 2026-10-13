@@ -10344,6 +10344,8 @@ Result:
           "reference",
           "state",
           "face_count",
+          "face_area_m2",
+          "unclassified_face_area_m2",
           "independence"
         ],
         "properties": {
@@ -10461,6 +10463,18 @@ Result:
           "face_count": {
             "type": "integer",
             "minimum": 0
+          },
+          "face_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "x-unit": "m2",
+            "description": "Summed over this occurrence's Faces, each through its own transform."
+          },
+          "unclassified_face_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "x-unit": "m2",
+            "description": "Summed over this occurrence's Faces, each through its own transform."
           },
           "independence": {
             "type": [
@@ -10612,13 +10626,27 @@ Result:
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ground_depth_mm"
+        "ground_depth_mm",
+        "face_area_m2",
+        "unclassified_face_area_m2"
       ],
       "properties": {
         "ground_depth_mm": {
           "type": "string",
           "enum": [
             "mm"
+          ]
+        },
+        "face_area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        },
+        "unclassified_face_area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
           ]
         }
       }
@@ -12451,6 +12479,18 @@ Result:
             "type": "integer",
             "minimum": 0
           },
+          "face_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "x-unit": "m2",
+            "description": "Summed over this occurrence's Faces, each through its own transform."
+          },
+          "unclassified_face_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "x-unit": "m2",
+            "description": "Summed over this occurrence's Faces, each through its own transform."
+          },
           "independence": {
             "type": [
               "object",
@@ -12602,13 +12642,27 @@ Result:
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ground_depth_mm"
+        "ground_depth_mm",
+        "face_area_m2",
+        "unclassified_face_area_m2"
       ],
       "properties": {
         "ground_depth_mm": {
           "type": "string",
           "enum": [
             "mm"
+          ]
+        },
+        "face_area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        },
+        "unclassified_face_area_m2": {
+          "type": "string",
+          "enum": [
+            "m2"
           ]
         }
       }

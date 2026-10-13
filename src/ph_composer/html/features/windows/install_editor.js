@@ -11,6 +11,10 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
   // (display.install_topology); the editor never classifies an edge itself. Staging changes no topology, so the
   // facts read with a draft's baseline hold for the session.
   function topologyOf(row) { return row && row.display && row.display.install_topology || null; }
+  // An edge's stroke class is its source: assigned, default or missing, or else the host's classification
+  // ("shared", "partial") or "unavailable" when the facts were not read. Only a glazed element is offered, so
+  // any other element's edge reads as one that cannot be painted.
+  var PARTIAL_LABEL = "Partly shared edge · cannot paint";
   function Editor(session, send, close) {
     var self = this; this.requests = request.channel(session, send, "window-installs"); this.close = close;
     this.root = el("section", "window-install-editor"); this.root.hidden = true;
@@ -246,7 +250,7 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
         var source = eligible ? product ? assigned ? "assigned" : "default" : "missing" : classification;
         var label = cell.name + " " + side + ": " + (!eligible ? classification === "shared" ?
           "Shared edge · derived zero" : classification === "unavailable" ? "Edge not read · cannot paint" :
-            "Partly shared edge · cannot paint" : product ? product.values.name +
+            PARTIAL_LABEL : product ? product.values.name +
             (!assigned ? " · Model default" : "") : assigned ? "Missing product" : "Missing default");
         var points = { top: [x, y, x + w, y], right: [x + w, y, x + w, y + h],
           bottom: [x, y + h, x + w, y + h], left: [x, y, x, y + h] }[side];

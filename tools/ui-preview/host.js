@@ -56,6 +56,21 @@
       number_format: { decimal: settings.decimal || ".", locale: settings.locale || "en-US" } };
   }
 
+  /* Each Zone row with the totals the host's Zones read publishes: its Faces' area, and the part with no values. */
+  Host.prototype.zoneRows = function () {
+    var faces = this.faces;
+    return JSON.parse(JSON.stringify(this.zones)).map(function (zone) {
+      var own = faces.filter(function (face) {
+        return JSON.stringify(face.reference.zone_path) === JSON.stringify(zone.reference.zone_path);
+      });
+      zone.face_area_m2 = own.reduce(function (sum, face) { return sum + face.area_m2; }, 0);
+      zone.unclassified_face_area_m2 = own.reduce(function (sum, face) {
+        return sum + (Object.keys(face.values || {}).length ? 0 : face.area_m2);
+      }, 0);
+      return zone;
+    });
+  };
+
   Host.prototype.publish = function (type, payload) {
     this.window.PhComposerUI.get("panel").receive({ type: type, payload: payload });
   };
@@ -78,8 +93,8 @@
           value: { records: records, units: { length_mm: "mm" }, next_cursor: null, total: records.length } },
         ["ph_composer.zones.options"]: { status: "completed", value: JSON.parse(JSON.stringify(this.zoneOptions)) },
         [ZONES]: { status: "completed", code: "ok", revision: this.revision,
-          value: { zones: JSON.parse(JSON.stringify(this.zones)), make_zone: this.makeZone,
-            units: { ground_depth_mm: "mm" } } },
+          value: { zones: this.zoneRows(), make_zone: this.makeZone,
+            units: { ground_depth_mm: "mm", face_area_m2: "m2", unclassified_face_area_m2: "m2" } } },
         [FACES]: { status: "completed", code: "ok", revision: this.revision,
           value: { faces: JSON.parse(JSON.stringify(this.faces)), units: { area_m2: "m2" } } },
         ["ph_composer.zones.faces.selected"]: { status: "completed", value: {
