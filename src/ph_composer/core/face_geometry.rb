@@ -8,7 +8,7 @@ module PhComposer
   # Detached, SI geometry for one SketchUp Face occurrence. Both adjacency and export use this
   # representation, so a transform or digest cannot mean one thing to the solver and another to HBJSON.
   # Everything here is pure over Arrays of Floats and loads without SketchUp
-  # (tests/face_geometry_pure_test.rb); FaceCapture reads a live Face into it.
+  # (tests/support/face_geometry_pure.rb); FaceCapture reads a live Face into it.
   module FaceGeometry
     INCH_TO_M = 0.0254
     QUANTUM_M = 0.000001 # 0.001 mm, the geometry-stamp normalization.

@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-# FaceGeometry's rules in a bare Ruby process: no SketchUp, no stub, no test_helper. Run directly
-# (`ruby tests/face_geometry_pure_test.rb`); tests/face_geometry_test.rb runs it as a subprocess so a
-# stub constant cannot leak in. A rule that needs the host here belongs in an adapter instead.
+# FaceGeometry's rules in a bare Ruby process: no SketchUp, no stub, no test_helper. It is not a
+# `*_test.rb` file, so the stubbed suite never loads it; tests/face_geometry_test.rb runs it as a
+# subprocess, and `ruby tests/support/face_geometry_pure.rb` runs it alone. A rule that needs the
+# host here belongs in an adapter instead.
 require "minitest/autorun"
-require_relative "../src/ph_composer/core/face_geometry"
+require_relative "../../src/ph_composer/core/face_geometry"
 
 class FaceGeometryPureTest < Minitest::Test
   G = PhComposer::FaceGeometry

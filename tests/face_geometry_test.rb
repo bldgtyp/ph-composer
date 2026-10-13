@@ -102,7 +102,7 @@ class FaceGeometryTest < PhComposerTestCase
   end
 
   def test_the_rules_run_in_a_bare_process_without_sketchup
-    path = File.join(TESTS_ROOT, "face_geometry_pure_test.rb")
+    path = File.join(TESTS_ROOT, "support", "face_geometry_pure.rb")
     out, err, status = Open3.capture3(RbConfig.ruby, path)
     assert status.success?, out + err
     assert_match(/0 failures, 0 errors/, out)

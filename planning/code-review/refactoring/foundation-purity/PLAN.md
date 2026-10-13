@@ -64,7 +64,9 @@ digests are identical by construction: the same arithmetic runs on the same numb
 
 ### P-01: pure build and the adapter
 
-State: Implemented on branch.
+State: Implemented on branch. Deviation: the pure file is `tests/support/face_geometry_pure.rb`, not
+`tests/face_geometry_pure_test.rb`, because `tests/all_tests.rb` loads every `*_test.rb` into the
+stubbed process, where the no-SketchUp assertion cannot hold. It runs only as its own process.
 
 Files: `core/face_geometry.rb`, `core/face_capture.rb` (new), `extension.rb` load order (both under
 `core/`, alphabetical, `face_capture` before `face_geometry`, so `face_capture.rb` requires

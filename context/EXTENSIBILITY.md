@@ -36,7 +36,7 @@ The foundation under `src/ph_composer/core/` keeps the split visible by file:
 
 | Role | Files | Rule |
 | --- | --- | --- |
-| Pure values and rules | `json_value`, `json_walk`, `json_schema`, `canonical_json`, `deep_copy`, `vector3`, `face_geometry`, `schema_shapes`, record kinds, fields and validation (`records/record_kind`, `records/fields`, `records/authoring_fields`) | Explicit values in and out; no SketchUp constant. `tests/face_geometry_pure_test.rb` runs in a bare Ruby process and is the way to test a rule without the host |
+| Pure values and rules | `json_value`, `json_walk`, `json_schema`, `canonical_json`, `deep_copy`, `vector3`, `face_geometry`, `schema_shapes`, record kinds, fields and validation (`records/record_kind`, `records/fields`, `records/authoring_fields`) | Explicit values in and out; no SketchUp constant. `tests/support/face_geometry_pure.rb` runs in a bare Ruby process and is the way to test a rule without the host |
 | Application services | `records/engine`, `records/projected_engine`, `records/change_set`, `operations/proposal`, `operations/contributions` | Compose rules over records and proposals; reach the Model only through the adapters |
 | Native adapters | `face_capture`, `records/dictionary_store`, `records/entity_store`, `pick`, `view_framing`, `model_operation` | The only places that read or write SketchUp objects |
 
