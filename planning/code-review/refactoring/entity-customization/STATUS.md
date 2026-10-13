@@ -25,3 +25,22 @@ resolver refuses only a locked parent, and a Face inside a locked Zone refuses `
 result is `{ updates: [{ reference, extension_status }] }`. The canon for EC-01 and EC-02 (EC-05's
 first step, for these two stages) is in CONTRACTS "Records and extension data", EXTENSIBILITY
 "Metadata" and AGENT_INTERFACE "Writes"; EC-05's projection-claim text waits for EC-03.
+
+## Native receipt for EC-01 and EC-02, 2026-10-13
+
+SketchUp 26.1.188 (Ruby 3.2.2), current host, not the support floor; source `12ddbde`, RBZ sha256
+prefix `7728d5fed402bb1c`. Fresh process on a copy of `_private/host/blank-template.skp`, panel closed;
+development eval built a box Zone and placed two Units and loaded the foundation example so
+`example.foundation.review` is installed; every write went through `PhComposer::API`.
+
+| Step | Observation |
+| --- | --- |
+| `zones.update_metadata` with user_data and a review payload | committed; read back with `extension_status` `understood` |
+| `windows.units.update_metadata` with user_data | committed; the Unit reads back the map, the other Unit unchanged |
+| Copy the Zone (Group copy with its dictionaries, as a native copy carries them) | the copy is made independent with its own id; both records carry the user_data and the payload |
+| Save, quit, reopen without the example loaded | both Zones report the namespace `unavailable`; user_data kept; the stored payload is byte-identical |
+| `zones.update_metadata` of user_data alone, namespace absent | committed; the unavailable payload is left byte-identical |
+
+Outstanding: native Undo and Redo of a metadata action. The full-screen approval needed to press
+Edit > Undo with SketchUp frontmost was not answered twice during this run; the offline suite covers
+Undo against the stub (`test_a_zone_update_replaces_user_data_and_a_payload_in_one_undo_and_reads_back`).
