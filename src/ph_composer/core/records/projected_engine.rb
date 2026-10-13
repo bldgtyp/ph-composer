@@ -7,7 +7,8 @@ module PhComposer
     # set: a staged create is found, a staged delete is gone. Proposals are accepted only into that
     # change set and only for `writable_kinds`; any other write refuses the whole change set with
     # `refusal_code`. It never applies a change set; the dispatcher's engine does. It does not migrate
-    # extension payloads and cannot be projected again: a callback does not start a nested copy.
+    # extension payloads. `projected` derives a further projection from the same root engine for the
+    # same change set, which is how a participant delegates to a kind owner's callback.
     class ProjectedEngine
       def initialize(engine, change_set, writable_kinds:, refusal_code:)
         @engine = engine
@@ -46,6 +47,21 @@ module PhComposer
 
       def check_identity_removal!(kind_id, id, reference_plan: nil)
         @engine.check_identity_removal!(kind_id, id, :change_set => @change_set, :reference_plan => reference_plan)
+      end
+
+      # A nil change set asks for a read-only view (a nested read, a library local read): it keeps this
+      # projection's staged view and accepts no write.
+      def projected(change_set, writable_kinds:, refusal_code:)
+        if change_set.nil?
+          raise InternalError, "A read-only projection cannot accept writes." unless writable_kinds.empty?
+
+          return ProjectedEngine.new(@engine, @change_set, :writable_kinds => [], :refusal_code => refusal_code)
+        end
+        unless @change_set && change_set.equal?(@change_set)
+          raise InternalError, "A projection can only be derived for the change set it reads through."
+        end
+
+        @engine.projected(change_set, :writable_kinds => writable_kinds, :refusal_code => refusal_code)
       end
 
       # ---------------------------------------------------------------- proposals

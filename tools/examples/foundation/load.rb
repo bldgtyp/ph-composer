@@ -6,8 +6,10 @@
 #
 #   load "<repo>/tools/examples/foundation/load.rb"
 require_relative "example_foundation"
+require_relative "example_kit"
 require_relative "walkthrough"
 
 PhComposer::Registry.install([ExampleFoundation]) unless PhComposer::Registry.installed?(ExampleFoundation::ID)
+PhComposer::Registry.install([ExampleKit]) unless PhComposer::Registry.installed?(ExampleKit::ID)
 # The synthetic editor: a development-only panel section the panel runs each time it opens.
 PhComposer::Panel.add_development_script(File.join(__dir__, "editor.js"))

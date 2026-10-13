@@ -65,6 +65,140 @@ module ExampleWalkthrough
     { "session" => session, "passed" => steps.all? { |row| row["passed"] }, "steps" => steps }
   end
 
+  Field = PhComposer::Records::Field
+  NOTES = "example.notes"
+  NOTE = "#{NOTES}.note"
+
+  # A store the example writes itself rather than DictionaryStore: registration admits any object that
+  # answers the engine's five methods with a dictionary under ph_composer. It is checked, not called,
+  # at install.
+  class NoteStore
+    def initialize
+      @records = PhComposer::Records::DictionaryStore.new(NOTE)
+    end
+
+    def dictionary
+      @records.dictionary
+    end
+
+    def ids(model)
+      @records.ids(model)
+    end
+
+    def read(model, id)
+      @records.read(model, id)
+    end
+
+    def write(model, record)
+      @records.write(model, record)
+    end
+
+    def delete(model, id)
+      @records.delete(model, id)
+    end
+  end
+
+  # The registration contract as an outside contributor meets it (context/CONTRACTS.md, "Registration"):
+  # a second feature with its own store and a nested reference installs through the same call as the
+  # built-ins; editing the builders it kept afterwards changes nothing published; a further
+  # contribution with a store outside the prefix is refused whole, and the first keeps working.
+  def registration
+    steps = []
+    builders = notes_builders
+    PhComposer::Registry.install([notes_feature(builders)]) unless PhComposer::Registry.installed?(NOTES)
+    described = API.describe(:name => NOTE)
+    installed = described["owner"] == NOTES && described.dig("references", 0, "key") == "rows[].part_id"
+    steps << { "step" => "outside install", "passed" => installed }
+
+    builders.fetch(:text)["minLength"] = 100
+    builders.fetch(:rows).target_kind.replace("example.elsewhere")
+    after = API.describe(:name => NOTE)
+    steps << { "step" => "builders edited after install",
+               "passed" => after.dig("values", "properties", "text", "minLength") == 1 &&
+                           after.dig("references", 0, "target_kind") == PART }
+
+    error = begin
+      PhComposer::Registry.install([refused_feature])
+      nil
+    rescue PhComposer::RegistrationError => refusal
+      refusal
+    end
+    still = API.query(:context => API.connect(:session_id => active_session), :name => "#{ID}.summary")
+    refused = error&.diagnostics&.map(&:code) == ["registration.schema_invalid"] &&
+              !PhComposer::Registry.installed?("example.refused") &&
+              !PhComposer::Dictionaries.names.include?("outside.notes")
+    steps << { "step" => "refused contribution", "passed" => refused && still["status"] == "completed" }
+    { "passed" => steps.all? { |row| row["passed"] }, "steps" => steps }
+  end
+
+  # A dependent feature's action calls the example's participant twice inside its own proposal: preview
+  # writes nothing, invoke commits both parts as one Undo step, and the parts read back.
+  def composition(session_id: nil)
+    context = API.connect(:session_id => session_id || active_session)
+    created = invoke(context, "#{ID}.create_parts", create_params, next_sequence(context), revision(context))
+    definition = created.dig("value", "definition_id")
+    params = { "definition_id" => definition, "length_mm" => 2100 }
+    before = API.query(:context => context, :name => "#{ID}.summary").dig("value", "parts")
+    preview = API.preview(:context => context, :name => "#{ExampleKit::ID}.add_pair", :params => params)
+    previewed = API.query(:context => context, :name => "#{ID}.summary").dig("value", "parts")
+    added = invoke(context, "#{ExampleKit::ID}.add_pair", params, next_sequence(context), revision(context))
+    ids = added.dig("value", "part_ids") || []
+    back = parts(context, ids).dig("value", "records") || []
+    steps = [
+      step("preview", preview, preview["status"] == "completed" && previewed == before),
+      step("invoke", added, added["effect"] == "committed" && ids.length == 2),
+      step("read back", added, back.map { |row| row.dig("values", "label") }.sort == ["Left jamb", "Right jamb"] &&
+                               back.all? { |row| row.dig("values", "definition_id") == definition })
+    ]
+    { "passed" => steps.all? { |row| row["passed"] }, "steps" => steps, "part_ids" => ids }
+  end
+
+  # Each walkthrough connects its own caller, so it starts its own sequence.
+  def next_sequence(context)
+    (@sequences ||= {}.compare_by_identity)[context] = @sequences.fetch(context, 0) + 1
+  end
+
+  def notes_builders
+    { :text => { "type" => "string", "minLength" => 1 },
+      :rows => PhComposer::Records::Reference.new(:key => "rows[].part_id".dup, :target_kind => PART.dup,
+                                                  :cardinality => "one") }
+  end
+
+  def notes_feature(builders)
+    Module.new do
+      define_singleton_method(:name) { "ExampleNotes" }
+      define_singleton_method(:install) do |registry|
+        rows = { "type" => "array", "items" => { "type" => "object",
+                                                 "properties" => { "part_id" => { "type" => "string" } } } }
+        kind = PhComposer::Records::RecordKind.new(
+          :id => NOTE, :label => "Example note", :schema_version => 1, :id_prefix => "exn", :store => NoteStore.new,
+          :fields => [Field.new(:key => "text", :schema => builders.fetch(:text), :required => true),
+                      Field.new(:key => "rows", :schema => rows, :required => false)],
+          :references => [builders.fetch(:rows)]
+        )
+        registry.feature(NOTES, :contract_version => 1, :requires => [ID]).record_kind(kind)
+      end
+    end
+  end
+
+  def refused_feature
+    # Every engine method is present; only the dictionary is outside the prefix.
+    store = Struct.new(:dictionary, :ids, :read, :write, :delete).new("outside.notes")
+    Module.new do
+      define_singleton_method(:name) { "ExampleRefused" }
+      define_singleton_method(:install) do |registry|
+        registry.feature("example.refused", :contract_version => 1).record_kind(
+          PhComposer::Records::RecordKind.new(:id => "example.refused.note", :label => "Refused",
+                                              :schema_version => 1, :id_prefix => "exr", :fields => [], :store => store)
+        )
+      end
+    end
+  end
+
+  def active_session
+    API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
+  end
+
   def create_params
     { "definition_label" => "Frame",
       "parts" => [{ "label" => "Sill", "length_mm" => 1200 }, { "label" => "Head", "length_mm" => 1200 }] }

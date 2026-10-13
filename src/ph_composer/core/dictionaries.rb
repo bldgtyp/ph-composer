@@ -8,10 +8,14 @@ module PhComposer
   # The attribute dictionaries the extension owns. The module that owns a dictionary registers it
   # where it names it, so this list names no feature. The Export attribute guard reads it.
   module Dictionaries
+    # Whether `name` may be an extension dictionary: a String under the prefix with a name after it.
+    # Registration checks this before it publishes, so `register` never raises while publishing.
+    def self.valid_name?(name)
+      name.is_a?(String) && name.start_with?("#{DICTIONARY_PREFIX}.") && name.length > DICTIONARY_PREFIX.length + 1
+    end
+
     def self.register(name)
-      unless name.start_with?("#{DICTIONARY_PREFIX}.")
-        raise ArgumentError, "Dictionary #{name} must start with #{DICTIONARY_PREFIX}."
-      end
+      raise ArgumentError, "Dictionary #{name} must start with #{DICTIONARY_PREFIX}." unless valid_name?(name)
 
       registered << name unless registered.include?(name)
       @names = nil

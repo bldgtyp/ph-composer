@@ -28,7 +28,8 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
 | Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys`, `requires` (sections it reads), optional `projection` |
-| Proposal participant | Name and handler another feature calls inside its own action |
+| Proposal participant | Namespaced id, description, params and result schemas, examples, refusal codes, the participants it calls, handler; called only through `request.participate` by a declaration that lists it |
+| Participant edges | `participants:` on a query, action or participant names each participant its handler calls |
 | Reference retargeter | Name, target kind and handler; the owner requires the target owner or owns the target itself |
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
 | Code | A `noun.condition` code under a noun the feature owns, and its description (see "Outcomes and codes") |
@@ -43,8 +44,36 @@ feature declares. Registrations are staged and validated together:
 duplicate ids, missing dependencies, cycles, incompatible contract majors, invalid schemas and
 invalid examples each produce a `registration.*` diagnostic naming the owner and, where one is
 missing, the dependency. Any diagnostic refuses the whole batch and publishes nothing; the last
-registration never silently wins. Published operations are deep-frozen. Repeated install adds no
-duplicate observers.
+registration never silently wins. Repeated install adds no duplicate observers.
+
+A record kind's store is admitted during validation. It must answer the five methods the engine
+calls, `dictionary`, `ids`, `read`, `write` and `delete`, which are checked by presence; only the
+`dictionary` getter is called, once, and its answer must be a String starting with `ph_composer.`
+followed by a name; that admitted answer is the name publishing registers. A getter that raises is a diagnostic. The default `ph_composer.records.<kind
+id>` is not required, so a kind may keep a legacy name.
+
+Publishing cannot leave a batch half published. It prepares everything that could fail first,
+writing nothing live, and then commits by assigning into the registry's maps and appending
+dictionary names and host subscriptions, none of which can refuse once validation has admitted
+them. A failure while preparing is an `InternalError` with nothing published. `Registry.install`
+called while another install is staging or publishing, from an `install` or a store getter, raises
+`InternalError` and leaves the registry as it was.
+
+A published declaration owns its values. Publishing replaces each value member (names, owners,
+descriptions, schemas, examples, refusal lists, Undo names, side effects, snapshot params, export
+result fields, `user_data_keys`, `requires`, library adapter schemas and callback schemas, and the
+strings of Colour-by modes, menu items, codes, retargeters, participants and subscriptions) with a
+deep-frozen copy and freezes the declaration; the owner index `owner_of` reads is built from frozen
+copies too. Record kinds, descriptors, extensions and reference
+targets keep frozen copies of their ids, labels, prefixes, fields, references and schemas from the
+moment they are built. Behaviour (handlers, validators, stores, factories, projections, callbacks
+and migrations) is kept by identity and never copied or frozen. A contributor who edits a builder it
+kept after install changes nothing published. Reads that hand out schemas (`view_schema`,
+`patch_schema`, `to_h`, `API.describe`) return editable detached copies. The registry's maps stay
+live Hashes, so readers see an additive install on their next lookup.
+
+The guarantee covers what the registry owns. An `install` that raises is a diagnostic and publishes
+nothing, but side effects it caused outside the registry before raising are not undone.
 
 During installation, `registry.record_descriptor(kind_id)` resolves a same-batch catalog kind or
 entity target, then an already installed kind or target, returning its descriptor or nil. A feature
@@ -142,16 +171,17 @@ Codes are stable `noun.condition` strings, one per outcome:
 | Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |
 | Session | `session.unknown` (closed, reopened or never issued), `session.busy`, `session.closed`, `session.changed` (a native menu built for another Model), `session.inactive` (panel client only: its Model is no longer shown) |
 | Preconditions | `revision.stale`, `proposal.changed`, `record.unreadable` |
+| Proposal contributions | `proposal.foreign_write` (a participant or library callback staged a write to a kind its owner does not own, or into another change set), `proposal.contribution_replaced` (it removed or changed what an earlier contributor proposed) |
 | Targets | `target.not_found`, `target.changed`, `target.ambiguous`, `target.locked`, `target.wrong_kind`, `target.wrong_hierarchy`, `target.wrong_zone`, `target.same_zone`, `target.shared_definition`, `target.edit_path_changed` |
 | Validation | `params.invalid`, `validation.failed`, `reference.invalid`, `reference.in_use`, `geometry.invalid`, `geometry.failed`, `geometry.split_failed` |
 | Extension data | `extension.unavailable`, `extension.schema_unsupported`, `extension.migration_required`, `extension.migration_failed`, `extension.invalid`, `copy.rule_missing` |
 | Query | `query.limit_invalid`, `query.cursor_expired` |
-| Operation | `operation.failed`, `operation.rollback_unverified`, `operation.participant_missing`, `operation.proposal_required`, `operation.query_missing`, `operation.dependency_missing`, `operation.query_cycle`, `operation.locate_missing` |
+| Operation | `operation.failed`, `operation.rollback_unverified`, `operation.participant_missing`, `operation.proposal_required`, `operation.query_missing`, `operation.dependency_missing`, `operation.query_cycle`, `operation.locate_missing`, `operation.participant_cycle` |
 | Identity and scope | `identity.conflict`, `identity.choice_required`, `identity.choice_conflicts`, `scope.incomplete`, `selection.invalid` |
 | Registration | `registration.duplicate_id`, `registration.missing_dependency`, `registration.cycle`, `registration.contract_major`, `registration.schema_invalid` |
 | Translation | `payload.contract`, `section.missing_dependency`, `section.cycle`, `section.duplicate`, `section.version_unsupported`, `object.unavailable`, `dependency.unavailable` |
 | Export | `export.blocked`, `export.busy`, `export.cancelled`, `export.failed`, `export.refused`, `export.model_changed`, `export.destination_changed`, `export.replace_required`, `export.privacy_undeclared`, `export.relevance_unknown`, `export.metadata_omitted` (a finding), `task.expired` |
-| Library | `library.adapter_invalid`, `library.assignment_unavailable`, `library.callback_invalid`, `library.catalog_budget`, `library.catalog_stale`, `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.kind_unavailable`, `library.local_choice_required`, `library.mutation_owner`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_semantic_invalid`, `library.row_unavailable`, `library.schema_unsupported`, `library.setup_invalid`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, `library.update_destination_invalid`, `library.update_destination_required`. Catalog notes are listed in "Library providers and catalogs" |
+| Library | `library.adapter_invalid`, `library.assignment_unavailable`, `library.callback_invalid`, `library.catalog_budget`, `library.catalog_stale`, `library.catalog_too_large`, `library.catalog_too_many_rows`, `library.destination_changed`, `library.destination_invalid`, `library.export_write_failed`, `library.file_malformed`, `library.file_too_large`, `library.file_unreadable`, `library.format_invalid`, `library.kind_unavailable`, `library.local_choice_required`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_semantic_invalid`, `library.row_unavailable`, `library.schema_unsupported`, `library.setup_invalid`, `library.setup_too_large`, `library.setup_unavailable`, `library.setup_unreadable`, `library.update_destination_invalid`, `library.update_destination_required`. Catalog notes are listed in "Library providers and catalogs" |
 | Runtime | `runtime.asset_refused`, `runtime.boot_timeout`, `runtime.boot_failed`, `runtime.translation_failed`, `runtime.stopped`, `runtime.closed` |
 
 Shared nouns (`request`, `session`, `revision`, `proposal`, `target`, `params`, `validation`,
@@ -531,10 +561,41 @@ computing it. Memos end with the request.
 
 Feature handlers do not write the Model; they add steps to an `Operations::Proposal` of detached
 values: record changes, named geometry steps with explicit targets and created-entity slots, the
-declared mutation scope, affected references and findings. A proposal participant is a declared
-callback another feature calls inside its own handler, so a cross-feature effect stays in one
-proposal. It either adds its changes to the proposal or returns a detached plan for the caller to
-fold into its own writes, so each entity is written once.
+declared mutation scope, affected references and findings. A proposal participant is a step another
+feature composes into its own action's proposal, so a cross-feature effect stays in one proposal and
+one Undo step. It adds its changes to the proposal and returns a detached JSON result.
+
+**Participants.** A feature declares one with `feature.proposal_participant(name, description:,
+params:, result:, refuses:, examples:, participants: [])`, validated as an operation is. No client
+calls it: discovery lists it under `participants` and `describe` returns its contract with `kind`
+`participant`. An action, query or participant that calls one names it in `participants:`.
+Registration refuses an edge to a participant that is not installed or in the batch, or whose owner
+the caller's feature neither is nor requires (`registration.missing_dependency`), and participants
+that name each other in a cycle (`registration.cycle`). An operation's published refusals are its
+own, the codes of every participant it names through their own edges, and each such participant's
+`participant` common set.
+
+A handler calls `request.participate(name, params)`. The foundation checks, in order: the
+participant is installed (`operation.participant_missing`); the request has an active proposal,
+which a query never has (`operation.proposal_required`); the caller's feature owns or requires the
+owner (`operation.dependency_missing`); the calling declaration names it in `participants`
+(`operation.participant_missing`); the call is not recursive (`operation.participant_cycle`); the
+params match (`params.invalid`). The first that fails is the refusal. The handler then
+runs as `->(request, proposal) { value }` under the participant's owner, with an engine projected
+from the caller's (`engine.projected(proposal, writable_kinds:, refusal_code:)`) that reads the
+proposal's view and stages writes only to catalog kinds the owner registered; any other write
+refuses with `proposal.foreign_write`. The same confinement holds however the handler writes: while
+it runs, the proposal's change set refuses any record write outside those kinds, a direct
+`proposal.put` included (`Records::ChangeSet#guarded`). A projection may derive a further one for the
+same proposal, which is how a participant delegates to a kind owner's callback; the callback is
+confined to its own owner's kinds for the length of its call. After the handler returns, every
+write, step and finding proposed before the call must be unchanged, steps by identity and by
+descriptor (`proposal.contribution_replaced`), and the result must match its schema or the call fails. The
+caller receives a detached copy. Any failure refuses the whole proposal, so a caller that rescues
+it still writes nothing, and a later successful call does not clear the refusal. The outer
+dispatcher remains the only owner of the transaction, retry and outcome; a participant opens no
+operation. Memos are keyed by engine and owner, so a participant's start empty; a caller's memo
+computed before the call is not refreshed by what the participant stages.
 
 Preview builds and validates the proposal without opening an operation. Invoke rebuilds it from the
 same inputs and refuses if the revision, edit path, resolution or expected values changed, or if a
@@ -667,9 +728,10 @@ Its request's engine is `engine.projected(proposal, writable_kinds:, refusal_cod
 `incoming_references`, `check_identity_removal!`) answers as the proposal would leave the records,
 `find` refusing as the plain engine does (`target.not_found` for a record absent there, a staged
 delete included, `record.unreadable` for one that fails its kind), and a write into another change set or to a kind its owner did not register refuses at once with
-`library.mutation_owner`. A local read's projection accepts no write. After the callback returns,
-every write staged before it must be unchanged and every write it added must be to a record kind
-its owner registered; otherwise `library.mutation_owner`. Local reads get no proposal. Any
+`proposal.foreign_write`, as does any record write the callback stages directly into the proposal
+while it runs. A local read's projection accepts no write. After the callback returns,
+every write, step and finding staged before it must be unchanged; otherwise
+`proposal.contribution_replaced`. Local reads get no proposal. Any
 refusal inside the coordinator or a callback poisons the proposal, so a rescued error still writes
 nothing. `ph_composer.library.copy_into_proposal` applies the same rules inside another feature's
 action and refuses without that action's active proposal

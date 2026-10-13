@@ -16,11 +16,17 @@ module PhComposer
         end
       end
 
-      attr_reader :writes, :refusal
+      attr_reader :refusal
 
       def initialize
         @writes = []
         @refusal = nil
+      end
+
+      # The staged writes, in order, as a frozen list of frozen writes: the only way to add or change
+      # one is `put` and `delete`, which the write guard sees.
+      def writes
+        @writes.dup.freeze
       end
 
       # Marks the set as refused. The engine calls this when a proposal raises, so a handler that
@@ -29,15 +35,29 @@ module PhComposer
         @refusal ||= error
       end
 
+      # While the block runs, every write must be to one of `kinds`; any other refuses the whole set
+      # with `code`. The foundation confines a contributor that shares another's proposal this way
+      # (a proposal participant, a library callback), whether it writes through an engine or calls
+      # `put` itself. Guards nest; the innermost decides, so a contributor may delegate to a narrower
+      # or different owner for the length of that owner's call.
+      def guarded(kinds, code)
+        (@guards ||= []).push([kinds, code])
+        yield
+      ensure
+        @guards.pop
+      end
+
       # Records the write unless it would change nothing, so a no-change edit opens no operation.
       def put(kind, before:, after:)
         raise ArgumentError, "a record change needs a before or after value" if before.nil? && after.nil?
+
+        guard!(kind)
 
         id = (after || before).fetch("id")
         raise ArgumentError, "#{kind} #{id} is already in this change set." if find(kind, id)
         return if before == after
 
-        @writes << Write.new(:kind => kind, :id => id, :before => before, :after => after)
+        @writes << Write.new(:kind => kind, :id => id, :before => before, :after => after).freeze
       end
 
       def delete(kind, before:)
@@ -55,6 +75,17 @@ module PhComposer
       # What a caller reads back: every record the operation created or changed.
       def affected
         @writes.map { |write| { "kind" => write.kind, "id" => write.id, "change" => write.change } }
+      end
+
+      private
+
+      def guard!(kind)
+        kinds, code = @guards&.last
+        return if kinds.nil? || kinds.include?(kind)
+
+        error = CodedError.new(code, "This contribution cannot stage a #{kind} write.")
+        refuse(error)
+        raise error
       end
     end
   end

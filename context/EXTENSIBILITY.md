@@ -263,14 +263,18 @@ contract versions. Keep supported public APIs distinguishable from implementatio
 Implemented registration checks: the JSON Schema subset's keyword values (counts, bounds, text,
 an anchored `pattern` that compiles, non-empty enums whose values fit their type, no lower bound above its upper, a closed object requiring only what it declares); a description, a callable
 handler and examples for every query, action, view command, setup command and file export, where an operation whose params
-accept `{}` may omit examples and every example must validate; callable participants, menu items,
+accept `{}` may omit examples and every example must validate; participants checked the same way,
+with their `participants:` edges resolved against the caller's dependencies; callable menu items,
 subscriptions and Colour-by projections; and a described `noun.condition` form for each
 `feature.code`, declared once, under a noun no other feature declares and outside the foundation's
 nouns. A test over the built-in registry
 (`tests/api_reference_test.rb`) also requires a description on every top-level param, and an id
 param carries the `pattern` of its prefix, such as `^asm_[A-Za-z0-9]{12}$`. Write each operation's
-description, Undo name and side effects by hand at its declaration, not by interpolating its name. Published operations are frozen with deep-frozen schemas
-and examples, so a test or a contributor registers a new declaration rather than editing one.
+description, Undo name and side effects by hand at its declaration, not by interpolating its name. Every published declaration owns
+deep-frozen copies of its values, and record kinds copy theirs when built, so a test or a
+contributor registers a new declaration rather than editing one: editing a builder you kept after
+install changes nothing. Store admission, the publish order and the ownership rule are in
+[CONTRACTS.md](CONTRACTS.md), "Registration".
 
 A feature names each condition it reports by one code under its own noun, built where the condition
 is detected and never derived from message text, and declares it once with `feature.code`
@@ -342,13 +346,16 @@ identity, references and metadata. Optional assignment accepts the generic wrapp
 `{ "target" => owner_target, "local_id" => copied_id }`; only the kind owner translates the
 wrapper, by calling the operation its assignment action calls. Copy and assignment refuse together.
 
-A feature requiring `ph_composer.library` may join a library copy to its own proposal through
-`request.participant("ph_composer.library.copy_into_proposal").call(request, proposal, copy_params)`.
-It uses the public copy operation's closed parameter and result schemas and the same trusted
-catalog resolution and owner callbacks. The supplied proposal must be the caller's active
-proposal. Preview remains detached; the enclosing action provides the only native transaction.
-Any participant refusal poisons the caller's active proposal, even when the caller catches it.
-This supports staged imports without exposing a nested action dispatcher.
+A feature requiring `ph_composer.library` may join a library copy to its own proposal: its action
+lists `participants: ["ph_composer.library.copy_into_proposal"]` and calls
+`request.participate("ph_composer.library.copy_into_proposal", copy_params)`. It is the shipping
+example of a proposal participant, whose declaration and invocation rules are in
+[CONTRACTS.md](CONTRACTS.md), "Compound proposals"; the Windows Installs save is its caller. It uses
+the public copy operation's closed parameter and result schemas and the same trusted catalog
+resolution and owner callbacks, inside the caller's active proposal. Preview remains detached; the
+enclosing action provides the only native transaction. Any participant refusal poisons the caller's
+active proposal, even when the caller catches it. This supports staged imports without exposing a
+nested action dispatcher.
 
 Registration validates ownership, unique ids and supported versions, plus schema and callable
 contracts. Any diagnostic refuses the whole batch. Published declaration metadata and schemas are

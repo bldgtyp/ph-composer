@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped; implementation ready after registration reliability, not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+ISSUE: [#104](https://github.com/bldgtyp/ph-composer/issues/104)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDING: [F04](../../sections/02-shell-session.md#f04-generic-proposal-participants-expose-raw-callbacks-rather-than-a-guarded-invocation)
 DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) RR-02, for the ownership of the new declaration values.

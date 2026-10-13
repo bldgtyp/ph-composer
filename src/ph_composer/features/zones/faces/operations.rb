@@ -406,7 +406,7 @@ module PhComposer
         retiring = targets.select { |_occurrence, record| retiring?(record, intent) }
         return {} if retiring.empty?
 
-        request.participant("#{Zones::FEATURE_ID}.retire_pairs").call(request, retiring, index)
+        Zones.retire_pairs(request, retiring, index)
       end
 
       def classify_updates(request, targets, retirements, intent)

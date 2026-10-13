@@ -19,6 +19,9 @@ module PhComposer
       "view_command" => ANY_OPERATION,
       "setup_command" => ANY_OPERATION,
       "file_export" => ANY_OPERATION,
+      # What the foundation's invocation answers for any participant (shell/participant_invocation.rb).
+      "participant" => (ANY_OPERATION + %w[operation.proposal_required operation.participant_cycle
+                                           proposal.foreign_write proposal.contribution_replaced]).freeze,
       "approval" => %w[access.user_required request.cancelled].freeze,
       "location" => %w[location.unknown location.revoked location.used location.kind_mismatch location.unavailable
                        location.setup_unreadable location.setup_unavailable].freeze
@@ -42,14 +45,31 @@ module PhComposer
       outcome
     end
 
-    # Discovery, generated references and the offline audit use this one projection. The library
-    # service contributes installed callback codes without naming any receiving feature.
+    # Discovery, generated references and the offline audit use this one projection: the operation's
+    # own codes, the installed library callback codes it runs, and everything every participant it
+    # names can answer (its own codes and the `participant` set), through their own `participants`.
+    # The library service contributes its callback codes without naming any receiving feature.
     def declared(declaration, registry = Registry.current)
-      (declaration.refuses + Library::Refuses.callback_codes(registry, declaration.name)).uniq - common(declaration)
+      effective(declaration, registry, [declaration.name]).uniq - common(declaration)
     end
 
-    # The names of the COMMON sets one operation answers.
+    def effective(declaration, registry, seen)
+      codes = declaration.refuses + Library::Refuses.callback_codes(registry, declaration.name)
+      Array(declaration.respond_to?(:participants) ? declaration.participants : nil).each do |name|
+        participant = registry.proposal_participants[name]
+        next if participant.nil? || seen.include?(name)
+
+        codes += effective(participant, registry, seen + [name]) + COMMON.fetch("participant")
+      end
+      codes
+    end
+    private_class_method :effective
+
+    # The names of the COMMON sets one operation answers. A participant answers what any operation
+    # does; the action that calls it adds its own set.
     def common_sets(declaration)
+      return ["participant"] if declaration.is_a?(Declarations::ProposalParticipant)
+
       sets = [Declarations::OPERATION_KINDS.fetch(declaration.class)]
       approval = declaration.respond_to?(:approval) && declaration.approval
       sets << "approval" if approval

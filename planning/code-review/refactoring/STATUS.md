@@ -15,8 +15,8 @@ issues and PRs are linked from each packet row as they open.
 | [Export wording](../../archive/export-contract-wording/STATUS.md) | F08 | EW-01 | Complete; merged in [PR #99](https://github.com/bldgtyp/ph-composer/pull/99), archived |
 | [Outcome hook](../../archive/outcome-hook-isolation/STATUS.md) | JS-02 | OH-01, OH-02 | Complete; merged in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102), archived |
 | [Contributor example](../../archive/contributor-example-lifecycle/STATUS.md) | JS-03, JS-04 | CE-01 to CE-03 | Complete; merged in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102), archived |
-| [Registration](registration-reliability/STATUS.md) | F01, F02 | RR-01 to RR-03 | Scoped; implementation ready |
-| [Composition](cross-feature-composition/STATUS.md) | F04 | C-01 to C-04 | Scoped; after RR-02 |
+| [Registration](registration-reliability/STATUS.md) | F01, F02 | RR-01 to RR-03 | Implemented on branch `refactor/group-2-foundation-contracts` ([#103](https://github.com/bldgtyp/ph-composer/issues/103)) |
+| [Composition](cross-feature-composition/STATUS.md) | F04 | C-01 to C-04 | Implemented on branch `refactor/group-2-foundation-contracts` ([#104](https://github.com/bldgtyp/ph-composer/issues/104)) |
 | [Windows coordinator](windows-orchestration/STATUS.md) | RF-02 | W-01 to W-03 | Scoped; implementation ready |
 | [Panel facts](panel-domain-ownership/STATUS.md) | JS-01, JS-05 | PD-01 to PD-04 | Scoped; implementation ready |
 | [Library contracts](library-contracts/STATUS.md) | F05, RF-04 | LC-01 to LC-04 | Scoped; after RR-02 (LC-03 independent) |

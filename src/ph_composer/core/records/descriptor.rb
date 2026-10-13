@@ -14,15 +14,16 @@ module PhComposer
       attr_reader :kind, :label, :schema_version, :values_schema, :occurrence_schema, :references
 
       # `references` are Records::Reference declarations over top-level or nested record fields. `occurrence_schema`
-      # is nil for a catalog kind, whose records are named by id alone.
+      # is nil for a catalog kind, whose records are named by id alone. The descriptor keeps frozen copies;
+      # `view_schema`, `patch_schema` and `to_h` hand out editable ones.
       def initialize(kind:, label:, schema_version: nil, values_schema: ANY_OBJECT, occurrence_schema: nil,
                      references: [])
-        @kind = kind
-        @label = label
+        @kind = DeepCopy.frozen(kind)
+        @label = DeepCopy.frozen(label)
         @schema_version = schema_version
-        @values_schema = values_schema
-        @occurrence_schema = occurrence_schema
-        @references = references.freeze
+        @values_schema = DeepCopy.frozen(values_schema)
+        @occurrence_schema = DeepCopy.frozen(occurrence_schema)
+        @references = references.map { |reference| Fields.detached(reference) }.freeze
       end
 
       # [[target_kind, id], ...] for every core reference `record` holds.
@@ -57,13 +58,13 @@ module PhComposer
 
       # The public, plain-JSON form discovery publishes.
       def to_h
-        {
+        reference_rows = references.map do |reference|
+          { "key" => reference.key, "target_kind" => reference.target_kind, "cardinality" => reference.cardinality }
+        end
+        DeepCopy.call(
           "id" => kind, "label" => label, "schema_version" => schema_version, "identity_field" => IDENTITY_FIELD,
-          "values" => DeepCopy.call(values_schema), "occurrence_reference" => DeepCopy.call(occurrence_schema),
-          "references" => references.map do |reference|
-            { "key" => reference.key, "target_kind" => reference.target_kind, "cardinality" => reference.cardinality }
-          end
-        }
+          "values" => values_schema, "occurrence_reference" => occurrence_schema, "references" => reference_rows
+        )
       end
     end
   end

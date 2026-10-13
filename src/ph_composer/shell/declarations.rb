@@ -27,7 +27,7 @@ module PhComposer
       location.setup_unreadable location.setup_unavailable
       request.pending request.sequence_conflict request.outcome_unavailable
       session.unknown session.busy session.closed session.changed session.inactive
-      revision.stale proposal.changed record.unreadable
+      revision.stale proposal.changed record.unreadable proposal.foreign_write proposal.contribution_replaced
       target.not_found target.changed target.ambiguous target.locked target.wrong_kind target.wrong_hierarchy
       target.wrong_zone target.same_zone target.shared_definition target.edit_path_changed
       params.invalid validation.failed reference.invalid reference.in_use geometry.invalid geometry.failed
@@ -37,6 +37,7 @@ module PhComposer
       query.limit_invalid query.cursor_expired
       operation.failed operation.rollback_unverified operation.participant_missing operation.proposal_required
       operation.query_missing operation.dependency_missing operation.query_cycle operation.locate_missing
+      operation.participant_cycle
       identity.conflict identity.choice_required identity.choice_conflicts scope.incomplete selection.invalid
       registration.duplicate_id registration.missing_dependency registration.cycle registration.contract_major
       registration.schema_invalid
@@ -49,7 +50,7 @@ module PhComposer
       library.catalog_stale library.catalog_too_large library.catalog_too_many_rows library.destination_changed
       library.destination_invalid library.export_write_failed library.file_malformed library.file_too_large
       library.file_unreadable library.format_invalid library.kind_unavailable library.local_choice_required
-      library.mutation_owner library.provider_ambiguous library.provider_failed library.provider_invalid
+      library.provider_ambiguous library.provider_failed library.provider_invalid
       library.provider_unavailable library.review_required library.row_semantic_invalid library.row_unavailable
       library.schema_unsupported
       library.setup_invalid library.setup_too_large library.setup_unavailable library.setup_unreadable
@@ -63,16 +64,20 @@ module PhComposer
     # kind can answer (Refusals::COMMON). `[]` says there are none beyond those.
 
     # A bounded read. `handler` is `->(request) { value }`; it must not write to the Model.
-    Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :handler,
+    # `participants` names the proposal participants the handler calls (`request.participate`); a query
+    # has no proposal, so a participant it calls refuses, and the edge exists only so the declaration
+    # is uniform with an action's.
+    Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :participants, :handler,
                        keyword_init: true)
 
     # A validated Model change. `handler` is `->(request, changes) { value }`: it proposes record
     # writes into `changes` (a Records::ChangeSet) and never writes itself. The dispatcher applies the
     # proposal as one native operation named `undo_name`. `confirmation` is the policy every client
     # must satisfy before the operation opens; only "none" is supported.
+    # `participants` names the proposal participants the handler calls through `request.participate`.
     Action = Struct.new(
       :name, :owner, :description, :params, :result, :examples, :refuses, :undo_name, :side_effects, :confirmation,
-      :handler, keyword_init: true
+      :participants, :handler, keyword_init: true
     )
 
     # A change to what the host shows, and nothing else, as a contribution seam. `handler` is
@@ -178,7 +183,14 @@ module PhComposer
     # return the final entity occurrences as Records::ReferencePlan.
     ReferenceRetargeter = Struct.new(:name, :owner, :target_kind, :handler, keyword_init: true)
 
-    ProposalParticipant = Struct.new(:name, :owner, :handler, keyword_init: true)
+    # A step another feature composes into its own action's proposal (context/CONTRACTS.md, "Compound
+    # proposals"). It is declared like an operation, with a description, params and result schemas,
+    # examples and `refuses`, but no client can call it: only a handler that names it in `participants`
+    # reaches it, through `request.participate`. `handler` is `->(request, proposal) { value }`; the
+    # request runs under the participant's owner with an engine that writes only that owner's kinds.
+    # `participants` names the participants it calls in turn.
+    ProposalParticipant = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses,
+                                     :participants, :handler, keyword_init: true)
 
     # A factory is called with the published registry and returns configured provider instances; it
     # never receives a Model or request.

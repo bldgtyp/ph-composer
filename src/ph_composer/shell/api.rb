@@ -51,6 +51,8 @@ module PhComposer
         "actions" => registry.actions.values.map do |action|
           summary(action).merge("side_effects" => action.side_effects)
         end,
+        # Steps an action of a dependent feature composes into its own proposal; no client calls one.
+        "participants" => registry.proposal_participants.values.map { |participant| summary(participant) },
         "record_kinds" => registry.record_kinds.values.map do |kind|
           { "id" => kind.id, "owner" => registry.owner_of(kind.id), "label" => kind.label,
             "schema_version" => kind.schema_version }
@@ -72,7 +74,8 @@ module PhComposer
     def describe(name:)
       registry = Registry.current
       if (operation = registry.queries[name] || registry.actions[name] || registry.view_commands[name] ||
-                      registry.setup_commands[name] || registry.file_exports[name])
+                      registry.setup_commands[name] || registry.file_exports[name] ||
+                      registry.proposal_participants[name])
         return DeepCopy.call(operation_description(registry, operation))
       end
 
@@ -171,8 +174,8 @@ module PhComposer
       { "name" => operation.name, "owner" => operation.owner, "description" => operation.description }
     end
 
-    # `refuses` is the operation's own refusal codes; `common_refusal_sets` names the sets of
-    # `discover`'s `common_refusals` it answers as well.
+    # `refuses` is the operation's effective refusal codes, its own and those of the participants it
+    # calls; `common_refusal_sets` names the sets of `discover`'s `common_refusals` it answers as well.
     def operation_description(registry, operation)
       {
         "kind" => operation_kind(operation),
@@ -184,6 +187,7 @@ module PhComposer
         operation.is_a?(Declarations::Action) ? { "side_effects" => operation.side_effects,
                                                   "confirmation" => operation.confirmation } : {}
       ).merge(operation.respond_to?(:approval) && operation.approval ? { "approval" => operation.approval.to_h } : {})
+        .merge(operation.respond_to?(:participants) ? { "participants" => operation.participants } : {})
     end
 
     # A feature's code carries its owner and description; a foundation code is described in
@@ -196,6 +200,8 @@ module PhComposer
     end
 
     def operation_kind(operation)
+      return "participant" if operation.is_a?(Declarations::ProposalParticipant)
+
       Declarations::OPERATION_KINDS.fetch(operation.class)
     end
     private_class_method :session_summary, :summary, :operation_description, :refusal, :operation_kind

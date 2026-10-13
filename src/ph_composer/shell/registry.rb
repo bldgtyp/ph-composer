@@ -30,13 +30,21 @@ module PhComposer
       end
 
       # Validates the features' declarations together with everything already published, then
-      # publishes them, or raises RegistrationError and publishes nothing.
+      # publishes them, or raises RegistrationError and publishes nothing. An install started from
+      # inside another (an `install` or a store that installs while it is read) is refused.
       def install(features)
-        staged = current.stage(features)
-        diagnostics = staged.diagnostics
-        raise RegistrationError, diagnostics unless diagnostics.empty?
+        raise InternalError, "Registry.install was called while another install was running." if @installing
 
-        current.publish(staged)
+        begin
+          @installing = true
+          staged = current.stage(features)
+          diagnostics = staged.diagnostics
+          raise RegistrationError, diagnostics unless diagnostics.empty?
+
+          current.publish(staged)
+        ensure
+          @installing = false
+        end
       end
 
       def installed?(feature_id)
@@ -44,6 +52,8 @@ module PhComposer
       end
 
       def reset
+        raise InternalError, "Registry.reset was called while an install was running." if @installing
+
         current.unsubscribe_all
         @current = new
       end
@@ -94,34 +104,12 @@ module PhComposer
       staging
     end
 
+    # Publishes a validated batch in two steps. `prepare` does everything that could fail and writes
+    # nothing live; `commit` then only assigns into the maps and appends, so a batch cannot be left
+    # half published. Validation has already admitted each store's dictionary and each subscription's
+    # event kind, so neither `Dictionaries.register` nor `Sessions.on_host_event` can refuse here.
     def publish(staging)
-      staging.declared_features.each { |feature| @features[feature.id] = feature }
-      staging.declared_operations.each { |operation| freeze_operation(operation) }
-      publish_each(staging.declared_queries, @queries, :name)
-      publish_each(staging.declared_actions, @actions, :name)
-      publish_each(staging.declared_view_commands, @view_commands, :name)
-      publish_each(staging.declared_setup_commands, @setup_commands, :name)
-      publish_each(staging.declared_file_exports, @file_exports, :name)
-      publish_each(staging.declared_record_kinds, @record_kinds, :id)
-      staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
-      publish_each(staging.declared_reference_targets, @reference_targets, :id)
-      publish_each(staging.declared_extensions, @extensions, :namespace)
-      publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
-      publish_each(staging.declared_export_contributors, @export_contributors, :name)
-      publish_each(staging.declared_reference_retargeters, @reference_retargeters, :name)
-      publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
-      staging.declared_library_providers.each { |item| freeze_library_provider(item) }
-      staging.declared_library_kinds.each { |item| freeze_library_kind(item) }
-      publish_each(staging.declared_library_providers, @library_providers, :name)
-      publish_each(staging.declared_library_kinds, @library_kinds, :name)
-      publish_each(staging.declared_colour_modes, @colour_modes, :name)
-      publish_each(staging.declared_menu_items, @menu_items, :name)
-      publish_each(staging.declared_codes, @codes, :code)
-      staging.owners.each { |name, owner| @owners[name] = owner }
-      staging.declared_subscriptions.each do |subscription|
-        @subscriptions << subscription
-        @unsubscribers << Sessions.on_host_event(subscription.kind, &subscription.handler)
-      end
+      commit(staging, prepare(staging))
       self
     end
 
@@ -132,41 +120,116 @@ module PhComposer
 
     private
 
-    # A published operation is what validation and discovery read, so nothing may change it afterwards:
-    # its schemas and examples are deep-frozen copies and the declaration itself is frozen.
-    def freeze_operation(operation)
-      %i[params result examples refuses].each do |part|
-        operation[part] = DeepCopy.frozen(operation[part])
+    Prepared = Struct.new(:dictionaries, :owners, keyword_init: true)
+
+    # The batch's declarations made final, the dictionary name each kind was admitted with, and the
+    # owner index, all as the registry's own frozen values.
+    def prepare(staging)
+      staging.declared_structs.each { |declaration| own(declaration) }
+      Prepared.new(:dictionaries => staging.declared_record_kinds.map { |kind| admitted_dictionary(staging, kind) },
+                   :owners => staging.owners.to_h { |name, owner| [DeepCopy.frozen(name), DeepCopy.frozen(owner)] })
+    rescue StandardError => error
+      raise InternalError, "Registration could not prepare the batch: #{error.class}: #{error.message}"
+    end
+
+    # The name validation admitted, so a getter that answers differently later cannot reach publishing.
+    # A batch published without validation (a test's direct `publish`) is checked here instead.
+    def admitted_dictionary(staging, kind)
+      staging.admitted_dictionaries.fetch(kind) do
+        name = kind.store.dictionary
+        raise InternalError, "#{kind.id} store dictionary #{name.inspect} is not admitted." \
+          unless Dictionaries.valid_name?(name)
+
+        DeepCopy.frozen(name)
       end
-      operation.freeze
     end
 
-    def freeze_library_provider(item)
-      item.name = item.name.dup.freeze
-      item.owner = item.owner.dup.freeze
-      item.kinds = DeepCopy.frozen(item.kinds)
-      item.freeze
+    def commit(staging, prepared)
+      staging.declared_features.each { |feature| @features[feature.id] = feature }
+      publish_each(staging.declared_queries, @queries, :name)
+      publish_each(staging.declared_actions, @actions, :name)
+      publish_each(staging.declared_view_commands, @view_commands, :name)
+      publish_each(staging.declared_setup_commands, @setup_commands, :name)
+      publish_each(staging.declared_file_exports, @file_exports, :name)
+      publish_each(staging.declared_record_kinds, @record_kinds, :id)
+      prepared.dictionaries.each { |name| Dictionaries.register(name) }
+      publish_each(staging.declared_reference_targets, @reference_targets, :id)
+      publish_each(staging.declared_extensions, @extensions, :namespace)
+      publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
+      publish_each(staging.declared_export_contributors, @export_contributors, :name)
+      publish_each(staging.declared_reference_retargeters, @reference_retargeters, :name)
+      publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
+      publish_each(staging.declared_library_providers, @library_providers, :name)
+      publish_each(staging.declared_library_kinds, @library_kinds, :name)
+      publish_each(staging.declared_colour_modes, @colour_modes, :name)
+      publish_each(staging.declared_menu_items, @menu_items, :name)
+      publish_each(staging.declared_codes, @codes, :code)
+      prepared.owners.each { |name, owner| @owners[name] = owner }
+      staging.declared_subscriptions.each do |subscription|
+        @subscriptions << subscription
+        @unsubscribers << Sessions.on_host_event(subscription.kind, &subscription.handler)
+      end
     end
 
-    def freeze_library_kind(item)
-      adapter = item.adapter.dup
-      adapter.wire_kind = adapter.wire_kind.dup.freeze
-      adapter.wire_schema = DeepCopy.frozen(adapter.wire_schema)
-      adapter.mapped_schema = DeepCopy.frozen(adapter.mapped_schema)
-      adapter.fingerprint_fields = DeepCopy.frozen(adapter.fingerprint_fields)
-      %i[local_read create replace assign].each do |method|
+    # The value members of each declaration: what validation, discovery and dispatch read. Publishing
+    # replaces each with a deep-frozen copy and freezes the declaration, so neither a builder the
+    # contributor kept nor anything a reader is handed can change a published declaration. Every other
+    # member is behaviour (a handler, validator, factory, projection or callback) and is kept by
+    # identity, never copied or frozen. The record classes (core/records) detach their own values when
+    # they are built.
+    VALUE_MEMBERS = {
+      Declarations::Feature => %i[id contract_version requires],
+      Declarations::Query => %i[name owner description params result examples refuses participants],
+      Declarations::Action => %i[name owner description params result examples refuses undo_name side_effects
+                                 confirmation participants],
+      Declarations::ViewCommand => %i[name owner description params result examples refuses],
+      Declarations::SetupCommand => %i[name owner description params result examples refuses],
+      Declarations::FileExport => %i[name owner description params result examples refuses],
+      Declarations::SnapshotSection => %i[name owner query params],
+      Declarations::ExportContributor => %i[name owner section_version result preflight user_data_keys requires],
+      Declarations::ColourMode => %i[name owner label entity_kind group],
+      Declarations::MenuItem => %i[name owner label menu separator_after],
+      Declarations::ReferenceRetargeter => %i[name owner target_kind],
+      Declarations::ProposalParticipant => %i[name owner description params result examples refuses participants],
+      Declarations::LibraryProvider => %i[name owner contract_version kinds],
+      Declarations::LibraryKind => %i[name owner contract_version record_kind],
+      Declarations::HostEventSubscription => %i[owner kind],
+      Declarations::Code => %i[code owner description]
+    }.freeze
+    LIBRARY_ADAPTER_VALUES = %i[wire_kind wire_version fingerprint_version wire_schema mapped_schema
+                                fingerprint_fields].freeze
+    LIBRARY_CALLBACK_VALUES = %i[params result refuses].freeze
+    LIBRARY_CALLBACKS = %i[local_read create replace assign].freeze
+
+    def own(declaration)
+      return declaration if declaration.frozen?
+
+      owned_values(declaration, VALUE_MEMBERS.fetch(declaration.class))
+      declaration.approval = owned_approval(declaration.approval) if declaration.respond_to?(:approval=)
+      declaration.adapter = owned_adapter(declaration.adapter) if declaration.is_a?(Declarations::LibraryKind)
+      declaration.freeze
+    end
+
+    def owned_values(struct, members)
+      members.each { |member| struct[member] = DeepCopy.frozen(struct[member]) unless struct[member].nil? }
+      struct
+    end
+
+    def owned_approval(approval)
+      approval && owned_values(approval.dup, Declarations::Approval.members).freeze
+    end
+
+    # The adapter struct is the contributor's, so it is copied; its methods and callback handlers are
+    # behaviour and are kept.
+    def owned_adapter(adapter)
+      return adapter unless adapter.is_a?(Declarations::LibraryAdapter)
+
+      adapter = owned_values(adapter.dup, LIBRARY_ADAPTER_VALUES)
+      LIBRARY_CALLBACKS.each do |method|
         callback = adapter[method]
-        next unless callback
-
-        callback = callback.dup
-        callback.params = DeepCopy.frozen(callback.params)
-        callback.result = DeepCopy.frozen(callback.result)
-        callback.refuses = DeepCopy.frozen(callback.refuses)
-        adapter[method] = callback.freeze
+        adapter[method] = owned_values(callback.dup, LIBRARY_CALLBACK_VALUES).freeze if callback
       end
-      item.adapter = adapter.freeze
-      %i[name owner record_kind].each { |part| item[part] = item[part].dup.freeze }
-      item.freeze
+      adapter.freeze
     end
 
     def publish_each(declarations, target, key)
@@ -183,7 +246,7 @@ module PhComposer
                   :declared_library_providers, :declared_library_kinds,
                   :declared_colour_modes,
                   :declared_menu_items, :declared_codes,
-                  :declared_subscriptions, :owners, :named
+                  :declared_subscriptions, :owners, :named, :admitted_dictionaries
 
       def initialize(live)
         @live = live
@@ -209,6 +272,7 @@ module PhComposer
         @owners = {}
         @named = []
         @failures = []
+        @admitted_dictionaries = {}.compare_by_identity
       end
 
       # Contribution schemas may reuse a dependency's published record shape during registration.
@@ -222,7 +286,7 @@ module PhComposer
       # Declares a feature and returns the scope its other declarations are made through.
       def feature(id, contract_version:, requires: [])
         declaration = Declarations::Feature.new(:id => id, :contract_version => contract_version,
-                                                :requires => requires.dup.freeze)
+                                                :requires => requires)
         @declared_features << declaration
         FeatureScope.new(self, declaration)
       end
@@ -240,6 +304,14 @@ module PhComposer
 
       def diagnostics
         Validation.new(@live, self).diagnostics + @failures
+      end
+
+      # Every declaration struct the batch made, which publishing takes ownership of.
+      def declared_structs
+        declared_features + declared_operations + declared_snapshot_sections + declared_export_contributors +
+          declared_reference_retargeters + declared_proposal_participants + declared_library_providers +
+          declared_library_kinds + declared_colour_modes + declared_menu_items + declared_codes +
+          declared_subscriptions
       end
 
       # Every operation the batch declared, of every kind a client can call.
@@ -272,20 +344,20 @@ module PhComposer
 
       # Every operation names `refuses:`. It defaults to nil only so validation can name each operation
       # that omits it, rather than one Ruby error ending the feature's install.
-      def query(name, description:, params:, result:, refuses: nil, examples: [], &handler)
+      def query(name, description:, params:, result:, refuses: nil, examples: [], participants: [], &handler)
         declaration = Declarations::Query.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :refuses => refuses, :handler => handler
+          :examples => examples, :refuses => refuses, :participants => participants, :handler => handler
         )
         @staging.add(:declared_queries, id, name, declaration)
       end
 
       def action(name, description:, params:, result:, undo_name:, side_effects:, examples: [],
-                 refuses: nil, confirmation: "none", &handler)
+                 refuses: nil, confirmation: "none", participants: [], &handler)
         declaration = Declarations::Action.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :undo_name => undo_name, :side_effects => side_effects,
-          :confirmation => confirmation, :handler => handler
+          :confirmation => confirmation, :participants => participants, :handler => handler
         )
         @staging.add(:declared_actions, id, name, declaration)
       end
@@ -334,9 +406,8 @@ module PhComposer
                              requires: [], projection: nil, &contract)
         declaration = Declarations::ExportContributor.new(
           :name => name, :owner => id, :section_version => section_version, :contract => contract,
-          :result => DeepCopy.call(result).freeze, :report => report, :preflight => preflight,
-          :user_data_keys => DeepCopy.call(user_data_keys).freeze, :requires => DeepCopy.call(requires).freeze,
-          :projection => projection
+          :result => result, :report => report, :preflight => preflight,
+          :user_data_keys => user_data_keys, :requires => requires, :projection => projection
         )
         @staging.add(:declared_export_contributors, id, name, declaration)
       end
@@ -374,8 +445,13 @@ module PhComposer
         @staging.add(:declared_reference_retargeters, id, name, declaration)
       end
 
-      def proposal_participant(name, &handler)
-        declaration = Declarations::ProposalParticipant.new(:name => name, :owner => id, :handler => handler)
+      # A participant is declared as an operation is; `participants` names the ones its handler calls.
+      def proposal_participant(name, description:, params:, result:, refuses: nil, examples: [], participants: [],
+                               &handler)
+        declaration = Declarations::ProposalParticipant.new(
+          :name => name, :owner => id, :description => description, :params => params, :result => result,
+          :examples => examples, :refuses => refuses, :participants => participants, :handler => handler
+        )
         @staging.add(:declared_proposal_participants, id, name, declaration)
       end
 
@@ -396,8 +472,7 @@ module PhComposer
       # Declares one code this feature raises under its own noun, such as `window.unhosted`. Codes are not
       # names under the feature id; one feature owns each noun.
       def code(code, description:)
-        @staging.declared_codes << Declarations::Code.new(:code => code, :owner => id,
-                                                          :description => description).freeze
+        @staging.declared_codes << Declarations::Code.new(:code => code, :owner => id, :description => description)
       end
 
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).

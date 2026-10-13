@@ -18,14 +18,15 @@ module PhComposer
 
       attr_reader :id, :label, :schema_version, :id_prefix, :fields, :store
 
-      # `validate`, when given, is `->(values) { [finding, ...] }` for rules a schema cannot express.
+      # `validate`, when given, is `->(values) { [finding, ...] }` for rules a schema cannot express. The kind
+      # keeps frozen copies of its id, label, prefix and fields; `validate` and `store` are kept as given.
       def initialize(id:, label:, schema_version:, id_prefix:, fields:, validate: nil, store: nil, references: [])
-        @id = id
-        @label = label
+        @id = DeepCopy.frozen(id)
+        @label = DeepCopy.frozen(label)
         @schema_version = schema_version
-        @id_prefix = id_prefix
-        @fields = fields.freeze
-        @nested_references = references.freeze
+        @id_prefix = DeepCopy.frozen(id_prefix)
+        @fields = fields.map { |field| Fields.detached(field) }.freeze
+        @nested_references = references.map { |reference| Fields.detached(reference) }.freeze
         @validate = validate
         @store = store || DictionaryStore.new(id)
         @id_pattern = Identity.pattern(id_prefix)

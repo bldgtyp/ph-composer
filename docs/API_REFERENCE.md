@@ -1928,6 +1928,7 @@ Every operation answers the codes of its kind's set besides its own, and an oper
 | `view_command` | `request.malformed`, `request.api_version`, `request.capability_denied`, `session.unknown`, `session.busy`, `params.invalid`, `operation.failed` |
 | `setup_command` | `request.malformed`, `request.api_version`, `request.capability_denied`, `session.unknown`, `session.busy`, `params.invalid`, `operation.failed` |
 | `file_export` | `request.malformed`, `request.api_version`, `request.capability_denied`, `session.unknown`, `session.busy`, `params.invalid`, `operation.failed` |
+| `participant` | `request.malformed`, `request.api_version`, `request.capability_denied`, `session.unknown`, `session.busy`, `params.invalid`, `operation.failed`, `operation.proposal_required`, `operation.participant_cycle`, `proposal.foreign_write`, `proposal.contribution_replaced` |
 | `approval` | `access.user_required`, `request.cancelled` |
 | `location` | `location.unknown`, `location.revoked`, `location.used`, `location.kind_mismatch`, `location.unavailable`, `location.setup_unreadable`, `location.setup_unavailable` |
 
@@ -20705,7 +20706,7 @@ Copy or reuse one library record with optional assignment. Owner: `ph_composer.l
 
 Undo step: Copy Library Record. Copies or replaces local definitions and optional assignments in one Undo step.
 
-Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `library.adapter_invalid`, `library.callback_invalid`, `library.catalog_stale`, `library.kind_unavailable`, `library.local_choice_required`, `library.mutation_owner`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_semantic_invalid`, `library.row_unavailable`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `library.adapter_invalid`, `library.callback_invalid`, `library.catalog_stale`, `library.kind_unavailable`, `library.local_choice_required`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_semantic_invalid`, `library.row_unavailable`, `proposal.contribution_replaced`, `proposal.foreign_write`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -31580,7 +31581,9 @@ Assign Psi-Install Types to the edges of Window Type elements, in one Undo step,
 
 Undo step: Edit Window Installations. Creates or edits installation products and updates type edges atomically. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
 
-Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `library.adapter_invalid`, `library.callback_invalid`, `library.catalog_stale`, `library.kind_unavailable`, `library.local_choice_required`, `library.mutation_owner`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_unavailable`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+Calls: `ph_composer.library.copy_into_proposal`.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `library.adapter_invalid`, `library.callback_invalid`, `library.catalog_stale`, `library.kind_unavailable`, `library.local_choice_required`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_semantic_invalid`, `library.row_unavailable`, `operation.participant_cycle`, `operation.proposal_required`, `proposal.contribution_replaced`, `proposal.foreign_write`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `action` common set.
 
 Params:
 
@@ -39877,6 +39880,220 @@ Example params:
     }
   ],
   "identity": "new"
+}
+```
+
+## Proposal participants
+
+Called by no client. An action of a feature that requires the owner names the participant in its `participants` and calls it inside its own proposal; its refusals are included in that action's.
+
+### `ph_composer.library.copy_into_proposal`
+
+Copy or reuse one library record, with optional assignment, inside the calling action's own proposal and Undo step. Owner: `ph_composer.library`.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `geometry.invalid`, `identity.conflict`, `library.adapter_invalid`, `library.callback_invalid`, `library.catalog_stale`, `library.kind_unavailable`, `library.local_choice_required`, `library.provider_ambiguous`, `library.provider_failed`, `library.provider_invalid`, `library.provider_unavailable`, `library.review_required`, `library.row_semantic_invalid`, `library.row_unavailable`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.definition_editing`, `window.definition_missing`, `window.host_required`, `window.nested_units`, `window.overhang`, `window.overlap`, `window.surface_host`, `window.type_geometry_unknown`, and the `participant` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider_id",
+    "kind",
+    "generation",
+    "library_id",
+    "record_id",
+    "choice"
+  ],
+  "properties": {
+    "provider_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A configured library, by the id ph_composer.library.providers lists."
+    },
+    "kind": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The library kind, such as materials or frames; providers lists the kinds each library serves."
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The catalog generation the caller read. Omit it to use the current one; a stale one is refused as library.catalog_stale."
+    },
+    "library_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The library holding the row, as the catalog row gives it."
+    },
+    "record_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The row's record id within that library."
+    },
+    "choice": {
+      "type": "string",
+      "enum": [
+        "create",
+        "keep_local",
+        "use_library"
+      ],
+      "description": "create copies the row as a new local record; keep_local reuses a reviewed local candidate unchanged; use_library replaces a reviewed candidate's values with the library's. Read the resolution first with in_file or a preview."
+    },
+    "local_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The reviewed local candidate for keep_local or use_library, from the resolution's candidates. May be omitted when there is exactly one."
+    },
+    "expected_values": {
+      "type": "object",
+      "description": "For use_library: the candidate's expected_values from the resolution. Refused when the local record changed since."
+    },
+    "assignment": {
+      "type": "object",
+      "description": "Optional: where the owning feature also assigns the copied record, in that kind's assignment target shape, such as one Window Type element side."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "resolution",
+    "local_id",
+    "assigned"
+  ],
+  "properties": {
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "candidates"
+      ],
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "create",
+            "reuse",
+            "review_required",
+            "ambiguous_source",
+            "ambiguous_name"
+          ]
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "differences",
+              "expected_values",
+              "comparison_available",
+              "source_changed"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "differences": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "field",
+                    "local",
+                    "incoming",
+                    "local_present",
+                    "incoming_present"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string"
+                    },
+                    "local": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "object",
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "incoming": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "object",
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "local_present": {
+                      "type": "boolean"
+                    },
+                    "incoming_present": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "expected_values": {
+                "type": "object"
+              },
+              "comparison_available": {
+                "type": "boolean"
+              },
+              "source_changed": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "local_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "assigned": {
+      "type": "boolean"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "provider_id": "example",
+  "kind": "example_parts",
+  "generation": 1,
+  "library_id": "synthetic",
+  "record_id": "one",
+  "choice": "create"
 }
 ```
 

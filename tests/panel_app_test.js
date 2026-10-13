@@ -442,12 +442,12 @@ test("with no host message and no translator text the generic sentence shows", f
 });
 
 test("declines fall through and non-string answers are skipped, never shown", function () {
-  [null, undefined, "", 42, Promise.resolve("later"), { text: "object" }].forEach(function (answer) {
+  [null, undefined, "", "   ", 42, Promise.resolve("later"), { text: "object" }].forEach(function (answer) {
     var p = hookPage();
     p.panel.outcomeText(function () { return answer; }, { owner: "test.odd" });
     p.receive("action.result", results.refused("r1", "session-a", "Host words."));
     assert.strictEqual(p.notice().message.textContent, "Host words.", String(answer));
-    var declined = answer === null || answer === undefined || answer === "";
+    var declined = answer === null || answer === undefined || (typeof answer === "string" && !answer.trim());
     assert.strictEqual(p.logged.length, declined ? 0 : 1, String(answer));
   });
 });

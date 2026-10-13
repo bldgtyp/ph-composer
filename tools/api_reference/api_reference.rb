@@ -16,7 +16,7 @@ module PhComposerTools
     def markdown(registry)
       [intro, kinds(registry), common_refusals,
        *GROUPS.map { |title, key, capability| operations(registry, title, key, capability) },
-       tasks, codes(registry)].join("\n")
+       participants(registry), tasks, codes(registry)].join("\n")
     end
 
     def intro
@@ -82,6 +82,16 @@ module PhComposerTools
         declarations.map { |declaration| operation_section(declaration, registry) }.join("\n")
     end
 
+    # Participants answer no client, so they have a section of their own rather than a capability.
+    def participants(registry)
+      sections = registry.proposal_participants.values.sort_by(&:name).map do |declaration|
+        operation_section(declaration, registry)
+      end
+      "## Proposal participants\n\nCalled by no client. An action of a feature that requires the owner names " \
+        "the participant in its `participants` and calls it inside its own proposal; its refusals are " \
+        "included in that action's.\n\n#{sections.join("\n")}"
+    end
+
     # The codes every operation of a kind can answer, printed once instead of under each operation.
     def common_refusals
       rows = PhComposer::Refusals::COMMON.map do |set, codes|
@@ -139,6 +149,11 @@ module PhComposerTools
                      "`location`, the id of a location the user approved, or is refused with " \
                      "`access.user_required`."
                  end
+        lines << ""
+      end
+      calls = declaration.respond_to?(:participants) ? Array(declaration.participants) : []
+      unless calls.empty?
+        lines << "Calls: #{calls.map { |name| "`#{name}`" }.join(', ')}."
         lines << ""
       end
       lines << refuses_line(declaration, registry)

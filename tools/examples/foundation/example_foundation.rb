@@ -4,9 +4,9 @@
 # builder refuses any `examples` path, and the shipping composition root does not list it. Load it
 # with tools/examples/foundation/load.rb. The README beside this file walks through it.
 #
-# It declares two record kinds, one structured extension, a query, four actions, a snapshot section
-# and two export contributors. Nothing in shell/, session/, core/ or export/ names it; its translation
-# sections are in example_translation.py beside this file.
+# It declares two record kinds, one structured extension, a query, four actions, a proposal
+# participant, a snapshot section and two export contributors. Nothing in shell/, session/, core/ or
+# export/ names it; its translation sections are in example_translation.py beside this file.
 module ExampleFoundation
   ID = "example.foundation"
   DEFINITION = "#{ID}.definition"
@@ -79,7 +79,30 @@ module ExampleFoundation
     declare_create(feature)
     declare_update(feature)
     declare_duplicate_and_migrate(feature)
+    declare_participant(feature)
     declare_export(feature)
+  end
+
+  ADD_PART = {
+    "type" => "object", "required" => %w[definition_id label length_mm], "additionalProperties" => false,
+    "properties" => PART_VALUES.fetch("properties").merge(
+      "definition_id" => { "type" => "string", "description" => "The definition the new part names." }
+    )
+  }.freeze
+
+  # A step another feature's action composes into its own proposal (example_kit.rb is the caller). It
+  # stages one part; it cannot write another feature's kinds, and it opens no operation of its own.
+  def declare_participant(feature)
+    feature.proposal_participant(
+      "#{ID}.add_part",
+      :description => "Stage one part that names an existing definition, inside the caller's proposal.",
+      :params => ADD_PART, :refuses => %w[reference.invalid validation.failed],
+      :result => { "type" => "object", "required" => ["part_id"], "additionalProperties" => false,
+                   "properties" => { "part_id" => { "type" => "string" } } },
+      :examples => [{ "definition_id" => "exd_Ab12Cd34Ef56", "label" => "Jamb", "length_mm" => 2100 }]
+    ) do |request, proposal|
+      { "part_id" => request.engine.propose_create(PART, proposal, :values => request.params) }
+    end
   end
 
   def declare_summary(feature)
