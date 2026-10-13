@@ -44,9 +44,13 @@ module PhComposer
                                 "applies; null otherwise.")
       # A Zone read captures each Face's geometry for the area totals, so it answers what a Face read does.
       READ = (Refuses::READ + %w[geometry.invalid]).freeze
+      EXTENSION_STATUS = { "type" => "object",
+                           "description" => "Each extension envelope's status against what is installed, by " \
+                                            "namespace." }.freeze
       AREA_TOTAL = { "type" => "number", "minimum" => 0, "x-unit" => "m2",
                      "description" => "Summed over this occurrence's Faces, each through its own transform." }.freeze
       ZONE_ROW = Shapes.with(TARGET.descriptor.view_schema, "display" => DISPLAY,
+                                                            "extension_status" => EXTENSION_STATUS,
                                                             "reference" => ZONE_REFERENCE,
                                                             "state" => { "type" => "string",
                                                                          "enum" => %w[found ambiguous shared_definition
@@ -101,6 +105,37 @@ module PhComposer
 
       module_function
 
+      # The two edits of an existing Zone occurrence: its values, and its metadata.
+      def declare_edits(feature)
+        feature.action("#{FEATURE_ID}.update", :description => "Update one explicit Zone occurrence.",
+                                               :refuses => Options::Registration::REFUSALS,
+                                               :params => UPDATE_PARAMS, :result => ZONE_ID_RESULT,
+                                               :undo_name => "Edit Zone",
+                                               :examples => [{ "reference" => EXAMPLE_REFERENCE,
+                                                               "values" => EXAMPLE_VALUES.merge("level" => "L1"),
+                                                               "expected_values" => EXAMPLE_VALUES }],
+                                               :side_effects => "Updates Zone values and membership stamps.") do |
+                                                    request, proposal|
+          Zones.update(request, proposal,
+                       :reference => request.params.fetch("reference"),
+                       :values => request.params.fetch("values"),
+                       :expected_values => request.params.fetch("expected_values"))
+        end
+        feature.action("#{FEATURE_ID}.update_metadata",
+                       :description => "Replace the user_data and installed extension payloads of explicit Zone " \
+                                       "occurrences, guarded by the metadata last read.",
+                       :refuses => (Refuses::ZONE_TARGET + Refuses::METADATA).uniq,
+                       :params => Shapes.metadata_updates(ZONE_REFERENCE, Pages::MAXIMUM_LIMIT),
+                       :result => Shapes.metadata_result(ZONE_REFERENCE), :undo_name => "Edit Zone Metadata",
+                       :examples => [{ "updates" => [{ "reference" => EXAMPLE_REFERENCE,
+                                                       "user_data" => { "example" => { "note" => "kept" } },
+                                                       "expected_metadata" => { "user_data" => {},
+                                                                                "extension_data" => {} } }] }],
+                       :side_effects => "Rewrites only the named Zones' metadata.") do |request, proposal|
+          Zones.update_metadata(request, proposal, :updates => request.params.fetch("updates"))
+        end
+      end
+
       def install(feature)
         feature.reference_target(TARGET)
         ColourModes.install(feature)
@@ -126,20 +161,7 @@ module PhComposer
                      :parent_path => request.params.fetch("parent_path"),
                      :entity_ids => request.params.fetch("entity_ids"), :name => request.params["name"])
         end
-        feature.action("#{FEATURE_ID}.update", :description => "Update one explicit Zone occurrence.",
-                                               :refuses => Options::Registration::REFUSALS,
-                                               :params => UPDATE_PARAMS, :result => ZONE_ID_RESULT,
-                                               :undo_name => "Edit Zone",
-                                               :examples => [{ "reference" => EXAMPLE_REFERENCE,
-                                                               "values" => EXAMPLE_VALUES.merge("level" => "L1"),
-                                                               "expected_values" => EXAMPLE_VALUES }],
-                                               :side_effects => "Updates Zone values and membership stamps.") do |
-                                                    request, proposal|
-          Zones.update(request, proposal,
-                       :reference => request.params.fetch("reference"),
-                       :values => request.params.fetch("values"),
-                       :expected_values => request.params.fetch("expected_values"))
-        end
+        declare_edits(feature)
         feature.snapshot_section("#{FEATURE_ID}.overview", :query => "#{FEATURE_ID}.all")
         feature.on_host_event(:selection_changed) { |session| session.request_refresh }
       end

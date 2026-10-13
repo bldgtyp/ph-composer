@@ -121,6 +121,11 @@ partial success is never the default. Failures distinguish no writes from a comp
 or a partial result only where that operation's accepted contract permits one. Never leave a model
 transaction open while waiting for an LLM or a person's response.
 
+Metadata on authored entities is written the same way: `ph_composer.zones.update_metadata`,
+`ph_composer.zones.faces.update_metadata` and `ph_composer.windows.units.update_metadata` take a
+batch of explicit occurrences with the metadata last read, and refuse every target or none
+([CONTRACTS.md](CONTRACTS.md), "Records and extension data").
+
 Provide a non-mutating proposal/preview for compound or destructive edits. It reports targets,
 changed values, affected references and validation findings. A proposal binds to its inputs and
 revision; applying it revalidates those preconditions. Routine edits need not acquire an extra

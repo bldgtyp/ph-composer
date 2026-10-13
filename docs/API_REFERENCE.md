@@ -9785,6 +9785,7 @@ Result:
           "extension_data",
           "reference",
           "host",
+          "extension_status",
           "findings"
         ],
         "properties": {
@@ -9884,6 +9885,10 @@ Result:
                 ]
               }
             }
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status, by namespace."
           },
           "findings": {
             "type": "array",
@@ -10138,6 +10143,7 @@ Result:
           "extension_data",
           "reference",
           "host",
+          "extension_status",
           "findings"
         ],
         "properties": {
@@ -10237,6 +10243,10 @@ Result:
                 ]
               }
             }
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status, by namespace."
           },
           "findings": {
             "type": "array",
@@ -10341,6 +10351,7 @@ Result:
           "user_data",
           "extension_data",
           "display",
+          "extension_status",
           "reference",
           "state",
           "face_count",
@@ -10431,6 +10442,10 @@ Result:
                 ]
               }
             }
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status against what is installed, by namespace."
           },
           "reference": {
             "type": "object",
@@ -10824,6 +10839,7 @@ Result:
           "values",
           "user_data",
           "extension_data",
+          "extension_status",
           "suggested",
           "attached_zone_state",
           "adjacency_state",
@@ -10921,6 +10937,10 @@ Result:
           },
           "extension_data": {
             "type": "object"
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status against what is installed, by namespace."
           },
           "suggested": {
             "type": "object",
@@ -11920,6 +11940,10 @@ Result:
           "extension_data": {
             "type": "object"
           },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status against what is installed, by namespace."
+          },
           "suggested": {
             "type": "object",
             "additionalProperties": false,
@@ -12446,6 +12470,10 @@ Result:
                 ]
               }
             }
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status against what is installed, by namespace."
           },
           "reference": {
             "type": "object",
@@ -34574,6 +34602,168 @@ Example params:
 }
 ```
 
+### `ph_composer.windows.units.update_metadata`
+
+Replace the user_data and installed extension payloads of explicit Window occurrences, guarded by the metadata last read. Owner: `ph_composer.windows`.
+
+Undo step: Edit Window Metadata. Rewrites only the named Windows' metadata. It first gives every copied Window Unit that still shares an identity a new one, in the same Undo step; ph_composer.windows.units.repair_copied_identities does only that.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `extension.migration_required`, `extension.schema_unsupported`, `extension.unavailable`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "updates"
+  ],
+  "properties": {
+    "updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "expected_metadata"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "unit_id",
+              "entity_path"
+            ],
+            "properties": {
+              "unit_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "The occurrence to update, as a read returns it."
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Replaces the whole user_data map."
+          },
+          "extension_payloads": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            },
+            "description": "Replaces the payload of each named installed extension."
+          },
+          "expected_metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "user_data",
+              "extension_data"
+            ],
+            "properties": {
+              "user_data": {
+                "type": "object"
+              },
+              "extension_data": {
+                "type": "object"
+              }
+            },
+            "description": "The user_data and extension_data last read; a change refuses."
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "The occurrences to update, written in one step and one Undo."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "updates"
+  ],
+  "properties": {
+    "updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "extension_status"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "unit_id",
+              "entity_path"
+            ],
+            "properties": {
+              "unit_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each envelope's status after the update."
+          }
+        }
+      },
+      "description": "Each occurrence the batch names, in order."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "updates": [
+    {
+      "reference": {
+        "unit_id": "wun_Ab12Cd34Ef56",
+        "entity_path": [
+          1201,
+          1203
+        ]
+      },
+      "user_data": {},
+      "expected_metadata": {
+        "user_data": {},
+        "extension_data": {}
+      }
+    }
+  ]
+}
+```
+
 ### `ph_composer.zones.faces.assign_assembly`
 
 Set or clear only the Assembly of explicit Faces. Owner: `ph_composer.zones`.
@@ -35739,6 +35929,191 @@ Example params:
     ],
     "entity_id": null
   }
+}
+```
+
+### `ph_composer.zones.faces.update_metadata`
+
+Replace the user_data and installed extension payloads of recorded Faces, guarded by the metadata last read. Owner: `ph_composer.zones`.
+
+Undo step: Edit Face Metadata. Rewrites only the named Faces' metadata.
+
+Refuses: `extension.invalid`, `extension.migration_required`, `extension.schema_unsupported`, `extension.unavailable`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "updates"
+  ],
+  "properties": {
+    "updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "expected_metadata"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": "string"
+              }
+            },
+            "description": "The occurrence to update, as a read returns it."
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Replaces the whole user_data map."
+          },
+          "extension_payloads": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            },
+            "description": "Replaces the payload of each named installed extension."
+          },
+          "expected_metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "user_data",
+              "extension_data"
+            ],
+            "properties": {
+              "user_data": {
+                "type": "object"
+              },
+              "extension_data": {
+                "type": "object"
+              }
+            },
+            "description": "The user_data and extension_data last read; a change refuses."
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "The occurrences to update, written in one step and one Undo."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "updates"
+  ],
+  "properties": {
+    "updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "extension_status"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": "string"
+              }
+            }
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each envelope's status after the update."
+          }
+        }
+      },
+      "description": "Each occurrence the batch names, in order."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "updates": [
+    {
+      "reference": {
+        "zone_id": "zon_Ab12Cd34Ef56",
+        "zone_path": [
+          1201
+        ],
+        "entity_path": [
+          1202
+        ],
+        "entity_id": "fac_Ab12Cd34Ef56"
+      },
+      "user_data": {},
+      "expected_metadata": {
+        "user_data": {},
+        "extension_data": {}
+      }
+    }
+  ]
 }
 ```
 
@@ -37513,6 +37888,169 @@ Example params:
   ],
   "field": "level",
   "value": "L1"
+}
+```
+
+### `ph_composer.zones.update_metadata`
+
+Replace the user_data and installed extension payloads of explicit Zone occurrences, guarded by the metadata last read. Owner: `ph_composer.zones`.
+
+Undo step: Edit Zone Metadata. Rewrites only the named Zones' metadata.
+
+Refuses: `extension.invalid`, `extension.migration_required`, `extension.schema_unsupported`, `extension.unavailable`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "updates"
+  ],
+  "properties": {
+    "updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "expected_metadata"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "The occurrence to update, as a read returns it."
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Replaces the whole user_data map."
+          },
+          "extension_payloads": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            },
+            "description": "Replaces the payload of each named installed extension."
+          },
+          "expected_metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "user_data",
+              "extension_data"
+            ],
+            "properties": {
+              "user_data": {
+                "type": "object"
+              },
+              "extension_data": {
+                "type": "object"
+              }
+            },
+            "description": "The user_data and extension_data last read; a change refuses."
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "The occurrences to update, written in one step and one Undo."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "updates"
+  ],
+  "properties": {
+    "updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "extension_status"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each envelope's status after the update."
+          }
+        }
+      },
+      "description": "Each occurrence the batch names, in order."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "updates": [
+    {
+      "reference": {
+        "zone_id": "zon_Ab12Cd34Ef56",
+        "zone_path": [
+          1201
+        ]
+      },
+      "user_data": {
+        "example": {
+          "note": "kept"
+        }
+      },
+      "expected_metadata": {
+        "user_data": {},
+        "extension_data": {}
+      }
+    }
+  ]
 }
 ```
 

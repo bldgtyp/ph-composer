@@ -296,6 +296,24 @@ export as `extension.invalid`. A payload without a usable declaration blocks ope
 invalidate its references and blocks export when its relevance is unknown. Never guess from a
 payload's text. Native SketchUp copy semantics are feature-owned.
 
+**Entity-owned records.** Zones, Faces and Window Units store their records on SketchUp entities,
+and the same rules hold for them (`Records::Metadata`, shared with the engine). Their reads
+(`ph_composer.zones.list` and `.all`, `ph_composer.zones.faces.list` and `.all`,
+`ph_composer.windows.units.list`) report `extension_status` beside `extension_data`, in the words a
+catalog read uses; a Face with no record reports `{}`. Each owner has one metadata action:
+`ph_composer.zones.update_metadata`, `ph_composer.zones.faces.update_metadata` and
+`ph_composer.windows.units.update_metadata`. It takes a batch of occurrences, each with the whole
+`user_data` map to write, payloads for installed extensions, or both, and `expected_metadata`, the
+two maps as last read; any difference refuses `target.changed`. Identical entries collapse; two
+entries for one occurrence that differ, or an entry naming nothing to write, refuse `params.invalid`.
+Each target resolves through its owner's writable resolver and refuses with the owner's `target.*`
+code; a payload follows the engine's rules (`extension.unavailable`, `.migration_required`,
+`.schema_unsupported`, a failed validator as `validation.failed`) and every record it names must
+resolve (`reference.invalid`); the owner then validates the whole record. Every target is checked
+before any step is built, the batch writes in one step and one Undo entry, and a batch that writes
+what is stored adds no step. The Window action runs the copied-identity repair first, as every
+Windows action does. A Face must already have a record.
+
 ## Model settings
 
 `PhComposer::ModelSettings` provides one feature-owned dictionary, schema, effective defaults and a

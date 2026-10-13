@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped; EC-01 and EC-02 implementation ready, EC-03 is a contract stage for Ed's confirmation. Not authorized.
-ISSUE: none (local planning draft)
+ISSUE: [#109](https://github.com/bldgtyp/ph-composer/issues/109)
 
 The phased plan is the `## Stages` section of [PLAN.md](PLAN.md); there is no `phases/` folder.
 Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).

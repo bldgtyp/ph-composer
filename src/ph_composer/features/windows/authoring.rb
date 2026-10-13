@@ -78,6 +78,11 @@ module PhComposer
         Settings.propose(request, proposal, :values => values, :expected_values => expected_values)
       end
 
+      def update_unit_metadata(request, proposal, updates:)
+        Units::Mutation.prepare(request, proposal)
+        Units::Metadata.update(request, proposal, :updates => updates)
+      end
+
       # The placed Windows follow the Type as the proposal leaves it.
       def follow_type(request, proposal, before)
         id = before.fetch("id")
