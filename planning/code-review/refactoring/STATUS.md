@@ -12,7 +12,7 @@ test, runtime asset, native gate, commit, issue or PR was produced by this progr
 
 | Packet | Findings | Stages | State |
 | --- | --- | --- | --- |
-| [Export wording](export-contract-wording/STATUS.md) | F08 | EW-01 | Scoped; implementation ready |
+| [Export wording](export-contract-wording/STATUS.md) | F08 | EW-01 | Implemented on branch; [issue 98](https://github.com/bldgtyp/ph-composer/issues/98) |
 | [Outcome hook](outcome-hook-isolation/STATUS.md) | JS-02 | OH-01, OH-02 | Scoped; implementation ready |
 | [Contributor example](contributor-example-lifecycle/STATUS.md) | JS-03, JS-04 | CE-01 to CE-03 | Scoped; implementation ready |
 | [Registration](registration-reliability/STATUS.md) | F01, F02 | RR-01 to RR-03 | Scoped; implementation ready |

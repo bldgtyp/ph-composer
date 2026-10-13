@@ -12,8 +12,9 @@ module PhComposer
       RESULT = object({ "id" => TEXT }).freeze
       EXPECTED = "Any of the record's values as last read; if one changed since, the edit is refused as " \
                  "target.changed. {} skips the check."
-      USER_DATA = { "type" => "object", "description" => "Free metadata kept with the record and exported " \
-                                                         "verbatim." }.freeze
+      USER_DATA = { "type" => "object",
+                    "description" => "Local JSON metadata kept with the record in the Model. Export needs an " \
+                                     "explicit mapping; arbitrary metadata is left out with a finding." }.freeze
       EXAMPLE_ID = "asm_Ab12Cd34Ef56"
       EXAMPLE_LAYER = "lyr_Ab12Cd34Ef56"
       EXAMPLE_SEGMENT = "seg_Ab12Cd34Ef56"

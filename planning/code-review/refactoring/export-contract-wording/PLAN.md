@@ -1,8 +1,8 @@
 # Export contract wording plan
 
 DATE: 2026-10-13
-STATUS: Scoped; implementation ready, not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+STATUS: Implemented on branch `refactor/export-wording-ew-01` (2026-10-13). Stage ledger in [STATUS.md](STATUS.md).
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/98
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDING: [F08](../../sections/06-export.md#f08-some-operation-schemas-incorrectly-promise-verbatim-metadata-export)
 DEPENDS ON: nothing. Lands on its own.
@@ -49,7 +49,7 @@ One stage. It is a shipping Ruby source change whose only observable effect is d
 
 ### EW-01: correct the three descriptions and regenerate the reference
 
-State: Scoped.
+State: Implemented on branch `refactor/export-wording-ew-01`, 2026-10-13.
 
 1. Edit the three constants above to the new sentence. Line wrap at the 120 column ceiling as the
    neighbours do.

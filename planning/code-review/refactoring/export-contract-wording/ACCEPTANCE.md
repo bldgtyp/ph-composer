@@ -1,7 +1,7 @@
 # Export contract wording acceptance
 
 DATE: 2026-10-13
-STATUS: Planned checks; none run.
+STATUS: EW-A01 to EW-A06 observed on branch `refactor/export-wording-ew-01`, 2026-10-13; completion `make ci` passed on the same head.
 PLAN: [PLAN.md](PLAN.md)
 
 | Case | Check | Required observation |
