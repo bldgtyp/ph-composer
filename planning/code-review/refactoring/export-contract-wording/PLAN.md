@@ -13,7 +13,7 @@ Three declaration constants describe `user_data` as "exported verbatim". The exp
 exports arbitrary `user_data`: `Export::RecordReader#omit_metadata` records
 `export.metadata_omitted` for every record that carries any, for catalog and entity records alike.
 The constants feed every create, update and place schema in their features, and the generated
-`docs/API_REFERENCE.md` repeats the false sentence seventeen times.
+`docs/API_REFERENCE.md` repeats the false sentence sixteen times.
 
 The review plan named two constants. There are three.
 
@@ -54,7 +54,7 @@ State: Implemented on branch `refactor/export-wording-ew-01`, 2026-10-13.
 1. Edit the three constants above to the new sentence. Line wrap at the 120 column ceiling as the
    neighbours do.
 2. Run `make fixtures`. `tests/api_reference_test.rb` owns `docs/API_REFERENCE.md`; the regenerated
-   file must differ only in the seventeen description strings. Inspect the diff with
+   file must differ only in the sixteen description strings. Inspect the diff with
    `git diff --stat docs/API_REFERENCE.md` and `git diff docs/API_REFERENCE.md | grep '^[-+]' | grep -v description`
    which should print nothing but the diff headers.
 3. Run the focused checks:
