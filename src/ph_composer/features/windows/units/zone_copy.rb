@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative "identity_plan"
-require_relative "mutation_scope"
 
 module PhComposer
   module Windows
@@ -26,22 +25,21 @@ module PhComposer
 
         def contribute(request, proposal, description)
           zone_path = description.fetch("zone_path")
-          all = Occurrences.all(request.model)
-          inside, outside = all.partition { |item| item.path[0, zone_path.length] == zone_path }
-          held = outside.map { |item| item.record.fetch("id") }
+          inside = Occurrences.under(request.model, zone_path)
+          held = Occurrences.held_ids(request.model, :except => zone_path)
           copies = inside.select { |item| held.include?(item.record.fetch("id")) }.sort_by(&:path)
           return [] if copies.empty?
 
           step = ZoneCopyStep.new(:zone_path => zone_path, :inside => inside,
-                                  :updates => updates(request, copies, all, description))
-          proposal.add_step(step, :scopes => [MutationScope.new])
+                                  :updates => updates(request, copies, held + inside.map { |item| item.record["id"] },
+                                                      description))
+          proposal.add_step(step, :scopes => [])
           step.affected
         end
 
-        def updates(request, copies, all, description)
+        def updates(request, copies, ids, description)
           allocator = Records::Identity.allocator(request, "transition" => Zones::TRANSITION,
                                                            "zone_id" => description.fetch("new_zone_id"))
-          ids = all.map { |item| item.record.fetch("id") }
           updates = copies.map do |copy|
             raise CodedError.new("target.locked", "Unlock the copied Window before making its Zone independent.") if
               copy.locked
@@ -51,15 +49,39 @@ module PhComposer
               ids.include?(id)
 
             ids << id
-            after = DeepCopy.call(copy.record).merge("id" => id)
-            Units.validate!(after)
             IdentityPlan::Update.new(:reference => copy.reference, :before => DeepCopy.call(copy.record),
-                                     :after => after)
+                                     :after => DeepCopy.call(copy.record).merge("id" => id))
           end
-          IdentityPlan.copy_extensions!(updates, request.registry.catalog, request.engine)
-          updates
+          copy_extensions(request, updates, description)
+          updates.each { |update| Units.validate!(update.after) }
         end
-        private_class_method :updates
+
+        # A copied Unit's structured payloads are remapped across the whole copied collection: to
+        # its sibling Units' new ids and to the Zone's and Faces' new ids, typed by the plan; anything
+        # else, such as a Type, keeps its id.
+        def copy_extensions(request, updates, description)
+          mapping = description.fetch("mapping").merge(updates.to_h do |update|
+            [update.before.fetch("id"), update.after.fetch("id")]
+          end)
+          parent = description.fetch("references").map do |row|
+            Records::ReferenceEntry.new(:kind => row.fetch("kind"), :key => row.fetch("key"),
+                                        :record => row.fetch("record"))
+          end
+          plan = Records::ReferencePlan.new(:entries => parent + updates.map do |update|
+            Records::ReferenceEntry.new(:kind => REFERENCE_KIND, :key => update.reference.fetch("entity_path"),
+                                        :record => update.after)
+          end)
+          updates.each do |update|
+            data = update.before.fetch("extension_data", {})
+            next if data.empty?
+
+            update.after["extension_data"] = Records::Extension.copy_data(data, request.registry.catalog, "Window unit",
+                                                                          update.before.fetch("id"), mapping,
+                                                                          :engine => request.engine,
+                                                                          :reference_plan => plan)
+          end
+        end
+        private_class_method :updates, :copy_extensions
       end
 
       # Make Unique replaces every entity inside the copy, so the step binds logically: each Unit by its
@@ -93,7 +115,7 @@ module PhComposer
         end
 
         def apply(model, _slots)
-          inside = Occurrences.all(model).select { |item| item.path[0, @zone_path.length] == @zone_path }
+          inside = Occurrences.under(model, @zone_path)
           groups = inside.group_by { |item| item.record.fetch("id") }.transform_values { |rows| rows.sort_by(&:path) }
           unless groups.transform_values(&:length) == @counts
             raise CodedError.new("target.changed", "The copied Zone's Windows changed after it was previewed.")

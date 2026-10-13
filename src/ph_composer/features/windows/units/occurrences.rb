@@ -25,6 +25,51 @@ module PhComposer
           walk(model.entities, [], Geom::Transformation.new, false, false, [])
         end
 
+        # The occurrences inside the container at `path` only, with the transform, sharing and lock
+        # carried down to it as `all` would; nothing outside it is read. Empty when `path` is gone.
+        def under(model, path)
+          entities = model.entities
+          transform = Geom::Transformation.new
+          shared = locked = false
+          path.each do |id|
+            entity = entities.to_a.find do |item|
+              (item.is_a?(Sketchup::Group) || item.is_a?(Sketchup::ComponentInstance)) && item.persistent_id == id
+            end
+            return [] unless entity
+
+            transform *= entity.transformation
+            locked ||= entity.locked?
+            shared ||= entity.is_a?(Sketchup::ComponentInstance) || entity.definition.instances.length > 1
+            entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
+          end
+          walk(entities, path.dup, transform, shared, locked, [])
+        end
+
+        # Every Unit record id anywhere outside `path`, read leniently: an unreadable record elsewhere
+        # is skipped, since only whether an id is held matters here.
+        def held_ids(model, except:)
+          ids = []
+          pending = [[model.entities, []]]
+          until pending.empty?
+            entities, path = pending.shift
+            entities.to_a.each do |entity|
+              next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+
+              current = path + [entity.persistent_id]
+              next if current[0, except.length] == except
+
+              record = begin
+                STORE.read(entity)
+              rescue CodedError
+                nil
+              end
+              ids << record["id"] if record.is_a?(Hash) && record["id"].is_a?(String)
+              pending << [entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities, current]
+            end
+          end
+          ids
+        end
+
         # Replacing/removing a generated container must not silently erase nested identities.
         # Walk native storage once, including nested unused definitions, without adopting it.
         def assert_leaf!(item)

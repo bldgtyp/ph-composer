@@ -62,33 +62,64 @@ class WindowZoneCopyTest < PhComposerTestCase
     assert_equal [["Made the copied Zone independent.", :success]], @notices
   end
 
+  def test_a_fault_after_every_child_wrote_restores_the_zone_and_both_children
+    PhComposer::Registry.install([ZoneChildFixture, fault_feature])
+    tag(@original, "tag_000000000001")
+    native_copy(@original, 400)
+
+    UI.run_timers
+
+    copy = zone_groups.last
+    assert_equal ZONE_STORE.read(@original).fetch("id"), ZONE_STORE.read(copy).fetch("id"), "the Zone restored"
+    assert_equal units_under(@original).map { |row| row["id"] }, units_under(copy).map { |row| row["id"] }
+    assert_equal ["tag_000000000001"], tags_under(copy), "the child that wrote is restored"
+    assert_equal :warning, @notices.last.last
+    refute(@model.operations.any? { |_name, _disable, result| result == :aborted })
+  end
+
   def test_a_child_restore_failure_still_restores_the_others_and_reports_unrestored
-    PhComposer::Registry.install([ZoneChildFixture])
+    PhComposer::Registry.install([ZoneChildFixture, fault_feature])
     tag(@original, "tag_000000000001")
     native_copy(@original, 400)
     ZoneChildFixture.fail_restore = true
-    calls = 0
-    with_unit_write_fault(-> { (calls += 1) == 2 }) { UI.run_timers }
+
+    UI.run_timers
 
     copy = zone_groups.last
     assert_equal ZONE_STORE.read(@original).fetch("id"), ZONE_STORE.read(copy).fetch("id"), "the Zone restored"
     assert_equal units_under(@original).map { |row| row["id"] }, units_under(copy).map { |row| row["id"] }
     assert_equal :error, @notices.last.last, "the failed child restore is reported"
-    refute(@model.operations.any? { |_name, _disable, result| result == :aborted })
   end
 
-  def test_a_fault_after_the_parent_write_restores_the_zone_and_every_child_in_the_follow_up
-    PhComposer::Registry.install([ZoneChildFixture])
-    tag(@original, "tag_000000000001")
-    native_copy(@original, 400)
-    calls = 0
-    with_unit_write_fault(-> { (calls += 1) == 2 }) { UI.run_timers }
+  def test_copied_extension_references_follow_their_sibling_unit_and_zone_and_keep_the_type
+    extension = register_unit_extension
+    first, second = @original.entities.to_a.grep(Sketchup::ComponentInstance)
+    zone_id = ZONE_STORE.read(@original).fetch("id")
+    type_id = invoke("ph_composer.windows.types.create", { "values" => { "name" => "Shared" } }).dig("value", "id")
+    payload = { "sibling" => U.read(second).fetch("id"), "zone" => zone_id, "type" => type_id }
+    U.write(first, U.read(first).merge("extension_data" => { extension.namespace => extension.envelope(payload) }))
+    copy = shared_copy(@original, 400)
 
-    copy = zone_groups.last
-    assert_equal ZONE_STORE.read(@original).fetch("id"), ZONE_STORE.read(copy).fetch("id")
-    assert_equal units_under(@original).map { |row| row["id"] }, units_under(copy).map { |row| row["id"] }
-    assert_equal ["tag_000000000001"], tags_under(copy)
-    refute(@model.operations.any? { |_name, _disable, result| result == :aborted })
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal %w[completed committed], result.values_at("status", "effect"), result.inspect
+    copied = units_under(copy)
+    remapped = copied.first.dig("extension_data", extension.namespace, "payload")
+    assert_equal({ "sibling" => copied.last.fetch("id"), "zone" => ZONE_STORE.read(copy).fetch("id"),
+                   "type" => type_id }, remapped)
+    assert_equal payload, units_under(@original).first.dig("extension_data", extension.namespace, "payload")
+  end
+
+  def test_an_unreadable_unit_outside_the_copy_does_not_block_it
+    stray = Sketchup::ComponentInstance.new(900, @model.definitions.add("Stray"), {})
+    stray.set_attribute(U::STORE.dictionary, U::STORE.key, "{not json")
+    @model.entities << stray
+    copy = shared_copy(@original, 400)
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal %w[completed committed], result.values_at("status", "effect"), result.inspect
+    assert_empty units_under(copy).map { |row| row["id"] } & units_under(@original).map { |row| row["id"] }
   end
 
   def test_an_unsupported_extension_payload_on_a_copied_unit_refuses_the_whole_transition
@@ -118,6 +149,53 @@ class WindowZoneCopyTest < PhComposerTestCase
   end
 
   private
+
+  # A contributor whose step fails at apply, after every contributor named before it has written.
+  class FaultStep
+    attr_reader :affected
+
+    def initialize
+      @affected = []
+    end
+
+    def descriptor
+      { "name" => "fault" }
+    end
+
+    def apply(_model, _slots)
+      raise IOError, "injected after the children wrote"
+    end
+
+    def restore; end
+  end
+
+  def fault_feature
+    Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("test.zz_fault", :contract_version => 1, :requires => ["ph_composer.zones"])
+                .transition_contributor("test.zz_fault.follow", :transition => PhComposer::Zones::TRANSITION) do |
+                  _request, proposal, _description|
+          proposal.add_step(FaultStep.new, :scopes => [])
+          []
+        end
+      end
+    end
+  end
+
+  def register_unit_extension
+    references = [{ "path" => "$.sibling", "target_kind" => U::REFERENCE_KIND, "cardinality" => "one" },
+                  { "path" => "$.zone", "target_kind" => PhComposer::Zones::REFERENCE_KIND, "cardinality" => "one" },
+                  { "path" => "$.type", "target_kind" => PhComposer::Windows::TYPE_KIND, "cardinality" => "one" }]
+    extension = PhComposer::Records::Extension.new(:namespace => "test.window_copy.links", :schema_version => 1,
+                                                   :references => references)
+    PhComposer::Registry.install([Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("test.window_copy", :contract_version => 1, :requires => ["ph_composer.windows"])
+                .extension(extension)
+      end
+    end])
+    extension
+  end
 
   def invoke(name, params)
     @sequence += 1
@@ -184,20 +262,5 @@ class WindowZoneCopyTest < PhComposerTestCase
 
   def zone_groups
     @model.entities.to_a.select { |entity| entity.is_a?(Sketchup::Group) && ZONE_STORE.read(entity) }
-  end
-
-  # Fails the Unit write `fault` names, then restores the real writer.
-  def with_unit_write_fault(fault)
-    U.singleton_class.send(:alias_method, :__zone_copy_write, :write)
-    U.define_singleton_method(:write) do |entity, record|
-      raise IOError, "injected" if fault.call
-
-      __zone_copy_write(entity, record)
-    end
-    yield
-  ensure
-    U.singleton_class.send(:remove_method, :write)
-    U.singleton_class.send(:alias_method, :write, :__zone_copy_write)
-    U.singleton_class.send(:remove_method, :__zone_copy_write)
   end
 end

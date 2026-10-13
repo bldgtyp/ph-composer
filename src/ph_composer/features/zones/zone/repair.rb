@@ -79,7 +79,8 @@ module PhComposer
                                                                 :reference_plan => reference_plan)
         Schema.validate!(record)
         plans = face_plans(faces, zone, mapping.fetch(old_id), mapping, catalog, engine, reference_plan)
-        { :old_id => old_id, :record => record, :faces => plans, :mapping => mapping }
+        { :old_id => old_id, :record => record, :faces => plans, :mapping => mapping,
+          :reference_plan => reference_plan }
       end
 
       def identity_reference_plan(zone, faces, mapping)
