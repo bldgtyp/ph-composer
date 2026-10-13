@@ -68,6 +68,7 @@ module PhComposer
           "area_m2" => { "type" => "number", "x-unit" => "m2" },
           "values" => FACE_VALUES.merge("description" => "Empty for a Face with no record."),
           "user_data" => { "type" => "object" }, "extension_data" => { "type" => "object" },
+          "extension_status" => ZoneRegistration::EXTENSION_STATUS,
           "suggested" => SUGGESTED,
           "attached_zone_state" => { "type" => %w[string null], "enum" => [nil, "absent", "resolved", "dangling",
                                                                            "invalid"],
@@ -233,7 +234,28 @@ module PhComposer
           ExportProjection.install(feature)
         end
 
+        RECORDED_FACE = FACE_REFERENCE.merge(
+          "properties" => FACE_REFERENCE.fetch("properties").merge("entity_id" => { "type" => "string" })
+        ).freeze
+
+        def declare_metadata(feature)
+          feature.action("#{PREFIX}.update_metadata",
+                         :description => "Replace the user_data and installed extension payloads of recorded " \
+                                         "Faces, guarded by the metadata last read.",
+                         :refuses => (Refuses::FACE_TARGET + Refuses::METADATA).uniq,
+                         :params => Shapes.metadata_updates(RECORDED_FACE, Pages::MAXIMUM_LIMIT),
+                         :result => Shapes.metadata_result(RECORDED_FACE), :undo_name => "Edit Face Metadata",
+                         :examples => [{ "updates" => [{ "reference" => EXAMPLE_FACE.merge(
+                           "entity_id" => "fac_Ab12Cd34Ef56"
+                         ), "user_data" => {}, "expected_metadata" => { "user_data" => {},
+                                                                        "extension_data" => {} } }] }],
+                         :side_effects => "Rewrites only the named Faces' metadata.") do |request, proposal|
+            Faces.update_metadata(request, proposal, :updates => request.params.fetch("updates"))
+          end
+        end
+
         def declare_writes(feature)
+          declare_metadata(feature)
           classify = { "faces" => [EXAMPLE_FACE], "expected_values" => {},
                        "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" },
                                      "boundary_condition" => { "mode" => "set", "value" => "Outdoors" } } }

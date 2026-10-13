@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped; EC-01 and EC-02 implementation ready, EC-03 is a contract stage that needs Ed's confirmation before EC-04. Not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+ISSUE: [#109](https://github.com/bldgtyp/ph-composer/issues/109)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDINGS: [RF-01](../../sections/04-ruby-features.md#rf-01-entity-owned-metadata-cannot-be-maintained-through-the-supported-operations), [RF-03](../../sections/04-ruby-features.md#rf-03-entity-reads-preserve-envelopes-but-omit-their-understoodunavailable-status), [F07](../../sections/06-export.md#f07-entity-extension-payloads-have-no-supported-allowlisted-export-projection)
 DEPENDS ON: [Registration reliability](../../../archive/registration-reliability/PLAN.md) for the new export

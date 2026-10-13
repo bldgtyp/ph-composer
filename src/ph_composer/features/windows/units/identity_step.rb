@@ -62,6 +62,17 @@ module PhComposer
           proposal.add_step(IdentityStep.new(changes), :scopes => [MutationScope.new])
         end
 
+        # The identities this proposal's repair leaves, for resolving a reference while it is staged.
+        def reference_plan(proposal)
+          step = proposal.steps.find { |item| item.is_a?(IdentityStep) }
+          return nil unless step
+
+          Records::ReferencePlan.new(:entries => step.updates.map do |row|
+            Records::ReferenceEntry.new(:kind => REFERENCE_KIND, :key => row.fetch("reference").fetch("entity_path"),
+                                        :record => row.fetch("after"))
+          end)
+        end
+
         def record(proposal, occurrence)
           step = proposal.steps.find { |item| item.is_a?(IdentityStep) }
           update = step&.updates&.find { |row| row.fetch("reference").fetch("entity_path") == occurrence.path }

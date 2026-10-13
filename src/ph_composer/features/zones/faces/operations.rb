@@ -106,6 +106,31 @@ module PhComposer
 
       # One gesture, one step, all or nothing. Targets are deduplicated by occurrence before anything
       # is resolved, so an over-limit gesture refuses without walking the Model once per Face.
+      # The user_data and installed extension payloads of recorded Faces, guarded by the two maps as
+      # last read, in one step (context/CONTRACTS.md, "Records and extension data"). A Face with no record
+      # has no metadata to update and refuses as resolving it does.
+      def update_metadata(request, proposal, updates:)
+        catalog = request.registry.catalog
+        rows = Records::Metadata.distinct_updates(updates).map do |update|
+          reference = update.fetch("reference")
+          before = FACE_STORE.read(Zones::Occurrences.resolve_face(request.model, reference, :mutable => true).entity)
+          after = Records::Metadata.planned(request.engine, catalog, before, update, "Face")
+          Schema.validate!(after)
+          { "reference" => reference, "before" => before, "after" => after, "change" => "updated", "stamp" => nil }
+        end
+        changed = rows.reject { |row| row.fetch("before") == row.fetch("after") }
+        unless changed.empty?
+          scopes = changed.map { |row| row.fetch("reference").fetch("zone_path")[0...-1] }.uniq.map do |path|
+            Operations::EntityScope.new(path)
+          end
+          proposal.add_step(ClassifyStep.new(:updates => changed), :scopes => scopes)
+        end
+        { "updates" => rows.map do |row|
+          { "reference" => row.fetch("reference"),
+            "extension_status" => Records::Metadata.status_map(row.fetch("after"), catalog) }
+        end }
+      end
+
       def classify(request, proposal, faces:, intent:, expected_values: {})
         plan_classification(request, proposal, faces, intent, expected_values)
       end
@@ -347,6 +372,7 @@ module PhComposer
           "area_m2" => Geometry.area_m2(occurrence), "values" => record ? Schema.values(record) : {},
           "user_data" => record ? DeepCopy.call(record.fetch("user_data", {})) : {},
           "extension_data" => record ? DeepCopy.call(record.fetch("extension_data", {})) : {},
+          "extension_status" => record ? Records::Metadata.status_map(record, request.registry.catalog) : {},
           "suggested" => Geometry.suggested_values(occurrence, :settings => Settings.read(request.model)),
           "attached_zone_state" => AttachedZone.reference_state(request.engine, record),
           "adjacency_state" => Zones::Adjacency.state(request.model, occurrence, record, :index => index),

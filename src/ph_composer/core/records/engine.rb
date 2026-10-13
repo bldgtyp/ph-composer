@@ -53,9 +53,7 @@ module PhComposer
           "values" => DeepCopy.call(@catalog.kind(kind_id).values(record)),
           "user_data" => DeepCopy.call(record.fetch("user_data", {})),
           "extension_data" => DeepCopy.call(extension_data),
-          "extension_status" => extension_data.to_h do |namespace, envelope|
-            [namespace, Extension.status(envelope, @catalog.extension(namespace))]
-          end
+          "extension_status" => Metadata.status_map(record, @catalog)
         }
       end
 
@@ -73,7 +71,7 @@ module PhComposer
           id = Identity.fresh(kind.id_prefix, reserved_ids(kind, change_set))
           check_value_keys!(kind, values)
           record = { "id" => id, "schema_version" => kind.schema_version }.merge(DeepCopy.call(values))
-          record["user_data"] = checked_user_data(user_data) unless user_data.nil?
+          record["user_data"] = Metadata.checked_user_data(user_data) unless user_data.nil?
           propose(kind, change_set, nil, record)
           id
         end
@@ -89,11 +87,10 @@ module PhComposer
           kind = @catalog.kind(kind_id)
           before = find(kind_id, id)
           check_expected!(kind, before, expected_values)
-          after = DeepCopy.call(before)
+          after = Metadata.updated(before, @catalog, :user_data => user_data,
+                                                     :extension_payloads => extension_payloads)
           check_value_keys!(kind, values)
           values.each { |key, value| value.nil? ? after.delete(key) : after[key] = DeepCopy.call(value) }
-          after["user_data"] = checked_user_data(user_data) unless user_data.nil?
-          extension_payloads.each { |namespace, payload| set_extension_payload(after, namespace, payload) }
           propose(kind, change_set, before, after)
         end
       end
@@ -168,7 +165,7 @@ module PhComposer
             next [id, "absent"] unless envelope
 
             status = Extension.status(envelope, extension)
-            refuse_extension!(namespace, id, status) unless %w[understood outdated].include?(status)
+            Metadata.refuse_extension!(namespace, id, status) unless %w[understood outdated].include?(status)
             next [id, "current"] if status == "understood"
 
             after = DeepCopy.call(before)
@@ -253,22 +250,6 @@ module PhComposer
                                                "(#{changed.join(', ')}).", "fields" => changed)
       end
 
-      def set_extension_payload(record, namespace, payload)
-        extension = @catalog.extension(namespace)
-        current = record.dig("extension_data", namespace)
-        status = current && Extension.status(current, extension)
-        # Replacing an invalid payload with a valid one depends on nothing stored, so it repairs it.
-        writable = extension && [nil, "understood", "invalid"].include?(status)
-        refuse_extension!(namespace, record["id"], status || "unavailable") unless writable
-        problems = extension.problems(payload)
-        unless problems.empty?
-          raise CodedError.new("validation.failed", "#{namespace} data is not valid: #{problems.first}.",
-                               "findings" => problems)
-        end
-
-        (record["extension_data"] ||= {})[namespace] = extension.envelope(DeepCopy.call(payload))
-      end
-
       def migrated_payload(extension, envelope, id)
         steps = envelope.fetch("schema_version")...extension.schema_version
         payload = steps.reduce(DeepCopy.call(envelope["payload"])) do |value, version|
@@ -284,33 +265,6 @@ module PhComposer
 
         message = "#{extension.namespace} data on #{id} could not be migrated (#{error.class})."
         raise CodedError.new("extension.migration_failed", message)
-      end
-
-      def refuse_extension!(namespace, id, status)
-        if status == "outdated"
-          message = "#{namespace} data on #{id} is stored at an older version; migrate it before changing it."
-          raise CodedError.new("extension.migration_required", message, "namespace" => namespace)
-        end
-        if status == "unavailable"
-          raise CodedError.new("extension.unavailable", "#{namespace} is not installed, so its data on #{id} " \
-                                                        "cannot be changed.", "namespace" => namespace)
-        end
-        if status == "invalid"
-          message = "#{namespace} data on #{id} does not meet the installed extension's contract, so it cannot " \
-                    "be copied or migrated. Replace it with valid data first."
-          raise CodedError.new("extension.invalid", message, "namespace" => namespace, "status" => status)
-        end
-
-        message = "#{namespace} data on #{id} uses a version the installed extension cannot read."
-        raise CodedError.new("extension.schema_unsupported", message, "namespace" => namespace)
-      end
-
-      def checked_user_data(user_data)
-        problems = user_data.is_a?(Hash) ? JsonValue.problems(user_data) : ["$ must be a JSON object"]
-        return DeepCopy.call(user_data) if problems.empty?
-
-        raise CodedError.new("params.invalid", "User data must be plain JSON: #{problems.first}.",
-                             "findings" => problems)
       end
 
       def reserved_ids(kind, change_set)

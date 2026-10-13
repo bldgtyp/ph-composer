@@ -54,7 +54,9 @@ module PhComposer
                                             :shared_id => counts.fetch(item.record.fetch("id")) > 1)
             { "reference" => item.reference, "id" => item.record.fetch("id"), "schema_version" => 1,
               "values" => RECORD_KIND.values(item.record), "user_data" => item.record.fetch("user_data", {}),
-              "extension_data" => item.record.fetch("extension_data", {}), "host" => host&.reference,
+              "extension_data" => item.record.fetch("extension_data", {}),
+              "extension_status" => Records::Metadata.status_map(item.record, request.registry.catalog),
+              "host" => host&.reference,
               "findings" => findings }
           end
           result = { "units" => rows }

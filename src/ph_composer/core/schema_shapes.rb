@@ -31,6 +31,31 @@ module PhComposer
       schema.merge("description" => description)
     end
 
+    # The params of an entity owner's `update_metadata` action (Records::Metadata): a batch of
+    # occurrences, each with the whole `user_data` map to write, payloads for installed extensions, or
+    # both, and the two maps as the caller last read them.
+    def metadata_updates(reference, limit)
+      update = object({
+        "reference" => described(reference, "The occurrence to update, as a read returns it."),
+        "user_data" => { "type" => "object", "description" => "Replaces the whole user_data map." },
+        "extension_payloads" => { "type" => "object", "additionalProperties" => { "type" => "object" },
+                                  "description" => "Replaces the payload of each named installed extension." },
+        "expected_metadata" => object({ "user_data" => { "type" => "object" },
+                                        "extension_data" => { "type" => "object" } },
+                                      :description => "The user_data and extension_data last read; a change " \
+                                                      "refuses.")
+      }, :optional => %w[user_data extension_payloads])
+      object({ "updates" => { "type" => "array", "items" => update, "minItems" => 1, "maxItems" => limit,
+                              "description" => "The occurrences to update, written in one step and one Undo." } })
+    end
+
+    def metadata_result(reference)
+      row = object({ "reference" => reference,
+                     "extension_status" => { "type" => "object",
+                                             "description" => "Each envelope's status after the update." } })
+      object({ "updates" => list(row, :description => "Each occurrence the batch names, in order.") })
+    end
+
     # A param naming one record or part by its id, such as `asm_Ab12Cd34Ef56` for prefix "asm".
     def id(prefix, description, nullable: false)
       { "type" => nullable ? %w[string null] : "string", "pattern" => "^#{prefix}_[A-Za-z0-9]{12}$",

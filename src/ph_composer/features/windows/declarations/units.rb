@@ -2,11 +2,16 @@
 
 require_relative "../units/actions"
 require_relative "../units/repairs"
+require_relative "../units/update_step"
 
 module PhComposer
   module Windows
     module UnitRegistration
+      STATUS_MAP = { "type" => "object", "description" => "Each extension envelope's status, by namespace." }.freeze
       EXAMPLE_UNIT = { "unit_id" => "wun_Ab12Cd34Ef56", "entity_path" => [1201, 1203] }.freeze
+      METADATA_EXAMPLE = { "updates" => [{ "reference" => EXAMPLE_UNIT, "user_data" => {},
+                                           "expected_metadata" => { "user_data" => {}, "extension_data" => {} } }] }
+                         .freeze
       ANCHOR = { "type" => "string", "enum" => Units::Anchors::ALL }.freeze
       ANCHOR_TEXT = "Which point of the opening sits at the placement point: sill, center or head, by left, " \
                     "center or right as seen from outside."
@@ -34,6 +39,7 @@ module PhComposer
         repairs(feature, face, reference)
         batch_repairs(feature, reference)
         identity_repair(feature, reference)
+        metadata(feature, reference)
         flip_repair(feature, reference)
         restore_repair(feature, face)
         place(feature, face)
@@ -47,6 +53,7 @@ module PhComposer
         finding = Shapes.object({ "code" => Shapes::TEXT, "repair" => repair })
         view = Shapes.with(Units::RECORD_KIND.descriptor.view_schema,
                            "reference" => reference, "host" => face.merge("type" => %w[object null]),
+                           "extension_status" => STATUS_MAP,
                            "findings" => Shapes.list(finding))
         prefix = "#{FEATURE_ID}.units"
         result = Shapes.object({ "units" => Shapes.list(view) })
@@ -143,6 +150,20 @@ module PhComposer
                                         "metadata stay.",
                        :examples => [{ "units" => [EXAMPLE_UNIT] }]) do |request, proposal|
           Units::Repairs.copied_identities(request, proposal, :units => request.params.fetch("units"))
+        end
+      end
+
+      def metadata(feature, reference)
+        feature.action("#{FEATURE_ID}.units.update_metadata",
+                       :description => "Replace the user_data and installed extension payloads of explicit Window " \
+                                       "occurrences, guarded by the metadata last read.",
+                       :refuses => (Refuses::EDIT + %w[extension.migration_required extension.schema_unsupported
+                                                       extension.unavailable]).uniq,
+                       :params => Shapes.metadata_updates(reference, Pages::MAXIMUM_LIMIT),
+                       :result => Shapes.metadata_result(reference), :undo_name => "Edit Window Metadata",
+                       :side_effects => Shapes.side_effects("Rewrites only the named Windows' metadata."),
+                       :examples => [METADATA_EXAMPLE]) do |request, proposal|
+          Authoring.update_unit_metadata(request, proposal, :updates => request.params.fetch("updates"))
         end
       end
 

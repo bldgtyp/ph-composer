@@ -636,7 +636,10 @@ and assignment records where applicable. Contributors use namespaced keys, for e
 ```
 
 Ordinary edits and supported persistence round trips preserve this metadata. Public operations
-read and update it without requiring raw dictionary access; updates participate in Undo. Core
+read and update it without requiring raw dictionary access; updates participate in Undo. Catalog
+records take it through their kind's update action (`engine.propose_update`); Zones, Faces and
+Window Units, whose records live on entities, take it through their owner's `update_metadata`
+action, which applies the same rules ([CONTRACTS.md](CONTRACTS.md), "Records and extension data"). Core
 calculations do not silently interpret arbitrary metadata. Absence in an older record is valid.
 
 Export inclusion is deliberate. Specify mappings for supported outputs and disclose omissions;

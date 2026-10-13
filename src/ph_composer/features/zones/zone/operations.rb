@@ -172,10 +172,33 @@ module PhComposer
       { "zone_id" => after.fetch("id") }
     end
 
+    # The user_data and installed extension payloads of explicit Zone occurrences, guarded by the two
+    # maps as last read, in one step per Zone (context/CONTRACTS.md, "Records and extension data").
+    def update_metadata(request, proposal, updates:)
+      catalog = request.registry.catalog
+      rows = Records::Metadata.distinct_updates(updates).map do |update|
+        reference = update.fetch("reference")
+        before = Occurrences.resolve_zone(request.model, reference, :mutable => true).record
+        after = Records::Metadata.planned(request.engine, catalog, before, update, "Zone")
+        Schema.validate!(after)
+        [reference, before, after]
+      end
+      rows.each do |reference, before, after|
+        next if before == after
+
+        proposal.add_step(UpdateZoneStep.new(:reference => reference, :before => before, :after => after),
+                          :scopes => [Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])])
+      end
+      { "updates" => rows.map do |reference, _before, after|
+        { "reference" => reference, "extension_status" => Records::Metadata.status_map(after, catalog) }
+      end }
+    end
+
     def zone_view(zone, ambiguous, request, counts)
       state = zone_state(zone, ambiguous)
       faces = Occurrences.faces(zone)
       Schema.view(zone.record).merge(face_totals(faces)).merge(
+        "extension_status" => Records::Metadata.status_map(zone.record, request.registry.catalog),
         "display" => Options.display(request.engine, zone.record),
         "reference" => zone.reference,
         "state" => state,
