@@ -1,10 +1,10 @@
 # Outcome presentation hook isolation plan
 
 DATE: 2026-10-13
-STATUS: Scoped; implementation ready, not authorized. Stage ledger in [STATUS.md](STATUS.md).
+STATUS: Complete; merged to main 2026-10-13 in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102), delivery group 1. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#100](https://github.com/bldgtyp/ph-composer/issues/100)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDING: [JS-02](../../sections/05-javascript.md#js-02-an-optional-outcome-translator-can-strand-an-unrelated-requesting-view)
+FINDING: [JS-02](../../code-review/sections/05-javascript.md#js-02-an-optional-outcome-translator-can-strand-an-unrelated-requesting-view)
 DEPENDS ON: nothing. Lands on its own.
 
 ## Verified at the baseline
@@ -20,7 +20,7 @@ DEPENDS ON: nothing. Lands on its own.
 | `html/features/zones/overview.js`, the one `panel.outcomeText` call | Checks `screen.session` and `screen.zoneCells.owns(result.request_id)` before answering | The only shipped translator; it already behaves as the contract below requires |
 | `context/TECH_STACK.md`, "Panel" | One sentence documents `panel.outcomeText(translate)` | Needs the owner argument, the disposer and the failure rule after implementation |
 
-The review probe in `../../evidence/javascript_probes.cjs` reproduces the stranded channel. No shipped
+The review probe in `../../code-review/evidence/javascript_probes.cjs` reproduces the stranded channel. No shipped
 translator throws; this is a contributor failure boundary.
 
 ## Target design

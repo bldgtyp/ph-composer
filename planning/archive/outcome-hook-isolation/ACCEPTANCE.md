@@ -1,7 +1,7 @@
 # Outcome presentation hook acceptance
 
 DATE: 2026-10-13
-STATUS: Planned cases; none run. Rows map onto the OH-01 and OH-02 tests.
+STATUS: Offline cases run and passing at merge (PR #102); the mapping is in STATUS.md. No native observation was added by this packet.
 PLAN: [Contract and stages](PLAN.md)
 
 Use valid synthetic host outcomes and the actual panel receive/reducer plus a real request

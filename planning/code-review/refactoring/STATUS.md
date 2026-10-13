@@ -1,7 +1,7 @@
 # Refactoring status
 
 DATE: 2026-10-13
-STATUS: In progress; Ed authorized implementation on 2026-10-13, one stage per PR through the pr-loop. First PR: export wording EW-01 ([#99](https://github.com/bldgtyp/ph-composer/pull/99)).
+STATUS: In progress; Ed authorized implementation on 2026-10-13, through the pr-loop. First PR: export wording EW-01 ([#99](https://github.com/bldgtyp/ph-composer/pull/99)). From delivery group 1 on, Ed asked for one branch and PR per group of `DELIVERY_ORDER.md`; group 1 merged in [#102](https://github.com/bldgtyp/ph-composer/pull/102).
 ISSUE: none (local planning draft)
 
 Ed accepted C1, C2, W1 and the Zone-child pattern on 2026-10-13. The same day the twelve plans were
@@ -13,8 +13,8 @@ issues and PRs are linked from each packet row as they open.
 | Packet | Findings | Stages | State |
 | --- | --- | --- | --- |
 | [Export wording](../../archive/export-contract-wording/STATUS.md) | F08 | EW-01 | Complete; merged in [PR #99](https://github.com/bldgtyp/ph-composer/pull/99), archived |
-| [Outcome hook](outcome-hook-isolation/STATUS.md) | JS-02 | OH-01, OH-02 | Implemented on branch `refactor/group-1-independent-corrections` ([#100](https://github.com/bldgtyp/ph-composer/issues/100)) |
-| [Contributor example](contributor-example-lifecycle/STATUS.md) | JS-03, JS-04 | CE-01 to CE-03 | Implemented on branch `refactor/group-1-independent-corrections` ([#101](https://github.com/bldgtyp/ph-composer/issues/101)) |
+| [Outcome hook](../../archive/outcome-hook-isolation/STATUS.md) | JS-02 | OH-01, OH-02 | Complete; merged in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102), archived |
+| [Contributor example](../../archive/contributor-example-lifecycle/STATUS.md) | JS-03, JS-04 | CE-01 to CE-03 | Complete; merged in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102), archived |
 | [Registration](registration-reliability/STATUS.md) | F01, F02 | RR-01 to RR-03 | Scoped; implementation ready |
 | [Composition](cross-feature-composition/STATUS.md) | F04 | C-01 to C-04 | Scoped; after RR-02 |
 | [Windows coordinator](windows-orchestration/STATUS.md) | RF-02 | W-01 to W-03 | Scoped; implementation ready |

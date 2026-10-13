@@ -1,7 +1,7 @@
 # Contributor example keyboard and lifecycle acceptance
 
 DATE: 2026-10-13
-STATUS: Planned cases; none run. CE01 to CE07 are CE-01, CE08 to CE13 are CE-02, CE14 and CE15 are CE-03.
+STATUS: Offline cases run and passing at merge (PR #102); the mapping is in STATUS.md. No native observation was added by this packet.
 PLAN: [Contract and stages](PLAN.md)
 
 Use the synthetic foundation feature and actual public kit. Full key-event propagation must

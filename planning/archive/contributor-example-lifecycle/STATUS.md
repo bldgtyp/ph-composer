@@ -1,7 +1,7 @@
 # Contributor example keyboard and lifecycle status
 
 DATE: 2026-10-13
-STATUS: Implemented on branch `refactor/group-1-independent-corrections` with the outcome hook, one PR for the delivery group.
+STATUS: Complete; merged to main 2026-10-13 in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102) as `ed92825`, with the other delivery group 1 packet.
 ISSUE: [#101](https://github.com/bldgtyp/ph-composer/issues/101)
 
 The phased plan is the `## Stages` section of [PLAN.md](PLAN.md); there is no `phases/` folder.
@@ -9,9 +9,9 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 | Stage | Scope | State | Evidence |
 | --- | --- | --- | --- |
-| CE-01 | Capture-phase Enter route to one submit; real event dispatch tests | Implemented on branch | Four tests through `dom.dispatch` (CE01 to CE03, CE05); fail on the baseline editor, pass after; stale comment fixed |
-| CE-02 | Permanent `dispose` on Model switch; retained-callback tests | Implemented on branch | Four tests (CE08 to CE12); `run` also guarded, since a retained `run` would otherwise send with the old session; `example_editor_test.js` 19 of 19 |
-| CE-03 | README walkthrough and docs pointers; `make ci` | Implemented on branch | README section "Keyboard and lifecycle in the editor"; `docs/DEVELOPMENT.md` and `context/EXTENSIBILITY.md` pointers already claim no more than was built, unchanged |
+| CE-01 | Capture-phase Enter route to one submit; real event dispatch tests | Merged to main | Four tests through `dom.dispatch` (CE01 to CE03, CE05); fail on the baseline editor, pass after; stale comment fixed |
+| CE-02 | Permanent `dispose` on Model switch; retained-callback tests | Merged to main | Four tests (CE08 to CE12); `run` also guarded, since a retained `run` would otherwise send with the old session; `example_editor_test.js` 19 of 19 |
+| CE-03 | README walkthrough and docs pointers; `make ci` | Merged to main | README section "Keyboard and lifecycle in the editor"; `docs/DEVELOPMENT.md` and `context/EXTENSIBILITY.md` pointers already claim no more than was built, unchanged |
 
 Reviewed against source on 2026-10-13: `tests/support/dom_stub.js` already dispatches capture
 listeners through `dispatch(target, event)`; the test helper `press` bypasses it. CE-01 adds a
