@@ -40,7 +40,14 @@ module PhComposer
 
             [item.entity, row.fetch("after")]
           end
+          @captured = resolved.map { |entity, _record| [entity, Units.read(entity)] }
           resolved.each { |entity, record| Units.write(entity, record) }
+        end
+
+        # Writes back what apply replaced, for a host follow-up that cannot abort. Nothing when apply
+        # did not reach its writes.
+        def restore
+          Units.restore_all(@captured)
         end
       end
 

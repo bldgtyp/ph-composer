@@ -6,7 +6,9 @@ module PhComposer
     REFERENCE_KIND = "#{FEATURE_ID}.zone"
     # Emitted when a Zone occurrence becomes independent, by the action or the copy watcher's follow-up.
     # The description is `zone_path`, `old_zone_id`, `new_zone_id`, `mapping` (every old id to its new
-    # one) and `revision` (context/CONTRACTS.md, "Compound proposals").
+    # one), `revision`, and `references`: the Zone's and its Faces' new records as typed entries
+    # (`kind`, `key`, `record`), so a child can remap its own references to them (context/CONTRACTS.md,
+    # "Compound proposals").
     TRANSITION = "#{FEATURE_ID}.occurrence_independent"
     ZONE_DICTIONARY = "ph_composer.zone"
     STAMP_DICTIONARY = "ph_composer.zone_stamp"

@@ -44,7 +44,10 @@ module PhComposer
       # once storage is isolated. Zones names none of them (context/CONTRACTS.md, "Compound proposals").
       request.contribute_transition(TRANSITION, "zone_path" => zone.path, "old_zone_id" => zone.record.fetch("id"),
                                                 "new_zone_id" => plan.fetch(:record).fetch("id"),
-                                                "mapping" => plan.fetch(:mapping), "revision" => request.revision)
+                                                "mapping" => plan.fetch(:mapping), "revision" => request.revision,
+                                                "references" => plan.fetch(:reference_plan).entries.map do |entry|
+                                                  { "kind" => entry.kind, "key" => entry.key, "record" => entry.record }
+                                                end)
       { "zone_id" => plan.fetch(:record).fetch("id"), "retired_pairs" => retired_pairs(plan),
         "storage_isolated" => MakeIndependentStep.shared_storage?(zone.entity) }
     end
