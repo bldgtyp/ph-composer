@@ -1,7 +1,7 @@
 # Entity customization acceptance
 
 DATE: 2026-10-13
-STATUS: Planned cases; none run. EC-A01 and EC-A02 are EC-01; EC-A03 to EC-A23 are EC-02 and EC-05; EC-A24 to EC-A36 are EC-03 and EC-04.
+STATUS: EC-A01 to EC-A23 for EC-01 and EC-02 pass offline (PR 110); EC-02 native Undo outstanding. EC-A24 to EC-A36 wait for Ed to confirm the EC-03 declaration before EC-04.
 ISSUE: none (local planning draft)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 

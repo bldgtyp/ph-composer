@@ -15,3 +15,5 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 Reviewed against source on 2026-10-13: the caller inventory is in the plan; the extraction is one
 adapter module and one rename.
+
+Final gate on main `17ac0d0`: `make coverage` 95.60% (required 92%).

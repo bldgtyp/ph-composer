@@ -1,6 +1,6 @@
 # Geometry contribution acceptance
 
-STATUS: Planned cases; none run. G01 to G06 are G-02; G07 to G13 are G-03; G14 and G15 are G-04.
+STATUS: G01 to G06 pass offline on both Rubies (PR 119, `tests/geometry_snapshot_test.rb`). G07 to G15 wait for G-03 and the thermal-bridge adopter.
 
 | Case | Scenario | Required result |
 | --- | --- | --- |

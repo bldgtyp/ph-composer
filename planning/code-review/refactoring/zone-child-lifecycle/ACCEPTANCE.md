@@ -1,6 +1,6 @@
 # Zone-child lifecycle acceptance
 
-STATUS: Planned cases; none run. ZC01 and ZC02 are ZC-02; ZC03 to ZC09 are ZC-03; ZC10 to ZC15 are ZC-04; ZC16 is the Spaces adopter.
+STATUS: ZC01 to ZC09 pass offline on both Rubies (PRs 115 and 116). ZC10 to ZC15 native: single copy, 5x array, save and reopen, and export read-back pass; native Undo and Redo and the native copy gestures outstanding. ZC16 waits for the Spaces adopter. Receipts in [STATUS.md](STATUS.md).
 
 | Case | Scenario | Required observation |
 | --- | --- | --- |

@@ -1,8 +1,8 @@
 # Library contracts acceptance
 
 DATE: 2026-10-13
-STATUS: Planned cases; none run. LC-A01 to LC-A08 are LC-01; LC-A09 to LC-A13 and LC-A20 are LC-02; LC-A14 to LC-A19 are LC-03; the rest are LC-04.
-ISSUE: none (local planning draft)
+STATUS: Offline cases LC-A01 to LC-A20 pass on both Rubies (PR 112, `tests/library_label_test.rb`, resolver, registration, Material and copy-dialog suites). LC-04 native: copy and assign, provider removal, save and reopen pass; native Undo and Redo outstanding. Receipts in [STATUS.md](STATUS.md).
+ISSUE: [#111](https://github.com/bldgtyp/ph-composer/issues/111)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 
 This matrix gates [PLAN.md](PLAN.md). F05 baseline evidence establishes sorting failure, not a

@@ -1,7 +1,7 @@
 # Refactoring status
 
 DATE: 2026-10-13
-STATUS: In progress; Ed authorized implementation on 2026-10-13, through the pr-loop. First PR: export wording EW-01 ([#99](https://github.com/bldgtyp/ph-composer/pull/99)). From delivery group 1 on, Ed asked for one branch and PR per group of `DELIVERY_ORDER.md`; group 1 merged in [#102](https://github.com/bldgtyp/ph-composer/pull/102), group 2 in [#105](https://github.com/bldgtyp/ph-composer/pull/105), group 3 in [#108](https://github.com/bldgtyp/ph-composer/pull/108), group 4 in [#110](https://github.com/bldgtyp/ph-composer/pull/110).
+STATUS: In progress; Ed authorized implementation on 2026-10-13, through the pr-loop, one branch and PR per group of `DELIVERY_ORDER.md`. Groups 1 to 8 are merged (PRs 99, 102, 105, 108, 110, 112, 114 to 117, 119, 121). Open: EC-03 waits for Ed; native Undo and Redo checks for EC-02, LC-04 and ZC-04 need one host session with full-screen control; G-01, G-03 and G-04 wait for the thermal-bridge adopter.
 ISSUE: none (local planning draft)
 
 Ed accepted C1, C2, W1 and the Zone-child pattern on 2026-10-13. The same day the twelve plans were
