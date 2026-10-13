@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped; implementation ready, not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+ISSUE: [#101](https://github.com/bldgtyp/ph-composer/issues/101)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDINGS: [JS-03](../../sections/05-javascript.md#js-03-the-contributor-examples-length-enter-never-creates-the-part), [JS-04](../../sections/05-javascript.md#js-04-the-contributor-example-retires-its-form-without-disposing-its-field-or-callbacks)
 DEPENDS ON: nothing. Lands on its own. The example is development only and never enters the RBZ.

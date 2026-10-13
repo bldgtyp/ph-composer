@@ -635,6 +635,19 @@ test("a refused Zone name keeps the typed text until a visible Cancel restores t
   assert.strictEqual(p.sent.length, 1, "Cancel writes nothing");
 });
 
+test("the Zone screen restates its own refused write and leaves another request's message alone", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var section = p.query("[data-section='ph_composer.overview']");
+  var notice = function () { return p.query(".phc-floating-notice").message.textContent; };
+  enter(byLabel(section, "Zone 1 name"), "North Zone");
+  result(p, 0, { status: "refused", code: "target.shared_definition", effect: "none", message: "Shared." });
+  assert.match(notice(), /reach both/);
+  p.panel.receive({ type: "action.result", payload: { request_id: "session-a:other:1", session: "session-a",
+    outcome: { status: "refused", code: "target.shared_definition", effect: "none", message: "Not ours." } } });
+  assert.strictEqual(notice(), "Not ours.");
+});
+
 test("an invalid Ground depth offers Cancel, which restores the Model's value", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });

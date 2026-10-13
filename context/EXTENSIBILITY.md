@@ -183,6 +183,14 @@ registered prefix that is the owner, or ends at one of its dots, wins; an owner 
 returns null. It is one tab per feature: a finding one feature reports about a record another tab
 edits still opens the reporting feature's tab.
 
+A view may also restate a refused or failed outcome of its own request in its users' words with
+`panel.outcomeText(translate, { owner })`, which returns a disposer. `translate` receives a detached
+copy of `{ request_id, session, outcome }` and answers a string or declines with null; it must
+check that the request is its own, as the Zones screen does. A translator that throws or answers
+anything but a string is skipped and logged under its `owner`, and the result still reaches its
+requester. The host's message, code and tone stay the contract; the first nonempty string replaces
+only the notice's words.
+
 Shared UI hints use `ui.tooltip(node, text)`: a nonempty string sets `data-tooltip`; an empty
 string clears it. The helper removes native `title` attributes so browser hints cannot obscure
 the panel's styled tooltip. Keep the control's accessible name in `aria-label`; the tooltip

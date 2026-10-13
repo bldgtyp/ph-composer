@@ -429,15 +429,45 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   }
 
   /* A view may restate a refused or failed outcome of its own request in its users' words; the host's message
-     and code stay the contract. Each translator answers text or null for `{ request_id, session, outcome }`. */
+     and code stay the contract. Each translator answers text or null for a detached
+     `{ request_id, session, outcome }`; `options.owner` names it in diagnostics, and the returned function
+     removes it. A translator that throws or answers something other than a string is skipped and logged under
+     its owner; it never stops the result being recorded, because the reducer that calls it must return. The
+     first nonempty string wins. Iteration runs over a copy, so disposal during a call takes effect from the
+     next outcome. */
   var translators = [];
-  function outcomeText(translate) { translators.push(translate); }
+  function outcomeText(translate, options) {
+    var owner = options && options.owner;
+    if (typeof translate !== "function") throw new Error("panel.outcomeText needs a function");
+    if (owner !== undefined && (typeof owner !== "string" || !owner)) {
+      throw new Error("panel.outcomeText owner must be a nonempty string");
+    }
+    var entry = { translate: translate, owner: owner || "anonymous" };
+    translators.push(entry);
+    return function dispose() {
+      var index = translators.indexOf(entry);
+      if (index >= 0) translators.splice(index, 1);
+    };
+  }
   function outcomeWords(payload) {
-    for (var index = 0; index < translators.length; index += 1) {
-      var text = translators[index](payload);
-      if (text) return text;
+    var current = translators.slice();
+    for (var index = 0; index < current.length; index += 1) {
+      var text;
+      try { text = current[index].translate(JSON.parse(JSON.stringify(payload))); } catch (error) {
+        translatorFailed(current[index], "threw", error);
+        continue;
+      }
+      if (text === null || text === undefined || text === "") continue;
+      if (typeof text !== "string") { translatorFailed(current[index], "answered " + typeof text); continue; }
+      return text;
     }
     return null;
+  }
+  /* A diagnostic must not become a second failure: a missing or throwing console is ignored. */
+  function translatorFailed(entry, what, error) {
+    try {
+      if (window.console) window.console.error("panel.outcomeText " + entry.owner + " " + what, error || "");
+    } catch (ignored) { /* the console itself failed */ }
   }
 
   /* Sent once the page has started, so the first snapshot has somewhere to render. */

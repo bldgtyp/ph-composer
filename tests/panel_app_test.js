@@ -390,3 +390,130 @@ test("last-export findings name Materials, Assemblies and Layers without interna
     assert.doesNotMatch(row.textContent, /mat_|segment material id must be non-empty text/);
   });
 });
+
+/* panel.outcomeText: a contributor translator never stands between a result and its requester. */
+var results = require("./support/action_results");
+
+function hookPage() {
+  var p = page(), logged = [];
+  p.receive("panel.snapshot", snapshot("session-a", 7));
+  p.context.console = { error: function (message) { logged.push(message); } };
+  p.logged = logged;
+  return p;
+}
+
+function requested(p) {
+  var channel = p.modules.request.channel("session-a", p.panel.send, "probe");
+  return { channel: channel, id: channel.run("example.probe", {}) };
+}
+
+test("a throwing translator is skipped, the result settles and a later translator's text shows", function () {
+  var p = hookPage(), r = requested(p);
+  p.panel.outcomeText(function () { throw new Error("hook bug"); }, { owner: "test.broken" });
+  p.panel.outcomeText(function () { return "Said our way."; });
+  p.receive("action.result", results.refused(r.id, "session-a", "Host words."));
+
+  assert.strictEqual(p.panel.state.ui.actionResult.request_id, r.id);
+  assert.strictEqual(p.notice().message.textContent, "Said our way.");
+  assert.strictEqual(r.channel.consume(p.panel.state).status, "refused");
+  assert.strictEqual(r.channel.busy(), false);
+  assert.strictEqual(r.channel.consume(p.panel.state), null, "consumed once");
+  assert.deepStrictEqual(p.logged, ["panel.outcomeText test.broken threw"]);
+});
+
+test("when every translator throws or declines, the host message shows with the outcome's tone", function () {
+  var p = hookPage();
+  p.panel.outcomeText(function () { throw new Error("hook bug"); });
+  p.panel.outcomeText(function () { return null; });
+  p.receive("action.result", results.refused("r1", "session-a", "Host words."));
+  assert.strictEqual(p.notice().message.textContent, "Host words.");
+  assert.strictEqual(p.notice().getAttribute("data-tone"), "warning");
+  p.receive("action.result", results.failed("r2", "session-a", "It broke."));
+  assert.strictEqual(p.notice().message.textContent, "It broke.");
+  assert.strictEqual(p.notice().getAttribute("data-tone"), "error");
+  assert.strictEqual(p.panel.state.ui.actionResult.outcome.code, "operation.failed", "the outcome is kept whole");
+});
+
+test("with no host message and no translator text the generic sentence shows", function () {
+  var p = hookPage();
+  p.panel.outcomeText(function () { throw new Error("hook bug"); });
+  p.receive("action.result", results.refused("r1", "session-a"));
+  assert.strictEqual(p.notice().message.textContent, "The change was not applied.");
+});
+
+test("declines fall through and non-string answers are skipped, never shown", function () {
+  [null, undefined, "", 42, Promise.resolve("later"), { text: "object" }].forEach(function (answer) {
+    var p = hookPage();
+    p.panel.outcomeText(function () { return answer; }, { owner: "test.odd" });
+    p.receive("action.result", results.refused("r1", "session-a", "Host words."));
+    assert.strictEqual(p.notice().message.textContent, "Host words.", String(answer));
+    var declined = answer === null || answer === undefined || answer === "";
+    assert.strictEqual(p.logged.length, declined ? 0 : 1, String(answer));
+  });
+});
+
+test("the first valid text wins and later translators are not called", function () {
+  var p = hookPage(), later = 0;
+  p.panel.outcomeText(function () { return "First."; });
+  p.panel.outcomeText(function () { later += 1; return "Second."; });
+  p.receive("action.result", results.refused("r1", "session-a", "Host words."));
+  assert.strictEqual(p.notice().message.textContent, "First.");
+  assert.strictEqual(later, 0);
+});
+
+test("a translator that edits its input changes neither the kept result nor the next input", function () {
+  var p = hookPage(), seen = null;
+  p.panel.outcomeText(function (result) {
+    result.request_id = "forged"; result.session = "session-b"; result.outcome.status = "completed";
+    return null;
+  });
+  p.panel.outcomeText(function (result) { seen = result; return null; });
+  p.receive("action.result", results.refused("r1", "session-a", "Host words."));
+  assert.deepStrictEqual([seen.request_id, seen.session, seen.outcome.status], ["r1", "session-a", "refused"]);
+  var kept = p.panel.state.ui.actionResult;
+  assert.deepStrictEqual([kept.request_id, kept.session, kept.outcome.status], ["r1", "session-a", "refused"]);
+});
+
+test("completed outcomes and another Model's results never reach a translator", function () {
+  var p = hookPage(), calls = 0;
+  p.panel.outcomeText(function () { calls += 1; return "No."; });
+  p.receive("action.result", results.completed("r1", "session-a"));
+  var before = p.panel.state;
+  p.receive("action.result", results.refused("r2", "session-b", "Elsewhere."));
+  assert.strictEqual(calls, 0);
+  assert.strictEqual(p.panel.state, before);
+  assert.strictEqual(p.notice().hidden, true);
+});
+
+test("a disposer removes only its own translator, keeps order and is safe to call twice", function () {
+  var p = hookPage(), calls = [];
+  function hook(name) { return function () { calls.push(name); return null; }; }
+  p.panel.outcomeText(hook("a"));
+  var disposeB = p.panel.outcomeText(hook("b"));
+  p.panel.outcomeText(hook("c"));
+  disposeB();
+  disposeB();
+  p.receive("action.result", results.refused("r1", "session-a", "Host words."));
+  assert.deepStrictEqual(calls, ["a", "c"]);
+});
+
+test("a missing or throwing console cannot strand the result", function () {
+  [undefined, { error: function () { throw new Error("console bug"); } }].forEach(function (console) {
+    var p = hookPage(), r = requested(p);
+    p.context.console = console;
+    p.panel.outcomeText(function () { throw new Error("hook bug"); });
+    p.receive("action.result", results.refused(r.id, "session-a", "Host words."));
+    assert.strictEqual(p.notice().message.textContent, "Host words.");
+    assert.strictEqual(r.channel.consume(p.panel.state).status, "refused");
+  });
+});
+
+test("a registration without a function or with an empty owner throws and inserts nothing", function () {
+  var p = hookPage(), calls = 0;
+  assert.throws(function () { p.panel.outcomeText("not a function"); }, /needs a function/);
+  assert.throws(function () { p.panel.outcomeText(function () { calls += 1; return "No."; }, { owner: "" }); },
+    /owner must be a nonempty string/);
+  p.receive("action.result", results.refused("r1", "session-a", "Host words."));
+  assert.strictEqual(calls, 0);
+  assert.strictEqual(p.notice().message.textContent, "Host words.");
+});
