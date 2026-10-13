@@ -19,6 +19,13 @@ class ExampleFoundationTest < PhComposerTestCase
                  result.fetch("steps").map { |step| step.fetch("step") }
   end
 
+  def test_an_outside_contribution_keeps_its_admitted_values_and_a_refused_one_publishes_nothing
+    result = ExampleWalkthrough.registration
+
+    assert_empty(result.fetch("steps").reject { |step| step.fetch("passed") })
+    assert_equal 3, result.fetch("steps").length
+  end
+
   def test_the_example_needs_no_change_outside_its_own_files
     registry = PhComposer::Registry.current
 

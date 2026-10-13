@@ -269,8 +269,11 @@ subscriptions and Colour-by projections; and a described `noun.condition` form f
 nouns. A test over the built-in registry
 (`tests/api_reference_test.rb`) also requires a description on every top-level param, and an id
 param carries the `pattern` of its prefix, such as `^asm_[A-Za-z0-9]{12}$`. Write each operation's
-description, Undo name and side effects by hand at its declaration, not by interpolating its name. Published operations are frozen with deep-frozen schemas
-and examples, so a test or a contributor registers a new declaration rather than editing one.
+description, Undo name and side effects by hand at its declaration, not by interpolating its name. Every published declaration owns
+deep-frozen copies of its values, and record kinds copy theirs when built, so a test or a
+contributor registers a new declaration rather than editing one: editing a builder you kept after
+install changes nothing. Store admission, the publish order and the ownership rule are in
+[CONTRACTS.md](CONTRACTS.md), "Registration".
 
 A feature names each condition it reports by one code under its own noun, built where the condition
 is detected and never derived from message text, and declares it once with `feature.code`

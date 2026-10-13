@@ -43,8 +43,35 @@ feature declares. Registrations are staged and validated together:
 duplicate ids, missing dependencies, cycles, incompatible contract majors, invalid schemas and
 invalid examples each produce a `registration.*` diagnostic naming the owner and, where one is
 missing, the dependency. Any diagnostic refuses the whole batch and publishes nothing; the last
-registration never silently wins. Published operations are deep-frozen. Repeated install adds no
-duplicate observers.
+registration never silently wins. Repeated install adds no duplicate observers.
+
+A record kind's store is admitted during validation. It must answer the five methods the engine
+calls, `dictionary`, `ids`, `read`, `write` and `delete`, which are checked by presence; only the
+`dictionary` getter is called, once, and its answer must be a String starting with `ph_composer.`
+followed by a name. A getter that raises is a diagnostic. The default `ph_composer.records.<kind
+id>` is not required, so a kind may keep a legacy name.
+
+Publishing cannot leave a batch half published. It prepares everything that could fail first,
+writing nothing live, and then commits by assigning into the registry's maps and appending
+dictionary names and host subscriptions, none of which can refuse once validation has admitted
+them. A failure while preparing is an `InternalError` with nothing published. `Registry.install`
+called while another install is staging or publishing, from an `install` or a store getter, raises
+`InternalError` and leaves the registry as it was.
+
+A published declaration owns its values. Publishing replaces each value member (names, owners,
+descriptions, schemas, examples, refusal lists, Undo names, side effects, snapshot params, export
+result fields, `user_data_keys`, `requires`, library adapter schemas and callback schemas, and the
+strings of Colour-by modes, menu items, codes, retargeters, participants and subscriptions) with a
+deep-frozen copy and freezes the declaration. Record kinds, descriptors, extensions and reference
+targets keep frozen copies of their ids, labels, prefixes, fields, references and schemas from the
+moment they are built. Behaviour (handlers, validators, stores, factories, projections, callbacks
+and migrations) is kept by identity and never copied or frozen. A contributor who edits a builder it
+kept after install changes nothing published. Reads that hand out schemas (`view_schema`,
+`patch_schema`, `to_h`, `API.describe`) return editable detached copies. The registry's maps stay
+live Hashes, so readers see an additive install on their next lookup.
+
+The guarantee covers what the registry owns. An `install` that raises is a diagnostic and publishes
+nothing, but side effects it caused outside the registry before raising are not undone.
 
 During installation, `registry.record_descriptor(kind_id)` resolves a same-batch catalog kind or
 entity target, then an already installed kind or target, returning its descriptor or nil. A feature

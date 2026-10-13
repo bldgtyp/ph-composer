@@ -73,6 +73,15 @@ The New part dialog shows who owns what in a form built from the kit.
   field's unit-preference subscription. Afterwards its `submit`, `run` and `show` do nothing, and
   the header button opens only the form it was painted with. A form disposes the children it built.
 
+## Registration as an outside contributor
+
+`ExampleWalkthrough.registration` installs a second small feature, `example.notes`, with its own
+duck-typed store (`NoteStore`, not `DictionaryStore`) and a nested reference, through the same
+`Registry.install`. It then edits the field schema and reference it kept and shows discovery still
+reports the admitted values, and installs a third contribution whose store dictionary is outside
+`ph_composer.`: that batch is refused with `registration.schema_invalid`, registers no dictionary,
+and the example's own summary query still answers (`tests/example_foundation_test.rb`).
+
 ## Try it in a host
 
 With PH-Composer installed and the development bridge running:
