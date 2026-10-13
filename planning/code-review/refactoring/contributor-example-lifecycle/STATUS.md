@@ -22,3 +22,9 @@ test harness now captures each record form the editor builds (test-only instrume
 `RecordForm.prototype.finish`), so the retained `submit`, `run` and `show` of a retired form, `dispose`
 twice and withdraw-then-reopen (CE10, CE11, CE13) are tested. The stub's `removeEventListener` ignores
 the capture flag; the example registers and removes with the same flag, so no stub change was needed.
+
+The second review on PR 102 found that Create stayed disabled after a refused or failed create,
+because the kit leaves submit availability to the owner; the example now re-enables Create when an
+outcome settles and when the form opens, and a test covers refusal and failure, correction, retry
+and Cancel (CE06). It also caught a `node_modules` symlink committed from a review worktree,
+removed in the same commit.

@@ -70,7 +70,15 @@
   };
   NewPartForm.prototype.show = function () {
     if (this.retired) return;
+    this.submitButton.disabled = this.busy();
     RecordForm.prototype.show.call(this);
+  };
+  /* The kit leaves Create's availability to the form: once a refused or failed create settles, the user
+     can correct the draft and create again. */
+  NewPartForm.prototype.settle = function (state) {
+    var outcome = RecordForm.prototype.settle.call(this, state);
+    if (outcome) this.submitButton.disabled = false;
+    return outcome;
   };
   /* Permanent: the Model this form belonged to is no longer shown. Withdraw alone forgets the request and
      closes, and stays reusable; disposal also ends the length field's preference subscription and the

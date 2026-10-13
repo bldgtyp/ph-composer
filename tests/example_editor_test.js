@@ -404,3 +404,36 @@ test("dispose is permanent and safe twice; withdraw alone leaves a form reusable
   assert.strictEqual(d.form.hidden, true);
   assert.strictEqual(creates(e).length, 1);
 });
+
+test("a refused or failed create keeps its message, and Create, correction, retry and Cancel all recover", function () {
+  ["refused", "failed"].forEach(function (status) {
+    var e = editor(), d = newPart(e), invoke = e.host.invoke, held = [];
+    var create = d.form.querySelectorAll("button").filter(function (node) { return node.textContent === "Create"; })[0];
+    var statusLine = d.form.querySelectorAll(".cell-error").filter(function (node) {
+      return node.getAttribute("role") === "status";
+    })[0];
+    e.host.invoke = function (payload) { held.push(payload); };
+    d.open();
+    d.fill("Jamb", "3 ft");
+    e.dispatch("Length", "Enter");
+    assert.strictEqual(create.disabled, true, status + ": pending");
+    e.context.PhComposerUI.get("panel").receive({ type: "action.result", payload: { request_id: held[0].request_id,
+      session: held[0].session, outcome: { status: status, code: status === "failed" ? "operation.failed" :
+        "validation.failed", message: "Not this time." } } });
+
+    assert.strictEqual(statusLine.textContent, "Not this time.", status);
+    assert.strictEqual(create.disabled, false, status + ": Create is available again");
+    assert.strictEqual(d.form.hidden, false, status + ": the form stays open");
+    e.host.invoke = invoke;
+    d.fill("Jamb", "4 ft");
+    d.create();
+    assert.strictEqual(creates(e).length, 2, status + ": the corrected draft is sent once");
+    assert.strictEqual(e.host.parts.length, 3, status);
+    assert.strictEqual(d.form.hidden, true, status + ": a completed retry closes the form");
+
+    d.open();
+    assert.strictEqual(create.disabled, false, status + ": a reopened form can create");
+    d.cancel();
+    assert.strictEqual(d.form.hidden, true, status);
+  });
+});

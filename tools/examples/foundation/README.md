@@ -64,7 +64,9 @@ The New part dialog shows who owns what in a form built from the kit.
   screen until it is corrected or cancelled. The Assembly builder's dimension fields are the
   shipping precedent.
 - **Pending.** `RecordForm.run` allows one request in flight, so a repeated Enter or Create sends
-  nothing more; the result settles once and a completed create closes the dialog.
+  nothing more; the result settles once and a completed create closes the dialog. The kit leaves
+  Create's availability to the form, so the form makes Create available again when a refused or
+  failed create settles, keeping its message until the user corrects the draft or cancels.
 - **Withdraw versus dispose.** `withdraw` forgets the pending request and closes the dialog; the
   form stays usable. `dispose` is permanent and runs when the panel shows another Model: the form
   withdraws, removes its Enter route and disposes the length field it built, which ends that
