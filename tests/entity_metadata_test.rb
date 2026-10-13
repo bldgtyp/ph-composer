@@ -101,29 +101,25 @@ class EntityMetadataTest < PhComposerTestCase
     assert_equal revision, @session.revision
   end
 
-  # The five statuses, as an older or newer build or another installation would have stored them, read
-  # through each entity owner and compared with what a catalog read reports for the same envelopes.
-  def test_every_status_word_on_a_zone_face_and_unit_matches_a_catalog_read
-    stored = { "a.understood" => envelope(2, { "status" => "draft" }) }
-    statuses = { "understood" => envelope(2, { "status" => "draft" }), "invalid" => envelope(2, {}),
-                 "outdated" => envelope(1, {}), "unsupported" => envelope(3, {}) }
+  # Each of the five statuses, stored as an older or newer build or another installation would have
+  # stored it, read through every owner's public read and compared with what a catalog read reports.
+  def test_every_status_word_reaches_each_owners_read_as_a_catalog_read_reports_it
     catalog = PhComposer::Registry.current.catalog
-    statuses.each do |word, row|
-      assert_equal word, PhComposer::Records::Extension.status(row, catalog.extension(REVIEW)), word
-    end
-    stored = { REVIEW => statuses.fetch("invalid"), "absent.extension" => envelope(1, {}) }
-    expected = { REVIEW => "invalid", "absent.extension" => "unavailable" }
-    zone_record = PhComposer::Zones::ZONE_STORE.read(@group).merge("extension_data" => stored)
-    PhComposer::Zones::ZONE_STORE.write(@group, zone_record)
     face_entity = PhComposer::Zones::Occurrences.resolve_face(@model, face.fetch("reference")).entity
-    face_record = PhComposer::Zones::Faces::FACE_STORE.read(face_entity).merge("extension_data" => stored)
-    PhComposer::Zones::Faces::FACE_STORE.write(face_entity, face_record)
     unit_item = PhComposer::Windows::Units::Occurrences.all(@model).first
-    PhComposer::Windows::Units.write(unit_item.entity, unit_item.record.merge("extension_data" => stored))
-    assert_equal expected, zone.fetch("extension_status")
-    assert_equal expected, face.fetch("extension_status")
-    assert_equal expected, unit.fetch("extension_status")
-    assert_equal expected, PhComposer::Records::Metadata.status_map({ "extension_data" => stored }, catalog)
+    { "understood" => [REVIEW, envelope(2, { "status" => "draft" })], "invalid" => [REVIEW, envelope(2, {})],
+      "outdated" => [REVIEW, envelope(1, {})], "unsupported" => [REVIEW, envelope(3, {})],
+      "unavailable" => ["absent.extension", envelope(1, {})] }.each do |word, (namespace, row)|
+      stored = { namespace => row }
+      assert_equal({ namespace => word }, PhComposer::Records::Metadata.status_map({ "extension_data" => stored },
+                                                                                   catalog), word)
+      zone_record = PhComposer::Zones::ZONE_STORE.read(@group).merge("extension_data" => stored)
+      PhComposer::Zones::ZONE_STORE.write(@group, zone_record)
+      face_record = PhComposer::Zones::Faces::FACE_STORE.read(face_entity).merge("extension_data" => stored)
+      PhComposer::Zones::Faces::FACE_STORE.write(face_entity, face_record)
+      PhComposer::Windows::Units.write(unit_item.entity, unit_item.record.merge("extension_data" => stored))
+      [zone, face, unit].each { |row| assert_equal({ namespace => word }, row.fetch("extension_status"), word) }
+    end
   end
 
   def test_a_zone_update_replaces_user_data_and_a_payload_in_one_undo_and_reads_back
@@ -215,9 +211,20 @@ class EntityMetadataTest < PhComposerTestCase
     locked = update("#{ZONES}.faces.update_metadata", face.fetch("reference"), face, :user_data => {})
     assert_equal "target.locked", locked.fetch("code")
     @group.locked = false
-    unrecorded = face.fetch("reference").merge("entity_id" => "fac_Zz99Zz99Zz99")
-    result = update("#{ZONES}.faces.update_metadata", unrecorded, face, :user_data => {})
+    mismatched = face.fetch("reference").merge("entity_id" => "fac_Zz99Zz99Zz99")
+    result = update("#{ZONES}.faces.update_metadata", mismatched, face, :user_data => {})
     assert_includes %w[target.changed target.not_found], result.fetch("code"), result.inspect
+  end
+
+  def test_a_face_with_no_record_refuses_and_gains_none
+    read = face
+    entity = PhComposer::Zones::Occurrences.resolve_face(@model, read.fetch("reference")).entity
+    PhComposer::Zones::Faces::FACE_STORE.delete(entity)
+    revision = @session.revision
+    result = update("#{ZONES}.faces.update_metadata", read.fetch("reference"), EMPTY, :user_data => { "x" => 1 })
+    assert_equal "target.not_found", result.fetch("code"), result.inspect
+    assert_nil PhComposer::Zones::Faces::FACE_STORE.read(entity)
+    assert_equal revision, @session.revision
   end
 
   def test_the_unit_action_repairs_a_copied_unit_first
