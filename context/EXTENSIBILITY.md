@@ -324,6 +324,23 @@ feature branch inside shell, session, export orchestration or UI-kit internals i
 defect. Explicit registration does not promise dynamic plugin loading, a marketplace or separate
 installation in the MVP.
 
+### Records inside a Zone occurrence
+
+A feature whose records live inside Zone occurrences (Window Units today, Spaces next) follows the
+Zone when an occurrence becomes independent by declaring a transition contributor for
+`ph_composer.zones.occurrence_independent` ([CONTRACTS.md](CONTRACTS.md), "Compound proposals").
+Zones names no child: its action lists the transition, and each child adds its own restorable step to
+the same proposal, so the copy, the Zone repair and every child's repair are one Undo step. The child
+owns its records and plans only inside `zone_path`. Make Unique replaces the entities inside the copy
+before the child's step applies (measured, [SKETCHUP_HOST_BEHAVIOR.md](SKETCHUP_HOST_BEHAVIOR.md),
+"Window Units inside a copied Zone"), so the step binds logically, by record id and pre-image,
+re-enumerates at apply, refuses drift with `target.changed`, and restores what it wrote. Payload
+references are remapped with the description's `mapping` and typed `references`. Windows is the
+example: `features/windows/units/zone_copy.rb`. A test-only second child built from public contracts
+alone is in `tests/support/zone_child_fixture.rb`. The accepted pattern and why containment and
+implementation ownership stay separate are in
+[ZONE_CHILD_PATTERN.md](../planning/code-review/refactoring/ZONE_CHILD_PATTERN.md).
+
 ### Library providers and kind adapters
 
 `feature.library_provider(name, contract_version: 1, kinds: [...], &factory)` registers a
