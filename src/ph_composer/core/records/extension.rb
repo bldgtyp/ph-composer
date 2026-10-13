@@ -33,10 +33,10 @@ module PhComposer
       # `copy` is :remap (declared references follow a duplicated collection) or :refuse.
       def initialize(namespace:, schema_version:, references: [], export_relevance: "unknown",
                      migrations: {}, validate: nil, copy: :remap)
-        @namespace = namespace
+        @namespace = DeepCopy.frozen(namespace)
         @schema_version = schema_version
-        @references = references.map { |reference| DeepCopy.string_keys(reference) }.freeze
-        @export_relevance = export_relevance
+        @references = DeepCopy.frozen(references.map { |reference| DeepCopy.string_keys(reference) })
+        @export_relevance = DeepCopy.frozen(export_relevance)
         @migrations = migrations.freeze
         @validate = validate
         @copy = copy

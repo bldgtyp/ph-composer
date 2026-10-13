@@ -122,9 +122,7 @@ module PhComposer
 
     # The batch's declarations made final, and the dictionary names its kinds use.
     def prepare(staging)
-      staging.declared_operations.each { |operation| freeze_operation(operation) }
-      staging.declared_library_providers.each { |item| freeze_library_provider(item) }
-      staging.declared_library_kinds.each { |item| freeze_library_kind(item) }
+      staging.declared_structs.each { |declaration| own(declaration) }
       staging.declared_record_kinds.map { |kind| kind.store.dictionary }
     rescue StandardError => error
       raise InternalError, "Registration could not prepare the batch: #{error.class}: #{error.message}"
@@ -157,41 +155,65 @@ module PhComposer
       end
     end
 
-    # A published operation is what validation and discovery read, so nothing may change it afterwards:
-    # its schemas and examples are deep-frozen copies and the declaration itself is frozen.
-    def freeze_operation(operation)
-      %i[params result examples refuses].each do |part|
-        operation[part] = DeepCopy.frozen(operation[part])
-      end
-      operation.freeze
+    # The value members of each declaration: what validation, discovery and dispatch read. Publishing
+    # replaces each with a deep-frozen copy and freezes the declaration, so neither a builder the
+    # contributor kept nor anything a reader is handed can change a published declaration. Every other
+    # member is behaviour (a handler, validator, factory, projection or callback) and is kept by
+    # identity, never copied or frozen. The record classes (core/records) detach their own values when
+    # they are built.
+    VALUE_MEMBERS = {
+      Declarations::Feature => %i[id contract_version requires],
+      Declarations::Query => %i[name owner description params result examples refuses],
+      Declarations::Action => %i[name owner description params result examples refuses undo_name side_effects
+                                 confirmation],
+      Declarations::ViewCommand => %i[name owner description params result examples refuses],
+      Declarations::SetupCommand => %i[name owner description params result examples refuses],
+      Declarations::FileExport => %i[name owner description params result examples refuses],
+      Declarations::SnapshotSection => %i[name owner query params],
+      Declarations::ExportContributor => %i[name owner section_version result preflight user_data_keys requires],
+      Declarations::ColourMode => %i[name owner label entity_kind group],
+      Declarations::MenuItem => %i[name owner label menu separator_after],
+      Declarations::ReferenceRetargeter => %i[name owner target_kind],
+      Declarations::ProposalParticipant => %i[name owner],
+      Declarations::LibraryProvider => %i[name owner contract_version kinds],
+      Declarations::LibraryKind => %i[name owner contract_version record_kind],
+      Declarations::HostEventSubscription => %i[owner kind],
+      Declarations::Code => %i[code owner description]
+    }.freeze
+    LIBRARY_ADAPTER_VALUES = %i[wire_kind wire_version fingerprint_version wire_schema mapped_schema
+                                fingerprint_fields].freeze
+    LIBRARY_CALLBACK_VALUES = %i[params result refuses].freeze
+    LIBRARY_CALLBACKS = %i[local_read create replace assign].freeze
+
+    def own(declaration)
+      return declaration if declaration.frozen?
+
+      owned_values(declaration, VALUE_MEMBERS.fetch(declaration.class))
+      declaration.approval = owned_approval(declaration.approval) if declaration.respond_to?(:approval=)
+      declaration.adapter = owned_adapter(declaration.adapter) if declaration.is_a?(Declarations::LibraryKind)
+      declaration.freeze
     end
 
-    def freeze_library_provider(item)
-      item.name = item.name.dup.freeze
-      item.owner = item.owner.dup.freeze
-      item.kinds = DeepCopy.frozen(item.kinds)
-      item.freeze
+    def owned_values(struct, members)
+      members.each { |member| struct[member] = DeepCopy.frozen(struct[member]) unless struct[member].nil? }
+      struct
     end
 
-    def freeze_library_kind(item)
-      adapter = item.adapter.dup
-      adapter.wire_kind = adapter.wire_kind.dup.freeze
-      adapter.wire_schema = DeepCopy.frozen(adapter.wire_schema)
-      adapter.mapped_schema = DeepCopy.frozen(adapter.mapped_schema)
-      adapter.fingerprint_fields = DeepCopy.frozen(adapter.fingerprint_fields)
-      %i[local_read create replace assign].each do |method|
+    def owned_approval(approval)
+      approval && owned_values(approval.dup, Declarations::Approval.members).freeze
+    end
+
+    # The adapter struct is the contributor's, so it is copied; its methods and callback handlers are
+    # behaviour and are kept.
+    def owned_adapter(adapter)
+      return adapter unless adapter.is_a?(Declarations::LibraryAdapter)
+
+      adapter = owned_values(adapter.dup, LIBRARY_ADAPTER_VALUES)
+      LIBRARY_CALLBACKS.each do |method|
         callback = adapter[method]
-        next unless callback
-
-        callback = callback.dup
-        callback.params = DeepCopy.frozen(callback.params)
-        callback.result = DeepCopy.frozen(callback.result)
-        callback.refuses = DeepCopy.frozen(callback.refuses)
-        adapter[method] = callback.freeze
+        adapter[method] = owned_values(callback.dup, LIBRARY_CALLBACK_VALUES).freeze if callback
       end
-      item.adapter = adapter.freeze
-      %i[name owner record_kind].each { |part| item[part] = item[part].dup.freeze }
-      item.freeze
+      adapter.freeze
     end
 
     def publish_each(declarations, target, key)
@@ -247,7 +269,7 @@ module PhComposer
       # Declares a feature and returns the scope its other declarations are made through.
       def feature(id, contract_version:, requires: [])
         declaration = Declarations::Feature.new(:id => id, :contract_version => contract_version,
-                                                :requires => requires.dup.freeze)
+                                                :requires => requires)
         @declared_features << declaration
         FeatureScope.new(self, declaration)
       end
@@ -265,6 +287,14 @@ module PhComposer
 
       def diagnostics
         Validation.new(@live, self).diagnostics + @failures
+      end
+
+      # Every declaration struct the batch made, which publishing takes ownership of.
+      def declared_structs
+        declared_features + declared_operations + declared_snapshot_sections + declared_export_contributors +
+          declared_reference_retargeters + declared_proposal_participants + declared_library_providers +
+          declared_library_kinds + declared_colour_modes + declared_menu_items + declared_codes +
+          declared_subscriptions
       end
 
       # Every operation the batch declared, of every kind a client can call.
@@ -359,9 +389,8 @@ module PhComposer
                              requires: [], projection: nil, &contract)
         declaration = Declarations::ExportContributor.new(
           :name => name, :owner => id, :section_version => section_version, :contract => contract,
-          :result => DeepCopy.call(result).freeze, :report => report, :preflight => preflight,
-          :user_data_keys => DeepCopy.call(user_data_keys).freeze, :requires => DeepCopy.call(requires).freeze,
-          :projection => projection
+          :result => result, :report => report, :preflight => preflight,
+          :user_data_keys => user_data_keys, :requires => requires, :projection => projection
         )
         @staging.add(:declared_export_contributors, id, name, declaration)
       end
@@ -421,8 +450,7 @@ module PhComposer
       # Declares one code this feature raises under its own noun, such as `window.unhosted`. Codes are not
       # names under the feature id; one feature owns each noun.
       def code(code, description:)
-        @staging.declared_codes << Declarations::Code.new(:code => code, :owner => id,
-                                                          :description => description).freeze
+        @staging.declared_codes << Declarations::Code.new(:code => code, :owner => id, :description => description)
       end
 
       # Subscribes to a session host event once the batch publishes (session/sessions.rb HOST_EVENTS).

@@ -33,8 +33,8 @@ module PhComposer
 
       def initialize(id:, label:, records:, validate:, schema_version: nil, values: Descriptor::ANY_OBJECT,
                      occurrence: nil, references: [], locate: nil, locate_index: nil)
-        @id = id
-        @label = label
+        @id = DeepCopy.frozen(id)
+        @label = DeepCopy.frozen(label)
         @provider = records
         @validator = validate
         @resolver = locate

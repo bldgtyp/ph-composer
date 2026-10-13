@@ -2,6 +2,15 @@
 
 module PhComposer
   module Records
+    # A record kind keeps its own copies of what it was declared with, so a contributor that edits a
+    # Field, a Reference or a schema Hash after building the kind changes nothing the kind enforces.
+    module Fields
+      # A frozen copy of a declared Field or Reference whose schema and strings are its own.
+      def self.detached(declaration)
+        declaration.class.new(**declaration.to_h.transform_values { |value| DeepCopy.frozen(value) }).freeze
+      end
+    end
+
     # One stored value of a record kind, declared as a JSON Schema (core/json_schema.rb). A number
     # carries its SI unit as `x-unit`, and its key names the unit too: `length_mm`.
     Field = Struct.new(:key, :schema, :required, keyword_init: true) do

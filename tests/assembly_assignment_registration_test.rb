@@ -33,15 +33,14 @@ class AssemblyAssignmentRegistrationTest < PhComposerTestCase
     assignment_zone(100, 3)
     id = assignment_assembly("One read")
     assignment_invoke("#{FACE_PREFIX}.assign_assembly", assignment_params(assignment_faces, id))
-    declaration = PhComposer::Registry.current.queries.fetch("#{ASSEMBLY_PREFIX}.all")
-    original = declaration.handler
+    # Counted where a feature asks for another's query, below the registry, whose published
+    # declarations cannot be swapped.
+    original = PhComposer::HandlerRequest.instance_method(:query)
     queries = 0
-    replacement = declaration.dup
-    replacement.handler = lambda do |request|
-      queries += 1
-      original.call(request)
+    PhComposer::HandlerRequest.define_method(:query) do |name, params = {}|
+      queries += 1 if name == "#{ASSEMBLY_PREFIX}.all"
+      original.bind(self).call(name, params)
     end
-    PhComposer::Registry.current.queries[declaration.name] = replacement
     occurrence = PhComposer::Zones::Occurrences
     old_zones = occurrence.method(:scan_zones)
     old_faces = occurrence.method(:scan_faces)
@@ -59,7 +58,7 @@ class AssemblyAssignmentRegistrationTest < PhComposerTestCase
     assert_equal({ :zones => 1, :faces => 1 }, scans)
     assert_equal 3, read.fetch("assembly_usage").first.fetch("face_count")
   ensure
-    PhComposer::Registry.current.queries[declaration.name] = declaration if declaration
+    PhComposer::HandlerRequest.define_method(:query, original) if original
     occurrence.define_singleton_method(:scan_zones, old_zones) if old_zones
     occurrence.define_singleton_method(:scan_faces, old_faces) if old_faces
   end
