@@ -121,9 +121,9 @@
       "sha256": "47798cafead34fafe4ee90ef29fa42697f0080e42af3013197da593d422baeea"
     },
     "html/features/windows/install_editor.js": {
-      "bytes": 23705,
+      "bytes": 25138,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "0abd68ac03d35b6b13c990198eff52af5886f15d0c15e58a94b4b77e09e34129"
+      "sha256": "be49cbdc943159b42e56933069c22800832d843cdfb2afc196888df313cff7ae"
     },
     "html/features/windows/inventory.js": {
       "bytes": 14658,

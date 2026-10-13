@@ -532,3 +532,32 @@ test("Installs offers only Types whose published copy key matches, and keeps its
   var offered = installs.copyForm.querySelectorAll("button").map(function (button) { return button.textContent; });
   assert.deepStrictEqual(offered, ["Copy to Same key"]);
 });
+test("Installs refuses a copy whose slots are missing, empty or ambiguous, staging nothing", function () {
+  [function (facts) { facts.copy_slots = {}; },
+    function (facts) { delete facts.copy_slots.wel_a_other; },
+    function (facts) { facts.copy_slots.wel_b_other = facts.copy_slots.wel_a_other; }].forEach(function (spoil, index) {
+    var o = setup(), installs = o.editor.installEditor, raw = o.editor.rawRecord();
+    var target = JSON.parse(JSON.stringify(raw)); target.id = "wnt_b"; target.values.name = "Other";
+    target.values.elements.forEach(function (cell) { cell.id += "_other"; }); fixtures.withTopology(target);
+    spoil(target.display.install_topology);
+    o.state.sections["ph_composer.windows.types"].value.records.push(target); o.editor.render(o.state);
+    installs.open(raw); installs.selected = "psi_a"; installs.paintEdge("wel_a", "top");
+    assert.strictEqual(installs.copyTo(target), false, "case " + index);
+    assert.strictEqual(installs.drafts.wnt_b, undefined, "case " + index);
+    assert.ok(/not read/.test(installs.notice.textContent), "case " + index);
+  });
+});
+test("Installs refuses a second copy to a Type changed in the Model and keeps the first", function () {
+  var o = setup(), installs = o.editor.installEditor, raw = o.editor.rawRecord();
+  var target = JSON.parse(JSON.stringify(raw)); target.id = "wnt_b"; target.values.name = "Other";
+  target.values.elements.forEach(function (cell) { cell.id += "_other"; }); fixtures.withTopology(target);
+  o.state.sections["ph_composer.windows.types"].value.records.push(target); o.editor.render(o.state);
+  installs.open(raw); installs.selected = "psi_a"; installs.paintEdge("wel_a", "top");
+  assert.strictEqual(installs.copyTo(target), true);
+  var staged = JSON.stringify(installs.drafts.wnt_b);
+  target.values.elements.forEach(function (cell) { cell.id += "_renamed"; }); fixtures.withTopology(target);
+  o.editor.render(o.state);
+  assert.strictEqual(installs.copyTo(target), false);
+  assert.ok(/changed in the Model/.test(installs.notice.textContent));
+  assert.strictEqual(JSON.stringify(installs.drafts.wnt_b), staged, "the first staged copy is untouched");
+});

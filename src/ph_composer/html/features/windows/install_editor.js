@@ -139,15 +139,40 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     var facts = this.facts[this.active], other = topologyOf(row);
     return row.id !== this.active && Boolean(facts && other && other.copy_key === facts.copy_key);
   };
+  /* Each target element's source element, joined on the host's copy slots, or null unless every element on
+     both sides has a slot and the slots pair the two sides one to one. */
+  function slotMapping(source, sourceSlots, target, targetSlots) {
+    if (!sourceSlots || !targetSlots) return null;
+    var bySlot = {}, complete = source.elements.every(function (cell) {
+      var slot = sourceSlots[cell.id];
+      if (typeof slot !== "string" || bySlot[slot]) return false;
+      bySlot[slot] = cell; return true;
+    });
+    var mapping = {}, used = {};
+    complete = complete && target.elements.length === source.elements.length && target.elements.every(function (cell) {
+      var slot = targetSlots[cell.id];
+      if (typeof slot !== "string" || !bySlot[slot] || used[slot]) return false;
+      used[slot] = true; mapping[cell.id] = bySlot[slot]; return true;
+    });
+    return complete ? mapping : null;
+  }
   Editor.prototype.copyTo = function (row) {
     if (this.disposed || this.requests.busy() || !this.compatible(row)) return false;
-    if (!this.baselines[row.id]) { this.baselines[row.id] = clone(row.values); this.facts[row.id] = topologyOf(row); }
-    var draft = clone(row.values), source = this.drafts[this.active];
-    var slots = this.facts[this.active].copy_slots, targetSlots = this.facts[row.id].copy_slots;
-    draft.elements.forEach(function (cell) {
-      var mapped = source.elements.filter(function (entry) { return slots[entry.id] === targetSlots[cell.id]; })[0];
-      cell.installs = clone(mapped.installs);
-    }); this.drafts[row.id] = draft; this.dirty = true;
+    // A target keeps the values and facts it was first staged with; one changed in the Model since then is
+    // refused rather than mixed with them.
+    if (this.baselines[row.id] && JSON.stringify(this.baselines[row.id]) !== JSON.stringify(row.values)) {
+      this.notice.textContent = row.values.name + " changed in the Model. Cancel and reopen Installs to copy to it.";
+      return false;
+    }
+    var source = this.drafts[this.active], facts = this.baselines[row.id] ? this.facts[row.id] : topologyOf(row);
+    var mapping = slotMapping(source, this.facts[this.active].copy_slots, row.values, facts && facts.copy_slots);
+    if (!mapping) {
+      this.notice.textContent = "Installation facts for " + row.values.name + " were not read."; return false;
+    }
+    if (!this.baselines[row.id]) { this.baselines[row.id] = clone(row.values); this.facts[row.id] = facts; }
+    var draft = clone(row.values);
+    draft.elements.forEach(function (cell) { cell.installs = clone(mapping[cell.id].installs); });
+    this.drafts[row.id] = draft; this.dirty = true;
     this.notice.textContent = "Installs will also replace assignments on " + row.values.name + " when saved.";
     this.copyForm.hidden = true; return true;
   };

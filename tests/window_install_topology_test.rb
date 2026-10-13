@@ -87,6 +87,13 @@ class WindowInstallTopologyTest < PhComposerTestCase
     end
   end
 
+  def test_numerically_equal_dimensions_give_one_copy_key
+    integral = rows(:rows_m => [1, 1], :columns_m => [2, 1])
+    float = rows(%w[wel_hhhhhhhhhhhh wel_iiiiiiiiiiii], :rows_m => [1.0, 1.0], :columns_m => [2.0, 1.0])
+    Installs.copy(integral, float)
+    assert_equal Installs.topology_facts(integral).fetch("copy_key"), Installs.topology_facts(float).fetch("copy_key")
+  end
+
   def test_the_type_list_read_publishes_the_facts_with_the_panel_closed_and_writes_nothing
     PhComposer::Registry.install([W]) unless PhComposer::Registry.installed?(W::FEATURE_ID)
     model = Sketchup.active_model

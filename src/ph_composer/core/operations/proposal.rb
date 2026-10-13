@@ -74,6 +74,10 @@ module PhComposer
         record_changes.put(*arguments, **keywords)
       end
 
+      def restage(*arguments, **keywords)
+        record_changes.restage(*arguments, **keywords)
+      end
+
       def delete(*arguments, **keywords)
         record_changes.delete(*arguments, **keywords)
       end

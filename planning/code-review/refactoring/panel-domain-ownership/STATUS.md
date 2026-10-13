@@ -41,3 +41,11 @@ columns were arranged through the API.
 | Copy, Save Installs | "Installs saved."; both Types' left element top edge names the product |
 | Save, quit, reopen | Zone totals 108, 192 and 100 m², each equal to its Face rows; both Types keep the install |
 
+
+First review on PR 108 (gpt-6-astra): the copy key now digests dimensions as Floats, so `[1]` and
+`[1.0]`, which `copy` accepts, share a key; the editor requires a complete one-to-one slot mapping
+before staging a copy, and refuses a second copy to a Type changed in the Model, leaving the first
+staged copy untouched. It also found that a change set's admitted write kept the caller's kind and
+records by reference (from PR 105): `put` now stores frozen copies, and the two places that edited a
+staged record afterwards (a Zone option create's `user_data`, an adopted option's remapped extension
+data) now write it at creation or through `ChangeSet#restage`, which the write guard sees.

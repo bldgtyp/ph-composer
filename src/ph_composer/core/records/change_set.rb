@@ -57,7 +57,21 @@ module PhComposer
         raise ArgumentError, "#{kind} #{id} is already in this change set." if find(kind, id)
         return if before == after
 
-        @writes << Write.new(:kind => kind, :id => id, :before => before, :after => after).freeze
+        # The admitted write keeps its own frozen values, so nothing the caller retains can change it.
+        @writes << Write.new(:kind => DeepCopy.frozen(kind), :id => DeepCopy.frozen(id),
+                             :before => DeepCopy.frozen(before), :after => DeepCopy.frozen(after)).freeze
+      end
+
+      # Replaces what an already staged write leaves behind, keeping its `before`. The owner's second
+      # pass over a record it just staged (a create completed with remapped extension data) uses this
+      # rather than editing the staged record, which is frozen; the write guard sees it like a `put`.
+      def restage(kind, id, after:)
+        guard!(kind)
+        index = @writes.index { |write| write.kind == kind && write.id == id }
+        raise ArgumentError, "#{kind} #{id} is not in this change set." unless index
+
+        @writes[index] = Write.new(:kind => @writes[index].kind, :id => @writes[index].id,
+                                   :before => @writes[index].before, :after => DeepCopy.frozen(after)).freeze
       end
 
       def delete(kind, before:)

@@ -80,7 +80,14 @@ module PhComposer
           end
         end
         slots = record.fetch("elements").to_h { |element| [element.fetch("id"), CanonicalJson.generate(slot(element))] }
-        { "edges" => edges, "copy_key" => CanonicalJson.digest(topology(record)), "copy_slots" => slots }
+        { "edges" => edges, "copy_key" => CanonicalJson.digest(comparable(topology(record))), "copy_slots" => slots }
+      end
+
+      # The topology as `copy` compares it, with each dimension as a Float: Ruby equality takes 1 and
+      # 1.0 as one value, and the digest must too.
+      def comparable(topology)
+        rows, columns, elements = topology
+        [rows.map { |value| value&.to_f }, columns.map { |value| value&.to_f }, elements]
       end
 
       def slot(element)
