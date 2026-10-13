@@ -17,6 +17,7 @@ module PhComposer
         check_names
         check_operations
         check_record_kinds
+        @diagnostics.concat(StoreValidation.new(@live, @staging).diagnostics)
         check_reference_targets
         check_extensions
         check_snapshot_sections
@@ -418,6 +419,41 @@ module PhComposer
 
         add("registration.schema_invalid", contributor.owner, contributor.name,
             "#{contributor.name} user_data_keys must be dotted lowercase keys such as ph_composer.level.")
+      end
+    end
+
+    # A record kind's store is admitted before anything publishes, so publishing never meets a
+    # dictionary it must refuse. The engine's methods are checked by presence; only `dictionary` is
+    # called, once. The default `ph_composer.records.<kind id>` name is not required: a kind may keep a
+    # legacy name, as the Attached zone does.
+    class StoreValidation < Validation
+      STORE_METHODS = %i[dictionary ids read write delete].freeze
+
+      def diagnostics
+        @staging.declared_record_kinds.each { |kind| check_store(owner(kind.id), kind) }
+        @diagnostics
+      end
+
+      private
+
+      def check_store(owner, kind)
+        missing = STORE_METHODS.reject { |method| kind.store.respond_to?(method) }
+        return store_problem(owner, kind, "must answer #{missing.join(', ')}") unless missing.empty?
+
+        name = begin
+          kind.store.dictionary
+        rescue InternalError
+          raise
+        rescue StandardError => error
+          return store_problem(owner, kind, "dictionary raised #{error.class}")
+        end
+        return if Dictionaries.valid_name?(name)
+
+        store_problem(owner, kind, "dictionary #{name.inspect} must be a string starting with #{DICTIONARY_PREFIX}")
+      end
+
+      def store_problem(owner, kind, text)
+        add("registration.schema_invalid", owner, kind.id, "#{kind.id} store #{text}.")
       end
     end
 

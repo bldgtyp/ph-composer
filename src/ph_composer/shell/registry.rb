@@ -30,13 +30,21 @@ module PhComposer
       end
 
       # Validates the features' declarations together with everything already published, then
-      # publishes them, or raises RegistrationError and publishes nothing.
+      # publishes them, or raises RegistrationError and publishes nothing. An install started from
+      # inside another (an `install` or a store that installs while it is read) is refused.
       def install(features)
-        staged = current.stage(features)
-        diagnostics = staged.diagnostics
-        raise RegistrationError, diagnostics unless diagnostics.empty?
+        raise InternalError, "Registry.install was called while another install was running." if @installing
 
-        current.publish(staged)
+        begin
+          @installing = true
+          staged = current.stage(features)
+          diagnostics = staged.diagnostics
+          raise RegistrationError, diagnostics unless diagnostics.empty?
+
+          current.publish(staged)
+        ensure
+          @installing = false
+        end
       end
 
       def installed?(feature_id)
@@ -44,6 +52,8 @@ module PhComposer
       end
 
       def reset
+        raise InternalError, "Registry.reset was called while an install was running." if @installing
+
         current.unsubscribe_all
         @current = new
       end
@@ -94,24 +104,47 @@ module PhComposer
       staging
     end
 
+    # Publishes a validated batch in two steps. `prepare` does everything that could fail and writes
+    # nothing live; `commit` then only assigns into the maps and appends, so a batch cannot be left
+    # half published. Validation has already admitted each store's dictionary and each subscription's
+    # event kind, so neither `Dictionaries.register` nor `Sessions.on_host_event` can refuse here.
     def publish(staging)
-      staging.declared_features.each { |feature| @features[feature.id] = feature }
+      commit(staging, prepare(staging))
+      self
+    end
+
+    def unsubscribe_all
+      @unsubscribers.each(&:call)
+      @unsubscribers = []
+    end
+
+    private
+
+    # The batch's declarations made final, and the dictionary names its kinds use.
+    def prepare(staging)
       staging.declared_operations.each { |operation| freeze_operation(operation) }
+      staging.declared_library_providers.each { |item| freeze_library_provider(item) }
+      staging.declared_library_kinds.each { |item| freeze_library_kind(item) }
+      staging.declared_record_kinds.map { |kind| kind.store.dictionary }
+    rescue StandardError => error
+      raise InternalError, "Registration could not prepare the batch: #{error.class}: #{error.message}"
+    end
+
+    def commit(staging, dictionaries)
+      staging.declared_features.each { |feature| @features[feature.id] = feature }
       publish_each(staging.declared_queries, @queries, :name)
       publish_each(staging.declared_actions, @actions, :name)
       publish_each(staging.declared_view_commands, @view_commands, :name)
       publish_each(staging.declared_setup_commands, @setup_commands, :name)
       publish_each(staging.declared_file_exports, @file_exports, :name)
       publish_each(staging.declared_record_kinds, @record_kinds, :id)
-      staging.declared_record_kinds.each { |kind| Dictionaries.register(kind.store.dictionary) }
+      dictionaries.each { |name| Dictionaries.register(name) }
       publish_each(staging.declared_reference_targets, @reference_targets, :id)
       publish_each(staging.declared_extensions, @extensions, :namespace)
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
       publish_each(staging.declared_reference_retargeters, @reference_retargeters, :name)
       publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
-      staging.declared_library_providers.each { |item| freeze_library_provider(item) }
-      staging.declared_library_kinds.each { |item| freeze_library_kind(item) }
       publish_each(staging.declared_library_providers, @library_providers, :name)
       publish_each(staging.declared_library_kinds, @library_kinds, :name)
       publish_each(staging.declared_colour_modes, @colour_modes, :name)
@@ -122,15 +155,7 @@ module PhComposer
         @subscriptions << subscription
         @unsubscribers << Sessions.on_host_event(subscription.kind, &subscription.handler)
       end
-      self
     end
-
-    def unsubscribe_all
-      @unsubscribers.each(&:call)
-      @unsubscribers = []
-    end
-
-    private
 
     # A published operation is what validation and discovery read, so nothing may change it afterwards:
     # its schemas and examples are deep-frozen copies and the declaration itself is frozen.

@@ -489,6 +489,71 @@ class RegistryTest < PhComposerTestCase
     refute Registry.current.menu_items.key?("outside.probe.go")
   end
 
+  def test_a_store_dictionary_outside_the_prefix_refuses_the_batch_and_publishes_nothing
+    store = CountingStore.new("outside.records")
+    before = published
+    diagnostics = refused(kind_feature("probe.store", store))
+
+    assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
+    assert_match(/probe\.store\.kind store dictionary "outside\.records"/, diagnostics.first.message)
+    refute Registry.installed?("probe.store")
+    assert_equal before, published
+    assert_nil Registry.current.owner_of("probe.store.kind")
+    assert_equal({ :dictionary => 1 }, store.calls, "the getter is read once and nothing else is called")
+  end
+
+  def test_a_store_missing_any_engine_method_is_named
+    %i[dictionary ids read write delete].each do |method|
+      store = CountingStore.new("ph_composer.records.probe", without: method)
+      diagnostics = refused(kind_feature("probe.store", store))
+      assert_equal 1, diagnostics.length, method.to_s
+      assert_match(/store must answer #{method}\./, diagnostics.first.message)
+    end
+  end
+
+  def test_a_store_dictionary_getter_that_raises_is_a_diagnostic
+    store = CountingStore.new(nil) { raise ArgumentError, "no name" }
+    diagnostics = refused(kind_feature("probe.store", store))
+    assert_equal ["registration.schema_invalid"], diagnostics.map(&:code)
+    assert_match(/store dictionary raised ArgumentError/, diagnostics.first.message)
+  end
+
+  def test_a_kind_may_keep_a_legacy_dictionary_name_under_the_prefix
+    Registry.install([kind_feature("probe.legacy", CountingStore.new("ph_composer.face_assignment.legacy"))])
+    assert_includes PhComposer::Dictionaries.names, "ph_composer.face_assignment.legacy"
+  end
+
+  def test_one_bad_kind_publishes_nothing_of_any_feature_or_subscription_in_the_batch
+    received = []
+    good = feature("Good") do |registry|
+      scope = registry.feature("probe.good", :contract_version => 1)
+      scope.query("probe.good.read", :description => "Read.", :params => OBJECT, :result => OBJECT,
+                                     :refuses => []) { {} }
+      scope.on_host_event(:selection_changed) { |_session| received << :selection_changed }
+    end
+    before = published
+    refused(good, kind_feature("probe.bad", CountingStore.new("outside.records"), "Bad"))
+
+    assert_equal before, published
+    PhComposer::Sessions.current.host_event(:selection_changed)
+    assert_empty received
+  end
+
+  def test_an_install_from_inside_an_install_is_refused_and_the_next_install_succeeds
+    before = published
+    nested = kind_feature("probe.nested", CountingStore.new("ph_composer.records.nested"), "Nested")
+    store = CountingStore.new(nil) do
+      Registry.install([nested])
+      "ph_composer.records.outer"
+    end
+    error = assert_raises(PhComposer::InternalError) { Registry.install([kind_feature("probe.outer", store)]) }
+    assert_match(/while another install was running/, error.message)
+    assert_equal before, published
+
+    Registry.install([nested])
+    assert Registry.installed?("probe.nested")
+  end
+
   private
 
   def read
@@ -501,5 +566,46 @@ class RegistryTest < PhComposerTestCase
         received << :selection_changed
       end
     end
+  end
+
+  # A store the engine could call: every method counts its calls, and `dictionary` answers `name`.
+  class CountingStore
+    attr_reader :calls
+
+    def initialize(name, without: nil, &getter)
+      @name = name
+      @getter = getter
+      @calls = Hash.new(0)
+      singleton_class.send(:undef_method, without) if without
+    end
+
+    def dictionary
+      @calls[:dictionary] += 1
+      @getter ? @getter.call : @name
+    end
+
+    %i[ids read write delete].each do |method|
+      define_method(method) { |*_args| @calls[method] += 1 }
+    end
+  end
+
+  def stored_kind(id, store)
+    PhComposer::Records::RecordKind.new(:id => id, :label => "Kind", :schema_version => 1, :id_prefix => "prb",
+                                        :fields => [], :store => store)
+  end
+
+  def kind_feature(feature_id, store, name = "Probe")
+    feature(name) do |registry|
+      scope = registry.feature(feature_id, :contract_version => 1)
+      scope.record_kind(stored_kind("#{feature_id}.kind", store))
+      scope.query("#{feature_id}.read", :description => "Read.", :params => OBJECT, :result => OBJECT,
+                                        :refuses => []) { {} }
+    end
+  end
+
+  def published
+    current = Registry.current
+    [current.features.keys, current.queries.keys, current.record_kinds.keys, PhComposer::Dictionaries.names.dup,
+     current.subscriptions.length]
   end
 end
