@@ -11,6 +11,7 @@ require_relative "types/installs"
 require_relative "types/graph"
 require_relative "declarations/shapes"
 require_relative "units/identity_step"
+require_relative "units/zone_copy"
 require_relative "settings"
 require_relative "definitions"
 require_relative "products/operations"
@@ -52,6 +53,7 @@ module PhComposer
       LibraryKinds.install(feature)
       ExportProjection.install(feature)
       Units::Areas.install(feature, registry)
+      Units::ZoneCopy.install(feature)
       Codes.install(feature)
     end
   end

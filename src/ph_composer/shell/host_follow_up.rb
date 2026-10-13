@@ -77,12 +77,16 @@ module PhComposer
       failure
     end
 
+    # Every step is asked to restore, in reverse, even after one fails, so one owner's failure never
+    # leaves another owner's writes in place. True only when all of them restored.
     def restore_steps(proposal)
-      proposal.steps.reverse_each(&:restore)
-      true
-    rescue StandardError => error
-      Diagnostics.exception("follow_up_restore", error)
-      false
+      proposal.steps.reverse.map do |step|
+        step.restore
+        true
+      rescue StandardError => error
+        Diagnostics.exception("follow_up_restore", error)
+        false
+      end.all?
     end
   end
 end

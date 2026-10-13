@@ -21,7 +21,7 @@ issues and PRs are linked from each packet row as they open.
 | [Panel facts](../../archive/panel-domain-ownership/STATUS.md) | JS-01, JS-05 | PD-01 to PD-04 | Complete; merged in [PR #108](https://github.com/bldgtyp/ph-composer/pull/108), archived |
 | [Library contracts](library-contracts/STATUS.md) | F05, RF-04 | LC-01 to LC-04 | Merged to main in PR 112 ([#111](https://github.com/bldgtyp/ph-composer/issues/111)); native Undo/Redo outstanding |
 | [Entity customization](entity-customization/STATUS.md) | RF-01, RF-03, F07 | EC-01 to EC-05 | EC-01, EC-02 merged in [PR #110](https://github.com/bldgtyp/ph-composer/pull/110); EC-03 waits for Ed ([#109](https://github.com/bldgtyp/ph-composer/issues/109)) |
-| [Zone-child lifecycle](zone-child-lifecycle/STATUS.md) | copied-Zone request | ZC-01 to ZC-04 | ZC-01 merged, ZC-02 implemented on branch ([#113](https://github.com/bldgtyp/ph-composer/issues/113)); ZC-03 next |
+| [Zone-child lifecycle](zone-child-lifecycle/STATUS.md) | copied-Zone request | ZC-01 to ZC-04 | ZC-01 and ZC-02 merged, ZC-03 implemented on branch ([#113](https://github.com/bldgtyp/ph-composer/issues/113)); ZC-04 next |
 | [Geometry seams](geometry-contribution-contracts/STATUS.md) | F06 | G-01 to G-04 | Scoped; G-02 ready, rest with the adopter |
 | [Foundation purity](foundation-purity/STATUS.md) | F03 | P-01 to P-03 | Scoped; optional |
 

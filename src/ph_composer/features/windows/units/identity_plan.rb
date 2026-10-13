@@ -43,6 +43,7 @@ module PhComposer
           updates
         end
 
+        # Gives each update's `after` its copied structured payloads, by the foundation's declared rules.
         def copy_extensions!(updates, catalog, engine)
           plan = Records::ReferencePlan.new(:entries => updates.map do |update|
             Records::ReferenceEntry.new(:kind => REFERENCE_KIND, :key => update.reference.fetch("entity_path"),
@@ -63,7 +64,6 @@ module PhComposer
                                                                           :mapping_kind => REFERENCE_KIND)
           end
         end
-        private_class_method :copy_extensions!
       end
     end
   end

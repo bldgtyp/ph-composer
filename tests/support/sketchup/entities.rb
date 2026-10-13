@@ -838,10 +838,18 @@ module Sketchup
     # new definition whose Faces are new entities carrying copies of the shared Faces' dictionaries.
     # The other placement keeps its definition and entities. A nested Group becomes a new placement
     # of its own definition, so it stays shared until it is made unique in turn.
+    # Every member becomes a new entity with a new persistent id and copied dictionaries. A Component
+    # Instance keeps its definition and transform and is glued to the new copy of its glued Face
+    # (measured, context/SKETCHUP_HOST_BEHAVIOR.md, "Window Units inside a copied Zone").
     def make_unique
       return self unless definition.instances.length > 1
 
-      members = @entities.to_a.map { |entity| unique_member(entity) }
+      copies = {}.compare_by_identity
+      @entities.to_a.each { |entity| copies[entity] = unique_member(entity) }
+      copies.each_value do |copy|
+        copy.glued_to = copies.fetch(copy.glued_to, copy.glued_to) if copy.is_a?(ComponentInstance) && copy.glued_to
+      end
+      members = copies.values
       @entities.group_instances.delete(self)
       @entities = Entities.new(members)
       @entities.register_group(self)
@@ -878,6 +886,10 @@ module Sketchup
       when Group
         Group.new(id, entity.entities, dictionaries, :transformation => entity.transformation, :name => entity.name,
                                                      :locked => entity.locked?)
+      when ComponentInstance
+        ComponentInstance.new(id, entity.definition, dictionaries, :transformation => entity.transformation,
+                                                                   :name => entity.name, :glued_to => entity.glued_to)
+                         .tap { |copy| copy.locked = entity.locked? }
       else
         entity
       end

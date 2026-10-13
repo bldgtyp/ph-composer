@@ -123,7 +123,9 @@ Exit: the note exists and the ZC-02 design is confirmed or amended against it.
 
 ### ZC-02: declaration and invocation
 
-State: Implemented on branch. Deviation: the description carries no `mode`; no contributor needs to
+State: Merged to main in PR 115. Review added: contributors run with the participant guards (owner-only
+writes, add-only proposal, `{kind, id}` references of owned kinds); actions declare `transitions:` and
+contributors `refuses:`, so discovery projects child codes onto the emitting action. Deviation: the description carries no `mode`; no contributor needs to
 tell the routes apart, since both require restorable steps. Add it when a contributor does.
 
 Files: `shell/declarations.rb`, `shell/registry.rb`, `shell/registry_validation.rb`,
@@ -141,7 +143,10 @@ Exit: tests pass; Zones source contains no child feature name.
 
 ### ZC-03: Windows adopter and a synthetic child
 
-State: Scoped; after ZC-02.
+State: Implemented on branch. The step is `Units::ZoneCopyStep` beside `Units::ZoneCopy` rather than a
+mode of `IdentityStep`, which keeps path binding for the broad repair; `IdentityStep` still gains
+`restore`. `HostFollowUp` now asks every step to restore even after one fails. The test stub's Make
+Unique now gives nested ComponentInstances new ids and glue, as ZC-01 measured.
 
 Files: `features/windows/units/zone_copy.rb` (new), `units/identity_step.rb` (`restore`, late
 binding), `windows/install.rb`; a synthetic child feature under `tests/support/` or
