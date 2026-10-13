@@ -263,7 +263,8 @@ contract versions. Keep supported public APIs distinguishable from implementatio
 Implemented registration checks: the JSON Schema subset's keyword values (counts, bounds, text,
 an anchored `pattern` that compiles, non-empty enums whose values fit their type, no lower bound above its upper, a closed object requiring only what it declares); a description, a callable
 handler and examples for every query, action, view command, setup command and file export, where an operation whose params
-accept `{}` may omit examples and every example must validate; callable participants, menu items,
+accept `{}` may omit examples and every example must validate; participants checked the same way,
+with their `participants:` edges resolved against the caller's dependencies; callable menu items,
 subscriptions and Colour-by projections; and a described `noun.condition` form for each
 `feature.code`, declared once, under a noun no other feature declares and outside the foundation's
 nouns. A test over the built-in registry
@@ -345,13 +346,16 @@ identity, references and metadata. Optional assignment accepts the generic wrapp
 `{ "target" => owner_target, "local_id" => copied_id }`; only the kind owner translates the
 wrapper, by calling the operation its assignment action calls. Copy and assignment refuse together.
 
-A feature requiring `ph_composer.library` may join a library copy to its own proposal through
-`request.participant("ph_composer.library.copy_into_proposal").call(request, proposal, copy_params)`.
-It uses the public copy operation's closed parameter and result schemas and the same trusted
-catalog resolution and owner callbacks. The supplied proposal must be the caller's active
-proposal. Preview remains detached; the enclosing action provides the only native transaction.
-Any participant refusal poisons the caller's active proposal, even when the caller catches it.
-This supports staged imports without exposing a nested action dispatcher.
+A feature requiring `ph_composer.library` may join a library copy to its own proposal: its action
+lists `participants: ["ph_composer.library.copy_into_proposal"]` and calls
+`request.participate("ph_composer.library.copy_into_proposal", copy_params)`. It is the shipping
+example of a proposal participant, whose declaration and invocation rules are in
+[CONTRACTS.md](CONTRACTS.md), "Compound proposals"; the Windows Installs save is its caller. It uses
+the public copy operation's closed parameter and result schemas and the same trusted catalog
+resolution and owner callbacks, inside the caller's active proposal. Preview remains detached; the
+enclosing action provides the only native transaction. Any participant refusal poisons the caller's
+active proposal, even when the caller catches it. This supports staged imports without exposing a
+nested action dispatcher.
 
 Registration validates ownership, unique ids and supported versions, plus schema and callable
 contracts. Any diagnostic refuses the whole batch. Published declaration metadata and schemas are

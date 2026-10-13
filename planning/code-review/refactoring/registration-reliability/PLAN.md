@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped; implementation ready, not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+ISSUE: [#103](https://github.com/bldgtyp/ph-composer/issues/103)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDINGS: [F01](../../sections/01-foundation.md#f01-registration-can-fail-after-publishing-part-of-the-batch), [F02](../../sections/01-foundation.md#f02-published-record-field-schemas-remain-mutable-aliases)
 DEPENDS ON: nothing. [Cross-feature composition](../cross-feature-composition/PLAN.md) and every packet

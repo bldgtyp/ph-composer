@@ -28,7 +28,8 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
 | Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys`, `requires` (sections it reads), optional `projection` |
-| Proposal participant | Name and handler another feature calls inside its own action |
+| Proposal participant | Namespaced id, description, params and result schemas, examples, refusal codes, the participants it calls, handler; called only through `request.participate` by a declaration that lists it |
+| Participant edges | `participants:` on a query, action or participant names each participant its handler calls |
 | Reference retargeter | Name, target kind and handler; the owner requires the target owner or owns the target itself |
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
 | Code | A `noun.condition` code under a noun the feature owns, and its description (see "Outcomes and codes") |
@@ -559,10 +560,37 @@ computing it. Memos end with the request.
 
 Feature handlers do not write the Model; they add steps to an `Operations::Proposal` of detached
 values: record changes, named geometry steps with explicit targets and created-entity slots, the
-declared mutation scope, affected references and findings. A proposal participant is a declared
-callback another feature calls inside its own handler, so a cross-feature effect stays in one
-proposal. It either adds its changes to the proposal or returns a detached plan for the caller to
-fold into its own writes, so each entity is written once.
+declared mutation scope, affected references and findings. A proposal participant is a step another
+feature composes into its own action's proposal, so a cross-feature effect stays in one proposal and
+one Undo step. It adds its changes to the proposal and returns a detached JSON result.
+
+**Participants.** A feature declares one with `feature.proposal_participant(name, description:,
+params:, result:, refuses:, examples:, participants: [])`, validated as an operation is. No client
+calls it: discovery lists it under `participants` and `describe` returns its contract with `kind`
+`participant`. An action, query or participant that calls one names it in `participants:`.
+Registration refuses an edge to a participant that is not installed or in the batch, or whose owner
+the caller's feature neither is nor requires (`registration.missing_dependency`), and participants
+that name each other in a cycle (`registration.cycle`). An operation's published refusals are its
+own, the codes of every participant it names through their own edges, and each such participant's
+`participant` common set.
+
+A handler calls `request.participate(name, params)`. The foundation checks, in order: the
+participant is installed and the calling declaration names it (`operation.participant_missing`);
+the request has an active proposal, which a query never has (`operation.proposal_required`); the
+caller's feature owns or requires the owner (`operation.dependency_missing`); the call is not
+recursive (`operation.participant_cycle`); the params match (`params.invalid`). The handler then
+runs as `->(request, proposal) { value }` under the participant's owner, with an engine projected
+from the caller's (`engine.projected(proposal, writable_kinds:, refusal_code:)`) that reads the
+proposal's view and stages writes only to catalog kinds the owner registered; any other write
+refuses with `proposal.foreign_write`. A projection may derive a further one for the same proposal,
+which is how a participant delegates to a kind owner's callback. After the handler returns, every
+write, step and finding proposed before the call must be unchanged
+(`proposal.contribution_replaced`), and the result must match its schema or the call fails. The
+caller receives a detached copy. Any failure refuses the whole proposal, so a caller that rescues
+it still writes nothing, and a later successful call does not clear the refusal. The outer
+dispatcher remains the only owner of the transaction, retry and outcome; a participant opens no
+operation. Memos are keyed by engine and owner, so a participant's start empty; a caller's memo
+computed before the call is not refreshed by what the participant stages.
 
 Preview builds and validates the proposal without opening an operation. Invoke rebuilds it from the
 same inputs and refuses if the revision, edit path, resolution or expected values changed, or if a

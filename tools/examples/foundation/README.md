@@ -8,10 +8,11 @@ any `examples` path.
 
 | File | What it shows |
 | --- | --- |
-| `example_foundation.rb` | The feature: two record kinds, one structured extension, one query, four actions, one snapshot section and two export contributors, all declared in `install(registry)` |
+| `example_foundation.rb` | The feature: two record kinds, one structured extension, one query, four actions, one proposal participant, one snapshot section and two export contributors, all declared in `install(registry)` |
+| `example_kit.rb` | A second feature that requires the first and composes its participant into one action |
 | `example_translation.py` | The feature's translation sections: definitions, and parts that require definitions by durable id |
 | `example_doors.py` | An attaching translation section: Doors that join the Faces another feature translates, with no edit to that feature (`tests/python/test_example_doors.py`) |
-| `load.rb` | The development composition entry: registers the feature and hands the editor to the panel |
+| `load.rb` | The development composition entry: registers both features and hands the editor to the panel |
 | `walkthrough.rb` | Two clients driving the feature through `PhComposer::API` with the panel closed |
 | `editor.js` | The synthetic editor: a panel section for the parts, built from the shared unit field, record form and request channel |
 
@@ -72,6 +73,17 @@ The New part dialog shows who owns what in a form built from the kit.
   withdraws, removes its Enter route and disposes the length field it built, which ends that
   field's unit-preference subscription. Afterwards its `submit`, `run` and `show` do nothing, and
   the header button opens only the form it was painted with. A form disposes the children it built.
+
+## Composing another feature's step
+
+`example.foundation.add_part` is a proposal participant: a step another feature composes into its
+own action's proposal. `example.kit.add_pair` requires the example feature, lists the participant in
+`participants:` and calls `request.participate("example.foundation.add_part", params)` twice, so both
+parts are one Undo step. The foundation checks the dependency, the edge, the active proposal and the
+params, runs the participant under its own owner with an engine that writes only the example's
+kinds, and refuses the whole proposal if anything fails. `ExampleWalkthrough.composition` previews
+(nothing written), invokes and reads back; the offline test also undoes it once. The rules are in
+`context/CONTRACTS.md`, "Compound proposals".
 
 ## Registration as an outside contributor
 

@@ -26,6 +26,18 @@ class ExampleFoundationTest < PhComposerTestCase
     assert_equal 3, result.fetch("steps").length
   end
 
+  def test_a_dependent_feature_composes_the_example_participant_into_one_undo_step
+    result = ExampleWalkthrough.composition
+
+    assert_empty(result.fetch("steps").reject { |step| step.fetch("passed") })
+    engine = PhComposer::Records::Engine.new(Sketchup.active_model, PhComposer::Registry.current.catalog)
+    assert_equal 4, engine.ids(ExampleFoundation::PART).length
+    Sketchup.active_model.undo
+    assert_equal 2, engine.ids(ExampleFoundation::PART).length, "one Undo removes both composed parts"
+    described = PhComposer::API.describe(:name => "example.kit.add_pair")
+    assert_equal ["example.foundation.add_part"], described.fetch("participants")
+  end
+
   def test_the_example_needs_no_change_outside_its_own_files
     registry = PhComposer::Registry.current
 

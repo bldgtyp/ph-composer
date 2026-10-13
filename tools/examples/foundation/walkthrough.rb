@@ -131,6 +131,33 @@ module ExampleWalkthrough
     { "passed" => steps.all? { |row| row["passed"] }, "steps" => steps }
   end
 
+  # A dependent feature's action calls the example's participant twice inside its own proposal: preview
+  # writes nothing, invoke commits both parts as one Undo step, and the parts read back.
+  def composition(session_id: nil)
+    context = API.connect(:session_id => session_id || active_session)
+    created = invoke(context, "#{ID}.create_parts", create_params, next_sequence(context), revision(context))
+    definition = created.dig("value", "definition_id")
+    params = { "definition_id" => definition, "length_mm" => 2100 }
+    before = API.query(:context => context, :name => "#{ID}.summary").dig("value", "parts")
+    preview = API.preview(:context => context, :name => "#{ExampleKit::ID}.add_pair", :params => params)
+    previewed = API.query(:context => context, :name => "#{ID}.summary").dig("value", "parts")
+    added = invoke(context, "#{ExampleKit::ID}.add_pair", params, next_sequence(context), revision(context))
+    ids = added.dig("value", "part_ids") || []
+    back = parts(context, ids).dig("value", "records") || []
+    steps = [
+      step("preview", preview, preview["status"] == "completed" && previewed == before),
+      step("invoke", added, added["effect"] == "committed" && ids.length == 2),
+      step("read back", added, back.map { |row| row.dig("values", "label") }.sort == ["Left jamb", "Right jamb"] &&
+                               back.all? { |row| row.dig("values", "definition_id") == definition })
+    ]
+    { "passed" => steps.all? { |row| row["passed"] }, "steps" => steps, "part_ids" => ids }
+  end
+
+  # Each walkthrough connects its own caller, so it starts its own sequence.
+  def next_sequence(context)
+    (@sequences ||= {}.compare_by_identity)[context] = @sequences.fetch(context, 0) + 1
+  end
+
   def notes_builders
     { :text => { "type" => "string", "minLength" => 1 },
       :rows => PhComposer::Records::Reference.new(:key => "rows[].part_id".dup, :target_kind => PART.dup,
