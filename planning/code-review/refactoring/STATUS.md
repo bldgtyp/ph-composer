@@ -1,7 +1,7 @@
 # Refactoring status
 
 DATE: 2026-10-13
-STATUS: In progress; Ed authorized implementation on 2026-10-13, through the pr-loop. First PR: export wording EW-01 ([#99](https://github.com/bldgtyp/ph-composer/pull/99)). From delivery group 1 on, Ed asked for one branch and PR per group of `DELIVERY_ORDER.md`; group 1 merged in [#102](https://github.com/bldgtyp/ph-composer/pull/102).
+STATUS: In progress; Ed authorized implementation on 2026-10-13, through the pr-loop. First PR: export wording EW-01 ([#99](https://github.com/bldgtyp/ph-composer/pull/99)). From delivery group 1 on, Ed asked for one branch and PR per group of `DELIVERY_ORDER.md`; group 1 merged in [#102](https://github.com/bldgtyp/ph-composer/pull/102), group 2 in [#105](https://github.com/bldgtyp/ph-composer/pull/105).
 ISSUE: none (local planning draft)
 
 Ed accepted C1, C2, W1 and the Zone-child pattern on 2026-10-13. The same day the twelve plans were
@@ -15,8 +15,8 @@ issues and PRs are linked from each packet row as they open.
 | [Export wording](../../archive/export-contract-wording/STATUS.md) | F08 | EW-01 | Complete; merged in [PR #99](https://github.com/bldgtyp/ph-composer/pull/99), archived |
 | [Outcome hook](../../archive/outcome-hook-isolation/STATUS.md) | JS-02 | OH-01, OH-02 | Complete; merged in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102), archived |
 | [Contributor example](../../archive/contributor-example-lifecycle/STATUS.md) | JS-03, JS-04 | CE-01 to CE-03 | Complete; merged in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102), archived |
-| [Registration](registration-reliability/STATUS.md) | F01, F02 | RR-01 to RR-03 | Implemented on branch `refactor/group-2-foundation-contracts` ([#103](https://github.com/bldgtyp/ph-composer/issues/103)) |
-| [Composition](cross-feature-composition/STATUS.md) | F04 | C-01 to C-04 | Implemented on branch `refactor/group-2-foundation-contracts` ([#104](https://github.com/bldgtyp/ph-composer/issues/104)) |
+| [Registration](../../archive/registration-reliability/STATUS.md) | F01, F02 | RR-01 to RR-03 | Complete; merged in [PR #105](https://github.com/bldgtyp/ph-composer/pull/105), archived |
+| [Composition](../../archive/cross-feature-composition/STATUS.md) | F04 | C-01 to C-04 | Complete; merged in [PR #105](https://github.com/bldgtyp/ph-composer/pull/105), archived |
 | [Windows coordinator](windows-orchestration/STATUS.md) | RF-02 | W-01 to W-03 | Scoped; implementation ready |
 | [Panel facts](panel-domain-ownership/STATUS.md) | JS-01, JS-05 | PD-01 to PD-04 | Scoped; implementation ready |
 | [Library contracts](library-contracts/STATUS.md) | F05, RF-04 | LC-01 to LC-04 | Scoped; after RR-02 (LC-03 independent) |

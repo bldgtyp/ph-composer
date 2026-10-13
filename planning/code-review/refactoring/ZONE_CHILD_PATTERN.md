@@ -36,7 +36,7 @@ distinction between domain values, persistence proposals, application coordinati
 
 A feature package can span these responsibilities. Shared folders do not prove dependency direction;
 tests and explicit inputs do. Keep Windows as one package initially. A feature-local coordinator can
-call explicit collaborators directly. Cross-feature mutations use the [composition contract](cross-feature-composition/PLAN.md).
+call explicit collaborators directly. Cross-feature mutations use the [composition contract](../../archive/cross-feature-composition/PLAN.md).
 
 ```mermaid
 flowchart TB

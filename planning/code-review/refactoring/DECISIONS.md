@@ -30,6 +30,14 @@ technical defaults from the first drafts changed mechanism, not direction. Ed ac
 | Entity customization | Pre-image with explicit presence bits for legacy absence; a preparation helper returning candidates and findings; new steps per owner | `expected_metadata` is the two maps as read; `Metadata.updated` returns a record or raises; `UpdateZoneStep` and `ClassifyStep` are reused, one new `UpdateUnitStep` | Reads already report absence as `{}` and the updater never adds a key it was not asked to write; the existing steps already carry full before and after records |
 | Zone-child lifecycle | A gesture-provenance lifecycle with invalidation; a transition registry with schemas; a foundation late-materialization protocol | Inherit the Zone repair's accepted join and Undo notice; a string transition plus a contributor declaration mirroring retargeters; logical binding inside the child step as `MakeIndependentStep` does | No new risk beyond what D-1 accepted for Zones; one mechanism to learn; the parent already solved the binding shape |
 
+Two further mechanism changes followed from the PR 105 review (gpt-6-astra), within the accepted
+C2 direction and recorded here because they replace a default above:
+
+| Packet | Accepted default | Shipped | Why |
+| --- | --- | --- | --- |
+| Composition | Projected-engine write guard plus a prefix postcondition | Also `Records::ChangeSet#guarded`, which confines every record write a contributor makes while it runs, nesting for a delegated kind owner; the write list is a frozen copy of frozen writes; earlier steps are compared by descriptor as well as identity | The review reproduced a participant and a library callback calling `proposal.put` with another owner's kind, appending to the write list, and editing an earlier step in place; the projected engine sees none of those |
+| Registration | Store dictionary validated in staging | The admitted name is the one published, and the owner index is built from frozen copies | A getter could answer differently at publish, and a retained feature-id string could change `owner_of` |
+
 Smaller choices recorded in the plans and not needing confirmation: `install_topology` lives in a
 Type row's `display`; Zone totals are two numbers beside `face_count`; the library label is an
 adapter projection (the mandatory-name alternative is documented); Colour-by lines are per-segment

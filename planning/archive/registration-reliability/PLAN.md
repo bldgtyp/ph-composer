@@ -1,10 +1,10 @@
 # Registration reliability plan
 
 DATE: 2026-10-13
-STATUS: Scoped; implementation ready, not authorized. Stage ledger in [STATUS.md](STATUS.md).
+STATUS: Complete; merged to main 2026-10-13 in [PR #105](https://github.com/bldgtyp/ph-composer/pull/105) as `1ee60a7`, delivery group 2. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#103](https://github.com/bldgtyp/ph-composer/issues/103)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDINGS: [F01](../../sections/01-foundation.md#f01-registration-can-fail-after-publishing-part-of-the-batch), [F02](../../sections/01-foundation.md#f02-published-record-field-schemas-remain-mutable-aliases)
+FINDINGS: [F01](../../code-review/sections/01-foundation.md#f01-registration-can-fail-after-publishing-part-of-the-batch), [F02](../../code-review/sections/01-foundation.md#f02-published-record-field-schemas-remain-mutable-aliases)
 DEPENDS ON: nothing. [Cross-feature composition](../cross-feature-composition/PLAN.md) and every packet
 that adds a declaration family build on RR-02's ownership rule.
 
@@ -38,7 +38,7 @@ behaviour do not change in this packet.
 | Readers of registry maps (`shell/api.rb`, `dispatch.rb`, `handler_request.rb`, `library/*`, `export/*`, `colour_by/*`) | Call `registry.actions[name]`, `.fetch`, `.values` on each use | Nobody captures a map; additive install into the same Hash is visible to every reader |
 | `tools/examples/foundation/example_foundation.rb` and `load.rb` | A complete outside feature installed through `Registry.install` behind `installed?` | The walkthrough fixture RR-03 extends |
 
-The review probes in `../../evidence/foundation_probes.rb` reproduce F01 and F02.
+The review probes in `../../code-review/evidence/foundation_probes.rb` reproduce F01 and F02.
 
 ## Target design
 
@@ -212,7 +212,7 @@ tests in `tests/registry_test.rb`, `tests/records_engine_test.rb` (if it holds d
    - a batch with a valid subscription and a bad kind: the subscriber receives no later event;
    - a store getter that calls `Registry.install` during validation: `InternalError`, baseline
      unchanged, a following valid install succeeds;
-   - the F01 probe scenario from `../../evidence/foundation_probes.rb`, inverted to assert refusal.
+   - the F01 probe scenario from `../../code-review/evidence/foundation_probes.rb`, inverted to assert refusal.
 6. Run `make lint-ruby` and
    `"$RUBY" -Itests -rregistry_test -rsessions_test -rrecords_engine_test -rfeature_composition_test -e ''`.
 

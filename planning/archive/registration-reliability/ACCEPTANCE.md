@@ -1,7 +1,7 @@
 # Registration reliability acceptance
 
 DATE: 2026-10-13
-STATUS: Planned cases; none run.
+STATUS: Offline cases run and passing at merge (PR #105); native receipts in STATUS.md. Current host only, not the support floor.
 PLAN: [PLAN.md](PLAN.md)
 
 Case ids are kept from the first draft so cross-references stay valid. Rows the simplified design

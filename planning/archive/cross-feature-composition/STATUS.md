@@ -1,7 +1,7 @@
 # Cross-feature composition status
 
 DATE: 2026-10-13
-STATUS: Implemented on branch `refactor/group-2-foundation-contracts`, with the other delivery group 2 packet, one PR.
+STATUS: Complete; merged to main 2026-10-13 in [PR #105](https://github.com/bldgtyp/ph-composer/pull/105) as `1ee60a7`, with the other delivery group 2 packet.
 ISSUE: [#104](https://github.com/bldgtyp/ph-composer/issues/104)
 
 The phased plan is the `## Stages` section of [PLAN.md](PLAN.md); there is no `phases/` folder.
@@ -9,15 +9,15 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 | Stage | Scope | State | Evidence |
 | --- | --- | --- | --- |
-| C-01 | Typed participant declaration, `participants:` edge, validation, discovery, three new codes | Implemented on branch | Typed `ProposalParticipant`; `participants:` on queries, actions and participants; `ParticipantValidation` (edges, dependency, cycles); `participants` in discovery and `describe`; `docs/API_REFERENCE.md` regenerated with a Proposal participants section; three foundation codes |
-| C-02 | `request.participate`, `ParticipantInvocation`, `ProjectedEngine#projected`, contribution postcondition | Implemented on branch | `request.participate`, `ParticipantInvocation`, `ProjectedEngine#projected`, `Operations::Contributions`. Eleven tests in `tests/participant_invocation_test.rb` |
-| C-03 | Migrate Library copy, the Windows import caller; convert `retire_pairs` to a direct call; remove the raw accessor | Implemented on branch | Library participant typed; `CopyParticipant` reduced to the coordinator call; `CallbackInvoker` uses the contribution check and `proposal.foreign_write` (`library.mutation_owner` retired); Windows Installs save lists the participant; `retire_pairs` a direct call; `HandlerRequest#participant` removed; `tests/library_copy_participant_test.rb` migrated |
-| C-04 | Outside two-feature example, CONTRACTS and EXTENSIBILITY, dual-Ruby `make ci`, one native compound action | Implemented on branch | `example.foundation.add_part` and `example_kit.rb`; `ExampleWalkthrough.composition` and its Undo test (C18); CONTRACTS "Compound proposals" and EXTENSIBILITY; native Installs save passed (receipt below) |
+| C-01 | Typed participant declaration, `participants:` edge, validation, discovery, three new codes | Merged to main | Typed `ProposalParticipant`; `participants:` on queries, actions and participants; `ParticipantValidation` (edges, dependency, cycles); `participants` in discovery and `describe`; `docs/API_REFERENCE.md` regenerated with a Proposal participants section; three foundation codes |
+| C-02 | `request.participate`, `ParticipantInvocation`, `ProjectedEngine#projected`, contribution postcondition | Merged to main | `request.participate`, `ParticipantInvocation`, `ProjectedEngine#projected`, `Operations::Contributions`. Eleven tests in `tests/participant_invocation_test.rb` |
+| C-03 | Migrate Library copy, the Windows import caller; convert `retire_pairs` to a direct call; remove the raw accessor | Merged to main | Library participant typed; `CopyParticipant` reduced to the coordinator call; `CallbackInvoker` uses the contribution check and `proposal.foreign_write` (`library.mutation_owner` retired); Windows Installs save lists the participant; `retire_pairs` a direct call; `HandlerRequest#participant` removed; `tests/library_copy_participant_test.rb` migrated |
+| C-04 | Outside two-feature example, CONTRACTS and EXTENSIBILITY, dual-Ruby `make ci`, one native compound action | Merged to main | `example.foundation.add_part` and `example_kit.rb`; `ExampleWalkthrough.composition` and its Undo test (C18); CONTRACTS "Compound proposals" and EXTENSIBILITY; native Installs save passed (receipt below) |
 
 Reviewed against source on 2026-10-13. The Zones `retire_pairs` participant, called with non-JSON
 arguments from the same feature, was missing from the first draft; C-03 converts it. The
 `ProposalScope` facade was dropped for the existing projected-engine guard; see the plan's
-"Decisions and deviations" and [DECISIONS.md](../DECISIONS.md). Ed accepted it on 2026-10-13.
+"Decisions and deviations" and [DECISIONS.md](../../code-review/refactoring/DECISIONS.md). Ed accepted it on 2026-10-13.
 
 Decisions taken while implementing. The foundation's own participant refusals
 (`operation.proposal_required`, `operation.participant_cycle`, `proposal.foreign_write`,
@@ -61,3 +61,8 @@ projection (`ProjectedEngine#projected(nil, ...)` now keeps the staged view and 
 before the proposal and dependency checks (now in the implemented order, pinned by a test). It also
 caught a whitespace-only translator answer replacing a refusal with an empty notice, in the outcome
 hook merged in PR 102; it now declines.
+
+Final build: the guarded Installs save and `ExampleWalkthrough.composition` were run again on the
+host at the merged head `42ce29d` (RBZ sha256 prefix `64b80a430e5374ce`) and passed. Native Undo and
+Redo ran only at `2c8afbe`. Residual, deliberately deferred: C21 covers records only; the fixture had
+no placed Window Unit, so geometry restoration through an Installs save is not demonstrated.

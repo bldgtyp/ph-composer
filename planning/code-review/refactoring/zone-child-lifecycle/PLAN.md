@@ -5,9 +5,9 @@ STATUS: Design; ZC-01 is a host spike whose deliverable is a document. Not imple
 ISSUE: none (local planning draft)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 PRODUCT REQUEST: [copied-Zone Windows](../../../features/unscheduled/copied-zone-windows/README.md)
-DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) RR-02 for the new
+DEPENDS ON: [Registration reliability](../../../archive/registration-reliability/PLAN.md) RR-02 for the new
 declaration; [Windows orchestration](../windows-orchestration/PLAN.md) for `units/identity_step.rb`
-ownership; [Cross-feature composition](../cross-feature-composition/PLAN.md) C-02 for the owner-derived
+ownership; [Cross-feature composition](../../../archive/cross-feature-composition/PLAN.md) C-02 for the owner-derived
 request pattern. [Entity customization](../entity-customization/PLAN.md) shares `Extension.copy_data`.
 
 ## Goal

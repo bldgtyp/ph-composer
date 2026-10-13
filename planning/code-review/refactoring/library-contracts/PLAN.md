@@ -5,9 +5,9 @@ STATUS: Scoped; implementation ready after registration reliability, not authori
 ISSUE: none (local planning draft)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDINGS: [F05](../../sections/03-services.md#f05-a-registered-library-kind-can-be-valid-yet-fail-because-sorting-requires-name), [RF-04](../../sections/04-ruby-features.md#rf-04-material-library-replacement-repeats-the-ordinary-persistence-pipeline)
-DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) RR-02 for the new adapter
+DEPENDS ON: [Registration reliability](../../../archive/registration-reliability/PLAN.md) RR-02 for the new adapter
 value. LC-03 touches `CallbackInvoker` only through its existing call; if
-[cross-feature composition](../cross-feature-composition/PLAN.md) C-03 lands first, LC-03 uses the
+[cross-feature composition](../../../archive/cross-feature-composition/PLAN.md) C-03 lands first, LC-03 uses the
 migrated invoker.
 
 ## Goal

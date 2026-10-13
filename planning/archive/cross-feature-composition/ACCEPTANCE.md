@@ -1,7 +1,7 @@
 # Cross-feature composition acceptance
 
 DATE: 2026-10-13
-STATUS: Planned cases; none run.
+STATUS: Offline cases run and passing at merge (PR #105); native receipts in STATUS.md. Current host only, not the support floor.
 PLAN: [PLAN.md](PLAN.md)
 
 Synthetic records and registered contributions only. The expected behaviour is the target, not the
