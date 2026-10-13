@@ -23,6 +23,7 @@ module PhComposer
         check_snapshot_sections
         @diagnostics.concat(ExportValidation.new(@live, @staging).diagnostics)
         check_reference_retargeters
+        @diagnostics.concat(TransitionValidation.new(@live, @staging).diagnostics)
         @diagnostics.concat(ParticipantValidation.new(@live, @staging).diagnostics)
         @diagnostics.concat(LibraryValidation.new(@live, @staging).diagnostics)
         check_colour_modes
@@ -453,6 +454,46 @@ module PhComposer
     # The `participants:` edges of actions, queries and participants. Each named participant must be
     # installed or in the batch, and owned by the caller's feature or one it requires; participants
     # that name each other in a cycle are refused, since a call through one would never end.
+    # Transitions an action declares and the contributors that join them (Declarations::TransitionContributor).
+    class TransitionValidation < Validation
+      TRANSITION_NAME = /\A[a-z0-9_]+(\.[a-z0-9_]+)+\z/.freeze
+
+      # The transition's owner is the feature id before its last segment; the contributor requires it.
+      # An action emits only its own feature's transitions.
+      def diagnostics
+        @staging.declared_actions.each do |action|
+          names = action.transitions.nil? ? [] : action.transitions
+          valid = names.is_a?(Array) && names.uniq.length == names.length && names.all? do |name|
+            name.is_a?(String) && TRANSITION_NAME.match?(name) && emitter(name) == action.owner
+          end
+          problem(action, "transitions must be distinct names of its own feature's transitions") unless valid
+        end
+        @staging.declared_transition_contributors.each do |contributor|
+          problem(contributor, "needs a callable handler") unless contributor.handler.respond_to?(:call)
+          check_refusal_list(contributor, contributor.refuses, Refusals::ANY_OPERATION)
+          transition = contributor.transition
+          unless transition.is_a?(String) && TRANSITION_NAME.match?(transition)
+            problem(contributor, "needs a dotted transition name")
+            next
+          end
+
+          emitter = emitter(transition)
+          feature = @staging.declared_features.find { |item| item.id == contributor.owner }
+          next if emitter == contributor.owner || feature.requires.include?(emitter)
+
+          add("registration.missing_dependency", contributor.owner, contributor.name,
+              "#{contributor.name} must require #{emitter}, which emits #{transition}.", emitter)
+        end
+        @diagnostics
+      end
+
+      private
+
+      def emitter(transition)
+        transition.split(".")[0...-1].join(".")
+      end
+    end
+
     class ParticipantValidation < Validation
       def diagnostics
         callers.each { |caller| check_edges(caller) }

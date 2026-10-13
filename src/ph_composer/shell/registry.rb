@@ -20,8 +20,8 @@ module PhComposer
     attr_reader :features, :queries, :actions, :view_commands, :setup_commands, :file_exports, :record_kinds,
                 :reference_targets, :extensions,
                 :snapshot_sections,
-                :export_contributors, :reference_retargeters, :proposal_participants, :library_providers,
-                :library_kinds, :colour_modes, :menu_items, :codes,
+                :export_contributors, :reference_retargeters, :transition_contributors, :proposal_participants,
+                :library_providers, :library_kinds, :colour_modes, :menu_items, :codes,
                 :subscriptions
 
     class << self
@@ -72,6 +72,7 @@ module PhComposer
       @snapshot_sections = {}
       @export_contributors = {}
       @reference_retargeters = {}
+      @transition_contributors = {}
       @proposal_participants = {}
       @library_providers = {}
       @library_kinds = {}
@@ -158,6 +159,7 @@ module PhComposer
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
       publish_each(staging.declared_export_contributors, @export_contributors, :name)
       publish_each(staging.declared_reference_retargeters, @reference_retargeters, :name)
+      publish_each(staging.declared_transition_contributors, @transition_contributors, :name)
       publish_each(staging.declared_proposal_participants, @proposal_participants, :name)
       publish_each(staging.declared_library_providers, @library_providers, :name)
       publish_each(staging.declared_library_kinds, @library_kinds, :name)
@@ -181,7 +183,7 @@ module PhComposer
       Declarations::Feature => %i[id contract_version requires],
       Declarations::Query => %i[name owner description params result examples refuses participants],
       Declarations::Action => %i[name owner description params result examples refuses undo_name side_effects
-                                 confirmation participants],
+                                 confirmation participants transitions],
       Declarations::ViewCommand => %i[name owner description params result examples refuses],
       Declarations::SetupCommand => %i[name owner description params result examples refuses],
       Declarations::FileExport => %i[name owner description params result examples refuses],
@@ -190,6 +192,7 @@ module PhComposer
       Declarations::ColourMode => %i[name owner label entity_kind group],
       Declarations::MenuItem => %i[name owner label menu separator_after],
       Declarations::ReferenceRetargeter => %i[name owner target_kind],
+      Declarations::TransitionContributor => %i[name owner transition refuses],
       Declarations::ProposalParticipant => %i[name owner description params result examples refuses participants],
       Declarations::LibraryProvider => %i[name owner contract_version kinds],
       Declarations::LibraryKind => %i[name owner contract_version record_kind],
@@ -242,7 +245,8 @@ module PhComposer
                   :declared_setup_commands, :declared_file_exports,
                   :declared_record_kinds, :declared_reference_targets, :declared_extensions,
                   :declared_snapshot_sections,
-                  :declared_export_contributors, :declared_reference_retargeters, :declared_proposal_participants,
+                  :declared_export_contributors, :declared_reference_retargeters,
+                  :declared_transition_contributors, :declared_proposal_participants,
                   :declared_library_providers, :declared_library_kinds,
                   :declared_colour_modes,
                   :declared_menu_items, :declared_codes,
@@ -262,6 +266,7 @@ module PhComposer
         @declared_snapshot_sections = []
         @declared_export_contributors = []
         @declared_reference_retargeters = []
+        @declared_transition_contributors = []
         @declared_proposal_participants = []
         @declared_library_providers = []
         @declared_library_kinds = []
@@ -309,9 +314,9 @@ module PhComposer
       # Every declaration struct the batch made, which publishing takes ownership of.
       def declared_structs
         declared_features + declared_operations + declared_snapshot_sections + declared_export_contributors +
-          declared_reference_retargeters + declared_proposal_participants + declared_library_providers +
-          declared_library_kinds + declared_colour_modes + declared_menu_items + declared_codes +
-          declared_subscriptions
+          declared_reference_retargeters + declared_transition_contributors + declared_proposal_participants +
+          declared_library_providers + declared_library_kinds + declared_colour_modes + declared_menu_items +
+          declared_codes + declared_subscriptions
       end
 
       # Every operation the batch declared, of every kind a client can call.
@@ -353,11 +358,12 @@ module PhComposer
       end
 
       def action(name, description:, params:, result:, undo_name:, side_effects:, examples: [],
-                 refuses: nil, confirmation: "none", participants: [], &handler)
+                 refuses: nil, confirmation: "none", participants: [], transitions: [], &handler)
         declaration = Declarations::Action.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :undo_name => undo_name, :side_effects => side_effects,
-          :confirmation => confirmation, :participants => participants, :handler => handler
+          :confirmation => confirmation, :participants => participants, :transitions => transitions,
+          :handler => handler
         )
         @staging.add(:declared_actions, id, name, declaration)
       end
@@ -443,6 +449,13 @@ module PhComposer
         declaration = Declarations::ReferenceRetargeter.new(:name => name, :owner => id,
                                                             :target_kind => target_kind, :handler => handler)
         @staging.add(:declared_reference_retargeters, id, name, declaration)
+      end
+
+      # Runs when the feature that owns `transition` emits it (HandlerRequest#contribute_transition).
+      def transition_contributor(name, transition:, refuses: [], &handler)
+        declaration = Declarations::TransitionContributor.new(:name => name, :owner => id, :transition => transition,
+                                                              :refuses => refuses, :handler => handler)
+        @staging.add(:declared_transition_contributors, id, name, declaration)
       end
 
       # A participant is declared as an operation is; `participants` names the ones its handler calls.

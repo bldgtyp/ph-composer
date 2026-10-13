@@ -40,6 +40,11 @@ module PhComposer
       plan = Repair.identity_plan(request.model, zone, request.revision, catalog, request.engine, :isolating => true)
       proposal.add_step(MakeIndependentStep.new(:reference => zone.reference, :plan => plan, :catalog => catalog),
                         :scopes => [Operations::EntityScope.new(zone.path[0...-1])])
+      # Features owning records inside the occurrence add their steps after this one, so they apply
+      # once storage is isolated. Zones names none of them (context/CONTRACTS.md, "Compound proposals").
+      request.contribute_transition(TRANSITION, "zone_path" => zone.path, "old_zone_id" => zone.record.fetch("id"),
+                                                "new_zone_id" => plan.fetch(:record).fetch("id"),
+                                                "mapping" => plan.fetch(:mapping), "revision" => request.revision)
       { "zone_id" => plan.fetch(:record).fetch("id"), "retired_pairs" => retired_pairs(plan),
         "storage_isolated" => MakeIndependentStep.shared_storage?(zone.entity) }
     end

@@ -27,7 +27,8 @@ module PhComposer
       REPAIR_IDENTITY = (ZONE_TARGET - %w[target.changed target.locked] +
                          %w[copy.rule_missing extension.invalid reference.invalid zone.identity_unique]).freeze
       # Make Zone independent resolves by path, refuses a lock and isolates storage first, so a record
-      # that changes between preview and apply is caught at apply.
+      # that changes between preview and apply is caught at apply. Contributors' codes are projected from
+      # the action's declared transition (Refusals.declared).
       MAKE_INDEPENDENT = (REPAIR_IDENTITY + %w[target.changed target.locked]).freeze
       RESTORE = %w[record.unreadable target.changed target.not_found target.wrong_kind validation.failed
                    zone.identity_in_use zone.restore_unsafe zone.options_adoption_required reference.invalid].freeze

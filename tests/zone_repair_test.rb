@@ -556,6 +556,159 @@ class ZoneRepairTest < PhComposerTestCase
     assert rows.fetch([860]).fetch("available"), "both occurrences carry the id; either can take a new one"
   end
 
+  # A child step the transition tests add: it records when it applied and what the Zone read then.
+  class ChildStep
+    attr_reader :affected
+
+    def initialize(log, group_id)
+      @log = log
+      @group_id = group_id
+      @affected = []
+    end
+
+    def descriptor
+      { "name" => "child_probe" }
+    end
+
+    def apply(model, _slots)
+      group = model.entities.to_a.find { |entity| entity.persistent_id == @group_id }
+      @log << [:applied, PhComposer::Zones::ZONE_STORE.read(group).fetch("id")]
+    end
+
+    def restore
+      @log << [:restored]
+    end
+  end
+
+  class UnrestorableStep < ChildStep
+    undef_method :restore
+  end
+
+  def child_feature(id, requires: ["ph_composer.zones"], refuses: [], &handler)
+    part = PhComposer::Records::RecordKind.new(:id => "#{id}.part", :label => "Child part", :schema_version => 1,
+                                               :id_prefix => "cpt", :fields => [])
+    Module.new do
+      define_singleton_method(:install) do |registry|
+        scope = registry.feature(id, :contract_version => 1, :requires => requires)
+        scope.record_kind(part)
+        refuses.each { |code| scope.code(code, :description => "The child's records cannot follow the copy.") }
+        scope.transition_contributor("#{id}.follow_zone_copy", :transition => PhComposer::Zones::TRANSITION,
+                                                               :refuses => refuses, &handler)
+      end
+    end
+  end
+
+  def test_a_transition_contributor_must_require_the_feature_that_emits_it
+    error = assert_raises(PhComposer::RegistrationError) do
+      PhComposer::Registry.install([child_feature("test.child", :requires => []) { |*_args| [] }])
+    end
+    assert_equal ["registration.missing_dependency"], error.diagnostics.map(&:code)
+    assert_includes error.diagnostics.first.message, "ph_composer.zones"
+    refute PhComposer::Registry.installed?("test.child")
+  end
+
+  def test_a_contributor_runs_under_its_owner_after_the_zone_step_with_a_detached_description
+    original, copy = shared_copy(900)
+    old_id = ZONE_STORE.read(copy).fetch("id")
+    log = []
+    seen = []
+    PhComposer::Registry.install([child_feature("test.child") do |request, proposal, description|
+      seen << [request.owner, PhComposer::DeepCopy.call(description)]
+      description["zone_path"] << 0
+      proposal.add_step(ChildStep.new(log, description.fetch("zone_path").first), :scopes => [])
+      [{ "kind" => "test.child.part", "id" => "cpt_000000000001" }]
+    end])
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    owner, description = seen.last
+    assert_equal "test.child", owner
+    assert_equal [copy.persistent_id], description.fetch("zone_path")
+    assert_equal old_id, description.fetch("old_zone_id")
+    assert_equal result.dig("value", "zone_id"), description.fetch("new_zone_id")
+    assert_equal description.fetch("new_zone_id"), description.fetch("mapping").fetch(old_id)
+    assert_kind_of Integer, description.fetch("revision")
+    assert_equal [[:applied, description.fetch("new_zone_id")]], log
+    refute_nil original
+  end
+
+  def test_a_contributed_step_that_cannot_be_restored_refuses_the_whole_transition
+    _original, copy = shared_copy(940)
+    PhComposer::Registry.install([child_feature("test.child") do |_request, proposal, description|
+      proposal.add_step(UnrestorableStep.new([], description.fetch("zone_path").first), :scopes => [])
+      []
+    end])
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    refute_equal "completed", result.fetch("status")
+    assert_equal "none", result.fetch("effect")
+    assert_equal %w[shared_definition shared_definition], zone_states
+  end
+
+  def test_a_contributor_that_changes_an_earlier_step_refuses
+    _original, copy = shared_copy(960)
+    PhComposer::Registry.install([child_feature("test.child") do |_request, proposal, description|
+      proposal.steps.unshift(ChildStep.new([], description.fetch("zone_path").first))
+      []
+    end])
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal "proposal.contribution_replaced", result.fetch("code")
+    assert_equal %w[shared_definition shared_definition], zone_states
+  end
+
+  def test_a_contributor_reporting_malformed_or_foreign_references_refuses
+    _original, copy = shared_copy(970)
+    PhComposer::Registry.install([child_feature("test.child") do |*_args|
+      [nil, 123, { "kind" => "ph_composer.zones.zone", "id" => "zon_000000000001" }]
+    end])
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal "none", result.fetch("effect")
+    refute_equal "completed", result.fetch("status")
+    assert_equal %w[shared_definition shared_definition], zone_states
+  end
+
+  def test_a_contributor_refusal_is_discovered_on_the_emitting_action_and_answered
+    _original, copy = shared_copy(990)
+    code = "child.unsupported"
+    PhComposer::Registry.install([child_feature("test.child", :refuses => [code]) do |*_args|
+      raise PhComposer::CodedError.new(code, "The child's records cannot follow the copy.")
+    end])
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal code, result.fetch("code")
+    described = API.describe(:name => MAKE_INDEPENDENT)
+    assert_includes described.fetch("refuses"), { "code" => code, "owner" => "test.child",
+                                                  "description" => "The child's records cannot follow the copy." }
+    assert_equal [PhComposer::Zones::TRANSITION], described.fetch("transitions")
+  end
+
+  def test_a_contributor_that_raises_after_another_contributed_refuses_everything
+    _original, copy = shared_copy(980)
+    log = []
+    first = child_feature("test.child_a") do |_request, proposal, description|
+      proposal.add_step(ChildStep.new(log, description.fetch("zone_path").first), :scopes => [])
+      []
+    end
+    second = child_feature("test.child_b") do |*_args|
+      raise PhComposer::CodedError.new("target.changed", "The child's records changed.")
+    end
+    PhComposer::Registry.install([first, second])
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal "target.changed", result.fetch("code")
+    assert_equal "none", result.fetch("effect")
+    assert_empty log
+    assert_equal %w[shared_definition shared_definition], zone_states
+  end
+
   private
 
   def register_copy_extension
