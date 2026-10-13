@@ -1,6 +1,6 @@
 # Planning Status
 
-DATE: 2026-10-12
+DATE: 2026-10-13
 STATUS: Active index of tracked planning work.
 AUTHOR: Ed May, BLDGTYP
 
@@ -19,6 +19,8 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
+| n/a | Ruby / JavaScript architecture and extensibility review | investigation | Complete against `cfe01a6`; 17 findings and architecture diagrams recorded; refactoring not authorized | none (local review requested by Ed) | [code-review/](code-review/README.md); [findings](code-review/FINDINGS.md) |
+| n/a | Architecture refactoring program | refactoring | Scoped; 12 packets reviewed against source and fleshed out as phased plans with stage ledgers on 2026-10-13; nine implementation ready, three design or contract stage; four technical-default deviations await Ed; implementation not authorized | none (local planning draft) | [code-review/refactoring/](code-review/refactoring/README.md); [packet ledger](code-review/refactoring/STATUS.md); [deviations](code-review/refactoring/DECISIONS.md#deviations-recorded-2026-10-13) |
 | 3a | Spaces | feature | Scoped; P3a-01 to P3a-12 planned, twelve earlier decisions open; D3a-13 child-copy behavior confirmed 2026-10-12, none authorized | none (local planning draft) | [features/phase-03a-spaces/](features/phase-03a-spaces/README.md); stage ledger in its [STATUS](features/phase-03a-spaces/STATUS.md) |
 | 3b | Thermal bridges | feature | Scoped, interviewed 2026-10-03; planned as P3b-01 to P3b-09, none authorized | none (local planning draft) | [features/phase-03b-thermal-bridges/](features/phase-03b-thermal-bridges/README.md); tracked in its [ledger](features/phase-03b-thermal-bridges/STATUS.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
@@ -39,7 +41,7 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 | n/a | GitHub issue delivery queue | workflow | Complete; all eleven issues closed, review and CI passed, branches cleaned; no manual steps | [receipt](archive/github-issue-sweep.md) | [archive/github-issue-sweep.md](archive/github-issue-sweep.md) |
 | n/a | Runtime page test fails under CPU load | bug | Requested; reproduced and root-caused 2026-10-02 (a fixed 5 ms wait) | none (local planning draft) | [bugs/runtime-probe-test-flake.md](bugs/runtime-probe-test-flake.md) |
 | n/a | A copied Zone cannot be edited and the refusal locks Zones / Faces | bug | Complete 2026-10-12 on `fix/copied-zone-edit-refusal`, archived; merges with PR #97 after review and CI | [PR #97](https://github.com/bldgtyp/ph-composer/pull/97) | [archive/copied-zone-edit-refusal/](archive/copied-zone-edit-refusal/README.md) |
-| none | Copied Windows get their own identities in the Zone copy gesture | feature | Requested 2026-10-12 (D-8 follow-up); not planned | none (local planning draft) | [features/unscheduled/copied-zone-windows/](features/unscheduled/copied-zone-windows/README.md) |
+| none | Copied Windows get their own identities in the Zone copy gesture | feature | Scoped 2026-10-13; generic child lifecycle and Windows adopter planned, implementation not authorized | none (local planning draft) | [features/unscheduled/copied-zone-windows/](features/unscheduled/copied-zone-windows/README.md); [shared plan](code-review/refactoring/zone-child-lifecycle/PLAN.md) |
 | n/a | The Ruby suite errors without a UTF-8 locale | bug | Requested; reproduced 2026-10-03 (five tests read source with no encoding) | none (local planning draft) | [bugs/ci-needs-utf8-locale.md](bugs/ci-needs-utf8-locale.md) |
 | n/a | Native acceptance tooling | workflow | Implemented; historical evidence indexed, observed-result validation and dependency screening | none (local tooling work) | [native-acceptance/](native-acceptance/README.md); tools and skills remain development-only |
 | n/a | UI baseline from the predecessor's six screens | reference | Scoped | none (no remote) | [ui-baseline/](ui-baseline/README.md) |

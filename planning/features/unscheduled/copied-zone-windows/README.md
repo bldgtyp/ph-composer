@@ -1,7 +1,7 @@
 # Copied Windows get their own identities in the Zone copy gesture
 
 DATE: 2026-10-12
-STATUS: Requested by Ed 2026-10-12 as the follow-up to D-8 of copied-zone-edit-refusal. Not planned.
+STATUS: Scoped 2026-10-13; shared lifecycle and Windows adopter plan drafted. Implementation not authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -22,6 +22,14 @@ originals keep their ids, as Repair Copied Windows already decides (first by ent
 
 ## What it needs
 
+The detailed [shared lifecycle plan](../../../code-review/refactoring/zone-child-lifecycle/PLAN.md)
+and [acceptance matrix](../../../code-review/refactoring/zone-child-lifecycle/ACCEPTANCE.md) now own
+the proposed contributor contract, logical binding inside the child step, the ZC-01 host spike and the
+Windows adopter stages.
+The accepted [Zone-child pattern](../../../code-review/refactoring/ZONE_CHILD_PATTERN.md) records why
+parent containment and child implementation ownership are separate. This request remains the product
+router; it is not a second implementation queue. Spaces P3a-04 is the future real second adopter.
+
 - A declared multi-contributor hook for host follow-ups, in the shape of the reference retargeters:
   Zones names the event (a Zone occurrence made independent), any feature that owns data inside the
   occurrence contributes restorable steps to the same proposal, and Zones never names Windows.
@@ -29,8 +37,9 @@ originals keep their ids, as Repair Copied Windows already decides (first by ent
 - Windows contributes its `IdentityStep` for the Units inside the copied occurrence. The step
   must answer `restore`, which it does not today.
 - The explicit Make Zone independent command takes the same contributions.
-- D-6 left the Windows identity-repair timing unchanged; this packet changes it and needs that
-  decision recorded.
+- Ed accepted the initial refactoring policy on 2026-10-13: add this copied-parent repair route while
+  retaining the broad next-Windows-mutation fallback for other copies. Narrowing that fallback is a
+  separate later product decision. See [the decision register](../../../code-review/refactoring/DECISIONS.md).
 - Spaces' future child-copy participation (D3a-13) is the second consumer of the same hook.
 
 Acceptance: a native copy of a Zone with glued, cutting Units of two Types; distinct Unit ids at once;

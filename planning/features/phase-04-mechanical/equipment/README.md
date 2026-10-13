@@ -12,6 +12,12 @@ the predecessor held this as two discovery briefs, Q1 and B4.
 
 ## Family map
 
+The accepted [definition/context ownership pattern](../../../code-review/refactoring/ZONE_CHILD_PATTERN.md)
+guides this future feature. Equipment that serves Zones can use an explicit assignment relationship;
+it need not be a native child Group. Reusable equipment values remain independent, and a higher-level
+service composes assignment/copy/delete through owner contracts. Shared-system copy policy remains
+for the equipment interview; this reference authorizes no implementation or product-policy change.
+
 | # | Family | honeybee-ph carrier | Unlocks |
 | --- | --- | --- | --- |
 | 1 | Ventilators | `Ventilator` in a `PhVentilationSystem` | ERV ducting, the by-ventilator airflow balance in Spaces |
