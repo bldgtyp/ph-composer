@@ -264,6 +264,8 @@ Exit: both `make ci` runs pass; review has no open blocker; native receipt filed
 
 ## Decisions and deviations
 
+Accepted by Ed on 2026-10-13.
+
 | Earlier default | Now | Reason |
 | --- | --- | --- |
 | `expected_metadata` with explicit presence bits for legacy absence | `expected_metadata` is the two maps as the read returned them | Reads already report absence as `{}`; `Metadata.updated` never adds a key it was not asked to write, so absence survives an unrelated edit without a presence bit |

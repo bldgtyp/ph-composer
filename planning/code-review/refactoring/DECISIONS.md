@@ -1,7 +1,7 @@
 # Refactoring decisions
 
 DATE: 2026-10-13
-STATUS: Direction accepted by Ed; four technical-default deviations from the 2026-10-13 source review await his confirmation. Implementation not authorized.
+STATUS: Direction and the four 2026-10-13 deviations accepted by Ed. Implementation not authorized.
 ISSUE: none (local planning draft)
 
 ## Accepted on 2026-10-13
@@ -20,8 +20,8 @@ See [ZONE_CHILD_PATTERN](ZONE_CHILD_PATTERN.md) and the [Windows rationale](../W
 ## Deviations recorded 2026-10-13
 
 The plans were reviewed against the baseline source after the direction was accepted. Four
-technical defaults from the first drafts changed mechanism, not direction. Each plan's "Decisions
-and deviations" section carries the detail; this register is the list for Ed.
+technical defaults from the first drafts changed mechanism, not direction. Ed accepted all four on
+2026-10-13 after a walkthrough; each plan's "Decisions and deviations" section carries the detail.
 
 | Packet | First default | Now | Why |
 | --- | --- | --- | --- |

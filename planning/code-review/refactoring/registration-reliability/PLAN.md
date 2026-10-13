@@ -288,7 +288,7 @@ packet; STATUS rows updated.
 
 ## Decisions and deviations
 
-Deviations from the 2026-10-13 plan, for Ed to confirm:
+Deviations from the first draft, accepted by Ed on 2026-10-13:
 
 | Earlier default | Now | Reason |
 | --- | --- | --- |

@@ -6,8 +6,8 @@ ISSUE: none (local planning draft)
 
 Ed accepted C1, C2, W1 and the Zone-child pattern on 2026-10-13. The same day the twelve plans were
 reviewed against the baseline source and rewritten as phased implementation plans with per-packet
-stage ledgers. Four technical defaults were simplified in that review; they are listed in
-[DECISIONS.md](DECISIONS.md) under "Deviations recorded 2026-10-13" for Ed to confirm. No source,
+stage ledgers. Four technical defaults were simplified in that review and Ed accepted them the same day; they
+are listed in [DECISIONS.md](DECISIONS.md) under "Deviations recorded 2026-10-13". No source,
 test, runtime asset, native gate, commit, issue or PR was produced by this program.
 
 | Packet | Findings | Stages | State |

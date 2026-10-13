@@ -172,6 +172,8 @@ Exit: receipts filed; STATUS updated; the product request marked implemented on 
 
 ## Decisions and deviations
 
+Accepted by Ed on 2026-10-13.
+
 | Earlier default | Now | Reason |
 | --- | --- | --- |
 | A new gesture-provenance lifecycle with invalidation on intervening commits | None added; inherit the Zone repair's accepted join and Undo notice | The uncertainty is already accepted for Zones; a child joining the same follow-up adds no new risk |

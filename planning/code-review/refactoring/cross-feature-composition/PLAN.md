@@ -273,6 +273,8 @@ Exit: both `make ci` runs pass; review has no open blocker; native receipt filed
 
 ## Decisions and deviations
 
+Accepted by Ed on 2026-10-13.
+
 | Earlier default | Now | Reason |
 | --- | --- | --- |
 | New `proposal_scope.rb` facade over the proposal | Projected engine write guard plus a prefix postcondition | The guard exists; the facade would duplicate `ChangeSet` and `Proposal` for one check |

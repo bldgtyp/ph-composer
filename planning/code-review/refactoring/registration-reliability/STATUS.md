@@ -15,4 +15,4 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 Reviewed against source on 2026-10-13. Four technical defaults from the first draft were dropped
 (reference swap with restoration, subscription tokens, frozen maps, cyclic-container diagnostics);
-the reasons are in the plan's "Decisions and deviations" and in [DECISIONS.md](../DECISIONS.md).
+the reasons are in the plan's "Decisions and deviations" and in [DECISIONS.md](../DECISIONS.md). Ed accepted them on 2026-10-13.
