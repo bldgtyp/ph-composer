@@ -58,6 +58,55 @@ class ZoneCopyWatchTest < PhComposerTestCase
     assert_equal 1, @notices.length
   end
 
+  # An unrelated operation committed before the deferred pass is the transaction the repair joins, so
+  # undoing it takes the repair back too. The copy is left consistent and recoverable, and is told so.
+  def test_undoing_a_change_the_repair_joined_says_the_copy_is_read_only_again
+    copy = native_copy(@original, 400)
+    PhComposer::ModelOperation.perform(@model, "Move") do
+      @original.transformation = Geom::Transformation.translation([10, 0, 0])
+    end
+    UI.run_timers
+    assert_equal %w[found found], states
+
+    assert @model.undo
+    UI.run_timers
+
+    live = @model.entities.to_a.find { |entity| entity.persistent_id == copy.persistent_id }
+    assert live, "the copied Group stays"
+    assert_equal %w[shared_definition shared_definition], states
+    assert_match(/^Undo also took back making the copied Zone independent/, @notices.last.first)
+    assert_equal :warning, @notices.last.last
+    result = invoke("ph_composer.zones.make_independent", { "zone_path" => [copy.persistent_id] })
+    assert_equal "completed", result.fetch("status"), "and the row's command still makes it independent"
+  end
+
+  def test_a_copy_whose_faces_sit_in_a_child_group_is_made_independent_with_its_child
+    faces = 3.times.map do |index|
+      Sketchup::Face.new(1001 + index, {}, :points => [Geom::Point3d.new(0, 0, index), Geom::Point3d.new(2, 0, index),
+                                                       Geom::Point3d.new(2, 2, index)])
+    end
+    child = Sketchup::Group.new(1010, Sketchup::Entities.new(faces))
+    parent = Sketchup::Group.new(1000, Sketchup::Entities.new([child]))
+    @model.entities << parent
+    invoke("ph_composer.zones.make", { "parent_path" => [], "entity_ids" => [1000] })
+    copy = native_copy(parent, 1050)
+    UI.run_timers
+
+    refute_equal child.definition.persistent_id, copy.entities.to_a.first.definition.persistent_id
+    assert_equal %w[found found found], states
+    assert_equal ["Made the copied Zone independent.", :success], @notices.last
+  end
+
+  def test_one_undo_of_a_copy_and_its_repair_posts_no_extra_notice
+    native_copy(@original, 400)
+    UI.run_timers
+
+    assert @model.undo
+    UI.run_timers
+
+    assert_equal [["Made the copied Zone independent.", :success]], @notices
+  end
+
   def test_an_array_copy_is_made_independent_as_one_batch_with_one_notice
     copies = native_copies(@original, [400, 500, 600, 700, 800])
     UI.run_timers

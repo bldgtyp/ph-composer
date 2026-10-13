@@ -18,7 +18,8 @@ module PhComposer
         "zone_id" => Shapes::ID.merge("description" => "The occurrence's new Zone id."),
         "retired_pairs" => Shapes::COUNT.merge("description" => "Surface pairs the occurrence's Faces left behind."),
         "storage_isolated" => { "type" => "boolean",
-                                "description" => "Whether the occurrence's Group still shared its Faces." }
+                                "description" => "Whether the occurrence's Group, or a Group inside it, " \
+                                                 "still shared its contents." }
       }).freeze
       SPLIT_REPAIR_PARAMS = Shapes.object({
         "zone" => ZONE_REFERENCE.merge("description" => "The Zone occurrence holding the split pieces."),

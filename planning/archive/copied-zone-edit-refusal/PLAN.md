@@ -304,6 +304,29 @@ invoke with digest, storage isolated, original definition, Face entities and ids
 `found`). The native-gesture check of P4 needs SketchUp frontmost and runs in P5's single
 full-control batch.
 
+#### PR review fixes
+
+The PR #97 review (head `3e69239`) found two blockers, both reproduced with the host stub and
+fixed on the branch:
+
+- **Nested Face storage (P2 of the review).** Making only the Zone's Group unique left a child Group
+  sharing its definition with the original's child, so the write refused while the row offered the
+  command. `MakeIndependentStep` now makes each nested Group that still shares its contents unique
+  too, which S5 showed leaves the original untouched; member Faces inside a component or a locked
+  Group are refused up front with their prerequisite, so availability, preview and apply agree.
+  Tests: a nested child Group through the command and through the watcher; component-held Faces not
+  offered. Host: a nested Zone copied with Paste in Place became independent with its child, the
+  original child's definition and Face records unchanged.
+- **A transaction between the copy and the pass (P1 of the review).** The repair joins the latest
+  transaction. A native Move/Copy commits once more after its addition inside its own Undo step
+  (measured; one Undo removes copy and repair), and callbacks cannot tell that commit from an
+  unrelated operation, so declining or splitting on any intervening commit would break one-step Undo
+  for every Move/Copy, and a repair can never join a step that is no longer the latest. The watcher
+  now remembers its repairs; if an Undo takes one back while the copied Group stays, it warns that the
+  copy is read only again and points at Make Zone independent. Host: Paste in Place followed in the
+  same turn by a named operation, then one Undo, reverted both, kept the copy shared, posted the
+  warning, and Make Zone independent recovered it. Test added for the same sequence.
+
 ### P5: acceptance and canon
 
 - Host, fresh process, native gestures, on `_private/host/copied-zone-bug/error-original.skp`

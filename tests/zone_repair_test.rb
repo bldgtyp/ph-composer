@@ -449,6 +449,54 @@ class ZoneRepairTest < PhComposerTestCase
     assert_match(/component/, result.fetch("message"))
   end
 
+  # Faces inside a child Group: making only the Zone's Group unique leaves that child shared with the
+  # original's (P2 S5), so the child is isolated too, and the read offers only what apply can do.
+  def test_make_independent_isolates_a_nested_face_group_and_leaves_the_original_untouched
+    original, copy = nested_copy(1100)
+    original_child = original.entities.to_a.first
+    before = original_child.entities.to_a.map { |face| FACE_STORE.read(face) }
+    row = zones_value.fetch("zones").find { |zone| zone.dig("reference", "zone_path") == [copy.persistent_id] }
+    assert row.dig("independence", "available")
+    params = { "zone_path" => [copy.persistent_id] }
+    preview = API.preview(:context => @context, :name => MAKE_INDEPENDENT, :params => params)
+
+    result = invoke(MAKE_INDEPENDENT, params, :digest => preview.fetch("proposal_digest"))
+
+    assert_equal %w[completed committed], result.values_at("status", "effect")
+    copy_child = copy.entities.to_a.first
+    refute_equal original_child.definition.persistent_id, copy_child.definition.persistent_id
+    assert_equal before, original_child.entities.to_a.map { |face| FACE_STORE.read(face) }
+    new_id = ZONE_STORE.read(copy).fetch("id")
+    copy_child.entities.to_a.each { |face| assert_equal new_id, STAMP_STORE.read(face).fetch("zone_id") }
+    assert_equal %w[found found], zone_states
+  end
+
+  def test_make_independent_is_not_offered_when_member_faces_sit_inside_a_component
+    faces = 2.times.map { |index|
+      Sketchup::Face.new(1201 + index, {}, :points => [point(0, 0, index),
+                                                       point(1, 0, index),
+                                                       point(1, 1, index)])
+    }
+    definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new(faces), :name => "panel")
+    holder = Sketchup::Group.new(1200, Sketchup::Entities.new([]))
+    holder.entities.add_instance(definition, Geom::Transformation.new)
+    ZONE_STORE.write(holder, zone_record("zon_#{'d' * 12}"))
+    stamp = PhComposer::Zones::Schema.stamp(ZONE_STORE.read(holder))
+    faces.each { |face| STAMP_STORE.write(face, stamp) }
+    copy = Sketchup::Group.new(1250, holder.entities)
+    copy.set_attribute("ph_composer.zone", "record", holder.get_attribute("ph_composer.zone", "record"))
+    @model.entities << holder
+    @model.entities << copy
+    treat_duplicates_as_existing(@model)
+
+    row = zones_value.fetch("zones").find { |zone| zone.dig("reference", "zone_path") == [1250] }
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [1250] })
+
+    refute row.dig("independence", "available")
+    assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
+    assert_match(/inside a component/, result.fetch("message"))
+  end
+
   def test_a_failed_make_independent_rolls_back_storage_and_records
     original, copy = shared_copy(820)
     before = [ZONE_STORE.read(copy), copy.definition.instances.length]
@@ -549,6 +597,20 @@ class ZoneRepairTest < PhComposerTestCase
 
   def original_state(group)
     [ZONE_STORE.read(group), group.entities.to_a, group.entities.to_a.map { |face| FACE_STORE.read(face) }]
+  end
+
+  # A Zone whose classified Faces sit in one child Group, and a copy over the same definition.
+  def nested_copy(base)
+    child = box_group(base + 10, 3)
+    original = Sketchup::Group.new(base, Sketchup::Entities.new([child]))
+    @model.entities << original
+    make_zone(original)
+    classify_all
+    copy = Sketchup::Group.new(base + 50, original.entities)
+    copy.set_attribute("ph_composer.zone", "record", original.get_attribute("ph_composer.zone", "record"))
+    @model.entities << copy
+    treat_duplicates_as_existing(@model)
+    [original, copy]
   end
 
   def zone_record(id)

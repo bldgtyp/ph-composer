@@ -454,10 +454,11 @@ pairing share one transaction. Geometry never selects an identity.
   invalid envelopes on the pieces and their counterparts and creates no pairs.
 - A copied Zone is ambiguous until it is made independent. Make Zone independent
   (`ph_composer.zones.make_independent`) makes the occurrence's own Group unique when it shares its
-  Faces, then gives it and its members new ids, updates stamps and retires copied pairs, as one
-  step; the other occurrence keeps its id, Faces and pairs. It refuses a Zone inside a component, a
-  Zone inside a still-shared parent Group, a nested Zone, a lock and an id held only once, each with
-  its prerequisite. Identity repair (`repair_identity`) remains for scripts and refuses shared storage.
+  Faces, and each Group inside it that still shares its contents, then gives it and its members new
+  ids, updates stamps and retires copied pairs, as one step; the other occurrence keeps its id, Faces
+  and pairs. It refuses a Zone inside a component, a Zone inside a still-shared parent Group, member
+  Faces inside a component or a locked Group, a nested Zone, a lock and an id held only once, each
+  with its prerequisite; the Zones read offers it only where its plan succeeds. Identity repair (`repair_identity`) remains for scripts and refuses shared storage.
   Both derive the new Zone id from the occurrence path and each new Face id from the id it was
   copied with (not its entity path, which Make Unique replaces), so a preview's ids hold at apply.
 - Limited Restore regroups only stamped Faces and their bounding edges in one parent context and
@@ -470,7 +471,9 @@ classification. It rebinds identity in one case only: a Zone copied natively dur
 made independent by the copy watcher, through the registered Make Zone independent action as a
 host follow-up joined to the copy (D-1). A copy is an occurrence the gesture added whose id one
 original holds; a duplicate already in the Model, a copy whose path crosses a ComponentInstance and
-anything Undo or Redo restores are left alone.
+anything Undo or Redo restores are left alone. The repair joins the latest transaction; if an
+unrelated operation committed before the deferred pass, undoing it takes the repair back with it, and
+the watcher tells the user the copy is read only again.
 
 **Host follow-ups.** `HostFollowUp.run(session, action, params_list)` is internal; nothing registers
 it where the panel or the API can reach it. It runs the registered action's handler once per params

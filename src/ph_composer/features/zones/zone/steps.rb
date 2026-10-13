@@ -174,6 +174,25 @@ module PhComposer
                        "reference" => @reference.merge("zone_id" => new_id) }]
       end
 
+      # Make Unique on the Zone's Group leaves the Groups inside it shared with the original's (measured,
+      # P2 S5), so each nested Group still sharing its contents is made unique in turn, which leaves the
+      # original's untouched. Components are left alone: eligibility refuses member Faces inside one.
+      def self.isolate_groups(entities)
+        entities.to_a.grep(Sketchup::Group).each do |group|
+          next if ZONE_STORE.read(group)
+
+          group.make_unique if Occurrences.shared_storage?(group)
+          isolate_groups(group.entities)
+        end
+      end
+
+      # Whether the occurrence or any Group inside it still shares its contents.
+      def self.shared_storage?(entity)
+        Occurrences.shared_storage?(entity) || entity.entities.to_a.grep(Sketchup::Group).any? do |group|
+          !ZONE_STORE.read(group) && shared_storage?(group)
+        end
+      end
+
       # Every Face record change, without the Face paths that Make Unique replaces.
       def self.contents(plan)
         plan.fetch(:faces).map { |face| [face.fetch(:before), face.fetch(:after), face.fetch(:stamp)] }
@@ -200,6 +219,7 @@ module PhComposer
         raise refusal if refusal
 
         zone.entity.make_unique if Occurrences.shared_storage?(zone.entity)
+        MakeIndependentStep.isolate_groups(zone.entity.entities)
         zone = Repair.occurrence_at(model, path)
         live = Repair.plan_with(zone, @mapping, @catalog, Records::Engine.new(model, @catalog))
         unless live.fetch(:record) == @record && MakeIndependentStep.contents(live) == @contents

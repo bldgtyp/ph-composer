@@ -41,7 +41,7 @@ module PhComposer
       proposal.add_step(MakeIndependentStep.new(:reference => zone.reference, :plan => plan, :catalog => catalog),
                         :scopes => [Operations::EntityScope.new(zone.path[0...-1])])
       { "zone_id" => plan.fetch(:record).fetch("id"), "retired_pairs" => retired_pairs(plan),
-        "storage_isolated" => Occurrences.shared_storage?(zone.entity) }
+        "storage_isolated" => MakeIndependentStep.shared_storage?(zone.entity) }
     end
 
     def plan_refusal(request, zone)

@@ -35562,7 +35562,7 @@ Result:
     },
     "storage_isolated": {
       "type": "boolean",
-      "description": "Whether the occurrence's Group still shared its Faces."
+      "description": "Whether the occurrence's Group, or a Group inside it, still shared its contents."
     }
   }
 }

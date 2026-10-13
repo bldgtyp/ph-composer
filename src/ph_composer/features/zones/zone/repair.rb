@@ -134,9 +134,28 @@ module PhComposer
                          "Group and choose Make Unique first.")
         elsif zone.locked_parent || (zone.entity.respond_to?(:locked?) && zone.entity.locked?)
           CodedError.new("target.locked", "This Zone or a Group containing it is locked. Unlock it first.")
+        elsif member_containers(zone).any? { |entity| entity.is_a?(Sketchup::ComponentInstance) }
+          CodedError.new("target.shared_definition",
+                         "Some of this Zone's Faces are inside a component, which its placements share by " \
+                         "design. Explode or make that component unique first.")
+        elsif member_containers(zone).any? { |entity| entity.respond_to?(:locked?) && entity.locked? }
+          CodedError.new("target.locked", "A Group holding some of this Zone's Faces is locked. Unlock it first.")
         elsif ids < 2
           CodedError.new("zone.identity_unique", "This Zone already has an identity of its own.")
         end
+      end
+
+      # Every Group or ComponentInstance inside the Zone that holds a Face the repair writes. Nested
+      # Groups are isolated with the Zone (MakeIndependentStep); a component or a lock is a prerequisite.
+      def member_containers(zone)
+        member_entries(zone).flat_map do |entry|
+          entities = zone.entity.entities
+          entry.fetch(:occurrence).path[0...-1].map do |persistent_id|
+            container = Occurrences.unique_entity(entities, persistent_id)
+            entities = container.is_a?(Sketchup::ComponentInstance) ? container.definition.entities : container.entities
+            container
+          end
+        end.uniq
       end
 
       # The entities on a root-to-Zone path, through Groups and ComponentInstances alike.
@@ -286,7 +305,7 @@ module PhComposer
         end
       end
       private_class_method :orphan_group, :orphan_refusal, :shared_edge?, :walk_orphans, :repaired_face, :face_plans,
-                           :member_entries, :path_entities
+                           :member_entries, :path_entities, :member_containers
     end
   end
 end

@@ -19,6 +19,12 @@ module PhComposer
     #
     # Undo and Redo drop a pending pass and never repair: an array count (`5x`) undoes the first copy
     # and commits every copy in one transaction, and Redo restores a repaired copy without an addition.
+    #
+    # The repair joins the latest transaction. A native Move/Copy commits once more after its addition,
+    # inside the copy's own Undo step (measured: one Undo removes copy and repair), and callbacks cannot
+    # tell that commit from an unrelated operation committed before the deferred pass. If one was
+    # unrelated, undoing it also undoes the repair while the copied Group stays. That state is
+    # consistent (the copy is read only and offers Make Zone independent), and the watcher says so.
     module CopyWatch
       ACTION = "#{FEATURE_ID}.make_independent"
 
@@ -31,7 +37,7 @@ module PhComposer
       def install(feature)
         feature.on_host_event(:session_created) { |session| state(session) }
         feature.on_host_event(:transaction_committed) { |session| state(session).committed }
-        feature.on_host_event(:transaction_undone) { |session| state(session).reset }
+        feature.on_host_event(:transaction_undone) { |session| state(session).undone }
         feature.on_host_event(:transaction_redone) { |session| state(session).reset }
         Sessions.all.each { |session| state(session) }
       end
@@ -42,6 +48,7 @@ module PhComposer
           @timer = CoalescedTimer.new
           @added = []
           @running = false
+          @repaired = {}
           Names.state(session).subscribe(self)
         end
 
@@ -51,6 +58,24 @@ module PhComposer
 
           @timer.cancel
           @added = []
+        end
+
+        # Undo and Redo: drop a pending pass, and say so if an Undo took back a repair but left its copy.
+        def undone
+          reset
+          return if @running || @repaired.empty?
+
+          reverted = @repaired.select do |path, id|
+            occurrences.any? { |other_path, other_id| other_path == path && other_id != id }
+          end
+          return if reverted.empty?
+
+          @repaired = {}
+          count = reverted.length
+          @session.notice("Undo also took back making the #{count == 1 ? 'copied Zone' : "#{count} copied Zones"} " \
+                          "independent, because it had joined a later change. #{count == 1 ? 'It is' : 'They are'} " \
+                          "read only again; use Make Zone independent on #{count == 1 ? 'its row' : 'their rows'}.",
+                          :tone => :warning)
         end
 
         # Only an addition that brings in a Zone id another occurrence already holds can be a copy.
@@ -90,6 +115,7 @@ module PhComposer
         def detach
           @timer.cancel
           @added = []
+          @repaired = {}
         end
 
         private
@@ -148,6 +174,7 @@ module PhComposer
           @running = true
           result = HostFollowUp.run(@session, ACTION, paths.map { |path| { "zone_path" => path } })
           @session.changed(:zones, :copy_watch) if result.fetch("status") != "refused"
+          remember(paths, result)
           announce(paths, result)
         rescue StandardError => error
           Diagnostics.exception("zone_copy_watch", error)
@@ -158,6 +185,12 @@ module PhComposer
         end
 
         # Each notice says what is true in the Model afterwards; a failure is read back rather than assumed.
+        def remember(paths, result)
+          return unless result.fetch("status") == "completed"
+
+          @repaired = paths.zip(result.fetch("values")).to_h { |path, value| [path, value.fetch("zone_id")] }
+        end
+
         def announce(paths, result)
           count = paths.length
           zones = count == 1 ? "copied Zone" : "#{count} copied Zones"
