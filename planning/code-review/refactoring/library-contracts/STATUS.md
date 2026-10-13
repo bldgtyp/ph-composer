@@ -16,3 +16,9 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 Reviewed against source on 2026-10-13: the exact `name` read sites are listed in the plan; LC-03
 can land independently of LC-01 and LC-02.
+
+## Gate evidence
+
+Source `349f6ea` on `refactor/group-5-library-contracts`, rebased on `main` `4d7a5a7`, 2026-10-13:
+`make ci` on Ruby 3.2 and on Ruby 2.7.2 both pass (1566 Ruby runs, 19136 assertions; 537 JS tests;
+Python 9 runs; RBZ verified, 399 files). `make coverage` passes at 95.60% (required 92%).
