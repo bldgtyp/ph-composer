@@ -264,6 +264,7 @@ class WindowUnitActionsTest < PhComposerTestCase
     copy = Sketchup::Group.new(3000, @group.entities)
     PhComposer::Zones::ZONE_STORE.write(copy, PhComposer::Zones::ZONE_STORE.read(@group))
     @model.entities << copy
+    treat_duplicates_as_existing(@model)
     rows = units
     assert_equal 2, rows.length
     assert_equal [[1000], [3000]], rows.map { |row| row.fetch("reference").fetch("entity_path")[0...-1] }.sort

@@ -239,15 +239,25 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     message.setAttribute("aria-atomic", "true");
     var dismiss = iconButton("Dismiss message", "clear", function () { root.clear(); });
     dismiss.classList.add("phc-floating-notice-dismiss");
+    var act = button("", function () {
+      var chosen = act._action; root.clear();
+      if (chosen) chosen.run();
+    });
+    act.className = "phc-floating-notice-action";
+    act.hidden = true;
     root.appendChild(message);
+    root.appendChild(act);
     root.appendChild(dismiss);
     root.hidden = true;
-    root.message = message; root.dismissButton = dismiss;
+    root.message = message; root.dismissButton = dismiss; root.actionButton = act;
     root.show = function (text, options) {
       revision += 1; persistent = Boolean(options && options.persistent); root.classList.remove("is-dismissing");
       // A hold belongs to the notice under the pointer or focus now; a hidden notice never sent its leave.
       held = root.contains(document.activeElement) || Boolean(root.matches && root.matches(":hover"));
       message.textContent = text || "";
+      act._action = (options && options.action) || null;
+      act.textContent = act._action ? act._action.label : "";
+      act.hidden = !act._action;
       root.hidden = !message.textContent;
       root.setAttribute("data-persistent", String(persistent));
       // Information and instructions are neutral; yellow is kept for warnings and red for errors.
@@ -260,6 +270,7 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
       persistent = false; held = false;
       root.classList.remove("is-dismissing");
       message.textContent = "";
+      act._action = null; act.hidden = true;
       root.hidden = true;
     };
     root.fade = function () {

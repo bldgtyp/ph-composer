@@ -14,6 +14,13 @@ module PhComposer
         "zone_id" => Shapes::ID.merge("description" => "The copy's new Zone id."),
         "retired_pairs" => Shapes::COUNT.merge("description" => "Surface pairs the copy's Faces left behind.")
       }).freeze
+      INDEPENDENT_RESULT = Shapes.object({
+        "zone_id" => Shapes::ID.merge("description" => "The occurrence's new Zone id."),
+        "retired_pairs" => Shapes::COUNT.merge("description" => "Surface pairs the occurrence's Faces left behind."),
+        "storage_isolated" => { "type" => "boolean",
+                                "description" => "Whether the occurrence's Group, or a Group inside it, " \
+                                                 "still shared its contents." }
+      }).freeze
       SPLIT_REPAIR_PARAMS = Shapes.object({
         "zone" => ZONE_REFERENCE.merge("description" => "The Zone occurrence holding the split pieces."),
         "face_id" => Shapes::ID.merge("description" => "The Face id the split pieces share."),
@@ -43,6 +50,7 @@ module PhComposer
 
       def install(feature)
         SplitIdentityMenu.install(feature)
+        IndependenceMenu.install(feature)
         feature.action("#{FEATURE_ID}.repair_split_face",
                        :description => "Repair copied Face identities after a native split.",
                        :refuses => Refuses::REPAIR_SPLIT_FACE,
@@ -67,6 +75,7 @@ module PhComposer
                                         "left untouched.") do |request, proposal|
           Zones.repair_identity(request, proposal, :zone_path => request.params.fetch("zone_path"))
         end
+        install_make_independent(feature)
         feature.action("#{FEATURE_ID}.restore",
                        :description => "Regroup the stamped members of an exploded Zone, recovering only their stamp.",
                        :refuses => Refuses::RESTORE,
@@ -76,6 +85,20 @@ module PhComposer
                                         "record.") do |request, proposal|
           Zones.restore(request, proposal, :parent_path => request.params.fetch("parent_path"),
                                            :zone_id => request.params.fetch("zone_id"))
+        end
+      end
+
+      def install_make_independent(feature)
+        feature.action("#{FEATURE_ID}.make_independent",
+                       :description => "Give a copied Zone occurrence its own Faces and identity, leaving the " \
+                                       "occurrence it shares them with untouched.",
+                       :refuses => Refuses::MAKE_INDEPENDENT,
+                       :params => REPAIR_PARAMS, :result => INDEPENDENT_RESULT, :undo_name => "Make Zone Independent",
+                       :examples => [{ "zone_path" => [1401] }],
+                       :side_effects => "Makes the occurrence's Group unique when it shares its Faces, then " \
+                                        "reidentifies it and its Faces and retires their Surface " \
+                                        "pairs.") do |request, proposal|
+          Zones.make_independent(request, proposal, :zone_path => request.params.fetch("zone_path"))
         end
       end
     end

@@ -259,11 +259,13 @@ test("unchecking a Face makes its Zone ineligible and Select all restores whole-
   assert.strictEqual(bar(p).querySelector(".phc-checked-zone-count").textContent, "1 Zone checked");
   click(p.header());
   assert.strictEqual(bar(p).querySelector(".phc-checked-zone-count").textContent, "3 Zones checked");
-  // Unsafe occurrences remain in the explicit mutation scope for the host's all-or-nothing validation.
+  // A shared Zone refuses every write, so Solve is refused whole rather than dropping it from the scope.
   p.payload.sections["ph_composer.zones.overview"].value.zones[2].state = "ambiguous";
   p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  assert.strictEqual(solveButton(p).disabled, true);
+  assert.strictEqual(bar(p).querySelector(".phc-checked-zone-count").textContent, "3 Zones checked");
   click(solveButton(p));
-  assert.strictEqual(p.sent[0].payload.params.zones.length, 3);
+  assert.strictEqual(p.sent.length, 0);
 });
 
 test("painting preserves checked Solve scope and a Model switch clears it", function () {
@@ -381,8 +383,10 @@ test("two Zone occurrences sharing one record id are two rows", function () {
     .map(nameText);
   assert.deepStrictEqual(names, ["Zone 1", "Wall 1", "1 unclassified Face", "Face 2", "Zone 1 copy", "Floor 1"],
     "each occurrence keeps its own row and its own Faces");
-  assert.strictEqual(section.querySelectorAll(".phc-row-marker")[0].textContent, "shared identity",
-    "and the panel says why, because an edit here names one of the two");
+  var markers = section.querySelectorAll(".phc-row-marker").filter(function (node) {
+    return node.classList.contains("is-icon") && /same identity/.test(node.getAttribute("aria-label"));
+  });
+  assert.strictEqual(markers.length, 2, "both occurrences say why, and neither is called the copy");
 });
 
 /* A Face row must not be rekeyed or renamed because a neighbour was classified: the table drops a
@@ -506,22 +510,247 @@ test("an invalid Ground depth or a blank name sends nothing and says why on the 
   assert.ok(depth.parentNode.querySelector(".cell-error").textContent);
 });
 
-test("a managed Zone choice follows the Model and retains a refused selection until Escape", function () {
-  var p = page(), payload = managedSnapshot();
-  p.panel.receive({ type: "panel.snapshot", payload: payload });
-  var section = p.query("[data-section='ph_composer.overview']");
-  payload = managedSnapshot();
-  payload.sections["ph_composer.zones.overview"].value.zones[0].values.building_segment_id = "bsg_tower";
-  p.panel.receive({ type: "panel.snapshot", payload: payload });
-  var segment = byLabel(section, "Zone 1 Building-Segment");
-  assert.strictEqual(segment.value, "bsg_tower");
-  segment.value = "bsg_house"; segment.listeners.change({});
-  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[0].payload.request_id,
-    session: "session-a", outcome: { status: "refused", message: "The Zone changed." } } });
+function result(p, index, outcome) {
+  p.panel.receive({ type: "action.result", payload: { request_id: p.sent[index].payload.request_id,
+    session: "session-a", outcome: outcome } });
+}
+
+/* A managed snapshot with a third Segment, so a held choice can be retried with a different one. */
+function threeSegments() {
+  var payload = managedSnapshot();
+  payload.sections["ph_composer.zones.options"].value.building_segments.push({ id: "bsg_annex",
+    values: { name: "Annex", colour: "#AA7755", export_identifier: "seg_annex" }, usage: { live: 0, recoverable: 0 } });
+  return payload;
+}
+
+test("a refused Zone choice returns to the Model's value, says why, and leaves the screen usable", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: managedSnapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), segment = byLabel(section, "Zone 1 Building-Segment");
+  segment.value = "bsg_tower"; segment.listeners.change({});
+  result(p, 0, { status: "refused", code: "target.ambiguous", effect: "none",
+    message: "Zone zon_a occurs more than once. Nothing was written." });
+  assert.strictEqual(segment.value, "bsg_house", "nothing was written, so the Model's value shows");
+  assert.match(segment.parentNode.querySelector(".cell-error").textContent, /made independent/);
+  assert.match(p.query(".phc-floating-notice-message").textContent, /made independent/,
+    "the notice names the route out, not the duplicated id");
+  assert.strictEqual(byLabel(section, "Cancel Zone 1 Building-Segment choice").hidden, true, "nothing is held");
+  enter(byLabel(section, "Zone 1 name"), "North Zone");
+  assert.strictEqual(p.sent[1].payload.name, "ph_composer.zones.update", "another edit is not blocked");
+});
+
+test("a failed Zone choice with an uncertain effect shows the Model's value and says to check it", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: managedSnapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), segment = byLabel(section, "Zone 1 Building-Segment");
+  segment.value = "bsg_tower"; segment.listeners.change({});
+  result(p, 0, { status: "failed", code: "operation.failed", effect: "unknown", message: "It broke." });
   assert.strictEqual(segment.value, "bsg_house");
-  assert.strictEqual(segment.disabled, false, "Escape remains available after refusal");
-  segment.listeners.keydown({ key: "Escape", preventDefault: function () {} });
-  assert.strictEqual(segment.value, "bsg_tower");
+  assert.match(segment.parentNode.querySelector(".cell-error").textContent, /may have been partly applied/);
+});
+
+test("a held Zone choice has a visible Cancel, and the guard notice offers it too", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: managedSnapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), segment = byLabel(section, "Zone 1 Building-Segment");
+  var cancel = byLabel(section, "Cancel Zone 1 Building-Segment choice");
+  segment.value = "bsg_tower"; segment.listeners.change({});
+  result(p, 0, { status: "completed", effect: "committed" });
+  assert.strictEqual(segment.value, "bsg_tower", "the Model settled elsewhere, so the choice is held");
+  assert.strictEqual(cancel.hidden, false);
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview", "a held choice guards navigation");
+  p.panel.receive({ type: "panel.snapshot", payload: managedSnapshot() });
+  assert.strictEqual(cancel.hidden, false, "a later snapshot keeps the held choice and its Cancel");
+  click(cancel);
+  assert.strictEqual(segment.value, "bsg_house");
+  assert.strictEqual(cancel.hidden, true);
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.state.ui.activeTab, "export", "Cancel released the guard without a request");
+  assert.strictEqual(p.sent.length, 1);
+});
+
+test("the guard notice's Cancel drops a held Zone choice", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: managedSnapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), segment = byLabel(section, "Zone 1 Building-Segment");
+  segment.value = "bsg_tower"; segment.listeners.change({});
+  result(p, 0, { status: "completed", effect: "committed" });
+  var filter = byLabel(section, "Filter Zones");
+  filter.value = "Zone"; filter.listeners.input({});
+  assert.strictEqual(p.query(".phc-floating-notice-message").textContent, "Finish or cancel the Zone edit first.");
+  var action = p.query(".phc-floating-notice-action");
+  assert.strictEqual(action.hidden, false);
+  assert.strictEqual(action.textContent, "Cancel the Zone edit");
+  click(action);
+  assert.strictEqual(segment.value, "bsg_house");
+  assert.strictEqual(p.query(".phc-floating-notice").hidden, true);
+  filter.value = "Zone"; filter.listeners.input({});
+  assert.strictEqual(filter.value, "Zone", "the filter is no longer refused");
+  assert.strictEqual(p.sent.length, 1);
+});
+
+test("choosing the Model's value cancels a held choice; a new choice retries with current values", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: threeSegments() });
+  var section = p.query("[data-section='ph_composer.overview']"), segment = byLabel(section, "Zone 1 Building-Segment");
+  segment.value = "bsg_tower"; segment.listeners.change({});
+  result(p, 0, { status: "completed", effect: "committed" });
+  segment.value = "bsg_house"; segment.listeners.change({});
+  assert.strictEqual(p.sent.length, 1, "the Model's own value cancels without a request");
+  assert.strictEqual(byLabel(section, "Cancel Zone 1 Building-Segment choice").hidden, true);
+  segment.value = "bsg_tower"; segment.listeners.change({});
+  result(p, 1, { status: "completed", effect: "committed" });
+  var moved = threeSegments();
+  moved.sections["ph_composer.zones.overview"].value.zones[0].values.level_id = "lvl_1";
+  p.panel.receive({ type: "panel.snapshot", payload: moved });
+  assert.match(segment.parentNode.querySelector(".cell-error").textContent, /Changed in the Model/);
+  segment.value = "bsg_annex"; segment.listeners.change({});
+  assert.strictEqual(p.sent.length, 3, "a held choice retries instead of being ignored");
+  assert.strictEqual(p.sent[2].payload.params.expected_values.level_id, "lvl_1", "against the current values");
+  assert.strictEqual(segment.parentNode.querySelector(".cell-error").hidden, true);
+});
+
+test("a refused Zone name keeps the typed text until a visible Cancel restores the Model's name", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), name = byLabel(section, "Zone 1 name");
+  var cancel = byLabel(section, "Cancel Zone 1 name edit");
+  assert.strictEqual(cancel.hidden, true);
+  enter(name, "North Zone");
+  result(p, 0, { status: "refused", code: "target.shared_definition", effect: "none", message: "Shared." });
+  assert.strictEqual(name.value, "North Zone", "the typed text survives the refusal");
+  assert.match(name.parentNode.querySelector(".cell-error").textContent, /reach both/);
+  assert.strictEqual(cancel.hidden, false);
+  name.listeners.blur({});
+  name.listeners.keydown({ key: "Enter", preventDefault: function () {} });
+  assert.strictEqual(p.sent.length, 1, "Enter and blur do not resubmit a refused draft");
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview");
+  click(cancel);
+  assert.strictEqual(name.value, "Zone 1");
+  assert.strictEqual(cancel.hidden, true);
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.state.ui.activeTab, "export");
+  assert.strictEqual(p.sent.length, 1, "Cancel writes nothing");
+});
+
+test("an invalid Ground depth offers Cancel, which restores the Model's value", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), depth = byLabel(section, "Zone 1 ground depth");
+  enter(depth, "deep");
+  click(byLabel(section, "Cancel Zone 1 ground depth edit"));
+  assert.strictEqual(depth.getAttribute("aria-invalid"), "false");
+  assert.strictEqual(p.sent.length, 0);
+});
+
+test("a refused tab change while a Zone choice is held offers Cancel on its notice", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: managedSnapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), segment = byLabel(section, "Zone 1 Building-Segment");
+  segment.value = "bsg_tower"; segment.listeners.change({});
+  result(p, 0, { status: "completed", effect: "committed" });
+  p.panel.showTab("export");
+  click(p.query(".phc-floating-notice-action"));
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.state.ui.activeTab, "export");
+});
+
+test("a typed draft its Zone turns read only underneath keeps a visible Cancel", function () {
+  var p = page(), payload = snapshot();
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var section = p.query("[data-section='ph_composer.overview']"), name = byLabel(section, "Zone 1 name");
+  name.value = "North"; name.listeners.input({});
+  payload = snapshot();
+  payload.sections["ph_composer.zones.overview"].value.zones[0].state = "shared_definition";
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  var cancel = byLabel(section, "Cancel Zone 1 name edit");
+  assert.strictEqual(cancel.hidden, false);
+  click(cancel);
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.state.ui.activeTab, "export", "nothing is left holding the screen");
+});
+
+test("a refused choice's reason clears once the Zone it was refused against changes", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: managedSnapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), segment = byLabel(section, "Zone 1 Building-Segment");
+  segment.value = "bsg_tower"; segment.listeners.change({});
+  result(p, 0, { status: "refused", code: "target.ambiguous", effect: "none", message: "Duplicated." });
+  var error = segment.parentNode.querySelector(".cell-error");
+  assert.strictEqual(error.hidden, false);
+  p.panel.receive({ type: "panel.snapshot", payload: managedSnapshot() });
+  assert.strictEqual(error.hidden, false, "an unchanged Zone keeps the reason");
+  var renamed = managedSnapshot();
+  renamed.sections["ph_composer.zones.overview"].value.zones[0].values.name = "Renamed";
+  p.panel.receive({ type: "panel.snapshot", payload: renamed });
+  assert.strictEqual(error.hidden, true);
+});
+
+/* Zone 1 and a copy carrying its id, both read "ambiguous", plus Zone 2, an ordinary Zone. */
+function sharedPage() {
+  var p = checkPage(), payload = p.payload;
+  var zones = payload.sections["ph_composer.zones.overview"].value.zones;
+  var faces = payload.sections["ph_composer.zones.faces.faces"].value.faces;
+  var copy = JSON.parse(JSON.stringify(zones[0])), other = JSON.parse(JSON.stringify(zones[0]));
+  copy.reference.zone_path = [200]; copy.values.name = "Zone 1 copy";
+  other.id = other.reference.zone_id = "zon_2"; other.reference.zone_path = [300]; other.values.name = "Zone 2";
+  zones[0].state = copy.state = "ambiguous";
+  zones.push(copy, other);
+  faces.push({ reference: { zone_id: "zon_2", zone_path: [300], entity_path: [301], entity_id: "fac_z2" },
+    zone_name: "Zone 2", area_m2: 4, state: "classified",
+    values: { face_type: "Floor", boundary_condition: "Outdoors" },
+    suggested: { face_type: "Floor", boundary_condition: "Outdoors" } });
+  p.panel.receive({ type: "panel.snapshot", payload: payload });
+  return p;
+}
+
+test("a shared Zone's cells and its Faces' chips are read only, and Suggest says why", function () {
+  var p = sharedPage();
+  assert.strictEqual(byLabel(p.section, "Zone 1 name").readOnly, true);
+  assert.strictEqual(byLabel(p.section, "Wall 1 type"), undefined, "the Face's type is a read-only pill");
+  assert.strictEqual(byLabel(p.section, "Zone 2 name").readOnly, false, "an ordinary Zone stays editable");
+  var suggest = p.section.querySelectorAll("[data-row-action='suggest']").filter(function (node) {
+    return /Zone 1\b/.test(node.getAttribute("aria-label") || "");
+  })[0];
+  assert.strictEqual(suggest.disabled, true);
+  assert.match(suggest.getAttribute("aria-label"), /read only/);
+});
+
+test("an eligible shared Zone offers Make independent, names what it costs, and sends one action", function () {
+  var p = sharedPage(), zones = p.payload.sections["ph_composer.zones.overview"].value.zones;
+  zones[0].independence = { available: true, code: null, reason: null, retired_pairs: 2 };
+  zones[1].independence = { available: false, code: "target.locked", reason: "Unlock it first.", retired_pairs: 0 };
+  p.panel.receive({ type: "panel.snapshot", payload: p.payload });
+  var offered = p.section.querySelectorAll("[data-row-action='independent']");
+  assert.strictEqual(offered.length, 1, "only the occurrence the command can act on");
+  assert.match(p.section.querySelectorAll(".phc-row-marker").filter(function (m) {
+    return m.classList.contains("is-icon");
+  })[1].getAttribute("aria-label"), /Unlock it first/,
+    "the other says what comes first");
+  click(offered[0]);
+  var dialog = p.query("dialog");
+  assert.match(dialog.querySelector("p").textContent, /2 Surface pairs on this occurrence's Faces are retired/);
+  var buttons = dialog.querySelectorAll("button");
+  click(buttons.filter(function (b) { return b.textContent === "Locate"; })[0]);
+  assert.strictEqual(p.sent[p.sent.length - 1].payload.name, "ph_composer.zones.faces.locate");
+  click(buttons.filter(function (b) { return b.textContent === "Make independent"; })[0]);
+  var sent = p.sent[p.sent.length - 1].payload;
+  assert.strictEqual(sent.name, "ph_composer.zones.make_independent");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(sent.params)), { zone_path: [100] });
+});
+
+test("a checked Face in a shared Zone refuses the bar's assignment whole and says why", function () {
+  var p = sharedPage();
+  click(p.box("Floor 1")); click(p.box("Wall 1"));
+  assert.strictEqual(byLabel(bar(p), "Type for selected Faces").disabled, true);
+  assert.strictEqual(byLabel(bar(p), "Boundary for selected Faces").disabled, true);
+  assert.ok(byLabel(bar(p), "Why Assign is unavailable"));
+  assert.strictEqual(bar(p).querySelector(".phc-selection-bar-count").textContent, "2 Faces selected",
+    "the checked set is kept whole");
+  click(p.box("Wall 1"));
+  assert.strictEqual(byLabel(bar(p), "Type for selected Faces").disabled, false);
 });
 
 function attachedDialog(p, payload) {

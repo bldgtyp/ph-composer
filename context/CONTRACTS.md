@@ -452,15 +452,37 @@ pairing share one transaction. Geometry never selects an identity.
 - Split identity repair keeps one identity, using the stored original endpoint path or an explicit
   choice when that proof is absent; a choice that conflicts with stored proof refuses. It retires
   invalid envelopes on the pieces and their counterparts and creates no pairs.
-- A copied Zone is ambiguous until explicit identity repair gives it and its members new ids,
-  updates stamps and retires copied pairs, leaving the original untouched. Shared storage refuses.
+- A copied Zone is ambiguous until it is made independent. Make Zone independent
+  (`ph_composer.zones.make_independent`) makes the occurrence's own Group unique when it shares its
+  Faces, and each Group inside it that still shares its contents, then gives it and its members new
+  ids, updates stamps and retires copied pairs, as one step; the other occurrence keeps its id, Faces
+  and pairs. It refuses a Zone inside a component, a Zone inside a still-shared parent Group, member
+  Faces inside a component or a locked Group, a nested Zone, a lock and an id held only once, each
+  with its prerequisite; the Zones read offers it only where its plan succeeds. Identity repair (`repair_identity`) remains for scripts and refuses shared storage.
+  Both derive the new Zone id from the occurrence path and each new Face id from the id it was
+  copied with (not its entity path, which Make Unique replaces), so a preview's ids hold at apply.
 - Limited Restore regroups only stamped Faces and their bounding edges in one parent context and
   recovers only the Zone id, Building-Segment, Level and a new default name.
 
 **Reconciliation.** Zones keeps one state object per session. Observers only mark what changed
 dirty and queue a deferred pass, which reports missing or duplicate ids, changed paths and stamps,
-and stale pairs. It emits findings and cache invalidations and never solves, rebinds identity or
-edits classification.
+and stale pairs. It emits findings and cache invalidations and never solves or edits
+classification. It rebinds identity in one case only: a Zone copied natively during the session is
+made independent by the copy watcher, through the registered Make Zone independent action as a
+host follow-up joined to the copy (D-1). A copy is an occurrence the gesture added whose id one
+original holds; a duplicate already in the Model, a copy whose path crosses a ComponentInstance and
+anything Undo or Redo restores are left alone. The repair joins the latest transaction; if an
+unrelated operation committed before the deferred pass, undoing it takes the repair back with it, and
+the watcher tells the user the copy is read only again.
+
+**Host follow-ups.** `HostFollowUp.run(session, action, params_list)` is internal; nothing registers
+it where the panel or the API can reach it. It runs the registered action's handler once per params
+into one proposal, so any refusal declines the whole gesture before a write. It accepts only steps
+that answer `restore` and no record changes, applies them in one transparent operation, and never
+aborts: on a failure the applied steps restore in reverse and the operation commits. It answers an
+internal result (`completed`, `refused` with the code and message, or `failed` with whether every
+step restored) for the caller's notice, not a public outcome, because storage isolation done before
+the failure remains.
 
 ## Handler-side dependency reads
 
@@ -520,7 +542,11 @@ supplied preview digest no longer matches (`proposal.changed`). The order is fix
 session, capability and revision; resolve the whole scope and refuse non-unique targets;
 participants add their changes; steps validate projected records, references and geometry
 feasibility; capture the scoped pre-image; then open one operation, apply the steps in order,
-resolve created slots and commit. Each step validates its own writes.
+resolve created slots and commit. Each step validates its own writes. A step whose final references exist only
+after an earlier part of it runs (Make Unique creating a copy's Faces) binds the logical change
+instead: preview and digest cover its id mapping and record contents, keyed without those
+references; apply rebuilds the plan from the live entities with the same mapping, refuses
+`target.changed` if any record differs, and completes `affected` with the final references.
 
 The pre-image fingerprints the declared containers: kind, persistent id, parent path,
 transformation, loops and every `ph_composer.*` dictionary. Coordinates are rounded to six decimals

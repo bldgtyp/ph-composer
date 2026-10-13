@@ -1,9 +1,9 @@
 {
   "assets": {
     "html/base.css": {
-      "bytes": 12315,
+      "bytes": 12863,
       "mime": "text/css; charset=utf-8",
-      "sha256": "0637990ba1dc74a06cef7c516b1f9331802b84c004ebd0de59d45b45bde28246"
+      "sha256": "998c453cc21e80aef3de9ef3c562f7f548b929480144eb7ab85c10bb0ad8af20"
     },
     "html/column_menu.js": {
       "bytes": 5796,
@@ -201,19 +201,19 @@
       "sha256": "d29df66f89aa13ccfabf7e501c2746015af715aeb0cb29612c12c986a38ee2ba"
     },
     "html/features/zones/overview.js": {
-      "bytes": 55824,
+      "bytes": 62062,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "47b42f3cf374fe193634976338021f27fc302543d22e86e8ec14ff68407851f5"
+      "sha256": "84838ce71a5491277ca089c27de2c52d75a400aebfd4140166515c893e28745c"
     },
     "html/features/zones/selection_assignment.js": {
-      "bytes": 2727,
+      "bytes": 2996,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "041feddeda18a5220cc780298f5c5c2795b4168711adba65509243edbf432534"
+      "sha256": "d6c754be9324028ea1e4c7ff8a6b2ab9278cf5d8b55fe182521108ef6432c1d3"
     },
     "html/features/zones/zone_cells.js": {
-      "bytes": 7903,
+      "bytes": 12874,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "b60dcba2eec618c8ebdf01dc0c6b12af06338376f2f7da18275d37bb9f3c5580"
+      "sha256": "20a714f8035f5d5843710fdded68ae1965b92c39441938e87247860674228c59"
     },
     "html/features/zones/zone_options.js": {
       "bytes": 2535,
@@ -226,9 +226,9 @@
       "sha256": "556c9ee3225bf30e8efc656e33bc9a7e8b15dcc82c82c0d898481ee04145ee04"
     },
     "html/features/zones/zones.css": {
-      "bytes": 5725,
+      "bytes": 5900,
       "mime": "text/css; charset=utf-8",
-      "sha256": "e3a463777af0494db0a9a5716d2af1de7acc9593d50d452aa210ab4278dcd967"
+      "sha256": "85ec4376f716b5cd6a417db0cef3092ce0a0d5246171877c7c071662ab41f4c8"
     },
     "html/fields.js": {
       "bytes": 1756,
@@ -326,14 +326,14 @@
       "sha256": "884ea2b3e0312b660d13517ae33cb7cb5cf6c60fd602f7dee624543bfac9cde2"
     },
     "html/overlay.css": {
-      "bytes": 12403,
+      "bytes": 12767,
       "mime": "text/css; charset=utf-8",
-      "sha256": "56657d14a0e80b7830ad450209d88daa5e899454585ba882e4d7af943927778e"
+      "sha256": "353377683dc5a4db82fc4449196790aeed56171716dc49240c54c7e82576685a"
     },
     "html/overlay.js": {
-      "bytes": 23608,
+      "bytes": 24055,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "e67661b31c272c6e2a00fc55524db280378541c71a12a51aec8e78e7bdb26ed5"
+      "sha256": "5c74c7402aacc4e6cf277eaad30a0a91b95c82cbb10b02c02bf321d04a6cf9ef"
     },
     "html/page_header.js": {
       "bytes": 1658,
@@ -341,14 +341,14 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 22117,
+      "bytes": 22851,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "abab59bb43b4e20cfc2fb97eccd10d6da0e20b1bbb4d00751e63c603dc153b3d"
+      "sha256": "2b6ad3b81abfe2f27fe4bec5c4f0df0a745e2a200abf65716468c370fb7b2f56"
     },
     "html/record_edits.js": {
-      "bytes": 15834,
+      "bytes": 17435,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "b35f0499ec77f12c8db9750778a51c9e26a5d35173f169add967c2d48bee16b4"
+      "sha256": "55552dd4fe2e7c378cea2227189dc6e10425dcfc4f9faa07c5d258164dcfe60d"
     },
     "html/record_form.js": {
       "bytes": 4548,
@@ -411,9 +411,9 @@
       "sha256": "68f558292066946a37b1b4af633a157e9a6c372d3789db66bc3c7b076e857d9c"
     },
     "html/table.js": {
-      "bytes": 24405,
+      "bytes": 24670,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "b3141303c6b025f28b5528f3495d5f54cff6b17bb450a61764122606890401ee"
+      "sha256": "9b5a23d2763ec717c9166d60ea8d8f267af47062de45dfc036619e16ff6dff1f"
     },
     "html/table_contributions.js": {
       "bytes": 2905,

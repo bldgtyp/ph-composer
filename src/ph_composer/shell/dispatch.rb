@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "handler_request"
+require_relative "request_checks"
 
 module PhComposer
   # Runs public queries and operations for every client: the panel, Ruby scripts and, later, external
@@ -9,6 +10,8 @@ module PhComposer
   # operation per accepted change, and a verified rollback when that operation fails. Handlers only
   # read and propose.
   class Dispatch
+    include RequestChecks
+
     REQUEST_KEYS = %w[sequence expected_revision proposal_digest].freeze
 
     Request = HandlerRequest
@@ -314,31 +317,12 @@ module PhComposer
       declaration.precondition.call(request_for(session, params, declaration))
     end
 
-    def check_params!(declaration, params, session)
-      check_json!(params, session)
-      findings = JsonSchema.validate(params, declaration.params)
-      return if findings.empty?
-
-      raise CodedError.new("params.invalid", "The request is not valid: #{findings.first}.", "findings" => findings)
-    end
-
-    def check_json!(params, session)
-      return if params.is_a?(Hash) && JsonValue.problems(params).empty?
-
-      raise CodedError.new("request.malformed", "Params must be a plain JSON object.", "revision" => session.revision)
-    end
-
     # `value`, once it is within the declared result schema.
     def check_result!(declaration, value)
       findings = JsonSchema.validate(value, declaration.result)
       return value if findings.empty? && JsonValue.problems(value).empty?
 
       raise InternalError, "#{declaration.name} returned a result outside its schema: #{findings.first}"
-    end
-
-    def request_for(session, params, declaration, proposal = nil, approval: nil)
-      Request.for(session, :owner => declaration.owner, :name => declaration.name, :registry => @registry,
-                           :params => params, :proposal => proposal, :approval => approval)
     end
 
     # ---------------------------------------------------------------- the mutation

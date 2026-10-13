@@ -27,20 +27,24 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   // screen cannot drift from what the feature will actually accept. What it subtracts is its own:
   // a value the palette lists but a chip cannot set on its own keeps its cell read only.
   var ORDER_FIELDS = [["name", "Name"], ["area_m2", "Area"]];
-  // What the Zones read says is wrong with a Zone occurrence, in the words the user needs.
+  // What the Zones read says is wrong with a Zone occurrence, in the words the user needs. Both the
+  // original and its copy carry the state, so the marker names the condition, not which one is the copy.
+  // A shared Zone's marker is an alert icon: no word fits beside "Zone" in the Hierarchy column.
+  // Every write to such a Zone refuses, so its cells are read only.
   var ZONE_STATES = {
-    ambiguous: { text: "shared identity",
-      tooltip: "Another Zone carries the same identity, which a copy does until it is repaired. " +
-        "Repair it before classifying, or an edit here may reach the other one." },
-    shared_definition: { text: "shared definition",
-      tooltip: "This Zone is one of several instances of the same component, so editing it edits " +
-        "them all. Make it unique before classifying." },
+    ambiguous: { text: "Shared", icon: "alert",
+      tooltip: "Another Zone carries the same identity, as a copy does. Its cells are read only until it is " +
+        "made independent, because an edit here could reach the other one." },
+    shared_definition: { text: "Shared", icon: "alert",
+      tooltip: "This Zone shares its Faces with another occurrence: a copy, or another instance of the same " +
+        "component. Its cells are read only, because an edit here would reach both." },
     wrong_hierarchy: { text: "nested",
       tooltip: "This Zone sits inside another Zone. A Zone is one Room, so a Zone within a Zone " +
         "cannot be exported as it stands." }
   };
 
   var screen = null;
+  var ZONE_DRAFT = "Finish or cancel the Zone edit first.";
   var HELP = "Select Faces in SketchUp, or check their rows, to edit them together in the bar under the table. " +
     "A column's palette icon colours the Model by that column; its menu sorts and filters.";
 
@@ -53,6 +57,11 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (screen && screen.attachedDraft) screen.attachedDraft.dispose();
     if (screen && screen.settings) screen.settings.dispose();
     if (screen && screen.selectionAssignment) screen.selectionAssignment.dispose();
+    if (screen && screen.independenceDialog) {
+      screen.independenceDialog.closeModal();
+      var stale = screen.independenceDialog;
+      if (stale.parentNode) stale.parentNode.removeChild(stale);
+    }
     if (screen && screen.bar) withdrawBar(screen.bar);
     screen = { session: session, expanded: Object.create(null), showAll: Object.create(null),
       columnWidths: {}, menus: Object.create(null), toggles: Object.create(null), hiddenColumns: {},
@@ -70,7 +79,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     screen.settings = new ZoneSettings(session, send, function () { return draftReason(screen); }, refuse);
     screen.selectionAssignment = new SelectionAssignment(session, send, function () {
       return draftReason(screen);
-    }, refuse, function () { return screen.barTargets || []; });
+    }, refuse, function () { return screen.barTargets || []; }, function (faces) {
+      return gatedReason(screen, faces, true);
+    });
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone, type or boundary", fields: ORDER_FIELDS, initialOrder: "name",
       columnSort: true,
@@ -84,7 +95,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   function draftReason(state, skipCells) {
     if (state && state.optionDialog && state.optionDialog.active()) return "Finish the managed options draft first.";
     if (!skipCells && state && state.zoneCells && state.zoneCells.active()) {
-      return "Finish or cancel the Zone edit first.";
+      return ZONE_DRAFT;
     }
     if (state && state.attachedDraft) return "Finish the Attached zone assignment first.";
     if (state && state.selectionAssignment && state.selectionAssignment.active()) {
@@ -94,8 +105,23 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     return null;
   }
 
+  /* A refusal because a Zone edit is held offers to cancel it from the notice, so the way out is in view. */
   function refuse(reason) {
-    panel.notify(reason, "warning");
+    var cells = screen && screen.zoneCells;
+    panel.notify(reason, "warning", reason === ZONE_DRAFT && cells ? { label: "Cancel the Zone edit",
+      run: function () { cells.cancelAll(); panel.repaint(); } } : null);
+  }
+
+  /* The Zone occurrences every write refuses, keyed by path, and why a gesture naming one of them cannot
+     run. A bulk change is refused whole rather than quietly leaving out the Faces the user checked. */
+  function gatedReason(state, references, selected) {
+    var count = references.filter(function (reference) {
+      return state.gated[occurrence((reference.reference || reference).zone_path)];
+    }).length, noun = selected ? " selected" : " checked";
+    if (!count) return null;
+    return count + noun + (count === 1 ? " Face is" : " Faces are") + " in a shared Zone, which is read only. " +
+      (selected ? "Select only Faces in other Zones to assign them." :
+        "Uncheck " + (count === 1 ? "it" : "them") + " to assign the rest.");
   }
 
   /* Held category filters follow explicit merge/removal results; rename keeps the same ID. */
@@ -323,7 +349,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         return { key: JSON.stringify(["Face", zone.reference.zone_path, face.reference.entity_path]),
           parent: parent, tier: "Face", depth: depth,
           record: { id: face.reference.entity_id, name: faceName(face, own), place: own.indexOf(face) + 1,
-            face: face } };
+            face: face, gated: ZoneCells.gated(zone) } };
       }
       recorded.forEach(function (face) { rows.push(faceRow(face, key, 1)); });
       var waiting = own.filter(function (face) { return face.state === "unclassified"; });
@@ -376,6 +402,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   }
 
   var ZONE_FIELDS = { building_segment: true, level: true, ground_depth_mm: true };
+  var SHARED_FACE = "Read only while this Face's Zone is shared with another occurrence.";
 
   function totalArea(faces) {
     return faces.reduce(function (sum, face) { return sum + face.area_m2; }, 0);
@@ -390,11 +417,18 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
      occurrence and nothing else on the screen tells the user there are two. */
   function marker(row) {
     var count = row.record.unclassified, trouble = ZONE_STATES[row.record.state];
-    if (trouble) return { text: trouble.text, tooltip: trouble.tooltip };
+    if (trouble) return { text: trouble.text, icon: trouble.icon, tooltip: (trouble.tooltip + " " +
+      independenceHint(row.record.zone && row.record.zone.independence)).trim() };
     if (!count) return null;
     return { text: String(count),
       tooltip: count + " unclassified Faces in this Zone have no record yet. Suggest classification writes one " +
         "for each of them and leaves every Face that already has one alone." };
+  }
+
+  /* What the user can do about a shared Zone: the row's Make independent action, or what comes first. */
+  function independenceHint(independence) {
+    if (!independence) return "";
+    return independence.available ? "Make it independent from its row's actions." : independence.reason || "";
   }
 
   function actions(row) {
@@ -402,8 +436,15 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var locatable = row.record.face || (row.record.every || row.record.faces).length;
     var items = [{ id: "locate", icon: "locate", disabled: !locatable,
       label: locatable ? "Locate " + row.record.name : "Nothing to locate: " + row.record.name + " has no Faces" }];
+    var independence = row.depth === 0 && row.record.zone.independence;
+    if (independence && independence.available) {
+      items.push({ id: "independent", icon: "repair", label: "Make " + row.record.name + " independent" });
+    }
     if (row.depth === 0 && row.record.unclassified) {
-      items.push({ id: "suggest", icon: "sort", label: "Suggest classification for " + row.record.name });
+      var shared = ZoneCells.gated(row.record.zone);
+      items.push({ id: "suggest", icon: "sort", disabled: shared, label: shared ?
+        "Suggest classification is unavailable: " + row.record.name + " is read only" :
+        "Suggest classification for " + row.record.name });
     }
     return items;
   }
@@ -441,7 +482,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
 
   /* A value a chip cannot set here (a paired Surface, an Air boundary) shows as the same pill, read only,
      with what sets it in its tooltip. An earlier control, if the cell had one, is forgotten. */
-  function readOnly(td, field, face) {
+  function readOnly(td, field, face, why) {
     var stored = face.values[field];
     td.className = "col-" + field + (stored ? " phc-pill-cell" : "");
     td._chip = td._attachedChip = td._chipValues = null;
@@ -458,7 +499,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     }
     pill.textContent = chipLabel(field, stored);
     words.paintFill(pill, field, stored);
-    var hint = "Read only. " + (words.UNCHOOSABLE[stored] ?
+    var hint = why || "Read only. " + (words.UNCHOOSABLE[stored] ?
       pill.textContent + ": " + words.UNCHOOSABLE[stored] : pill.textContent);
     flag(td, problem(face, field), hint);
     return true;
@@ -477,13 +518,19 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (state.zoneCells.render(td, row, field)) return true;
     // A Face with no record has nothing to hang an Assembly on yet; its type or boundary comes first.
     if (field === "assembly_id") {
-      if (!face || face.state !== "unclassified") return assemblies.cell(td, row, state, draftReason, refuse);
+      if (!face || face.state !== "unclassified") {
+        var painted = assemblies.cell(td, row, state, draftReason, refuse);
+        if (painted && row.record.gated) { td._assemblyChip.disabled = true; ui.tooltip(td, SHARED_FACE); }
+        else if (painted) ui.tooltip(td, "");
+        return painted;
+      }
       // Back to text: the control this cell may have held (the Face had a record until an Undo) is forgotten.
       if (td._assemblyChip) { td._assemblyChip = null; td.className = "col-assembly_id"; }
       return false;
     }
     if (!face || (field !== "face_type" && field !== "boundary_condition")) return false;
     var issue = problem(face, field);
+    if (row.record.gated) return readOnly(td, field, face, SHARED_FACE);
     if (field === "boundary_condition" && face.values.boundary_condition === "AttachedZone") {
       attachedCell(td, row, state);
       flag(td, issue);
@@ -618,6 +665,36 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     }
   });
 
+  /* Make Zone independent names the occurrence it acts on and what it costs before it writes. Either
+     occurrence can be the one that takes the new identity, and both can carry the same name, so the
+     dialog offers Locate and says what the other keeps. */
+  function confirmIndependent(state, row) {
+    var reason = draftReason(state);
+    if (reason) return refuse(reason);
+    var zone = row.record.zone, retired = zone.independence.retired_pairs, dialog = state.independenceDialog;
+    if (!dialog) {
+      dialog = state.independenceDialog = ui.formDialog("", function () { dialog.closeModal(); });
+      document.body.appendChild(dialog);
+    }
+    var consequence = "This occurrence gets its own Faces and a new identity. The other occurrence keeps the " +
+      "current identity." + (retired ? " " + retired + (retired === 1 ? " Surface pair on this occurrence's " +
+        "Faces is" : " Surface pairs on this occurrence's Faces are") + " retired; run Solve adjacencies " +
+        "again afterwards." : "");
+    var cancel = ui.button("Cancel", function () { dialog.closeModal(); });
+    var footer = ui.actionRow(cancel,
+      ui.button("Make independent", function () {
+        dialog.closeModal();
+        if (state.disposed || state.edits.busy()) return;
+        state.edits.run("ph_composer.zones.make_independent", { zone_path: zone.reference.zone_path });
+        panel.repaint();
+      }));
+    footer.insertBefore(ui.button("Locate", function () { locate(state, row); }), footer.firstChild);
+    dialog.replaceChildren(ui.element("h2", "", "Make " + row.record.name + " independent"),
+      ui.element("p", "", consequence), footer);
+    dialog.openModal();
+    cancel.focus();
+  }
+
   function suggest(state, row) {
     state.edits.run("ph_composer.zones.faces.auto_classify", { zone: row.record.zone.reference });
   }
@@ -646,6 +723,10 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     screenState.send = send;
     screenState.snapshot = state;
     screenState.zoneRecords = zones.zones;
+    screenState.gated = Object.create(null);
+    zones.zones.forEach(function (zone) {
+      if (ZoneCells.gated(zone)) screenState.gated[occurrence(zone.reference.zone_path)] = true;
+    });
     screenState.assemblyEnabled = Boolean(snapshot.value(state, "ph_composer.zones.faces.assemblies") &&
       snapshot.value(state, "ph_composer.zones.faces.faces"));
     screenState.revision = state.revision;
@@ -748,7 +829,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var label = "Solve adjacencies for checked Zones";
     var solve = ui.button(label, function () {
       var zones = state.checkedZones || [];
-      if (zones.length < 2 || state.edits.busy()) return;
+      if (zones.length < 2 || state.edits.busy() || sharedChecked()) return;
       var reason = draftReason(state);
       if (reason) return refuse(reason);
       state.edits.run("ph_composer.zones.solve_adjacency", {
@@ -759,13 +840,25 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     solve.classList.add("phc-toolbar-button");
     solve.setAttribute("aria-label", label);
     solve.replaceChildren(ui.glyph("link"), ui.element("span", "", label));
-    root.appendChild(count); root.appendChild(solve);
+    function sharedChecked() {
+      return (state.checkedZones || []).filter(function (zone) { return ZoneCells.gated(zone); }).length;
+    }
+    var why = ui.element("span", "phc-selection-limit");
+    root.appendChild(count); root.appendChild(solve); root.appendChild(why);
     return { root: root, paint: function () {
-      var total = (state.checkedZones || []).length;
+      var total = (state.checkedZones || []).length, shared = sharedChecked();
       root.hidden = !total;
+      var reason = shared ? shared + (shared === 1 ? " checked Zone is" : " checked Zones are") +
+        " shared with another occurrence and read only. Uncheck " + (shared === 1 ? "it" : "them") +
+        " to solve." : null;
+      why.hidden = !reason;
+      if (reason && why._reason !== reason) {
+        why._reason = reason; why.replaceChildren(ui.reasonButton("Solve", reason));
+      }
       count.textContent = total + (total === 1 ? " Zone checked" : " Zones checked");
-      solve.disabled = state.edits.busy() || total < 2;
-      ui.tooltip(solve, total < 2 ? "Check at least two complete Zones. Partially checked Zones are not included." :
+      solve.disabled = state.edits.busy() || total < 2 || Boolean(shared);
+      ui.tooltip(solve, reason ? reason :
+        total < 2 ? "Check at least two complete Zones. Partially checked Zones are not included." :
         "Only fully checked Zones are solved, including those hidden by filters. Check touching neighbours too.");
     } };
   }
@@ -804,13 +897,14 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       fields[field] = select;
     }
     function paint() {
-      var tooMany = state.barTargets.length > state.limit;
-      over.hidden = !tooMany;
-      if (tooMany && over._limit !== state.limit) {
-        over._limit = state.limit;
-        over.replaceChildren(ui.reasonButton("Assign", "Check at most " + state.limit +
-          " Faces to assign them together."));
+      var tooMany = state.barTargets.length > state.limit, shared = gatedReason(state, state.barTargets);
+      var reason = shared || (tooMany ? "Check at most " + state.limit + " Faces to assign them together." : null);
+      over.hidden = !reason;
+      if (reason && over._reason !== reason) {
+        over._reason = reason;
+        over.replaceChildren(ui.reasonButton("Assign", reason));
       }
+      tooMany = Boolean(reason);
       Object.keys(fields).forEach(function (field) {
         var select = fields[field], shared = common(field);
         var offered = choices(state, field).filter(function (choice) { return choice !== "AttachedZone"; });
@@ -952,6 +1046,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       action: function (row, item) {
         if (item.id === "locate") locate(state, row);
         if (item.id === "suggest") suggest(state, row);
+        if (item.id === "independent") confirmIndependent(state, row);
       }
     });
   }
@@ -1005,7 +1100,14 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
 
   // First in its pane: the Zone tree is the screen's work surface, and the palette and column menus
   // are controls that act on what it shows.
-  panel.navigationGuard("ph_composer.overview", function () { return draftReason(screen); });
+  // A refused tab change restates its reason through `refuse`, so a held Zone edit's notice offers Cancel too.
+  panel.navigationGuard("ph_composer.overview", function () { return draftReason(screen); },
+    function () { var reason = draftReason(screen); if (reason) refuse(reason); });
+  // A refused Zone write says what to do about a shared Zone rather than naming its duplicated id.
+  panel.outcomeText(function (result) {
+    if (!screen || result.session !== screen.session || !screen.zoneCells.owns(result.request_id)) return null;
+    return ZoneCells.refusalText(result.outcome);
+  });
   /* Another tab can open this one with Faces checked and, with `locate: true`, framed
      (`panel.navigate("overview", { check: references, locate: true })`), as the Assemblies tab's "Select
      faces using" does. Locating here keeps the outline this screen's to clear. */

@@ -1,6 +1,6 @@
 # P3a-04: copies and Move Space to Zone
 
-DATE: 2026-10-03
+DATE: 2026-10-12
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
@@ -9,7 +9,10 @@ ISSUE: none (local planning draft)
 
 Requires P3a-03 and D3a-3. Owns the two operations that change identity or parentage: the
 `duplicate_identity` finding with its Make independent repair, and Move Space to Zone. Also
-carries the Space half of Restore Zone. M1 closes here.
+carries the Space half of Restore Zone and the confirmed Zone-child copy behavior
+[D3a-13](../DECISIONS.md#confirmed-copy-decision-d3a-13). M1 closes here. Reconcile the then-current
+[copied-Zone plan](../../../archive/copied-zone-edit-refusal/PLAN.md) before binding participation;
+this stage cannot close with parent-only independence leaving shared Space storage or IDs.
 
 Behavior owner: [Spaces PRD](../PRD.md), Records "Copies (Q20)" and "`user_data`",
 Behaviors "Move Space to Zone" (Q18, Q24), and "Carried from zones-and-adjacency". Names:
@@ -33,11 +36,14 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    kept, since the copy is the user's own. Shape it after `features/windows/units/identity_plan.rb`
    and `identity_step.rb`; port the rules from `operations/recovery.rb` (`repair_copied_space`,
    `adopt_copied_volume`).
-3. **No silent reissue.** The reconciler never changes an id. A test holds it.
+3. **No guessed reissue.** The standalone Spaces reconciler never guesses which occurrence
+   should take a new id. Tests hold this for standalone copies; the proven parent-copy scope
+   in step 9 is a separate, owner-authorized duplication path.
 4. **Repeated components.** A Space inside a ComponentInstance, or inside a Group whose
    definition another Group shares, raises the same finding with no repair and the message to
    draw the Space directly. Make independent refuses there with `target.shared_definition` and
-   never makes a parent unique.
+   never makes a parent unique in the standalone repair. Parent-gesture storage isolation in
+   step 9 must be proven separately before the child participant writes anything.
 5. **Move Space to Zone.** `move/plan.rb`, pure: from a Space occurrence and a target Zone
    occurrence, the transform of the new Space Group in the target's entities that holds world
    position, and each Volume's recomputed `home_transform`. `move/step.rb`: inside the one
@@ -55,6 +61,15 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    inside it, then restored.
 8. **Walkthrough.** Extend `tools/examples/authoring/spaces_walkthrough.rb`, panel closed: copy,
    detect, make independent, move to a second Zone, read back.
+9. **Zone-child copy participation (D3a-13).** Bind Spaces' pure copy plan and native application
+   into the proven Zone-copy scope through a declared contribution contract. Keep Zones,
+   shell and session free of Space-specific dictionary logic. Allocate independent child
+   identities and isolate child storage; rewrite Zone stamps and declared internal references;
+   preserve values and metadata through the copy rules. Join the complete gesture's atomic
+   proposal, failure policy and one Undo step. Unsafe/unavailable child payloads must not yield
+   partial success. Confirm preview/commit correspondence and stale-target refusal. The exact
+   participation mechanism remains part of D3a-3's unresolved architecture, not a new API already
+   provided by this packet. Windows participants follow their own protocol and retain Type references.
 
 ## Source
 
@@ -72,7 +87,7 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 2. Make independent on each clears it in one Undo step; ids are new throughout the copy and
    unchanged in the original; the copied Space takes the next free number; `user_data` survives.
 3. Naming the original rather than the copy is honored: the named one is rewritten.
-4. A reconciler pass over a model with a copy changes no id.
+4. A standalone reconciler pass over a model with an unproven copy changes no id.
 5. A Space inside a repeated component: finding, no repair, refusal.
 6. Move under a rotated wrapper Zone to a Zone with a different rotation: every Floor Segment's
    world loop is unchanged to the stored precision; ids and all record values are unchanged; the
@@ -81,6 +96,14 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    the original intact and no new Group.
 8. One Undo restores the original Space in the original Zone; Redo moves it again.
 9. Restore Zone recovers a stamped Space Group.
+10. Copy a Zone containing several Spaces, Volumes and Floor Segments, plus Window Units:
+    copied authored Space storage and IDs are independent; stamps name the copied Zone;
+    internal typed references remap and external definition references remain as prescribed;
+    original storage, IDs, values and references remain unchanged. Windows reference their
+    existing Type under their protocol. Unsafe child data refuses the whole batch; injected
+    failures satisfy the parent's proven failure-safe policy. One Undo/Redo includes parent
+    and Space-child changes; save/reopen verifies actual ownership/references. Retain the exact
+    mapping/fixture for HBJSON attachment read-back in S10 when export is implemented.
 
 ## Host gate
 
@@ -90,6 +113,12 @@ with `make_independent`; Undo each. Cut and paste a Space within its Zone and co
 Move Space 103 from Zone A to Zone B, where B sits under a rotated wrapper: confirm by
 measurement that the faces did not move, then Undo. Attempt the move with a Volume open. Save and
 reopen after a move and read the records back.
+
+Also copy a Zone containing Spaces and Windows together. Edit a copied Space and its Floor
+Segment factor without changing the original; read back the full identity/stamp/reference map.
+Verify one Undo/Redo of the parent gesture, failure cases and save/reopen. Retain the fixture and
+identity map for S10's later HBJSON attachment read-back to the copied Room; export is not an entry
+gate for this stage. Repeated reconciliation and Redo must not reissue identities a second time.
 
 ## Out of scope
 

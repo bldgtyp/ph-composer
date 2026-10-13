@@ -57,6 +57,12 @@
   color: var(--muted);
   transform: translateY(-50%);
 }
+/* The notice's own way out (Cancel the held edit): a quiet text button after the message. */
+.phc-workspace .phc-floating-notice-action {
+  margin-left: 10px; min-height: 24px; padding: 2px 8px; background: transparent; color: inherit;
+  border-color: currentColor; font-weight: 600; pointer-events: auto;
+}
+.phc-floating-notice-action[hidden] { display: none; }
 .phc-floating-notice[data-tone="warning"] { border-color: var(--warning-border); background: #fff8df; color: #4f3a0b; }
 .phc-workspace .phc-floating-notice[data-tone="warning"] .phc-floating-notice-dismiss { color: #6b5220; }
 .phc-floating-notice[data-tone="error"] { border-color: #e3a79d; background: var(--error-surface); color: #7a2418; }

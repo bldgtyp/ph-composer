@@ -55,6 +55,7 @@ record rather than repeat its 22-question interview.
   first. Ed confirmed leaving it as two explicit steps rather than having repair make the Group
   unique itself, because that is a native edit affecting every other instance and hiding it inside
   a repair would change more of the Model than the repair names. Recorded as Q25 in the Zones PRD.
+  *Superseded 2026-10-12 by D-1 of [copied-zone-edit-refusal](../../archive/copied-zone-edit-refusal/README.md): a native copy of a Zone is made independent automatically, and Make Zone independent makes the copy's Group unique itself. Make Unique was measured to change only the receiving placement.*
 
 ## Carryovers outside this milestone
 

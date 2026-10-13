@@ -1,7 +1,7 @@
 # Phase 3a, Spaces: what the merged foundation changed, and the decisions that follow
 
-DATE: 2026-10-03
-STATUS: Scoped. Part 1 is findings read from source on `main` at `70c340f` and from the predecessor at `f358ebf`. Part 2 is unanswered; every row waits for Ed.
+DATE: 2026-10-12
+STATUS: Scoped. Part 1 is findings read from source on `main` at `70c340f` and from the predecessor at `f358ebf`. Part 2's twelve decisions remain unanswered. D3a-13 is confirmed; mechanism and acceptance pending.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -106,8 +106,35 @@ Applied to [PRD.md](PRD.md) only after Ed answers, one change per decision:
 | F19 | Acceptance shape: PHX and METr steps point at metr-export |
 | D3a-8 | Airflows: the grouping provider's registration is deferred to the equipment packet |
 
+## Confirmed copy decision D3a-13
+
+**D3a-13, confirmed by Ed 2026-10-12:** when a Zone is copied and made independent, every Space
+included in that copy becomes an independent authored instance. This includes independent
+storage and identities for its Volumes, Floor Segments and logical Space Floors, correct copied
+Zone membership stamps, preserved ordinary values/metadata under their copy rules, and typed
+references remapped within the copied collection. The original Zone and its Spaces stay unchanged.
+
+Window Units in that same Zone follow Windows' protocol: new instances reference their existing
+Window Type. Copying the Zone does not create new Window Type definitions in the same Model.
+See [copied-Zone D-2 to D-6](../../archive/copied-zone-edit-refusal/DECISIONS.md).
+
+This qualifies PRD Q20's "no silent reissue" rule: the standalone Spaces reconciler still cannot
+guess which occurrence to rewrite, and standalone Space/Volume/Floor Segment copies retain their
+explicit repair workflow. A proven Zone-copy gesture supplies the parent-copy scope; Spaces must
+participate through its own declared copy planning/application, in that gesture's one atomic
+proposal and Undo step. Zones must not learn Space schemas or rewrite their dictionaries. A
+refusal/failure cannot leave a reported-independent Zone holding shared or duplicated Spaces.
+
+Allocated to P3a-04, with S04/S12 host acceptance and S10 HBJSON read-back. Before implementation,
+resolve the participation binding, child-storage isolation, typed collection mapping and failure
+recovery against the copied-Zone mechanism then present. D3a-3's architecture choice remains open;
+this decision specifies the result, not a new shared identity framework.
+
+D3a-1 to D3a-12 remain open. No Spaces stage is authorized or implemented by this decision.
+
 ## Ledger
 
 | Date | Event |
 | --- | --- |
 | 2026-10-03 | Drafted from a source review at `70c340f`, the predecessor at `f358ebf` and the Spaces PRD. Twenty-two findings, twelve decisions, none answered. |
+| 2026-10-12 | Ed confirmed D3a-13 through the copied-Zone review: Spaces copied with a Zone become independent authored instances; Window Units remain instances of their existing Type. Q20 and P3a-04 qualified; the twelve earlier decisions and implementation gates remain open. |

@@ -5,7 +5,9 @@
    quantities, numericFields, requiredFields, selectFields ({ value, label, fill? } or strings), validate(field, value),
    normalize(field, text),
    send(cell) -> { action, params }, label(row, field, cell), recordLabel, fieldAttribute,
-   presentation ("overlay" or "inline"), statusText(cell), textInputs, navigateOnCommit.
+   presentation ("overlay" or "inline"), statusText(cell), textInputs, navigateOnCommit,
+   cancelControl (a visible Cancel beside a draft that needs one, for mouse users),
+   refusalText(outcome) (the user's words for a refused or failed outcome, or null for the host's).
    The default action params are { id, values, expected_values }; custom send owns its public action shape. */
 PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", "units", "workspace"],
   function (request, snapshot, preferences, units, ui) {
@@ -30,6 +32,8 @@ PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", 
       this.inline = options.presentation === "inline";
       this.textInputs = Boolean(options.textInputs);
       this.navigateOnCommit = options.navigateOnCommit !== false;
+      this.cancelControl = Boolean(options.cancelControl);
+      this.refusalText = options.refusalText || function () { return null; };
       this.requiredFields = options.requiredFields || [];
       this.notice = notice || function () {};
       this.action = options.action;
@@ -136,6 +140,12 @@ PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", 
       }
       cell.error.textContent = cell.message || (owner.inline && owner.statusText ? owner.statusText(cell) : "");
       cell.error.hidden = !cell.error.textContent;
+      // Cancel stays usable on a read-only cell: it writes nothing and only drops the draft.
+      if (cell.cancelButton) {
+        // A refused or invalid draft needs it; so does a typed one its row turned read only underneath.
+        var stranded = cell.status === "error" || cell.status === "dirty" && owner.isReadOnly(cell);
+        cell.cancelButton.hidden = !stranded || owner.disposed || Boolean(cell.disposed);
+      }
       var td = cell.input.parentNode;
       if (td) td.classList.toggle("has-cell-error", !cell.error.hidden);
     }
@@ -150,6 +160,12 @@ PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", 
       cell.requiresCancel = false;
       cell.message = "";
       paint(cell);
+    };
+    /* Drops every draft that is not in flight: an owner's "cancel the edit" route. */
+    Controller.prototype.cancelAll = function () {
+      Object.keys(this.cells).forEach(function (key) {
+        if (this.cells[key].status !== "clean") this.cancel(this.cells[key]);
+      }, this);
     };
     Controller.prototype.commit = function (cell) {
       if (!this.enabled || this.isReadOnly(cell) || busy(cell) || cell.status === "error") return;
@@ -211,7 +227,8 @@ PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", 
           if (result.outcome.status !== "completed") {
             cell.status = "error";
             cell.requiresCancel = true;
-            cell.message = snapshot.message(result.outcome, "The edit was not applied.");
+            cell.message = self.refusalText(result.outcome) ||
+              snapshot.message(result.outcome, "The edit was not applied.");
           } else if (same(next.value, cell.submitted)) {
             cell.status = "dirty";
             self.cancel(cell);
@@ -256,6 +273,13 @@ PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", 
         cell.error.setAttribute("role", "alert");
         cell.input.setAttribute("aria-describedby", cell.error.id);
         cell.input.setAttribute(this.fieldAttribute, field);
+        if (this.cancelControl) {
+          cell.cancelButton = ui.iconButton("Cancel edit", "clear", function () {
+            self.cancel(cell);
+          });
+          cell.cancelButton.classList.add("phc-cell-cancel");
+          cell.cancelButton.hidden = true;
+        }
         cell.input.addEventListener("input", function () {
           if (self.isReadOnly(cell) || busy(cell)) return;
           if (!cell.requiresCancel) {
@@ -292,11 +316,15 @@ PhComposerUI.define("record_edits", ["request", "snapshot", "unit_preferences", 
         });
         cell.input.addEventListener("blur", function () { self.commit(cell); });
       }
-      if (cell.input.parentNode !== td) td.replaceChildren(cell.input, cell.error);
+      if (cell.input.parentNode !== td) {
+        td.replaceChildren.apply(td, [cell.input].concat(cell.cancelButton ? [cell.cancelButton] : [], [cell.error]));
+      }
       td.classList.add("phc-editable-cell");
       cell.row = row;
       cell.input.setAttribute("aria-label", this.label ? this.label(row, field, cell) :
         ((row.record.values || {}).name || row.record.id) + " " + ui.titleCase(field));
+      if (cell.cancelButton) ui.paintIconButton(cell.cancelButton, "Cancel " + cell.input.getAttribute("aria-label") +
+        " edit", "clear");
       paint(cell);
       return true;
     };

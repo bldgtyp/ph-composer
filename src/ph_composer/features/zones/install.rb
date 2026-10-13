@@ -40,6 +40,8 @@ require_relative "adjacency/operations"
 require_relative "zone/repair"
 require_relative "zone/split_identity_repair"
 require_relative "zone/split_identity_menu"
+require_relative "zone/independence_menu"
+require_relative "zone/copy_watch"
 require_relative "zone/operations"
 require_relative "zone/menu"
 require_relative "zone/selection"
@@ -73,6 +75,7 @@ module PhComposer
       Options::CommandRegistration.install(feature)
       ZoneRegistration.install(feature)
       Names.install(feature)
+      CopyWatch.install(feature)
       ZoneMenu.install(feature)
       SelectionRegistration.install(feature)
       Faces::Registration.install(feature)

@@ -34,12 +34,21 @@ module PhComposer
         "building_segment" => { "type" => %w[string null] }, "level" => { "type" => %w[string null] },
         "building_segment_colour" => { "type" => %w[string null] }, "level_colour" => { "type" => %w[string null] }
       }, :optional => %w[building_segment level building_segment_colour level_colour])
+      INDEPENDENCE = Shapes.object({
+        "available" => { "type" => "boolean", "description" => "Whether make_independent can act on it." },
+        "code" => { "type" => %w[string null], "description" => "The refusal make_independent would give." },
+        "reason" => { "type" => %w[string null], "description" => "That refusal's message: what to do first." },
+        "retired_pairs" => Shapes::COUNT.merge("description" => "Surface pairs acting would retire.")
+      }).merge("type" => %w[object null],
+               "description" => "For an occurrence that is not found cleanly, whether Make Zone independent " \
+                                "applies; null otherwise.")
       ZONE_ROW = Shapes.with(TARGET.descriptor.view_schema, "display" => DISPLAY,
                                                             "reference" => ZONE_REFERENCE,
                                                             "state" => { "type" => "string",
                                                                          "enum" => %w[found ambiguous shared_definition
                                                                                       wrong_hierarchy] },
-                                                            "face_count" => Shapes::COUNT)
+                                                            "face_count" => Shapes::COUNT,
+                                                            "independence" => INDEPENDENCE)
       # A row as `list` returns it: whole, or with `fields` only its identity, state and those values.
       PROJECTED_ZONE_ROW = ZONE_ROW.merge(
         "required" => %w[id reference state values],

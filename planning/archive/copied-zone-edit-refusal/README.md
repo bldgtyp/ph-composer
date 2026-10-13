@@ -1,13 +1,18 @@
 # A copied Zone cannot be edited, and the refused edit locks the Zones / Faces screen
 
 DATE: 2026-10-12
-STATUS: Scoped. Reproduced on the host and root-caused 2026-10-12. Direction decided by Ed
-2026-10-12 (D-1). Phases planned in [PLAN.md](PLAN.md); none authorized.
+STATUS: Complete 2026-10-12 on `fix/copied-zone-edit-refusal`, PR bldgtyp/ph-composer#97 (merges after review
+and CI). P1 to P5 implemented and host-accepted; decisions D-1 to D-8 recorded. Phases in
+[PLAN.md](PLAN.md); follow-up [copied-zone-windows](../../features/unscheduled/copied-zone-windows/README.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 Read this file for the defect, the evidence and the decision, then [PLAN.md](PLAN.md) for the
 change surface and the phases.
+
+[Planning review, 2026-10-12](REVIEW.md): Ed accepted the behavioral corrections in
+[DECISIONS.md](DECISIONS.md), including future child-copy semantics. Failure safety and native
+mechanisms still need proof. All phases remain Scoped and unauthorized.
 
 ## Decision
 
@@ -16,7 +21,9 @@ automatically.** When the user copies a Zone Group (Move/Copy, Copy and Paste, a
 PH-Composer makes the copy's Group unique and gives the copy and its Faces their own identities,
 joined to the user's copy so one Undo removes the copy and the repair together. The original keeps
 its identity, its Faces and its adjacency pairs. An explicit "Make Zone independent" command
-remains for every duplicate the automatic path cannot settle.
+remains for eligible duplicates the automatic path cannot settle; other cases show their recovery
+prerequisite. D-3 bounds the first implementation to same-Model Zone Group copies without a shared
+ancestor requiring recursive isolation. Cross-Model and floor-copy automation remain deferred.
 
 This supersedes Q25 in the archived [Zones PRD](../../archive/phase-01-zones-and-adjacency/PRD.md)
 ("A copied Zone is shared storage, and Make Unique comes first") and the matching entry in the
@@ -38,9 +45,14 @@ work mutates", "Join the user's Undo step"), already used by Zone name restorati
 - Only at copy time is it certain which occurrence is the copy. Later, in a reopened file, nothing
   proves which one should keep the old identity.
 
+Child-copy direction, D-6: Window Units become new instances of their existing Window Type under
+the Windows protocol. Spaces, when implemented, duplicate as independent authored instances with
+independent children. The [Spaces packet](../../features/phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13)
+records the future integration requirement. Neither owner is bypassed by Zone repair.
+
 Limits that stay: a Zone inside a ComponentInstance is never made unique automatically, because
 there sharing is the user's intent; a duplicate that already exists when a file opens is reported,
-not repaired; anything the automatic path refuses is left for the explicit command.
+not repaired; other refusals show an eligible explicit command or the prerequisite it cannot bypass.
 
 ## Defect 1: a copied Zone and its original can no longer be edited
 
@@ -129,8 +141,10 @@ the panel is the only exit.
 Ruled out: `channel.busy()` holding the lock. `consume` resets the channel when the outcome
 arrives (`html/request.js`), so the select is re-enabled on the next render.
 
-No offline test covers a refused Zone choice; `tests/zone_options_panel_test.js` covers the options
-dialog only.
+`tests/overview_panel_test.js` tests a refused Zone choice and explicitly expects retention until
+Escape. It does not establish mouse-only recovery or guard release without Escape;
+`tests/zone_options_panel_test.js` covers the options dialog. The planning review reproduced the
+Level and Name recovery gaps offline and records the required coverage changes.
 
 Defect 2 is independent of D-1. Automatic independence removes this particular trigger, but any
 refused choice (a stale revision, a locked Group) still locks the screen until it is fixed.
@@ -139,8 +153,8 @@ refused choice (a stale revision, a locked Group) still locks the screen until i
 
 | Phase | State | Notes |
 | --- | --- | --- |
-| [P1](PLAN.md#p1-the-panel-is-never-stuck) | Scoped | No dependency; can start first |
-| [P2](PLAN.md#p2-host-spike) | Scoped | Development-only; gates P3 and P4 |
-| [P3](PLAN.md#p3-make-zone-independent-the-explicit-command) | Scoped | Core contract question for architecture review |
-| [P4](PLAN.md#p4-automatic-independence-on-copy) | Scoped | Depends on P2 measurements and P3's step |
-| [P5](PLAN.md#p5-acceptance-and-canon) | Scoped | Host acceptance, canon updates, archive |
+| [P1](PLAN.md#p1-the-panel-is-never-stuck) | Implemented on branch `fix/copied-zone-edit-refusal` | Offline suite and host check passed 2026-10-12; see [P1 outcome](PLAN.md#p1-outcome) |
+| [P2](PLAN.md#p2-host-spike) | Measured 2026-10-12; read and accepted by Ed | [Evidence](evidence/p2-host-spike.md); gates P3 and P4 |
+| [P3](PLAN.md#p3-make-zone-independent-the-explicit-command) | Implemented on branch | See [P3 outcome](PLAN.md#p3-outcome) |
+| [P4](PLAN.md#p4-automatic-independence-on-copy) | Implemented on branch | See [P4 outcome](PLAN.md#p4-outcome); D-7 confirmed |
+| [P5](PLAN.md#p5-acceptance-and-canon) | Complete | Zone and Window host cases passed ([evidence](evidence/p5-host-acceptance.md)); canon updated; D-7 and D-8 recorded; archived |

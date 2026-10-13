@@ -1,7 +1,7 @@
 # Spaces: behavior contract
 
-DATE: 2026-09-18
-STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 18 decisions recorded below. Architecture review folded in 2026-09-18 (Q19 to Q24). PLAN.md follows the overlay spike and the foundation transplant.
+DATE: 2026-10-12
+STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 18 decisions recorded below. Architecture review folded in 2026-09-18 (Q19 to Q24). D3a-13 qualifies Q20 on 2026-10-12; architecture/UI decisions and implementation gates remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (no remote)
 
@@ -134,9 +134,21 @@ Floor Segment   identifier, display_name, icfa_factor (default 1.0),
   dictionary, so two entities share an identifier. That is the predecessor's blocking
   `duplicate_identity` finding, kept. Its repair is **Make independent**: the copy and everything
   inside it receive new identifiers and the Space the next free number, as one Undo step.
-  Nothing reissues an identifier silently, because a deferred pass cannot tell a copy from a cut
-  and paste. A Space inside a repeated component is the same finding with no repair offered:
-  PH-Composer never makes a parent unique.
+  For standalone copies, nothing reissues an identifier silently, because a deferred pass cannot
+  tell a copy from a cut and paste. A Space inside a repeated component is the same finding with
+  no standalone repair offered: Spaces never makes a shared parent unique on its own. The proven
+  Zone-copy exception is defined below.
+- **Spaces included in a Zone copy (D3a-13, Ed 2026-10-12).** A proven Zone copy makes each copied
+  Space and its authored descendants independent in storage and identity, through the Spaces
+  owner's copy protocol. This includes Volumes, Floor Segments and logical Space Floors. Copied
+  membership stamps name the new Zone; declared references within the copied collection follow
+  the new counterparts. The original stays unchanged, and ordinary values and metadata follow
+  their copy rules. This participates in the parent gesture's single atomic proposal and Undo
+  step; it is not an identity guess by the standalone Spaces reconciler. Standalone copies keep
+  Q20's explicit repair route. Windows in the Zone follow their own protocol: new Window Unit
+  instances reference their existing Window Type. This qualifies the parent-copy exception to
+  Q20 without approving the twelve open architecture/UI decisions or authorizing implementation;
+  see [D3a-13](DECISIONS.md#confirmed-copy-decision-d3a-13).
 - **`user_data`.** All three records carry the `user_data` mapping and structured extension
   payloads that [EXTENSIBILITY.md](../../../context/EXTENSIBILITY.md) requires, under the
   foundation's storage contract. Move Space to Zone keeps it. Make independent keeps it, since a

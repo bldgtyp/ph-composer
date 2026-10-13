@@ -20,6 +20,8 @@
 .phc-workspace .phc-blocked-reason { color: var(--warning-ink); border-color: transparent; background: transparent; }
 .phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
   color: var(--warning-ink); background: var(--warning-surface); }
+.phc-overview .phc-row-marker.is-icon { display: inline-flex; vertical-align: middle; padding: 1px; }
+.phc-overview .phc-row-marker.is-icon svg { width: 14px; height: 14px; }
 /* The selection bar floats over the bottom of the table, positioned in the overview's root, so it never
    moves a row. The checked Faces' controls read along one line, each label before its control. */
 .phc-overview { position: relative; }
