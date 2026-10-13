@@ -21,7 +21,7 @@ stable, and rows a later simplification made moot are marked withdrawn rather th
 
 | Packet | Findings | Readiness | Documents |
 | --- | --- | --- | --- |
-| Export contract wording | F08 | Implementation ready, one stage, no dependency | [plan](export-contract-wording/PLAN.md), [status](export-contract-wording/STATUS.md), [acceptance](export-contract-wording/ACCEPTANCE.md) |
+| Export contract wording | F08 | Complete; merged 2026-10-13 ([PR #99](https://github.com/bldgtyp/ph-composer/pull/99)) | archived at [planning/archive/export-contract-wording](../../archive/export-contract-wording/PLAN.md) |
 | Outcome hook isolation | JS-02 | Implementation ready, two stages, no dependency | [plan](outcome-hook-isolation/PLAN.md), [status](outcome-hook-isolation/STATUS.md), [acceptance](outcome-hook-isolation/ACCEPTANCE.md) |
 | Contributor example lifecycle | JS-03, JS-04 | Implementation ready, three stages, no dependency | [plan](contributor-example-lifecycle/PLAN.md), [status](contributor-example-lifecycle/STATUS.md), [acceptance](contributor-example-lifecycle/ACCEPTANCE.md) |
 | Registration reliability | F01, F02 | Implementation ready, three stages, first of the foundation pair | [plan](registration-reliability/PLAN.md), [status](registration-reliability/STATUS.md), [acceptance](registration-reliability/ACCEPTANCE.md) |

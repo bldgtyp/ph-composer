@@ -1,10 +1,10 @@
 # Export contract wording plan
 
 DATE: 2026-10-13
-STATUS: Implemented on branch `refactor/export-wording-ew-01` (2026-10-13). Stage ledger in [STATUS.md](STATUS.md).
+STATUS: Complete; merged to main 2026-10-13 in [PR #99](https://github.com/bldgtyp/ph-composer/pull/99). Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/98
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDING: [F08](../../sections/06-export.md#f08-some-operation-schemas-incorrectly-promise-verbatim-metadata-export)
+FINDING: [F08](../../code-review/sections/06-export.md#f08-some-operation-schemas-incorrectly-promise-verbatim-metadata-export)
 DEPENDS ON: nothing. Lands on its own.
 
 ## What is wrong
@@ -49,7 +49,7 @@ One stage. It is a shipping Ruby source change whose only observable effect is d
 
 ### EW-01: correct the three descriptions and regenerate the reference
 
-State: Implemented on branch `refactor/export-wording-ew-01`, 2026-10-13.
+State: Merged to main, 2026-10-13 (PR #99).
 
 1. Edit the three constants above to the new sentence. Line wrap at the 120 column ceiling as the
    neighbours do.
@@ -79,7 +79,7 @@ The coding agent decides the exact line wrapping. Nothing here needs Ed.
 Not in scope: exporting `user_data`, any reader or serializer change, any quickstart edit (none
 contradicts the policy), and any `context/` edit. If an implementation finds it must change
 behaviour to make the wording true, stop: that belongs to
-[entity customization](../entity-customization/PLAN.md).
+[entity customization](../../code-review/refactoring/entity-customization/PLAN.md).
 
 ## Verification profile
 
