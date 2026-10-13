@@ -34,3 +34,7 @@ shipping copy watcher ran its follow-up as for a native gesture.
 | Public export (`API.start_export` to an approved location) | `export.complete`; HBJSON has 8 Rooms, 42 Faces and 20 Apertures, every identifier unique; 2 Apertures per west Room and 4 per east Room |
 | Native Undo and Redo of copy plus repair | **Outstanding.** Edit > Undo is disabled with SketchUp in the background, and full-screen control was not granted. Offline: `test_undo_removes_the_unit_ids_with_the_zone_and_redo_repeats_them` |
 | Native copy gestures (Move-copy, clipboard) | **Outstanding**, for the same reason; the background tools refuse clipboard menu items |
+
+Gate on the ZC-04 head: `make ci` passes; `make coverage` 95.60% (required 92%). The ZC-04 PR is
+documentation and ledgers only, so it had the focused consistency check; the code it describes was
+reviewed by gpt-6-astra in PRs 115 and 116 (two cycles each).
