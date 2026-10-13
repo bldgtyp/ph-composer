@@ -32,6 +32,29 @@ module PhComposer
         end
       end
 
+      # One Edge occurrence in world SI metres. Its vertex and Face ids are the container's own, so
+      # Edges connect by a shared vertex id within one occurrence; coincident points in different
+      # containers are not connected. A sibling Face's path is the Edge's path with the Face id last.
+      EdgeGeometry = Struct.new(:points_m, :vertex_ids, :face_ids, :keyword_init => true) do
+        def self.capture(edge, transform)
+          FaceGeometry.check_transform!(transform)
+          points = [edge.start, edge.end].map do |vertex|
+            point = vertex.position.transform(transform)
+            [point.x, point.y, point.z].map { |value| value.to_f * FaceGeometry::INCH_TO_M }.freeze
+          end
+          unless points.flatten.all?(&:finite?)
+            raise CodedError.new("geometry.invalid", "An Edge has a non-finite coordinate.")
+          end
+
+          new(:points_m => points.freeze, :vertex_ids => [edge.start, edge.end].map(&:persistent_id).freeze,
+              :face_ids => edge.faces.map(&:persistent_id).sort.freeze)
+        end
+
+        def to_h
+          { "points_m" => points_m, "vertex_ids" => vertex_ids, "face_ids" => face_ids }
+        end
+      end
+
       attr_reader :entries, :revision, :model_dictionaries
 
       # A traversal resumed by UI timers. One slice bounds both entity count and elapsed host work;
@@ -79,6 +102,12 @@ module PhComposer
             entry = if capture_faces
                       Entry.new(:kind => "face", :path => child_path.freeze, :transform => transform.to_a.freeze,
                                 :dictionaries => dictionaries, :geometry => FaceGeometry.capture(entity, transform))
+                    end
+            block.call(entry)
+          elsif entity.is_a?(Sketchup::Edge)
+            entry = if capture_faces
+                      Entry.new(:kind => "edge", :path => child_path.freeze, :transform => transform.to_a.freeze,
+                                :dictionaries => dictionaries, :geometry => EdgeGeometry.capture(entity, transform))
                     end
             block.call(entry)
           elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)

@@ -137,13 +137,24 @@ module PhComposer
       Math.sqrt(left.zip(right).sum { |a, b| (a - b)**2 })
     end
 
-    def world_normal(normal, transformation)
+    # Refuses a transform that collapses geometry (a zero scale); answers its linear determinant.
+    def check_transform!(transformation)
       values = transformation.to_a
       a, b, c = values[0], values[4], values[8]
       d, e, f = values[1], values[5], values[9]
       g, h, i = values[2], values[6], values[10]
       determinant = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
-      raise CodedError.new("geometry.invalid", "The Face transform is singular.") if determinant.abs < 1.0e-12
+      raise CodedError.new("geometry.invalid", "The geometry transform is singular.") if determinant.abs < 1.0e-12
+
+      determinant
+    end
+
+    def world_normal(normal, transformation)
+      values = transformation.to_a
+      a, b, c = values[0], values[4], values[8]
+      d, e, f = values[1], values[5], values[9]
+      g, h, i = values[2], values[6], values[10]
+      determinant = check_transform!(transformation)
 
       vector = [
         ((e * i - f * h) * normal.x + (f * g - d * i) * normal.y + (d * h - e * g) * normal.z) / determinant,

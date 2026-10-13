@@ -2,7 +2,7 @@
 
 DATE: 2026-10-13
 STATUS: Scoped capability; G-02 is implementation ready on its own, G-03 and G-04 wait for the thermal-bridge adopter. Not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+ISSUE: [#118](https://github.com/bldgtyp/ph-composer/issues/118)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDING: [F06](../../sections/03-services.md#f06-the-geometry-seams-cannot-yet-serve-ordinary-edges-or-derived-line-overlays)
 DEPENDS ON: the [thermal-bridge plan](../../../features/phase-03b-thermal-bridges/PLAN.md) P3b-06 and
@@ -95,7 +95,9 @@ Exit: the thermal-bridge plan references these shapes; any disagreement is resol
 
 ### G-02: Edge capture
 
-State: Scoped; implementation ready now.
+State: Implemented on branch. `FaceGeometry.check_transform!` is the shared singular-transform check
+the Edge capture reuses. The stub's Vertex ids come from their own lazy sequence so existing
+allocated ids do not move.
 
 Files: `export/geometry_snapshot.rb`; tests `tests/geometry_snapshot_test.rb`,
 `tests/export_collection_slices_test.rb`.
