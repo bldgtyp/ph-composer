@@ -1,15 +1,15 @@
 # Zone-child lifecycle status
 
 DATE: 2026-10-13
-STATUS: Design; ZC-01 is a host spike with a document deliverable. Later stages are implementation ready only after it. Not authorized.
-ISSUE: none (local planning draft)
+STATUS: ZC-01 implemented on branch; late binding confirmed. ZC-02 to ZC-04 implementation ready.
+ISSUE: [#113](https://github.com/bldgtyp/ph-composer/issues/113)
 
 The phased plan is the `## Stages` section of [PLAN.md](PLAN.md); there is no `phases/` folder.
 Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 | Stage | Scope | State | Evidence |
 | --- | --- | --- | --- |
-| ZC-01 | Host spike: Unit ids and glue through `make_unique`, array copies, trial restore, enumeration after isolation; note in SKETCHUP_HOST_BEHAVIOR | Scoped; document deliverable | none yet |
+| ZC-01 | Host spike: Unit ids and glue through `make_unique`, array copies, trial restore, enumeration after isolation; note in SKETCHUP_HOST_BEHAVIOR | Implemented on branch | SketchUp 26.1.188, fresh process, 2026-10-13, `tools/spikes/zone-child-units/spike.rb`: single, `5x` array and nested copies; trace through make_unique and isolation; trial rewrite and restore. Note in `context/SKETCHUP_HOST_BEHAVIOR.md`. Native Undo not measured (no full-screen grant); left to ZC-04 |
 | ZC-02 | `transition_contributor` declaration, validation, `request.contribute_transition`; Zones emits the transition | Scoped; after ZC-01 | none yet |
 | ZC-03 | `IdentityStep#restore` with logical binding; `Units::ZoneCopy`; synthetic second child; watcher and explicit route tests | Scoped; after ZC-02 | none yet |
 | ZC-04 | Native copy, array, Undo, reopen, export read-back; CONTRACTS and EXTENSIBILITY; stronger review; dual-Ruby `make ci` | Scoped; after ZC-03 | none yet |
