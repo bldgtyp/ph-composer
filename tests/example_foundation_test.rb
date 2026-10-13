@@ -59,6 +59,13 @@ class ExampleFoundationTest < PhComposerTestCase
     refute_match(/example/, File.read(PhComposer::Panel::PAGE))
   end
 
+  def test_the_kit_hears_one_selection_change_once_however_often_the_example_loads
+    before = ExampleKit.selection_events
+    load File.expand_path("../tools/examples/foundation/load.rb", __dir__)
+    PhComposer::Sessions.current.host_event(:selection_changed)
+    assert_equal before + 1, ExampleKit.selection_events
+  end
+
   def test_loading_the_example_twice_installs_it_once
     load File.expand_path("../tools/examples/foundation/load.rb", __dir__)
 

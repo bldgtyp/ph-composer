@@ -3,15 +3,22 @@
 # A second development-only feature, an outside consumer of the example's proposal participant. Its one
 # action adds a matched pair of parts in one Undo step by calling `example.foundation.add_part` twice:
 # it requires the example feature, names the participant in `participants:` and reaches it only through
-# `request.participate`, never the example's store or handler. Loaded by load.rb after the example.
+# `request.participate`, never the example's store or handler. It also subscribes to one host event,
+# counting selection changes, so a host check can see an outside subscription delivered once however
+# often load.rb runs. Loaded by load.rb after the example.
 module ExampleKit
   ID = "example.kit"
   ADD_PART = "#{ExampleFoundation::ID}.add_part"
 
   module_function
 
+  def selection_events
+    @selection_events ||= 0
+  end
+
   def install(registry)
     feature = registry.feature(ID, :contract_version => 1, :requires => [ExampleFoundation::ID])
+    feature.on_host_event(:selection_changed) { |_session| @selection_events = selection_events + 1 }
     feature.action(
       "#{ID}.add_pair",
       :description => "Add a left and a right part of one length to a definition, in one Undo step.",
