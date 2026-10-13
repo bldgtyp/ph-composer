@@ -1,7 +1,7 @@
 # Windows orchestration status
 
 DATE: 2026-10-13
-STATUS: Implemented on branch `refactor/group-3-definition-placement`, with the other delivery group 3 packet, one PR.
+STATUS: Complete; merged to main 2026-10-13 in [PR #108](https://github.com/bldgtyp/ph-composer/pull/108) as `80b1d8f`, with the other delivery group 3 packet.
 ISSUE: [#106](https://github.com/bldgtyp/ph-composer/issues/106)
 
 The phased plan is the `## Stages` section of [PLAN.md](PLAN.md); there is no `phases/` folder.
@@ -9,9 +9,9 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 | Stage | Scope | State | Evidence |
 | --- | --- | --- | --- |
-| W-01 | `Windows::Authoring` coordinator; every action, grid gesture, library callback and settings write routed through it | Implemented on branch | `features/windows/authoring.rb`; eight record actions, grid gestures, two library callbacks, `assign_grid`, `assign_psi` and the settings action routed; `make fixtures-check` unchanged |
-| W-02 | Remove `Units::` from product and Type operations; record-only operation tests; coordinator tests; source dependency check | Implemented on branch | Operations and `Settings.propose` name no Unit; `tests/window_authoring_test.rb` (six cases, source check included); 363 Windows tests unchanged |
-| W-03 | EXTENSIBILITY and CONTRACTS wording; stronger review; dual-Ruby `make ci`; native resize, locked-copy refusal and repair | Implemented on branch | EXTENSIBILITY coordinator paragraph and CONTRACTS repair sentence; dual-Ruby `make ci`; native receipt below |
+| W-01 | `Windows::Authoring` coordinator; every action, grid gesture, library callback and settings write routed through it | Merged to main | `features/windows/authoring.rb`; eight record actions, grid gestures, two library callbacks, `assign_grid`, `assign_psi` and the settings action routed; `make fixtures-check` unchanged |
+| W-02 | Remove `Units::` from product and Type operations; record-only operation tests; coordinator tests; source dependency check | Merged to main | Operations and `Settings.propose` name no Unit; `tests/window_authoring_test.rb` (six cases, source check included); 363 Windows tests unchanged |
+| W-03 | EXTENSIBILITY and CONTRACTS wording; stronger review; dual-Ruby `make ci`; native resize, locked-copy refusal and repair | Merged to main | EXTENSIBILITY coordinator paragraph and CONTRACTS repair sentence; dual-Ruby `make ci`; native receipt below |
 
 Reviewed against source on 2026-10-13. The caller inventory the first draft deferred to its W-01 is
 now in the plan; stages start with code.
@@ -40,3 +40,4 @@ SketchUp 26.1.188 (Ruby 3.2.2), current host, not the support floor; source `e89
 | Unlock, same `frames.create` | committed; the copy repaired, 3 Units with 3 ids |
 | Save, quit, reopen | Unit ids distinct; Types and installs as saved |
 
+Final build: the bridge-driven scenario (placement, resize, locked-copy refusal and repair, Zone totals, an Installs save) passed again on the host at the merged head `58889ad` (RBZ sha256 prefix `73734abfe07c84ab`). Native Undo/Redo and the panel gestures ran at `e89644d` only.

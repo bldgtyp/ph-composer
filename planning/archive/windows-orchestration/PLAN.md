@@ -1,13 +1,13 @@
 # Windows definition and placement coordination plan
 
 DATE: 2026-10-13
-STATUS: Scoped; implementation ready, not authorized. Stage ledger in [STATUS.md](STATUS.md).
+STATUS: Complete; merged to main 2026-10-13 in [PR #108](https://github.com/bldgtyp/ph-composer/pull/108) as `80b1d8f`, delivery group 3. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#106](https://github.com/bldgtyp/ph-composer/issues/106)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDING: [RF-02](../../sections/04-ruby-features.md#rf-02-windows-definition-operations-know-placement-internals)
+FINDING: [RF-02](../../code-review/sections/04-ruby-features.md#rf-02-windows-definition-operations-know-placement-internals)
 DEPENDS ON: nothing for the extraction itself. Coordinate file ownership with
 [panel domain ownership](../panel-domain-ownership/PLAN.md), which edits `types/installs.rb` and
-`snapshot.rb`, and with [zone-child lifecycle](../zone-child-lifecycle/PLAN.md), which edits
+`snapshot.rb`, and with [zone-child lifecycle](../../code-review/refactoring/zone-child-lifecycle/PLAN.md), which edits
 `units/identity_step.rb`.
 
 ## Goal
@@ -200,7 +200,7 @@ Exit: both `make ci` runs pass; review has no open blocker; native receipt filed
 The coding agent decides the module name (`Authoring` is the default), whether `InstallSave` moves
 under it or stays beside it, and test names.
 
-Escalate to Ed only for a change to repair timing or trigger (D-02 in [DECISIONS](../DECISIONS.md)),
+Escalate to Ed only for a change to repair timing or trigger (D-02 in [DECISIONS](../../code-review/refactoring/DECISIONS.md)),
 which this packet does not make.
 
 No deviation from the accepted direction. The first draft's W-01 (an inventory stage) is done in this

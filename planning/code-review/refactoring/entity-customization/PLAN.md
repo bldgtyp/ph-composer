@@ -6,7 +6,7 @@ ISSUE: none (local planning draft)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDINGS: [RF-01](../../sections/04-ruby-features.md#rf-01-entity-owned-metadata-cannot-be-maintained-through-the-supported-operations), [RF-03](../../sections/04-ruby-features.md#rf-03-entity-reads-preserve-envelopes-but-omit-their-understoodunavailable-status), [F07](../../sections/06-export.md#f07-entity-extension-payloads-have-no-supported-allowlisted-export-projection)
 DEPENDS ON: [Registration reliability](../../../archive/registration-reliability/PLAN.md) for the new export
-declaration values (EC-03 only); [Windows orchestration](../windows-orchestration/PLAN.md) W-01 so the
+declaration values (EC-03 only); [Windows orchestration](../../../archive/windows-orchestration/PLAN.md) W-01 so the
 Unit action routes through the coordinator (EC-02 can land before it by calling `Units::Mutation.prepare`
 directly, then migrate).
 

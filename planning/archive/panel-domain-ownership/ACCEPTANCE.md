@@ -1,7 +1,7 @@
 # Panel domain ownership acceptance
 
 DATE: 2026-10-13
-STATUS: Planned cases only. No refactoring case has run.
+STATUS: Offline cases run and passing at merge (PR #108); native receipts in STATUS.md. Current host only, not the support floor.
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 PLAN: [Contract and stages](PLAN.md)
 

@@ -1,7 +1,7 @@
 # Refactoring status
 
 DATE: 2026-10-13
-STATUS: In progress; Ed authorized implementation on 2026-10-13, through the pr-loop. First PR: export wording EW-01 ([#99](https://github.com/bldgtyp/ph-composer/pull/99)). From delivery group 1 on, Ed asked for one branch and PR per group of `DELIVERY_ORDER.md`; group 1 merged in [#102](https://github.com/bldgtyp/ph-composer/pull/102), group 2 in [#105](https://github.com/bldgtyp/ph-composer/pull/105).
+STATUS: In progress; Ed authorized implementation on 2026-10-13, through the pr-loop. First PR: export wording EW-01 ([#99](https://github.com/bldgtyp/ph-composer/pull/99)). From delivery group 1 on, Ed asked for one branch and PR per group of `DELIVERY_ORDER.md`; group 1 merged in [#102](https://github.com/bldgtyp/ph-composer/pull/102), group 2 in [#105](https://github.com/bldgtyp/ph-composer/pull/105), group 3 in [#108](https://github.com/bldgtyp/ph-composer/pull/108).
 ISSUE: none (local planning draft)
 
 Ed accepted C1, C2, W1 and the Zone-child pattern on 2026-10-13. The same day the twelve plans were
@@ -17,8 +17,8 @@ issues and PRs are linked from each packet row as they open.
 | [Contributor example](../../archive/contributor-example-lifecycle/STATUS.md) | JS-03, JS-04 | CE-01 to CE-03 | Complete; merged in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102), archived |
 | [Registration](../../archive/registration-reliability/STATUS.md) | F01, F02 | RR-01 to RR-03 | Complete; merged in [PR #105](https://github.com/bldgtyp/ph-composer/pull/105), archived |
 | [Composition](../../archive/cross-feature-composition/STATUS.md) | F04 | C-01 to C-04 | Complete; merged in [PR #105](https://github.com/bldgtyp/ph-composer/pull/105), archived |
-| [Windows coordinator](windows-orchestration/STATUS.md) | RF-02 | W-01 to W-03 | Implemented on branch `refactor/group-3-definition-placement` ([#106](https://github.com/bldgtyp/ph-composer/issues/106)) |
-| [Panel facts](panel-domain-ownership/STATUS.md) | JS-01, JS-05 | PD-01 to PD-04 | Implemented on branch `refactor/group-3-definition-placement` ([#107](https://github.com/bldgtyp/ph-composer/issues/107)) |
+| [Windows coordinator](../../archive/windows-orchestration/STATUS.md) | RF-02 | W-01 to W-03 | Complete; merged in [PR #108](https://github.com/bldgtyp/ph-composer/pull/108), archived |
+| [Panel facts](../../archive/panel-domain-ownership/STATUS.md) | JS-01, JS-05 | PD-01 to PD-04 | Complete; merged in [PR #108](https://github.com/bldgtyp/ph-composer/pull/108), archived |
 | [Library contracts](library-contracts/STATUS.md) | F05, RF-04 | LC-01 to LC-04 | Scoped; after RR-02 (LC-03 independent) |
 | [Entity customization](entity-customization/STATUS.md) | RF-01, RF-03, F07 | EC-01 to EC-05 | Scoped; EC-03 needs Ed before EC-04 |
 | [Zone-child lifecycle](zone-child-lifecycle/STATUS.md) | copied-Zone request | ZC-01 to ZC-04 | Design; ZC-01 is a host spike |

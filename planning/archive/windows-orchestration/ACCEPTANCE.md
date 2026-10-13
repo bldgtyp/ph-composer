@@ -1,7 +1,7 @@
 # Windows orchestration acceptance
 
 DATE: 2026-10-13
-STATUS: Planned checks; none run.
+STATUS: Offline cases run and passing at merge (PR #108); native receipts in STATUS.md. Current host only, not the support floor.
 PLAN: [PLAN.md](PLAN.md)
 
 | Case | Scenario | Required result | Evidence |

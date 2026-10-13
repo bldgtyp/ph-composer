@@ -1,7 +1,7 @@
 # Panel domain ownership status
 
 DATE: 2026-10-13
-STATUS: Implemented on branch `refactor/group-3-definition-placement`, with the other delivery group 3 packet, one PR.
+STATUS: Complete; merged to main 2026-10-13 in [PR #108](https://github.com/bldgtyp/ph-composer/pull/108) as `80b1d8f`, with the other delivery group 3 packet.
 ISSUE: [#107](https://github.com/bldgtyp/ph-composer/issues/107)
 
 The phased plan is the `## Stages` section of [PLAN.md](PLAN.md); there is no `phases/` folder.
@@ -9,10 +9,10 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 | Stage | Scope | State | Evidence |
 | --- | --- | --- | --- |
-| PD-01 | `Installs.topology_facts`; `display.install_topology` on Type rows; schema and fixture tests | Implemented on branch | `Installs.topology_facts`, `display.install_topology`, `INSTALL_TOPOLOGY` schema; `tests/window_install_topology_test.rb` (four cases: classification against `paint`, missing dimensions, copy key against `copy`, the panel-closed read); `docs/API_REFERENCE.md` regenerated |
-| PD-02 | Installs editor consumes edges, `copy_key` and `copy_slots`; JS classifier and local topology deleted | Implemented on branch | Editor reads `edges`, `copy_key` and `copy_slots`; `editor_shared.classification` and the local `topology` deleted; fixtures carry the facts; two new cases (missing facts; only a matching key offered, facts kept through staging); 35 of 35 |
-| PD-03 | Zone occurrence totals published and consumed; read cost measured | Implemented on branch | `face_area_m2` and `unclassified_face_area_m2` on Zone rows and in `units`; `tests/zone_area_totals_test.rb` (three cases); Overview and the preview host read them; measurement below |
-| PD-04 | AGENT_INTERFACE and CONTRACTS wording; stronger review; dual-Ruby `make ci`; native observation | Implemented on branch | AGENT_INTERFACE "Focused reads" paragraph (CONTRACTS describes no Type or Zone row, so nothing to amend there); dual-Ruby `make ci`; native receipt below |
+| PD-01 | `Installs.topology_facts`; `display.install_topology` on Type rows; schema and fixture tests | Merged to main | `Installs.topology_facts`, `display.install_topology`, `INSTALL_TOPOLOGY` schema; `tests/window_install_topology_test.rb` (four cases: classification against `paint`, missing dimensions, copy key against `copy`, the panel-closed read); `docs/API_REFERENCE.md` regenerated |
+| PD-02 | Installs editor consumes edges, `copy_key` and `copy_slots`; JS classifier and local topology deleted | Merged to main | Editor reads `edges`, `copy_key` and `copy_slots`; `editor_shared.classification` and the local `topology` deleted; fixtures carry the facts; two new cases (missing facts; only a matching key offered, facts kept through staging); 35 of 35 |
+| PD-03 | Zone occurrence totals published and consumed; read cost measured | Merged to main | `face_area_m2` and `unclassified_face_area_m2` on Zone rows and in `units`; `tests/zone_area_totals_test.rb` (three cases); Overview and the preview host read them; measurement below |
+| PD-04 | AGENT_INTERFACE and CONTRACTS wording; stronger review; dual-Ruby `make ci`; native observation | Merged to main | AGENT_INTERFACE "Focused reads" paragraph (CONTRACTS describes no Type or Zone row, so nothing to amend there); dual-Ruby `make ci`; native receipt below |
 
 Reviewed against source on 2026-10-13. The slot key is the `[kind, row_span, column_span]` tuple
 `Installs.copy` already joins on; the first draft's five stages collapsed to four.
@@ -54,3 +54,5 @@ Second review on PR 108: the Zone reads now declare `geometry.invalid`, which th
 raise, and validate each stored Face record as the Face read does, so an unreadable record refuses
 with the Face read's code instead of being counted; the editor treats a topology without `edges`
 or a well-formed edge as unread, and requires a copy key on both sides before offering a copy.
+
+Final build: the bridge-driven scenario (placement, resize, locked-copy refusal and repair, Zone totals, an Installs save) passed again on the host at the merged head `58889ad` (RBZ sha256 prefix `73734abfe07c84ab`). Native Undo/Redo and the panel gestures ran at `e89644d` only.

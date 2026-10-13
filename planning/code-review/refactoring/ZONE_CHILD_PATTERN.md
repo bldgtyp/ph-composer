@@ -114,7 +114,7 @@ insufficient evidence that an outside child can use the same contract.
 ## Evidence and limits
 
 Windows retains the generated shared primary component, anchor preservation, atomic Type propagation
-and next-Windows-mutation repair. [Windows orchestration](windows-orchestration/PLAN.md) moves their
+and next-Windows-mutation repair. [Windows orchestration](../../archive/windows-orchestration/PLAN.md) moves their
 coordination without changing those policies. The native child-copy plan adds copied-occurrence repair
 while retaining the broad fallback; narrowing unrelated catalog triggers remains a later decision.
 
