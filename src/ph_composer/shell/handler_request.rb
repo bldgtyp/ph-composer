@@ -117,6 +117,31 @@ module PhComposer
       raise
     end
 
+    # Runs every contributor registered for `transition`, in name order, under its own owner and inside
+    # this request's proposal, after the caller added its own step. Each receives a detached copy of
+    # `description` and returns its affected references; every step it adds must answer `restore`, since
+    # the transition also runs inside a host follow-up. Any failure refuses the whole proposal.
+    def contribute_transition(transition, description)
+      raise InternalError, "A transition needs an action proposal." unless proposal
+
+      rows = registry.transition_contributors.values.select { |item| item.transition == transition }.sort_by(&:name)
+      rows.flat_map do |declaration|
+        before = proposal.steps.length
+        affected = declaration.handler.call(with(:owner => declaration.owner), proposal, DeepCopy.call(description))
+        unless affected.is_a?(Array) && JsonValue.problems(affected).empty?
+          raise InternalError, "#{declaration.name} must return its affected references."
+        end
+        unless proposal.steps.drop(before).all? { |step| step.respond_to?(:restore) }
+          raise InternalError, "#{declaration.name} added a step that cannot be restored."
+        end
+
+        DeepCopy.call(affected)
+      end
+    rescue StandardError => error
+      proposal&.refuse(error)
+      raise
+    end
+
     # Calls a proposal participant inside this request's active proposal, under the same dependency
     # rule as `query`; the calling declaration names it in `participants` (shell/participant_invocation.rb).
     # Feature code never reaches a participant's handler directly.

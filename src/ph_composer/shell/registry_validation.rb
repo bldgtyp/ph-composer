@@ -23,6 +23,7 @@ module PhComposer
         check_snapshot_sections
         @diagnostics.concat(ExportValidation.new(@live, @staging).diagnostics)
         check_reference_retargeters
+        check_transition_contributors
         @diagnostics.concat(ParticipantValidation.new(@live, @staging).diagnostics)
         @diagnostics.concat(LibraryValidation.new(@live, @staging).diagnostics)
         check_colour_modes
@@ -201,6 +202,25 @@ module PhComposer
       def add_schema_problems(operation, part, schema)
         JsonSchema.schema_problems(schema).each do |problem|
           add("registration.schema_invalid", operation.owner, operation.name, "#{operation.name} #{part}: #{problem}.")
+        end
+      end
+
+      # The transition's owner is the feature id before its last segment; the contributor requires it.
+      def check_transition_contributors
+        @staging.declared_transition_contributors.each do |contributor|
+          problem(contributor, "needs a callable handler") unless contributor.handler.respond_to?(:call)
+          transition = contributor.transition
+          unless transition.is_a?(String) && /\A[a-z0-9_]+(\.[a-z0-9_]+)+\z/.match?(transition)
+            problem(contributor, "needs a dotted transition name")
+            next
+          end
+
+          emitter = transition.split(".")[0...-1].join(".")
+          feature = @staging.declared_features.find { |item| item.id == contributor.owner }
+          next if emitter == contributor.owner || feature.requires.include?(emitter)
+
+          add("registration.missing_dependency", contributor.owner, contributor.name,
+              "#{contributor.name} must require #{emitter}, which emits #{transition}.", emitter)
         end
       end
 

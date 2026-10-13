@@ -183,6 +183,12 @@ module PhComposer
     # return the final entity occurrences as Records::ReferencePlan.
     ReferenceRetargeter = Struct.new(:name, :owner, :target_kind, :handler, keyword_init: true)
 
+    # A feature owning records inside another feature's entity adds its own restorable steps when
+    # that owner emits `transition` (context/CONTRACTS.md, "Compound proposals"). `transition` is a
+    # name the emitting feature documents; the prefix before its last segment is that feature's id.
+    # `handler` is `->(request, proposal, description) { affected }`.
+    TransitionContributor = Struct.new(:name, :owner, :transition, :handler, keyword_init: true)
+
     # A step another feature composes into its own action's proposal (context/CONTRACTS.md, "Compound
     # proposals"). It is declared like an operation, with a description, params and result schemas,
     # examples and `refuses`, but no client can call it: only a handler that names it in `participants`

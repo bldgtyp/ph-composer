@@ -123,7 +123,8 @@ Exit: the note exists and the ZC-02 design is confirmed or amended against it.
 
 ### ZC-02: declaration and invocation
 
-State: Scoped; after ZC-01.
+State: Implemented on branch. Deviation: the description carries no `mode`; no contributor needs to
+tell the routes apart, since both require restorable steps. Add it when a contributor does.
 
 Files: `shell/declarations.rb`, `shell/registry.rb`, `shell/registry_validation.rb`,
 `shell/handler_request.rb`, `features/zones/zone/operations.rb`; tests `tests/registry_test.rb`,

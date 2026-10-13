@@ -4,6 +4,10 @@ module PhComposer
   module Zones
     FEATURE_ID = "ph_composer.zones"
     REFERENCE_KIND = "#{FEATURE_ID}.zone"
+    # Emitted when a Zone occurrence becomes independent, by the action or the copy watcher's follow-up.
+    # The description is `zone_path`, `old_zone_id`, `new_zone_id`, `mapping` (every old id to its new
+    # one) and `revision` (context/CONTRACTS.md, "Compound proposals").
+    TRANSITION = "#{FEATURE_ID}.occurrence_independent"
     ZONE_DICTIONARY = "ph_composer.zone"
     STAMP_DICTIONARY = "ph_composer.zone_stamp"
     ZONE_STORE = Records::EntityStore.new(ZONE_DICTIONARY)
