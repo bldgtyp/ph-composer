@@ -16,8 +16,10 @@ module PhComposer
                                                             :refusal_code => "proposal.foreign_write")
         nested = request.with(:params => params, :owner => declaration.owner,
                               :proposal => readonly ? nil : request.proposal, :engine => engine)
-        before = request.proposal && Operations::Contributions.snapshot(request.proposal)
-        value = callback.handler.call(nested, readonly ? nil : request.proposal)
+        proposal = request.proposal
+        before = proposal && Operations::Contributions.snapshot(proposal)
+        call = -> { callback.handler.call(nested, readonly ? nil : proposal) }
+        value = proposal ? proposal.guarded(writable, "proposal.foreign_write", &call) : call.call
         validate!(value, callback.result, "library.callback_invalid", "Library callback returned an invalid result.")
         Operations::Contributions.preserved!(request.proposal, before) if before
         DeepCopy.call(value)

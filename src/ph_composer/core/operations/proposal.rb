@@ -65,6 +65,11 @@ module PhComposer
         record_changes.refuse(error)
       end
 
+      # Confines record writes while the block runs (Records::ChangeSet#guarded).
+      def guarded(kinds, code, &block)
+        record_changes.guarded(kinds, code, &block)
+      end
+
       def put(*arguments, **keywords)
         record_changes.put(*arguments, **keywords)
       end

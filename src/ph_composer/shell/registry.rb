@@ -120,15 +120,31 @@ module PhComposer
 
     private
 
-    # The batch's declarations made final, and the dictionary names its kinds use.
+    Prepared = Struct.new(:dictionaries, :owners, keyword_init: true)
+
+    # The batch's declarations made final, the dictionary name each kind was admitted with, and the
+    # owner index, all as the registry's own frozen values.
     def prepare(staging)
       staging.declared_structs.each { |declaration| own(declaration) }
-      staging.declared_record_kinds.map { |kind| kind.store.dictionary }
+      Prepared.new(:dictionaries => staging.declared_record_kinds.map { |kind| admitted_dictionary(staging, kind) },
+                   :owners => staging.owners.to_h { |name, owner| [DeepCopy.frozen(name), DeepCopy.frozen(owner)] })
     rescue StandardError => error
       raise InternalError, "Registration could not prepare the batch: #{error.class}: #{error.message}"
     end
 
-    def commit(staging, dictionaries)
+    # The name validation admitted, so a getter that answers differently later cannot reach publishing.
+    # A batch published without validation (a test's direct `publish`) is checked here instead.
+    def admitted_dictionary(staging, kind)
+      staging.admitted_dictionaries.fetch(kind) do
+        name = kind.store.dictionary
+        raise InternalError, "#{kind.id} store dictionary #{name.inspect} is not admitted." \
+          unless Dictionaries.valid_name?(name)
+
+        DeepCopy.frozen(name)
+      end
+    end
+
+    def commit(staging, prepared)
       staging.declared_features.each { |feature| @features[feature.id] = feature }
       publish_each(staging.declared_queries, @queries, :name)
       publish_each(staging.declared_actions, @actions, :name)
@@ -136,7 +152,7 @@ module PhComposer
       publish_each(staging.declared_setup_commands, @setup_commands, :name)
       publish_each(staging.declared_file_exports, @file_exports, :name)
       publish_each(staging.declared_record_kinds, @record_kinds, :id)
-      dictionaries.each { |name| Dictionaries.register(name) }
+      prepared.dictionaries.each { |name| Dictionaries.register(name) }
       publish_each(staging.declared_reference_targets, @reference_targets, :id)
       publish_each(staging.declared_extensions, @extensions, :namespace)
       publish_each(staging.declared_snapshot_sections, @snapshot_sections, :name)
@@ -148,7 +164,7 @@ module PhComposer
       publish_each(staging.declared_colour_modes, @colour_modes, :name)
       publish_each(staging.declared_menu_items, @menu_items, :name)
       publish_each(staging.declared_codes, @codes, :code)
-      staging.owners.each { |name, owner| @owners[name] = owner }
+      prepared.owners.each { |name, owner| @owners[name] = owner }
       staging.declared_subscriptions.each do |subscription|
         @subscriptions << subscription
         @unsubscribers << Sessions.on_host_event(subscription.kind, &subscription.handler)
@@ -230,7 +246,7 @@ module PhComposer
                   :declared_library_providers, :declared_library_kinds,
                   :declared_colour_modes,
                   :declared_menu_items, :declared_codes,
-                  :declared_subscriptions, :owners, :named
+                  :declared_subscriptions, :owners, :named, :admitted_dictionaries
 
       def initialize(live)
         @live = live
@@ -256,6 +272,7 @@ module PhComposer
         @owners = {}
         @named = []
         @failures = []
+        @admitted_dictionaries = {}.compare_by_identity
       end
 
       # Contribution schemas may reuse a dependency's published record shape during registration.

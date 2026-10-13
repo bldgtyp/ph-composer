@@ -199,4 +199,13 @@ class RegistryOwnershipTest < PhComposerTestCase
     published.write(Sketchup.active_model, "id" => "pro_Ab12Cd34Ef56")
     assert_equal ["pro_Ab12Cd34Ef56"], store.writes
   end
+
+  def test_a_retained_feature_id_edited_after_install_leaves_ownership_unchanged
+    id = +"probe.owned"
+    kind = part_kind
+    Registry.install([feature { |r| r.feature(id, :contract_version => 1).record_kind(kind) }])
+    id.replace("probe.elsewhere")
+    assert_equal "probe.owned", Registry.current.owner_of("probe.owned.part")
+    assert_equal "probe.owned", PhComposer::API.describe(:name => "probe.owned.part").fetch("owner")
+  end
 end

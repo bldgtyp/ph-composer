@@ -6,8 +6,11 @@ module PhComposer
   # installed, the caller has an active proposal, the caller's feature owns or requires the participant's
   # owner, the calling declaration names the participant in `participants`, the call is not recursive,
   # and the params match the participant's schema. It then runs the handler under the participant's owner
-  # with an engine that stages writes only to that owner's catalog kinds, checks nothing earlier in the
-  # proposal was removed or changed, and validates the result. Any failure refuses the whole proposal,
+  # with an engine that stages writes only to that owner's catalog kinds; however the handler writes,
+  # through that engine or `proposal.put`, a record write outside them refuses (Records::ChangeSet
+  # #guarded), and a kind owner it delegates to is confined to that owner's kinds for its own call. It
+  # then checks nothing earlier in the proposal was removed or changed, and validates the result. Any
+  # failure refuses the whole proposal,
   # so a caller that rescues still cannot apply it. The outer dispatcher keeps the transaction, retry and
   # outcome; nothing here opens an operation.
   module ParticipantInvocation
@@ -37,12 +40,13 @@ module PhComposer
 
     def run(request, declaration, params)
       proposal = request.proposal
-      engine = request.engine.projected(proposal, :writable_kinds => owned_kinds(request.registry, declaration.owner),
+      writable = owned_kinds(request.registry, declaration.owner)
+      engine = request.engine.projected(proposal, :writable_kinds => writable,
                                                   :refusal_code => "proposal.foreign_write")
       nested = request.with(:params => DeepCopy.call(params), :owner => declaration.owner, :engine => engine,
                             :query_stack => request.query_stack + [declaration.name])
       before = Operations::Contributions.snapshot(proposal)
-      value = declaration.handler.call(nested, proposal)
+      value = proposal.guarded(writable, "proposal.foreign_write") { declaration.handler.call(nested, proposal) }
       Operations::Contributions.preserved!(proposal, before)
       unless JsonValue.problems(value).empty? && JsonSchema.validate(value, declaration.result).empty?
         raise InternalError, "#{declaration.name} returned a result outside its schema."

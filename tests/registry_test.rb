@@ -539,6 +539,16 @@ class RegistryTest < PhComposerTestCase
     assert_empty received
   end
 
+  def test_a_dictionary_getter_that_changes_its_answer_publishes_the_admitted_name
+    answers = %w[ph_composer.records.admitted outside.records]
+    store = CountingStore.new(nil) { answers.shift || "outside.records" }
+    Registry.install([kind_feature("probe.changing", store)])
+    assert_includes PhComposer::Dictionaries.names, "ph_composer.records.admitted"
+    refute_includes PhComposer::Dictionaries.names, "outside.records"
+    assert_equal 1, store.calls[:dictionary]
+    assert_equal "probe.changing", Registry.current.owner_of("probe.changing.kind")
+  end
+
   def test_an_install_from_inside_an_install_is_refused_and_the_next_install_succeeds
     before = published
     nested = kind_feature("probe.nested", CountingStore.new("ph_composer.records.nested"), "Nested")

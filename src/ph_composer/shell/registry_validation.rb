@@ -440,7 +440,7 @@ module PhComposer
         rescue StandardError => error
           return store_problem(owner, kind, "dictionary raised #{error.class}")
         end
-        return if Dictionaries.valid_name?(name)
+        return @staging.admitted_dictionaries[kind] = DeepCopy.frozen(name) if Dictionaries.valid_name?(name)
 
         store_problem(owner, kind, "dictionary #{name.inspect} must be a string starting with #{DICTIONARY_PREFIX}")
       end

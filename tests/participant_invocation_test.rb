@@ -169,6 +169,40 @@ class ParticipantInvocationTest < PhComposerTestCase
     expect_refused(invoke, "proposal.foreign_write")
   end
 
+  def test_a_participant_cannot_put_a_foreign_record_into_the_proposal_directly
+    install(provider do |_request, proposal|
+      proposal.put(NOTE, :before => nil, :after => { "id" => "prn_Ab12Cd34Ef56", "schema_version" => 1,
+                                                     "label" => "stray" })
+      { "id" => "none", "nested" => {} }
+    end)
+    expect_refused(invoke, "proposal.foreign_write")
+  end
+
+  # A step whose payload a later contributor can reach and edit in place.
+  class PayloadStep < MarkStep
+    attr_reader :payload
+
+    def initialize
+      super
+      @payload = { "values" => { "label" => "mine" } }
+    end
+
+    def descriptor
+      { "name" => "payload", "payload" => @payload }
+    end
+  end
+
+  def test_a_participant_cannot_edit_an_earlier_step_in_place
+    install(provider do |_request, proposal|
+      proposal.steps.first.descriptor["payload"]["values"]["label"] = "theirs"
+      { "id" => "none", "nested" => {} }
+    end, consumer do |request, proposal|
+      proposal.add_step(PayloadStep.new, :scopes => [])
+      request.participate(ADD, "label" => "One")
+    end)
+    assert_equal "proposal.contribution_replaced", invoke["code"]
+  end
+
   def test_a_participant_cannot_remove_an_earlier_step_or_write
     { "step" => ->(proposal) { proposal.steps.pop }, "write" => ->(proposal) { proposal.writes.pop } }
       .each do |label, remove|

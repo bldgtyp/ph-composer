@@ -49,7 +49,7 @@ registration never silently wins. Repeated install adds no duplicate observers.
 A record kind's store is admitted during validation. It must answer the five methods the engine
 calls, `dictionary`, `ids`, `read`, `write` and `delete`, which are checked by presence; only the
 `dictionary` getter is called, once, and its answer must be a String starting with `ph_composer.`
-followed by a name. A getter that raises is a diagnostic. The default `ph_composer.records.<kind
+followed by a name; that admitted answer is the name publishing registers. A getter that raises is a diagnostic. The default `ph_composer.records.<kind
 id>` is not required, so a kind may keep a legacy name.
 
 Publishing cannot leave a batch half published. It prepares everything that could fail first,
@@ -63,7 +63,8 @@ A published declaration owns its values. Publishing replaces each value member (
 descriptions, schemas, examples, refusal lists, Undo names, side effects, snapshot params, export
 result fields, `user_data_keys`, `requires`, library adapter schemas and callback schemas, and the
 strings of Colour-by modes, menu items, codes, retargeters, participants and subscriptions) with a
-deep-frozen copy and freezes the declaration. Record kinds, descriptors, extensions and reference
+deep-frozen copy and freezes the declaration; the owner index `owner_of` reads is built from frozen
+copies too. Record kinds, descriptors, extensions and reference
 targets keep frozen copies of their ids, labels, prefixes, fields, references and schemas from the
 moment they are built. Behaviour (handlers, validators, stores, factories, projections, callbacks
 and migrations) is kept by identity and never copied or frozen. A contributor who edits a builder it
@@ -582,10 +583,13 @@ recursive (`operation.participant_cycle`); the params match (`params.invalid`). 
 runs as `->(request, proposal) { value }` under the participant's owner, with an engine projected
 from the caller's (`engine.projected(proposal, writable_kinds:, refusal_code:)`) that reads the
 proposal's view and stages writes only to catalog kinds the owner registered; any other write
-refuses with `proposal.foreign_write`. A projection may derive a further one for the same proposal,
-which is how a participant delegates to a kind owner's callback. After the handler returns, every
-write, step and finding proposed before the call must be unchanged
-(`proposal.contribution_replaced`), and the result must match its schema or the call fails. The
+refuses with `proposal.foreign_write`. The same confinement holds however the handler writes: while
+it runs, the proposal's change set refuses any record write outside those kinds, a direct
+`proposal.put` included (`Records::ChangeSet#guarded`). A projection may derive a further one for the
+same proposal, which is how a participant delegates to a kind owner's callback; the callback is
+confined to its own owner's kinds for the length of its call. After the handler returns, every
+write, step and finding proposed before the call must be unchanged, steps by identity and by
+descriptor (`proposal.contribution_replaced`), and the result must match its schema or the call fails. The
 caller receives a detached copy. Any failure refuses the whole proposal, so a caller that rescues
 it still writes nothing, and a later successful call does not clear the refusal. The outer
 dispatcher remains the only owner of the transaction, retry and outcome; a participant opens no
@@ -723,7 +727,8 @@ Its request's engine is `engine.projected(proposal, writable_kinds:, refusal_cod
 `incoming_references`, `check_identity_removal!`) answers as the proposal would leave the records,
 `find` refusing as the plain engine does (`target.not_found` for a record absent there, a staged
 delete included, `record.unreadable` for one that fails its kind), and a write into another change set or to a kind its owner did not register refuses at once with
-`proposal.foreign_write`. A local read's projection accepts no write. After the callback returns,
+`proposal.foreign_write`, as does any record write the callback stages directly into the proposal
+while it runs. A local read's projection accepts no write. After the callback returns,
 every write, step and finding staged before it must be unchanged; otherwise
 `proposal.contribution_replaced`. Local reads get no proposal. Any
 refusal inside the coordinator or a callback poisons the proposal, so a rescued error still writes
