@@ -79,6 +79,30 @@ class GeometrySnapshotTest < PhComposerTestCase
     assert_empty first.geometry.vertex_ids & second.geometry.vertex_ids
   end
 
+  def test_edges_meeting_at_a_vertex_share_it_within_each_occurrence_of_a_repeated_definition
+    corner = Sketchup::Vertex.new(Geom::Point3d.new(1, 0, 0))
+    first = Sketchup::Edge.new(91, Geom::Point3d.new(0, 0, 0), corner)
+    second = Sketchup::Edge.new(92, corner, Geom::Point3d.new(1, 1, 0))
+    face = Sketchup::Face.new(93)
+    first.attach_face(face)
+    definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([first, second, face]))
+    model = Sketchup.active_model
+    model.entities << Sketchup::ComponentInstance.new(90, definition)
+    model.entities << Sketchup::ComponentInstance.new(94, definition,
+                                                      :transformation => Geom::Transformation.translation([10, 0, 0]))
+
+    captured = edges(PhComposer::Export::GeometrySnapshot.capture(model, :revision => 1))
+
+    assert_equal [[90, 91], [90, 92], [94, 91], [94, 92]], captured.map(&:path)
+    captured.each_slice(2) do |left, right|
+      assert_equal left.geometry.vertex_ids.last, right.geometry.vertex_ids.first, "the corner is shared"
+      assert_equal [93], left.geometry.face_ids
+    end
+    assert_in_delta 11 * 0.0254, captured[2].geometry.points_m.last[0], 1e-12
+    assert_equal captured[0].geometry.vertex_ids, captured[2].geometry.vertex_ids,
+                 "vertex ids are definition-local; the occurrence path tells copies apart"
+  end
+
   def test_edges_inside_a_cutting_component_are_not_captured
     model = Sketchup.active_model
     definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([edge(61, [0, 0, 0], [1, 0, 0])]))

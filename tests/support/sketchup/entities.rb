@@ -515,8 +515,9 @@ module Sketchup
 
     def initialize(persistent_id, start_point, end_point, dictionaries = {})
       super(persistent_id, dictionaries)
-      @start = Vertex.new(start_point)
-      @end = Vertex.new(end_point)
+      # A Vertex passed in is shared, as two host Edges meeting at a point share one.
+      @start = start_point.is_a?(Vertex) ? start_point : Vertex.new(start_point)
+      @end = end_point.is_a?(Vertex) ? end_point : Vertex.new(end_point)
       @faces = []
     end
 
