@@ -338,8 +338,13 @@ or request; private configuration belongs to the provider and its setup store.
 adapter for a catalog record kind it owns. Entity reference targets cannot be imported as catalog
 kinds. A wire kind has one adapter. `Declarations::LibraryAdapter` declares `wire_kind`,
 `wire_version`, `fingerprint_version`, `wire_schema`, `mapped_schema`, ordered `fingerprint_fields`,
-`map`, `reverse`, `fingerprint`, `local_read`, `create`, `replace` and optional `assign`. Supported
-contract, wire and fingerprint versions are 1. Fingerprint fields are unique mapped-schema
+`display_label`, `map`, `reverse`, `fingerprint`, `local_read`, `create`, `replace` and optional
+`assign`. Supported contract, wire and fingerprint versions are 1. The wire schema must declare `id`
+as a required string. `display_label` is `->(mapped) { text }`: the shared library UI, admission
+ordering and copy resolution read it, so a kind needs no `name` field. Admission skips a row whose
+label is not nonblank text, or whose projection raises, with `library.row_label_invalid`; a local
+record without a label is resolved by source only. The development example
+`tools/examples/library_provider/` registers such a kind. Fingerprint fields are unique mapped-schema
 property names in canonical order. Pure mapping and reverse mapping use detached values; the
 fingerprint returns a lowercase SHA-256 hex string and excludes provenance and local identities.
 

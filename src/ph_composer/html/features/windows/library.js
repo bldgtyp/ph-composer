@@ -15,6 +15,7 @@ PhComposerUI.define("features/windows/library", ["features/windows/editor_shared
   };
   function adapter(kind, target) {
     return Object.assign({}, definitions[kind], { read: function (state) { return shared.records(state, kind); },
+      name: function (row) { return row.display_label || row.values.name; },
       category: function (row) { return row.values.manufacturer || "manual"; },
       categories: function (state) {
         var seen = {};

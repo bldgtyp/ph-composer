@@ -92,7 +92,7 @@ PhComposerUI.define("library/store", ["request", "snapshot"], function (request,
         if (!cursor || !self.page || self.page.generation !== page.generation) self.rows = [];
         self.rows = self.rows.concat(page.rows.map(function (row) {
           return { id: JSON.stringify([provider, self.kind, row.library_id, row.record_id]),
-            values: row.snapshot, resolution: row.resolution,
+            values: row.snapshot, display_label: row.display_label, resolution: row.resolution,
             library: Object.assign({ provider_id: provider, kind: self.kind, generation: page.generation }, row) };
         }));
         self.loaded[provider] = { rows: self.rows.slice(), generation: page.generation, revision: revision };

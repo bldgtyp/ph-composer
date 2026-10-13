@@ -603,15 +603,25 @@ module PhComposer
                                                               adapter[part]["type"] == "object"
           end
           check_library_fingerprint_fields(item, adapter)
-          %i[map reverse fingerprint].each do |part|
+          %i[map reverse fingerprint display_label].each do |part|
             problem(item, "needs callable #{part}") unless adapter[part].respond_to?(:call)
           end
+          check_library_identity(item, adapter)
           %i[local_read create replace assign].each do |part|
             next if part == :assign && adapter[part].nil?
 
             check_library_callback(item, part, adapter[part])
           end
         end
+      end
+
+      # A row's identity is its wire `id`: a required string, whatever else the kind's vocabulary holds.
+      def check_library_identity(item, adapter)
+        schema = adapter.wire_schema
+        id = schema.is_a?(Hash) && schema["properties"].is_a?(Hash) ? schema["properties"]["id"] : nil
+        return if id.is_a?(Hash) && Array(id["type"]) == ["string"] && Array(schema["required"]).include?("id")
+
+        problem(item, "wire_schema must declare id as a required string")
       end
 
       def check_library_kind_owner(item)

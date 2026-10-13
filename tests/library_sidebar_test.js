@@ -21,7 +21,7 @@ function setup() {
   state.ui.queryResults[request.request_id] = { session: "session", request_id: request.request_id,
     outcome: { status: "completed", value: { generation: 1, state: "loaded", total: 1, next_cursor: null,
       rows: [{ library_id: "lib", library_name: "Public library", record_id: "r", snapshot: { id: "r", name: "Part" },
-        resolution: { outcome: "create", candidates: [] } }] } } };
+        display_label: "Part", resolution: { outcome: "create", candidates: [] } }] } } };
   sidebar.refresh(state, {}, true);
   return { sidebar: sidebar, sent: sent, state: state, target: target };
 }
@@ -112,7 +112,7 @@ test("a long list starts with its groups folded, a search opens them, and a fold
   o.sidebar.records = [];
   for (var i = 0; i < 25; i += 1) {
     var row = JSON.parse(template);
-    row.id = "row" + i; row.values.name = "Part " + i;
+    row.id = "row" + i; row.display_label = "Part " + i;
     o.sidebar.records.push(row);
   }
   o.sidebar.renderList();
@@ -132,7 +132,7 @@ test("the sidebar narrows to one category and orders names either way, and the c
   var o = setup(), template = JSON.stringify(o.sidebar.records[0]);
   o.sidebar.records = [["Board", "wood"], ["Fiber", "insulation"], ["Wool", "insulation"]].map(function (pair, i) {
     var row = JSON.parse(template);
-    row.id = "row" + i; row.values.name = pair[0]; row.values.category = pair[1];
+    row.id = "row" + i; row.display_label = pair[0]; row.values.category = pair[1];
     return row;
   });
   o.sidebar.renderList();
@@ -143,7 +143,7 @@ test("the sidebar narrows to one category and orders names either way, and the c
   assert.strictEqual(o.sidebar.visible.length, 2);
   o.sidebar.order.value = "desc";
   o.sidebar.order.listeners.change({});
-  assert.strictEqual(o.sidebar.visible.map(function (entry) { return entry.row.values.name; }).join(), "Wool,Fiber");
+  assert.strictEqual(o.sidebar.visible.map(function (entry) { return entry.row.display_label; }).join(), "Wool,Fiber");
   o.sidebar.renderList();
   assert.strictEqual(o.sidebar.category.value, "insulation", "a repaint keeps the category chosen");
 });

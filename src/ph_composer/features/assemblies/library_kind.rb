@@ -76,20 +76,13 @@ module PhComposer
         params.fetch("properties").delete("user_data")
         params.fetch("properties").fetch("values").fetch("properties")["source"] =
           Materials::Schema::KIND.values_schema.fetch("properties").fetch("source")
+        # The ordinary Material update, with the copy's provenance passed apart from the edited values.
         callback(params, Shapes::RESULT, :refuses => Refuses::EDIT) do |request, proposal|
-          id = request.params.fetch("id")
-          record = request.engine.find(MATERIAL_KIND, id)
           values = request.params.fetch("values")
-          if values["name"]
-            Commands.unique_name!(values["name"], Definitions.records(request, MATERIAL_KIND), :except => id)
-          end
-          result = Commands.update_material(record, :values => values.reject { |key, _value| key == "source" })
-          changes = Definitions.changed_values(Materials::Schema::KIND, record, result.record)
-          changes["source"] = DeepCopy.call(values["source"]) if values.key?("source")
-          request.engine.propose_update(MATERIAL_KIND, id, proposal,
-                                        :values => changes,
-                                        :expected_values => request.params.fetch("expected_values"))
-          { "id" => id }
+          Materials::Operations.update(request, proposal, :id => request.params.fetch("id"),
+                                                          :values => values.reject { |key, _value| key == "source" },
+                                                          :expected_values => request.params.fetch("expected_values"),
+                                                          :source => values["source"])
         end
       end
 
@@ -97,7 +90,8 @@ module PhComposer
         adapter = Declarations::LibraryAdapter.new(
           :wire_kind => "materials", :wire_version => 1, :fingerprint_version => 1, :wire_schema => wire_schema,
           :mapped_schema => schema, :fingerprint_fields => FIELDS, :map => method(:map), :reverse => method(:reverse),
-          :fingerprint => method(:fingerprint), :local_read => local_read,
+          :fingerprint => method(:fingerprint), :display_label => ->(mapped) { mapped.fetch("name") },
+          :local_read => local_read,
           :create => callback(Shapes.create(Materials::Schema::KIND, :labelled => Materials::Schema::LABELLED_FIELDS),
                               Shapes::RESULT, :refuses => Refuses::CREATE) do |request, proposal|
                        Materials::Operations.create(request, proposal, :values => request.params.fetch("values"),

@@ -27,7 +27,7 @@ PhComposerUI.define("library/copy", ["request", "units", "workspace"], function 
   Copy.prototype.open = function (row, assignment) {
     if (this.disposed || this.enabled === false || this.busy()) return false;
     this.held = { row: freeze(row), assignment: assignment ? freeze(assignment) : null };
-    this.title.textContent = "Review " + row.values.name;
+    this.title.textContent = "Review " + row.display_label;
     this.error.textContent = ""; this.candidates.replaceChildren();
     var candidates = row.resolution.candidates;
     this.explanation.textContent = row.resolution.outcome === "ambiguous_source" ||
@@ -35,7 +35,8 @@ PhComposerUI.define("library/copy", ["request", "units", "workspace"], function 
       "Keep local values or replace copied properties from this library. Local user data is preserved.";
     var blank = el("option", "", "Choose a local copy…"); blank.value = ""; this.candidates.appendChild(blank);
     candidates.forEach(function (candidate) {
-      var option = el("option", "", candidate.name + " · " + candidate.id); option.value = candidate.id;
+      var option = el("option", "", (candidate.display_label || "Unlabelled") + " · " + candidate.id);
+      option.value = candidate.id;
       this.candidates.appendChild(option);
     }, this);
     this.candidates.value = candidates.length === 1 ? candidates[0].id : "";

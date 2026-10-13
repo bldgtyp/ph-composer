@@ -82,9 +82,14 @@ module PhComposer
 
         private
 
+        # `display_label` is admission's (Admission.label_for); a provider's own is replaced there.
         def valid_row?(row)
           fields = %w[library_id library_name record_id snapshot wire_schema_version]
-          row.is_a?(Hash) && row.keys.length == fields.length && fields.all? { |key| row.key?(key) } &&
+          labelled = row.is_a?(Hash) && row.key?("display_label")
+          return false if labelled && !(row["display_label"].is_a?(String) && !row["display_label"].strip.empty?)
+
+          row.is_a?(Hash) && row.keys.length == fields.length + (labelled ? 1 : 0) &&
+            fields.all? { |key| row.key?(key) } &&
             %w[library_id library_name record_id].all? { |key| row[key].is_a?(String) && !row[key].strip.empty? } &&
             row["wire_schema_version"].is_a?(Integer) && row["wire_schema_version"].positive? &&
             row["snapshot"].is_a?(Hash) && row.dig("snapshot", "id") == row["record_id"]

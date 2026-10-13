@@ -200,10 +200,13 @@ module PhComposer
 
     # Pure wire methods use detached values. Local callbacks will run under this declaration's
     # owner, validating these schemas and sharing the caller's proposal; registration never runs them.
+    # `display_label` is `->(mapped_values) { "text" }`, the label a catalog row, a local record and a
+    # resolution candidate show; it is the only word the library service reads from a kind's values,
+    # so a kind need not have a `name`. The wire schema must declare `id`, the row's identity.
     LibraryCallback = Struct.new(:params, :result, :refuses, :handler, keyword_init: true)
     LibraryAdapter = Struct.new(:wire_kind, :wire_version, :fingerprint_version, :wire_schema,
                                 :mapped_schema, :fingerprint_fields,
-                                :map, :reverse, :fingerprint, :local_read, :create, :replace, :assign,
+                                :map, :reverse, :fingerprint, :display_label, :local_read, :create, :replace, :assign,
                                 keyword_init: true)
     LibraryKind = Struct.new(:name, :owner, :contract_version, :record_kind, :adapter, keyword_init: true)
 

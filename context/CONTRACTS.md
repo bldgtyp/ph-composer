@@ -693,7 +693,8 @@ failing it. Withheld libraries are listed under `unavailable` with `library.dupl
 `library.identity_conflict`, `library.kind_unavailable`, `library.kind_schema_missing`,
 `library.kind_schema_unsupported` or `library.kind_malformed`. Skipped or trimmed rows are listed
 under `warnings` with `library.row_required_invalid`, `library.row_optional_invalid`,
-`library.unit_invalid` or `library.row_semantic_invalid` (row skipped), or
+`library.unit_invalid`, `library.row_semantic_invalid` or `library.row_label_invalid` (the adapter's
+`display_label` gave no nonblank text; row skipped), or
 `library.row_optional_absent` and `library.row_fields_omitted` (row kept). `library.row_semantic_invalid`
 is also an outcome-table code: admission consumes it and skips the row, while an adapter reused
 outside admission may raise it as an operation refusal. Copy/review and in-file resolution declare

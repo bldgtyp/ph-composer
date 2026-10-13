@@ -1,8 +1,8 @@
 # Library contracts plan
 
 DATE: 2026-10-13
-STATUS: Scoped; implementation ready after registration reliability, not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+STATUS: Implemented on branch `refactor/group-5-library-contracts` (LC-01 to LC-04 code and docs); native receipt pending. Stage ledger in [STATUS.md](STATUS.md).
+ISSUE: [#111](https://github.com/bldgtyp/ph-composer/issues/111)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDINGS: [F05](../../sections/03-services.md#f05-a-registered-library-kind-can-be-valid-yet-fail-because-sorting-requires-name), [RF-04](../../sections/04-ruby-features.md#rf-04-material-library-replacement-repeats-the-ordinary-persistence-pipeline)
 DEPENDS ON: [Registration reliability](../../../archive/registration-reliability/PLAN.md) RR-02 for the new adapter
@@ -106,7 +106,7 @@ null follows the existing `source` schema.
 
 ### LC-01: adapter label declaration and admission
 
-State: Scoped.
+State: Implemented on branch.
 
 Files: `shell/declarations.rb`, `shell/registry_validation.rb`, `shell/registry.rb` (`VALUE_MEMBERS`
 entry for the adapter if RR-02 is in), `library/admission.rb`, `library/library_file.rb`,
@@ -133,7 +133,7 @@ Exit: F05's `NoMethodError` cannot occur; tests pass.
 
 ### LC-02: resolution, schemas and the shared UI
 
-State: Scoped.
+State: Implemented on branch.
 
 Files: `library/resolver.rb`, `library/coordinator.rb`, `library/schemas.rb`,
 `html/library/adapters.js`, `copy.js`, `rows.js`, `drag.js`; tests `tests/library_resolver_test.rb`,
@@ -155,7 +155,7 @@ in shared library UI.
 
 ### LC-03: Material replacement reuse
 
-State: Scoped.
+State: Implemented on branch.
 
 Files: `features/assemblies/materials/operations.rb`, `library_kind.rb`; tests
 `tests/material_library_kind_test.rb`, `tests/assembly_records_operations_test.rb`.
@@ -171,7 +171,7 @@ Exit: `library_kind.rb` `replace` holds no second persistence path.
 
 ### LC-04: outside walkthrough, docs, gates, native
 
-State: Scoped.
+State: Implemented on branch.
 
 1. Extend `tools/examples/library_provider/` with the name-free kind end to end: list, preview,
    create, replace, assign, export, import into a fresh synthetic Model with typed references.
@@ -191,6 +191,7 @@ Exit: both `make ci` runs pass; review has no open blocker; native receipt filed
 | Label policy | Adapter-declared `display_label` projection | Mandatory wire `name` on every kind: smaller, but imposes a storage word and contradicts the permissive registration promise. If Ed prefers it, LC-01 and LC-02 are rewritten together; do not mix |
 | `ambiguous_name` outcome word | Kept | Renaming is a separate contract cleanup |
 | New warning code | `library.row_label_invalid` | Reusing `library.row_semantic_invalid` would conflate two causes |
+| Local record without a label (deviation, recorded at implementation) | Matches by source only; its candidate `display_label` is null and the copy dialog shows "Unlabelled" | Refusing the whole kind with `library.adapter_invalid` whenever one local record has no label: one hand-made record would block every copy of that kind. The incoming row still must have a label, since admission already required one |
 
 The coding agent decides helper placement and names.
 

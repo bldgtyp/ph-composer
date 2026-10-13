@@ -37,20 +37,12 @@ module PhComposer
         rows = batch.rows.filter_map do |row|
           next if duplicate.include?(row.fetch("library_id")) || unsupported.include?(row.fetch("library_id"))
 
-          snapshot, codes = LibraryFile.normalize_row(row.fetch("snapshot"), adapter.wire_schema)
-          warnings.concat(codes.map do |code|
-            { "code" => code, "kind" => kind, "library_id" => row.fetch("library_id"),
-              "record_id" => row.fetch("record_id") }
-          end)
-          next unless snapshot
-
-          unless semantic_row?(snapshot, adapter)
-            warnings << { "code" => "library.row_semantic_invalid", "kind" => kind,
-                          "library_id" => row.fetch("library_id"), "record_id" => row.fetch("record_id") }
-            next
-          end
-
-          row.merge("snapshot" => snapshot)
+          admitted(row, kind, adapter, warnings)
+        end
+        # Admission is the one place rows are labelled, so it is the one place they are ordered.
+        rows.sort_by! do |row|
+          label = row.fetch("display_label")
+          [row.fetch("library_id"), label.downcase, label, row.fetch("record_id")]
         end
         freshness = batch.freshness.slice("loaded_at", "exported_at").select do |_key, value|
           value.is_a?(String) && /\A\d{4}-\d\d-\d\dT[0-9:.+-]+Z?\z/.match?(value)
@@ -61,13 +53,42 @@ module PhComposer
         raise Error.new("library.provider_invalid", "The provider response is malformed."), :cause => nil
       end
 
-      def semantic_row?(snapshot, adapter)
+      # One row with its normalized snapshot and label, or nil with the reason added to `warnings`.
+      def admitted(row, kind, adapter, warnings)
+        note = ->(code) {
+          { "code" => code, "kind" => kind, "library_id" => row.fetch("library_id"),
+            "record_id" => row.fetch("record_id") }
+        }
+        snapshot, codes = LibraryFile.normalize_row(row.fetch("snapshot"), adapter.wire_schema)
+        warnings.concat(codes.map(&note))
+        return unless snapshot
+
+        mapped = semantic_row(snapshot, adapter)
+        label = mapped && label_for(adapter, mapped)
+        unless label
+          warnings << note.call(mapped ? "library.row_label_invalid" : "library.row_semantic_invalid")
+          return
+        end
+
+        row.merge("snapshot" => snapshot, "display_label" => label)
+      end
+
+      # The row's mapped values, or nil when the adapter's semantic check refuses them.
+      def semantic_row(snapshot, adapter)
         mapped = adapter.map.call(DeepCopy.call(snapshot))
-        JsonValue.problems(mapped).empty? && JsonSchema.validate(mapped, adapter.mapped_schema).empty?
+        mapped if JsonValue.problems(mapped).empty? && JsonSchema.validate(mapped, adapter.mapped_schema).empty?
       rescue CodedError => error
         raise unless error.code == "library.row_semantic_invalid"
 
-        false
+        nil
+      end
+
+      # The adapter's label for mapped values, trimmed, or nil when it does not give nonblank text.
+      def label_for(adapter, mapped)
+        label = adapter.display_label.call(DeepCopy.call(mapped))
+        label.is_a?(String) && !label.strip.empty? ? label.strip : nil
+      rescue StandardError
+        nil
       end
 
       def notes(values)
@@ -79,7 +100,7 @@ module PhComposer
           end
         end
       end
-      private_class_method :notes, :semantic_row?
+      private_class_method :notes, :semantic_row, :admitted
     end
   end
 end

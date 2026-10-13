@@ -32,8 +32,14 @@ wire kinds are `materials`, `frames`, `glazings` and `psi_install_types`. The co
 
 Every envelope field shown above is required. `library.id` and `library.name` contain nonempty
 text. `exported_at` is an ISO 8601 timestamp with a timezone. Each `kinds` entry is an array with
-a version in `kind_schema_versions`. A row's `id` is the provider's stable record identity;
-PH-Composer gives a copied record its own local identity.
+a version in `kind_schema_versions`. Every kind requires a row `id`, the provider's stable record
+identity; PH-Composer gives a copied record its own local identity.
+
+A row has no label field of its own. Each kind declares how a label is read from its values: the
+Materials and Window product kinds use `name`, and a kind without a `name` uses its own words, such
+as a designation. A row whose label is missing or blank is skipped with the warning
+`library.row_label_invalid`. Rows are listed by library, then label without regard to case, then
+`id`, so equal labels with different ids are all kept.
 
 Exporting local definitions publishes each local id as the wire record id. The optional
 `record_origins` object groups informational origins by wire kind and exported record id.
@@ -141,7 +147,8 @@ source attribution contain stable ids, never that path. A successful load publis
 session generation; a failed refresh retains the last valid generation with its failure state.
 Reconfiguring or removing a provider invalidates its session catalogs.
 
-Copy resolves exact source identity first, then the local name. Equal mapped values permit reuse;
+Copy resolves exact source identity first, then the local label, trimmed and without regard to
+case. A local record without a label is matched by source identity only. Equal mapped values permit reuse;
 different values require an explicit choice. Replacement preserves the local id and references,
 with guarded authored values and metadata preservation. Optional assignment shares the copy's
 single Model transaction. Preview and invoke use the same revision-bound copy timestamp for that

@@ -116,7 +116,7 @@ module PhComposer
         end
         refused = unavailable.select { |row| row["kind"] == kind }.map { |row| row["library_id"] }
         rows.reject! { |row| refused.include?(row.fetch("library_id")) }
-        [rows.sort_by { |row| [row.fetch("library_id"), row.dig("snapshot", "name").downcase, row.fetch("record_id")] },
+        [rows.sort_by { |row| [row.fetch("library_id"), row.fetch("record_id")] },
          unavailable.uniq]
       end
     end

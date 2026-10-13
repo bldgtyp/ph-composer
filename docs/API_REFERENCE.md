@@ -4430,7 +4430,8 @@ Result:
           "library_name",
           "record_id",
           "wire_schema_version",
-          "snapshot"
+          "snapshot",
+          "display_label"
         ],
         "properties": {
           "library_id": {
@@ -4448,6 +4449,10 @@ Result:
           },
           "snapshot": {
             "type": "object"
+          },
+          "display_label": {
+            "type": "string",
+            "description": "The kind adapter's label for the row's mapped values."
           }
         }
       }
@@ -4858,6 +4863,7 @@ Result:
           "record_id",
           "wire_schema_version",
           "snapshot",
+          "display_label",
           "resolution"
         ],
         "properties": {
@@ -4876,6 +4882,10 @@ Result:
           },
           "snapshot": {
             "type": "object"
+          },
+          "display_label": {
+            "type": "string",
+            "description": "The kind adapter's label for the row's mapped values."
           },
           "resolution": {
             "type": "object",
@@ -4902,7 +4912,7 @@ Result:
                   "additionalProperties": false,
                   "required": [
                     "id",
-                    "name",
+                    "display_label",
                     "differences",
                     "expected_values",
                     "comparison_available",
@@ -4912,8 +4922,12 @@ Result:
                     "id": {
                       "type": "string"
                     },
-                    "name": {
-                      "type": "string"
+                    "display_label": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "The local record's label; null when it has none."
                     },
                     "differences": {
                       "type": "array",
@@ -21139,7 +21153,7 @@ Result:
             "additionalProperties": false,
             "required": [
               "id",
-              "name",
+              "display_label",
               "differences",
               "expected_values",
               "comparison_available",
@@ -21149,8 +21163,12 @@ Result:
               "id": {
                 "type": "string"
               },
-              "name": {
-                "type": "string"
+              "display_label": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The local record's label; null when it has none."
               },
               "differences": {
                 "type": "array",
@@ -40834,7 +40852,7 @@ Result:
             "additionalProperties": false,
             "required": [
               "id",
-              "name",
+              "display_label",
               "differences",
               "expected_values",
               "comparison_available",
@@ -40844,8 +40862,12 @@ Result:
               "id": {
                 "type": "string"
               },
-              "name": {
-                "type": "string"
+              "display_label": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The local record's label; null when it has none."
               },
               "differences": {
                 "type": "array",
