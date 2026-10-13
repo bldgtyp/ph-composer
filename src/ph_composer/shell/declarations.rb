@@ -150,8 +150,14 @@ module PhComposer
     # result fields in its report, through `result.section(id)`. Each must belong to this feature or
     # one it requires. `projection` is an optional `->(reader) { detached value }` other contributors
     # may read.
+    # `entity_projections` claims structured extension data this contributor's feature owns on another
+    # feature's entities: `{"namespace", "target_kind", "source_section", "fields"}` each. The entity
+    # owner's section hands over the declared fields of an understood envelope, and this contributor
+    # reads them with `reader.entity_projection(namespace, target_kind)` (context/CONTRACTS.md,
+    # "Records and extension data").
     ExportContributor = Struct.new(:name, :owner, :section_version, :contract, :result, :report, :preflight,
-                                   :user_data_keys, :requires, :projection, keyword_init: true)
+                                   :user_data_keys, :requires, :projection, :entity_projections,
+                                   keyword_init: true)
 
     # One Colour-by mode. `projection` is `->(model) { [ColourBy::Entry, ...] }`: a pure read of the
     # feature's own entities, their world transforms and the value each one carries. `colours` is

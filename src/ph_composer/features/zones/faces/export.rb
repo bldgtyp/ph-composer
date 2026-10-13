@@ -170,7 +170,8 @@ module PhComposer
             end
 
             exported = reader.entity_record(
-              record, :fields => %w[face_type boundary_condition assembly_id adjacency]
+              record, :fields => %w[face_type boundary_condition assembly_id adjacency],
+                      :target_kind => REFERENCE_KIND, :path => entry.path
             ).merge(
               "zone_id" => stamp.fetch("zone_id"), "geometry" => geometry.to_h
             )

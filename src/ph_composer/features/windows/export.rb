@@ -52,9 +52,10 @@ module PhComposer
           settings = ExportGeometry.record(reader.snapshot.model_dictionaries, Settings::SERVICE.store) ||
                      DeepCopy.call(Settings::DEFAULTS)
           Settings::SERVICE.validate!(settings)
-          reader.snapshot.records(Units::STORE.dictionary).each do |_entry, record|
+          reader.snapshot.records(Units::STORE.dictionary).each do |entry, record|
             Units.validate!(record)
-            reader.entity_record(record, :fields => %w[window_type_id anchor])
+            reader.entity_record(record, :fields => %w[window_type_id anchor], :target_kind => Units::REFERENCE_KIND,
+                                         :path => entry.path)
           end
           assess(:snapshot => reader.snapshot, :types => types, :products => products, :settings => settings,
                  :faces => reader.section(FACES))

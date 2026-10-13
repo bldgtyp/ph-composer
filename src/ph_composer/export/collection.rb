@@ -23,7 +23,7 @@ module PhComposer
           @run_id = run_id
           @registry = registry
           @cursor = GeometrySnapshot::Cursor.new(model)
-          @contributors = registry.export_contributors.values.sort_by(&:name)
+          @contributors = Collection.ordered(registry.export_contributors.values)
           @sections = {}
           @count = 0
         end
@@ -36,7 +36,10 @@ module PhComposer
           end
           @reader ||= reader
           contributor = @contributors.shift
-          return true unless contributor
+          unless contributor
+            @reader.reconcile!
+            return true
+          end
 
           records = @reader.within(contributor.name) { contributor.contract.call(@reader) }
           @sections[contributor.name] = { "version" => contributor.section_version, "records" => records }
@@ -45,13 +48,14 @@ module PhComposer
 
         def extraction
           Extraction.new(:document => { "schema_version" => SCHEMA_VERSION, "run_id" => @run_id,
-                                        "sections" => @sections }, :findings => @reader.findings.map(&:to_h))
+                                        "sections" => @sections.sort.to_h }, :findings => @reader.findings.map(&:to_h))
         end
 
         private
 
         def reader
-          records = RecordReader.new(Records::Engine.new(@model, @registry.catalog), @registry.catalog)
+          records = RecordReader.new(Records::Engine.new(@model, @registry.catalog), @registry.catalog,
+                                     :claims => Collection.claims(@registry))
           snapshot = GeometrySnapshot.new(@cursor.entries, Sessions.for(@model).revision,
                                           :model_dictionaries => @cursor.model_dictionaries)
           SnapshotReader.new(records, snapshot, :registry => @registry)
@@ -60,21 +64,48 @@ module PhComposer
 
       module_function
 
+      # Contributors in name order, except that each runs after every section it `requires:`, so an
+      # entity owner's section has handed its claimed rows over before the claimant reads them.
+      # Registration has refused cycles and unknown sections.
+      def ordered(contributors)
+        by_name = contributors.to_h { |contributor| [contributor.name, contributor] }
+        done = []
+        visit = lambda do |contributor|
+          next if done.include?(contributor)
+
+          Array(contributor.requires).sort.each { |name| visit.call(by_name[name]) if by_name[name] }
+          done << contributor
+        end
+        contributors.sort_by(&:name).each(&visit)
+        done
+      end
+
+      # `[namespace, target_kind]` to the claiming contributor and its declared fields.
+      def claims(registry)
+        registry.export_contributors.values.each_with_object({}) do |contributor, claims|
+          Array(contributor.entity_projections).each do |claim|
+            claims[claim.values_at("namespace", "target_kind")] = { "contributor" => contributor.name,
+                                                                    "fields" => claim.fetch("fields") }
+          end
+        end
+      end
+
       # Reads the Model; never writes. Raises Export::Blocked when data that export cannot leave out
       # would be lost.
       def build(model, run_id:, registry: Registry.current, contributors: nil)
         catalog = registry.catalog
         session = Sessions.for(model)
         revision = session.revision
-        records = RecordReader.new(Records::Engine.new(model, catalog), catalog)
-        reader = SnapshotReader.new(records, GeometrySnapshot.capture(model, :revision => revision),
+        record_reader = RecordReader.new(Records::Engine.new(model, catalog), catalog, :claims => claims(registry))
+        reader = SnapshotReader.new(record_reader, GeometrySnapshot.capture(model, :revision => revision),
                                     :registry => registry)
         declared = registry.export_contributors.values
         declared = declared.select { |contributor| Array(contributors).include?(contributor.name) } if contributors
-        sections = declared.sort_by(&:name).to_h do |contributor|
+        sections = ordered(declared).to_h do |contributor|
           records = reader.within(contributor.name) { contributor.contract.call(reader) }
           [contributor.name, { "version" => contributor.section_version, "records" => records }]
-        end
+        end.sort.to_h
+        record_reader.reconcile!
         if session.revision != revision
           raise Blocked.new("export.model_changed", "The Model changed while export geometry was collected.")
         end

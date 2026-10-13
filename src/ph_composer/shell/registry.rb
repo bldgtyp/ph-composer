@@ -188,7 +188,8 @@ module PhComposer
       Declarations::SetupCommand => %i[name owner description params result examples refuses],
       Declarations::FileExport => %i[name owner description params result examples refuses],
       Declarations::SnapshotSection => %i[name owner query params],
-      Declarations::ExportContributor => %i[name owner section_version result preflight user_data_keys requires],
+      Declarations::ExportContributor => %i[name owner section_version result preflight user_data_keys requires
+                                            entity_projections],
       Declarations::ColourMode => %i[name owner label entity_kind group],
       Declarations::MenuItem => %i[name owner label menu separator_after],
       Declarations::ReferenceRetargeter => %i[name owner target_kind],
@@ -409,11 +410,12 @@ module PhComposer
 
       # Adds a section to the export extraction and declares the result fields its translation adds.
       def export_contributor(name, section_version:, result: {}, report: nil, preflight: nil, user_data_keys: [],
-                             requires: [], projection: nil, &contract)
+                             requires: [], projection: nil, entity_projections: [], &contract)
         declaration = Declarations::ExportContributor.new(
           :name => name, :owner => id, :section_version => section_version, :contract => contract,
           :result => result, :report => report, :preflight => preflight,
-          :user_data_keys => user_data_keys, :requires => requires, :projection => projection
+          :user_data_keys => user_data_keys, :requires => requires, :projection => projection,
+          :entity_projections => entity_projections
         )
         @staging.add(:declared_export_contributors, id, name, declaration)
       end
