@@ -13581,7 +13581,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -19792,7 +19792,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -20015,7 +20015,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -20662,7 +20662,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -21097,7 +21097,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -21737,7 +21737,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -21942,7 +21942,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -22528,7 +22528,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -22689,7 +22689,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -23129,7 +23129,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -23784,7 +23784,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -32474,7 +32474,7 @@ Params:
               },
               "user_data": {
                 "type": "object",
-                "description": "Free metadata kept with the record and exported verbatim."
+                "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
               }
             }
           }
@@ -33404,7 +33404,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -33625,7 +33625,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     }
   }
 }
@@ -34546,7 +34546,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     },
     "intent": {
       "type": "object",
@@ -34904,7 +34904,7 @@ Params:
     },
     "user_data": {
       "type": "object",
-      "description": "Free metadata kept with the record and exported verbatim."
+      "description": "Local JSON metadata kept with the record in the Model. Export needs an explicit mapping; arbitrary metadata is left out with a finding."
     },
     "expected_values": {
       "type": "object",

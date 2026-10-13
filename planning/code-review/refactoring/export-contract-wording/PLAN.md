@@ -1,8 +1,8 @@
 # Export contract wording plan
 
 DATE: 2026-10-13
-STATUS: Scoped; implementation ready, not authorized. Stage ledger in [STATUS.md](STATUS.md).
-ISSUE: none (local planning draft)
+STATUS: Implemented on branch `refactor/export-wording-ew-01` (2026-10-13). Stage ledger in [STATUS.md](STATUS.md).
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/98
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 FINDING: [F08](../../sections/06-export.md#f08-some-operation-schemas-incorrectly-promise-verbatim-metadata-export)
 DEPENDS ON: nothing. Lands on its own.
@@ -13,7 +13,7 @@ Three declaration constants describe `user_data` as "exported verbatim". The exp
 exports arbitrary `user_data`: `Export::RecordReader#omit_metadata` records
 `export.metadata_omitted` for every record that carries any, for catalog and entity records alike.
 The constants feed every create, update and place schema in their features, and the generated
-`docs/API_REFERENCE.md` repeats the false sentence seventeen times.
+`docs/API_REFERENCE.md` repeats the false sentence sixteen times.
 
 The review plan named two constants. There are three.
 
@@ -49,12 +49,12 @@ One stage. It is a shipping Ruby source change whose only observable effect is d
 
 ### EW-01: correct the three descriptions and regenerate the reference
 
-State: Scoped.
+State: Implemented on branch `refactor/export-wording-ew-01`, 2026-10-13.
 
 1. Edit the three constants above to the new sentence. Line wrap at the 120 column ceiling as the
    neighbours do.
 2. Run `make fixtures`. `tests/api_reference_test.rb` owns `docs/API_REFERENCE.md`; the regenerated
-   file must differ only in the seventeen description strings. Inspect the diff with
+   file must differ only in the sixteen description strings. Inspect the diff with
    `git diff --stat docs/API_REFERENCE.md` and `git diff docs/API_REFERENCE.md | grep '^[-+]' | grep -v description`
    which should print nothing but the diff headers.
 3. Run the focused checks:

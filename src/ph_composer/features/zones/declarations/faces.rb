@@ -31,8 +31,9 @@ module PhComposer
           "value" => { "type" => %w[string null], "description" => "The value `set` writes." }
         }, :optional => ["value"])
         FACES = { "type" => "array", "items" => FACE_REFERENCE, "minItems" => 1 }.freeze
-        USER_DATA = { "type" => "object", "description" => "Free metadata kept with the record and exported " \
-                                                           "verbatim." }.freeze
+        USER_DATA = { "type" => "object",
+                      "description" => "Local JSON metadata kept with the record in the Model. Export needs an " \
+                                       "explicit mapping; arbitrary metadata is left out with a finding." }.freeze
         EXPECTED = FACE_VALUES.merge("description" => "The values last read for every target; a change refuses.")
         CLASSIFY_PARAMS = Shapes.object({
           # The ceiling is a feature bound, not a schema bound, so one Face over it refuses with

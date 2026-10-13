@@ -16,8 +16,9 @@ module PhComposer
                          "product_id" => TEXT }, :optional => %w[element_id side product_id]).freeze
       EXPECTED = "Any of the record's values as last read; if one changed since, the edit is refused as " \
                  "target.changed. {} skips the check."
-      USER_DATA = { "type" => "object", "description" => "Free metadata kept with the record and exported " \
-                                                         "verbatim." }.freeze
+      USER_DATA = { "type" => "object",
+                    "description" => "Local JSON metadata kept with the record in the Model. Export needs an " \
+                                     "explicit mapping; arbitrary metadata is left out with a finding." }.freeze
       FINDINGS = { "type" => "array", "items" => FINDING }.freeze
 
       # Every Windows action but the named repair first gives copied Units new identities.
