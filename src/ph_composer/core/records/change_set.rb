@@ -16,11 +16,17 @@ module PhComposer
         end
       end
 
-      attr_reader :writes, :refusal
+      attr_reader :refusal
 
       def initialize
         @writes = []
         @refusal = nil
+      end
+
+      # The staged writes, in order, as a frozen list of frozen writes: the only way to add or change
+      # one is `put` and `delete`, which the write guard sees.
+      def writes
+        @writes.dup.freeze
       end
 
       # Marks the set as refused. The engine calls this when a proposal raises, so a handler that
@@ -51,7 +57,7 @@ module PhComposer
         raise ArgumentError, "#{kind} #{id} is already in this change set." if find(kind, id)
         return if before == after
 
-        @writes << Write.new(:kind => kind, :id => id, :before => before, :after => after)
+        @writes << Write.new(:kind => kind, :id => id, :before => before, :after => after).freeze
       end
 
       def delete(kind, before:)

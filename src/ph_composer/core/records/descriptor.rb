@@ -58,13 +58,13 @@ module PhComposer
 
       # The public, plain-JSON form discovery publishes.
       def to_h
-        {
+        reference_rows = references.map do |reference|
+          { "key" => reference.key, "target_kind" => reference.target_kind, "cardinality" => reference.cardinality }
+        end
+        DeepCopy.call(
           "id" => kind, "label" => label, "schema_version" => schema_version, "identity_field" => IDENTITY_FIELD,
-          "values" => DeepCopy.call(values_schema), "occurrence_reference" => DeepCopy.call(occurrence_schema),
-          "references" => references.map do |reference|
-            { "key" => reference.key, "target_kind" => reference.target_kind, "cardinality" => reference.cardinality }
-          end
-        }
+          "values" => values_schema, "occurrence_reference" => occurrence_schema, "references" => reference_rows
+        )
       end
     end
   end

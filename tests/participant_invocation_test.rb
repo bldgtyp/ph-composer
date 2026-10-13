@@ -192,6 +192,40 @@ class ParticipantInvocationTest < PhComposerTestCase
     end
   end
 
+  def test_a_participant_cannot_append_or_alter_a_write_through_the_write_list
+    install(provider do |_request, proposal|
+      write = PhComposer::Records::ChangeSet::Write.new(:kind => NOTE, :id => "prn_Ab12Cd34Ef56", :before => nil,
+                                                        :after => { "id" => "prn_Ab12Cd34Ef56" })
+      assert_raises(FrozenError) { proposal.writes << write }
+      assert_raises(FrozenError) { proposal.writes.first.kind = NOTE }
+      { "id" => "none", "nested" => {} }
+    end, consumer do |request, proposal|
+      request.engine.propose_create(NOTE, proposal, :values => { "label" => "mine" })
+      request.participate(ADD, "label" => "One")
+    end)
+    result = invoke
+    assert_equal "committed", result["effect"], result.inspect
+  end
+
+  def test_a_query_with_neither_proposal_nor_edge_is_refused_for_the_proposal_first
+    install(provider, consumer)
+    declaration = PhComposer::Registry.current.queries.fetch("probe.consumer.read")
+    assert_equal [ADD], declaration.participants
+    result = API.query(:context => @context, :name => "probe.consumer.read")
+    assert_equal "operation.proposal_required", result["code"], "the proposal check precedes the edge check"
+  end
+
+  def test_a_participant_can_make_a_nested_read_through_a_read_only_projection
+    engine = PhComposer::Records::Engine.new(Sketchup.active_model, PhComposer::Registry.current.catalog)
+    proposal = PhComposer::Operations::Proposal.new
+    projected = engine.projected(proposal, :writable_kinds => [], :refusal_code => "proposal.foreign_write")
+    readonly = projected.projected(nil, :writable_kinds => [], :refusal_code => "proposal.foreign_write")
+    assert_kind_of PhComposer::Records::ProjectedEngine, readonly
+    assert_raises(PhComposer::InternalError) do
+      projected.projected(nil, :writable_kinds => [ITEM], :refusal_code => "proposal.foreign_write")
+    end
+  end
+
   def test_a_participant_cannot_edit_an_earlier_step_in_place
     install(provider do |_request, proposal|
       proposal.steps.first.descriptor["payload"]["values"]["label"] = "theirs"
@@ -203,21 +237,16 @@ class ParticipantInvocationTest < PhComposerTestCase
     assert_equal "proposal.contribution_replaced", invoke["code"]
   end
 
-  def test_a_participant_cannot_remove_an_earlier_step_or_write
-    { "step" => ->(proposal) { proposal.steps.pop }, "write" => ->(proposal) { proposal.writes.pop } }
-      .each do |label, remove|
-      PhComposer::Registry.reset
-      install(provider do |_request, proposal|
-        remove.call(proposal)
-        { "id" => "none", "nested" => {} }
-      end, consumer do |request, proposal|
-        proposal.add_step(MarkStep.new, :scopes => [])
-        request.engine.propose_create(NOTE, proposal, :values => { "label" => "mine" })
-        request.participate(ADD, "label" => "One")
-      end)
-      result = invoke
-      assert_equal "proposal.contribution_replaced", result["code"], "#{label}: #{result.inspect}"
-    end
+  def test_a_participant_cannot_remove_an_earlier_step
+    install(provider do |_request, proposal|
+      proposal.steps.pop
+      { "id" => "none", "nested" => {} }
+    end, consumer do |request, proposal|
+      proposal.add_step(MarkStep.new, :scopes => [])
+      request.engine.propose_create(NOTE, proposal, :values => { "label" => "mine" })
+      request.participate(ADD, "label" => "One")
+    end)
+    assert_equal "proposal.contribution_replaced", invoke["code"]
   end
 
   def test_a_caller_editing_the_result_does_not_change_the_next_callers

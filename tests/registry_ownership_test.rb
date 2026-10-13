@@ -73,6 +73,8 @@ class RegistryOwnershipTest < PhComposerTestCase
     [descriptor.view_schema, descriptor.patch_schema, descriptor.to_h].each do |projection|
       projection.each_value { |part| part.clear if part.is_a?(Hash) }
     end
+    descriptor.to_h.fetch("label").replace("Custom label")
+    assert_equal "Entity", descriptor.label
     assert_equal "integer", descriptor.view_schema.dig("properties", "values", "properties", "n", "type")
   end
 

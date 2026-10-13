@@ -49,7 +49,14 @@ module PhComposer
         @engine.check_identity_removal!(kind_id, id, :change_set => @change_set, :reference_plan => reference_plan)
       end
 
+      # A nil change set asks for a read-only view (a nested read, a library local read): it keeps this
+      # projection's staged view and accepts no write.
       def projected(change_set, writable_kinds:, refusal_code:)
+        if change_set.nil?
+          raise InternalError, "A read-only projection cannot accept writes." unless writable_kinds.empty?
+
+          return ProjectedEngine.new(@engine, @change_set, :writable_kinds => [], :refusal_code => refusal_code)
+        end
         unless @change_set && change_set.equal?(@change_set)
           raise InternalError, "A projection can only be derived for the change set it reads through."
         end

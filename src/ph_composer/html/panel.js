@@ -433,8 +433,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
      `{ request_id, session, outcome }`; `options.owner` names it in diagnostics, and the returned function
      removes it. A translator that throws or answers something other than a string is skipped and logged under
      its owner; it never stops the result being recorded, because the reducer that calls it must return. The
-     first nonempty string wins. Iteration runs over a copy, so disposal during a call takes effect from the
-     next outcome. */
+     first string with visible text wins; a blank one declines. Iteration runs over a copy, so disposal during
+     a call takes effect from the next outcome. */
   var translators = [];
   function outcomeText(translate, options) {
     var owner = options && options.owner;
@@ -459,6 +459,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
       }
       if (text === null || text === undefined || text === "") continue;
       if (typeof text !== "string") { translatorFailed(current[index], "answered " + typeof text); continue; }
+      if (!text.trim()) continue;
       return text;
     }
     return null;

@@ -576,10 +576,11 @@ own, the codes of every participant it names through their own edges, and each s
 `participant` common set.
 
 A handler calls `request.participate(name, params)`. The foundation checks, in order: the
-participant is installed and the calling declaration names it (`operation.participant_missing`);
-the request has an active proposal, which a query never has (`operation.proposal_required`); the
-caller's feature owns or requires the owner (`operation.dependency_missing`); the call is not
-recursive (`operation.participant_cycle`); the params match (`params.invalid`). The handler then
+participant is installed (`operation.participant_missing`); the request has an active proposal,
+which a query never has (`operation.proposal_required`); the caller's feature owns or requires the
+owner (`operation.dependency_missing`); the calling declaration names it in `participants`
+(`operation.participant_missing`); the call is not recursive (`operation.participant_cycle`); the
+params match (`params.invalid`). The first that fails is the refusal. The handler then
 runs as `->(request, proposal) { value }` under the participant's owner, with an engine projected
 from the caller's (`engine.projected(proposal, writable_kinds:, refusal_code:)`) that reads the
 proposal's view and stages writes only to catalog kinds the owner registered; any other write

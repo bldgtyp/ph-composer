@@ -47,3 +47,17 @@ RBZ `388cd8c84d799d4e`). Development eval wrote a synthetic one-row `psi_install
 Records only: an Installs save changes Type records and products, not geometry, in this fixture (no
 placed Unit). Restored afterwards: the synthetic library removed from this machine's setup, SketchUp
 quit cleanly. C22 needs no native run, because no host step changed.
+
+Recheck after the PR 105 review fixes (the change-set write guard sits on this path): source
+`02e4315`, RBZ sha256 prefix `f6c6cd2c18d01471`, fresh process, same host. The Installs save with one
+staged library import committed with all four sides assigned and provenance kept, and
+`ExampleWalkthrough.composition` passed on the host. Undo and Redo were not repeated: the guard
+changes only how the proposal is built, not what is applied.
+
+Second review on PR 105 (gpt-6-astra): the write list was a mutable array a contributor could append
+to (now a frozen copy of frozen writes); a participant's nested read could not derive a read-only
+projection (`ProjectedEngine#projected(nil, ...)` now keeps the staged view and accepts no write);
+`Descriptor#to_h` handed out frozen strings (now a deep copy); the contract listed the edge check
+before the proposal and dependency checks (now in the implemented order, pinned by a test). It also
+caught a whitespace-only translator answer replacing a refusal with an empty notice, in the outcome
+hook merged in PR 102; it now declines.
