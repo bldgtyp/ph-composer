@@ -74,10 +74,11 @@ module PhComposer
     # writes into `changes` (a Records::ChangeSet) and never writes itself. The dispatcher applies the
     # proposal as one native operation named `undo_name`. `confirmation` is the policy every client
     # must satisfy before the operation opens; only "none" is supported.
-    # `participants` names the proposal participants the handler calls through `request.participate`.
+    # `participants` names the proposal participants the handler calls through `request.participate`;
+    # `transitions` names the transitions it emits through `request.contribute_transition`.
     Action = Struct.new(
       :name, :owner, :description, :params, :result, :examples, :refuses, :undo_name, :side_effects, :confirmation,
-      :participants, :handler, keyword_init: true
+      :participants, :transitions, :handler, keyword_init: true
     )
 
     # A change to what the host shows, and nothing else, as a contribution seam. `handler` is
@@ -186,8 +187,9 @@ module PhComposer
     # A feature owning records inside another feature's entity adds its own restorable steps when
     # that owner emits `transition` (context/CONTRACTS.md, "Compound proposals"). `transition` is a
     # name the emitting feature documents; the prefix before its last segment is that feature's id.
-    # `handler` is `->(request, proposal, description) { affected }`.
-    TransitionContributor = Struct.new(:name, :owner, :transition, :handler, keyword_init: true)
+    # `handler` is `->(request, proposal, description) { affected }`; `refuses` lists the codes it can
+    # raise, which discovery adds to every action declaring that transition.
+    TransitionContributor = Struct.new(:name, :owner, :transition, :refuses, :handler, keyword_init: true)
 
     # A step another feature composes into its own action's proposal (context/CONTRACTS.md, "Compound
     # proposals"). It is declared like an operation, with a description, params and result schemas,

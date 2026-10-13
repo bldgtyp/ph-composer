@@ -183,7 +183,7 @@ module PhComposer
       Declarations::Feature => %i[id contract_version requires],
       Declarations::Query => %i[name owner description params result examples refuses participants],
       Declarations::Action => %i[name owner description params result examples refuses undo_name side_effects
-                                 confirmation participants],
+                                 confirmation participants transitions],
       Declarations::ViewCommand => %i[name owner description params result examples refuses],
       Declarations::SetupCommand => %i[name owner description params result examples refuses],
       Declarations::FileExport => %i[name owner description params result examples refuses],
@@ -192,7 +192,7 @@ module PhComposer
       Declarations::ColourMode => %i[name owner label entity_kind group],
       Declarations::MenuItem => %i[name owner label menu separator_after],
       Declarations::ReferenceRetargeter => %i[name owner target_kind],
-      Declarations::TransitionContributor => %i[name owner transition],
+      Declarations::TransitionContributor => %i[name owner transition refuses],
       Declarations::ProposalParticipant => %i[name owner description params result examples refuses participants],
       Declarations::LibraryProvider => %i[name owner contract_version kinds],
       Declarations::LibraryKind => %i[name owner contract_version record_kind],
@@ -358,11 +358,12 @@ module PhComposer
       end
 
       def action(name, description:, params:, result:, undo_name:, side_effects:, examples: [],
-                 refuses: nil, confirmation: "none", participants: [], &handler)
+                 refuses: nil, confirmation: "none", participants: [], transitions: [], &handler)
         declaration = Declarations::Action.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :undo_name => undo_name, :side_effects => side_effects,
-          :confirmation => confirmation, :participants => participants, :handler => handler
+          :confirmation => confirmation, :participants => participants, :transitions => transitions,
+          :handler => handler
         )
         @staging.add(:declared_actions, id, name, declaration)
       end
@@ -451,9 +452,9 @@ module PhComposer
       end
 
       # Runs when the feature that owns `transition` emits it (HandlerRequest#contribute_transition).
-      def transition_contributor(name, transition:, &handler)
-        declaration = Declarations::TransitionContributor.new(:name => name, :owner => id,
-                                                              :transition => transition, :handler => handler)
+      def transition_contributor(name, transition:, refuses: [], &handler)
+        declaration = Declarations::TransitionContributor.new(:name => name, :owner => id, :transition => transition,
+                                                              :refuses => refuses, :handler => handler)
         @staging.add(:declared_transition_contributors, id, name, declaration)
       end
 

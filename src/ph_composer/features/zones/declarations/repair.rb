@@ -92,7 +92,7 @@ module PhComposer
         feature.action("#{FEATURE_ID}.make_independent",
                        :description => "Give a copied Zone occurrence its own Faces and identity, leaving the " \
                                        "occurrence it shares them with untouched.",
-                       :refuses => Refuses::MAKE_INDEPENDENT,
+                       :refuses => Refuses::MAKE_INDEPENDENT, :transitions => [TRANSITION],
                        :params => REPAIR_PARAMS, :result => INDEPENDENT_RESULT, :undo_name => "Make Zone Independent",
                        :examples => [{ "zone_path" => [1401] }],
                        :side_effects => "Makes the occurrence's Group unique when it shares its Faces, then " \

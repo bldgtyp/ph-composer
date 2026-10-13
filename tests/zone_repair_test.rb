@@ -575,7 +575,7 @@ class ZoneRepairTest < PhComposerTestCase
       @log << [:applied, PhComposer::Zones::ZONE_STORE.read(group).fetch("id")]
     end
 
-    def restore(_model)
+    def restore
       @log << [:restored]
     end
   end
@@ -584,15 +584,16 @@ class ZoneRepairTest < PhComposerTestCase
     undef_method :restore
   end
 
-  def child_feature(id, requires: ["ph_composer.zones"], &handler)
+  def child_feature(id, requires: ["ph_composer.zones"], refuses: [], &handler)
     part = PhComposer::Records::RecordKind.new(:id => "#{id}.part", :label => "Child part", :schema_version => 1,
                                                :id_prefix => "cpt", :fields => [])
     Module.new do
       define_singleton_method(:install) do |registry|
         scope = registry.feature(id, :contract_version => 1, :requires => requires)
         scope.record_kind(part)
+        refuses.each { |code| scope.code(code, :description => "The child's records cannot follow the copy.") }
         scope.transition_contributor("#{id}.follow_zone_copy", :transition => PhComposer::Zones::TRANSITION,
-                                     &handler)
+                                                               :refuses => refuses, &handler)
       end
     end
   end
@@ -670,6 +671,22 @@ class ZoneRepairTest < PhComposerTestCase
     assert_equal "none", result.fetch("effect")
     refute_equal "completed", result.fetch("status")
     assert_equal %w[shared_definition shared_definition], zone_states
+  end
+
+  def test_a_contributor_refusal_is_discovered_on_the_emitting_action_and_answered
+    _original, copy = shared_copy(990)
+    code = "child.unsupported"
+    PhComposer::Registry.install([child_feature("test.child", :refuses => [code]) do |*_args|
+      raise PhComposer::CodedError.new(code, "The child's records cannot follow the copy.")
+    end])
+
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+
+    assert_equal code, result.fetch("code")
+    described = API.describe(:name => MAKE_INDEPENDENT)
+    assert_includes described.fetch("refuses"), { "code" => code, "owner" => "test.child",
+                                                  "description" => "The child's records cannot follow the copy." }
+    assert_equal [PhComposer::Zones::TRANSITION], described.fetch("transitions")
   end
 
   def test_a_contributor_that_raises_after_another_contributed_refuses_everything

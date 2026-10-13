@@ -125,6 +125,9 @@ module PhComposer
     # proposal.
     def contribute_transition(transition, description)
       raise InternalError, "A transition needs an action proposal." unless proposal
+      unless Array(registry.actions[query_stack.last]&.transitions).include?(transition)
+        raise InternalError, "#{query_stack.last} does not declare the transition #{transition}."
+      end
 
       rows = registry.transition_contributors.values.select { |item| item.transition == transition }.sort_by(&:name)
       rows.flat_map { |declaration| contribution(declaration, description) }

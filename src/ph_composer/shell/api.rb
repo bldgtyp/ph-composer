@@ -185,7 +185,8 @@ module PhComposer
         "common_refusal_sets" => Refusals.common_sets(operation)
       }.merge(
         operation.is_a?(Declarations::Action) ? { "side_effects" => operation.side_effects,
-                                                  "confirmation" => operation.confirmation } : {}
+                                                  "confirmation" => operation.confirmation,
+                                                  "transitions" => Array(operation.transitions) } : {}
       ).merge(operation.respond_to?(:approval) && operation.approval ? { "approval" => operation.approval.to_h } : {})
         .merge(operation.respond_to?(:participants) ? { "participants" => operation.participants } : {})
     end

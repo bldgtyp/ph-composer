@@ -54,7 +54,8 @@ module PhComposer
     end
 
     def effective(declaration, registry, seen)
-      codes = declaration.refuses + Library::Refuses.callback_codes(registry, declaration.name)
+      codes = declaration.refuses + Library::Refuses.callback_codes(registry, declaration.name) +
+              transition_codes(declaration, registry)
       Array(declaration.respond_to?(:participants) ? declaration.participants : nil).each do |name|
         participant = registry.proposal_participants[name]
         next if participant.nil? || seen.include?(name)
@@ -64,6 +65,17 @@ module PhComposer
       codes
     end
     private_class_method :effective
+
+    # What the contributors to the transitions an action declares can answer, and the guard codes
+    # contribution itself gives (HandlerRequest#contribute_transition).
+    def transition_codes(declaration, registry)
+      transitions = Array(declaration.respond_to?(:transitions) ? declaration.transitions : nil)
+      return [] if transitions.empty?
+
+      registry.transition_contributors.values.select { |item| transitions.include?(item.transition) }
+              .flat_map(&:refuses) + %w[proposal.foreign_write proposal.contribution_replaced]
+    end
+    private_class_method :transition_codes
 
     # The names of the COMMON sets one operation answers. A participant answers what any operation
     # does; the action that calls it adds its own set.
