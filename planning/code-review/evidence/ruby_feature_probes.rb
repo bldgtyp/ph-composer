@@ -76,7 +76,7 @@ class RubyFeatureReviewProbes < PhComposerTestCase
                 "references" => [], "export_relevance" => "local_only" }
     record = PhComposer::Zones::ZONE_STORE.read(@group)
     PhComposer::Zones::ZONE_STORE.write(@group,
-                                      record.merge("extension_data" => { "outside.review" => unknown }))
+                                        record.merge("extension_data" => { "outside.review" => unknown }))
     row = assignment_query("ph_composer.zones.list").fetch("zones").first
     assert_equal unknown, row.dig("extension_data", "outside.review")
     refute row.key?("extension_status")

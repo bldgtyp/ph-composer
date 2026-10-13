@@ -24,7 +24,7 @@ class ArchitectureReviewProbes < PhComposerTestCase
       scope = registry.feature("review.atomic", :contract_version => 1)
       scope.record_kind(kind)
       scope.query("review.atomic.read", :description => "Read probe.",
-                                       :params => OBJECT, :result => OBJECT, :refuses => []) { {} }
+                                        :params => OBJECT, :result => OBJECT, :refuses => []) { {} }
     end
     assert_raises(ArgumentError) { PhComposer::Registry.install([contribution]) }
     assert PhComposer::Registry.installed?("review.atomic")
@@ -59,8 +59,8 @@ class ArchitectureReviewProbes < PhComposerTestCase
     end])
     proposal = PhComposer::Operations::Proposal.new
     request = PhComposer::HandlerRequest.for(PhComposer::Sessions.current,
-                                            :owner => "review.consumer", :name => "review.consumer.probe",
-                                            :proposal => proposal)
+                                             :owner => "review.consumer", :name => "review.consumer.probe",
+                                             :proposal => proposal)
     handler = request.participant("review.provider.reject")
     assert_raises(PhComposer::CodedError) { handler.call(request, proposal) }
     assert_nil proposal.refusal
@@ -123,7 +123,9 @@ class ArchitectureReviewProbes < PhComposerTestCase
       path = File.join(directory, "synthetic.json")
       File.write(path, text)
       provider = PhComposer::Library::FileProvider.new(:id => "probe", :label => "Probe", :path => path,
-                                                       :kinds => ["synthetic_labels"], :adapters => ->(_kind) { adapter })
+                                                       :kinds => ["synthetic_labels"], :adapters => ->(_kind) {
+                                                                                         adapter
+                                                                                       })
       assert_raises(NoMethodError) { provider.list("synthetic_labels") }
     end
   end
