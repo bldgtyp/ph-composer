@@ -22,7 +22,7 @@ issues and PRs are linked from each packet row as they open.
 | [Library contracts](library-contracts/STATUS.md) | F05, RF-04 | LC-01 to LC-04 | Merged to main in PR 112 ([#111](https://github.com/bldgtyp/ph-composer/issues/111)); native Undo/Redo outstanding |
 | [Entity customization](entity-customization/STATUS.md) | RF-01, RF-03, F07 | EC-01 to EC-05 | EC-01, EC-02 merged in [PR #110](https://github.com/bldgtyp/ph-composer/pull/110); EC-03 waits for Ed ([#109](https://github.com/bldgtyp/ph-composer/issues/109)) |
 | [Zone-child lifecycle](zone-child-lifecycle/STATUS.md) | copied-Zone request | ZC-01 to ZC-04 | ZC-01 to ZC-04 merged ([#113](https://github.com/bldgtyp/ph-composer/issues/113)); native Undo/Redo outstanding |
-| [Geometry seams](geometry-contribution-contracts/STATUS.md) | F06 | G-01 to G-04 | G-02 implemented on branch ([#118](https://github.com/bldgtyp/ph-composer/issues/118)); G-01, G-03, G-04 with the adopter |
+| [Geometry seams](geometry-contribution-contracts/STATUS.md) | F06 | G-01 to G-04 | G-02 merged ([#118](https://github.com/bldgtyp/ph-composer/issues/118)); G-01, G-03, G-04 with the adopter |
 | [Foundation purity](foundation-purity/STATUS.md) | F03 | P-01 to P-03 | Scoped; optional |
 
 Each packet's `STATUS.md` is its stage ledger and the entry point for `implement`. The

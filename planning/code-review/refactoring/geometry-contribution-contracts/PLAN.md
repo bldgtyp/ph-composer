@@ -95,7 +95,7 @@ Exit: the thermal-bridge plan references these shapes; any disagreement is resol
 
 ### G-02: Edge capture
 
-State: Implemented on branch. `FaceGeometry.check_transform!` is the shared singular-transform check
+State: Merged to main in PR 119. `FaceGeometry.check_transform!` is the shared singular-transform check
 the Edge capture reuses. The stub's Vertex ids come from their own lazy sequence so existing
 allocated ids do not move.
 
