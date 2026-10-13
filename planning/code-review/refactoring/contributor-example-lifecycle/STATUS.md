@@ -17,8 +17,8 @@ Reviewed against source on 2026-10-13: `tests/support/dom_stub.js` already dispa
 listeners through `dispatch(target, event)`; the test helper `press` bypasses it. CE-01 adds a
 dispatching helper rather than a stub change.
 
-Deviations: "dispose twice" and "withdraw then show" (CE11, CE13) are not reachable through the
-example's public routes, because the form instance lives in the editor's closure; `dispose` is
-guarded by `retired` and `withdraw` is unchanged kit behaviour. The stub's `removeEventListener`
-ignores the capture flag; the example registers and removes with the same flag, so no stub change was
-needed.
+Review on PR 102 (gpt-6-astra) asked for the retained `run` route to be exercised directly. The
+test harness now captures each record form the editor builds (test-only instrumentation of
+`RecordForm.prototype.finish`), so the retained `submit`, `run` and `show` of a retired form, `dispose`
+twice and withdraw-then-reopen (CE10, CE11, CE13) are tested. The stub's `removeEventListener` ignores
+the capture flag; the example registers and removes with the same flag, so no stub change was needed.

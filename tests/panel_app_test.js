@@ -8,7 +8,7 @@ var test = require("node:test");
 var dom = require("./support/dom_stub");
 var panelSource = require("./support/panel_source");
 
-function page() {
+function page(extra) {
   var sent = [];
   var context = {
     document: dom.buildDocument(panelSource.markup("index.html")), Intl: Intl,
@@ -17,7 +17,7 @@ function page() {
   };
   context.window = context;
   dom.attachEvents(context);
-  var modules = panelSource.start(context, ["sections/shell", "sections/export", "request"]);
+  var modules = panelSource.start(context, ["sections/shell", "sections/export", "request"].concat(extra || []));
   var panel = modules.panel;
   return {
     context: context, modules: modules, panel: panel, sent: sent,
@@ -394,8 +394,8 @@ test("last-export findings name Materials, Assemblies and Layers without interna
 /* panel.outcomeText: a contributor translator never stands between a result and its requester. */
 var results = require("./support/action_results");
 
-function hookPage() {
-  var p = page(), logged = [];
+function hookPage(extra) {
+  var p = page(extra), logged = [];
   p.receive("panel.snapshot", snapshot("session-a", 7));
   p.context.console = { error: function (message) { logged.push(message); } };
   p.logged = logged;
@@ -495,6 +495,51 @@ test("a disposer removes only its own translator, keeps order and is safe to cal
   disposeB();
   p.receive("action.result", results.refused("r1", "session-a", "Host words."));
   assert.deepStrictEqual(calls, ["a", "c"]);
+});
+
+test("a failed outcome settles its pending form whole, with Cancel usable and no second settlement", function () {
+  var p = hookPage(["record_form"]), changed = [];
+  var form = new p.modules.record_form(p.panel.state.session, p.panel.send, {
+    title: "Probe", action: "example.probe", label: "probe", submitLabel: "Save", pendingText: "Saving...",
+    failureText: "Not saved.", dialog: false, changed: function (arg) { changed.push(arg); }
+  });
+  form.finish();
+  form.show();
+  p.panel.outcomeText(function () { throw new Error("hook bug"); });
+  form.run({});
+  var id = p.sent[p.sent.length - 1].payload.request_id;
+  var envelope = results.failed(id, "session-a", "It broke.");
+  envelope.outcome.effect = "unknown";
+  envelope.outcome.value = { partial: true };
+  p.receive("action.result", envelope);
+
+  var outcome = form.settle(p.panel.state);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(outcome)), { status: "failed", code: "operation.failed",
+    message: "It broke.", effect: "unknown", value: { partial: true } });
+  assert.strictEqual(form.busy(), false);
+  assert.strictEqual(form.cancel.disabled, false);
+  assert.strictEqual(p.notice().getAttribute("data-tone"), "error");
+  assert.strictEqual(form.settle(p.panel.state), null, "a repeated render settles nothing more");
+  form.cancel.listeners.click({});
+  assert.strictEqual(form.root.hidden, true);
+});
+
+test("a translator disposed or added during a call changes the next outcome, not the current one", function () {
+  var p = hookPage(), calls = [], disposeSelf;
+  disposeSelf = p.panel.outcomeText(function () {
+    calls.push("self");
+    disposeSelf();
+    p.panel.outcomeText(function () { calls.push("late"); return null; });
+    return null;
+  });
+  p.panel.outcomeText(function () { calls.push("next"); return "Next."; });
+  p.receive("action.result", results.refused("r1", "session-a", "Host words."));
+  assert.deepStrictEqual(calls, ["self", "next"]);
+  assert.strictEqual(p.notice().message.textContent, "Next.");
+
+  calls.length = 0;
+  p.receive("action.result", results.refused("r2", "session-a", "Host words."));
+  assert.deepStrictEqual(calls, ["next"], "the disposed translator is gone and the later one is after the winner");
 });
 
 test("a missing or throwing console cannot strand the result", function () {

@@ -34,6 +34,9 @@ function editor(options) {
   vm.createContext(context);
   panelSource.start(context, ["sections/shell", "sections/export", "request", "snapshot", "record_form",
     "unit_field"]);
+  // Test-only: every record form the editor builds, so a test can hold a retired form's methods.
+  var RecordForm = context.PhComposerUI.get("record_form"), forms = [], finish = RecordForm.prototype.finish;
+  RecordForm.prototype.finish = function () { forms.push(this); return finish.apply(this, arguments); };
   run(context, "tools/ui-preview/host.js");
   var host = context.PhComposerPreviewHost.install(context, Object.assign({ parts: PARTS }, options));
   context.PhComposerUI.get("panel").ready();
@@ -45,7 +48,7 @@ function editor(options) {
     })[0];
   }
   return {
-    context: context, host: host, section: section, input: input,
+    context: context, host: host, section: section, input: input, forms: forms,
     preferences: context.PhComposerUI.get("unit_preferences"),
     type: function (label, text) { var node = input(label); node.value = text; node.listeners.input({}); },
     press: function (label, key) { input(label).listeners.keydown({ key: key, preventDefault: function () {} }); },
@@ -324,7 +327,8 @@ test("a Model switch ends the old form's length field subscription and the new o
 
 test("an old form's retained submit, run, show and Enter route send nothing after a Model switch", function () {
   var e = editor(), d = newPart(e);
-  var form = d.form;
+  var form = d.form, old = e.forms[e.forms.length - 1];
+  var retained = { submit: old.submit.bind(old), run: old.run.bind(old), show: old.show.bind(old) };
   d.open();
   d.fill("Jamb", "3 ft");
   d.cancel();
@@ -338,6 +342,10 @@ test("an old form's retained submit, run, show and Enter route send nothing afte
   routes.submit({ preventDefault: function () {} });
   dom.dispatch(lengthInput, { type: "keydown", key: "Enter" });
   header.listeners.click({});
+  retained.submit();
+  assert.strictEqual(retained.run({ definition_label: "Example", parts: [{ label: "Jamb", length_mm: 914.4 }] }),
+    false);
+  retained.show();
   assert.strictEqual(e.invokes().length, 0);
   assert.strictEqual(form.hidden, true, "the old dialog stays closed");
   assert.strictEqual(newPart(e).form.hidden, true, "the new dialog was not opened by the old header");
@@ -378,4 +386,21 @@ test("after several Model switches only the active form's field follows preferen
   e.dispatch("Length", "Enter");
   assert.strictEqual(creates(e).length, 1);
   assert.strictEqual(creates(e)[0].payload.session, "preview-session-d");
+});
+
+test("dispose is permanent and safe twice; withdraw alone leaves a form reusable", function () {
+  var e = editor(), live = e.forms[e.forms.length - 1], d = newPart(e);
+  d.open();
+  live.withdraw();
+  assert.strictEqual(d.form.hidden, true);
+  d.open();
+  d.fill("Jamb", "3 ft");
+  e.dispatch("Length", "Enter");
+  assert.strictEqual(creates(e).length, 1, "a withdrawn form still creates after it is reopened");
+
+  switchModel(e);
+  assert.doesNotThrow(function () { live.dispose(); });
+  live.show();
+  assert.strictEqual(d.form.hidden, true);
+  assert.strictEqual(creates(e).length, 1);
 });

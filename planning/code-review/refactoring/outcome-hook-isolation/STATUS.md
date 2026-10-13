@@ -16,6 +16,8 @@ Reviewed against source on 2026-10-13: the result is already placed in the reduc
 the hook runs, so isolating the hook alone settles correlation. The earlier four-stage plan collapsed
 to two.
 
-OH10, OH11 and OH15 were already covered by the existing channel and renderer-isolation tests
-(`tests/request_test.js`; "a section that throws does not hide the refusal warning") and the
-existing Zones refusal and Cancel tests; no new case was needed for them.
+Review on PR 102 (gpt-6-astra) added two cases: a failed outcome settling a real pending
+`RecordForm` (OH03: outcome kept whole, pending cleared, Cancel usable, no second settlement) and a
+translator that disposes itself and registers another during a call (OH14). OH10, OH11 and OH15 are
+covered by the existing channel and renderer-isolation tests (`tests/request_test.js`; "a section that
+throws does not hide the refusal warning") and the existing Zones refusal and Cancel tests.
