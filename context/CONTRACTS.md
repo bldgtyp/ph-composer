@@ -376,7 +376,8 @@ visible.
 
 **Copied Unit identities.** A native copy duplicates the Unit record, so several occurrences can
 carry one `wun_` id. Reads report the copy and never repair it. The next Windows action repairs
-it inside its own proposal: the occurrence first in path order keeps the id and every other copy
+it inside its own proposal, before anything else that action proposes, from the Windows authoring
+coordinator (`Windows::Authoring`) or the Unit action itself: the occurrence first in path order keeps the id and every other copy
 gets a fresh one, with `user_data` copied verbatim and structured extension data copied through
 its declared rules (`copy.rule_missing` when they are unavailable). Copies behind shared parent
 storage refuse as `target.shared_definition`; a locked copy refuses as `target.locked`.

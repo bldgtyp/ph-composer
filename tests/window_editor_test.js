@@ -58,12 +58,14 @@ function outcome(o, status) {
 test("one and two-element drawings are independent of missing thermal data", function () {
   var o = setup(), record = o.state.sections["ph_composer.windows.types"].value.records[0];
   record.values.elements = record.values.elements.slice(0, 2); record.values.columns_m = [0.5, null];
+  fixtures.withTopology(record);
   record.display.thermal = { elements: [], uw_w_m2k: null, u_effective_w_m2k: null,
     findings: [{ code: "window_type.dimensions_incomplete", message: "Enter all grid dimensions." }] };
   o.editor.render(o.state);
     assert.strictEqual(o.editor.canvas.root.querySelectorAll("[data-window-element]").length, 2);
   assert.ok(o.editor.canvas.root.querySelector("[aria-label='Set column 2 width']"));
   record.values.elements = record.values.elements.slice(0, 1); record.values.columns_m = [null];
+  fixtures.withTopology(record);
   o.editor.render(o.state);
     assert.strictEqual(o.editor.canvas.root.querySelectorAll("[data-window-element]").length, 1);
   o.editor.installEditor.open(record); o.editor.installEditor.selected = "psi_a";
@@ -107,6 +109,7 @@ test("Installs copies compatible topology with independent element IDs and refus
   var o = setup(), installs = o.editor.installEditor;
   var original = o.editor.rawRecord(), target = JSON.parse(JSON.stringify(original)); target.id = "wnt_b";
   target.values.name = "Other"; target.values.elements.forEach(function (cell) { cell.id += "_other"; });
+  fixtures.withTopology(target);
   o.state.sections["ph_composer.windows.types"].value.records.push(target); o.editor.render(o.state);
   installs.open(original); installs.selected = "psi_a"; installs.paintEdge("wel_a", "top");
   assert.strictEqual(installs.copyTo(target), true);
@@ -116,7 +119,7 @@ test("Installs copies compatible topology with independent element IDs and refus
   assert.strictEqual(types[1].installs[0].element_id, "wel_a_other");
   assert.strictEqual(types[1].installs[0].sides.top, "psi_a");
   outcome(o, "refused"); assert.ok(installs.dirty); assert.ok(!installs.root.hidden);
-  target.values.columns_m = [2]; assert.strictEqual(installs.copyTo(target), false);
+  target.values.columns_m = [2]; fixtures.withTopology(target); assert.strictEqual(installs.copyTo(target), false);
 });
 test("product cards retain input identity, warn on missing quantities and audit names Empty", function () {
   var o = setup(), frame = o.state.sections["ph_composer.windows.frames"].value.records[0];
@@ -330,7 +333,7 @@ test("Installs validates and stages Psi products, then saves their frozen update
 test("Installs bulk paint and compatible copies stay local; missing defaults remain visible", function () {
   var o = setup(), installs = o.editor.installEditor, target = JSON.parse(JSON.stringify(o.editor.rawRecord()));
   target.id = "wnt_b"; target.values.name = "Compatible target";
-  target.values.elements.forEach(function (cell) { cell.id += "_target"; });
+  target.values.elements.forEach(function (cell) { cell.id += "_target"; }); fixtures.withTopology(target);
   o.state.sections["ph_composer.windows.types"].value.records.push(target);
   o.state.sections["ph_composer.windows.settings"].value.default_psi_install_id = "missing";
   o.editor.render(o.state); installs.open(o.editor.rawRecord());
@@ -501,4 +504,31 @@ test("an incomplete Window Type carries the amber mark in the rail; no Types nam
   o.editor.render(o.state);
   assert.strictEqual(o.editor.emptyPrompt.hidden, false);
   assert.strictEqual(o.editor.main.hidden, true);
+});
+test("Installs without the host's edge facts paints nothing and offers no copy, and sends nothing", function () {
+  var o = setup(), installs = o.editor.installEditor, raw = o.editor.rawRecord();
+  var target = JSON.parse(JSON.stringify(raw)); target.id = "wnt_b"; target.values.name = "Compatible target";
+  o.state.sections["ph_composer.windows.types"].value.records.push(target);
+  delete raw.display.install_topology; o.editor.render(o.state);
+  installs.open(raw); installs.selected = "psi_a";
+  assert.strictEqual(installs.paintEdge("wel_a", "top"), false);
+  assert.ok(installs.drawing.querySelector("[aria-label='Element 1 top: Edge not read · cannot paint']"));
+  click(installs.copyButton);
+  assert.ok(text(installs.copyForm).includes("No compatible Window Types."));
+  assert.strictEqual(installs.copyTo(target), false);
+  assert.strictEqual(o.sent.length, 0);
+});
+test("Installs offers only Types whose published copy key matches, and keeps its facts through staging", function () {
+  var o = setup(), installs = o.editor.installEditor, raw = o.editor.rawRecord();
+  var same = JSON.parse(JSON.stringify(raw)); same.id = "wnt_b"; same.values.name = "Same key";
+  var other = JSON.parse(JSON.stringify(raw)); other.id = "wnt_c"; other.values.name = "Other key";
+  other.display.install_topology.copy_key = "different";
+  o.state.sections["ph_composer.windows.types"].value.records.push(same, other); o.editor.render(o.state);
+  installs.open(raw); installs.selected = "psi_a";
+  installs.stageImport({ provider_id: "p", kind: "psi_install_types", generation: 1, library_id: "l",
+    record_id: "r" }, { name: "Staged", psi_w_mk: 0.02 });
+  assert.strictEqual(installs.paintEdge("wel_a", "top"), true, "staging changes no edge fact");
+  click(installs.copyButton);
+  var offered = installs.copyForm.querySelectorAll("button").map(function (button) { return button.textContent; });
+  assert.deepStrictEqual(offered, ["Copy to Same key"]);
 });

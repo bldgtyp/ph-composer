@@ -111,9 +111,9 @@
       "sha256": "c964819b11d82c0451ead356b19cc512c2fbf1baa8884e4622c5e8a6373c7fc5"
     },
     "html/features/windows/editor_shared.js": {
-      "bytes": 2972,
+      "bytes": 2035,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "3b59a75abd016f589615507f96272053bcd3b6cdf0705c8ca868926a37bf491a"
+      "sha256": "508381b6dc06b14f1bf5402cd9ffc3f4a80047f0d4a6fc2b9839791728778c64"
     },
     "html/features/windows/form.js": {
       "bytes": 5762,
@@ -121,9 +121,9 @@
       "sha256": "47798cafead34fafe4ee90ef29fa42697f0080e42af3013197da593d422baeea"
     },
     "html/features/windows/install_editor.js": {
-      "bytes": 22501,
+      "bytes": 23383,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "63b8d32eb8abdd9f5b6e48fabb3bb91e1f6b51101052a9a388c4dce3ee42faa8"
+      "sha256": "c09e3dccdbca668521c6ee483d2082f62879c3aa6ff0f92c2e47a6c6f6815a13"
     },
     "html/features/windows/inventory.js": {
       "bytes": 14658,

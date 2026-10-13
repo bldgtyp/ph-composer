@@ -7,11 +7,10 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
   var el = ui.element, clone = shared.clone, sides = shared.sides;
   // Drawing units an edge needs before its value is written beside it: along the edge, and across a line of text.
   var VALUE_ROOM = 44, LINE_ROOM = 40, INSIDE_ROOM = 96;
-  function topology(record) {
-    return JSON.stringify([record.rows_m, record.columns_m, record.elements.map(function (cell) {
-      return [cell.kind, cell.row_span, cell.column_span];
-    }).sort(function (a, b) { return JSON.stringify(a).localeCompare(JSON.stringify(b)); })]);
-  }
+  // Which edges take an installation and which Types accept a copy are the host's facts, read with each Type
+  // (display.install_topology); the editor never classifies an edge itself. Staging changes no topology, so the
+  // facts read with a draft's baseline hold for the session.
+  function topologyOf(row) { return row && row.display && row.display.install_topology || null; }
   function Editor(session, send, close) {
     var self = this; this.requests = request.channel(session, send, "window-installs"); this.close = close;
     this.root = el("section", "window-install-editor"); this.root.hidden = true;
@@ -73,7 +72,8 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
   Editor.prototype.open = function (record) {
     if (this.disposed || this.requests.busy() || !this.root.hidden) return;
     if (!snapshot.value(this.state, shared.PREFIX + "settings")) return;
-    this.baselines = {}; this.drafts = {}; this.baselines[record.id] = clone(record.values);
+    this.baselines = {}; this.drafts = {}; this.facts = {}; this.baselines[record.id] = clone(record.values);
+    this.facts[record.id] = topologyOf(record);
     this.drafts[record.id] = clone(record.values); this.active = record.id; this.selected = null;
     this.products = shared.records(this.state, "psi_install_types").map(function (row) { return clone(row); });
     this.creates = {}; this.updates = {}; this.imports = {};
@@ -85,8 +85,15 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     if (this.root.hidden || this.disposed) return null;
     return this.requests.busy() ? "Wait for Installs Save." : "Save or cancel the Installs session before leaving.";
   };
+  // The edge as the host classified it, or null when this Type's facts were not read.
+  Editor.prototype.edge = function (cell, side) {
+    var facts = this.facts[this.active], edges = facts && facts.edges[cell.id];
+    return edges && edges[side] || null;
+  };
+  // This screen offers glazed elements' edges; the host decides which of those are paintable.
   Editor.prototype.eligible = function (cell, side) {
-    return cell.kind === "glazed" && shared.classification(this.drafts[this.active], cell, side) === "perimeter";
+    var edge = this.edge(cell, side);
+    return cell.kind === "glazed" && Boolean(edge && edge.paintable);
   };
   Editor.prototype.stageImport = function (copy, values) {
     if (this.disposed || this.root.hidden || this.requests.busy()) return false;
@@ -116,24 +123,26 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
     var self = this; if (this.requests.busy() || this.disposed) return;
     this.copyForm.replaceChildren(el("p", "",
       "Replace installations on types with the same dimensions and mapped grid."));
-    var candidates = shared.records(this.state, "types").filter(function (row) {
-      return row.id !== self.active && topology(row.values) === topology(self.drafts[self.active]);
-    });
+    var candidates = shared.records(this.state, "types").filter(function (row) { return self.compatible(row); });
     if (!candidates.length) this.copyForm.appendChild(el("p", "muted", "No compatible Window Types."));
     candidates.forEach(function (row) {
       var button = ui.button("Copy to " + row.values.name, function () { self.copyTo(row); });
       self.copyForm.appendChild(button);
     }); this.copyForm.hidden = false;
   };
+  // A copy target is another Type whose copy key equals this draft's, which is when Save accepts the copy.
+  Editor.prototype.compatible = function (row) {
+    var facts = this.facts[this.active], other = topologyOf(row);
+    return row.id !== this.active && Boolean(facts && other && other.copy_key === facts.copy_key);
+  };
   Editor.prototype.copyTo = function (row) {
-    if (this.disposed || this.requests.busy() ||
-      topology(row.values) !== topology(this.drafts[this.active])) return false;
-    if (!this.baselines[row.id]) this.baselines[row.id] = clone(row.values);
+    if (this.disposed || this.requests.busy() || !this.compatible(row)) return false;
+    if (!this.baselines[row.id]) { this.baselines[row.id] = clone(row.values); this.facts[row.id] = topologyOf(row); }
     var draft = clone(row.values), source = this.drafts[this.active];
+    var slots = this.facts[this.active].copy_slots, targetSlots = this.facts[row.id].copy_slots;
     draft.elements.forEach(function (cell) {
-      var mapped = source.elements.filter(function (entry) { return JSON.stringify([entry.kind, entry.row_span,
-        entry.column_span]) ===
-        JSON.stringify([cell.kind, cell.row_span, cell.column_span]); })[0]; cell.installs = clone(mapped.installs);
+      var mapped = source.elements.filter(function (entry) { return slots[entry.id] === targetSlots[cell.id]; })[0];
+      cell.installs = clone(mapped.installs);
     }); this.drafts[row.id] = draft; this.dirty = true;
     this.notice.textContent = "Installs will also replace assignments on " + row.values.name + " when saved.";
     this.copyForm.hidden = true; return true;
@@ -230,12 +239,14 @@ PhComposerUI.define("features/windows/install_editor", ["features/windows/editor
         return;
       }
       sides.forEach(function (side) {
-        var classification = shared.classification(record, cell, side), eligible = classification === "perimeter";
+        var edge = self.edge(cell, side), classification = edge ? edge.classification : "unavailable";
+        var eligible = self.eligible(cell, side);
         var assigned = cell.installs[side], id = assigned || self.settings.default_psi_install_id;
         var product = self.products.filter(function (row) { return row.id === id; })[0];
         var source = eligible ? product ? assigned ? "assigned" : "default" : "missing" : classification;
         var label = cell.name + " " + side + ": " + (!eligible ? classification === "shared" ?
-          "Shared edge · derived zero" : "Partly shared edge · cannot paint" : product ? product.values.name +
+          "Shared edge · derived zero" : classification === "unavailable" ? "Edge not read · cannot paint" :
+            "Partly shared edge · cannot paint" : product ? product.values.name +
             (!assigned ? " · Model default" : "") : assigned ? "Missing product" : "Missing default");
         var points = { top: [x, y, x + w, y], right: [x + w, y, x + w, y + h],
           bottom: [x, y + h, x + w, y + h], left: [x, y, x, y + h] }[side];

@@ -34,10 +34,22 @@ module PhComposer
                                 "u_effective_w_m2k" => NUM.merge("x-unit" => "W/m2K"),
                                 "complete" => { "type" => "boolean" } },
                               :optional => %w[area_m2 empty_area_m2 h_construction_w_k h_install_w_k])
+      INSTALL_EDGE = Shapes.object({ "classification" => { "type" => "string", "enum" => %w[perimeter shared partial] },
+                                     "paintable" => { "type" => "boolean" } })
+      # Derived installation facts (Installs.topology_facts): never stored and never accepted by a write.
+      INSTALL_TOPOLOGY = Shapes.object(
+        { "edges" => { "type" => "object", "description" => "Each non-empty element's four edges, by element id.",
+                       "additionalProperties" => Shapes.object(Types::SIDES.to_h { |side| [side, INSTALL_EDGE] }) },
+          "copy_key" => Shapes.described(Shapes::TEXT, "Equal on two Types when an installation copy between " \
+                                                       "them is accepted; opaque."),
+          "copy_slots" => { "type" => "object", "description" => "Each element's slot in an installation copy, " \
+                                                                 "by element id; equal slots receive each other's.",
+                            "additionalProperties" => Shapes::TEXT } }
+      )
       DISPLAY = Shapes.object({ "thermal" => THERMAL, "width_m" => NUM.merge("x-unit" => "m"),
                                 "height_m" => NUM.merge("x-unit" => "m"),
                                 "install_depth_m" => NUM.merge("x-unit" => "m"),
-                                "complete" => { "type" => "boolean" } })
+                                "complete" => { "type" => "boolean" }, "install_topology" => INSTALL_TOPOLOGY })
       USE = Shapes.object(%w[kind type_id element_id side name].to_h { |key| [key, Shapes::TEXT] },
                           :optional => %w[type_id element_id side])
       # What a Window Type row adds to its record view, and what a product row adds.
