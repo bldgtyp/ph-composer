@@ -55,7 +55,7 @@ module PhComposer
           Host.new(:entity => located.entity, :entities => located.entities, :parent_path => located.parent_path,
                    :transform => located.transform, :reference => DeepCopy.call(reference),
                    :values => DeepCopy.call(row.fetch("values")), :zone_state => "found",
-                   :geometry => FaceGeometry.capture(located.entity, located.transform), :locator => locator)
+                   :geometry => FaceCapture.call(located.entity, located.transform), :locator => locator)
         end
 
         # What a host refuses before anything is located: a Zone that is not uniquely found, the write
@@ -94,7 +94,7 @@ module PhComposer
         def read(face, parent_path, transform, row, zone_state)
           Host.new(:entity => face, :parent_path => parent_path.dup, :transform => transform,
                    :reference => DeepCopy.call(row.fetch("reference")), :values => DeepCopy.call(row.fetch("values")),
-                   :zone_state => zone_state, :geometry => FaceGeometry.capture(face, transform))
+                   :zone_state => zone_state, :geometry => FaceCapture.call(face, transform))
         end
       end
     end

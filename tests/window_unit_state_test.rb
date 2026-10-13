@@ -22,7 +22,7 @@ class WindowUnitStateTest < PhComposerTestCase
     @host = @model.entities.add_face([[-100, -100, 0], [100, -100, 0],
                                       [100, 100, 0], [-100, 100, 0]].map { |point| Geom::Point3d.new(*point) })
     @unit.glued_to = @host
-    @geometry = PhComposer::FaceGeometry.capture(@host, Geom::Transformation.new)
+    @geometry = PhComposer::FaceCapture.call(@host, Geom::Transformation.new)
   end
 
   def findings(**options)

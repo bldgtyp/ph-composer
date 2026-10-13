@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../../core/face_geometry"
+require_relative "../../../core/face_capture"
 require_relative "../../../core/vector3"
 require_relative "../placement/fit"
 
@@ -42,7 +42,7 @@ module PhComposer
         def verify!(item, geometry)
           return unless geometry
 
-          current = FaceGeometry.capture(item.entity.glued_to, item.parent_transform)
+          current = FaceCapture.call(item.entity.glued_to, item.parent_transform)
           return if current.to_h == geometry
 
           raise CodedError.new("target.changed", "The Window host geometry changed after preview. Nothing was written.")

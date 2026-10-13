@@ -7,11 +7,11 @@ module PhComposer
         module_function
 
         def area_m2(occurrence)
-          FaceGeometry.capture(occurrence.entity, occurrence.transform).area_m2
+          FaceCapture.call(occurrence.entity, occurrence.transform).area_m2
         end
 
         def suggested_values(occurrence, settings: Settings::DEFAULTS)
-          normal = FaceGeometry.capture(occurrence.entity, occurrence.transform).normal
+          normal = FaceCapture.call(occurrence.entity, occurrence.transform).normal
           angle = Math.acos([[normal[2], -1.0].max, 1.0].min) * 180.0 / Math::PI
           face_type = if angle <= settings.fetch("roof_angle_deg")
                         "RoofCeiling"

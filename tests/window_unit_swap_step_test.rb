@@ -348,6 +348,6 @@ class WindowUnitSwapStepTest < PhComposerTestCase
   def host_for(item)
     P::Host.new(:entity => item.glued_to, :parent_path => [], :transform => Geom::Transformation.new,
                 :reference => {}, :values => {},
-                :geometry => PhComposer::FaceGeometry.capture(item.glued_to, Geom::Transformation.new))
+                :geometry => PhComposer::FaceCapture.call(item.glued_to, Geom::Transformation.new))
   end
 end

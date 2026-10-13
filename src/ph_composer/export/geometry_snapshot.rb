@@ -37,7 +37,7 @@ module PhComposer
       # containers are not connected. A sibling Face's path is the Edge's path with the Face id last.
       EdgeGeometry = Struct.new(:points_m, :vertex_ids, :face_ids, :keyword_init => true) do
         def self.capture(edge, transform)
-          FaceGeometry.check_transform!(transform)
+          FaceGeometry.check_transform!(transform.to_a)
           points = [edge.start, edge.end].map do |vertex|
             point = vertex.position.transform(transform)
             [point.x, point.y, point.z].map { |value| value.to_f * FaceGeometry::INCH_TO_M }.freeze
@@ -101,7 +101,7 @@ module PhComposer
           if entity.is_a?(Sketchup::Face)
             entry = if capture_faces
                       Entry.new(:kind => "face", :path => child_path.freeze, :transform => transform.to_a.freeze,
-                                :dictionaries => dictionaries, :geometry => FaceGeometry.capture(entity, transform))
+                                :dictionaries => dictionaries, :geometry => FaceCapture.call(entity, transform))
                     end
             block.call(entry)
           elsif entity.is_a?(Sketchup::Edge)
@@ -154,7 +154,7 @@ module PhComposer
       def self.definition_entity(entity)
         result = { "dictionaries" => read_dictionaries(entity) }
         if entity.is_a?(Sketchup::Face)
-          result.merge("kind" => "face", "geometry" => FaceGeometry.capture(entity, Geom::Transformation.new).to_h)
+          result.merge("kind" => "face", "geometry" => FaceCapture.call(entity, Geom::Transformation.new).to_h)
         elsif entity.is_a?(Sketchup::Edge)
           points = [entity.start.position, entity.end.position].map do |point|
             [point.x, point.y, point.z].map { |value| value.to_f * FaceGeometry::INCH_TO_M }.freeze

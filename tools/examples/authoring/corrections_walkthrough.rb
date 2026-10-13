@@ -419,7 +419,7 @@ module CorrectionsWalkthrough
     client.faces.select do |row|
       zone = zones.find { |candidate| candidate.path == row.dig("reference", "zone_path") }
       occurrence = PhComposer::Zones::Occurrences.face_at(zone, row.dig("reference", "entity_path"))
-      loops = PhComposer::FaceGeometry.capture(occurrence.entity, occurrence.transform).loops_m
+      loops = PhComposer::FaceCapture.call(occurrence.entity, occurrence.transform).loops_m
       loops.flatten(1).all? { |point| (point[0] - 4.0).abs < 1.0e-6 }
     end
   end

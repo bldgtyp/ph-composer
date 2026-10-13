@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require "open3"
+require "rbconfig"
 
 class FaceGeometryTest < PhComposerTestCase
   Geometry = PhComposer::FaceGeometry
@@ -36,24 +38,24 @@ class FaceGeometryTest < PhComposerTestCase
     hole = rectangle(0.5, 1.0, 0.5, 1.0)
     face = Sketchup::Face.new(1, {}, :points => rectangle(0, 2, 0, 3), :holes => [hole],
                                      :normal => Geom::Vector3d.new(1, 0, 0))
-    original = Geometry.capture(face, Geom::Transformation.new)
-    moved = Geometry.capture(face, Geom::Transformation.translation([1, 0, 0]))
+    original = PhComposer::FaceCapture.call(face, Geom::Transformation.new)
+    moved = PhComposer::FaceCapture.call(face, Geom::Transformation.translation([1, 0, 0]))
     opposite = Sketchup::Face.new(2, {}, :points => rectangle(0, 2, 0, 3), :holes => [hole],
                                          :normal => Geom::Vector3d.new(-1, 0, 0))
 
     refute_equal original.digest, moved.digest
-    refute_equal original.digest, Geometry.capture(opposite, Geom::Transformation.new).digest
+    refute_equal original.digest, PhComposer::FaceCapture.call(opposite, Geom::Transformation.new).digest
     assert_equal 1, original.holes.length
   end
 
   def test_gross_area_comes_from_loops_when_cutting_instance_changes_sdk_net_area
     face = Sketchup::Face.new(10, {}, :points => rectangle(0, 4, 0, 3))
-    original = Geometry.capture(face, Geom::Transformation.new)
+    original = PhComposer::FaceCapture.call(face, Geom::Transformation.new)
     # Native evidence: a 0.25 m2 cutting component changes SDK Face.area to 11.75 m2
     # while the underlying Face still owns the same 12 m2 outer loop and no inner loop.
     face.define_singleton_method(:area) { |_transform| 11.75 / (0.0254**2) }
     face.define_singleton_method(:get_glued_instances) { [:synthetic_glued_instance] }
-    captured = Geometry.capture(face, Geom::Transformation.new)
+    captured = PhComposer::FaceCapture.call(face, Geom::Transformation.new)
 
     assert_in_delta 12.0, captured.area_m2, 1.0e-10
     assert_equal original.to_h, captured.to_h
@@ -70,7 +72,7 @@ class FaceGeometryTest < PhComposerTestCase
       [points.rotate(index), points.rotate(index).reverse].each do |loop|
         face = Sketchup::Face.new(11, {}, :points => loop)
         face.define_singleton_method(:area) { |_transform| raise "SDK area must not supply gross area." }
-        assert_in_delta 6.0, Geometry.capture(face, Geom::Transformation.new).area_m2, 1.0e-10
+        assert_in_delta 6.0, PhComposer::FaceCapture.call(face, Geom::Transformation.new).area_m2, 1.0e-10
       end
     end
   end
@@ -79,7 +81,7 @@ class FaceGeometryTest < PhComposerTestCase
     holes = [rectangle(0.5, 1.5, 0.5, 1.5).reverse, rectangle(2.0, 2.5, 1.0, 1.5)]
     face = Sketchup::Face.new(12, {}, :points => rectangle(0, 4, 0, 3), :holes => holes)
     face.define_singleton_method(:area) { |_transform| 10.5 / (0.0254**2) }
-    captured = Geometry.capture(face, Geom::Transformation.new)
+    captured = PhComposer::FaceCapture.call(face, Geom::Transformation.new)
 
     assert_in_delta 10.75, captured.area_m2, 1.0e-10
     assert_equal 2, captured.holes.length
@@ -96,7 +98,34 @@ class FaceGeometryTest < PhComposerTestCase
     transform = moved * rotation * Geom::Transformation.scaling(1.5, 2, -3)
     face.define_singleton_method(:area) { |_transform| 1.0 }
 
-    assert_in_delta 64.5, Geometry.capture(face, transform).area_m2, 1.0e-8
+    assert_in_delta 64.5, PhComposer::FaceCapture.call(face, transform).area_m2, 1.0e-8
+  end
+
+  def test_the_rules_run_in_a_bare_process_without_sketchup
+    path = File.join(TESTS_ROOT, "support", "face_geometry_pure.rb")
+    out, err, status = Open3.capture3(RbConfig.ruby, path)
+    assert status.success?, out + err
+    assert_match(/0 failures, 0 errors/, out)
+  end
+
+  def test_the_adapter_builds_the_same_value_from_the_same_numbers
+    face = Sketchup::Face.new(14, {}, :points => rectangle(0, 2, 0, 3), :holes => [rectangle(0.5, 1, 0.5, 1)],
+                                      :normal => Geom::Vector3d.new(1, 0, 0))
+    face.define_singleton_method(:get_glued_instances) { [:synthetic_glued_instance] }
+    transform = Geom::Transformation.translation([10, 0, 0]) * Geom::Transformation.scaling(1, 2, 1)
+    captured = PhComposer::FaceCapture.call(face, transform)
+    loops = face.loops.map do |loop|
+      loop.vertices.map do |vertex|
+        point = vertex.position.transform(transform)
+        [point.x, point.y, point.z].map { |value| value * 0.0254 }
+      end
+    end
+    built = Geometry.build(:loops_m => loops, :normal => Geometry.world_normal([1.0, 0.0, 0.0], transform.to_a),
+                           :has_glued_instances => true)
+
+    assert_equal built.to_h, captured.to_h
+    assert_equal built.digest, captured.digest
+    assert captured.has_glued_instances
   end
 
   private
@@ -112,7 +141,7 @@ class FaceGeometryTest < PhComposerTestCase
   def snapshot(normal, transform = Geom::Transformation.new, width_m: 2.0)
     face = Sketchup::Face.new(1, {}, :points => rectangle(0, width_m, 0, 3),
                                      :normal => Geom::Vector3d.new(*normal))
-    Geometry.capture(face, transform)
+    PhComposer::FaceCapture.call(face, transform)
   end
 
   def rectangle(y0, y1, z0, z1)

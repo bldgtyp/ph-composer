@@ -253,7 +253,7 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
     group.entities << item.glued_to
     host = W::Placement::Host.new(:entity => item.glued_to, :parent_path => [group.persistent_id],
                                   :transform => group.transformation, :values => {},
-                                  :geometry => PhComposer::FaceGeometry.capture(
+                                  :geometry => PhComposer::FaceCapture.call(
                                     item.glued_to, group.transformation
                                   ))
     path = [group.persistent_id, item.persistent_id]
@@ -289,7 +289,7 @@ class WindowUnitTypeChangeStepTest < PhComposerTestCase
   def host_for(item)
     W::Placement::Host.new(:entity => item.glued_to, :parent_path => [], :transform => Geom::Transformation.new,
                            :reference => {}, :values => {},
-                           :geometry => PhComposer::FaceGeometry.capture(item.glued_to, Geom::Transformation.new))
+                           :geometry => PhComposer::FaceCapture.call(item.glued_to, Geom::Transformation.new))
   end
 
   def host_step(item, polygons = [])

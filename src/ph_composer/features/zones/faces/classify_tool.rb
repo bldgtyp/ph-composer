@@ -263,11 +263,11 @@ module PhComposer
         # solver's measured plane tolerance rather than a second number of this tool's own.
         # It stops one past the ceiling, for the same reason the drag set does: a flood over a wall of
         # thousands of pieces must refuse, not capture the lot and then refuse, and capturing costs a
-        # `FaceGeometry.capture` a Face. A rejected neighbour is remembered too, or every coplanar
+        # `FaceCapture.call` a Face. A rejected neighbour is remembered too, or every coplanar
         # Face touching it would capture it again.
         def coplanar_neighbours(occurrence)
           limit = Faces.gesture_face_limit
-          origin = FaceGeometry.capture(occurrence.entity, occurrence.transform)
+          origin = FaceCapture.call(occurrence.entity, occurrence.transform)
           found = { occurrence.entity.persistent_id => occurrence }
           seen = {}
           queue = [occurrence.entity]
@@ -276,7 +276,7 @@ module PhComposer
               Array(edge.faces).each do |face|
                 next if found.key?(face.persistent_id) || seen.key?(face.persistent_id)
 
-                capture = FaceGeometry.capture(face, occurrence.transform)
+                capture = FaceCapture.call(face, occurrence.transform)
                 unless FaceGeometry.coplanar?(origin, capture, Zones::Adjacency::PLANE_TOLERANCE_M)
                   seen[face.persistent_id] = true
                   next

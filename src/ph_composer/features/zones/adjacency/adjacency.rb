@@ -331,7 +331,7 @@ module PhComposer
         other_record = Faces::FACE_STORE.read(counterpart.entity)
         return "unresolved" unless other_record && reciprocal?(record, Faces::Schema.validate!(other_record))
 
-        digests = [occurrence, counterpart].map { |side| FaceGeometry.capture(side.entity, side.transform).digest }
+        digests = [occurrence, counterpart].map { |side| FaceCapture.call(side.entity, side.transform).digest }
         geometry_current?(record, other_record, *digests) ? "current" : "stale"
       rescue CodedError
         "unresolved"
@@ -411,7 +411,7 @@ module PhComposer
 
           Faces::Schema.validate!(record)
           { :occurrence => occurrence, :record => record,
-            :geometry => FaceGeometry.capture(occurrence.entity, occurrence.transform) }
+            :geometry => FaceCapture.call(occurrence.entity, occurrence.transform) }
         end
       end
       private_class_method :examine, :check_scope!, :resolve_contested, :face_key,

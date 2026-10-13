@@ -144,7 +144,7 @@ class WindowUnitFlipStepTest < PhComposerTestCase
     @unit.glued_to = face
     P::Host.new(:entity => face, :entities => @model.entities, :parent_path => [],
                 :transform => Geom::Transformation.new, :reference => { "zone_id" => "zone_synthetic" }, :values => {},
-                :geometry => PhComposer::FaceGeometry.capture(face, Geom::Transformation.new))
+                :geometry => PhComposer::FaceCapture.call(face, Geom::Transformation.new))
   end
 
   def test_glue_and_full_world_outline_fit_are_preserved_without_native_geometry_movement

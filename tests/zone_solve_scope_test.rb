@@ -90,11 +90,11 @@ class ZoneSolveScopeTest < PhComposerTestCase
     preview = API.preview(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params)
     group = @model.entities.to_a.last
     face = group.entities.to_a.grep(Sketchup::Face).first
-    before_geometry = PhComposer::FaceGeometry.capture(face, Geom::Transformation.new)
+    before_geometry = PhComposer::FaceCapture.call(face, Geom::Transformation.new)
     revision = @session.revision
     instance = group.entities.add_instance(Sketchup::ComponentDefinition.new, Geom::Transformation.new)
     instance.glued_to = face
-    assert_equal before_geometry.to_h, PhComposer::FaceGeometry.capture(face, Geom::Transformation.new).to_h
+    assert_equal before_geometry.to_h, PhComposer::FaceCapture.call(face, Geom::Transformation.new).to_h
     assert_equal revision, @session.revision
     @sequence += 1
     result = API.invoke(:context => @context, :name => "ph_composer.zones.solve_adjacency", :params => params,
