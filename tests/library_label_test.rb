@@ -136,7 +136,7 @@ class LibraryLabelTest < PhComposerTestCase
   end
 
   def test_unusable_projections_omit_only_their_row_with_the_label_code
-    projections = { "nil" => nil, "number" => 3, "object" => { "a" => 1 }, "blank" => "  " }
+    projections = { "nil" => nil, "number" => 3, "object" => { "a" => 1 }, "blank" => "  ", "binary" => "\xE9".b }
     label = lambda do |mapped|
       raise "projection failed" if mapped["designation"] == "raise"
 
@@ -147,7 +147,35 @@ class LibraryLabelTest < PhComposerTestCase
     assert_equal ["r-Kept"], result.rows.map { |row| row.fetch("record_id") }
     assert_equal "Kept", result.rows.first.fetch("display_label")
     codes = result.warnings.map { |row| [row.fetch("code"), row.fetch("record_id")] }
-    assert_equal(%w[nil number object blank raise].map { |value| ["library.row_label_invalid", "r-#{value}"] }, codes)
+    expected = %w[nil number object blank binary raise].map { |value| ["library.row_label_invalid", "r-#{value}"] }
+    assert_equal expected, codes
+  end
+
+  def test_provider_supplied_labels_of_any_value_are_replaced_not_trusted
+    rows = [nil, "", 7, "Spoofed"].each_with_index.map do |supplied, index|
+      { "library_id" => "synthetic.one", "library_name" => "Synthetic", "record_id" => "r#{index}",
+        "wire_schema_version" => 1, "snapshot" => tag_row("r#{index}", "Tag #{index}"), "display_label" => supplied }
+    end
+    batch = PhComposer::Library::Provider::Batch.new(:rows => rows, :warnings => [], :unavailable => [],
+                                                     :freshness => {})
+    result = PhComposer::Library::Admission.call(batch, :kind => "tags", :adapter => tag_adapter)
+    assert_equal(["Tag 0", "Tag 1", "Tag 2", "Tag 3"], result.rows.map { |row| row.fetch("display_label") })
+  end
+
+  def test_export_omits_a_local_record_a_reader_would_skip_for_its_label
+    PhComposer::Registry.install([tag_feature])
+    store = PhComposer::Registry.current.catalog.kind(KIND).store
+    store.write(Sketchup.active_model, { "id" => "tag_AAAAAAAAAAAA", "schema_version" => 1, "designation" => nil })
+    store.write(Sketchup.active_model, { "id" => "tag_BBBBBBBBBBBB", "schema_version" => 1, "designation" => "Kept" })
+    session = PhComposer::Sessions.for(Sketchup.active_model)
+    context = API.connect(:session_id => session.id, :capabilities => %w[read export])
+    preview = API.query(:context => context, :name => "ph_composer.library.export_preview",
+                        :params => { "kinds" => ["tags"] })
+    assert_equal "completed", preview["status"], preview.inspect
+    assert_equal [{ "kind" => "tags", "count" => 1 }],
+                 preview.dig("value", "kinds").map { |row| row.slice("kind", "count") }
+    omission = preview.dig("value", "omissions").find { |row| row["reason"] == "label_unavailable" }
+    assert_equal "tag_AAAAAAAAAAAA", omission&.fetch("id")
   end
 
   def test_absent_and_null_designations_are_omitted_and_labels_are_trimmed

@@ -26,6 +26,11 @@ module PhComposer
 
           record = read_record(request, record_kind, id)
           row = reverse(declaration.adapter, record)
+          # A row a reader would skip for its label is reported, not written.
+          unless Admission.label_for(declaration.adapter, mapped_values(declaration.adapter, row))
+            omissions << omission(record_kind, id, [], "label_unavailable")
+            next
+          end
           rows.fetch(declaration.adapter.wire_kind) << row
           origin = origin(record["source"], declaration.adapter.wire_kind)
           # A recorded origin carries the source attribution, so `source` is omitted only without one.

@@ -83,10 +83,12 @@ module PhComposer
         nil
       end
 
-      # The adapter's label for mapped values, trimmed, or nil when it does not give nonblank text.
+      # The adapter's label for mapped values, trimmed, or nil when it does not give nonblank JSON text.
       def label_for(adapter, mapped)
         label = adapter.display_label.call(DeepCopy.call(mapped))
-        label.is_a?(String) && !label.strip.empty? ? label.strip : nil
+        return unless label.is_a?(String) && JsonValue.problems(label).empty?
+
+        label.strip.empty? ? nil : label.strip
       rescue StandardError
         nil
       end
