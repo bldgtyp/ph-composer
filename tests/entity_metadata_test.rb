@@ -138,14 +138,14 @@ class EntityMetadataTest < PhComposerTestCase
   def test_a_face_and_a_unit_update_through_their_owners
     face_before = face
     assert_equal "committed", update("#{ZONES}.faces.update_metadata", face_before.fetch("reference"), face_before,
-                                     :user_data => { "firm" => { "tag" => "F1" } }).fetch("effect")
-    assert_equal({ "firm" => { "tag" => "F1" } }, face.fetch("user_data"))
+                                     :user_data => { "firm" => { "tag" => "north face" } }).fetch("effect")
+    assert_equal({ "firm" => { "tag" => "north face" } }, face.fetch("user_data"))
     assert_equal face_before.fetch("values"), face.fetch("values")
     unit_before = unit
     result = update("#{WINDOWS}.units.update_metadata", unit_before.fetch("reference"), unit_before,
-                    :user_data => { "firm" => { "tag" => "W1" } })
+                    :user_data => { "firm" => { "tag" => "north window" } })
     assert_equal "committed", result.fetch("effect"), result.inspect
-    assert_equal({ "firm" => { "tag" => "W1" } }, unit.fetch("user_data"))
+    assert_equal({ "firm" => { "tag" => "north window" } }, unit.fetch("user_data"))
     assert_equal unit_before.fetch("values"), unit.fetch("values")
   end
 
