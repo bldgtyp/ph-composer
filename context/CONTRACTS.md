@@ -647,6 +647,33 @@ already in the proposal are read through its change set. The engine still refuse
 reference left in the final projected state. A retargeter failure marks the proposal refused;
 rescuing it does not permit a partial write. The definition feature names no referrer.
 
+**Transition contributors.** A feature that owns records inside another feature's entity joins that
+owner's change to the entity without the owner naming it. The owner names a transition, a dotted
+string whose prefix before the last segment is its feature id, and lists it on each action that emits
+it (`transitions: [...]`). A contributor declares `feature.transition_contributor(name, transition:,
+refuses: [])`; registration refuses one whose feature neither is nor requires the emitting feature
+(`registration.missing_dependency`), and an action listing a transition of another feature. The
+emitting handler adds its own step first, then calls `request.contribute_transition(transition,
+description)`; only an action that lists the transition may. Every contributor runs in name order
+under its own owner, inside the caller's proposal, with a detached copy of `description` and the same
+confinement as a participant: an engine and change set that write only its owner's kinds, and every
+earlier write, step and finding unchanged afterwards (`proposal.foreign_write`,
+`proposal.contribution_replaced`). It returns the references it affects, each `{"kind", "id"}` of a kind
+it owns. Every step it adds must answer `restore`, since a transition can run inside a host follow-up
+that cannot abort; there the follow-up asks every applied step to restore, in reverse, even after one
+fails. Any failure refuses the whole proposal. An emitting action's published refusals add each
+contributor's `refuses` and the two guard codes. A contributor's step usually cannot hold entity
+references from preview, because the owner's step replaces them; it binds logically and re-resolves at
+apply, as the paragraph above describes.
+
+`ph_composer.zones.occurrence_independent` is emitted by `ph_composer.zones.make_independent`, for
+the explicit action and for the copy watcher's follow-up, after storage is isolated. Its description
+is `zone_path`, `old_zone_id`, `new_zone_id`, `mapping` (every old Zone and Face id to its new one),
+`revision` and `references`, the Zone's and Faces' new records as typed `{kind, key, record}` entries
+for remapping a child's own references. Windows contributes `ph_composer.windows.units.follow_zone_copy`:
+every Unit inside the occurrence whose id another occurrence holds gets a new id, and copied payloads
+are remapped across the copy.
+
 `Records::ReferencePlan.new(entries:, removals: [])` preserves replacement and addition entries
 as typed `ReferenceEntry(kind:, key:, record:)` values. A removal is a separate typed
 `ReferenceRemoval(kind:, key:, before:)`, with the complete expected record, including metadata.

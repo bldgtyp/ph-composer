@@ -1,9 +1,9 @@
 # Copied Windows get their own identities in the Zone copy gesture
 
 DATE: 2026-10-12
-STATUS: Scoped 2026-10-13; shared lifecycle and Windows adopter plan drafted. Implementation not authorized.
+STATUS: Implemented on branch (zone-child lifecycle ZC-01 to ZC-04); native Undo and Redo of the copy gesture outstanding.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#113](https://github.com/bldgtyp/ph-composer/issues/113)
 
 ## The gap
 

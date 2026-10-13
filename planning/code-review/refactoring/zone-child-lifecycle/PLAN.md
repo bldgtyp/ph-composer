@@ -143,7 +143,7 @@ Exit: tests pass; Zones source contains no child feature name.
 
 ### ZC-03: Windows adopter and a synthetic child
 
-State: Implemented on branch. The step is `Units::ZoneCopyStep` beside `Units::ZoneCopy` rather than a
+State: Merged to main in PR 116. The step is `Units::ZoneCopyStep` beside `Units::ZoneCopy` rather than a
 mode of `IdentityStep`, which keeps path binding for the broad repair; `IdentityStep` still gains
 `restore`. `HostFollowUp` now asks every step to restore even after one fails. The test stub's Make
 Unique now gives nested ComponentInstances new ids and glue, as ZC-01 measured. Review added: the
@@ -174,7 +174,7 @@ still names no child.
 
 ### ZC-04: native proof, export read-back and canon
 
-State: Scoped; after ZC-03.
+State: Implemented on branch; native Undo and Redo outstanding (receipt in STATUS).
 
 1. Native, current host, fresh process: copy a Zone with two export-ready Types (frames, glazing and
    Psi-Install Types assigned); distinct Unit ids at once; originals unchanged; one Undo and Redo;

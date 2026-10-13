@@ -136,7 +136,10 @@ On 2026-10-13 Ed accepted the shared [Zone-child ownership pattern](../../code-r
 The [child lifecycle plan](../../code-review/refactoring/zone-child-lifecycle/PLAN.md) now specifies the
 proposed parent transition and Windows/synthetic adopter proof. P3a-04 must reuse that accepted public
 contract once implemented, rather than designing another copy framework. Spaces still owns its
-collection mapping/storage and S04/S12/S10 evidence; its earlier decisions remain open.
+collection mapping/storage and S04/S12/S10 evidence; its earlier decisions remain open. The contract is
+implemented (zone-child lifecycle ZC-02 and ZC-03): a `transition_contributor` for
+`ph_composer.zones.occurrence_independent`, described in [CONTRACTS.md](../../../context/CONTRACTS.md),
+"Compound proposals", with Windows as the first adopter.
 
 ## Ledger
 
