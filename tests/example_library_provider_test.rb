@@ -35,6 +35,51 @@ class ExampleLibraryProviderTest < PhComposerTestCase
     assert_equal "none", second.fetch("effect")
   end
 
+  def test_name_free_tags_copy_assign_replace_then_export_and_import_into_a_fresh_model
+    assert BldgtypExampleLibrary.activate
+    proof = BldgtypExampleLibraryWalkthrough.tags
+    assert proof.fetch("assigned"), proof.inspect
+    assert_equal "reuse", proof.fetch("outcome")
+    assert proof.fetch("source_changed")
+    assert_equal proof.fetch("local_id"), proof.fetch("replaced_id")
+    assert_equal({ "designation" => "N-1", "height_mm" => 200.0 },
+                 proof.dig("tag", "values").slice("designation", "height_mm"))
+    assert_equal proof.fetch("local_id"), proof.dig("holder", "values", "tag_id")
+
+    directory = Dir.mktmpdir("example-tags")
+    path = File.join(directory, "tags.json")
+    session = PhComposer::Sessions.for(Sketchup.active_model)
+    context = PhComposer::API.connect(:session_id => session.id, :capabilities => %w[read export])
+    # The export as a native client runs it once the user has chosen the file in the save dialog.
+    approval = PhComposer::NativeApproval::Granted.new(:path => path, :replace => true)
+    exported = PhComposer::Dispatch.new.file_export(context, "ph_composer.library.export_file", { "kinds" => ["tags"] },
+                                                    :approval => approval)
+    assert_equal "completed", exported["status"], exported.inspect
+    row = JSON.parse(File.read(path)).dig("kinds", "tags").first
+    assert_equal %w[designation height_mm id], row.keys.sort
+
+    PhComposer::Library::Setup.add_file(:id => "exported.tags", :label => "Exported tags", :path => path)
+    Sketchup.active_model = Sketchup::Model.new
+    fresh = PhComposer::Sessions.for(Sketchup.active_model)
+    context = PhComposer::API.connect(:session_id => fresh.id, :capabilities => %w[read model_write setup])
+    loaded = PhComposer::API.setup(:context => context, :name => "ph_composer.library.load",
+                                   :params => { "provider_id" => "exported.tags", "kind" => "tags" })
+    holder = PhComposer::API.invoke(:context => context, :name => "bldgtyp.example_library.add_holder",
+                                    :params => { "position" => "Imported" },
+                                    :request => { "sequence" => 1, "expected_revision" => fresh.revision })
+    copied = PhComposer::API.invoke(:context => context, :name => "ph_composer.library.copy", :params => {
+      "provider_id" => "exported.tags", "kind" => "tags", "generation" => loaded.dig("value", "generation"),
+      "library_id" => exported.dig("value", "library_id"), "record_id" => row.fetch("id"), "choice" => "create",
+      "assignment" => { "id" => holder.dig("value", "id") }
+    }, :request => { "sequence" => 2, "expected_revision" => fresh.revision })
+    assert_equal "committed", copied["effect"], copied.inspect
+    holders = PhComposer::API.query(:context => context, :name => "ph_composer.records.list",
+                                    :params => { "kind" => BldgtypExampleLibrary::HOLDER }).dig("value", "records")
+    assert_equal [copied.dig("value", "local_id")], holders.map { |entry| entry.dig("values", "tag_id") }
+  ensure
+    FileUtils.rm_rf(directory) if directory
+  end
+
   def test_duplicate_registration_and_unavailable_kind_fail_explicitly
     assert BldgtypExampleLibrary.activate
     assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([BldgtypExampleLibrary]) }

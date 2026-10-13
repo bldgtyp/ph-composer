@@ -15,7 +15,8 @@ PhComposerUI.define("library/export", ["record_form", "request", "workspace"], f
   var REASONS = {
     unsupported_kind: function () { return "not a library record; it stays in this Model"; },
     fields_not_in_wire_schema: omitted,
-    origin_identity_unavailable: function () { return "library source attribution is not exported"; }
+    origin_identity_unavailable: function () { return "library source attribution is not exported"; },
+    label_unavailable: function () { return "has no label a library reader would accept; not exported"; }
   };
   function omissionLines(omissions) {
     var groups = {}, order = [];

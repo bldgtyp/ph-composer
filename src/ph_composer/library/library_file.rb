@@ -91,9 +91,8 @@ module PhComposer
           rows << { "library_id" => library.fetch("id"), "library_name" => library.fetch("name"),
                     "record_id" => snapshot.fetch("id"), "wire_schema_version" => version, "snapshot" => snapshot }
         end
-        [rows.sort_by { |row|
-           [row.dig("snapshot", "name").to_s.downcase, row.fetch("record_id")]
-         }, warnings, duplicate]
+        # Identity order only: labels are the adapter's projection, which admission applies and sorts by.
+        [rows.sort_by { |row| row.fetch("record_id") }, warnings, duplicate]
       end
 
       # Shared pure schema admission for file and contributor-provider rows. Returns an allowlisted
@@ -111,7 +110,7 @@ module PhComposer
 
         bad_required = required.any? do |field|
           !snapshot.key?(field) || !JsonSchema.validate(snapshot[field], properties.fetch(field)).empty? ||
-            (%w[id name].include?(field) && !text?(snapshot[field]))
+            (field == "id" && !text?(snapshot[field]))
         end
         return [nil, ["library.row_required_invalid"]] if bad_required
 

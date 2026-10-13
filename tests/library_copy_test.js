@@ -8,7 +8,7 @@ function setup(resolution) {
   var copy = new modules["library/copy"]("s", function (type, payload) { sent.push({ type: type, payload: payload }); },
     { properties: [] }, function () {});
   context.document.body.appendChild(copy.root);
-  var row = { values: { name: "Public" }, resolution: resolution,
+  var row = { values: { name: "Public" }, display_label: "Public", resolution: resolution,
     library: { provider_id: "p", kind: "materials", generation: 2, library_id: "lib", record_id: "r" } };
   return { copy: copy, row: row, sent: sent, context: context };
 }
@@ -23,9 +23,9 @@ test("create freezes provider generation and full target in exactly one action",
   o.copy.use(o.row, target); assert.strictEqual(o.sent.length, 1);
 });
 test("ambiguous candidates require explicit choice, review library update carries complete raw guard", function () {
-  var candidates = [{ id: "a", name: "First", expected_values: { name: "First", optional: null },
+  var candidates = [{ id: "a", display_label: "First", expected_values: { name: "First", optional: null },
     differences: [{ field: "name", local: "First", incoming: "Public", local_present: true, incoming_present: true }] },
-  { id: "b", name: "Second", expected_values: { name: "Second" }, differences: [] }];
+  { id: "b", display_label: "Second", expected_values: { name: "Second" }, differences: [] }];
   var o = setup({ outcome: "ambiguous_name", candidates: candidates }); o.copy.use(o.row);
   assert.strictEqual(o.sent.length, 0); assert.strictEqual(o.copy.libraryButton.disabled, true);
   o.copy.candidates.value = "a"; o.copy.candidates.listeners.change({}); o.copy.apply("use_library");
@@ -34,9 +34,29 @@ test("ambiguous candidates require explicit choice, review library update carrie
     { name: "First", optional: null });
 });
 test("Cancel and retained callbacks after dispose never send, even when a dialog was open", function () {
-  var o = setup({ outcome: "review_required", candidates: [{ id: "a", name: "First", expected_values: {},
+  var o = setup({ outcome: "review_required", candidates: [{ id: "a", display_label: "First", expected_values: {},
     differences: [] }] });
   o.copy.use(o.row); o.copy.cancel.listeners.click({}); assert.strictEqual(o.sent.length, 0);
   o.copy.use(o.row); o.copy.dispose(); o.copy.apply("keep_local"); o.copy.use(o.row);
   assert.strictEqual(o.sent.length, 0);
+});
+test("a name-free kind's review title and local choices read the declared label", function () {
+  var o = setup({ outcome: "ambiguous_source", candidates: [
+    { id: "a", display_label: "Wall tag", expected_values: {}, differences: [] },
+    { id: "b", display_label: null, expected_values: {}, differences: [] }] });
+  o.row.values = { designation: "Wall tag" }; o.row.display_label = "Wall tag";
+  o.copy.use(o.row);
+  assert.strictEqual(o.copy.title.textContent, "Review Wall tag");
+  assert.deepStrictEqual(o.copy.candidates.children.map(function (option) { return option.textContent; }),
+    ["Choose a local copy…", "Wall tag · a", "Unlabelled · b"]);
+});
+test("an empty authored guard still allows replacement; a missing one does not", function () {
+  var o = setup({ outcome: "review_required",
+    candidates: [{ id: "a", display_label: null, expected_values: {}, differences: [] }] });
+  o.copy.open(o.row);
+  assert.strictEqual(o.copy.libraryButton.disabled, false);
+  var missing = setup({ outcome: "review_required",
+    candidates: [{ id: "a", display_label: null, differences: [] }] });
+  missing.copy.open(missing.row);
+  assert.strictEqual(missing.copy.libraryButton.disabled, true);
 });

@@ -23,7 +23,8 @@ module PhComposer
       # Compare incoming semantic content with the stored attribution, not with local edits.
       # An older fingerprint contract cannot establish whether the provider changed.
       def resolve(adapter, source, mapped, locals)
-        result = Resolver.resolve(:source => source, :mapped => mapped, :locals => locals)
+        result = Resolver.resolve(:source => source, :mapped => mapped, :label => label(adapter, mapped),
+                                  :locals => locals.map { |row| labelled(adapter, row) })
         fingerprint = adapter.fingerprint.call(DeepCopy.call(mapped))
         unless fingerprint.is_a?(String) && /\A[0-9a-f]{64}\z/.match?(fingerprint)
           raise Error.new("library.adapter_invalid", "The kind adapter returned an invalid semantic fingerprint.")
@@ -39,6 +40,18 @@ module PhComposer
         end
         result
       end
+
+      # The incoming row was admitted with a label, so its projection must give one again. A local
+      # record may have none; it then matches by source only.
+      def label(adapter, mapped)
+        Admission.label_for(adapter, mapped) ||
+          raise(Error.new("library.adapter_invalid", "The kind adapter returned no display label."))
+      end
+
+      def labelled(adapter, row)
+        row.merge("display_label" => Admission.label_for(adapter, row.fetch("mapped")))
+      end
+      private_class_method :label, :labelled
 
       def copy(request, proposal)
         declaration, entry, row, mapped, identity, resolution = inspect_row(request)
@@ -92,7 +105,8 @@ module PhComposer
       end
 
       def reviewed_values?(expected, id, resolution)
-        return false unless expected.is_a?(Hash) && !expected.empty?
+        # An empty guard is valid when the local record has no authored values to guard.
+        return false unless expected.is_a?(Hash)
 
         candidate = resolution.fetch("candidates").find { |row| row.fetch("id") == id }
         actual = candidate.fetch("expected_values")

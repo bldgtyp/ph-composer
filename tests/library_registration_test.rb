@@ -14,8 +14,10 @@ class LibraryRegistrationTest < PhComposerTestCase
 
   def adapter(wire_kind = "widgets")
     schema = { "type" => "object", "properties" => { "name" => { "type" => "string" } } }
+    wire = { "type" => "object", "required" => ["id"],
+             "properties" => { "id" => { "type" => "string" }, "name" => { "type" => "string" } } }
     D::LibraryAdapter.new(:wire_kind => wire_kind.dup, :wire_version => 1, :fingerprint_version => 1,
-                          :wire_schema => PhComposer::DeepCopy.call(schema),
+                          :wire_schema => wire, :display_label => ->(mapped) { mapped.fetch("name") },
                           :mapped_schema => PhComposer::DeepCopy.call(schema),
                           :fingerprint_fields => ["name"], :map => ->(row) { row }, :reverse => ->(row) {
                                                                                                   row

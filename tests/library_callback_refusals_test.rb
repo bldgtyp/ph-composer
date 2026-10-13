@@ -71,7 +71,9 @@ class LibraryCallbackRefusalsTest < PhComposerTestCase
     shape = { "type" => "object", "properties" => { "name" => { "type" => "string" } }, "required" => ["name"] }
     D::LibraryAdapter.new(
       :wire_kind => "widgets", :wire_version => 1, :fingerprint_version => 1,
-      :wire_schema => shape.merge("properties" => shape["properties"].merge("id" => { "type" => "string" })),
+      :wire_schema => shape.merge("properties" => shape["properties"].merge("id" => { "type" => "string" }),
+                                  "required" => %w[id name]),
+      :display_label => ->(mapped) { mapped.fetch("name") },
       :mapped_schema => shape, :fingerprint_fields => ["name"], :map => ->(row) { row.slice("name") },
       :reverse => ->(row) { row.slice("id", "name") },
       :fingerprint => ->(row) { PhComposer::CanonicalJson.digest(row.slice("name")) },

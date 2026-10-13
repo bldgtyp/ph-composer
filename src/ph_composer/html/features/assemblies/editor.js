@@ -5,6 +5,8 @@ PhComposerUI.define("features/assemblies/editor", ["features/assemblies/editor_s
 function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar, RecordEdits, request, snapshot,
   unitFields, ui) {
   "use strict";
+  // A Material, local or a library row, is labelled by its name.
+  function materialName(row) { return row.display_label || row.values.name; }
   var SECTION = "ph_composer.assemblies.assemblies", MATERIALS = "ph_composer.assemblies.materials";
   var el = ui.element;
   function Editor(session, send, notice, onClose, chooseDimensionFormat) {
@@ -37,7 +39,7 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     this.color = new forms.ColorForm(session, send, SECTION + ".update", function () { self.repaint(); });
     this.sidebar = new Sidebar({ session: session, send: send, changed: function () { self.repaint();
     }, busy: function () { return self.busy() || Boolean(self.guard()); },
-      adapter: { title: "Material Library", wireKind: "materials", read: function (state) {
+      adapter: { title: "Material Library", wireKind: "materials", name: materialName, read: function (state) {
         var payload = snapshot.value(state, MATERIALS);
         return payload ? payload.records : [];
       }, categories: function (state) { return (snapshot.value(state, MATERIALS) || {}).categories || []; },

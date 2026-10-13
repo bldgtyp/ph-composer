@@ -12,11 +12,13 @@ class LibraryResolverTest < PhComposerTestCase
   end
 
   def resolve(locals, source = @source)
-    PhComposer::Library::Resolver.resolve(:source => source, :mapped => @mapped, :locals => locals)
+    PhComposer::Library::Resolver.resolve(:source => source, :mapped => @mapped, :label => @mapped.fetch("name"),
+                                          :locals => locals)
   end
 
   def local(id, mapped = @mapped, source = nil)
-    { "id" => id, "mapped" => PhComposer::DeepCopy.call(mapped), "source" => source }
+    { "id" => id, "mapped" => PhComposer::DeepCopy.call(mapped), "source" => source,
+      "display_label" => mapped.fetch("name") }
   end
 
   def test_exact_identity_reuses_renamed_and_edited_record_before_same_name
@@ -56,12 +58,22 @@ class LibraryResolverTest < PhComposerTestCase
   end
 
   def test_detached_differences_distinguish_missing_from_null
-    result = resolve([local("a", @mapped.merge("color" => nil))])
+    locals = [local("a", @mapped.merge("color" => nil))]
+    result = resolve(locals)
     difference = result["candidates"][0]["differences"][0]
     assert_equal "color", difference["field"]
     assert difference["local_present"]
     refute difference["incoming_present"]
-    result["candidates"][0]["name"].replace("Changed")
-    assert_equal "Insulation", @mapped["name"]
+    result["candidates"][0]["display_label"].replace("Changed")
+    assert_equal "Insulation", locals[0]["display_label"]
+  end
+
+  def test_unlabelled_local_matches_by_source_only
+    attributed = @source.merge("kind" => "library")
+    unlabelled = local("a").merge("display_label" => nil)
+    assert_equal "create", resolve([unlabelled])["outcome"]
+    result = resolve([unlabelled.merge("source" => attributed), local("b")])
+    assert_equal "reuse", result["outcome"]
+    assert_nil result["candidates"][0]["display_label"]
   end
 end

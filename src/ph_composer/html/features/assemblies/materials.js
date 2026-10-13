@@ -4,6 +4,8 @@ PhComposerUI.define("features/assemblies/materials", ["panel", "snapshot", "work
   "inventory", "inventory_forms", "library/sidebar", "library/section", "features/assemblies/material_form"],
 function (panel, snapshot, ui, fields, RecordForm, inventories, forms, Sidebar, library, MaterialForm) {
   "use strict";
+  // A Material, local or a library row, is labelled by its name.
+  function materialName(row) { return row.display_label || row.values.name; }
   var MATERIALS = "ph_composer.assemblies.materials";
   var categoryClasses = { warm: "category-warm", rose: "category-rose", wood: "category-wood",
     neutral: "category-neutral", blue: "category-blue", violet: "category-violet" };
@@ -77,7 +79,7 @@ function (panel, snapshot, ui, fields, RecordForm, inventories, forms, Sidebar, 
     }
     this.sidebar = new Sidebar({ session: state.session, send: send, changed: changed, besideTable: true,
       busy: function () { return Boolean(self.inventory && self.inventory.guard()); },
-      adapter: { title: "Material Library", wireKind: "materials", read: function (live) {
+      adapter: { title: "Material Library", wireKind: "materials", name: materialName, read: function (live) {
         return (snapshot.value(live, MATERIALS) || {}).records || [];
       }, categories: function () { return self.categories; }, properties: [
         ["Conductivity", "conductivity_w_mk", fields.CONDUCTIVITY], ["Density", "density_kg_m3", fields.DENSITY],

@@ -203,4 +203,30 @@ class MaterialLibraryKindTest < PhComposerTestCase
     error = assert_raises(PhComposer::CodedError) { invoke(:replace, params.merge("user_data" => {})) }
     assert_equal "params.invalid", error.code
   end
+
+  def update(proposal, values)
+    PhComposer::Assemblies::Materials::Operations.update(@request, proposal, :id => material_id("wool"),
+                                                                             :values => values,
+                                                                             :expected_values => {})
+  end
+
+  def after(proposal)
+    proposal.writes.map(&:after)
+  end
+
+  def test_replace_is_the_ordinary_update_plus_provenance
+    Kind.store.write(@model, fixture_materials.fetch(material_id("wool")).merge("source" => source))
+    values = Mapping.map(wire("conductivity_w_mk" => 0.05))
+    ordinary = PhComposer::Operations::Proposal.new
+    update(ordinary, values)
+    replaced = source.merge("record_id" => "renamed-record")
+    invoke(:replace, "id" => material_id("wool"), "values" => values.merge("source" => replaced),
+                     "expected_values" => {})
+    assert_equal after(ordinary).map { |row| row.merge("source" => replaced) }, after(@proposal)
+    assert_equal [source], after(ordinary).map { |row| row.fetch("source") }
+    error = assert_raises(PhComposer::CodedError) do
+      update(PhComposer::Operations::Proposal.new, values.merge("source" => replaced))
+    end
+    assert_equal "params.invalid", error.code
+  end
 end

@@ -48,7 +48,10 @@ module PhComposer
       def resolution
         difference = object({ "field" => TEXT, "local" => VALUE, "incoming" => VALUE,
                               "local_present" => BOOLEAN, "incoming_present" => BOOLEAN })
-        candidate = object({ "id" => TEXT, "name" => TEXT, "differences" => list(difference),
+        candidate = object({ "id" => TEXT,
+                             "display_label" => { "type" => %w[string null],
+                                                  "description" => "The local record's label; null when it has none." },
+                             "differences" => list(difference),
                              "expected_values" => OBJECT, "comparison_available" => BOOLEAN,
                              "source_changed" => { "type" => %w[boolean null] } })
         outcomes = %w[create reuse review_required ambiguous_source ambiguous_name]
@@ -58,7 +61,8 @@ module PhComposer
 
       def page(resolved: false)
         row = object({ "library_id" => TEXT, "library_name" => TEXT, "record_id" => TEXT,
-                       "wire_schema_version" => { "type" => "integer", "minimum" => 1 }, "snapshot" => OBJECT })
+                       "wire_schema_version" => { "type" => "integer", "minimum" => 1 }, "snapshot" => OBJECT,
+                       "display_label" => described(TEXT, "The kind adapter's label for the row's mapped values.") })
         row["properties"]["resolution"] = resolution if resolved
         row["required"] << "resolution" if resolved
         object(summary.fetch("properties").merge("rows" => list(row),
