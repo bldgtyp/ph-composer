@@ -9,7 +9,10 @@ module PhComposer
     # How an export contributor reads records (context/CONTRACTS.md, "Records and extension data").
     # Only a kind's declared values and the extension fields the contributor names leave the Model:
     #
-    # - `user_data` never does; a record that has some gets a finding saying it was left out.
+    # - `user_data` goes out only where the owner passes it through (`user_data: true`), as Honeybee
+    #   carries it on the matching object; it is never interpreted, it may not use the reserved
+    #   `ph_composer` key, and each section reports one count. Elsewhere a record that has some gets a
+    #   finding saying it was left out.
     # - An extension envelope the contributor names must be understood, and only the named payload
     #   fields go out.
     # - On an entity, an envelope another contributor claims (`entity_projections:`) must be understood;
@@ -23,7 +26,16 @@ module PhComposer
         end
       end
 
-      attr_reader :findings
+      RESERVED_USER_DATA_KEY = "ph_composer"
+
+      # What the reader found, then one count per section of the records whose user_data passed through.
+      def findings
+        @findings + @passed.map do |section, ids|
+          Finding.new(:code => "export.user_data_passed", :section => section, :object_id => nil,
+                      :message => "User data passed through to the HBJSON on #{ids.length} " \
+                                  "#{ids.length == 1 ? 'record' : 'records'}.")
+        end
+      end
 
       # `claims` maps `[namespace, target_kind]` to the claiming contributor's name.
       def initialize(engine, catalog, claims: {})
@@ -32,6 +44,7 @@ module PhComposer
         @claims = claims
         @projected = Hash.new { |hash, key| hash[key] = [] }
         @read = {}
+        @passed = Hash.new { |hash, key| hash[key] = [] }
         @findings = []
         @section = nil
       end
@@ -46,9 +59,12 @@ module PhComposer
       end
 
       # Every record of `kind_id`, in id order, as `{"id" => id, <values>..., "extensions" => {...}}`.
-      # `extensions` maps a namespace to the payload fields to include.
-      def records(kind_id, extensions: {})
-        @engine.ids(kind_id).sort.map { |id| record(kind_id, @engine.find(kind_id, id), extensions) }
+      # `extensions` maps a namespace to the payload fields to include; `user_data: true` passes each
+      # record's user_data through as `"user_data"`.
+      def records(kind_id, extensions: {}, user_data: false)
+        @engine.ids(kind_id).sort.map do |id|
+          record(kind_id, @engine.find(kind_id, id), extensions, user_data)
+        end
       end
 
       # Entity-owned feature records use the same metadata boundary. `fields` is an explicit
@@ -56,9 +72,9 @@ module PhComposer
       # read passes its `target_kind`, so a claimed envelope is validated rather than left out. Only the
       # claim's source section passes the occurrence `path` as well, once per occurrence: that read
       # captures the row for the claimant; a shared read without `path` validates and captures nothing.
-      def entity_record(stored, fields:, target_kind: nil, path: nil)
+      def entity_record(stored, fields:, target_kind: nil, path: nil, user_data: false)
         id = stored.fetch("id")
-        omit_metadata(id) unless stored.fetch("user_data", {}).empty?
+        passed = metadata(id, stored, user_data)
         stored.fetch("extension_data", {}).each do |namespace, envelope|
           claimed = target_kind && @claims[[namespace, target_kind]]
           next leave_out(id, namespace, envelope) unless claimed
@@ -67,7 +83,7 @@ module PhComposer
           capture(namespace, target_kind, claimed, "id" => id, "path" => DeepCopy.call(path),
                                                    "payload" => payload) if path
         end
-        { "id" => id }.merge(DeepCopy.call(stored.slice(*fields)))
+        { "id" => id }.merge(DeepCopy.call(stored.slice(*fields))).merge(passed)
       end
 
       # Captures the claimed envelopes of one entity occurrence for their claimants, without the
@@ -121,9 +137,9 @@ module PhComposer
         @projected[[namespace, target_kind]] << row
       end
 
-      def record(kind_id, stored, extensions)
+      def record(kind_id, stored, extensions, user_data)
         id = stored.fetch("id")
-        omit_metadata(id) unless stored.fetch("user_data", {}).empty?
+        passed = metadata(id, stored, user_data)
         exported = stored.fetch("extension_data", {}).each_with_object({}) do |(namespace, envelope), out|
           fields = extensions[namespace]
           if fields
@@ -133,7 +149,7 @@ module PhComposer
           end
         end
         values = DeepCopy.call(@engine.kind(kind_id).values(stored))
-        { "id" => id }.merge(values).merge(exported.empty? ? {} : { "extensions" => exported })
+        { "id" => id }.merge(values).merge(exported.empty? ? {} : { "extensions" => exported }).merge(passed)
       end
 
       def declared_payload(id, namespace, envelope, fields)
@@ -160,6 +176,25 @@ module PhComposer
           block("export.relevance_unknown",
                 "#{id} holds #{namespace} data whose effect on the export is unknown. Nothing was written.")
         end
+      end
+
+      # `{"user_data" => ...}` to merge into the exported record, or `{}`. A record read twice in one
+      # section counts once.
+      def metadata(id, stored, pass)
+        value = stored.fetch("user_data", {})
+        return {} if value.empty?
+
+        unless pass
+          omit_metadata(id)
+          return {}
+        end
+
+        if value.key?(RESERVED_USER_DATA_KEY)
+          block("export.blocked", "#{id} has user_data under the reserved key #{RESERVED_USER_DATA_KEY}, which " \
+                                  "PH-Composer writes itself. Rename that key. Nothing was written.")
+        end
+        @passed[@section] |= [id]
+        { "user_data" => DeepCopy.call(value) }
       end
 
       def omit_metadata(id)

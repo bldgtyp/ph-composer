@@ -11,12 +11,12 @@ from __future__ import annotations
 import hashlib
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from . import stack
 from .constructions import CONSTRUCTIONS
-from .contract import JSONValue, RecordError, as_number, as_text
+from .contract import JSONObject, JSONValue, RecordError, as_number, as_text, user_data, with_user_data
 from .result import Finding
 from .sections import MODEL, Attachment, AttachmentRefused, DependencyUnavailable, Inputs, Requirement, Section
 
@@ -52,6 +52,7 @@ class FaceSpec:
     adjacency: Mapping[str, object] | None
     area_m2: float
     omission: FaceOmission | None
+    user_data: JSONObject = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,7 @@ class ZoneRecord:
     face_ids: tuple[str, ...]
     building_segment_id: str | None = None
     building_segment_export_identifier: str | None = None
+    user_data: JSONObject = field(default_factory=dict)
 
 
 @dataclass
@@ -114,7 +116,18 @@ class FaceSection(Section[FaceSpec, FaceSpec]):
         area = as_number(geometry.get("area_m2"), f"face {identifier} area_m2")
         if area < 0:
             raise RecordError(f"face {identifier} area_m2 must not be negative")
-        return FaceSpec(identifier, zone_id, face_type, boundary, assembly, loops, adjacency, area, omission)
+        return FaceSpec(
+            identifier,
+            zone_id,
+            face_type,
+            boundary,
+            assembly,
+            loops,
+            adjacency,
+            area,
+            omission,
+            user_data(raw.get("user_data"), f"face {identifier}"),
+        )
 
     def translate(self, record: FaceSpec, inputs: Inputs) -> FaceSpec:
         return record
@@ -194,6 +207,7 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
             tuple(as_text(value, "face id") for value in face_ids),
             segment_id,
             export_identifier,
+            user_data(raw.get("user_data"), f"zone {identifier}"),
         )
 
     def translate(self, record: ZoneRecord, inputs: Inputs) -> TranslatedZone:
@@ -237,6 +251,8 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
                         hb_boundaries.boundary_conditions, _boundary_name(specification.boundary_condition)
                     )
                 face = hb_face.Face(specification.identifier, geometry, face_type, boundary)
+                if specification.user_data:
+                    face.user_data = dict(specification.user_data)
                 face.properties.energy.construction = construction
             except (AssertionError, AttributeError, KeyError, ValueError) as error:
                 raise RecordError(f"face {face_id} could not be built: {error}") from error
@@ -246,7 +262,9 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
         except (AssertionError, ValueError) as error:
             raise RecordError(f"Zone {record.identifier} could not be built: {error}") from error
         room.display_name = record.name
-        room.user_data = {"ph_composer": {"level": record.level, "building_segment": record.building_segment}}
+        room.user_data = with_user_data(
+            {"ph_composer": {"level": record.level, "building_segment": record.building_segment}}, record.user_data
+        )
         return TranslatedZone(record, room, faces, specifications)
 
     def attach(self, host: Any, objects: Sequence[TranslatedZone]) -> None:

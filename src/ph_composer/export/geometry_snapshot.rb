@@ -257,8 +257,9 @@ module PhComposer
         @records.records(*arguments, **keywords)
       end
 
-      def entity_record(record, fields:, target_kind: nil, path: nil)
-        @records.entity_record(record, :fields => fields, :target_kind => target_kind, :path => path)
+      def entity_record(record, fields:, target_kind: nil, path: nil, user_data: false)
+        @records.entity_record(record, :fields => fields, :target_kind => target_kind, :path => path,
+                                       :user_data => user_data)
       end
 
       def capture_entity(record, target_kind:, path:)

@@ -5,8 +5,10 @@ require "json"
 module PhComposer
   module Export
     # The metadata policy for the canonical HBJSON. The translator's bytes are what is written; this
-    # reads a parsed copy and never re-serializes. `user_data` may hold only the dotted leaf keys
-    # export contributors declare (an empty map, at any level, declares nothing); every other key
+    # reads a parsed copy and never re-serializes. Under a top-level `user_data` key that begins a
+    # declared key (`ph_composer`, `example`), only the dotted leaf keys export contributors declare may
+    # appear (an empty map, at any level, declares nothing); any other top-level key is the user's own
+    # data, passed through and not interpreted. Every other key
     # ArtifactHygiene prohibits, extension envelopes and usernames among them, refuses at any depth;
     # and every string passes the local-path check on its own. A refusal names the JSON path.
     #
@@ -62,7 +64,8 @@ module PhComposer
           refuse("The canonical HBJSON carries user_data at #{path(trail)} that is not an object.")
         end
 
-        undeclared = leaf_keys(value) - declared_keys
+        namespaces = declared_keys.map { |key| key.split(".").first }
+        undeclared = leaf_keys(value).select { |key| namespaces.include?(key.split(".").first) } - declared_keys
         return if undeclared.empty?
 
         refuse("The canonical HBJSON carries undeclared user_data #{undeclared.first} at #{path(trail)}.")

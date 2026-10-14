@@ -245,6 +245,7 @@ module PhComposer
                           "install_depth_m" => type.fetch("install_depth_m",
                                                           @settings.fetch("default_install_depth_m")),
                           "is_operable" => cell.fetch("operation").fetch("type") != "fixed" }
+                        .merge(record.fetch("user_data", {}).empty? ? {} : { "user_data" => record["user_data"] })
         end
       end
 

@@ -4,6 +4,7 @@ edge and named, never deep inside a translation."""
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from typing import TypeAlias
 
 JSONValue: TypeAlias = bool | int | float | str | list["JSONValue"] | dict[str, "JSONValue"] | None
@@ -31,6 +32,27 @@ def as_text(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise RecordError(f"{label} must be non-empty text")
     return value.strip()
+
+
+#: The user_data key PH-Composer writes its own values under; a user's data never takes it.
+RESERVED_USER_DATA_KEY = "ph_composer"
+
+
+def user_data(value: object, label: str) -> JSONObject:
+    """A record's user_data, passed to Honeybee as given: absent or null is empty, anything else must be
+    a JSON object that does not use the reserved key. Nothing here interprets the values."""
+    if value is None:
+        return {}
+    if not isinstance(value, dict) or not all(isinstance(key, str) for key in value):
+        raise RecordError(f"{label} user_data must be an object")
+    if RESERVED_USER_DATA_KEY in value:
+        raise RecordError(f"{label} user_data must not use the reserved key {RESERVED_USER_DATA_KEY}")
+    return dict(value)
+
+
+def with_user_data(own: Mapping[str, object], user: JSONObject) -> dict[str, object]:
+    """A Honeybee object's user_data: the user's keys beside PH-Composer's own reserved entry."""
+    return {**user, **own}
 
 
 def as_number(value: object, label: str) -> float:

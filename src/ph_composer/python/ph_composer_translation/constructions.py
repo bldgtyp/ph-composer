@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from . import stack
-from .contract import JSONValue, RecordError
+from .contract import JSONValue, RecordError, with_user_data
 from .contract.assembly_records import AssemblyRecord, LayerRecord, MaterialRecord
 from .result import Finding
 from .sections import Inputs, Requirement, Section
@@ -72,7 +72,9 @@ class ConstructionSection(Section[AssemblyRecord, TranslatedConstruction]):
         except (AssertionError, ValueError) as error:
             raise RecordError(f"assembly {record.id} could not be built: {error}") from error
         construction.display_name = record.name
-        construction.user_data = {"ph_composer": {"assembly_id": record.id, "membrane_layers": membranes}}
+        construction.user_data = with_user_data(
+            {"ph_composer": {"assembly_id": record.id, "membrane_layers": membranes}}, record.user_data
+        )
         return TranslatedConstruction(
             record,
             construction,

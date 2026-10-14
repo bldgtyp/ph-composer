@@ -27,14 +27,14 @@ module PhComposer
 
       def records(reader)
         materials = reader.records(MATERIAL_KIND).to_h { |row| [row.fetch("id"), row.slice(*MATERIAL_FIELDS)] }
-        reader.records(ASSEMBLY_KIND).map do |row|
+        reader.records(ASSEMBLY_KIND, :user_data => true).map do |row|
           layers = row.fetch("layers").map do |layer|
             layer.slice("id", "thickness_mm").merge(
               "segments" => layer.fetch("segments").map { |segment| segment.slice(*SEGMENT_FIELDS) }
             )
           end
           used = layers.flat_map { |layer| layer.fetch("segments").map { |segment| segment["material_id"] } }.uniq
-          row.slice("id", "name", "orientation").merge(
+          row.slice("id", "name", "orientation", "user_data").merge(
             "layers" => layers, "materials" => used.compact.sort.filter_map { |id| materials[id] }
           )
         end

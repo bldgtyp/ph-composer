@@ -212,8 +212,10 @@ credential.
 A feature adds export coverage with `feature.export_contributor(name, section_version:, result:,
 report:, preflight:, requires:, projection:)` in its `install`, whose block returns the section's records, and a Python `Section` with
 the same id listed in `python/ph_composer_translation/composition.py`. The block reads through
-`Export::RecordReader`, which exports only declared values and named extension fields, leaves
-`user_data` and `local_only` data out with a finding, and blocks on data whose export relevance is
+`Export::RecordReader`, which exports only declared values and named extension fields, passes
+`user_data` through where the owner asks (`user_data: true`: Zones, Faces, Window Units onto their
+Apertures, and Assemblies onto their Constructions, as Honeybee carries it) and leaves it out with a
+finding elsewhere, leaves `local_only` data out with a finding, and blocks on data whose export relevance is
 unknown or required but unexported. When the translator adds result fields for the feature, the
 contributor declares them in `result` and renders them in `report`; they arrive under the section's
 id. A feature whose translated objects sit inside another feature's, as Apertures sit in Faces,
@@ -250,10 +252,11 @@ id, composed on each check, so a result field no declaration names fails the exp
 the translator's result document unchanged.
 
 The canonical HBJSON is a string in that document, so the allowlist cannot see inside it. The
-guard (`export/hbjson_metadata.rb`, called from `Export::Privacy.validate!`) parses a copy: any
-`user_data` may hold only the dotted leaf keys export contributors declare with `user_data_keys:`
-(`zones` declares `ph_composer.level` and `ph_composer.building_segment`, which its translation
-writes on each Room; empty maps are allowed); `extension_data`, usernames and path keys refuse at
+guard (`export/hbjson_metadata.rb`, called from `Export::Privacy.validate!`) parses a copy: under a
+top-level `user_data` key that begins a declared key, only the dotted leaf keys export contributors
+declare with `user_data_keys:` may appear (`zones` declares `ph_composer.level` and
+`ph_composer.building_segment`, which its translation writes on each Room; empty maps are allowed);
+any other top-level key is a user's own passed-through data (Ed, 2026-10-13); `extension_data`, usernames and path keys refuse at
 any depth; every string passes the local-path check on its own. A refusal is
 `export.privacy_undeclared`. The bytes written are always the translator's, never re-serialized
 (Ed, R-D2, 2026-09-30).

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from . import RecordError, as_number, as_text
+from . import JSONObject, RecordError, as_number, as_text, user_data
 
 SIDES = ("top", "right", "bottom", "left")
 
@@ -133,6 +133,7 @@ class ApertureRecord:
     variant_type: str
     install_depth: float
     is_operable: bool
+    user_data: JSONObject = field(default_factory=dict)
 
     @classmethod
     def read(cls, raw: Mapping[str, object]) -> ApertureRecord:
@@ -166,4 +167,5 @@ class ApertureRecord:
             variant_type=as_text(raw.get("variant_type"), "variant_type"),
             install_depth=number(raw, "install_depth_m"),
             is_operable=operable,
+            user_data=user_data(raw.get("user_data"), f"aperture {raw.get('id')}"),
         )

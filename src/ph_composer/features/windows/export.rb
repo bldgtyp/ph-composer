@@ -43,22 +43,27 @@ module PhComposer
         ExportAssessment.call(**values)
       end
 
+      # Computed once, as the Apertures section whichever section asks first, so what it reads (Unit
+      # user_data counted among them) is reported under Apertures.
       def projection(reader)
-        reader.projection(APERTURES) do
-          types = reader.records(TYPE_KIND).to_h { |row| [row.fetch("id"), row] }
-          products = Products::KINDS.to_h do |collection, kind|
-            [collection, reader.records(kind.id).to_h { |row| [row.fetch("id"), row] }]
-          end
-          settings = ExportGeometry.record(reader.snapshot.model_dictionaries, Settings::SERVICE.store) ||
-                     DeepCopy.call(Settings::DEFAULTS)
-          Settings::SERVICE.validate!(settings)
-          reader.snapshot.records(Units::STORE.dictionary).each do |entry, record|
-            Units.validate!(record)
-            reader.entity_record(record, :fields => %w[window_type_id anchor], :target_kind => Units::REFERENCE_KIND)
-          end
-          assess(:snapshot => reader.snapshot, :types => types, :products => products, :settings => settings,
-                 :faces => reader.section(FACES))
+        reader.projection(APERTURES) { reader.within(APERTURES) { assessment(reader) } }
+      end
+
+      def assessment(reader)
+        types = reader.records(TYPE_KIND).to_h { |row| [row.fetch("id"), row] }
+        products = Products::KINDS.to_h do |collection, kind|
+          [collection, reader.records(kind.id).to_h { |row| [row.fetch("id"), row] }]
         end
+        settings = ExportGeometry.record(reader.snapshot.model_dictionaries, Settings::SERVICE.store) ||
+                   DeepCopy.call(Settings::DEFAULTS)
+        Settings::SERVICE.validate!(settings)
+        reader.snapshot.records(Units::STORE.dictionary).each do |_entry, record|
+          Units.validate!(record)
+          reader.entity_record(record, :fields => %w[window_type_id anchor], :target_kind => Units::REFERENCE_KIND,
+                                       :user_data => true)
+        end
+        assess(:snapshot => reader.snapshot, :types => types, :products => products, :settings => settings,
+               :faces => reader.section(FACES))
       end
 
       # The Apertures contract is the Units' owning section, so claimed Unit data is captured here, once,

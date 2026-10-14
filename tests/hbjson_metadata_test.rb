@@ -28,11 +28,23 @@ class HbjsonMetadataTest < PhComposerTestCase
     declared = model("user_data" => { "ph_composer" => { "level" => "L1", "building_segment" => "House" } })
     nested = model("faces" => [{ "properties" => { "extension_data" => { "a" => 1 } } }])
     undeclared = model("user_data" => { "ph_composer" => { "level" => "L1", "secret" => "x" } })
-    foreign = model("user_data" => { "firm" => { "note" => "x" } })
 
     assert Privacy.validate!(result(declared))
-    [nested, undeclared, foreign].each { |hbjson| assert_equal "export.privacy_undeclared", refusal(hbjson) }
+    [nested, undeclared].each { |hbjson| assert_equal "export.privacy_undeclared", refusal(hbjson) }
     assert_match(/ph_composer\.secret/, refusal_message(undeclared))
+  end
+
+  # A user's own top-level key passes through uninterpreted, beside the declared ones; its strings and
+  # keys are still checked like any other.
+  def test_a_users_own_user_data_passes_but_paths_and_prohibited_keys_inside_it_still_refuse
+    passed = model("user_data" => { "firm" => { "note" => "x", "count" => 2 },
+                                    "ph_composer" => { "level" => "L1" } })
+    local_path = model("user_data" => { "firm" => { "drawing" => "/Users/someone/plans/a.pdf" } })
+    prohibited = model("user_data" => { "firm" => { "extension_data" => { "a" => 1 } } })
+
+    assert Privacy.validate!(result(passed))
+    assert_match(/local file path/, refusal_message(local_path))
+    assert_match(/extension_data/, refusal_message(prohibited))
   end
 
   def test_a_contributor_that_declares_its_keys_needs_no_guard_change

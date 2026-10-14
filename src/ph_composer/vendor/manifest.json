@@ -476,24 +476,24 @@
       "sha256": "aba52de9721b43927f7df6083ab69b255f89b1213806a95b655556f20e72edab"
     },
     "python/ph_composer_translation/constructions.py": {
-      "bytes": 7160,
+      "bytes": 7232,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "cd4316358d9c9ace1860b1222fb51496676137b9cc4918194799b4498ccca067"
+      "sha256": "f90d16191053b78aeee9d00b9270bbb992172934ced3bf00d4cf7f7087818f1f"
     },
     "python/ph_composer_translation/contract/__init__.py": {
-      "bytes": 1494,
+      "bytes": 2490,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "f12db5332999d60bff17b39be4d9c53f7f57b86aa3e2d60a0bd90f9a3aee905c"
+      "sha256": "73514ef467c81e4a83f31900380deeb29a8b2e2fe838360d506a0e9d75c591a7"
     },
     "python/ph_composer_translation/contract/assembly_records.py": {
-      "bytes": 6729,
+      "bytes": 6886,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "2451ce5cb669e84ad1df8a4a0b5232e0b3e850a933916b74bef85c96293daa5a"
+      "sha256": "ef4a5dc648dbd55da8020e7dd21e32604ecd476ee553953cfd5411a3f9e445e3"
     },
     "python/ph_composer_translation/contract/window_records.py": {
-      "bytes": 5933,
+      "bytes": 6103,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "8c24c31c6ca8273079778b0ac2d6d9de06882a813609c126d3384a932cd2a00d"
+      "sha256": "0532dd352caae028398c792eb51fab88e67cd5c4cf55870fcf19bae1233f68fa"
     },
     "python/ph_composer_translation/coordinator.py": {
       "bytes": 8937,
@@ -516,9 +516,9 @@
       "sha256": "81afd69d32d75db8e3e2b9f305fd568c4c000be8a8d0d37128bbf637ccfd734f"
     },
     "python/ph_composer_translation/model_sections.py": {
-      "bytes": 19111,
+      "bytes": 19689,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "b2919b6c7dabcb20b33a7f0ddc727f5883e07e02b8ffe31585e7e782b2715963"
+      "sha256": "7d0d9cce609b11f638869c9d5723bdb3b27245c33bffa29282128f7c986eef31"
     },
     "python/ph_composer_translation/result.py": {
       "bytes": 3570,
@@ -536,9 +536,9 @@
       "sha256": "1b73dab83dd4ee7d5b381d71d70e2a30a753b691f248b035903596f59ca6a740"
     },
     "python/ph_composer_translation/window_sections.py": {
-      "bytes": 11533,
+      "bytes": 11626,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "1a3e8e6e710846e0dfa633a4a79e4893b541dd22fa10456e485cb742ad3fcbbe"
+      "sha256": "a648b709aafe951394875177c00fdd358e87ad2b0ad60cd1f957ab2a32228234"
     },
     "vendor/pyodide/pyodide-lock.json": {
       "bytes": 84412,

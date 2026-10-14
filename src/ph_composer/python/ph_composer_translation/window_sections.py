@@ -113,6 +113,8 @@ class ApertureSection(Section[ApertureRecord, TranslatedAperture]):
             if geometry.area <= 1e-10 or geometry.is_self_intersecting:
                 raise ValueError("aperture must have positive area and a simple polygon")
             aperture.display_name = record.name
+            if record.user_data:
+                aperture.user_data = dict(record.user_data)
             aperture.properties.energy.construction = construction
             aperture.properties.ph.variant_type = record.variant_type
             aperture.properties.ph.install_depth = record.install_depth
