@@ -255,7 +255,8 @@ Exit: F07 closed offline.
 
 ### EC-05: canon, review, native
 
-State: Scoped.
+State: Implemented on branch. Canon written; the stronger reviews ran per PR (gpt-6-astra on PRs
+110, 122, 123 and 125); the native write, copy, reopen and Undo/Redo receipts are in STATUS.
 
 1. `context/CONTRACTS.md` "Records and extension data": the three actions, the pre-image, the status
    on entity reads, the projection claim. `context/EXTENSIBILITY.md` "Metadata" and "Entity-owned

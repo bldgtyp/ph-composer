@@ -13,7 +13,7 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 | EC-02 | `update_metadata` action per owner reusing `UpdateZoneStep`, `ClassifyStep` and a new `UpdateUnitStep`; Unit route through the Windows coordinator | Merged to main | Three `update_metadata` actions (`Records::Metadata.distinct_updates` and `.planned` shared, `SchemaShapes.metadata_updates` and `.metadata_result`); `UpdateUnitStep`; Window route through `Authoring.update_unit_metadata`; eight cases in `tests/entity_metadata_test.rb`; `docs/API_REFERENCE.md` regenerated |
 | EC-03 | `entity_projections:` claims on export contributors; reader projection store; reconciliation | Merged to main (PR 122) | `tests/entity_projection_test.rb` (8): valid claim registers without running its contract; foreign namespace, unrequired target, missing source, overlap and empty fields refuse; claimed understood payload projects only declared fields; unclaimed still blocks; invalid and outdated still block; local-only omits with a finding; unread claim blocks; `user_data` still omits. Ed confirmed the shape 2026-10-13 |
 | EC-04 | Example entity extension with a claim; Python section; canonical reload | Merged to main (PR 123) | `tests/python/test_example_translation.py`: claimed Face review reaches its Face in the canonical HBJSON and survives Honeybee reload; missing required field refuses. `tests/export_test.rb`: the example claim exports only `review_status`; an unclaimed local-only note is left out with a finding and is byte-identical on the Face after save and reopen |
-| EC-05 | CONTRACTS, EXTENSIBILITY, AGENT_INTERFACE; stronger review; dual-Ruby `make ci`; native write, copy, reopen | Scoped | none yet |
+| EC-05 | CONTRACTS, EXTENSIBILITY, AGENT_INTERFACE; stronger review; dual-Ruby `make ci`; native write, copy, reopen | Implemented on branch | CONTRACTS "Records and extension data" (projection claims, Export row), the contributor table; EXTENSIBILITY "Metadata" claim paragraph; AGENT_INTERFACE HBJSON `user_data` note. Reviews: gpt-6-astra on PRs 110, 122, 123, 125. Native receipts below. Gate below |
 
 Reviewed against source on 2026-10-13: the existing Zone and Face write steps already carry full
 before and after records, so metadata writes reuse them; the presence-bit pre-image was dropped.
@@ -52,3 +52,10 @@ pre-image against what the caller read, and writes and reports under the repaire
 written payload's references resolve through the staged repair (`Mutation.reference_plan`), so a
 payload naming the retained original resolves. Distinct-target batches with a late refusal and an
 injected second write are tested (nothing written; `rolled_back`).
+
+## EC-05 gate
+
+On the EC-05 head (docs only over `main` `0b21f1c`), 2026-10-14: `make ci` on Ruby 3.2 and on Ruby 2.7.2
+pass (1618 Ruby runs, 19447 assertions); `make coverage` 95.59% (required 92%). The canon text was
+checked against the merged code (registration refusals, `capture_entity`, ordering, unread-claim
+block, `user_data` owners) as the documentation-only consistency review.
