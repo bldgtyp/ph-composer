@@ -201,8 +201,6 @@ class WindowExportTest < PhComposerTestCase
     assert_equal 1, sections.fetch(X::APERTURES).fetch("records").length
     # The Type's user_data stays local; the Unit's passes through to its Aperture.
     assert_equal 1, extracted.findings.count { |row| row["code"] == "export.metadata_omitted" }
-    assert_equal [X::APERTURES], extracted.findings.select { |row| row["code"] == "export.user_data_passed" }
-                                          .map { |row| row["section"] }
     assert_equal({ "private" => "local-only" }, sections.fetch(X::APERTURES).fetch("records").first["user_data"])
     wire = JSON.generate(sections.fetch(X::CONSTRUCTIONS))
     %w[user_data extension_data source entity_path provider private shading].each { |key| refute_includes wire, key }

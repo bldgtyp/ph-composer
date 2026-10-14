@@ -47,6 +47,28 @@ class HbjsonMetadataTest < PhComposerTestCase
     assert_match(/extension_data/, refusal_message(prohibited))
   end
 
+  def test_a_local_path_used_as_a_user_data_key_refuses
+    home = model("user_data" => { "firm" => { "~/private/model.skp" => true } })
+    unc = model("user_data" => { "\\\\server\\share\\model.skp" => true })
+
+    [home, unc].each { |hbjson| assert_match(/local file path as a key/, refusal_message(hbjson)) }
+  end
+
+  # The report's count reads the canonical HBJSON, so only objects that reached it are counted, and
+  # an object carrying PH-Composer's own keys alone is not.
+  def test_the_passed_count_reads_only_objects_that_carry_a_users_keys
+    hbjson = JSON.generate("type" => "Model", "rooms" => [{
+      "type" => "Room", "user_data" => { "ph_composer" => { "level" => "L1" }, "firm" => {} },
+      "faces" => [{ "type" => "Face", "user_data" => { "firm" => { "a" => 1 } } },
+                  { "type" => "Face", "user_data" => { "ph_composer" => { "level" => "x" } } },
+                  { "type" => "Face" }]
+    }])
+
+    counts = PhComposer::Export::HbjsonMetadata.passed(hbjson, ["ph_composer.level"])
+
+    assert_equal({ "Face" => 1, "Room" => 1 }, counts)
+  end
+
   def test_a_contributor_that_declares_its_keys_needs_no_guard_change
     feature = Module.new do
       define_singleton_method(:install) do |registry|

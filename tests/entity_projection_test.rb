@@ -146,9 +146,7 @@ class EntityProjectionTest < PhComposerTestCase
 
     face = extraction.document.dig("sections", FACES, "records", 0)
     assert_equal({ "firm" => { "note" => "kept" } }, face["user_data"])
-    passed = extraction.findings.select { |row| row["code"] == "export.user_data_passed" }
-    assert_equal [[FACES, "User data passed through to the HBJSON on 1 record."]],
-                 passed.map { |row| row.values_at("section", "message") }
+    assert(extraction.findings.none? { |row| row["code"] == "export.metadata_omitted" })
   end
 
   def test_user_data_under_the_reserved_key_blocks_the_export

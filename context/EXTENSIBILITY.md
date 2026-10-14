@@ -676,8 +676,8 @@ Export inclusion is deliberate. A record's `user_data` passes through to the HBJ
 gives it, uninterpreted, where the owner opts in (`reader.entity_record(..., user_data: true)` or
 `reader.records(kind, user_data: true)`): Zone to Room, Face to Face, Window Unit to each of its
 Apertures, Assembly to Construction (Ed, 2026-10-13). The translation writes it beside PH-Composer's
-own reserved `ph_composer` key, a user key named `ph_composer` blocks the export, every string still
-passes the local-path check, and the report counts what passed per section. Elsewhere `user_data`
+own reserved `ph_composer` key, a user key named `ph_composer` blocks the export, every string and
+key still passes the local-path check, and the report counts the HBJSON objects that carry it. Elsewhere `user_data`
 is left out with a finding. An export contributor whose translation writes its own HBJSON
 `user_data` declares those keys at registration (`user_data_keys:`); under a declared namespace the
 artifact guard refuses any key no contributor declared. Do not promise lossless round trips through

@@ -26,13 +26,36 @@ module PhComposer
         refuse("The canonical HBJSON is not valid JSON.")
       end
 
+      # How many objects of each Honeybee type carry a user's own user_data (any top-level key outside
+      # the declared namespaces), as `{"Room" => 2, "Face" => 12}`: what the report says passed through.
+      def passed(hbjson, declared_keys)
+        namespaces = declared_keys.map { |key| key.split(".").first }
+        counts = Hash.new(0)
+        pending = [JSON.parse(hbjson)]
+        until pending.empty?
+          node = pending.pop
+          if node.is_a?(Hash)
+            data = node["user_data"]
+            counts[node.fetch("type", "object").to_s] += 1 if data.is_a?(Hash) && (data.keys - namespaces).any?
+            pending.concat(node.values)
+          elsif node.is_a?(Array)
+            pending.concat(node)
+          end
+        end
+        counts
+      rescue JSON::ParserError
+        {}
+      end
+
       # `trail` is the keys and indexes from the root, kept as a list and joined only for a message.
       def visit(node, declared_keys, trail)
         case node
         when Hash
           node.each do |key, item|
             name = key.to_s
-            if name == "user_data"
+            if Diagnostics.absolute_path?(name)
+              refuse("The canonical HBJSON uses a local file path as a key at #{path(trail)}.")
+            elsif name == "user_data"
               check_user_data!(item, declared_keys, trail + [name])
             elsif prohibited?(name)
               refuse("The canonical HBJSON carries #{name} at #{path(trail + [name])}, which is never exported.")

@@ -11,8 +11,8 @@ module PhComposer
     #
     # - `user_data` goes out only where the owner passes it through (`user_data: true`), as Honeybee
     #   carries it on the matching object; it is never interpreted, it may not use the reserved
-    #   `ph_composer` key, and each section reports one count. Elsewhere a record that has some gets a
-    #   finding saying it was left out.
+    #   `ph_composer` key, and the export report counts what reached the HBJSON
+    #   (HbjsonMetadata.passed). Elsewhere a record that has some gets a finding saying it was left out.
     # - An extension envelope the contributor names must be understood, and only the named payload
     #   fields go out.
     # - On an entity, an envelope another contributor claims (`entity_projections:`) must be understood;
@@ -28,14 +28,7 @@ module PhComposer
 
       RESERVED_USER_DATA_KEY = "ph_composer"
 
-      # What the reader found, then one count per section of the records whose user_data passed through.
-      def findings
-        @findings + @passed.map do |section, ids|
-          Finding.new(:code => "export.user_data_passed", :section => section, :object_id => nil,
-                      :message => "User data passed through to the HBJSON on #{ids.length} " \
-                                  "#{ids.length == 1 ? 'record' : 'records'}.")
-        end
-      end
+      attr_reader :findings
 
       # `claims` maps `[namespace, target_kind]` to the claiming contributor's name.
       def initialize(engine, catalog, claims: {})
@@ -44,7 +37,6 @@ module PhComposer
         @claims = claims
         @projected = Hash.new { |hash, key| hash[key] = [] }
         @read = {}
-        @passed = Hash.new { |hash, key| hash[key] = [] }
         @findings = []
         @section = nil
       end
@@ -178,8 +170,7 @@ module PhComposer
         end
       end
 
-      # `{"user_data" => ...}` to merge into the exported record, or `{}`. A record read twice in one
-      # section counts once.
+      # `{"user_data" => ...}` to merge into the exported record, or `{}`.
       def metadata(id, stored, pass)
         value = stored.fetch("user_data", {})
         return {} if value.empty?
@@ -193,7 +184,6 @@ module PhComposer
           block("export.blocked", "#{id} has user_data under the reserved key #{RESERVED_USER_DATA_KEY}, which " \
                                   "PH-Composer writes itself. Rename that key. Nothing was written.")
         end
-        @passed[@section] |= [id]
         { "user_data" => DeepCopy.call(value) }
       end
 

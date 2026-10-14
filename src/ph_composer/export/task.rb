@@ -105,6 +105,8 @@ module PhComposer
         raise InternalError, "The runtime returned another run." unless result["run_id"] == id
 
         result.fetch("findings").concat(@extraction.findings.map { |note| note.merge("blocks_export" => false) })
+        passed = passed_user_data(result.dig("canonical_model", "hbjson"))
+        result.fetch("findings") << passed if passed
         result.fetch("summary")["findings"] = result.fetch("findings").length
         result["state"] = "complete_with_findings" if result["state"] == "complete" && !result["findings"].empty?
         Privacy.validate!(result)
@@ -209,6 +211,18 @@ module PhComposer
         @runtime&.stop
         @runtime = @builder = @extraction = @result = nil
         @session.request_refresh if @session.valid?
+      end
+
+      # One finding counting the HBJSON objects that carry a user's passed-through user_data, or nil.
+      def passed_user_data(hbjson)
+        return nil unless hbjson.is_a?(String)
+
+        counts = HbjsonMetadata.passed(hbjson, Privacy.user_data_keys)
+        return nil if counts.empty?
+
+        listed = counts.sort.map { |type, count| "#{count} #{type}#{count == 1 ? '' : 's'}" }.join(", ")
+        { "code" => "export.user_data_passed", "section" => "canonical_model", "object_id" => nil,
+          "message" => "User data passed through to the HBJSON on #{listed}.", "blocks_export" => false }
       end
     end
   end

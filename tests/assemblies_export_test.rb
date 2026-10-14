@@ -23,9 +23,8 @@ class AssembliesExportTest < PhComposerTestCase
     extracted = PhComposer::Export::Collection.build(@model, :run_id => expected.fetch("run_id"),
                                                              :contributors => [SECTION])
     assert_equal expected, extracted.document
-    codes = extracted.findings.map { |finding| finding.fetch("code") }.tally
-    assert_equal 1, codes.fetch("export.user_data_passed")
-    assert_operator codes.fetch("export.metadata_omitted"), :>=, 1
+    assert(extracted.findings.all? { |finding| finding.fetch("code") == "export.metadata_omitted" })
+    assert_operator extracted.findings.length, :>=, 1
     wire = JSON.generate(extracted.document)
     %w[air_barrier photo_collections ventilated_cladding exterior_condition notes source].each do |key|
       refute_includes wire, "\"#{key}\""
