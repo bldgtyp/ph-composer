@@ -138,14 +138,40 @@ class EntityProjectionTest < PhComposerTestCase
     assert_includes error.message, NAMESPACE
   end
 
-  def test_user_data_is_still_left_out_beside_a_claim
+  def test_a_faces_user_data_passes_through_beside_a_claim
     PhComposer::Registry.install([review_feature])
-    seed(payload, :user_data => { "firm" => { "note" => "local" } })
+    seed(payload, :user_data => { "firm" => { "note" => "kept" } })
 
     extraction = collect
 
-    refute_includes JSON.generate(extraction.document), "local"
-    assert(extraction.findings.any? { |row| row["message"].start_with?("User data") })
+    face = extraction.document.dig("sections", FACES, "records", 0)
+    assert_equal({ "firm" => { "note" => "kept" } }, face["user_data"])
+    assert(extraction.findings.none? { |row| row["code"] == "export.metadata_omitted" })
+  end
+
+  def test_user_data_under_a_contributors_declared_namespace_blocks_the_export
+    PhComposer::Registry.install([review_feature, Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("outside.tags", :contract_version => 1)
+                .export_contributor("outside.tags.export", :section_version => 1,
+                                                           :user_data_keys => ["outside.tag"]) { |_reader| [] }
+      end
+    end])
+    seed(payload, :user_data => { "outside" => { "tag" => "mine" } })
+
+    error = assert_raises(Export::Blocked) { collect }
+
+    assert_includes error.message, "reserved key outside"
+  end
+
+  def test_user_data_under_the_reserved_key_blocks_the_export
+    PhComposer::Registry.install([review_feature])
+    seed(payload, :user_data => { "ph_composer" => { "level" => "mine" } })
+
+    error = assert_raises(Export::Blocked) { collect }
+
+    assert_equal "export.blocked", error.code
+    assert_includes error.message, "reserved key"
   end
 
   def test_a_claim_survives_full_collection_shared_reads_and_the_incremental_builder

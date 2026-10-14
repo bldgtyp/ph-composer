@@ -5,8 +5,10 @@ require "json"
 module PhComposer
   module Export
     # The metadata policy for the canonical HBJSON. The translator's bytes are what is written; this
-    # reads a parsed copy and never re-serializes. `user_data` may hold only the dotted leaf keys
-    # export contributors declare (an empty map, at any level, declares nothing); every other key
+    # reads a parsed copy and never re-serializes. Under a top-level `user_data` key that begins a
+    # declared key (`ph_composer`, `example`), only the dotted leaf keys export contributors declare may
+    # appear (an empty map, at any level, declares nothing); any other top-level key is the user's own
+    # data, passed through and not interpreted. Every other key
     # ArtifactHygiene prohibits, extension envelopes and usernames among them, refuses at any depth;
     # and every string passes the local-path check on its own. A refusal names the JSON path.
     #
@@ -24,13 +26,38 @@ module PhComposer
         refuse("The canonical HBJSON is not valid JSON.")
       end
 
+      # How many objects of each Honeybee type carry a user's own user_data (any top-level key outside
+      # the declared namespaces, which a user may not take: RecordReader refuses them), as
+      # `{"Room" => 2, "Face" => 12}`: what the report says passed through. A user's own data is not
+      # searched for objects.
+      def passed(hbjson, declared_keys)
+        namespaces = declared_keys.map { |key| key.split(".").first }
+        counts = Hash.new(0)
+        pending = [JSON.parse(hbjson)]
+        until pending.empty?
+          node = pending.pop
+          if node.is_a?(Hash)
+            data = node["user_data"]
+            counts[node.fetch("type", "object").to_s] += 1 if data.is_a?(Hash) && (data.keys - namespaces).any?
+            pending.concat(node.reject { |key, _item| key == "user_data" }.values)
+          elsif node.is_a?(Array)
+            pending.concat(node)
+          end
+        end
+        counts
+      rescue JSON::ParserError
+        {}
+      end
+
       # `trail` is the keys and indexes from the root, kept as a list and joined only for a message.
       def visit(node, declared_keys, trail)
         case node
         when Hash
           node.each do |key, item|
             name = key.to_s
-            if name == "user_data"
+            if Diagnostics.absolute_path?(name)
+              refuse("The canonical HBJSON uses a local file path as a key at #{path(trail)}.")
+            elsif name == "user_data"
               check_user_data!(item, declared_keys, trail + [name])
             elsif prohibited?(name)
               refuse("The canonical HBJSON carries #{name} at #{path(trail + [name])}, which is never exported.")
@@ -62,7 +89,9 @@ module PhComposer
           refuse("The canonical HBJSON carries user_data at #{path(trail)} that is not an object.")
         end
 
-        undeclared = leaf_keys(value) - declared_keys
+        namespaces = declared_keys.map { |key| key.split(".").first }
+        owned = value.select { |key, _item| namespaces.include?(key.to_s) }
+        undeclared = leaf_keys(owned) - declared_keys
         return if undeclared.empty?
 
         refuse("The canonical HBJSON carries undeclared user_data #{undeclared.first} at #{path(trail)}.")

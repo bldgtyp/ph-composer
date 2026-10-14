@@ -672,11 +672,17 @@ Window Units, whose records live on entities, take it through their owner's `upd
 action, which applies the same rules ([CONTRACTS.md](CONTRACTS.md), "Records and extension data"). Core
 calculations do not silently interpret arbitrary metadata. Absence in an older record is valid.
 
-Export inclusion is deliberate. Specify mappings for supported outputs and disclose omissions;
-local metadata is not automatically admitted through the export privacy allowlist. An export
-contributor whose translation writes HBJSON `user_data` declares those keys at registration
-(`user_data_keys:`); the artifact guard refuses any key no contributor declared. Do not promise
-lossless round trips through formats that cannot preserve it.
+Export inclusion is deliberate. A record's `user_data` passes through to the HBJSON object Honeybee
+gives it, uninterpreted, where the owner opts in (`reader.entity_record(..., user_data: true)` or
+`reader.records(kind, user_data: true)`): Zone to Room, Face to Face, Window Unit to each of its
+Apertures, Assembly to Construction (Ed, 2026-10-13). The translation writes it beside PH-Composer's
+own reserved `ph_composer` key; a user key named `ph_composer`, or after any namespace an export
+contributor declares in `user_data_keys:`, blocks the export; every string and
+key still passes the local-path check, and the report counts the HBJSON objects that carry it. Elsewhere `user_data`
+is left out with a finding. An export contributor whose translation writes its own HBJSON
+`user_data` declares those keys at registration (`user_data_keys:`); under a declared namespace the
+artifact guard refuses any key no contributor declared. Do not promise lossless round trips through
+formats that cannot preserve it.
 
 Maintained extensions can register structured extension data with a namespace, schema version,
 validator and migrations. Preserve payloads belonging to unavailable extensions during ordinary

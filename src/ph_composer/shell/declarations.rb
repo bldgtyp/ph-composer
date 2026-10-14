@@ -45,7 +45,7 @@ module PhComposer
       object.unavailable dependency.unavailable
       export.blocked export.busy export.cancelled export.failed export.refused export.model_changed
       export.destination_changed export.replace_required export.privacy_undeclared export.relevance_unknown
-      export.metadata_omitted task.expired
+      export.metadata_omitted export.user_data_passed task.expired
       library.adapter_invalid library.assignment_unavailable library.callback_invalid library.catalog_budget
       library.catalog_stale library.catalog_too_large library.catalog_too_many_rows library.destination_changed
       library.destination_invalid library.export_write_failed library.file_malformed library.file_too_large

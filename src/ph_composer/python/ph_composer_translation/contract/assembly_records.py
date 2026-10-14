@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from . import RecordError, as_number, as_text
+from . import JSONObject, RecordError, as_number, as_text, user_data
 
 
 def positive(value: object, label: str) -> float:
@@ -115,6 +115,7 @@ class AssemblyRecord:
     name: str
     layers: tuple[LayerRecord, ...]
     materials: Mapping[str, MaterialRecord]
+    user_data: JSONObject = field(default_factory=dict)
 
     @classmethod
     def read(cls, raw: Mapping[str, object]) -> AssemblyRecord:
@@ -159,4 +160,5 @@ class AssemblyRecord:
             name,
             tuple(reversed(layers)) if orientation == "last_layer_outside" else layers,
             materials,
+            user_data(raw.get("user_data"), f"assembly {identifier}"),
         )

@@ -17,18 +17,20 @@ class AssembliesExportTest < PhComposerTestCase
     @context = PhComposer::API.connect(:session_id => session.id)
   end
 
-  def test_shared_extraction_contract_contains_only_declared_fields_and_reports_metadata_omission
+  # Assemblies pass their user_data through to the Construction; Materials still leave theirs out.
+  def test_shared_extraction_contract_contains_only_declared_fields_and_passes_assembly_user_data
     expected = JSON.parse(File.read(File.join(ROOT, "extraction.json")))
     extracted = PhComposer::Export::Collection.build(@model, :run_id => expected.fetch("run_id"),
                                                              :contributors => [SECTION])
     assert_equal expected, extracted.document
-    assert extracted.findings.all? { |finding| finding.fetch("code") == "export.metadata_omitted" }
-    assert_operator extracted.findings.length, :>=, 8
+    assert(extracted.findings.all? { |finding| finding.fetch("code") == "export.metadata_omitted" })
+    assert_operator extracted.findings.length, :>=, 1
     wire = JSON.generate(extracted.document)
-    %w[air_barrier photo_collections ventilated_cladding exterior_condition user_data notes source].each do |key|
+    %w[air_barrier photo_collections ventilated_cladding exterior_condition notes source].each do |key|
       refute_includes wire, "\"#{key}\""
     end
-    refute_includes wire, "local metadata"
+    materials = extracted.document.dig("sections", SECTION, "records").flat_map { |row| row.fetch("materials") }
+    assert(materials.none? { |row| row.key?("user_data") })
   end
 
   def test_record_preflight_is_nonblocking_for_unused_incomplete_and_names_mass_defaults

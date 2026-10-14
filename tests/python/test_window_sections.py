@@ -304,16 +304,33 @@ def test_authoring_provider_and_shading_metadata_never_reaches_hbjson() -> None:
         for row in payload["sections"][section_id]["records"]:
             row.update(
                 source={"provider_path": "PRIVATE_PATH_TOKEN"},
-                user_data={"secret": "PRIVATE_USER_TOKEN"},
                 shading={"coefficient": "PRIVATE_SHADING_TOKEN"},
                 extensions={"payload": "PRIVATE_EXT_TOKEN"},
             )
     output = result(payload)
     serialized = json.dumps(output)
     assert all(
-        token not in serialized
-        for token in ("PRIVATE_PATH_TOKEN", "PRIVATE_USER_TOKEN", "PRIVATE_SHADING_TOKEN", "PRIVATE_EXT_TOKEN")
+        token not in serialized for token in ("PRIVATE_PATH_TOKEN", "PRIVATE_SHADING_TOKEN", "PRIVATE_EXT_TOKEN")
     )
+
+
+def test_a_units_user_data_passes_through_to_each_of_its_apertures() -> None:
+    payload = document()
+    for row in payload["sections"][APERTURE_SECTION_ID]["records"]:
+        row["user_data"] = {"firm": {"tag": "north"}}
+
+    apertures = [ap for room in model(result(payload)).rooms for face in room.faces for ap in face.apertures]
+
+    assert apertures and all(ap.user_data == {"firm": {"tag": "north"}} for ap in apertures)
+
+
+def test_a_user_key_named_like_ph_composer_costs_the_aperture() -> None:
+    payload = document()
+    payload["sections"][APERTURE_SECTION_ID]["records"][0]["user_data"] = {"ph_composer": {"x": 1}}
+
+    output = result(payload)
+
+    assert any("reserved key" in row["message"] for row in output["findings"])
 
 
 @pytest.mark.parametrize("uw_w_m2k", [0, -1, 12.01, True, "1.1"])
@@ -348,3 +365,19 @@ def test_inputs_all_preserves_wrong_type_dependency_refusal() -> None:
     requirement = Requirement("synthetic.rows", str)
     with pytest.raises(DependencyUnavailable):
         Inputs((requirement,), {requirement.section: {"row": 42}}).all(requirement)
+
+
+def test_zone_face_and_assembly_user_data_pass_through_beside_ph_composer_keys() -> None:
+    payload = document()
+    payload["sections"][ZoneSection.id]["records"][0]["user_data"] = {"firm": {"room": "A"}}
+    payload["sections"][FaceSection.id]["records"][0]["user_data"] = {"firm": {"face": "north"}}
+    constructions = payload["sections"]["ph_composer.assemblies.export.constructions"]["records"]
+    constructions[0]["user_data"] = {"firm": {"wall": "W1"}}
+
+    reloaded = model(result(payload))
+
+    room = reloaded.rooms[0]
+    assert room.user_data["firm"] == {"room": "A"} and "ph_composer" in room.user_data
+    assert room.faces[0].user_data == {"firm": {"face": "north"}}
+    construction = room.faces[0].properties.energy.construction
+    assert construction.user_data["firm"] == {"wall": "W1"} and "ph_composer" in construction.user_data

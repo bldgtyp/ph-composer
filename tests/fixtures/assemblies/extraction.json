@@ -9,6 +9,9 @@
           "id": "asm_BadMixed0001",
           "name": "Mixed membrane",
           "orientation": "first_layer_outside",
+          "user_data": {
+            "firm.note": "local assembly metadata"
+          },
           "layers": [
             {
               "id": "lyr_000000000011",
@@ -56,6 +59,9 @@
           "id": "asm_Default00001",
           "name": "Default mass",
           "orientation": "first_layer_outside",
+          "user_data": {
+            "firm.note": "local assembly metadata"
+          },
           "layers": [
             {
               "id": "lyr_000000000010",
@@ -87,6 +93,9 @@
           "id": "asm_Membrane0001",
           "name": "Membrane reversed",
           "orientation": "last_layer_outside",
+          "user_data": {
+            "firm.note": "local assembly metadata"
+          },
           "layers": [
             {
               "id": "lyr_000000000006",
@@ -162,6 +171,9 @@
           "id": "asm_Mixed0000001",
           "name": "Mixed timber",
           "orientation": "first_layer_outside",
+          "user_data": {
+            "firm.note": "local assembly metadata"
+          },
           "layers": [
             {
               "id": "lyr_000000000003",
@@ -209,6 +221,9 @@
           "id": "asm_OnlyFilm0001",
           "name": "Only membrane",
           "orientation": "first_layer_outside",
+          "user_data": {
+            "firm.note": "local assembly metadata"
+          },
           "layers": [
             {
               "id": "lyr_000000000009",
@@ -240,6 +255,9 @@
           "id": "asm_Repeat000001",
           "name": "Repeated columns",
           "orientation": "first_layer_outside",
+          "user_data": {
+            "firm.note": "local assembly metadata"
+          },
           "layers": [
             {
               "id": "lyr_000000000005",
@@ -299,6 +317,9 @@
           "id": "asm_Single000001",
           "name": "Two wool thicknesses",
           "orientation": "first_layer_outside",
+          "user_data": {
+            "firm.note": "local assembly metadata"
+          },
           "layers": [
             {
               "id": "lyr_000000000001",
@@ -342,6 +363,9 @@
           "id": "asm_Steel0000001",
           "name": "Steel cavity",
           "orientation": "first_layer_outside",
+          "user_data": {
+            "firm.note": "local assembly metadata"
+          },
           "layers": [
             {
               "id": "lyr_000000000004",

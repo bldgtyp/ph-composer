@@ -55,6 +55,7 @@ module PhComposer
 
         def reader
           records = RecordReader.new(Records::Engine.new(@model, @registry.catalog), @registry.catalog,
+                                     :reserved => Collection.reserved(@registry),
                                      :claims => Collection.claims(@registry))
           snapshot = GeometrySnapshot.new(@cursor.entries, Sessions.for(@model).revision,
                                           :model_dictionaries => @cursor.model_dictionaries)
@@ -85,6 +86,11 @@ module PhComposer
         done
       end
 
+      # The user_data top-level keys exporters write themselves, which a user's own data may not take.
+      def reserved(registry)
+        Privacy.user_data_keys(registry).map { |key| key.split(".").first }.uniq
+      end
+
       # `[namespace, target_kind]` to the claiming contributor and its declared fields.
       def claims(registry)
         registry.export_contributors.values.each_with_object({}) do |contributor, claims|
@@ -103,7 +109,8 @@ module PhComposer
         catalog = registry.catalog
         session = Sessions.for(model)
         revision = session.revision
-        record_reader = RecordReader.new(Records::Engine.new(model, catalog), catalog, :claims => claims(registry))
+        record_reader = RecordReader.new(Records::Engine.new(model, catalog), catalog, :claims => claims(registry),
+                                                                                       :reserved => reserved(registry))
         reader = SnapshotReader.new(record_reader, GeometrySnapshot.capture(model, :revision => revision),
                                     :registry => registry)
         declared = registry.export_contributors.values

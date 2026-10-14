@@ -199,8 +199,10 @@ class WindowExportTest < PhComposerTestCase
     sections = extracted.document.fetch("sections")
     assert_equal 1, sections.fetch(X::CONSTRUCTIONS).fetch("records").length
     assert_equal 1, sections.fetch(X::APERTURES).fetch("records").length
-    assert_equal 2, extracted.findings.count { |row| row["code"] == "export.metadata_omitted" }
-    wire = JSON.generate(extracted.document)
+    # The Type's user_data stays local; the Unit's passes through to its Aperture.
+    assert_equal 1, extracted.findings.count { |row| row["code"] == "export.metadata_omitted" }
+    assert_equal({ "private" => "local-only" }, sections.fetch(X::APERTURES).fetch("records").first["user_data"])
+    wire = JSON.generate(sections.fetch(X::CONSTRUCTIONS))
     %w[user_data extension_data source entity_path provider private shading].each { |key| refute_includes wire, key }
     @unit.transformation *= Geom::Transformation.scaling(2, 1, 1)
     refusal = PhComposer::API.query(:context => context, :name => X::PREFLIGHT)
