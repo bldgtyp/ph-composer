@@ -27,7 +27,7 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Action additions | Side effects, confirmation policy (only `none` today), Undo name |
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
-| Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys`, `requires` (sections it reads), optional `projection` |
+| Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys`, `requires` (sections it reads), optional `projection`, `entity_projections` (claims on another feature's entity payloads) |
 | Proposal participant | Namespaced id, description, params and result schemas, examples, refusal codes, the participants it calls, handler; called only through `request.participate` by a declaration that lists it |
 | Participant edges | `participants:` on a query, action or participant names each participant its handler calls |
 | Reference retargeter | Name, target kind and handler; the owner requires the target owner or owns the target itself |
@@ -279,7 +279,7 @@ legacy mapping reads as empty without repairing the stored record.
 | Save and reopen | Preserve durable ids and path-qualified reference meaning | Retain unavailable or newer payloads without normalization |
 | Read | No repair, allocation or mutation | Report understood, invalid, outdated, unsupported or unavailable separately |
 | Migrate | Explicit version path; validate the result before writing | One atomic operation; failure keeps the original |
-| Export | Only declared supported fields and references | No arbitrary metadata; unknown correctness-relevant payload blocks |
+| Export | Only declared supported fields and references | Claimed payload fields only; `user_data` passes through only where its owner opts in; unknown correctness-relevant payload blocks |
 
 `propose_duplicate` may receive a block that transforms a detached copy of the authored values
 after identity and extension-reference remapping. The returned object replaces authored values
@@ -313,6 +313,23 @@ resolve (`reference.invalid`); the owner then validates the whole record. Every 
 before any step is built, the batch writes in one step and one Undo entry, and a batch that writes
 what is stored adds no step. The Window action runs the copied-identity repair first, as every
 Windows action does. A Face must already have a record.
+
+**Exporting a payload on another feature's entity.** The feature that owns an extension claims it on
+an entity kind in its export contributor: `entity_projections: [{"namespace", "target_kind",
+"source_section", "fields"}]`. Registration refuses a namespace the feature does not declare, a
+target kind it neither owns nor requires, a source section missing from its `requires:`, an empty
+field list, a key that is not a string, and a second claim on the same namespace and kind; export
+sections that require each other refuse as `registration.cycle`. The entity owner's reads pass the
+target kind (`entity_record(..., target_kind:)`), so a claimed envelope is validated rather than left
+out: understood, its declared fields are kept; invalid, outdated, unsupported or unavailable, it blocks
+with its code as an unclaimed envelope would. Only the claim's source section captures rows, once per
+occurrence (`entity_record(..., path:)`, or `capture_entity` where the owner's shared reads run
+elsewhere); a capture from any other section is an internal error. The claimant reads
+`reader.entity_projection(namespace, target_kind)`, `{"id", "path", "payload"}` rows, and Collection
+runs every section after the sections it requires. A claimed row the claimant has not read when
+collection ends blocks with `export.blocked`: installing an extension does not export it. Zones
+(Zone, Face) and Windows (Unit, captured in the Apertures section) are the owners today; the
+development example's `example.foundation.export.face_reviews` is the worked case.
 
 ## Model settings
 

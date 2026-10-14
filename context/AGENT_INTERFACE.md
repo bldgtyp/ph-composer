@@ -124,7 +124,10 @@ transaction open while waiting for an LLM or a person's response.
 Metadata on authored entities is written the same way: `ph_composer.zones.update_metadata`,
 `ph_composer.zones.faces.update_metadata` and `ph_composer.windows.units.update_metadata` take a
 batch of explicit occurrences with the metadata last read, and refuse every target or none
-([CONTRACTS.md](CONTRACTS.md), "Records and extension data").
+([CONTRACTS.md](CONTRACTS.md), "Records and extension data"). A script that reads the exported
+HBJSON finds a Zone's, Face's, Window Unit's or Assembly's `user_data` on its Room, Face, Apertures
+or Construction, beside PH-Composer's own `ph_composer` entry; other records' `user_data` stays in
+the Model.
 
 Provide a non-mutating proposal/preview for compound or destructive edits. It reports targets,
 changed values, affected references and validation findings. A proposal binds to its inputs and

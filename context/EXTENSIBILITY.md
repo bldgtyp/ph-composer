@@ -684,6 +684,13 @@ is left out with a finding. An export contributor whose translation writes its o
 artifact guard refuses any key no contributor declared. Do not promise lossless round trips through
 formats that cannot preserve it.
 
+A feature whose extension lives on another feature's entities (a review on Zones' Faces) exports it
+by claiming it, never by the entity owner naming it: its export contributor declares
+`entity_projections:` and reads the declared fields with `reader.entity_projection`; its Python
+section attaches to the HBJSON object (`Attachment(FACE, ...)`) and writes under the `user_data` keys
+it declares ([CONTRACTS.md](CONTRACTS.md), "Records and extension data"). The development example
+(`tools/examples/foundation/`, step 7 of its README) is the walkthrough.
+
 Maintained extensions can register structured extension data with a namespace, schema version,
 validator and migrations. Preserve payloads belonging to unavailable extensions during ordinary
 edits and save/reopen. Preserved data is not necessarily understood or validated: even at the
