@@ -347,7 +347,7 @@ references are remapped with the description's `mapping` and typed `references`.
 example: `features/windows/units/zone_copy.rb`. A test-only second child built from public contracts
 alone is in `tests/support/zone_child_fixture.rb`. The accepted pattern and why containment and
 implementation ownership stay separate are in
-[ZONE_CHILD_PATTERN.md](../planning/code-review/refactoring/ZONE_CHILD_PATTERN.md).
+[ZONE_CHILD_PATTERN.md](../planning/archive/code-review-refactoring/ZONE_CHILD_PATTERN.md).
 
 ### Library providers and kind adapters
 

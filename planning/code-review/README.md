@@ -1,7 +1,7 @@
 # Code and architecture review
 
 DATE: 2026-10-13
-STATUS: Review complete; all 17 findings mapped to detailed refactoring plans. Direction accepted; implementation not authorized.
+STATUS: Review complete; all 17 findings mapped to refactoring plans, delivered 2026-10-13 to 2026-10-14 (PRs 99 to 126) and archived at [archive/code-review-refactoring](../archive/code-review-refactoring/README.md). The geometry stages G-01, G-03 and G-04 remain, deferred to phase 3b.
 ISSUE: none (local review requested by Ed)
 BASELINE: `main` at `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 
@@ -29,8 +29,8 @@ does not need a wholesale replacement or speculative plugin loader.
 5. [Evidence](evidence/README.md): commands, baseline checks, reproducible synthetic probes and limits.
 6. [Windows boundary discussion](WINDOWS_BOUNDARY.md): why placement needs context, which native
    policies were deliberate, and how definitions can remain independent. Corrects RF-02's discovery claim.
-7. [Refactoring plans](refactoring/README.md): twelve logical packets cover all findings, with rationale,
-   dependencies, implementation stages and acceptance matrices. The [Zone-child pattern](refactoring/ZONE_CHILD_PATTERN.md)
+7. [Refactoring plans](../archive/code-review-refactoring/README.md): twelve logical packets cover all findings, with rationale,
+   dependencies, implementation stages and acceptance matrices. The [Zone-child pattern](../archive/code-review-refactoring/ZONE_CHILD_PATTERN.md)
    records Ed's accepted direction for Windows, Spaces and future entities. Planning only.
 
 The diagrams use Mermaid so their source remains reviewable and maintainable alongside code.

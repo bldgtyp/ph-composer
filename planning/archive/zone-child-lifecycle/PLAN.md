@@ -90,7 +90,7 @@ the Model. The broad next-Windows-mutation repair stays as the fallback for ever
 
 Provenance: this plan adds no new join mechanism. The follow-up joins the same transaction the Zone
 repair already joins, with the same accepted uncertainty and the same Undo notice. D-01 in
-[DECISIONS](../../code-review/refactoring/DECISIONS.md) becomes relevant only if ZC-01 shows the Units are not reliably present
+[DECISIONS](../code-review-refactoring/DECISIONS.md) becomes relevant only if ZC-01 shows the Units are not reliably present
 or re-resolvable after `make_unique` on the host.
 
 ## Stages

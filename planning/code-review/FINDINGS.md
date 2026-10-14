@@ -3,7 +3,7 @@
 DATE: 2026-10-13
 STATUS: Review complete against the recorded baseline; corrections proposed, none implemented.
 
-All 17 findings now have an owning [refactoring packet](refactoring/README.md#packets-and-readiness).
+All 17 findings now have an owning [refactoring packet](../archive/code-review-refactoring/README.md#packets-and-readiness).
 Ed accepted the initial recommended architecture direction on 2026-10-13; no finding is closed by planning.
 
 Priority here is the recommended order for refactoring design, not a production incident severity

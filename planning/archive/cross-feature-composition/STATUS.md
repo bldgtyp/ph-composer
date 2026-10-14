@@ -17,7 +17,7 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 Reviewed against source on 2026-10-13. The Zones `retire_pairs` participant, called with non-JSON
 arguments from the same feature, was missing from the first draft; C-03 converts it. The
 `ProposalScope` facade was dropped for the existing projected-engine guard; see the plan's
-"Decisions and deviations" and [DECISIONS.md](../../code-review/refactoring/DECISIONS.md). Ed accepted it on 2026-10-13.
+"Decisions and deviations" and [DECISIONS.md](../code-review-refactoring/DECISIONS.md). Ed accepted it on 2026-10-13.
 
 Decisions taken while implementing. The foundation's own participant refusals
 (`operation.proposal_required`, `operation.participant_cycle`, `proposal.foreign_write`,

@@ -26,7 +26,7 @@ The detailed [shared lifecycle plan](../../../archive/zone-child-lifecycle/PLAN.
 and [acceptance matrix](../../../archive/zone-child-lifecycle/ACCEPTANCE.md) now own
 the proposed contributor contract, logical binding inside the child step, the ZC-01 host spike and the
 Windows adopter stages.
-The accepted [Zone-child pattern](../../../code-review/refactoring/ZONE_CHILD_PATTERN.md) records why
+The accepted [Zone-child pattern](../../../archive/code-review-refactoring/ZONE_CHILD_PATTERN.md) records why
 parent containment and child implementation ownership are separate. This request remains the product
 router; it is not a second implementation queue. Spaces P3a-04 is the future real second adopter.
 
@@ -39,7 +39,7 @@ router; it is not a second implementation queue. Spaces P3a-04 is the future rea
 - The explicit Make Zone independent command takes the same contributions.
 - Ed accepted the initial refactoring policy on 2026-10-13: add this copied-parent repair route while
   retaining the broad next-Windows-mutation fallback for other copies. Narrowing that fallback is a
-  separate later product decision. See [the decision register](../../../code-review/refactoring/DECISIONS.md).
+  separate later product decision. See [the decision register](../../../archive/code-review-refactoring/DECISIONS.md).
 - Spaces' future child-copy participation (D3a-13) is the second consumer of the same hook.
 
 Acceptance: a native copy of a Zone with glued, cutting Units of two Types; distinct Unit ids at once;

@@ -132,7 +132,7 @@ this decision specifies the result, not a new shared identity framework.
 
 D3a-1 to D3a-12 remain open. No Spaces stage is authorized or implemented by this decision.
 
-On 2026-10-13 Ed accepted the shared [Zone-child ownership pattern](../../code-review/refactoring/ZONE_CHILD_PATTERN.md).
+On 2026-10-13 Ed accepted the shared [Zone-child ownership pattern](../../archive/code-review-refactoring/ZONE_CHILD_PATTERN.md).
 The [child lifecycle plan](../../archive/zone-child-lifecycle/PLAN.md) now specifies the
 proposed parent transition and Windows/synthetic adopter proof. P3a-04 must reuse that accepted public
 contract once implemented, rather than designing another copy framework. Spaces still owns its

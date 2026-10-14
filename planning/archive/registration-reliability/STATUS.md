@@ -15,7 +15,7 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 Reviewed against source on 2026-10-13. Four technical defaults from the first draft were dropped
 (reference swap with restoration, subscription tokens, frozen maps, cyclic-container diagnostics);
-the reasons are in the plan's "Decisions and deviations" and in [DECISIONS.md](../../code-review/refactoring/DECISIONS.md). Ed accepted them on 2026-10-13.
+the reasons are in the plan's "Decisions and deviations" and in [DECISIONS.md](../code-review-refactoring/DECISIONS.md). Ed accepted them on 2026-10-13.
 
 Deviation: the stage table in PLAN.md put the store check in `Validation#check_record_kinds`; it is a
 sibling `StoreValidation` class, because `Validation` would otherwise pass the class-length limit.

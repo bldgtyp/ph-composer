@@ -15,7 +15,7 @@ ISSUE: none (local planning draft)
 | Z2 | Parent containment does not make Zone the implementation owner of every child | Registered child owners supply their own steps and copy rules |
 | Z3 | Apply the pattern to Spaces and future equipment relationships | Reuse ownership and coordination, not a universal copy algorithm |
 
-See [ZONE_CHILD_PATTERN](ZONE_CHILD_PATTERN.md) and the [Windows rationale](../WINDOWS_BOUNDARY.md).
+See [ZONE_CHILD_PATTERN](ZONE_CHILD_PATTERN.md) and the [Windows rationale](../../code-review/WINDOWS_BOUNDARY.md).
 
 ## Deviations recorded 2026-10-13
 

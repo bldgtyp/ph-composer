@@ -25,9 +25,9 @@ remains for eligible duplicates the automatic path cannot settle; other cases sh
 prerequisite. D-3 bounds the first implementation to same-Model Zone Group copies without a shared
 ancestor requiring recursive isolation. Cross-Model and floor-copy automation remain deferred.
 
-This supersedes Q25 in the archived [Zones PRD](../../archive/phase-01-zones-and-adjacency/PRD.md)
+This supersedes Q25 in the archived [Zones PRD](../phase-01-zones-and-adjacency/PRD.md)
 ("A copied Zone is shared storage, and Make Unique comes first") and the matching entry in the
-[Phase 1 DECISIONS](../../archive/phase-01-faces-and-zones/DECISIONS.md), both confirmed on
+[Phase 1 DECISIONS](../phase-01-faces-and-zones/DECISIONS.md), both confirmed on
 2026-09-20. It also changes the Zones reconciliation rule in `context/CONTRACTS.md`, which says the
 deferred pass never rebinds identity, and the header of `features/zones/zone/repair.rb`. The
 mechanism itself is the established one in `context/TECH_STACK.md` ("Observers report; deferred

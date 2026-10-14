@@ -53,7 +53,7 @@ only when all three are done and its evidence file exists.
 ## Deferred foundation stages
 
 Three stages of the refactoring program's
-[geometry contribution contracts](../../code-review/refactoring/geometry-contribution-contracts/PLAN.md)
+[geometry contribution contracts](../cross-phase/geometry-contribution-contracts/PLAN.md)
 packet ([#118](https://github.com/bldgtyp/ph-composer/issues/118)) need this track as their adopter.
 They are deferred here until the P3b stage named in "Picked up by" starts. Their plan text stays in
 that packet; this ledger owns when they run.

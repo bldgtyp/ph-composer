@@ -6,7 +6,7 @@ ISSUE: none (local planning draft)
 
 ## Decision and rationale
 
-Ed accepted this direction on 2026-10-13 after the [Windows discussion](../WINDOWS_BOUNDARY.md).
+Ed accepted this direction on 2026-10-13 after the [Windows discussion](../../code-review/WINDOWS_BOUNDARY.md).
 Use the same responsibility split for Windows, Spaces and future Zone children such as mechanical
 equipment. A reusable definition validates its explicit values without a Zone. A placed occurrence
 represents a use of those values in a host. An authoring service coordinates their relationships
@@ -36,7 +36,7 @@ distinction between domain values, persistence proposals, application coordinati
 
 A feature package can span these responsibilities. Shared folders do not prove dependency direction;
 tests and explicit inputs do. Keep Windows as one package initially. A feature-local coordinator can
-call explicit collaborators directly. Cross-feature mutations use the [composition contract](../../archive/cross-feature-composition/PLAN.md).
+call explicit collaborators directly. Cross-feature mutations use the [composition contract](../cross-feature-composition/PLAN.md).
 
 ```mermaid
 flowchart TB
@@ -71,7 +71,7 @@ when they use the same transition description and child plan.
 
 ## Child-copy contract direction
 
-The [Zone-child lifecycle plan](../../archive/zone-child-lifecycle/PLAN.md) owns the concrete design. Proposed inputs
+The [Zone-child lifecycle plan](../zone-child-lifecycle/PLAN.md) owns the concrete design. Proposed inputs
 are the copied occurrence path, the old and new Zone ids, the id mapping Zones allocated, the
 revision and the execution mode (explicit or follow-up). Outputs describe owned targets, copy/reference remaps, guards,
 restorable work and affected occurrences. Contributions are synchronous and explicitly registered.
@@ -114,7 +114,7 @@ insufficient evidence that an outside child can use the same contract.
 ## Evidence and limits
 
 Windows retains the generated shared primary component, anchor preservation, atomic Type propagation
-and next-Windows-mutation repair. [Windows orchestration](../../archive/windows-orchestration/PLAN.md) moves their
+and next-Windows-mutation repair. [Windows orchestration](../windows-orchestration/PLAN.md) moves their
 coordination without changing those policies. The native child-copy plan adds copied-occurrence repair
 while retaining the broad fallback; narrowing unrelated catalog triggers remains a later decision.
 

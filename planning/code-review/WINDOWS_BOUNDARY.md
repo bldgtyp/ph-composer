@@ -219,7 +219,7 @@ Before implementation, update the accepted architecture authority to distinguish
 owner use cases and native adapters precisely, and record any changed repair policy. This discussion
 does not itself authorize source implementation.
 
-The [shared Zone-child pattern](refactoring/ZONE_CHILD_PATTERN.md) records the accepted direction for
+The [shared Zone-child pattern](../archive/code-review-refactoring/ZONE_CHILD_PATTERN.md) records the accepted direction for
 Windows, Spaces and future entities. The [Windows plan](../archive/windows-orchestration/PLAN.md)
 and [child-lifecycle plan](../archive/zone-child-lifecycle/PLAN.md) separate ordinary authoring from
 native-copy restoration and give their own acceptance gates.

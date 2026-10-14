@@ -200,7 +200,7 @@ Exit: both `make ci` runs pass; review has no open blocker; native receipt filed
 The coding agent decides the module name (`Authoring` is the default), whether `InstallSave` moves
 under it or stays beside it, and test names.
 
-Escalate to Ed only for a change to repair timing or trigger (D-02 in [DECISIONS](../../code-review/refactoring/DECISIONS.md)),
+Escalate to Ed only for a change to repair timing or trigger (D-02 in [DECISIONS](../code-review-refactoring/DECISIONS.md)),
 which this packet does not make.
 
 No deviation from the accepted direction. The first draft's W-01 (an inventory stage) is done in this
