@@ -64,7 +64,7 @@ do not equate an unverified rollback with effect:none.
 | EC-A22 | Metadata update Undo/Redo, then unrelated edit, then Undo/Redo | One correct native boundary restores complete record and presence; later transaction not joined accidentally; geometry/host/assignment stays correct |
 | EC-A23 | Save, close, fresh process/reopen with namespace installed, then absent | Identity and path-qualified refs remain meaningful; payload values/version/relevance/references exact; status becomes unavailable only when declaration absent; ordinary edit still preserves |
 
-EC-A18 through EC-A23 reuse the [child lifecycle](../../code-review/refactoring/zone-child-lifecycle/ACCEPTANCE.md) transition,
+EC-A18 through EC-A23 reuse the [child lifecycle](../zone-child-lifecycle/ACCEPTANCE.md) transition,
 restorable child steps and owner-copy evidence where the recorded source/build/fixture is identical.
 They must not invent a second child dispatch or treat parent Make Unique as proof that nested child
 storage is independent. Native follow-up failure restores owned writes without aborting the user's
