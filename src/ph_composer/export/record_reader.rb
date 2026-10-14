@@ -70,6 +70,20 @@ module PhComposer
         { "id" => id }.merge(DeepCopy.call(stored.slice(*fields)))
       end
 
+      # Captures the claimed envelopes of one entity occurrence for their claimants, without the
+      # metadata findings `entity_record` already gave: for an owner whose section contract is not where
+      # its shared reads ran. Call it only from that owner's section contract, once per occurrence.
+      def capture_entity(stored, target_kind:, path:)
+        stored.fetch("extension_data", {}).each do |namespace, envelope|
+          claimed = @claims[[namespace, target_kind]]
+          next unless claimed
+
+          payload = declared_payload(stored.fetch("id"), namespace, envelope, claimed.fetch("fields"))
+          capture(namespace, target_kind, claimed, "id" => stored.fetch("id"), "path" => DeepCopy.call(path),
+                                                   "payload" => payload)
+        end
+      end
+
       # The claimed rows for `namespace` on `target_kind`, in the order the owner's section read them.
       # Only the claimant reads them, after the owner's section ran (Collection orders by `requires:`).
       def entity_projection(namespace, target_kind, reader:)

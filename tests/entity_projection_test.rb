@@ -109,7 +109,7 @@ class EntityProjectionTest < PhComposerTestCase
     assert_equal "extension.unavailable", assert_raises(Export::Blocked) { collect }.code
   end
 
-  def test_an_invalid_or_outdated_claimed_payload_still_blocks_with_its_code
+  def test_an_invalid_or_unsupported_claimed_payload_still_blocks_with_its_code
     PhComposer::Registry.install([review_feature])
     seed(payload("review_status" => "maybe"))
     assert_equal "extension.invalid", assert_raises(Export::Blocked) { collect }.code
@@ -196,5 +196,22 @@ class EntityProjectionTest < PhComposerTestCase
     malformed = CLAIM.reject { |key, _value| key == "fields" }.merge(:fields => ["review_status"])
 
     assert_match(/entity_projections must be a list of claims/, refused(review_feature(:claims => [malformed])))
+  end
+
+  def test_section_cycle_validation_stays_linear_on_a_dense_acyclic_graph
+    names = 24.times.map { |index| format("test.review.s%02d", index) }
+    dense = Module.new do
+      define_singleton_method(:install) do |registry|
+        scope = registry.feature("test.review", :contract_version => 1)
+        names.each_with_index do |name, index|
+          scope.export_contributor(name, :section_version => 1, :requires => names.first(index)) { |_reader| [] }
+        end
+      end
+    end
+    started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+    PhComposer::Registry.install([dense])
+
+    assert_operator Process.clock_gettime(Process::CLOCK_MONOTONIC) - started, :<, 2.0
   end
 end

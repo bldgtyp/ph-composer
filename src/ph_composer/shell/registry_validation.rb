@@ -386,8 +386,9 @@ module PhComposer
       # or themselves, can never run.
       def check_section_cycles
         graph = @live.export_contributors.merge(@staging.declared_export_contributors.to_h { |item| [item.name, item] })
+        done = {}
         @staging.declared_export_contributors.each do |start|
-          path = section_cycle(graph, start.name, [start.name])
+          path = section_cycle(graph, start.name, [], done)
           next unless path
 
           add("registration.cycle", start.owner, start.name,
@@ -395,14 +396,16 @@ module PhComposer
         end
       end
 
-      def section_cycle(graph, name, path)
-        Array(graph[name]&.requires).each do |next_name|
-          return path + [next_name] if next_name == path.first
-          next if path.include?(next_name)
+      # Depth-first with a completed set, so each section is explored once however many paths reach it.
+      def section_cycle(graph, name, path, done)
+        return path[path.index(name)..] + [name] if path.include?(name)
+        return nil if done[name]
 
-          found = section_cycle(graph, next_name, path + [next_name])
+        Array(graph[name]&.requires).each do |next_name|
+          found = section_cycle(graph, next_name, path + [name], done)
           return found if found
         end
+        done[name] = true
         nil
       end
 

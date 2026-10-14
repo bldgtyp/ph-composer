@@ -36,7 +36,7 @@ module PhComposer
                                      "window_face_areas" => [Export::Privacy.fields(%w[face_id zone_id gross_area_m2
                                                                                        glazed_area_m2
                                                                                        net_area_m2])]
-                                   }, :report => method(:report)) { |reader| ready(reader).apertures }
+                                   }, :report => method(:report)) { |reader| apertures(reader) }
       end
 
       def assess(**values)
@@ -54,12 +54,21 @@ module PhComposer
           Settings::SERVICE.validate!(settings)
           reader.snapshot.records(Units::STORE.dictionary).each do |entry, record|
             Units.validate!(record)
-            reader.entity_record(record, :fields => %w[window_type_id anchor], :target_kind => Units::REFERENCE_KIND,
-                                         :path => entry.path)
+            reader.entity_record(record, :fields => %w[window_type_id anchor], :target_kind => Units::REFERENCE_KIND)
           end
           assess(:snapshot => reader.snapshot, :types => types, :products => products, :settings => settings,
                  :faces => reader.section(FACES))
         end
+      end
+
+      # The Apertures contract is the Units' owning section, so claimed Unit data is captured here, once,
+      # and never by the assessment both sections share.
+      def apertures(reader)
+        result = ready(reader).apertures
+        reader.snapshot.records(Units::STORE.dictionary).each do |entry, record|
+          reader.capture_entity(record, :target_kind => Units::REFERENCE_KIND, :path => entry.path)
+        end
+        result
       end
 
       def ready(reader)
