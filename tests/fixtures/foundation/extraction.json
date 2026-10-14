@@ -8,6 +8,10 @@
       ],
       "version": 1
     },
+    "example.foundation.export.face_reviews": {
+      "records": [],
+      "version": 1
+    },
     "example.foundation.export.parts": {
       "records": [
         {"definition_id": "exd_000000000001", "extensions": {"example.foundation.review": {"review_status": "checked"}}, "id": "exp_000000000002", "label": "Sill", "length_mm": 1200},

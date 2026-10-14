@@ -18,6 +18,11 @@
       "unavailable": []
     },
     {
+      "id": "example.foundation.export.face_reviews",
+      "objects": [],
+      "unavailable": []
+    },
+    {
       "id": "example.foundation.export.parts",
       "objects": [
         "exp_000000000002",

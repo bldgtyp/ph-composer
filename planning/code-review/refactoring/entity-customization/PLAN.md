@@ -211,7 +211,7 @@ Exit: RF-01 closed offline; `docs/API_REFERENCE.md` regenerated.
 
 ### EC-03: entity projection claims (contract stage)
 
-State: Implemented on branch. Ed confirmed the shape as drafted on 2026-10-13. As built: a projected
+State: Merged to main in PR 122. Ed confirmed the shape as drafted on 2026-10-13. As built: a projected
 row is `{"id", "path", "payload"}`, the occurrence being the entity's snapshot path; the entity owner
 passes `target_kind:` and `path:` to `entity_record` only from its section contract, so a shared
 projection read never projects twice; collection runs each contributor after the sections it
@@ -238,7 +238,9 @@ Exit: offline tests pass; Ed confirms or amends the shape.
 
 ### EC-04: translation fixture and canonical reload
 
-State: Scoped; EC-03 confirmed by Ed 2026-10-13.
+State: Implemented on branch. The example's claim is on Faces, as planned; the shared example
+fixtures (`tests/fixtures/foundation/{extraction,result}.json`) gain the empty face-reviews section.
+Cancellation and Model-change policy are unchanged and keep their existing tests.
 
 Files: `tools/examples/foundation/example_foundation.rb` (an entity extension on Faces with a claim),
 `example_translation.py`, `tests/python/` fixtures; `make runtime-manifest` if shipped Python changes.
