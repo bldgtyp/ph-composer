@@ -47,8 +47,8 @@ is one extraction the export contributors produce and the result the sections tr
 6. **Export.** `feature.export_contributor(name, section_version:, result:, report:) { |reader|
    records }` adds a section to the export extraction. The block reads through `reader.records(kind,
    extensions: { namespace => fields })`, which exports declared values and the named extension
-   fields only, leaves `user_data` out with a finding, and blocks on data it cannot safely leave
-   out. `result` declares the result fields the translation adds, which the privacy check then
+   fields only, leaves `user_data` out with a finding unless the call passes `user_data: true`, and
+   blocks on data it cannot safely leave out. `result` declares the result fields the translation adds, which the privacy check then
    admits; `report` renders them. The matching Python `Section` (`example_translation.py`) reads
    the section one record at a time and declares the other sections it requires with a typed
    `Requirement`; a build lists it in `python/ph_composer_translation/composition.py`.

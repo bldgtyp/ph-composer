@@ -2,8 +2,9 @@
 
 module PhComposer
   module Export
-    # What never leaves the Model in an artifact, whatever a contributor declares: local-only metadata,
-    # extension envelopes, and local file paths.
+    # What never appears in the export result document, whatever a contributor declares: metadata,
+    # extension envelopes, and local file paths. The canonical HBJSON inside it is HbjsonMetadata's,
+    # where passed-through user_data is allowed.
     module ArtifactHygiene
       PROHIBITED_KEYS = %w[user_data extension_data path source_path file_path model_path username].freeze
 

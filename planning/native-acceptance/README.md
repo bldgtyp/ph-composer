@@ -25,7 +25,7 @@ bounded tooling/documentation review passed. Every `make ci` target passed, with
 and packaging resumed after correcting a test type annotation. No shipping behavior changed.
 
 The Phase 1 packet is archived and stays unchanged. Later reruns record synthetic summaries under
-[`evidence/`](evidence/). Completed run handoffs are disposable instructions; their outcomes and
+[`evidence/`](evidence). Completed run handoffs are disposable instructions; their outcomes and
 limitations belong in the evidence summary and result index. The three completed 2026-09-30
 handoffs have been deleted. Keep future temporary handoffs under gitignored `_private/host/`;
 keep reusable procedures in the owning packet, hostkit tooling and native acceptance skill.

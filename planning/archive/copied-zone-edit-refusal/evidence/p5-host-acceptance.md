@@ -56,7 +56,7 @@ unrelated to copying. The host references above are what export places apertures
 share their identities and block export until a Windows action or Repair Copied Windows runs. The Windows
 feature reports it (findings, export preflight with Locate), but the copy's notice does not mention it.
 Ed kept D-6's timing for this packet; repairing them in the same gesture is the follow-up packet
-[copied-zone-windows](../../../features/unscheduled/copied-zone-windows/README.md).
+[copied-zone-windows](../../copied-zone-windows/README.md).
 
 ## Not covered here
 

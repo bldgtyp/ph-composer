@@ -17,7 +17,7 @@ one commit per completed unit. P0-A checked the handoff against the frozen sourc
 2. [PLAN.md](PLAN.md): dependencies, execution rules and copyable handoff instruction.
 3. [CONTRACTS.md](CONTRACTS.md): concrete interface and lifecycle design.
 4. [SOURCE_INVENTORY.md](SOURCE_INVENTORY.md): frozen predecessor disposition and tooling evidence.
-5. The applicable file under [phases/](phases/) and [ACCEPTANCE.md](ACCEPTANCE.md).
+5. The applicable file under [phases/](phases) and [ACCEPTANCE.md](ACCEPTANCE.md).
 6. [READINESS.md](READINESS.md): accepted decisions and technical gates still to run.
 
 [PHASES.md](PHASES.md) is a short stage index. The

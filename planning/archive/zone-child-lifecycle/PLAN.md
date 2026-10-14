@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Complete; merged to main and archived. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#113](https://github.com/bldgtyp/ph-composer/issues/113)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-PRODUCT REQUEST: [copied-Zone Windows](../../features/unscheduled/copied-zone-windows/README.md)
+PRODUCT REQUEST: [copied-Zone Windows](../copied-zone-windows/README.md)
 DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) RR-02 for the new
 declaration; [Windows orchestration](../windows-orchestration/PLAN.md) for `units/identity_step.rb`
 ownership; [Cross-feature composition](../cross-feature-composition/PLAN.md) C-02 for the owner-derived

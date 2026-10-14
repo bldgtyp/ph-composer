@@ -84,7 +84,7 @@ otherwise unrelated definition edit. This is a chosen trigger, not a native requ
 definition creation must depend on placement geometry.
 
 A named Repair copied identities action also exists. The separate
-[copied-Zone Windows packet](../features/unscheduled/copied-zone-windows/README.md) proposes
+[copied-Zone Windows packet](../archive/copied-zone-windows/README.md) proposes
 repairing copied children in the Zone-copy follow-up, without Zone code naming Windows. It remains
 scoped by the [child lifecycle plan](../archive/zone-child-lifecycle/PLAN.md), with implementation
 unauthorized. It adds copied-parent repair while retaining the broad Windows fallback.

@@ -34,7 +34,8 @@ bridge remains separate from the proposed shipped agent interface.
 
 The product direction is in [`../docs/PRD.md`](../docs/PRD.md). Three technical decisions are
 settled from the predecessor and carry over: SKP-owned definition records exist and their
-attribute-dictionary layout is the `RecordSchema` pattern below; the local calculation path is a
+attribute-dictionary layout is the record-kind pattern (`Records::RecordKind`, CONTRACTS.md,
+"Records and extension data"); the local calculation path is a
 Ruby thermal module for the panel with a Python recomputation at export; the panel is plain
 JavaScript and SVG on a shipped `workspace` toolkit, not React, with no local database. Optional
 external evidence is reserved in the records and hidden until its own feature. HBJSON and report

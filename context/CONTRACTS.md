@@ -24,13 +24,14 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Feature | Stable namespaced id, contract version, declared feature dependencies, install entrypoint |
 | Record kind | Kind id, schema version, validator, SI field descriptors, declared references, persistence adapter |
 | Query, action, view command, setup command, FileExport | Namespaced id, description, input and result schemas, examples, refusal codes (`refuses`), handler |
-| Action additions | Side effects, confirmation policy (only `none` today), Undo name |
+| Action additions | Side effects, confirmation policy (only `none` today), Undo name, `transitions:` (the transitions of its own feature it emits through `request.contribute_transition`) |
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
 | Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys`, `requires` (sections it reads), optional `projection`, `entity_projections` (claims on another feature's entity payloads) |
 | Proposal participant | Namespaced id, description, params and result schemas, examples, refusal codes, the participants it calls, handler; called only through `request.participate` by a declaration that lists it |
 | Participant edges | `participants:` on a query, action or participant names each participant its handler calls |
 | Reference retargeter | Name, target kind and handler; the owner requires the target owner or owns the target itself |
+| Transition contributor | Name, transition, refusal codes and handler; the owner requires the feature that emits the transition, and every step it adds answers `restore` |
 | Structured extension | Namespace and version, payload validator, reference and copy declarations, migrations, export relevance |
 | Code | A `noun.condition` code under a noun the feature owns, and its description (see "Outcomes and codes") |
 
@@ -828,7 +829,9 @@ section with none has no key. After the export reloads the canonical HBJSON, eac
 `conformance(model, fields)` checks it against that section's own fields.
 
 Export reads one revision-bound `GeometrySnapshot`: one traversal recording each occurrence path
-and accumulated transform, with no live SketchUp objects. Contributors project from it and never
+and accumulated transform, with no live SketchUp objects. Its entries are Faces, Edges (world SI
+endpoints, vertex and Face ids within their container), Groups and ComponentInstances; Faces and
+Edges inside a cutting component are left out. Contributors project from it and never
 rescan the Model. A changed export-relevant revision discards the snapshot; selection and camera
 neither enter it nor invalidate it. A contributor that reads another contributor's section names it
 in `requires:`; registration refuses a section that is not registered, or whose owner is neither

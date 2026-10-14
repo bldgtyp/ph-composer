@@ -54,7 +54,7 @@ Four layers, one dependency direction. The founding brief names them; this is wh
 - **A refusal that wrote nothing says so**, with the sentence ending `Nothing was written.` The
   user's next question is always whether the Model changed.
 - **Value objects at module boundaries.** A module that hands another module a bare Hash hands it
-  a shape nothing declares. `core/records/schema.rb`'s `RecordSchema` is the pattern.
+  a shape nothing declares. `Records::RecordKind` and its `Records::Descriptor` are the pattern.
 
 ## JavaScript
 

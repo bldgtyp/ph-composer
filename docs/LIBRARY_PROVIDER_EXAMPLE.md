@@ -1,7 +1,7 @@
 # A separate library provider extension
 
 The development example at `tools/examples/library_provider/` registers two synthetic Materials
-from a separate SketchUp extension. It changes no PH-Composer source file. The values illustrate
+and two synthetic tags from a separate SketchUp extension. It changes no PH-Composer source file. The values illustrate
 the contract and are not product specifications.
 
 Copy `bldgtyp_example_library.rb` and the sibling `bldgtyp_example_library/` directory into the
@@ -36,6 +36,14 @@ provider, previews a copy, applies that proposal with its revision and digest, t
 local Material through the public API. It reuses an unchanged prior copy. A conflicting local
 record requires review before the script proceeds. No file path is part of the provider's
 identity or the returned proof.
+
+The tags show a library kind whose records have no `name`. The example declares its own tag record
+kind, a designation and a height, and a tag holder that names one tag by typed reference. Its kind
+adapter declares `display_label`, the designation, which the library lists, sorts and resolves by.
+Run `BldgtypExampleLibraryWalkthrough.tags` on a fresh synthetic Model: it lists the tags, copies
+one while assigning it to a new holder, then replaces it from a changed provider edition after
+review. The example's tests also export the tag to a library file and copy it into a fresh Model
+with its holder reference.
 
 Native installation and copying are separate acceptance checks. The example is currently kept
 under development tools; its standalone repository and publication are pending.

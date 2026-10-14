@@ -3,7 +3,7 @@
 DATE: 2026-10-12
 STATUS: Complete 2026-10-12 on `fix/copied-zone-edit-refusal`, PR bldgtyp/ph-composer#97 (merges after review
 and CI). P1 to P5 implemented and host-accepted; decisions D-1 to D-8 recorded. Phases in
-[PLAN.md](PLAN.md); follow-up [copied-zone-windows](../../features/unscheduled/copied-zone-windows/README.md).
+[PLAN.md](PLAN.md); follow-up [copied-zone-windows](../copied-zone-windows/README.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
