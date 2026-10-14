@@ -1,12 +1,12 @@
 # Entity customization plan
 
 DATE: 2026-10-13
-STATUS: Scoped; EC-01 and EC-02 implementation ready, EC-03 is a contract stage that needs Ed's confirmation before EC-04. Not authorized. Stage ledger in [STATUS.md](STATUS.md).
+STATUS: Complete. EC-01 to EC-05 merged to main (PRs 110, 122, 123, 126); native receipts passed; archived.
 ISSUE: [#109](https://github.com/bldgtyp/ph-composer/issues/109)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDINGS: [RF-01](../../sections/04-ruby-features.md#rf-01-entity-owned-metadata-cannot-be-maintained-through-the-supported-operations), [RF-03](../../sections/04-ruby-features.md#rf-03-entity-reads-preserve-envelopes-but-omit-their-understoodunavailable-status), [F07](../../sections/06-export.md#f07-entity-extension-payloads-have-no-supported-allowlisted-export-projection)
-DEPENDS ON: [Registration reliability](../../../archive/registration-reliability/PLAN.md) for the new export
-declaration values (EC-03 only); [Windows orchestration](../../../archive/windows-orchestration/PLAN.md) W-01 so the
+FINDINGS: [RF-01](../../code-review/sections/04-ruby-features.md#rf-01-entity-owned-metadata-cannot-be-maintained-through-the-supported-operations), [RF-03](../../code-review/sections/04-ruby-features.md#rf-03-entity-reads-preserve-envelopes-but-omit-their-understoodunavailable-status), [F07](../../code-review/sections/06-export.md#f07-entity-extension-payloads-have-no-supported-allowlisted-export-projection)
+DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) for the new export
+declaration values (EC-03 only); [Windows orchestration](../windows-orchestration/PLAN.md) W-01 so the
 Unit action routes through the coordinator (EC-02 can land before it by calling `Units::Mutation.prepare`
 directly, then migrate).
 
@@ -211,7 +211,7 @@ Exit: RF-01 closed offline; `docs/API_REFERENCE.md` regenerated.
 
 ### EC-03: entity projection claims (contract stage)
 
-State: Merged to main in PR 122. Ed confirmed the shape as drafted on 2026-10-13. As built: a projected
+State: Complete; merged in PR 122. Ed confirmed the shape as drafted on 2026-10-13. As built: a projected
 row is `{"id", "path", "payload"}`, the occurrence being the entity's snapshot path; the entity owner
 passes `target_kind:` and `path:` to `entity_record` only from its section contract, so a shared
 projection read never projects twice; collection runs each contributor after the sections it
@@ -238,7 +238,7 @@ Exit: offline tests pass; Ed confirms or amends the shape.
 
 ### EC-04: translation fixture and canonical reload
 
-State: Merged to main in PR 123. The example's claim is on Faces, as planned; the shared example
+State: Complete; merged in PR 123. The example's claim is on Faces, as planned; the shared example
 fixtures (`tests/fixtures/foundation/{extraction,result}.json`) gain the empty face-reviews section.
 Cancellation and Model-change policy are unchanged and keep their existing tests.
 
@@ -255,7 +255,7 @@ Exit: F07 closed offline.
 
 ### EC-05: canon, review, native
 
-State: Implemented on branch. Canon written; the stronger reviews ran per PR (gpt-6-astra on PRs
+State: Complete; merged in PR 126. Canon written; the stronger reviews ran per PR (gpt-6-astra on PRs
 110, 122, 123 and 125); the native write, copy, reopen and Undo/Redo receipts are in STATUS.
 
 1. `context/CONTRACTS.md` "Records and extension data": the three actions, the pre-image, the status

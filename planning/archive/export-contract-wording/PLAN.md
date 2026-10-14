@@ -79,7 +79,7 @@ The coding agent decides the exact line wrapping. Nothing here needs Ed.
 Not in scope: exporting `user_data`, any reader or serializer change, any quickstart edit (none
 contradicts the policy), and any `context/` edit. If an implementation finds it must change
 behaviour to make the wording true, stop: that belongs to
-[entity customization](../../code-review/refactoring/entity-customization/PLAN.md).
+[entity customization](../entity-customization/PLAN.md).
 
 ## Verification profile
 

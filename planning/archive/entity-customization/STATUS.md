@@ -1,7 +1,7 @@
 # Entity customization status
 
 DATE: 2026-10-13
-STATUS: EC-01 to EC-04 merged to main (PRs 110, 122, 123); EC-05 (canon, review, native) next. `user_data` pass-through decided and merged separately (PR 125, #124).
+STATUS: Complete. EC-01 to EC-05 merged to main (PRs 110, 122, 123, 126); native receipts passed; archived.
 ISSUE: [#109](https://github.com/bldgtyp/ph-composer/issues/109)
 
 The phased plan is the `## Stages` section of [PLAN.md](PLAN.md); there is no `phases/` folder.
@@ -13,7 +13,7 @@ Acceptance rows are in [ACCEPTANCE.md](ACCEPTANCE.md).
 | EC-02 | `update_metadata` action per owner reusing `UpdateZoneStep`, `ClassifyStep` and a new `UpdateUnitStep`; Unit route through the Windows coordinator | Merged to main | Three `update_metadata` actions (`Records::Metadata.distinct_updates` and `.planned` shared, `SchemaShapes.metadata_updates` and `.metadata_result`); `UpdateUnitStep`; Window route through `Authoring.update_unit_metadata`; eight cases in `tests/entity_metadata_test.rb`; `docs/API_REFERENCE.md` regenerated |
 | EC-03 | `entity_projections:` claims on export contributors; reader projection store; reconciliation | Merged to main (PR 122) | `tests/entity_projection_test.rb` (8): valid claim registers without running its contract; foreign namespace, unrequired target, missing source, overlap and empty fields refuse; claimed understood payload projects only declared fields; unclaimed still blocks; invalid and outdated still block; local-only omits with a finding; unread claim blocks; `user_data` still omits. Ed confirmed the shape 2026-10-13 |
 | EC-04 | Example entity extension with a claim; Python section; canonical reload | Merged to main (PR 123) | `tests/python/test_example_translation.py`: claimed Face review reaches its Face in the canonical HBJSON and survives Honeybee reload; missing required field refuses. `tests/export_test.rb`: the example claim exports only `review_status`; an unclaimed local-only note is left out with a finding and is byte-identical on the Face after save and reopen |
-| EC-05 | CONTRACTS, EXTENSIBILITY, AGENT_INTERFACE; stronger review; dual-Ruby `make ci`; native write, copy, reopen | Implemented on branch | CONTRACTS "Records and extension data" (projection claims, Export row), the contributor table; EXTENSIBILITY "Metadata" claim paragraph; AGENT_INTERFACE HBJSON `user_data` note. Reviews: gpt-6-astra on PRs 110, 122, 123, 125. Native receipts below. Gate below |
+| EC-05 | CONTRACTS, EXTENSIBILITY, AGENT_INTERFACE; stronger review; dual-Ruby `make ci`; native write, copy, reopen | Complete (PR 126) | CONTRACTS "Records and extension data" (projection claims, Export row), the contributor table; EXTENSIBILITY "Metadata" claim paragraph; AGENT_INTERFACE HBJSON `user_data` note. Reviews: gpt-6-astra on PRs 110, 122, 123, 125. Native receipts below. Gate below |
 
 Reviewed against source on 2026-10-13: the existing Zone and Face write steps already carry full
 before and after records, so metadata writes reuse them; the presence-bit pre-image was dropped.

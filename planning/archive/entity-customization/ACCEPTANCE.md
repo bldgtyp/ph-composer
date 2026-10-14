@@ -1,7 +1,7 @@
 # Entity customization acceptance
 
 DATE: 2026-10-13
-STATUS: EC-A01 to EC-A23 for EC-01 and EC-02 pass offline (PR 110) and native Undo and Redo pass. EC-A24 to EC-A36 wait for Ed to confirm the EC-03 declaration before EC-04.
+STATUS: Complete. EC-01 to EC-05 merged to main (PRs 110, 122, 123, 126); native receipts passed; archived.
 ISSUE: none (local planning draft)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 
@@ -64,7 +64,7 @@ do not equate an unverified rollback with effect:none.
 | EC-A22 | Metadata update Undo/Redo, then unrelated edit, then Undo/Redo | One correct native boundary restores complete record and presence; later transaction not joined accidentally; geometry/host/assignment stays correct |
 | EC-A23 | Save, close, fresh process/reopen with namespace installed, then absent | Identity and path-qualified refs remain meaningful; payload values/version/relevance/references exact; status becomes unavailable only when declaration absent; ordinary edit still preserves |
 
-EC-A18 through EC-A23 reuse the [child lifecycle](../zone-child-lifecycle/ACCEPTANCE.md) transition,
+EC-A18 through EC-A23 reuse the [child lifecycle](../../code-review/refactoring/zone-child-lifecycle/ACCEPTANCE.md) transition,
 restorable child steps and owner-copy evidence where the recorded source/build/fixture is identical.
 They must not invent a second child dispatch or treat parent Make Unique as proof that nested child
 storage is independent. Native follow-up failure restores owned writes without aborting the user's

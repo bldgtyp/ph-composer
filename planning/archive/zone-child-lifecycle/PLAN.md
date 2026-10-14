@@ -8,7 +8,7 @@ PRODUCT REQUEST: [copied-Zone Windows](../../features/unscheduled/copied-zone-wi
 DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) RR-02 for the new
 declaration; [Windows orchestration](../windows-orchestration/PLAN.md) for `units/identity_step.rb`
 ownership; [Cross-feature composition](../cross-feature-composition/PLAN.md) C-02 for the owner-derived
-request pattern. [Entity customization](../../code-review/refactoring/entity-customization/PLAN.md) shares `Extension.copy_data`.
+request pattern. [Entity customization](../entity-customization/PLAN.md) shares `Extension.copy_data`.
 
 ## Goal
 
