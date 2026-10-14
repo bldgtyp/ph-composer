@@ -69,6 +69,14 @@ class HbjsonMetadataTest < PhComposerTestCase
     assert_equal({ "Face" => 1, "Room" => 1 }, counts)
   end
 
+  def test_a_literal_dotted_key_is_a_users_own_and_objects_inside_user_data_are_not_counted
+    hbjson = model("type" => "Room", "user_data" => { "ph_composer.note" => "keep",
+                                                      "firm" => { "type" => "Room", "user_data" => { "t" => 1 } } })
+
+    assert Privacy.validate!(result(hbjson))
+    assert_equal({ "Room" => 1 }, PhComposer::Export::HbjsonMetadata.passed(hbjson, ["ph_composer.level"]))
+  end
+
   def test_a_contributor_that_declares_its_keys_needs_no_guard_change
     feature = Module.new do
       define_singleton_method(:install) do |registry|

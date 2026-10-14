@@ -31,10 +31,13 @@ module PhComposer
       attr_reader :findings
 
       # `claims` maps `[namespace, target_kind]` to the claiming contributor's name.
-      def initialize(engine, catalog, claims: {})
+      # `reserved` lists the user_data top-level keys a user may not take: PH-Composer's own and every
+      # namespace an export contributor declares it writes (Privacy.user_data_keys).
+      def initialize(engine, catalog, claims: {}, reserved: [RESERVED_USER_DATA_KEY])
         @engine = engine
         @catalog = catalog
         @claims = claims
+        @reserved = (reserved + [RESERVED_USER_DATA_KEY]).uniq
         @projected = Hash.new { |hash, key| hash[key] = [] }
         @read = {}
         @findings = []
@@ -180,9 +183,10 @@ module PhComposer
           return {}
         end
 
-        if value.key?(RESERVED_USER_DATA_KEY)
-          block("export.blocked", "#{id} has user_data under the reserved key #{RESERVED_USER_DATA_KEY}, which " \
-                                  "PH-Composer writes itself. Rename that key. Nothing was written.")
+        taken = (value.keys & @reserved).first
+        if taken
+          block("export.blocked", "#{id} has user_data under the reserved key #{taken}, which an exporter writes " \
+                                  "itself. Rename that key. Nothing was written.")
         end
         { "user_data" => DeepCopy.call(value) }
       end

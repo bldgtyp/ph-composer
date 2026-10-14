@@ -27,7 +27,9 @@ module PhComposer
       end
 
       # How many objects of each Honeybee type carry a user's own user_data (any top-level key outside
-      # the declared namespaces), as `{"Room" => 2, "Face" => 12}`: what the report says passed through.
+      # the declared namespaces, which a user may not take: RecordReader refuses them), as
+      # `{"Room" => 2, "Face" => 12}`: what the report says passed through. A user's own data is not
+      # searched for objects.
       def passed(hbjson, declared_keys)
         namespaces = declared_keys.map { |key| key.split(".").first }
         counts = Hash.new(0)
@@ -37,7 +39,7 @@ module PhComposer
           if node.is_a?(Hash)
             data = node["user_data"]
             counts[node.fetch("type", "object").to_s] += 1 if data.is_a?(Hash) && (data.keys - namespaces).any?
-            pending.concat(node.values)
+            pending.concat(node.reject { |key, _item| key == "user_data" }.values)
           elsif node.is_a?(Array)
             pending.concat(node)
           end
@@ -88,7 +90,8 @@ module PhComposer
         end
 
         namespaces = declared_keys.map { |key| key.split(".").first }
-        undeclared = leaf_keys(value).select { |key| namespaces.include?(key.split(".").first) } - declared_keys
+        owned = value.select { |key, _item| namespaces.include?(key.to_s) }
+        undeclared = leaf_keys(owned) - declared_keys
         return if undeclared.empty?
 
         refuse("The canonical HBJSON carries undeclared user_data #{undeclared.first} at #{path(trail)}.")

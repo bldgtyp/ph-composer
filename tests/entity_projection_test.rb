@@ -149,6 +149,21 @@ class EntityProjectionTest < PhComposerTestCase
     assert(extraction.findings.none? { |row| row["code"] == "export.metadata_omitted" })
   end
 
+  def test_user_data_under_a_contributors_declared_namespace_blocks_the_export
+    PhComposer::Registry.install([review_feature, Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("outside.tags", :contract_version => 1)
+                .export_contributor("outside.tags.export", :section_version => 1,
+                                                           :user_data_keys => ["outside.tag"]) { |_reader| [] }
+      end
+    end])
+    seed(payload, :user_data => { "outside" => { "tag" => "mine" } })
+
+    error = assert_raises(Export::Blocked) { collect }
+
+    assert_includes error.message, "reserved key outside"
+  end
+
   def test_user_data_under_the_reserved_key_blocks_the_export
     PhComposer::Registry.install([review_feature])
     seed(payload, :user_data => { "ph_composer" => { "level" => "mine" } })
