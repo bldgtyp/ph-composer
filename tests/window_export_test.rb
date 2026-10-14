@@ -242,6 +242,36 @@ class WindowExportTest < PhComposerTestCase
     assert_includes codes, "record.unreadable"
   end
 
+  def test_public_preflight_accepts_a_required_unit_envelope_an_installed_claim_exports
+    extension = PhComposer::Records::Extension.new(:namespace => "test.unit_tag.data", :schema_version => 1,
+                                                   :export_relevance => "required")
+    PhComposer::Registry.install([Module.new do
+      define_singleton_method(:install) do |registry|
+        scope = registry.feature("test.unit_tag", :contract_version => 1, :requires => ["ph_composer.windows"])
+        scope.extension(extension)
+        scope.export_contributor("test.unit_tag.export", :section_version => 1, :requires => [X::APERTURES],
+                                                         :entity_projections => [{
+                                                           "namespace" => extension.namespace,
+                                                           "target_kind" => U::REFERENCE_KIND,
+                                                           "source_section" => X::APERTURES, "fields" => ["tag"]
+                                                         }]) do |reader|
+          reader.entity_projection(extension.namespace, U::REFERENCE_KIND)
+        end
+      end
+    end])
+    seed_export_records
+    U.write(@unit,
+            U.read(@unit).merge("extension_data" => { extension.namespace => extension.envelope("tag" => "N1") }))
+    session = PhComposer::Sessions.for(@model)
+    request = PhComposer::HandlerRequest.new(:model => @model, :session => session,
+                                             :registry => PhComposer::Registry.current,
+                                             :engine => PhComposer::Records::Engine.new(
+                                               @model, PhComposer::Registry.current.catalog
+                                             ))
+
+    assert_empty X.preflight(request).fetch("findings")
+  end
+
   def test_non_json_native_attributes_and_missing_unit_fields_return_completed_blocking_preflight
     seed_export_records
     context = PhComposer::API.connect(:session_id => PhComposer::Sessions.for(@model).id)

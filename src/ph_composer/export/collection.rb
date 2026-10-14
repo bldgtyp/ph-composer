@@ -66,14 +66,19 @@ module PhComposer
 
       # Contributors in name order, except that each runs after every section it `requires:`, so an
       # entity owner's section has handed its claimed rows over before the claimant reads them.
-      # Registration has refused cycles and unknown sections.
+      # Registration refuses section cycles (ExportValidation); the guard here stops one that slipped by.
       def ordered(contributors)
         by_name = contributors.to_h { |contributor| [contributor.name, contributor] }
         done = []
+        visiting = []
         visit = lambda do |contributor|
           next if done.include?(contributor)
+          raise InternalError,
+                "Export sections require each other at #{contributor.name}." if visiting.include?(contributor)
 
+          visiting << contributor
           Array(contributor.requires).sort.each { |name| visit.call(by_name[name]) if by_name[name] }
+          visiting.delete(contributor)
           done << contributor
         end
         contributors.sort_by(&:name).each(&visit)
@@ -84,8 +89,10 @@ module PhComposer
       def claims(registry)
         registry.export_contributors.values.each_with_object({}) do |contributor, claims|
           Array(contributor.entity_projections).each do |claim|
-            claims[claim.values_at("namespace", "target_kind")] = { "contributor" => contributor.name,
-                                                                    "fields" => claim.fetch("fields") }
+            claims[claim.values_at("namespace", "target_kind")] = {
+              "contributor" => contributor.name, "fields" => claim.fetch("fields"),
+              "source_section" => claim.fetch("source_section")
+            }
           end
         end
       end

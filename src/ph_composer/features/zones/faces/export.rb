@@ -26,7 +26,8 @@ module PhComposer
             owner = Zones::ExportProjection.zone_owner(reader.snapshot, entry)
             valid = stored && Schema.problems(stored).empty?
             record = valid && reader.entity_record(stored,
-                                                   :fields => %w[face_type boundary_condition assembly_id adjacency])
+                                                   :fields => %w[face_type boundary_condition assembly_id adjacency],
+                                                   :target_kind => REFERENCE_KIND)
             { "path" => entry.path, "record" => record || nil, "zone_id" => owner && owner[1]["id"],
               "geometry" => entry.geometry }
           end

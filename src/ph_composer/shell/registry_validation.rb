@@ -342,6 +342,7 @@ module PhComposer
     # feature of every section it reads.
     class ExportValidation < Validation
       def diagnostics
+        check_section_cycles
         @staging.declared_export_contributors.each do |contributor|
           check_preflight_owner(contributor)
           check_contract(contributor)
@@ -381,6 +382,30 @@ module PhComposer
         end
       end
 
+      # Collection runs a section after the ones it requires, so sections that require each other,
+      # or themselves, can never run.
+      def check_section_cycles
+        graph = @live.export_contributors.merge(@staging.declared_export_contributors.to_h { |item| [item.name, item] })
+        @staging.declared_export_contributors.each do |start|
+          path = section_cycle(graph, start.name, [start.name])
+          next unless path
+
+          add("registration.cycle", start.owner, start.name,
+              "Export sections require each other: #{path.join(' -> ')}.")
+        end
+      end
+
+      def section_cycle(graph, name, path)
+        Array(graph[name]&.requires).each do |next_name|
+          return path + [next_name] if next_name == path.first
+          next if path.include?(next_name)
+
+          found = section_cycle(graph, next_name, path + [next_name])
+          return found if found
+        end
+        nil
+      end
+
       CLAIM_KEYS = %w[namespace target_kind source_section fields].freeze
 
       # Each claim names an extension the contributor's own feature declares, a registered entity
@@ -388,7 +413,10 @@ module PhComposer
       # a non-empty field list. A namespace and target kind are claimed once across the registry.
       def check_entity_projections(contributor)
         claims = contributor.entity_projections
-        unless claims.is_a?(Array) && claims.all? { |claim| claim.is_a?(Hash) && claim.keys.sort == CLAIM_KEYS.sort }
+        well_formed = lambda do |claim|
+          claim.is_a?(Hash) && claim.keys.all?(String) && claim.keys.sort == CLAIM_KEYS.sort
+        end
+        unless claims.is_a?(Array) && claims.all?(&well_formed)
           return claim_problem(contributor, "entity_projections must be a list of claims with #{CLAIM_KEYS.join(', ')}")
         end
 

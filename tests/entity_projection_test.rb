@@ -147,4 +147,54 @@ class EntityProjectionTest < PhComposerTestCase
     refute_includes JSON.generate(extraction.document), "local"
     assert(extraction.findings.any? { |row| row["message"].start_with?("User data") })
   end
+
+  def test_a_claim_survives_full_collection_shared_reads_and_the_incremental_builder
+    PhComposer::Registry.install([review_feature])
+    seed(payload)
+
+    full = collect(nil).document.dig("sections", "test.review.export", "records")
+    builder = Export::Collection::Builder.new(@model, :run_id => "slices")
+    nil until builder.advance
+    sliced = builder.extraction.document.dig("sections", "test.review.export", "records")
+
+    assert_equal [{ "review_status" => "draft" }], full.map { |row| row["payload"] }
+    assert_equal full, sliced
+  end
+
+  def test_a_row_captured_by_a_section_other_than_the_declared_source_is_refused
+    zone_claim = CLAIM.merge("target_kind" => PhComposer::Zones::REFERENCE_KIND)
+    feature = review_feature(:claims => [zone_claim], :read => false)
+    PhComposer::Registry.install([feature])
+    seed
+    group = @model.entities.to_a.grep(Sketchup::Group).first
+    zone = PhComposer::Zones::ZONE_STORE.read(group)
+    PhComposer::Zones::ZONE_STORE.write(group, zone.merge("extension_data" => { NAMESPACE => payload }))
+
+    error = assert_raises(PhComposer::InternalError) do
+      collect([FACES, PhComposer::Zones::ExportProjection::SECTION, "test.review.export"])
+    end
+    assert_includes error.message, "its claim names"
+  end
+
+  def test_export_sections_that_require_each_other_or_themselves_refuse_registration
+    cyclic = lambda do |pairs|
+      Module.new do
+        define_singleton_method(:install) do |registry|
+          scope = registry.feature("test.review", :contract_version => 1)
+          pairs.each do |name, requires|
+            scope.export_contributor(name, :section_version => 1, :requires => requires) { |_reader| [] }
+          end
+        end
+      end
+    end
+    both = { "test.review.a" => ["test.review.b"], "test.review.b" => ["test.review.a"] }
+    assert_match(/require each other/, refused(cyclic.call(both)))
+    assert_match(/require each other/, refused(cyclic.call("test.review.a" => ["test.review.a"])))
+  end
+
+  def test_a_claim_with_a_symbol_key_is_a_named_diagnostic
+    malformed = CLAIM.reject { |key, _value| key == "fields" }.merge(:fields => ["review_status"])
+
+    assert_match(/entity_projections must be a list of claims/, refused(review_feature(:claims => [malformed])))
+  end
 end

@@ -31,7 +31,7 @@ module PhComposer
         @catalog = catalog
         @claims = claims
         @projected = Hash.new { |hash, key| hash[key] = [] }
-        @read = []
+        @read = {}
         @findings = []
         @section = nil
       end
@@ -52,9 +52,10 @@ module PhComposer
       end
 
       # Entity-owned feature records use the same metadata boundary. `fields` is an explicit
-      # contributor allowlist; an omitted core field never leaves under an opaque value slot. The entity
-      # owner's export section passes `target_kind` and the occurrence `path` once per occurrence, so a
-      # claimed envelope is projected for its claimant; a read without them projects nothing.
+      # contributor allowlist; an omitted core field never leaves under an opaque value slot. An entity
+      # read passes its `target_kind`, so a claimed envelope is validated rather than left out. Only the
+      # claim's source section passes the occurrence `path` as well, once per occurrence: that read
+      # captures the row for the claimant; a shared read without `path` validates and captures nothing.
       def entity_record(stored, fields:, target_kind: nil, path: nil)
         id = stored.fetch("id")
         omit_metadata(id) unless stored.fetch("user_data", {}).empty?
@@ -63,7 +64,8 @@ module PhComposer
           next leave_out(id, namespace, envelope) unless claimed
 
           payload = declared_payload(id, namespace, envelope, claimed.fetch("fields"))
-          @projected[[namespace, target_kind]] << { "id" => id, "path" => DeepCopy.call(path), "payload" => payload }
+          capture(namespace, target_kind, claimed, "id" => id, "path" => DeepCopy.call(path),
+                                                   "payload" => payload) if path
         end
         { "id" => id }.merge(DeepCopy.call(stored.slice(*fields)))
       end
@@ -76,13 +78,15 @@ module PhComposer
           raise InternalError, "#{reader.inspect} reads #{namespace} on #{target_kind} without claiming it."
         end
 
-        @read << [namespace, target_kind]
-        DeepCopy.call(@projected[[namespace, target_kind]])
+        rows = @projected[[namespace, target_kind]]
+        @read[[namespace, target_kind]] = rows.length
+        DeepCopy.call(rows)
       end
 
-      # A claimed row its claimant never read would leave declared data out of the export silently.
+      # A claimed row its claimant never read, including one captured after its read, would leave
+      # declared data out of the export silently.
       def reconcile!
-        unread = @projected.keys.find { |key| !@projected[key].empty? && !@read.include?(key) }
+        unread = @projected.keys.find { |key| @projected[key].length > @read.fetch(key, 0) }
         return unless unread
 
         raise Blocked.new("export.blocked",
@@ -91,6 +95,17 @@ module PhComposer
       end
 
       private
+
+      # The claim names the section that captures its rows; a capture anywhere else means the
+      # declaration and the owner disagree, which no export may paper over.
+      def capture(namespace, target_kind, claim, row)
+        unless claim.fetch("source_section") == @section
+          raise InternalError, "#{@section.inspect} captured #{namespace} on #{target_kind}, but its claim names " \
+                               "#{claim.fetch('source_section').inspect}."
+        end
+
+        @projected[[namespace, target_kind]] << row
+      end
 
       def record(kind_id, stored, extensions)
         id = stored.fetch("id")

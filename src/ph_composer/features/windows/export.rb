@@ -74,7 +74,8 @@ module PhComposer
 
       def preflight(request)
         snapshot = Export::GeometrySnapshot.capture(request.model, :revision => request.session.revision)
-        records = Export::RecordReader.new(request.engine, request.registry.catalog)
+        records = Export::RecordReader.new(request.engine, request.registry.catalog,
+                                           :claims => Export::Collection.claims(request.registry))
         reader = Export::SnapshotReader.new(records, snapshot, :registry => request.registry)
         result = reader.within(APERTURES) { projection(reader) }
         { "findings" => result.findings, "repairs" => result.repairs.uniq { |row| row.fetch("id") } }
