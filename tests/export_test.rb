@@ -27,7 +27,8 @@ class ExportTest < PhComposerTestCase
     registry = PhComposer::Registry.current
 
     names = registry.export_contributors.values.select { |item| item.owner == "example.foundation" }.map(&:name)
-    assert_equal %w[example.foundation.export.definitions example.foundation.export.parts], names.sort
+    assert_equal %w[example.foundation.export.definitions example.foundation.export.face_reviews
+                    example.foundation.export.parts], names.sort
     assert_equal "example.foundation", registry.owner_of("example.foundation.export.parts")
     assert_includes Export::Privacy.schema(registry).keys, "example.foundation.export.parts"
   end
@@ -135,6 +136,31 @@ class ExportTest < PhComposerTestCase
     part = extraction.document.dig("sections", "example.foundation.export.parts", "records", 0)
     refute part.key?("extensions")
     assert_equal [["export.metadata_omitted", id]], extraction.findings.map { |row| row.values_at("code", "object_id") }
+  end
+
+  # EC-04: the example claims its review on Zones' Faces. The claimed fields reach its section; an
+  # unclaimed local-only note is left out of the extraction and is still on the Face after reopen.
+  def test_the_example_face_review_claim_exports_its_field_and_local_data_survives_reopen
+    review = ExampleFoundation::FACE_REVIEW_EXTENSION.envelope("review_status" => "checked", "site" => "north")
+    face = seed_reviewed_face(ExampleFoundation::FACE_REVIEW => review,
+                              "other.org.notes" => envelope("local_only"))
+    before = PhComposer::Zones::Faces::FACE_STORE.read(face)
+
+    extraction = Export::Collection.build(@model, :run_id => "reviews", :contributors => [
+      PhComposer::Zones::Faces::ExportProjection::SECTION,
+      "example.foundation.export.face_reviews"
+    ])
+
+    rows = extraction.document.dig("sections", "example.foundation.export.face_reviews", "records")
+    assert_equal [{ "id" => "fac_A00000000001", "review_status" => "checked" }], rows
+    text = JSON.generate(extraction.document)
+    refute_includes text, "north"
+    refute_includes text, "other.org.notes"
+    assert(extraction.findings.any? { |row| row["code"] == "export.metadata_omitted" })
+    Sketchup.store_model("/tmp/ph-composer-ec04.skp", @model)
+    Sketchup.open_file("/tmp/ph-composer-ec04.skp")
+    reopened = Sketchup.active_model.entities.to_a.grep(Sketchup::Group).first.entities.to_a.first
+    assert_equal before, PhComposer::Zones::Faces::FACE_STORE.read(reopened)
   end
 
   def test_data_whose_relevance_is_unknown_blocks_the_export
@@ -254,6 +280,23 @@ class ExportTest < PhComposerTestCase
                          :request => { "sequence" => @sequence += 1, "expected_revision" => @session.revision })
     assert_equal "completed", outcome.fetch("status"), outcome.inspect
     outcome
+  end
+
+  # One classified Wall in a Zone; the Face carries `extension_data`.
+  def seed_reviewed_face(extension_data)
+    m = 1.0 / 0.0254
+    points = [[0, 0, 0], [0, 4, 0], [0, 4, 3], [0, 0, 3]].map { |x, y, z| Geom::Point3d.new(x * m, y * m, z * m) }
+    face = Sketchup::Face.new(101, {}, :points => points, :normal => Geom::Vector3d.new(-1, 0, 0))
+    PhComposer::Zones::Faces::FACE_STORE.write(face, "id" => "fac_A00000000001", "schema_version" => 1,
+                                                     "face_type" => "Wall", "boundary_condition" => "Adiabatic",
+                                                     "extension_data" => extension_data)
+    group = Sketchup::Group.new(100, Sketchup::Entities.new([face]))
+    zone = { "id" => "zon_AAAAAAAAAAAA", "schema_version" => 1, "name" => "Zone A", "building_segment" => "Main",
+             "level" => "L1", "ground_depth_mm" => 0.0 }
+    PhComposer::Zones::ZONE_STORE.write(group, zone)
+    PhComposer::Zones::STAMP_STORE.write(face, PhComposer::Zones::Schema.stamp(zone))
+    @model.entities << group
+    face
   end
 
   def store_part(extra)

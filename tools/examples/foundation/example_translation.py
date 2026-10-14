@@ -1,19 +1,22 @@
 """The example feature's translation sections. Development only, like the rest of this folder.
 
 `example.foundation.export.definitions` reads definitions. `example.foundation.export.parts` reads parts, each naming
-its definition by durable id, and requires the definitions section's typed objects. The Ruby export
+its definition by durable id, and requires the definitions section's typed objects.
+`example.foundation.export.face_reviews` reads the review the example stores on Zones' Faces, which its Ruby
+contributor claims (`entity_projections:`), and attaches each to its HBJSON Face's `user_data` under
+`example.foundation.face_review`, the key that contributor declares. The Ruby export
 contributors in example_foundation.rb build the sections these read; tests/fixtures/foundation/ holds
 one extraction and the result it translates to, which the Ruby and Python suites both check.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from ph_composer_translation.contract import JSONValue, RecordError, as_number, as_text
-from ph_composer_translation.sections import Inputs, Requirement, Section
+from ph_composer_translation.sections import FACE, Attachment, Inputs, Requirement, Section
 
 ID = "example.foundation"
 
@@ -87,4 +90,36 @@ class Parts(Section[PartRecord, Part]):
         return {"example_parts": {"count": len(objects), "total_length_mm": total_mm}}
 
 
-SECTIONS = (Definitions(), Parts())
+@dataclass(frozen=True)
+class FaceReview:
+    face_id: str
+    review_status: str
+
+
+class FaceReviews(Section[FaceReview, FaceReview]):
+    id = f"{ID}.export.face_reviews"
+    versions = frozenset({1})
+    object_type = FaceReview
+    attaches = Attachment(FACE, lambda item: item.face_id)
+
+    def read(self, raw: Mapping[str, object]) -> FaceReview:
+        status = as_text(raw.get("review_status"), "review_status")
+        if status not in ("draft", "checked"):
+            raise RecordError("review_status must be draft or checked")
+        return FaceReview(as_text(raw.get("id"), "id"), status)
+
+    def translate(self, record: FaceReview, inputs: Inputs) -> FaceReview:
+        return record
+
+    def attach(self, host: Any, objects: Sequence[FaceReview]) -> None:
+        """Writes the review beside whatever else the Face's user_data holds; it replaces nothing."""
+        data = dict(host.user_data or {})
+        example = dict(data.get("example", {}))
+        foundation = dict(example.get("foundation", {}))
+        foundation["face_review"] = objects[-1].review_status
+        example["foundation"] = foundation
+        data["example"] = example
+        host.user_data = data
+
+
+SECTIONS = (Definitions(), Parts(), FaceReviews())

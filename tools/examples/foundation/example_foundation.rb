@@ -4,14 +4,17 @@
 # builder refuses any `examples` path, and the shipping composition root does not list it. Load it
 # with tools/examples/foundation/load.rb. The README beside this file walks through it.
 #
-# It declares two record kinds, one structured extension, a query, four actions, a proposal
-# participant, a snapshot section and two export contributors. Nothing in shell/, session/, core/ or
-# export/ names it; its translation sections are in example_translation.py beside this file.
+# It declares two record kinds, two structured extensions (one stored on Zones' Faces), a query, four
+# actions, a proposal participant, a snapshot section and three export contributors. Nothing in
+# shell/, session/, core/ or export/ names it; its translation sections are in example_translation.py beside this file.
 module ExampleFoundation
   ID = "example.foundation"
   DEFINITION = "#{ID}.definition"
   PART = "#{ID}.part"
   REVIEW = "#{ID}.review"
+  FACE_REVIEW = "#{ID}.face_review"
+  FACES_SECTION = "ph_composer.zones.faces.export.faces"
+  FACE_KIND = "ph_composer.zones.faces.face"
 
   Records = PhComposer::Records
 
@@ -46,6 +49,16 @@ module ExampleFoundation
     end
   )
 
+  # A review stored on Zones' Faces, which this feature does not own. Zones exports Faces and names
+  # no review; the face-review section below claims the payload and its translation writes it to the
+  # HBJSON Face's user_data.
+  FACE_REVIEW_EXTENSION = Records::Extension.new(
+    :namespace => FACE_REVIEW, :schema_version => 1, :export_relevance => "required",
+    :validate => lambda do |payload|
+      %w[draft checked].include?(payload["review_status"]) ? [] : ["review_status must be draft or checked"]
+    end
+  )
+
   OBJECT = { "type" => "object" }.freeze
   IDS = { "type" => "array", "items" => { "type" => "string" }, "minItems" => 1 }.freeze
   PART_VALUES = {
@@ -70,10 +83,11 @@ module ExampleFoundation
 
   # The one entrypoint. It only declares; the registry validates and publishes.
   def install(registry)
-    feature = registry.feature(ID, :contract_version => 1)
+    feature = registry.feature(ID, :contract_version => 1, :requires => ["ph_composer.zones"])
     feature.record_kind(DEFINITION_KIND)
     feature.record_kind(PART_KIND)
     feature.extension(REVIEW_EXTENSION)
+    feature.extension(FACE_REVIEW_EXTENSION)
     feature.snapshot_section("#{ID}.parts", :query => "ph_composer.records.list", :params => { "kind" => PART })
     declare_summary(feature)
     declare_create(feature)
@@ -213,6 +227,17 @@ module ExampleFoundation
                                                                             total_length_mm]) },
       :report => method(:parts_report)
     ) { |reader| reader.records(PART, :extensions => { REVIEW => ["review_status"] }) }
+    feature.export_contributor(
+      "#{ID}.export.face_reviews", :section_version => 1, :requires => [FACES_SECTION],
+                                   :user_data_keys => ["#{ID}.face_review"],
+                                   :entity_projections => [{ "namespace" => FACE_REVIEW, "target_kind" => FACE_KIND,
+                                                             "source_section" => FACES_SECTION,
+                                                             "fields" => ["review_status"] }]
+    ) do |reader|
+      reader.entity_projection(FACE_REVIEW, FACE_KIND).map do |row|
+        { "id" => row.fetch("id"), "review_status" => row.fetch("payload")["review_status"] }
+      end
+    end
   end
 
   def parts_report(result, display_units)

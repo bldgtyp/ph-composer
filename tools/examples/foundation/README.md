@@ -8,7 +8,7 @@ any `examples` path.
 
 | File | What it shows |
 | --- | --- |
-| `example_foundation.rb` | The feature: two record kinds, one structured extension, one query, four actions, one proposal participant, one snapshot section and two export contributors, all declared in `install(registry)` |
+| `example_foundation.rb` | The feature: two record kinds, two structured extensions (one stored on Zones' Faces), one query, four actions, one proposal participant, one snapshot section and three export contributors, all declared in `install(registry)` |
 | `example_kit.rb` | A second feature that requires the first and composes its participant into one action |
 | `example_translation.py` | The feature's translation sections: definitions, and parts that require definitions by durable id |
 | `example_doors.py` | An attaching translation section: Doors that join the Faces another feature translates, with no edit to that feature (`tests/python/test_example_doors.py`) |
@@ -52,6 +52,14 @@ is one extraction the export contributors produce and the result the sections tr
    admits; `report` renders them. The matching Python `Section` (`example_translation.py`) reads
    the section one record at a time and declares the other sections it requires with a typed
    `Requirement`; a build lists it in `python/ph_composer_translation/composition.py`.
+7. **Data on another feature's entities.** The example stores a review on Zones' Faces
+   (`example.foundation.face_review`). Zones exports Faces and names no review: the
+   `example.foundation.export.face_reviews` contributor claims the payload with
+   `entity_projections: [{ "namespace", "target_kind", "source_section", "fields" }]` and reads the
+   declared fields with `reader.entity_projection(namespace, target_kind)`, one
+   `{"id", "path", "payload"}` row per Face. Its Python section attaches to each Face
+   (`Attachment(FACE, ...)`) and writes `user_data["example"]["foundation"]["face_review"]`, the key
+   the contributor declares in `user_data_keys:`. An unclaimed required payload still blocks export.
 
 ## Keyboard and lifecycle in the editor
 
