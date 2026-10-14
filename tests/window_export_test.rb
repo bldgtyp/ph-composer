@@ -242,6 +242,63 @@ class WindowExportTest < PhComposerTestCase
     assert_includes codes, "record.unreadable"
   end
 
+  UNIT_TAG = PhComposer::Records::Extension.new(:namespace => "test.unit_tag.data", :schema_version => 1,
+                                                :export_relevance => "required")
+
+  def install_unit_claim
+    extension = UNIT_TAG
+    PhComposer::Registry.install([Module.new do
+      define_singleton_method(:install) do |registry|
+        scope = registry.feature("test.unit_tag", :contract_version => 1, :requires => ["ph_composer.windows"])
+        scope.extension(extension)
+        scope.export_contributor("test.unit_tag.export", :section_version => 1, :requires => [X::APERTURES],
+                                                         :entity_projections => [{
+                                                           "namespace" => extension.namespace,
+                                                           "target_kind" => U::REFERENCE_KIND,
+                                                           "source_section" => X::APERTURES, "fields" => ["tag"]
+                                                         }]) do |reader|
+          reader.entity_projection(extension.namespace, U::REFERENCE_KIND)
+        end
+      end
+    end])
+    seed_export_records
+    U.write(@unit, U.read(@unit).merge("extension_data" => { UNIT_TAG.namespace => UNIT_TAG.envelope("tag" => "N1") }))
+  end
+
+  def test_public_preflight_accepts_a_required_unit_envelope_an_installed_claim_exports
+    install_unit_claim
+    session = PhComposer::Sessions.for(@model)
+    request = PhComposer::HandlerRequest.new(:model => @model, :session => session,
+                                             :registry => PhComposer::Registry.current,
+                                             :engine => PhComposer::Records::Engine.new(
+                                               @model, PhComposer::Registry.current.catalog
+                                             ))
+
+    assert_empty X.preflight(request).fetch("findings")
+  end
+
+  # A section that runs Window constructions first must not make the shared assessment capture Unit
+  # rows under the wrong section.
+  def test_unit_claims_are_captured_by_apertures_even_when_constructions_run_first
+    install_unit_claim
+    PhComposer::Registry.install([Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("aaa.probe", :contract_version => 1, :requires => ["ph_composer.windows"])
+                .export_contributor("aaa.probe.export", :section_version => 1, :requires => [X::CONSTRUCTIONS]) do |_r|
+          []
+        end
+      end
+    end])
+
+    extraction = PhComposer::Export::Collection.build(
+      @model, :run_id => "order", :contributors => ["aaa.probe.export", X::CONSTRUCTIONS, X::APERTURES,
+                                                    "test.unit_tag.export"]
+    )
+
+    rows = extraction.document.dig("sections", "test.unit_tag.export", "records")
+    assert_equal [{ "tag" => "N1" }], rows.map { |row| row["payload"] }
+  end
+
   def test_non_json_native_attributes_and_missing_unit_fields_return_completed_blocking_preflight
     seed_export_records
     context = PhComposer::API.connect(:session_id => PhComposer::Sessions.for(@model).id)

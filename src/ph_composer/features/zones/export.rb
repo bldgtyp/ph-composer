@@ -106,7 +106,8 @@ module PhComposer
                                       "Zone #{record.fetch('id')} has #{missing.length} unclassified Faces.")
           end
           ids = assigned.map { |_face, assignment| assignment.fetch("id") }.sort
-          exported = reader.entity_record(record, :fields => %w[name building_segment level])
+          exported = reader.entity_record(record, :fields => %w[name building_segment level],
+                                                  :target_kind => REFERENCE_KIND, :path => entry.path)
           if record.fetch("schema_version") == 2
             choices = reader.projection(:zone_option_definitions) do
               [Options::SEGMENTS, Options::LEVELS].to_h do |kind|

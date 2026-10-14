@@ -257,12 +257,26 @@ module PhComposer
         @records.records(*arguments, **keywords)
       end
 
-      def entity_record(record, fields:)
-        @records.entity_record(record, :fields => fields)
+      def entity_record(record, fields:, target_kind: nil, path: nil)
+        @records.entity_record(record, :fields => fields, :target_kind => target_kind, :path => path)
+      end
+
+      def capture_entity(record, target_kind:, path:)
+        @records.capture_entity(record, :target_kind => target_kind, :path => path)
+      end
+
+      # The declared fields of `namespace` envelopes on `target_kind` occurrences, as
+      # `{"id", "path", "payload"}` rows; the reading contributor must hold that claim.
+      def entity_projection(namespace, target_kind)
+        @records.entity_projection(namespace, target_kind, :reader => @reading)
       end
 
       def findings
         @records.findings
+      end
+
+      def reconcile!
+        @records.reconcile!
       end
     end
   end

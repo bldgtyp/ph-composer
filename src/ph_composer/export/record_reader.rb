@@ -12,6 +12,8 @@ module PhComposer
     # - `user_data` never does; a record that has some gets a finding saying it was left out.
     # - An extension envelope the contributor names must be understood, and only the named payload
     #   fields go out.
+    # - On an entity, an envelope another contributor claims (`entity_projections:`) must be understood;
+    #   its declared fields go to that contributor's projection store, keyed by occurrence.
     # - Any other envelope is left out when it declares itself `local_only`, and blocks the export when
     #   it is `required` or its relevance is unknown: nothing guesses from a payload's text.
     class RecordReader
@@ -23,9 +25,13 @@ module PhComposer
 
       attr_reader :findings
 
-      def initialize(engine, catalog)
+      # `claims` maps `[namespace, target_kind]` to the claiming contributor's name.
+      def initialize(engine, catalog, claims: {})
         @engine = engine
         @catalog = catalog
+        @claims = claims
+        @projected = Hash.new { |hash, key| hash[key] = [] }
+        @read = {}
         @findings = []
         @section = nil
       end
@@ -46,15 +52,74 @@ module PhComposer
       end
 
       # Entity-owned feature records use the same metadata boundary. `fields` is an explicit
-      # contributor allowlist; an omitted core field never leaves under an opaque value slot.
-      def entity_record(stored, fields:)
+      # contributor allowlist; an omitted core field never leaves under an opaque value slot. An entity
+      # read passes its `target_kind`, so a claimed envelope is validated rather than left out. Only the
+      # claim's source section passes the occurrence `path` as well, once per occurrence: that read
+      # captures the row for the claimant; a shared read without `path` validates and captures nothing.
+      def entity_record(stored, fields:, target_kind: nil, path: nil)
         id = stored.fetch("id")
         omit_metadata(id) unless stored.fetch("user_data", {}).empty?
-        stored.fetch("extension_data", {}).each { |namespace, envelope| leave_out(id, namespace, envelope) }
+        stored.fetch("extension_data", {}).each do |namespace, envelope|
+          claimed = target_kind && @claims[[namespace, target_kind]]
+          next leave_out(id, namespace, envelope) unless claimed
+
+          payload = declared_payload(id, namespace, envelope, claimed.fetch("fields"))
+          capture(namespace, target_kind, claimed, "id" => id, "path" => DeepCopy.call(path),
+                                                   "payload" => payload) if path
+        end
         { "id" => id }.merge(DeepCopy.call(stored.slice(*fields)))
       end
 
+      # Captures the claimed envelopes of one entity occurrence for their claimants, without the
+      # metadata findings `entity_record` already gave: for an owner whose section contract is not where
+      # its shared reads ran. Call it only from that owner's section contract, once per occurrence.
+      def capture_entity(stored, target_kind:, path:)
+        stored.fetch("extension_data", {}).each do |namespace, envelope|
+          claimed = @claims[[namespace, target_kind]]
+          next unless claimed
+
+          payload = declared_payload(stored.fetch("id"), namespace, envelope, claimed.fetch("fields"))
+          capture(namespace, target_kind, claimed, "id" => stored.fetch("id"), "path" => DeepCopy.call(path),
+                                                   "payload" => payload)
+        end
+      end
+
+      # The claimed rows for `namespace` on `target_kind`, in the order the owner's section read them.
+      # Only the claimant reads them, after the owner's section ran (Collection orders by `requires:`).
+      def entity_projection(namespace, target_kind, reader:)
+        claim = @claims[[namespace, target_kind]]
+        unless claim && claim.fetch("contributor") == reader
+          raise InternalError, "#{reader.inspect} reads #{namespace} on #{target_kind} without claiming it."
+        end
+
+        rows = @projected[[namespace, target_kind]]
+        @read[[namespace, target_kind]] = rows.length
+        DeepCopy.call(rows)
+      end
+
+      # A claimed row its claimant never read, including one captured after its read, would leave
+      # declared data out of the export silently.
+      def reconcile!
+        unread = @projected.keys.find { |key| @projected[key].length > @read.fetch(key, 0) }
+        return unless unread
+
+        raise Blocked.new("export.blocked",
+                          "#{unread[0]} data on #{unread[1]} is claimed for export but its exporter did not " \
+                          "read it. Nothing was written.", "section" => @claims[unread].fetch("contributor"))
+      end
+
       private
+
+      # The claim names the section that captures its rows; a capture anywhere else means the
+      # declaration and the owner disagree, which no export may paper over.
+      def capture(namespace, target_kind, claim, row)
+        unless claim.fetch("source_section") == @section
+          raise InternalError, "#{@section.inspect} captured #{namespace} on #{target_kind}, but its claim names " \
+                               "#{claim.fetch('source_section').inspect}."
+        end
+
+        @projected[[namespace, target_kind]] << row
+      end
 
       def record(kind_id, stored, extensions)
         id = stored.fetch("id")

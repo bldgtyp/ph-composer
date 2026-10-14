@@ -342,12 +342,14 @@ module PhComposer
     # feature of every section it reads.
     class ExportValidation < Validation
       def diagnostics
+        check_section_cycles
         @staging.declared_export_contributors.each do |contributor|
           check_preflight_owner(contributor)
           check_contract(contributor)
           check_user_data_keys(contributor)
           check_result_fields(contributor)
           check_section_reads(contributor)
+          check_entity_projections(contributor)
         end
         @diagnostics
       end
@@ -378,6 +380,92 @@ module PhComposer
                     end
           add("registration.missing_dependency", contributor.owner, contributor.name, message, section)
         end
+      end
+
+      # Collection runs a section after the ones it requires, so sections that require each other,
+      # or themselves, can never run.
+      def check_section_cycles
+        graph = @live.export_contributors.merge(@staging.declared_export_contributors.to_h { |item| [item.name, item] })
+        done = {}
+        @staging.declared_export_contributors.each do |start|
+          path = section_cycle(graph, start.name, [], done)
+          next unless path
+
+          add("registration.cycle", start.owner, start.name,
+              "Export sections require each other: #{path.join(' -> ')}.")
+        end
+      end
+
+      # Depth-first with a completed set, so each section is explored once however many paths reach it.
+      def section_cycle(graph, name, path, done)
+        return path[path.index(name)..] + [name] if path.include?(name)
+        return nil if done[name]
+
+        Array(graph[name]&.requires).each do |next_name|
+          found = section_cycle(graph, next_name, path + [name], done)
+          return found if found
+        end
+        done[name] = true
+        nil
+      end
+
+      CLAIM_KEYS = %w[namespace target_kind source_section fields].freeze
+
+      # Each claim names an extension the contributor's own feature declares, a registered entity
+      # reference target whose owner that feature is or requires, a source section in `requires:`, and
+      # a non-empty field list. A namespace and target kind are claimed once across the registry.
+      def check_entity_projections(contributor)
+        claims = contributor.entity_projections
+        well_formed = lambda do |claim|
+          claim.is_a?(Hash) && claim.keys.all?(String) && claim.keys.sort == CLAIM_KEYS.sort
+        end
+        unless claims.is_a?(Array) && claims.all?(&well_formed)
+          return claim_problem(contributor, "entity_projections must be a list of claims with #{CLAIM_KEYS.join(', ')}")
+        end
+
+        feature = @staging.declared_features.find { |item| item.id == contributor.owner }
+        claims.each { |claim| check_claim(contributor, feature, claim) }
+        taken = (@live.export_contributors.values + @staging.declared_export_contributors).reject do |other|
+          other.equal?(contributor)
+        end.flat_map { |other| Array(other.entity_projections) }
+        claims.each do |claim|
+          key = claim.values_at("namespace", "target_kind")
+          next unless taken.any? { |other| other.is_a?(Hash) && other.values_at("namespace", "target_kind") == key } ||
+                      claims.count { |item| item.values_at("namespace", "target_kind") == key } > 1
+
+          claim_problem(contributor, "claims #{key.join(' on ')}, which another claim already projects")
+        end
+      end
+
+      def check_claim(contributor, feature, claim)
+        namespace, target, source, fields = claim.values_at(*CLAIM_KEYS)
+        unless fields.is_a?(Array) && !fields.empty? && fields.all? { |field| field.is_a?(String) && !field.empty? }
+          claim_problem(contributor, "claim fields must be a non-empty list of payload field names")
+        end
+        namespace_owner = @staging.owners[namespace] || @live.owner_of(namespace)
+        extension = @staging.declared_extensions.any? { |item| item.namespace == namespace } ||
+                    @live.extensions.key?(namespace)
+        unless extension && namespace_owner == contributor.owner
+          claim_problem(contributor,
+                        "claims #{namespace.inspect}, which is not an extension #{contributor.owner} declares")
+        end
+        target_owner = @staging.owners[target] || @live.owner_of(target)
+        registered = @staging.declared_reference_targets.any? { |item| item.id == target } ||
+                     @live.reference_targets.key?(target)
+        reachable = target_owner && (target_owner == contributor.owner || feature&.requires&.include?(target_owner))
+        unless registered && reachable
+          add("registration.missing_dependency", contributor.owner, contributor.name,
+              "#{contributor.name} projects onto #{target.inspect}, a registered entity target its feature must " \
+              "own or require.", target_owner || target)
+        end
+        return if Array(contributor.requires).include?(source)
+
+        add("registration.missing_dependency", contributor.owner, contributor.name,
+            "#{contributor.name} projects from #{source.inspect}, which it must list in requires.", source)
+      end
+
+      def claim_problem(contributor, text)
+        add("registration.schema_invalid", contributor.owner, contributor.name, "#{contributor.name} #{text}.")
       end
 
       def check_preflight_owner(contributor)

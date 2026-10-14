@@ -36,7 +36,7 @@ module PhComposer
                                      "window_face_areas" => [Export::Privacy.fields(%w[face_id zone_id gross_area_m2
                                                                                        glazed_area_m2
                                                                                        net_area_m2])]
-                                   }, :report => method(:report)) { |reader| ready(reader).apertures }
+                                   }, :report => method(:report)) { |reader| apertures(reader) }
       end
 
       def assess(**values)
@@ -52,13 +52,23 @@ module PhComposer
           settings = ExportGeometry.record(reader.snapshot.model_dictionaries, Settings::SERVICE.store) ||
                      DeepCopy.call(Settings::DEFAULTS)
           Settings::SERVICE.validate!(settings)
-          reader.snapshot.records(Units::STORE.dictionary).each do |_entry, record|
+          reader.snapshot.records(Units::STORE.dictionary).each do |entry, record|
             Units.validate!(record)
-            reader.entity_record(record, :fields => %w[window_type_id anchor])
+            reader.entity_record(record, :fields => %w[window_type_id anchor], :target_kind => Units::REFERENCE_KIND)
           end
           assess(:snapshot => reader.snapshot, :types => types, :products => products, :settings => settings,
                  :faces => reader.section(FACES))
         end
+      end
+
+      # The Apertures contract is the Units' owning section, so claimed Unit data is captured here, once,
+      # and never by the assessment both sections share.
+      def apertures(reader)
+        result = ready(reader).apertures
+        reader.snapshot.records(Units::STORE.dictionary).each do |entry, record|
+          reader.capture_entity(record, :target_kind => Units::REFERENCE_KIND, :path => entry.path)
+        end
+        result
       end
 
       def ready(reader)
@@ -73,7 +83,8 @@ module PhComposer
 
       def preflight(request)
         snapshot = Export::GeometrySnapshot.capture(request.model, :revision => request.session.revision)
-        records = Export::RecordReader.new(request.engine, request.registry.catalog)
+        records = Export::RecordReader.new(request.engine, request.registry.catalog,
+                                           :claims => Export::Collection.claims(request.registry))
         reader = Export::SnapshotReader.new(records, snapshot, :registry => request.registry)
         result = reader.within(APERTURES) { projection(reader) }
         { "findings" => result.findings, "repairs" => result.repairs.uniq { |row| row.fetch("id") } }

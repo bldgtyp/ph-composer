@@ -211,7 +211,11 @@ Exit: RF-01 closed offline; `docs/API_REFERENCE.md` regenerated.
 
 ### EC-03: entity projection claims (contract stage)
 
-State: Scoped; needs Ed's confirmation of the declaration shape before EC-04.
+State: Implemented on branch. Ed confirmed the shape as drafted on 2026-10-13. As built: a projected
+row is `{"id", "path", "payload"}`, the occurrence being the entity's snapshot path; the entity owner
+passes `target_kind:` and `path:` to `entity_record` only from its section contract, so a shared
+projection read never projects twice; collection runs each contributor after the sections it
+`requires:` (document keys stay in name order); an unread claimed row blocks with `export.blocked`.
 
 Files: `shell/declarations.rb`, `shell/registry.rb` (`VALUE_MEMBERS`), `shell/registry_validation.rb`,
 `export/record_reader.rb`, `export/geometry_snapshot.rb` (`SnapshotReader`), `export/collection.rb`,
@@ -234,7 +238,7 @@ Exit: offline tests pass; Ed confirms or amends the shape.
 
 ### EC-04: translation fixture and canonical reload
 
-State: Scoped; after EC-03 confirmation.
+State: Scoped; EC-03 confirmed by Ed 2026-10-13.
 
 Files: `tools/examples/foundation/example_foundation.rb` (an entity extension on Faces with a claim),
 `example_translation.py`, `tests/python/` fixtures; `make runtime-manifest` if shipped Python changes.
