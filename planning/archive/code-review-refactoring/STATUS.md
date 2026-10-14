@@ -26,7 +26,7 @@ issues and PRs are linked from each packet row as they open.
 | [Foundation purity](../foundation-purity/STATUS.md) | F03 | P-01 to P-03 | Complete; merged in PR 121 and archived |
 
 Each packet's `STATUS.md` is its stage ledger and the entry point for `implement`. The
-[review evidence](../../code-review/evidence/README.md) records the unchanged baseline tests and probes.
+[review evidence](../code-review/evidence/README.md) records the unchanged baseline tests and probes.
 [DELIVERY_ORDER.md](DELIVERY_ORDER.md) names dependencies and PR boundaries.
 
 The 2026-10-13 source review found two facts the first drafts missed: a third `USER_DATA` constant

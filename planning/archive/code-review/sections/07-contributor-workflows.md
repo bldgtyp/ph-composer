@@ -5,9 +5,9 @@ a detailed refactoring plan. The user explicitly permits architectural change at
 there is no need to maintain a legacy public API simply because version 1 exists in current source.
 Existing acceptance decisions, authored fixtures and host behavior still need deliberate treatment.
 
-Detailed [refactoring packets](../../archive/code-review-refactoring/README.md) now cover these candidates. This section
-retains the review's design priorities; the [packet ledger](../../archive/code-review-refactoring/STATUS.md) owns current
-planning state and the [Zone-child pattern](../../archive/code-review-refactoring/ZONE_CHILD_PATTERN.md) records accepted direction.
+Detailed [refactoring packets](../../code-review-refactoring/README.md) now cover these candidates. This section
+retains the review's design priorities; the [packet ledger](../../code-review-refactoring/STATUS.md) owns current
+planning state and the [Zone-child pattern](../../code-review-refactoring/ZONE_CHILD_PATTERN.md) records accepted direction.
 
 ## Concrete contributor tasks
 

@@ -20,10 +20,10 @@ Reviewed source: `library/`, `colour_by/`, `runtime/` and their registration con
 
 **Classification:** reproduced contributor-contract defect. **Planning priority:** medium.
 
-[Library kind registration](../../../src/ph_composer/shell/registry_validation.rb#L489) validates
+[Library kind registration](../../../../src/ph_composer/shell/registry_validation.rb#L489) validates
 the adapter wire schema as an object and its mapping/callback protocols. It does not require a
 shared `name` field. LibraryFile normalizes a schema with `id` and `label` successfully, using
-`to_s` for its own sort. [FileProvider#merge](../../../src/ph_composer/library/file_provider.rb#L119)
+`to_s` for its own sort. [FileProvider#merge](../../../../src/ph_composer/library/file_provider.rb#L119)
 then calls `row.dig("snapshot", "name").downcase` without that normalization.
 
 The probe registers a synthetic label-based adapter, parses its one valid row and obtains a
@@ -46,18 +46,18 @@ diagnostic. Cover file and outside-provider paths, optional/null label fields, a
 Face export. **Planning priority:** settle with Spaces/thermal bridges before dependent implementation.
 
 An Edge mode is accepted because `entity_kind` is open prose, but
-[Tessellation.each_face](../../../src/ph_composer/colour_by/tessellation.rb#L81) only yields Faces
-or Faces inside containers. [Overlay](../../../src/ph_composer/colour_by/overlay.rb#L29) draws
+[Tessellation.each_face](../../../../src/ph_composer/colour_by/tessellation.rb#L81) only yields Faces
+or Faces inside containers. [Overlay](../../../../src/ph_composer/colour_by/overlay.rb#L29) draws
 fills and unclassified surface outlines/hatching; it has no contributed classified line primitive.
 The probe supplies a native Edge and receives empty triangles and segments.
 
 The same Edge, with an authored dictionary, also disappears from
-[GeometrySnapshot.walk](../../../src/ph_composer/export/geometry_snapshot.rb#L83): the non-Face,
+[GeometrySnapshot.walk](../../../../src/ph_composer/export/geometry_snapshot.rb#L83): the non-Face,
 non-container branch yields nil. Edges inside a component definition may be captured as native
 definition facts, but ordinary occurrence Edges have no entries, identities, dictionaries or
 adjacency in the shared export snapshot.
 
-This is directly relevant to [the thermal-bridge PRD](../../features/phase-03b-thermal-bridges/PRD.md),
+This is directly relevant to [the thermal-bridge PRD](../../../features/phase-03b-thermal-bridges/PRD.md),
 whose assignments live on Edges and whose exported runs derive from connected edges, and to its
 planned line display. A contributor cannot supply those through the current capture/render
 contracts alone. The existing feature plan already anticipates some shared extension; do not call

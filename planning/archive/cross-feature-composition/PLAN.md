@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Complete; merged to main 2026-10-13 in [PR #105](https://github.com/bldgtyp/ph-composer/pull/105) as `1ee60a7`, delivery group 2. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#104](https://github.com/bldgtyp/ph-composer/issues/104)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDING: [F04](../../code-review/sections/02-shell-session.md#f04-generic-proposal-participants-expose-raw-callbacks-rather-than-a-guarded-invocation)
+FINDING: [F04](../code-review/sections/02-shell-session.md#f04-generic-proposal-participants-expose-raw-callbacks-rather-than-a-guarded-invocation)
 DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) RR-02, for the ownership of the new declaration values.
 
 ## Goal

@@ -26,9 +26,9 @@ No fresh coverage run was performed; historical thresholds are not presented as 
 From the repository root, using the Makefile-selected installed Ruby:
 
 ```sh
-"$(rbenv which ruby)" planning/code-review/evidence/foundation_probes.rb
-"$(rbenv which ruby)" -Itests planning/code-review/evidence/ruby_feature_probes.rb
-node planning/code-review/evidence/javascript_probes.cjs
+"$(rbenv which ruby)" planning/archive/code-review/evidence/foundation_probes.rb
+"$(rbenv which ruby)" -Itests planning/archive/code-review/evidence/ruby_feature_probes.rb
+node planning/archive/code-review/evidence/javascript_probes.cjs
 ```
 
 The [diagram renderer](render_diagrams.py) uses the bundled workspace Python and Pillow to create

@@ -26,14 +26,14 @@ Creating definition values is different from persisting them in a particular Mod
 from placing a cutting component on a Face. A persistence operation needs a datastore; a physical
 placement needs an explicit host. Neither implies that the reusable domain definition knows them.
 
-There are already pure rules: [Types::Grid](../../src/ph_composer/features/windows/types/grid.rb),
-Type/product thermal calculations and [DefinitionPlan.build](../../src/ph_composer/features/windows/units/definition_plan.rb#L16)
+There are already pure rules: [Types::Grid](../../../src/ph_composer/features/windows/types/grid.rb),
+Type/product thermal calculations and [DefinitionPlan.build](../../../src/ph_composer/features/windows/units/definition_plan.rb#L16)
 consume explicit records to produce detached values. DefinitionPlan lives under `units/` but reads
 no live native entity. This is an existing basis for the cleaner boundary.
 
 ## 2. What we deliberately chose, and why
 
-The original [Window interview](../archive/window-types/PRD.md#decision) chose plain generated
+The original [Window interview](../window-types/PRD.md#decision) chose plain generated
 components on 2026-09-18, later integrated with the revised downward-layering decision on
 2026-10-01. The choices should be documented individually rather than as one blanket exception
 for the entire Windows feature.
@@ -46,7 +46,7 @@ native Move/copy behavior, a real opening and shared geometry. The interview com
 a Group per Unit and stamped sub-faces: those alternatives require rewriting every separate
 Unit's geometry and have different native editing/recovery costs.
 
-No .skp template or Dynamic Component is required. [The current primary-definition contract](../../context/CONTRACTS.md#geometry-records-and-occurrence-references)
+No .skp template or Dynamic Component is required. [The current primary-definition contract](../../../context/CONTRACTS.md#geometry-records-and-occurrence-references)
 uses an index and Type mark, not a display name. Make Unique produces a detached definition;
 Reset to Type deliberately reassociates it. A Type rewrite does not silently rewrite detached copies.
 
@@ -57,41 +57,41 @@ Changing size/layout also regenerates the primary geometry. Each instance is tra
 own selected anchor stays fixed. Type record and native changes commit together: one Undo restores
 both. This avoids a Type that says one thing while its placed geometry says another.
 
-The [used-Type behavior](../archive/window-types/PRD.md#editing-a-used-type) requires checking
+The [used-Type behavior](../window-types/PRD.md#editing-a-used-type) requires checking
 whether the new outlines leave a host or overlap other Units. A 1.2 m wide Type cannot be accepted
 blindly if one instance sits in a 1.1 m available opening. That fit decision belongs to the edit use
 case, using Type-derived outlines and explicit host data, not to the Type's intrinsic validator.
 
-The current [TypeChangeStep](../../src/ph_composer/features/windows/units/type_change_step.rb#L23)
+The current [TypeChangeStep](../../../src/ph_composer/features/windows/units/type_change_step.rb#L23)
 handles primary-definition users, transforms, anchor preservation, supplied host geometry and fit,
-then rechecks its native guard at apply. Historical [P2-12 evidence](../archive/phase-02-envelope/evidence/p2-12-window-unit.md)
+then rechecks its native guard at apply. Historical [P2-12 evidence](../phase-02-envelope/evidence/p2-12-window-unit.md)
 records native resize/anchor/Undo and refusal behavior. This discussion does not renew that evidence
 or establish support-floor acceptance.
 
 ### Native copies are allowed; reads never repair them
 
 SketchUp copies the Unit dictionary along with an instance, so native copies initially share the
-authored Unit id. [Interview Q21](../archive/window-types/PRD.md#records) chose repair on the next
+authored Unit id. [Interview Q21](../window-types/PRD.md#records) chose repair on the next
 Windows mutation, inside that mutation's Undo step, rather than repair during a read or requiring
 every native copy to enter a separate command. The stated original reason was that a Unit's authored
 content was its Type and anchor, so a new identity could preserve its values without a separate
 per-Unit variant choice. Current structured metadata must also obey the declared copy rules.
 
 That convenience policy is broad: creating an unrelated Frame is a Windows mutation too. The
-current [Units::Mutation.prepare](../../src/ph_composer/features/windows/units/identity_step.rb#L50)
+current [Units::Mutation.prepare](../../../src/ph_composer/features/windows/units/identity_step.rb#L50)
 therefore scans all Units before that Frame is staged. A locked/shared copied Unit can refuse the
 otherwise unrelated definition edit. This is a chosen trigger, not a native requirement that all
 definition creation must depend on placement geometry.
 
 A named Repair copied identities action also exists. The separate
-[copied-Zone Windows packet](../archive/copied-zone-windows/README.md) proposes
+[copied-Zone Windows packet](../copied-zone-windows/README.md) proposes
 repairing copied children in the Zone-copy follow-up, without Zone code naming Windows. It remains
-scoped by the [child lifecycle plan](../archive/zone-child-lifecycle/PLAN.md), with implementation
+scoped by the [child lifecycle plan](../zone-child-lifecycle/PLAN.md), with implementation
 unauthorized. It adds copied-parent repair while retaining the broad Windows fallback.
 
 ### One feature package spans definition and placement layers
 
-[D2-1](../archive/phase-02-envelope/DECISIONS.md#part-2-decisions-for-ed) deliberately keeps Windows
+[D2-1](../phase-02-envelope/DECISIONS.md#part-2-decisions-for-ed) deliberately keeps Windows
 as one cohesive feature while assigning its definitions to the lower layer and Units/placement
 above Zones. Windows' placement code uses public Zone Face reads and locators. Zones requires
 Assemblies, but never Windows. Net opaque area belongs to the layer knowing both Faces and Units,
@@ -110,7 +110,7 @@ the host and other placed uses. Export must attach the resulting Apertures to Fa
 Rooms. These are relationships between objects; an intrinsic Window definition cannot decide them
 from its own data alone.
 
-The current [Placement::Hosts](../../src/ph_composer/features/windows/placement/host.rb#L16)
+The current [Placement::Hosts](../../../src/ph_composer/features/windows/placement/host.rb#L16)
 uses declared Zone reads and the Face locator. It does not read Zone dictionaries. Authoring allows
 some incomplete host states that export later reports; do not equate writable placement with every
 canonical export condition being satisfied. The current product export semantics use Wall or
@@ -128,8 +128,8 @@ Changing those product semantics is not needed to separate application coordinat
 
 ## 4. The actual architectural issue
 
-[Products::Operations](../../src/ph_composer/features/windows/products/operations.rb#L12) and
-[Types::Operations](../../src/ph_composer/features/windows/types/operations.rb#L12) combine record
+[Products::Operations](../../../src/ph_composer/features/windows/products/operations.rb#L12) and
+[Types::Operations](../../../src/ph_composer/features/windows/types/operations.rb#L12) combine record
 proposal construction with Unit identity preparation. Type operations additionally call Unit native
 changes and usage counts. Thus the callable that appears to be the lower definition-persistence
 operation also knows the placement lifecycle.
@@ -193,7 +193,7 @@ be described as identical to an Assembly definition.
 ## 6. Documentation correction and remaining decisions
 
 The initial RF-02 review incorrectly said copy repair was omitted from discovery. Its primary
-effect string is wrapped by [Shapes.side_effects](../../src/ph_composer/features/windows/declarations/shapes.rb#L24),
+effect string is wrapped by [Shapes.side_effects](../../../src/ph_composer/features/windows/declarations/shapes.rb#L24),
 which appends the repair statement. That claim is withdrawn in the section and findings register.
 The structural dependency and locked-copy consequence remain.
 
@@ -219,7 +219,7 @@ Before implementation, update the accepted architecture authority to distinguish
 owner use cases and native adapters precisely, and record any changed repair policy. This discussion
 does not itself authorize source implementation.
 
-The [shared Zone-child pattern](../archive/code-review-refactoring/ZONE_CHILD_PATTERN.md) records the accepted direction for
-Windows, Spaces and future entities. The [Windows plan](../archive/windows-orchestration/PLAN.md)
-and [child-lifecycle plan](../archive/zone-child-lifecycle/PLAN.md) separate ordinary authoring from
+The [shared Zone-child pattern](../code-review-refactoring/ZONE_CHILD_PATTERN.md) records the accepted direction for
+Windows, Spaces and future entities. The [Windows plan](../windows-orchestration/PLAN.md)
+and [child-lifecycle plan](../zone-child-lifecycle/PLAN.md) separate ordinary authoring from
 native-copy restoration and give their own acceptance gates.

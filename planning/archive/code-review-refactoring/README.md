@@ -6,7 +6,7 @@ ISSUE: none (local planning draft)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
 
 Start with the accepted [Zone-child pattern](ZONE_CHILD_PATTERN.md) and the source-backed
-[Windows rationale](../../code-review/WINDOWS_BOUNDARY.md). Reusable values stay independent of their placement;
+[Windows rationale](../code-review/WINDOWS_BOUNDARY.md). Reusable values stay independent of their placement;
 authoring coordinators compose owner operations and native adapters.
 
 Each packet holds three files. `PLAN.md` is the phased plan a coding agent executes from: a table of

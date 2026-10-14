@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Complete; merged to main 2026-10-13 in [PR #99](https://github.com/bldgtyp/ph-composer/pull/99). Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/98
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDING: [F08](../../code-review/sections/06-export.md#f08-some-operation-schemas-incorrectly-promise-verbatim-metadata-export)
+FINDING: [F08](../code-review/sections/06-export.md#f08-some-operation-schemas-incorrectly-promise-verbatim-metadata-export)
 DEPENDS ON: nothing. Lands on its own.
 
 ## What is wrong

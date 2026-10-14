@@ -29,16 +29,16 @@ portable business code.
 
 **Classification:** reproduced defect. **Planning priority:** high, before inviting contributors.
 
-At [Registry#publish](../../../src/ph_composer/shell/registry.rb#L97), features and operations are
+At [Registry#publish](../../../../src/ph_composer/shell/registry.rb#L97), features and operations are
 published first, then record kinds, then each store dictionary is registered. The dictionary prefix
-check raises from [Dictionaries.register](../../../src/ph_composer/core/dictionaries.rb#L11).
-[Record-kind validation](../../../src/ph_composer/shell/registry_validation.rb#L218) does not
+check raises from [Dictionaries.register](../../../../src/ph_composer/core/dictionaries.rb#L11).
+[Record-kind validation](../../../../src/ph_composer/shell/registry_validation.rb#L218) does not
 validate that persistence contract before publication.
 
 The synthetic probe registers a kind with a custom store whose dictionary is `outside.records`.
 `Registry.install` raises `ArgumentError`, yet the feature, query and kind remain in the live
 registry; the kind has no published owner because publication stopped before the owners step.
-This contradicts [CONTRACTS, Registration](../../../context/CONTRACTS.md#registration): a bad batch
+This contradicts [CONTRACTS, Registration](../../../../context/CONTRACTS.md#registration): a bad batch
 must publish nothing. This is an invalid contributor declaration, not a failure in the shipped
 default DictionaryStore, but diagnosing bad contributions is the purpose of this seam.
 
@@ -56,7 +56,7 @@ not duplicate on retry.
 
 **Classification:** reproduced contract-stability defect. **Planning priority:** high.
 
-[RecordKind initialization](../../../src/ph_composer/core/records/record_kind.rb#L22) freezes the
+[RecordKind initialization](../../../../src/ph_composer/core/records/record_kind.rb#L22) freezes the
 fields array but retains the Field instances and their nested schemas. Registry publication stores
 the same kind. In contrast, operation schemas and library adapters are copied and frozen.
 
@@ -78,7 +78,7 @@ must not give consumers mutable aliases. A new registration, rather than mutatio
 
 **Classification:** optional structural improvement, directly evidenced. **Planning priority:** later.
 
-[FaceGeometry.capture](../../../src/ph_composer/core/face_geometry.rb#L34) reads native Faces,
+[FaceGeometry.capture](../../../../src/ph_composer/core/face_geometry.rb#L34) reads native Faces,
 transforms vertices and obtains glue state. Its sibling functions compare planes/loops and calculate
 areas from explicit values. Records::Engine similarly coordinates persistence while RecordKind
 validation is pure. These are useful seams already, but a newcomer cannot infer purity from the

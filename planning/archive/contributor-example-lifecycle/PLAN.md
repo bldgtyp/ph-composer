@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Complete; merged to main 2026-10-13 in [PR #102](https://github.com/bldgtyp/ph-composer/pull/102), delivery group 1. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#101](https://github.com/bldgtyp/ph-composer/issues/101)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDINGS: [JS-03](../../code-review/sections/05-javascript.md#js-03-the-contributor-examples-length-enter-never-creates-the-part), [JS-04](../../code-review/sections/05-javascript.md#js-04-the-contributor-example-retires-its-form-without-disposing-its-field-or-callbacks)
+FINDINGS: [JS-03](../code-review/sections/05-javascript.md#js-03-the-contributor-examples-length-enter-never-creates-the-part), [JS-04](../code-review/sections/05-javascript.md#js-04-the-contributor-example-retires-its-form-without-disposing-its-field-or-callbacks)
 DEPENDS ON: nothing. Lands on its own. The example is development only and never enters the RBZ.
 
 ## Verified at the baseline

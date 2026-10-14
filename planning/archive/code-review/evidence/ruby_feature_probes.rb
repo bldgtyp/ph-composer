@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Synthetic, offline review probes. Run with the Makefile-selected Ruby from the repository root:
-#   "$(rbenv which ruby)" -Itests planning/code-review/evidence/ruby_feature_probes.rb
+#   "$(rbenv which ruby)" -Itests planning/archive/code-review/evidence/ruby_feature_probes.rb
 # These assertions record the reviewed baseline's mismatches, rather than desired future behavior.
 require_relative "../../../tests/test_helper"
 require_relative "../../../tests/support/window_record_fixtures"

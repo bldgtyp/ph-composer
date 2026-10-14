@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Complete; merged to main 2026-10-13 in [PR #108](https://github.com/bldgtyp/ph-composer/pull/108) as `80b1d8f`, delivery group 3. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#106](https://github.com/bldgtyp/ph-composer/issues/106)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDING: [RF-02](../../code-review/sections/04-ruby-features.md#rf-02-windows-definition-operations-know-placement-internals)
+FINDING: [RF-02](../code-review/sections/04-ruby-features.md#rf-02-windows-definition-operations-know-placement-internals)
 DEPENDS ON: nothing for the extraction itself. Coordinate file ownership with
 [panel domain ownership](../panel-domain-ownership/PLAN.md), which edits `types/installs.rb` and
 `snapshot.rb`, and with [zone-child lifecycle](../zone-child-lifecycle/PLAN.md), which edits

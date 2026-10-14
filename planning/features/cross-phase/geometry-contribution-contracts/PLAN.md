@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Scoped capability; G-02 is implementation ready on its own, G-03 and G-04 wait for the thermal-bridge adopter. Not authorized. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#118](https://github.com/bldgtyp/ph-composer/issues/118)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDING: [F06](../../../code-review/sections/03-services.md#f06-the-geometry-seams-cannot-yet-serve-ordinary-edges-or-derived-line-overlays)
+FINDING: [F06](../../../archive/code-review/sections/03-services.md#f06-the-geometry-seams-cannot-yet-serve-ordinary-edges-or-derived-line-overlays)
 DEPENDS ON: the [thermal-bridge plan](../../phase-03b-thermal-bridges/PLAN.md) P3b-06 and
 P3b-08 are the adopters; [foundation purity](../../../archive/foundation-purity/PLAN.md) P-02 touches the same
 capture file if both run.

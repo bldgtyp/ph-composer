@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Complete; merged to main 2026-10-13 in [PR #105](https://github.com/bldgtyp/ph-composer/pull/105) as `1ee60a7`, delivery group 2. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#103](https://github.com/bldgtyp/ph-composer/issues/103)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDINGS: [F01](../../code-review/sections/01-foundation.md#f01-registration-can-fail-after-publishing-part-of-the-batch), [F02](../../code-review/sections/01-foundation.md#f02-published-record-field-schemas-remain-mutable-aliases)
+FINDINGS: [F01](../code-review/sections/01-foundation.md#f01-registration-can-fail-after-publishing-part-of-the-batch), [F02](../code-review/sections/01-foundation.md#f02-published-record-field-schemas-remain-mutable-aliases)
 DEPENDS ON: nothing. [Cross-feature composition](../cross-feature-composition/PLAN.md) and every packet
 that adds a declaration family build on RR-02's ownership rule.
 

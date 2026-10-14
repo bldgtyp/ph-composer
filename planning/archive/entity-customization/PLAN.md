@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Complete. EC-01 to EC-05 merged to main (PRs 110, 122, 123, 126); native receipts passed; archived.
 ISSUE: [#109](https://github.com/bldgtyp/ph-composer/issues/109)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDINGS: [RF-01](../../code-review/sections/04-ruby-features.md#rf-01-entity-owned-metadata-cannot-be-maintained-through-the-supported-operations), [RF-03](../../code-review/sections/04-ruby-features.md#rf-03-entity-reads-preserve-envelopes-but-omit-their-understoodunavailable-status), [F07](../../code-review/sections/06-export.md#f07-entity-extension-payloads-have-no-supported-allowlisted-export-projection)
+FINDINGS: [RF-01](../code-review/sections/04-ruby-features.md#rf-01-entity-owned-metadata-cannot-be-maintained-through-the-supported-operations), [RF-03](../code-review/sections/04-ruby-features.md#rf-03-entity-reads-preserve-envelopes-but-omit-their-understoodunavailable-status), [F07](../code-review/sections/06-export.md#f07-entity-extension-payloads-have-no-supported-allowlisted-export-projection)
 DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) for the new export
 declaration values (EC-03 only); [Windows orchestration](../windows-orchestration/PLAN.md) W-01 so the
 Unit action routes through the coordinator (EC-02 can land before it by calling `Units::Mutation.prepare`

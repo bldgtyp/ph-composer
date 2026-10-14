@@ -6,7 +6,7 @@ ISSUE: none (local planning draft)
 
 ## Decision and rationale
 
-Ed accepted this direction on 2026-10-13 after the [Windows discussion](../../code-review/WINDOWS_BOUNDARY.md).
+Ed accepted this direction on 2026-10-13 after the [Windows discussion](../code-review/WINDOWS_BOUNDARY.md).
 Use the same responsibility split for Windows, Spaces and future Zone children such as mechanical
 equipment. A reusable definition validates its explicit values without a Zone. A placed occurrence
 represents a use of those values in a host. An authoring service coordinates their relationships

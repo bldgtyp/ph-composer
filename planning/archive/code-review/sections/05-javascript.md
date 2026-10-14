@@ -17,19 +17,19 @@ example's form lifecycle, and protect correlated outcomes from optional presenta
 **Classification:** Directly evidenced ownership violation; correction recommended before extending
 installation topology. No current disagreement between the two classifiers was demonstrated.
 
-**Evidence:** [editor_shared.js:25](../../../src/ph_composer/html/features/windows/editor_shared.js#L25)
+**Evidence:** [editor_shared.js:25](../../../../src/ph_composer/html/features/windows/editor_shared.js#L25)
 walks neighboring grid cells and decides `perimeter`, `shared` or `partial`.
-[install_editor.js:89](../../../src/ph_composer/html/features/windows/install_editor.js#L89) uses that
-answer to allow painting, and [install_editor.js:233](../../../src/ph_composer/html/features/windows/install_editor.js#L233)
+[install_editor.js:89](../../../../src/ph_composer/html/features/windows/install_editor.js#L89) uses that
+answer to allow painting, and [install_editor.js:233](../../../../src/ph_composer/html/features/windows/install_editor.js#L233)
 uses it to display shared zero and refuse partially shared edges. This is authoring eligibility,
-not only drawing geometry. The same rule belongs to [Grid#classify](../../../src/ph_composer/features/windows/types/grid.rb#L42)
-and [Installs.paint](../../../src/ph_composer/features/windows/types/installs.rb#L33) in Ruby. Copy
+not only drawing geometry. The same rule belongs to [Grid#classify](../../../../src/ph_composer/features/windows/types/grid.rb#L42)
+and [Installs.paint](../../../../src/ph_composer/features/windows/types/installs.rb#L33) in Ruby. Copy
 compatibility is also independently decided by JavaScript's
-[topology](../../../src/ph_composer/html/features/windows/install_editor.js#L10) and Ruby's
-[Installs.topology](../../../src/ph_composer/features/windows/types/installs.rb#L61).
+[topology](../../../../src/ph_composer/html/features/windows/install_editor.js#L10) and Ruby's
+[Installs.topology](../../../../src/ph_composer/features/windows/types/installs.rb#L61).
 
-**Governing rule:** [CODING_STANDARDS, Layering](../../../context/CODING_STANDARDS.md#layering) assigns
-business logic to Ruby; [EXTENSIBILITY, Organization and dependencies](../../../context/EXTENSIBILITY.md#organization-and-dependencies)
+**Governing rule:** [CODING_STANDARDS, Layering](../../../../context/CODING_STANDARDS.md#layering) assigns
+business logic to Ruby; [EXTENSIBILITY, Organization and dependencies](../../../../context/EXTENSIBILITY.md#organization-and-dependencies)
 requires the UI to consume published contracts without domain calculation.
 
 **Consequence:** A topology change requires the contributor to find and change two algorithms in two
@@ -41,7 +41,7 @@ copy descriptor with each Type, using Ruby's existing Grid/Installs rules. The d
 session changes products and assignments, not topology, so it can retain those facts with its baseline.
 Keep JavaScript's coordinates, scale, hit targets and staged assignment display local. Do not use
 thermal completeness as the availability gate: the current thermal calculation returns no element
-details when dimensions are missing ([thermal.rb:25](../../../src/ph_composer/features/windows/types/thermal.rb#L25)).
+details when dimensions are missing ([thermal.rb:25](../../../../src/ph_composer/features/windows/types/thermal.rb#L25)).
 
 **Verification:** One synthetic topology fixture family covering perimeter, fully shared, partly
 shared, Empty and merged spans; assert Ruby projection, UI eligibility and Save validation agree.
@@ -54,13 +54,13 @@ drawings; extend those cases around the published facts rather than testing a se
 **Classification:** Reproduced extension-boundary failure using an injected throwing translator.
 No shipped translator was observed throwing on the reviewed baseline.
 
-**Evidence:** [panel.outcomeText](../../../src/ph_composer/html/panel.js#L434) registers arbitrary
-presentation callbacks; [outcomeWords](../../../src/ph_composer/html/panel.js#L435) invokes them
-without isolation. [reduceActionResult](../../../src/ph_composer/html/panel.js#L76) invokes that hook
+**Evidence:** [panel.outcomeText](../../../../src/ph_composer/html/panel.js#L434) registers arbitrary
+presentation callbacks; [outcomeWords](../../../../src/ph_composer/html/panel.js#L435) invokes them
+without isolation. [reduceActionResult](../../../../src/ph_composer/html/panel.js#L76) invokes that hook
 before returning the updated result slot. A throw escapes
-[receive](../../../src/ph_composer/html/panel.js#L159), so the correlated outcome is never recorded.
+[receive](../../../../src/ph_composer/html/panel.js#L159), so the correlated outcome is never recorded.
 The Zones screen legitimately uses this seam
-([overview.js:1107](../../../src/ph_composer/html/features/zones/overview.js#L1107)).
+([overview.js:1107](../../../../src/ph_composer/html/features/zones/overview.js#L1107)).
 
 **Probe:** Register a translator that throws `broken contributor translator`, start a request channel,
 and receive its refused `action.result`. `receive` throws, `state.ui.actionResult` remains null and
@@ -68,7 +68,7 @@ and receive its refused `action.result`. `receive` throws, `state.ui.actionResul
 but the requesting editor cannot settle or release its pending UI.
 
 **Governing rule:** The panel's section isolation and presentation-only behavior are documented in
-[TECH_STACK, Panel](../../../context/TECH_STACK.md#panel). The translator should improve wording
+[TECH_STACK, Panel](../../../../context/TECH_STACK.md#panel). The translator should improve wording
 without becoming a prerequisite to accepting the operation outcome.
 
 **Minimum correction:** Catch and log each translator failure, continue to later translators or the
@@ -84,12 +84,12 @@ and unrelated sections render. Existing tests isolate renderer failures, but do 
 **Classification:** Reproduced defect in development-only contributor example; no shipping form
 defect inferred.
 
-**Evidence:** [NewPartForm](../../../tools/examples/foundation/editor.js#L29) creates a UnitField with
-no Enter-to-submit wiring. [UnitField's key handler](../../../src/ph_composer/html/unit_field.js#L51)
+**Evidence:** [NewPartForm](../../../../tools/examples/foundation/editor.js#L29) creates a UnitField with
+no Enter-to-submit wiring. [UnitField's key handler](../../../../src/ph_composer/html/unit_field.js#L51)
 prevents Enter's default action and commits only the field. The form's
-[submit](../../../tools/examples/foundation/editor.js#L45) therefore never runs. The example comment
+[submit](../../../../tools/examples/foundation/editor.js#L45) therefore never runs. The example comment
 says Enter and Create share one submit path, and the UI rubric requires that behavior. The existing
-[New part test](../../../tests/example_editor_test.js#L127) directly invokes the form submit listener;
+[New part test](../../../../tests/example_editor_test.js#L127) directly invokes the form submit listener;
 it does not press Enter in Length.
 
 **Probe:** Open New part, enter `3 ft` in Length, invoke its real keydown listener with Enter.
@@ -112,19 +112,19 @@ Check the Chromium 88 event-order behavior when the example next runs its native
 **Classification:** Reproduced lifecycle defect in development-only contributor example. The host
 prevents cross-Model mutation; data loss was not demonstrated.
 
-**Evidence:** [resetFor](../../../tools/examples/foundation/editor.js#L60) disposes the part-row
+**Evidence:** [resetFor](../../../../tools/examples/foundation/editor.js#L60) disposes the part-row
 fields but calls only `view.form.withdraw()` before replacing the New part form. The form's
-[Length UnitField](../../../tools/examples/foundation/editor.js#L39) remains subscribed to global
-preferences ([unit_field.js:58](../../../src/ph_composer/html/unit_field.js#L58)). Its submit method
+[Length UnitField](../../../../tools/examples/foundation/editor.js#L39) remains subscribed to global
+preferences ([unit_field.js:58](../../../../src/ph_composer/html/unit_field.js#L58)). Its submit method
 has no disposed/availability guard. `RecordForm.withdraw` resets a request and closes a surface;
 it is not permanent retirement
-([record_form.js:68](../../../src/ph_composer/html/record_form.js#L68)).
+([record_form.js:68](../../../../src/ph_composer/html/record_form.js#L68)).
 
 **Probes:** After switching the preview from `preview-session` to `session-b`, changing display units
 repaints the disconnected old form's Length input once. Calling the retained old form submit listener
 sends `example.foundation.create_parts` with `session: preview-session`. The preview refuses it and
 the part count stays two. The real host also checks the active session before invoking a mutation
-([panel.rb:187](../../../src/ph_composer/shell/panel.rb#L187)).
+([panel.rb:187](../../../../src/ph_composer/shell/panel.rb#L187)).
 
 **Consequence:** Each Model switch retains another form field subscription and teaches contributors
 an incomplete teardown pattern. Retained callbacks dispatch obsolete requests instead of ending
@@ -143,15 +143,15 @@ the active form should still create normally.
 **Classification:** Directly evidenced inconsistency with the strict documented quantity boundary;
 lower priority than the lifecycle corrections. No incorrect total was demonstrated.
 
-**Evidence:** [totalArea](../../../src/ph_composer/html/features/zones/overview.js#L407) sums
-`face.area_m2`; [value](../../../src/ph_composer/html/features/zones/overview.js#L388) shows that sum
+**Evidence:** [totalArea](../../../../src/ph_composer/html/features/zones/overview.js#L407) sums
+`face.area_m2`; [value](../../../../src/ph_composer/html/features/zones/overview.js#L388) shows that sum
 in the Area column for Zone and summary rows, and
-[paintTable](../../../src/ph_composer/html/features/zones/overview.js#L961) uses it for Zone ordering.
+[paintTable](../../../../src/ph_composer/html/features/zones/overview.js#L961) uses it for Zone ordering.
 The grouped rows represent all Faces of one Zone occurrence or its unclassified Faces, rather than
 an arbitrary user-defined numerical expression
-([project](../../../src/ph_composer/html/features/zones/overview.js#L335)).
+([project](../../../../src/ph_composer/html/features/zones/overview.js#L335)).
 
-**Governing rule:** [CODING_STANDARDS, Layering](../../../context/CODING_STANDARDS.md#layering) states
+**Governing rule:** [CODING_STANDARDS, Layering](../../../../context/CODING_STANDARDS.md#layering) states
 that a displayed PH quantity is computed in Ruby and travels through the message contract.
 
 **Consequence:** The displayed group quantity cannot be obtained by a panel-closed client from the
@@ -270,9 +270,9 @@ register before startup; the development example registers a section after start
 `get`. Library surfaces register before their first per-session build. These constraints are
 documented and sufficient for the present contribution model.
 
-The seams are discoverable through [EXTENSIBILITY](../../../context/EXTENSIBILITY.md), source
-headers, [the foundation walkthrough](../../../tools/examples/foundation/README.md) and
-[DEVELOPMENT's panel instructions](../../../docs/DEVELOPMENT.md#the-panel). A short contributor
+The seams are discoverable through [EXTENSIBILITY](../../../../context/EXTENSIBILITY.md), source
+headers, [the foundation walkthrough](../../../../tools/examples/foundation/README.md) and
+[DEVELOPMENT's panel instructions](../../../../docs/DEVELOPMENT.md#the-panel). A short contributor
 router linking these exact examples would reduce searching; it need not restate their contracts or
 make the generated operation reference larger.
 
@@ -311,7 +311,7 @@ Run each group with `node --test tests/<name>_test.js ...`. The four recorded re
 DOM/preview fixture constructors in fresh Node VMs. Run:
 
 ```sh
-node planning/code-review/evidence/javascript_probes.cjs
+node planning/archive/code-review/evidence/javascript_probes.cjs
 ```
 
 The retained script was run once against this baseline and all four assertions passed: Enter sent

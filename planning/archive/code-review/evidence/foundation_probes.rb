@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Review probes against the offline host stub, not production tests or native-host proof.
-# Run from the repo: $(rbenv which ruby) planning/code-review/evidence/foundation_probes.rb
+# Run from the repo: $(rbenv which ruby) planning/archive/code-review/evidence/foundation_probes.rb
 require_relative "../../../tests/test_helper"
 
 class ArchitectureReviewProbes < PhComposerTestCase

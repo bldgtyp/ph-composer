@@ -28,9 +28,9 @@ single synchronous feature-owned export function.
 **Classification:** reproduced extension-seam asymmetry. **Planning priority:** high with the entity
 metadata work, before offering company customization on geometry entities.
 
-[RecordReader.records](../../../src/ph_composer/export/record_reader.rb#L44) accepts an
+[RecordReader.records](../../../../src/ph_composer/export/record_reader.rb#L44) accepts an
 `extensions: { namespace => fields }` mapping for catalog records and validates installed payloads.
-[RecordReader.entity_record](../../../src/ph_composer/export/record_reader.rb#L50) has only `fields:`;
+[RecordReader.entity_record](../../../../src/ph_composer/export/record_reader.rb#L50) has only `fields:`;
 it sends every structured envelope to `leave_out`. SnapshotReader forwards only that signature.
 
 The probe registers an understood `required` extension, gives it an entity record and sees
@@ -60,10 +60,10 @@ and canonical reload with synthetic references. Coordinate with [RF-01/RF-03 in 
 
 **Classification:** directly evidenced public-contract wording defect. **Planning priority:** medium.
 
-The Attached-zone [USER_DATA schema](../../../src/ph_composer/features/zones/declarations/faces.rb#L34)
-and Window [USER_DATA schema](../../../src/ph_composer/features/windows/declarations/shapes.rb#L19)
+The Attached-zone [USER_DATA schema](../../../../src/ph_composer/features/zones/declarations/faces.rb#L34)
+and Window [USER_DATA schema](../../../../src/ph_composer/features/windows/declarations/shapes.rb#L19)
 describe local metadata as `exported verbatim`. The actual RecordReader omits arbitrary user_data
-with a finding, and [EXTENSIBILITY, Metadata](../../../context/EXTENSIBILITY.md#metadata-and-structured-extension-data)
+with a finding, and [EXTENSIBILITY, Metadata](../../../../context/EXTENSIBILITY.md#metadata-and-structured-extension-data)
 requires deliberate mappings. Operation schemas feed generated API documentation, so a company
 writing a script could reasonably rely on the false promise.
 

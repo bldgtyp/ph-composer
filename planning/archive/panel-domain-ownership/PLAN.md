@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Complete; merged to main 2026-10-13 in [PR #108](https://github.com/bldgtyp/ph-composer/pull/108) as `80b1d8f`, delivery group 3. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#107](https://github.com/bldgtyp/ph-composer/issues/107)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDINGS: [JS-01](../../code-review/sections/05-javascript.md#js-01-window-installation-eligibility-duplicates-ruby-domain-rules), [JS-05](../../code-review/sections/05-javascript.md#js-05-zone-and-unclassified-summary-area-is-calculated-in-the-panel)
+FINDINGS: [JS-01](../code-review/sections/05-javascript.md#js-01-window-installation-eligibility-duplicates-ruby-domain-rules), [JS-05](../code-review/sections/05-javascript.md#js-05-zone-and-unclassified-summary-area-is-calculated-in-the-panel)
 DEPENDS ON: nothing. Two independent slices: PD-01 and PD-02 (Windows), PD-03 (Zones). Coordinate
 `types/installs.rb` and `snapshot.rb` edits with [Windows orchestration](../windows-orchestration/PLAN.md).
 

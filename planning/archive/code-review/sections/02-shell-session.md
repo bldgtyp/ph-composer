@@ -29,20 +29,20 @@ This avoids a UI-specific implementation of business transactions.
 outside participant. No shipped Library-copy failure was found. **Planning priority:** high before
 adding further compound cross-feature workflows.
 
-[HandlerRequest#participant](../../../src/ph_composer/shell/handler_request.rb#L120) looks up a
+[HandlerRequest#participant](../../../../src/ph_composer/shell/handler_request.rb#L120) looks up a
 declaration and returns its handler. It does not check the participant owner's dependency against
 the caller, derive an owner-specific request, validate the active proposal, or retain a refusal
-on that proposal. [Participant registration](../../../src/ph_composer/shell/registry_validation.rb#L285)
+on that proposal. [Participant registration](../../../../src/ph_composer/shell/registry_validation.rb#L285)
 checks only that the handler is callable.
 
 The probe calls a participant from a feature with no `requires` relationship. It runs. Its
 `CodedError` leaves `proposal.refusal` nil, so a caller that catches it can continue toward a commit.
 This is weaker than the query/locator/retargeter seams and makes every contributor recreate boundary
-checks. The built-in [Library::CopyParticipant](../../../src/ph_composer/library/copy_participant.rb#L12)
+checks. The built-in [Library::CopyParticipant](../../../../src/ph_composer/library/copy_participant.rb#L12)
 already supplies its own dependency, schema, active-proposal and poisoning checks. That is evidence
 of a useful common contract, not a reason to report Library copy as broken.
 
-The [compound-proposal authority](../../../context/CONTRACTS.md#compound-proposals) defines a
+The [compound-proposal authority](../../../../context/CONTRACTS.md#compound-proposals) defines a
 participant as a callback inside the caller's proposal. It does not currently specify a full generic
 schema/ownership contract. Treat the proposed uniform contract as a design decision to settle,
 while retaining the established rule that a rescued refusal must not permit a partial write.

@@ -4,7 +4,7 @@ DATE: 2026-10-13
 STATUS: Complete; merged to main and archived. Stage ledger in [STATUS.md](STATUS.md).
 ISSUE: [#111](https://github.com/bldgtyp/ph-composer/issues/111)
 BASELINE: `cfe01a6aad99a0e09d5ecf0de5659c606d7ba4f9`
-FINDINGS: [F05](../../code-review/sections/03-services.md#f05-a-registered-library-kind-can-be-valid-yet-fail-because-sorting-requires-name), [RF-04](../../code-review/sections/04-ruby-features.md#rf-04-material-library-replacement-repeats-the-ordinary-persistence-pipeline)
+FINDINGS: [F05](../code-review/sections/03-services.md#f05-a-registered-library-kind-can-be-valid-yet-fail-because-sorting-requires-name), [RF-04](../code-review/sections/04-ruby-features.md#rf-04-material-library-replacement-repeats-the-ordinary-persistence-pipeline)
 DEPENDS ON: [Registration reliability](../registration-reliability/PLAN.md) RR-02 for the new adapter
 value. LC-03 touches `CallbackInvoker` only through its existing call; if
 [cross-feature composition](../cross-feature-composition/PLAN.md) C-03 lands first, LC-03 uses the
