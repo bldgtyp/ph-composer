@@ -238,7 +238,7 @@ Exit: offline tests pass; Ed confirms or amends the shape.
 
 ### EC-04: translation fixture and canonical reload
 
-State: Implemented on branch. The example's claim is on Faces, as planned; the shared example
+State: Merged to main in PR 123. The example's claim is on Faces, as planned; the shared example
 fixtures (`tests/fixtures/foundation/{extraction,result}.json`) gain the empty face-reviews section.
 Cancellation and Model-change policy are unchanged and keep their existing tests.
 
@@ -281,7 +281,8 @@ Accepted by Ed on 2026-10-13.
 The coding agent decides action parameter names within the shape above, the batch limit per owner
 (reuse the owner's existing gesture limit), and test file placement.
 
-Escalate to Ed: the EC-03 declaration shape before EC-04; any proposal to export `user_data`; any
+Escalate to Ed: the EC-03 declaration shape before EC-04 (confirmed 2026-10-13); exporting
+`user_data` (decided 2026-10-13: pass-through for Zone, Face, Window Unit and Assembly, PR 125, #124); any
 mapping that would need licensed runtime values.
 
 ## Verification profile
