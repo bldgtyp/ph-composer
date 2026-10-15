@@ -169,6 +169,8 @@ module PhComposer
         zone = zone_for_path(entities[0..zone_index],
                              entities[0...zone_index].any? { |entity| ZONE_STORE.read(entity) })
         inside = entities[(zone_index + 1)..-1]
+        return nil if inside[0...-1].any? { |entity| container?(entity) }
+
         transform = inside[0...-1].reduce(zone.transform) { |carried, entity| carried * entity.transformation }
         FaceOccurrence.new(:entity => face, :zone => zone, :path => inside.map(&:persistent_id),
                            :transform => transform, :entities => contents(entities[-2]))
@@ -198,9 +200,10 @@ module PhComposer
       end
 
       # Every container on the path is checked the way `walk_faces` bounds a Zone's Faces: a child
-      # carrying a Zone record owns what is inside it, so a path through one names a Face this Zone
-      # does not own, for reads and writes alike. A Group whose definition another Group shares is
-      # storage both placements write through, so a mutable path refuses it and asks for Make Unique.
+      # carrying a Zone record, or a Group carrying a Zone stamp, owns what is inside it, so a path
+      # through one names a Face this Zone does not own, for reads and writes alike. A Group whose
+      # definition another Group shares is storage both placements write through, so a mutable path
+      # refuses it and asks for Make Unique.
       def resolve_face_path(zone, path, mutable)
         current = zone.entity.entities
         transform = zone.transform
@@ -211,6 +214,8 @@ module PhComposer
 
           if ZONE_STORE.read(entity)
             raise_target("target.wrong_hierarchy", "The Face path crosses another Zone.")
+          elsif container?(entity)
+            raise_target("target.wrong_hierarchy", "The Face is inside a nested container, not among the Zone's Faces.")
           elsif entity.is_a?(Sketchup::ComponentInstance)
             if cutting_component?(entity)
               raise_target("target.wrong_kind", "Cutting component geometry is not a Zone Face.")
@@ -329,7 +334,7 @@ module PhComposer
             found << FaceOccurrence.new(:entity => entity, :zone => zone, :path => child_path,
                                         :transform => transform, :entities => entities)
           elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
-            next if ZONE_STORE.read(entity) || cutting_component?(entity)
+            next if ZONE_STORE.read(entity) || cutting_component?(entity) || container?(entity)
 
             child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
             walk_faces(child_entities, child_path, transform * entity.transformation, zone, found)
@@ -345,12 +350,20 @@ module PhComposer
         entity.is_a?(Sketchup::ComponentInstance) && entity.definition.behavior.cuts_opening?
       end
 
+      # A Group inside a Zone that carries a Zone stamp is a nested authoring container: the feature
+      # that stamped it owns what it holds, so none of it is a Zone Face, whichever Zone the stamp
+      # names. Presence decides, so an unreadable stamp still marks one. Only Groups: a stamped Face
+      # is a classified Zone Face (context/CONTRACTS.md, "Zones geometry rules").
+      def container?(entity)
+        entity.is_a?(Sketchup::Group) && !entity.get_attribute(STAMP_DICTIONARY, STAMP_STORE.key).nil?
+      end
+
       def raise_target(code, message)
         raise CodedError.new(code, message)
       end
       private_class_method :resolve_face_path, :walk_zones, :walk_faces, :raise_target,
-                           :zone_for_path, :cutting_component?, :contents, :writable_zone!, :unlocked_zone!,
-                           :stamped_for!
+                           :zone_for_path, :cutting_component?, :container?, :contents, :writable_zone!,
+                           :unlocked_zone!, :stamped_for!
     end
   end
 end

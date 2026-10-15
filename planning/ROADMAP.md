@@ -111,7 +111,7 @@ library file. METr conversion stays deferred.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | Scoped; planned as P3a-01 to P3a-12, re-baselined and every decision answered 2026-10-15, none authorized | Mostly a port. The Zone-copy contract, units and section-cycle check are on `main`; the reconciler, edit-context writer and Colour-by derived geometry are still to build. Phase 3a, its own packet |
+| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | In progress; P3a-01 to P3a-12 authorized 2026-10-15, one pull request each | Mostly a port. The Zone-copy contract, units and section-cycle check are on `main`; the reconciler, edit-context writer and Colour-by derived geometry are still to build. Phase 3a, its own packet |
 | 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09, none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
 
 Ed split Phase 3 on 2026-10-03 into two sub-phases, each one packet planned and worked on its own:
@@ -200,3 +200,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-15 | Spaces UI and UX settled with Ed: the Zones / Faces tab becomes Zones, with Faces and Spaces as views and loads and equipment views to follow; Spaces stages P3a-06 to P3a-08 restructured. No implementation authorized. |
 | 2026-10-15 | Spaces decisions D3a-1 to D3a-18 all answered and the interview record confirmed; the packet waits for its phase issue and Ed's go on P3a-01. |
 | 2026-10-15 | Spaces phase issue [#133](https://github.com/bldgtyp/ph-composer/issues/133) created; the packet waits for Ed's go on P3a-01. |
+| 2026-10-15 | Ed authorized the Spaces packet, one stage per pull request; P3a-01 implemented on branch. |

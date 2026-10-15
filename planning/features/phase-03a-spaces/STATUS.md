@@ -1,7 +1,7 @@
 # Phase 3a: Spaces, tracking ledger
 
 DATE: 2026-10-15
-STATUS: Scoped. Every decision answered and the interview record confirmed on 2026-10-15. No Spaces stage authorized or implemented.
+STATUS: In progress. Ed authorized the whole packet on 2026-10-15, stage by stage as one pull request each. P3a-01 implemented on branch.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -47,9 +47,9 @@ interview record (2026-10-15). The PRD carries every amendment.
 
 ## Next step
 
-The phase issue is [#133](https://github.com/bldgtyp/ph-composer/issues/133), and every header
-points at it. Ed says go on [P3a-01](phases/p3a-01-contracts-and-groundwork.md); P3a-06 needs no
-Spaces record and can start on its own branch once authorized. No stage starts before that.
+Ed authorized the packet on 2026-10-15: each stage on its own branch as one pull request, reviewed,
+merged on green CI, then the next. P3a-01 is implemented on `feature/spaces-p3a-01`; P3a-02 follows
+it.
 
 The stages keep the order the interview left, with four foundation stages ahead of the features
 that need them: groundwork (P3a-01), edit contexts and reconciliation (P3a-03), the Colour-by
@@ -73,7 +73,7 @@ P3a-01 and P3a-05; see its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
 | D3a-2 to D3a-5, D3a-9, D3a-10, D3a-12, D3a-15 and D3a-18 answered, each before the stage it blocks | Closed 2026-10-15 |
 | The Spaces UI and UX discussion held and the screen stages revised | Closed 2026-10-15: D3a-16 and D3a-17; P3a-06 to P3a-08 restructured |
 | A phase issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Closed 2026-10-15: [#133](https://github.com/bldgtyp/ph-composer/issues/133) |
-| Ed authorizes implementation, stage by stage or for a run of stages | Open |
+| Ed authorizes implementation, stage by stage or for a run of stages | Closed 2026-10-15: the whole packet, one stage per pull request, merged on green CI |
 | Phase 2 review refactors that touch the same shared files are merged or parked | Closed: [shared-deep-freeze](../../archive/shared-deep-freeze.md) merged through PR #83 on 2026-10-07 |
 
 ## Stage ledger
@@ -84,7 +84,7 @@ only when all three are done and its evidence file exists.
 
 | Stage | Title | State | Blocked by | Branch / PR | Offline | Host | Review | Evidence | Register |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts and groundwork | Scoped | Entry gates | | | | strong | | S01 |
+| [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts and groundwork | Implemented on branch | | `feature/spaces-p3a-01` | `make ci` pass (Ruby 3.2.2 local; 2.7.2 in CI) | S01 pass, 26.1.188 | strong, on the PR | [p3a-01](evidence/p3a-01-groundwork.md) | S01 |
 | [P3a-02](phases/p3a-02-space-records-and-operations.md) | Space records and operations | Scoped | P3a-01 | | | | ordinary | | S02 |
 | [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | Edit contexts, protection and reconciliation | Scoped | P3a-02 | | | | strong | | S03 |
 | [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | Copies and Move Space to Zone | Scoped | P3a-03 | | | | strong | | S04 |
@@ -130,7 +130,7 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | --- | --- | --- | --- |
 | Derived-geometry Colour-by extension | D2-6 | P3a-05 | Scoped |
 | Window Type operation marks | D2-6 | P3a-05 slice B (D3a-5) | Scoped |
-| Empty Room defect | R05 item 1 | P3a-01 | Scoped |
+| Empty Room defect | R05 item 1 | P3a-01 | Implemented on branch: refused as `object.unavailable` |
 | Section-read cycle refusal | R05 item 2 | none | Delivered on `main` by PR #122 (`registration.cycle`); P3a-01 corrects validation-and-export's STATUS |
 | Results from runs that cannot publish | R05 item 3 | P3a-10 | Scoped |
 | Optional attaching section rule | R05 item 4 | Moved to Phase 3b, [P3b-08](../phase-03b-thermal-bridges/phases/p3b-08-thermal-bridge-export.md), which delivers the first optional attaching section (D3b-20) | Moved |
@@ -187,3 +187,4 @@ and not reproduced.
 | 2026-10-15 | UI and UX discussion: Spaces is a view of the Zones tab (D3a-16), the factor is a numeric weighting factor (D3a-17), D3a-6, D3a-7, D3a-11 and D3a-14 answered, D3a-8 superseded, D3a-18 raised. P3a-06 is now Zone views, P3a-07 the Spaces view (absorbing the former airflow and balance stage) and P3a-08 Mark floor and Create Space. PRD, CONTRACTS, PLAN and ACCEPTANCE amended; mockups added. |
 | 2026-10-15 | Ed answered D3a-1 to D3a-5, D3a-9, D3a-10, D3a-12, D3a-15 and D3a-18, each as recommended, and confirmed the interview record. Remaining entry gates: the phase issue and Ed's go. |
 | 2026-10-15 | Phase issue [#133](https://github.com/bldgtyp/ph-composer/issues/133) created; every header in the packet points at it. The only open entry gate is Ed's go. |
+| 2026-10-15 | Ed authorized the whole packet, one stage per pull request. P3a-01 implemented on `feature/spaces-p3a-01`: the nested-container rule, the empty-Room refusal, CONTRACTS section 8; S01 passed on the host. |

@@ -1,6 +1,6 @@
 # Validation and export: status
 
-DATE: 2026-10-07
+DATE: 2026-10-15
 STATUS: In progress. Phase 1 HBJSON/report scope merged to main through PR #3 and PR #6 and accepted in
 the archived Phase 1 packet. Later feature scope remains.
 AUTHOR: Ed May, BLDGTYP, with Codex review
@@ -39,18 +39,17 @@ on 2026-10-01. See [PLAN.md](PLAN.md) for the original allocation; later scope r
 ### Owed from the Phase 2 review
 
 Added 2026-10-02 from [R05](../../../archive/phase-02-envelope-review/R05-export-layering.md)'s follow-ups.
-None is authorized yet.
+Items 1 and 2 are delivered. Item 3 is allocated to
+[P3a-10](../../phase-03a-spaces/phases/p3a-10-spaces-export.md), with the Spaces contributor,
+section and report schedule, and item 4 to Phase 3b's P3b-08.
 
-Phase 3 planning (2026-10-03) allocates item 1 (and allocated item 2, since delivered) to
-[P3a-01](../../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md) and item 3
-to [P3a-10](../../phase-03a-spaces/phases/p3a-10-spaces-export.md), with the Spaces
-contributor, section and report schedule. Item 4 stays here if Ed confirms D3a-9, which makes the
-Spaces section required for export, so it is not the first optional attaching section.
-
-1. **Defect: a Room with no Faces.** A Zone whose Faces are all omitted builds a Room with no Faces,
-   and the diagnostic canonical model then fails to reload. It predates R05, which made it reachable
-   without an Aperture. Reproduce it in a focused test first, then refuse or omit the empty Room
-   with a declared code. Do it before Spaces adds its first export section, or sooner.
+1. **Defect: a Room with no Faces.** Delivered by Spaces P3a-01 on 2026-10-15
+   (`feature/spaces-p3a-01`). A Zone whose Faces are all omitted is refused in `ZoneSection.translate`
+   as `object.unavailable`, blocking, so the run publishes nothing and the diagnostic model reloads
+   with the remaining Rooms. Refusing was chosen over omitting the Room, which would export a model
+   with a Zone silently missing. The same change stops a Surface Face whose counterpart sat in the
+   refused Zone from refusing its own Zone in `attach`.
+   `tests/python/test_model_sections.py::test_a_zone_whose_faces_are_all_omitted_is_refused_and_the_rest_reloads`.
 2. **Section-read cycles.** Delivered: registration refuses export sections that require each
    other, or themselves, as `registration.cycle` (`shell/registry_validation.rb`,
    `check_section_cycles`), merged through PR #122 with EC-03. Confirmed against `main` at

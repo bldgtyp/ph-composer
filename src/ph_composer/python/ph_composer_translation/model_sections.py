@@ -257,6 +257,10 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
             except (AssertionError, AttributeError, KeyError, ValueError) as error:
                 raise RecordError(f"face {face_id} could not be built: {error}") from error
             faces[face_id] = face
+        if not faces:
+            # honeybee writes a Room with no Faces but cannot read it back, so the diagnostic model
+            # would not reload. The Zone is refused instead; its omitted Faces report themselves.
+            raise RecordError(f"Zone {record.identifier} has no Faces left to export: every Face is omitted")
         try:
             room = hb_room.Room(record.identifier, list(faces.values()))
         except (AssertionError, ValueError) as error:
@@ -312,7 +316,14 @@ class ZoneSection(Section[ZoneRecord, TranslatedZone]):
         unpaired: list[TranslatedZone] = []
         for zone in objects:
             for identifier, specification in zone.specifications.items():
-                if identifier in omissions or specification.boundary_condition != "Surface" or identifier in paired:
+                # A Face `translate` left out, its counterpart omitted, needs no pairing even when that
+                # counterpart's Zone was refused and is absent from these specifications.
+                if (
+                    identifier in omissions
+                    or identifier not in emitted
+                    or specification.boundary_condition != "Surface"
+                    or identifier in paired
+                ):
                     continue
                 counterpart_id = _counterpart_id(specification)
                 counterpart = specifications.get(counterpart_id)

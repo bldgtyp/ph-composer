@@ -1,7 +1,7 @@
 # Phase 3a delivery plan: Spaces
 
 DATE: 2026-10-15
-STATUS: Scoped. Stages P3a-01 to P3a-12 planned; none authorized. Re-baselined on `main` at `87bdc62` on 2026-10-15; the screen stages were restructured the same day after the UI and UX discussion (Zone views: P3a-06 to P3a-08).
+STATUS: In progress. Stages P3a-01 to P3a-12 planned and authorized 2026-10-15, one pull request each. Re-baselined on `main` at `87bdc62` on 2026-10-15; the screen stages were restructured the same day after the UI and UX discussion (Zone views: P3a-06 to P3a-08).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

@@ -1,7 +1,7 @@
 # P3a-01: contracts and groundwork
 
 DATE: 2026-10-15
-STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the Ruby units and the section-cycle refusal are already merged and leave this stage
+STATUS: Implemented on branch `feature/spaces-p3a-01`, 2026-10-15. [Evidence](../evidence/p3a-01-groundwork.md)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

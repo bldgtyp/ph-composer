@@ -425,3 +425,27 @@ def test_a_failed_zone_costs_its_surface_partner_a_named_finding_and_withholds_t
     partner = ({"zon_AAAAAAAAAAAA", "zon_BBBBBBBBBBBB"} - {failed}).pop()
     assert blocking == sorted([("dependency.unavailable", failed), ("object.unavailable", partner)])
     assert "canonical_model" not in result
+
+
+def test_a_zone_whose_faces_are_all_omitted_is_refused_and_the_rest_reloads() -> None:
+    from ph_composer_translation.conformance import check
+
+    document = load_fixture()
+    faces = document["sections"]["ph_composer.zones.faces.export.faces"]["records"]
+    empty = faces[0]["zone_id"]
+    for face in faces:
+        if face["zone_id"] == empty:
+            omit(face, "face.boundary_unassigned")
+    translation = translate(document, SECTIONS)
+    result = cast(dict[str, Any], translation.to_document())
+
+    refused = [row for row in result["findings"] if row["object_id"] == empty]
+    assert [(row["code"], row["blocks_export"]) for row in refused] == [("object.unavailable", True)]
+    assert "no Faces left" in refused[0]["message"]
+    assert empty not in translation.objects(ZoneSection.id)
+    assert result["summary"]["publishable"] is False
+    canonical = result["canonical_model"]
+    check(canonical)
+    hbjson = json.loads(canonical["hbjson"])
+    assert [room["identifier"] for room in hbjson["rooms"]] == list(translation.objects(ZoneSection.id))
+    assert all(room["faces"] for room in hbjson["rooms"])
