@@ -70,8 +70,13 @@ name later requires an explicit migration decision rather than a partial rename.
 The Volume, Space and reconciler rules in this section and in the failure signatures below are the
 predecessor's, measured there and carried over for the Spaces feature. The two pieces they rest on
 are in `session/` and name no feature: `EditContext`, the one writer of `model.active_path`, and
-`DeferredWork`, the keyed coalesced pass. The Spaces reconciler that composes them arrives with the
-Spaces stage that owns protection. The observer, session and Undo rules apply now.
+`DeferredWork`, the keyed coalesced pass. The Spaces reconciler that composes them is
+`features/spaces/context/`: `Protection` (a Volume's own lock, written in a transparent operation
+that never aborts, and the EditContext boundary), `Reconciler` (the Volume last seen on the path, the
+queued exit protection, and the save rules below) and `Navigation` (the edit-context commands and
+Restore position). A Volume's own lock is protection, not a user's lock, so Spaces' own writes go
+through it; a lock on the Space or above refuses. The reconciler does not rename Groups from their
+records: a native rename of a Space Group stands until the next Spaces write to it.
 
 ### Observers report; deferred work mutates
 

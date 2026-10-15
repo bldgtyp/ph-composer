@@ -9,7 +9,8 @@ module PhComposer
         "space.outside_zone" => true, "space.empty" => false, "space.volume_empty" => false,
         "space.height_missing" => true, "space.number_duplicate" => false, "space.floor_projected" => false,
         "space.nested" => true, "space.volume_nested" => true, "space.volume_orphan" => true,
-        "space.segment_misplaced" => true
+        "space.segment_misplaced" => true, "space.volume_moved" => false,
+        "space.volume_unprotected" => false
       }.freeze
 
       module_function
@@ -35,6 +36,11 @@ module PhComposer
         found = []
         found << finding("space.volume_nested", "#{name} is below another Group inside its Space.") if row["nested"]
         found << finding("space.volume_empty", "#{name} has no Floor Segment.") if row.fetch("floor_segments").empty?
+        if !row["open"] && !row["protected"]
+          found << finding("space.volume_unprotected", "#{name} is not protected; its Faces can be edited from the " \
+                                                       "Space.")
+        end
+        found << finding("space.volume_moved", "#{name} moved inside its Space. Restore its position.") if row["moved"]
         unless row.dig("values", "avg_ceiling_height_m")
           found << finding("space.height_missing", "#{name} needs an average clear ceiling height.")
         end

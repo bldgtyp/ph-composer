@@ -122,8 +122,9 @@ module PhComposer
           SPACE_STORE.write(space, @space)
           space.name = Names.space(@space) if space.respond_to?(:name=)
         end
-        write_volume(volume)
         space_path = space ? @context_path + [space.persistent_id] : @context_path
+        write_volume(volume, model, space_path)
+        volume.locked = true
         slots[@slot] = { "entity_path" => space_path } if @slot
         record_affected(space_path, volume, space && { "space_id" => @space.fetch("id") })
       end
@@ -140,8 +141,9 @@ module PhComposer
         face
       end
 
-      def write_volume(volume)
-        VOLUME_STORE.write(volume, @volume.merge("home_transform" => volume.transformation.to_a))
+      def write_volume(volume, model, parent_ids)
+        home = Protection.local_transform(model, volume, parent_ids).to_a
+        VOLUME_STORE.write(volume, @volume.merge("home_transform" => home))
         volume.name = Names.volume(@volume) if volume.respond_to?(:name=)
         volume.entities.to_a.grep(Sketchup::Face).each do |face|
           record = @segments[face.persistent_id.to_s]
@@ -193,6 +195,7 @@ module PhComposer
           FLOOR_SEGMENT_STORE.delete(face) if @segments.include?(FLOOR_SEGMENT_STORE.read(face)&.fetch("id", nil))
         end
         VOLUME_STORE.delete(volume)
+        volume.locked = false
         volume.explode
       end
     end

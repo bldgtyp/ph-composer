@@ -1,7 +1,7 @@
 # P3a-03: edit contexts, protection and reconciliation
 
 DATE: 2026-10-15
-STATUS: Scoped. Re-baselined on `main` at `87bdc62`: deferred work builds on `HostFollowUp` and the Zones copy watcher, which landed after this stage was planned
+STATUS: In progress. Slice A merged through #138; slice B implemented on `feature/spaces-p3a-03b`; host gate partly run ([evidence](../evidence/p3a-03-contexts-and-reconciliation.md)), native-keystroke rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -75,7 +75,8 @@ Two slices. Slice A is foundation and merges first if the stage splits.
    change itself queues it, because the host can deliver them in either order.
 7. **Pre-save and post-save.** In `pre_save`, synchronously protect the Volume last seen and
    never touch the path. In `post_save`, close the boundary on the restored path.
-8. **Context operations.** `context.open`, `context.enter_volume`, `context.close` and `locate`,
+8. **Context operations.** `context.open`, `volumes.unprotect` (in review, replacing
+   `context.enter_volume`; CONTRACTS section 8), `context.close` and `locate`,
    with the verb CONTRACTS section 8 settled. Selecting or entering another Volume closes and
    protects the current one first, using the previous path. Row commands carry the issuing
    session. Port `operations/context.rb`.

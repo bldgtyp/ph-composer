@@ -111,6 +111,26 @@ module PhComposer
         { "volume_id" => occurrence.record.fetch("id") }
       end
 
+      # Puts a moved Volume back where its record says it was left, and protects it, in one Undo step.
+      def restore_position(request, proposal, volume:)
+        model = request.model
+        occurrence = Resolve.occurrence(Occurrences.scan(model), volume, :mutable => true)
+        if Protection.placement(model, occurrence.entity, occurrence.path[0...-1]) == :unreadable
+          raise CodedError.new("space.volume_open", "Close the Volume, or the Volume open beside it, before " \
+                                                    "restoring its position. Nothing was written.")
+        end
+        unless occurrence.record["home_transform"]
+          raise CodedError.new("space.position_unknown", "The Volume has no stored position. Nothing was written.")
+        end
+
+        moved = Navigation.moved?(model, occurrence)
+        if moved
+          proposal.add_step(RestorePositionStep.new(:path => occurrence.path, :before => occurrence.record),
+                            :scopes => [Operations::EntityScope.new(occurrence.path[0...-1])])
+        end
+        { "volume_id" => occurrence.record.fetch("id"), "moved" => moved }
+      end
+
       def delete(request, proposal, space:)
         scan = Occurrences.scan(request.model)
         occurrence = Resolve.occurrence(scan, space, :mutable => true)

@@ -11,8 +11,8 @@ module PhComposer
     end
 
     # `nested` is a Volume below another container inside its Space rather than directly in it. On
-    # every occurrence `shared` is storage another placement writes through and `locked` a lock on the
-    # entity or a container above it.
+    # every occurrence `shared` is storage another placement writes through and `locked` a lock the user
+    # set, on the entity or a container above it. A Volume's own lock is its protection and is not one.
     VolumeOccurrence = Struct.new(:entity, :path, :transform, :record, :segments, :nested, :shared, :locked,
                                   keyword_init: true) do
       def reference
@@ -84,9 +84,10 @@ module PhComposer
       def container(entity, path, transform, found, shared:, locked:, space:, volume:, direct:)
         carried = transform * entity.transformation
         child_shared = shared || shared_storage?(entity)
-        child_locked = locked || entity.locked?
         space_record = read(SPACE_STORE, SPACE, entity)
         volume_record = read(VOLUME_STORE, VOLUME, entity)
+        # A Volume's own lock is its protection, which Spaces writes; any other lock is the user's.
+        child_locked = locked || (entity.locked? && volume_record.nil?)
         context = { :found => found, :shared => child_shared, :locked => child_locked }
         if space_record
           inner = SpaceOccurrence.new(:entity => entity, :path => path, :transform => carried, :record => space_record,
