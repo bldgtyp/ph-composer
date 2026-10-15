@@ -6517,7 +6517,8 @@ Params:
         "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Loose Faces of the Zone, as its Face list returns them."
     }
   }
 }
@@ -23927,7 +23928,8 @@ Params:
         }
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "The edits, all or none."
     }
   }
 }
@@ -24056,13 +24058,16 @@ Params:
         "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
       },
       "minItems": 1,
-      "maxItems": 500
+      "maxItems": 500,
+      "description": "Loose Faces of the Zone, as its Face list returns them."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "The new Space's name; empty when absent."
     },
     "number": {
-      "type": "string"
+      "type": "string",
+      "description": "The new Space's number; the next free one in the Zone when absent."
     },
     "weighting_factor": {
       "type": "number",
@@ -24334,7 +24339,8 @@ Params:
         },
         "description": "A Space, Volume or Floor Segment reference, as list returns it."
       },
-      "minItems": 1
+      "minItems": 1,
+      "description": "The Floor Segments whose records go."
     }
   }
 }

@@ -10,7 +10,8 @@ module PhComposer
       FACE = Shapes.object({ "zone_id" => Shapes::TEXT, "zone_path" => Shapes::ZONE_PATH,
                              "entity_path" => Shapes::ZONE_PATH, "entity_id" => { "type" => %w[string null] } },
                            :description => "A Zone Face, as ph_composer.zones.faces.list returns it.")
-      FACES = Shapes.list(FACE).merge("minItems" => 1, "maxItems" => Pages::MAXIMUM_LIMIT)
+      FACES = Shapes.list(FACE).merge("minItems" => 1, "maxItems" => Pages::MAXIMUM_LIMIT,
+                                      "description" => "Loose Faces of the Zone, as its Face list returns them.")
       PATHS = Shapes.list(PATH).merge("minItems" => 1, "maxItems" => Pages::MAXIMUM_LIMIT,
                                       "description" => "Root-to-Face persistent-id paths.")
       # Any one of the three references: the id key it carries says which.
@@ -54,7 +55,11 @@ module PhComposer
                           "Face a Floor Segment. The Zone's edit context must be open.",
           :refuses => (ZONE_TARGET + %w[space.context_required space.nothing_to_create]).uniq,
           :params => Shapes.object(CREATE_PARAMS.fetch("properties").merge(
-            "name" => Shapes::TEXT, "number" => Shapes::TEXT, "weighting_factor" => FACTOR
+            "name" => Shapes::TEXT.merge("description" => "The new Space's name; empty when absent."),
+            "number" => Shapes::TEXT.merge("description" => "The new Space's number; the " \
+                                                            "next free one in the Zone " \
+                                                            "when absent."),
+            "weighting_factor" => FACTOR
           ), :optional => %w[name number weighting_factor]),
           :result => CREATED, :undo_name => "Create Space", :participants => [Authoring::STAMP],
           :side_effects => "Groups the Faces and writes the Space, Volume, Floor Segment and Zone stamp.",
@@ -91,7 +96,8 @@ module PhComposer
           :description => "Change many Spaces, Volumes and Floor Segments in one all-or-nothing step.",
           :refuses => TARGET,
           :params => Shapes.object({ "edits" => Shapes.list(EDIT).merge("minItems" => 1,
-                                                                        "maxItems" => Pages::MAXIMUM_LIMIT) }),
+                                                                        "maxItems" => Pages::MAXIMUM_LIMIT,
+                                                                        "description" => "The edits, all or none.") }),
           :result => IDS, :undo_name => "Edit Spaces", :side_effects => "Rewrites every named record in one Undo step.",
           :examples => [{ "edits" => [{ "reference" => EXAMPLE_VOLUME, "values" => { "avg_ceiling_height_m" => 2.7 },
                                         "expected_values" => { "avg_ceiling_height_m" => 2.5 } }] }]
@@ -142,7 +148,9 @@ module PhComposer
         }],
         ["floors.unmark", {
           :description => "Remove explicit Floor Segment records; the Faces stay.", :refuses => TARGET,
-          :params => Shapes.object({ "floor_segments" => Shapes.list(REFERENCE).merge("minItems" => 1) }),
+          :params => Shapes.object({ "floor_segments" => Shapes.list(REFERENCE).merge(
+            "minItems" => 1, "description" => "The Floor Segments whose records go."
+          ) }),
           :result => Shapes.object({ "floor_segment_ids" => Shapes.list(Shapes::TEXT) }),
           :undo_name => "Unmark Floor", :side_effects => "Removes Floor Segment records.",
           :examples => [{ "floor_segments" => [{ "floor_segment_id" => "fsg_Ab12Cd34Ef56",
