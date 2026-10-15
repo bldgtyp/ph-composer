@@ -69,12 +69,13 @@ module PhComposer
           reset
           return if @repaired.empty?
 
-          reverted = @repaired.select do |path, id|
-            occurrences.any? { |space| space.path == path && space.record.fetch("id") != id }
-          end
+          live = occurrences.to_h { |space| [space.path, space.record.fetch("id")] }
+          # A copy no longer in the Model has nothing left to warn about; every other repair is kept, so a
+          # later Undo of an earlier batch, or another Undo after a Redo, still warns.
+          @repaired = @repaired.select { |path, _id| live.key?(path) }
+          reverted = @repaired.select { |path, id| live.fetch(path) != id }
           return if reverted.empty?
 
-          @repaired = {}
           count = reverted.length
           @session.notice("Undo also took back making the #{spaces(count)} independent, because it had joined a " \
                           "later change. Use Make independent on #{count == 1 ? 'its row' : 'their rows'}.",
@@ -149,9 +150,9 @@ module PhComposer
         def remember(repairable, result)
           return unless result.fetch("status") == "completed"
 
-          @repaired = repairable.zip(result.fetch("values")).to_h do |space, value|
+          @repaired = @repaired.merge(repairable.zip(result.fetch("values")).to_h do |space, value|
             [space.path, value.fetch("ids").find { |row| row.fetch("kind") == SPACE_KIND }.fetch("after")]
-          end
+          end)
         end
 
         def announce_shared(shared)

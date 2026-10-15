@@ -44,6 +44,15 @@ class SpacesCopyWatchTest < PhComposerTestCase
     copy
   end
 
+  def copy_in_operation(group, persistent_id)
+    copy = Sketchup::Group.new(persistent_id, group.entities)
+    SPACES::SPACE_STORE.write(copy, SPACES::SPACE_STORE.read(group))
+    @model.start_operation("Copy")
+    @zone.entities << copy
+    @model.commit_operation
+    copy
+  end
+
   def spaces
     API.query(:context => @context, :name => "ph_composer.spaces.all").dig("value", "spaces")
   end
@@ -122,6 +131,20 @@ class SpacesCopyWatchTest < PhComposerTestCase
     @model.undo
     assert_equal %w[spc_SSSSSSSSSSSS spc_SSSSSSSSSSSS], spaces.map { |row| row["id"] }
     assert_equal :warning, @notices.last.first
+    assert_includes @notices.last.last, "Undo also took back"
+  end
+
+  # A later batch does not forget an earlier repair: undoing back past it still warns.
+  def test_an_undo_of_an_earlier_batch_still_warns
+    copy_in_operation(@space, 120)
+    @model.start_operation("Other")
+    @model.commit_operation
+    UI.run_timers
+    copy_in_operation(@space, 130)
+    UI.run_timers
+    @model.undo
+    assert_empty(@notices.select { |tone, _message| tone == :warning })
+    @model.undo
     assert_includes @notices.last.last, "Undo also took back"
   end
 

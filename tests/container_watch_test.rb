@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "delegate"
 require_relative "test_helper"
 
 # The session reports each Group or ComponentInstance added to any container as `container_added`, for
@@ -38,6 +39,21 @@ class ContainerWatchTest < PhComposerTestCase
     UI.run_timers
     later.entities << Sketchup::Group.new(41, Sketchup::Entities.new([]))
     assert_equal [41], @added.map(&:persistent_id)
+  end
+
+  # The host answers a new Ruby wrapper from every Group#entities call (context/SKETCHUP_HOST_BEHAVIOR.md,
+  # "Observers and edit contexts"); a definition two placements share is still observed once.
+  def test_a_shared_definition_is_observed_once_through_fresh_wrappers
+    inner = Sketchup::Entities.new([])
+    placements = [60, 61].map { |id| Sketchup::Group.new(id, inner) }
+    placements.each { |group| group.define_singleton_method(:entities) { SimpleDelegator.new(inner) } }
+    @model.entities << Sketchup::Group.new(62, Sketchup::Entities.new(placements))
+    2.times do
+      @session.host_event(:transaction_committed)
+      UI.run_timers
+    end
+    observers = inner.instance_variable_get(:@observers)
+    assert_equal 1, observers.count { |observer| observer.is_a?(PhComposer::ContainerWatch::Observer) }
   end
 
   def test_a_detached_session_reports_nothing

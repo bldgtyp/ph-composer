@@ -32,7 +32,7 @@ module PhComposer
     def initialize(session)
       @session = session
       @observer = Observer.new(self)
-      @observed = {}.compare_by_identity
+      @observed = {}
       @timer = CoalescedTimer.new
     end
 
@@ -46,48 +46,57 @@ module PhComposer
     def added(entity)
       return unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
 
-      fresh = {}.compare_by_identity
-      walk(contents(entity), fresh)
-      fresh.each_key { |entities| observe(entities) }
+      fresh = {}
+      walk(contents(entity), key(entity), fresh)
+      fresh.each { |found_key, entities| observe(found_key, entities) }
       @session.host_event(:container_added, entity)
     rescue StandardError => error
       # An observer callback must not raise into SketchUp; a subscriber's failure is its own.
       Diagnostics.exception("container_added", error)
     end
 
-    # Observes every container now in the Model and stops observing those gone. Membership is keyed by
-    # identity, so one pass is linear in the containers it visits.
+    # Observes every container now in the Model and stops observing those gone. Each collection is keyed
+    # by its definition's persistent id, because `Group#entities` answers a new Ruby wrapper on every call
+    # (context/SKETCHUP_HOST_BEHAVIOR.md, "Observers and edit contexts"): a definition several placements
+    # share is walked and observed once, and an unchanged one is not observed again.
     def discover
       @timer.cancel
-      found = {}.compare_by_identity
-      walk(@session.model.entities, found)
-      @observed.each_key { |entities| unobserve(entities) unless found.key?(entities) }
-      found.each_key { |entities| entities.add_observer(@observer) unless @observed.key?(entities) }
-      @observed = found
+      found = {}
+      walk(@session.model.entities, :model, found)
+      @observed.each { |known, entities| unobserve(entities) unless found.key?(known) }
+      found.each { |known, entities| entities.add_observer(@observer) unless @observed.key?(known) }
+      # The wrapper an observer was added through is kept, so it is the one later removed.
+      @observed = found.to_h { |known, entities| [known, @observed.fetch(known, entities)] }
     end
 
     def detach
       @timer.cancel
-      @observed.each_key { |entities| unobserve(entities) }
-      @observed = {}.compare_by_identity
+      @observed.each_value { |entities| unobserve(entities) }
+      @observed = {}
     end
 
     private
 
-    def walk(entities, found)
-      return if found.key?(entities)
+    def walk(entities, known, found)
+      return if found.key?(known)
 
-      found[entities] = true
+      found[known] = entities
       entities.each do |entity|
-        walk(contents(entity), found) if entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+        next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+
+        walk(contents(entity), key(entity), found)
       end
     end
 
-    def observe(entities)
-      return if @observed.key?(entities)
+    def observe(known, entities)
+      return if @observed.key?(known)
 
       entities.add_observer(@observer)
-      @observed[entities] = true
+      @observed[known] = entities
+    end
+
+    def key(container)
+      container.definition.persistent_id
     end
 
     def contents(container)
