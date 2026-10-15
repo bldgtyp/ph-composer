@@ -68,6 +68,34 @@ class WindowColourModesTest < PhComposerTestCase
     assert_equal before, U::MutationScope.new.capture(@model)
   end
 
+  # Slice B of P3a-05: a swing element pointing left carries two mark segments from the pane's right
+  # corners to its left midpoint, placed by the Unit's transform and drawn in the Type's colour; a Type
+  # with no operation draws none.
+  def test_by_type_draws_each_elements_operation_marks_in_the_types_colour
+    assert(W::ColourModes.entries(read).all? { |entry| entry.derived.nil? })
+    values = assignment_query("ph_composer.windows.types.list", "ids" => [@type_id])["records"].first["values"]
+    element = values["elements"].first["id"]
+    result = assignment_invoke("ph_composer.windows.types.grid.set_element_operation",
+                               "id" => @type_id, "element_id" => element, "expected_values" => values,
+                               "operation" => { "type" => "swing", "directions" => ["left"] })
+    assert_equal "ok", result.fetch("code"), result.inspect
+    unit = U::Occurrences.all(@model).first
+    entry = W::ColourModes.entries(read).first
+    pane = U::DefinitionPlan.build(assignment_query("ph_composer.windows.types.list",
+                                                    "ids" => [@type_id])["records"].first["values"]).panes.first
+    left, bottom, right, top = [pane.polygon_m.map(&:first).min, pane.polygon_m.map { |point| point[1] }.min,
+                                pane.polygon_m.map(&:first).max, pane.polygon_m.map { |point| point[1] }.max]
+    xyz = ->(point) { [point.x, point.y, point.z] }
+    inches = ->(x, y) { xyz.call(Geom::Point3d.new(x / 0.0254, y / 0.0254, 0).transform(unit.transform)) }
+    expected = [[inches.call(right, top), inches.call(left, (top + bottom) / 2.0)],
+                [inches.call(left, (top + bottom) / 2.0), inches.call(right, bottom)]]
+    actual = entry.derived.segments.map { |segment| segment.map(&xyz) }
+    expected.flatten.zip(actual.flatten).each { |e, a| assert_in_delta e, a, 1e-9 }
+    service = PhComposer::ColourBy.for(@session)
+    service.activate(W::ColourModes::BY_TYPE)
+    assert_equal 8, service.lines.values.sum(&:length), "two Units, two segments each"
+  end
+
   private
 
   def read
