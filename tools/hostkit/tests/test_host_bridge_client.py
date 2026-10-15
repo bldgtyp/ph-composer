@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import subprocess
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -187,6 +189,48 @@ class DialogGuardTest(unittest.TestCase):
             self.guard(FakeChild(alive_polls=1, returncode=1, out=b"ERROR RuntimeError\n"))
 
         self.assertIn("RuntimeError", str(raised.exception))
+
+
+class QuitTest(unittest.TestCase):
+    """A SketchUp with no document open must still quit cleanly, not be killed."""
+
+    def test_a_failed_save_step_still_terminates_and_the_save_guards_a_missing_model(self) -> None:
+        calls: list[str] = []
+
+        def guard(_version: str, code: str, **_options: float) -> str:
+            calls.append(code)
+            raise hb.BridgeError("the save step failed")
+
+        running = iter([True, False])
+        with (
+            patch.object(hb, "sketchup_running", side_effect=lambda: next(running)),
+            patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}),
+            patch.object(hb, "run_with_dialog_guard", side_effect=guard),
+            patch.object(hb, "request", side_effect=lambda _state, payload, **_kw: calls.append(payload["code"])),
+            patch.object(hb.time, "sleep"),
+        ):
+            outcome = hb.quit_sketchup("2026")
+
+        self.assertEqual(outcome, "SketchUp quit cleanly")
+        self.assertEqual(calls, [hb.DISCARD_SAVE, 'Sketchup.send_action("terminate:")'], "save, then terminate")
+
+    @unittest.skipUnless(shutil.which("ruby"), "needs a ruby to run the save step")
+    def test_the_save_step_saves_only_a_modified_model_and_tolerates_none(self) -> None:
+        stub = (
+            "class M; def initialize(modified); @modified = modified; end; def modified?; @modified; end; "
+            "def save(path); $saved = path; true; end; end; "
+            "module Sketchup; def self.active_model; $model; end; end; "
+        )
+        for model, saved in (
+            ("nil", "nil"),
+            ("M.new(false)", "nil"),
+            ("M.new(true)", '"/private/tmp/ph_composer_discard.skp"'),
+        ):
+            script = (
+                f"{stub}$model = {model}; $saved = nil; value = ({hb.DISCARD_SAVE}); puts value.inspect, $saved.inspect"
+            )
+            result = subprocess.run(["ruby", "-e", script], capture_output=True, text=True, check=True)
+            self.assertEqual(result.stdout.split(), [":ok", saved], model)
 
 
 class TailTest(unittest.TestCase):

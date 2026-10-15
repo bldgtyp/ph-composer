@@ -50,6 +50,9 @@ Select the applicable questions; do not demand evidence for capabilities outside
   behavior. Preservation does not imply validation or permission to export arbitrary metadata.
 - Do importers propose changes through normal operations? Do exporters consume HBJSON alone?
   Does feature data enter translation through a declared contributor contract?
+- Does every ending, refusal and cancellation the owning PRD names have a test? Check the PRD's
+  list itself, not only the plan's test list, which can be narrower; gestures especially (lost
+  release, another button, blur, disposal).
 - Can a newcomer find a public entrypoint, its contract and a small working example? Are required
   tests proportional to the changed boundary? Use runtime, compatibility and host evidence where
   the owning gate requires them.

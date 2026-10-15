@@ -25,6 +25,7 @@ Exit status 1 on a Ruby error, 2 when the bridge is unreachable.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import signal
@@ -163,21 +164,22 @@ def run_with_dialog_guard(version: str, code: str, timeout: float = 120.0, escap
     return out.decode("utf-8", "replace").strip()
 
 
+# Saves a modified Model to a scratch path so terminate meets no save prompt; with no document open
+# the active Model is nil and there is nothing to save.
+DISCARD_SAVE = 'm = Sketchup.active_model; m.save("/private/tmp/ph_composer_discard.skp") if m && m.modified?; :ok'
+
+
 def quit_sketchup(version: str) -> str:
     """Quit without a save dialog: discard-save a modified Model to a scratch path, then terminate."""
     if not sketchup_running():
         return "SketchUp not running"
     state = read_state(version)
     if state is not None:
-        try:
-            run_with_dialog_guard(
-                version,
-                'm = Sketchup.active_model; m.save("/private/tmp/ph_composer_discard.skp") if m.modified?; :ok',
-                timeout=60.0,
-            )
+        # SketchUp running with no document has no active Model; the save step must not stop the quit.
+        with contextlib.suppress(BridgeError, OSError, TimeoutError):
+            run_with_dialog_guard(version, DISCARD_SAVE, timeout=60.0)
+        with contextlib.suppress(BridgeError, OSError, TimeoutError):
             request(state, {"code": 'Sketchup.send_action("terminate:")'}, timeout=10.0)
-        except (BridgeError, OSError, TimeoutError):
-            pass
     for _ in range(30):
         if not sketchup_running():
             Path("/private/tmp/ph_composer_discard.skp").unlink(missing_ok=True)
