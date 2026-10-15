@@ -9,22 +9,37 @@ module PhComposer
     module Protection
       module_function
 
-      # A Group's transform relative to its parent, read through the open edit context: while a context is
-      # open the host reports its direct children in world coordinates (composed with `edit_transform`)
-      # and the open Groups on the path as identity (context/SKETCHUP_HOST_BEHAVIOR.md). Nil for a Group on
-      # the open path, whose own transform cannot be read there.
+      # A Group's transform relative to its parent, read through the open edit context. While a context is
+      # open the host reports the Groups on the path as identity and the children of any of them in world
+      # coordinates (context/SKETCHUP_HOST_BEHAVIOR.md). A child of the innermost open Group converts
+      # through `edit_transform`, which is that Group's world transform; a child of an outer Group on the
+      # path cannot be read reliably, nor can a Group on the path, so both answer nil.
       def local_transform(model, entity, parent_ids)
-        open_ids = Array(model.active_path).map(&:persistent_id)
-        return nil if open_ids.include?(entity.persistent_id)
-        return entity.transformation unless !open_ids.empty? && open_ids == parent_ids
-
-        model.edit_transform.inverse * entity.transformation
+        case placement(model, entity, parent_ids)
+        when :closed then entity.transformation
+        when :in_open_context then model.edit_transform.inverse * entity.transformation
+        end
       end
 
-      # Sets a Group's transform relative to its parent, through the open edit context as above.
+      # Sets a Group's transform relative to its parent, through the open edit context as above. Answers
+      # false, writing nothing, where the transform cannot be read.
       def set_local_transform(model, entity, parent_ids, local)
+        case placement(model, entity, parent_ids)
+        when :closed then entity.transformation = local
+        when :in_open_context then entity.transformation = model.edit_transform * local
+        else return false
+        end
+        true
+      end
+
+      # :closed, :in_open_context (a child of the innermost open Group) or :unreadable.
+      def placement(model, entity, parent_ids)
         open_ids = Array(model.active_path).map(&:persistent_id)
-        entity.transformation = !open_ids.empty? && open_ids == parent_ids ? model.edit_transform * local : local
+        return :unreadable if open_ids.include?(entity.persistent_id)
+        return :in_open_context if !open_ids.empty? && open_ids == parent_ids
+        return :unreadable if open_ids.include?(parent_ids.last)
+
+        :closed
       end
 
       def volume?(entity)

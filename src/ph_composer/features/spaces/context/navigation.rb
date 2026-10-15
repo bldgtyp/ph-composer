@@ -105,9 +105,13 @@ module PhComposer
           raise CodedError.new("target.changed", "The Volume changed after it was previewed. Nothing was written.")
         end
 
+        home = Geom::Transformation.new(@before.fetch("home_transform"))
+        if Protection.placement(model, volume, @path[0...-1]) == :unreadable
+          raise CodedError.new("space.volume_open", "The Volume's context opened before it was restored.")
+        end
+
         volume.locked = false
-        Protection.set_local_transform(model, volume, @path[0...-1],
-                                       Geom::Transformation.new(@before.fetch("home_transform")))
+        Protection.set_local_transform(model, volume, @path[0...-1], home)
         volume.locked = true
       end
     end

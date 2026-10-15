@@ -115,9 +115,9 @@ module PhComposer
       def restore_position(request, proposal, volume:)
         model = request.model
         occurrence = Resolve.occurrence(Occurrences.scan(model), volume, :mutable => true)
-        if Array(model.active_path).any? { |entity| entity.equal?(occurrence.entity) }
-          raise CodedError.new("space.volume_open", "Close the Volume before restoring its position. Nothing was " \
-                                                    "written.")
+        if Protection.placement(model, occurrence.entity, occurrence.path[0...-1]) == :unreadable
+          raise CodedError.new("space.volume_open", "Close the Volume, or the Volume open beside it, before " \
+                                                    "restoring its position. Nothing was written.")
         end
         unless occurrence.record["home_transform"]
           raise CodedError.new("space.position_unknown", "The Volume has no stored position. Nothing was written.")

@@ -152,6 +152,9 @@ class SpacesContextTest < PhComposerTestCase
       assert_equal local.to_a, SPACES::Protection.local_transform(@model, @first, [100, 110]).to_a
     end
     assert_nil SPACES::Protection.local_transform(@model, @space, [100])
+    @model.active_path = [@zone, @space, @second]
+    assert_nil SPACES::Protection.local_transform(@model, @first, [100, 110]), "a sibling of the open Volume"
+    @model.active_path = [@zone, @space]
     written = nil
     @first.stub(:transformation=, ->(value) { written = value }) do
       SPACES::Protection.set_local_transform(@model, @first, [100, 110], local)
