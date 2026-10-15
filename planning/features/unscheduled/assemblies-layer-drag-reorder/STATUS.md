@@ -5,10 +5,10 @@ STATUS: In progress. Authorized 2026-10-15; LR-01 to LR-03 implemented on branch
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#128](https://github.com/bldgtyp/ph-composer/issues/128)
 
-The visual direction is approved; real drag behavior is not implemented. Packet created on
-2026-10-07 under the owner's standing instruction to scope larger new features for dedicated
-branches. The refactor's hover gear and the existing directional Move actions are separate and
-merged.
+The action, the grip and its drag gesture are implemented on the branch and pass the offline gates
+and the browser check; native host acceptance (LR-04) is outstanding. Packet created on 2026-10-07
+under the owner's standing instruction to scope larger new features for dedicated branches. The
+refactor's hover gear and the existing directional Move actions are separate and merged.
 
 ## Stages
 
@@ -25,6 +25,14 @@ LR-D1 to LR-D11 in [PLAN.md](PLAN.md), "Decisions proposed", are taken as propos
 decisions map to them: action name and schema (LR-D1), auto-scroll and thin-Layer reach
 (LR-D5, LR-D7), ghost versus reserved space (LR-D6). The gutter widening (LR-D11) is new.
 
+## Review
+
+[PR #129](https://github.com/bldgtyp/ph-composer/pull/129), gpt-6-astra over `ddad1b18`: one P1,
+one P2, one P3, all confirmed and fixed. P1: a lost release (no mouseup, later moves report the
+primary button up) left the drag live, so a later click could drop; a move with the button up now
+ends it. P2: any button's mouseup finished the drag; only the primary button's does now. P3: the
+STATUS and PLAN summaries contradicted the stage rows. One focused test covers P1 and P2.
+
 ## Delivery, as authorized on 2026-10-15
 
 Ed started the packet through `implement-loop` on 2026-10-15 with these instructions, which
@@ -32,12 +40,15 @@ override the plan where they differ. Veto any of them here.
 
 - One branch, `feat/assemblies-layer-drag-reorder`, and one pull request for the whole packet
   instead of one per stage. Each stage is its own signed commit on that branch.
-- The review is one gpt-6.1-sol pass through `pr-loop`, which also stands for LR-04 step 12's
-  "stronger independent pass": Ed named the model.
+- The review is one Codex pass through `pr-loop`, which also stands for LR-04 step 12's
+  "stronger independent pass". Ed named gpt-6.1-sol; it refused three times on 2026-10-15 ("not
+  supported when using Codex with a ChatGPT account", no OpenAI incident), and Ed chose
+  gpt-6-astra for this PR.
 - Claude merges the PR once the review findings are resolved, then archives the packet and deletes
   the branch locally and on the remote.
 - Guard detail settled during LR-02 design: `Editor.guard()` refuses while a Layer drag is active,
   not while `Editor.dragging` is set, because the Material drag's own busy check reads `guard()`
   on every move and would end itself.
 
-Offline and native acceptance: NOT RUN. No release or API claim.
+Offline gates and browser checks: passed for LR-01 to LR-03 (see the stage rows; two unrelated
+browser checks fail on `main` too). Native acceptance: NOT RUN until LR-04. No release claim.

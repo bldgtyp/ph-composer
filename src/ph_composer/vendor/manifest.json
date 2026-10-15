@@ -66,9 +66,9 @@
       "sha256": "41cf389b7db968076a84100cf8bb2480834a48c413d447805c640d99f4e668ed"
     },
     "html/features/assemblies/layer_drag.js": {
-      "bytes": 7434,
+      "bytes": 7785,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "244065b21334be05f501d37bb94ebd5c3690e18458fd1223946afe598a66889e"
+      "sha256": "1c8c3262a7bccbe13f45d8d12343c25a7a9ea6bc873d6439219edbda1c6408e1"
     },
     "html/features/assemblies/layer_tools.js": {
       "bytes": 3496,

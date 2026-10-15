@@ -57,6 +57,11 @@ function press(o, id, y) {
 function move(o, x, y) {
   o.document.dispatchEvent({ type: "mousemove", clientX: x, clientY: y, preventDefault: function () {} });
 }
+// A move that reports which buttons are held, as a real pointer does.
+function moveHolding(o, buttons, y) {
+  o.document.dispatchEvent({ type: "mousemove", clientX: 300, clientY: y, buttons: buttons,
+    preventDefault: function () {} });
+}
 function up(o, x, y) { o.document.dispatchEvent({ type: "mouseup", clientX: x, clientY: y }); }
 // Pressed on a grip, then dragged well past the threshold to clientY.
 function drag(o, id, from, to) { press(o, id, from); move(o, 150, from + (to < from ? -20 : 20)); move(o, 300, to); }
@@ -147,6 +152,25 @@ test("a release on its own place, outside the frame or under the threshold sends
   assert.strictEqual(o.sent.length, 0);
 });
 
+test("a lost release ends the drag and another button's release does not drop", function () {
+  var o = setup();
+  press(o, "layer_board", 106);
+  moveHolding(o, 0, 270);
+  assert.strictEqual(o.document.listenerLists.mousemove.length, 0, "a press whose release was lost lets go");
+  drag(o, "layer_board", 106, 270);
+  moveHolding(o, 0, 271);
+  ended(o);
+  up(o, 300, 271);
+  assert.strictEqual(o.sent.length, 0, "a later release sends nothing");
+  drag(o, "layer_board", 106, 270);
+  o.document.dispatchEvent({ type: "mouseup", button: 2, clientX: 300, clientY: 270 });
+  assert.strictEqual(o.editor.dragging, true, "the right button's release leaves the Layer held");
+  assert.strictEqual(o.sent.length, 0);
+  moveHolding(o, 1, 270);
+  up(o, 300, 270);
+  ended(o);
+  assert.deepStrictEqual([o.sent.length, o.sent[0].payload.params.index], [1, 3]);
+});
 test("Escape, leaving the window, a repaint and disposal end a drag and send nothing", function () {
   var o = setup();
   o.editor.select({ layerId: "layer_studs", segmentId: "seg_wool" });

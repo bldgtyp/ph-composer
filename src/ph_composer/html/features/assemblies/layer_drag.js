@@ -37,7 +37,11 @@ PhComposerUI.define("features/assemblies/layer_drag", ["workspace"], function (u
     var self = this;
     this.owner = owner;
     this.held = null;
-    this.move = function (event) { self.track(event); };
+    this.move = function (event) {
+      // The primary button is already up: its release was lost (outside the page, or swallowed), so drop nothing.
+      if (typeof event.buttons === "number" && !(event.buttons & 1)) self.end();
+      else self.track(event);
+    };
     this.up = function (event) { self.release(event); };
     this.key = function (event) {
       if (event.key !== "Escape" || !self.held) return;
@@ -109,6 +113,8 @@ PhComposerUI.define("features/assemblies/layer_drag", ["workspace"], function (u
   /* The drag ends before the action is sent, so the Builder's own guard sees no drag in progress. */
   LayerDrag.prototype.release = function (event) {
     var held = this.held;
+    // Only the primary button that pressed the grip ends the drag; another button's release changes nothing.
+    if (event.button) return;
     if (held && held.ghost) this.track(event);
     this.end();
     if (!held || !held.ghost || held.outside || held.index === held.context.index) return;
