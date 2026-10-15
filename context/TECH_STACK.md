@@ -68,10 +68,10 @@ name later requires an explicit migration decision rather than a partial rename.
 ## SketchUp Model and transaction rules
 
 The Volume, Space and reconciler rules in this section and in the failure signatures below are the
-predecessor's, measured there and carried over for the Spaces feature. No Volume, reconciler,
-`close_volume` or `model.active_path` assignment exists in this repository yet; the Spaces
-feature adopts them, with their tests, when it lands. The observer, session and Undo rules apply
-now.
+predecessor's, measured there and carried over for the Spaces feature. The two pieces they rest on
+are in `session/` and name no feature: `EditContext`, the one writer of `model.active_path`, and
+`DeferredWork`, the keyed coalesced pass. The Spaces reconciler that composes them arrives with the
+Spaces stage that owns protection. The observer, session and Undo rules apply now.
 
 ### Observers report; deferred work mutates
 
@@ -83,10 +83,14 @@ lock state inside the callback.
 Coalesce repeated callbacks for the same transaction. A deferred pass must be idempotent: no write,
 no Undo entry, and no panel churn when current state already matches the contract.
 
-In the predecessor, `features/spaces/reconciler.rb` owns these rules: a `Baseline` for what the
-last committed transaction looked like, `PendingWork` for the coalesced deferred pass, and an
-`UndoLedger` for the automatic entry and its explicit suppressions. `session/host_observers.rb`
-only translates SketchUp callbacks into session host events. Each feature subscribes in its
+`session/deferred_work.rb` is the coalesced pass: an observer queues a keyed job and returns, a
+second job under the same key merges through the caller's block, and one zero-delay pass runs every
+job. A feature keeps one in its state object and forwards `pending?`, `settle` and `detach`, so a
+queued pass makes reads and writes wait (`ModelSession#busy_reason`) and a closing Model drops it.
+Queue a job only for work that may write: a pass that would find nothing to do should not make the
+session busy. The predecessor's `UndoLedger` is not carried over: it tracked a Volume the TFA
+transition created and entered automatically, and the explicit mark removed that transition.
+`session/host_observers.rb` only translates SketchUp callbacks into session host events. Each feature subscribes in its
 `install`, subscribers run in install order, and a feature subscribes once per process so a
 reloaded `install` does not subscribe twice.
 
@@ -152,8 +156,12 @@ with the path already outside the Volume; either callback must queue the exit pr
 The active path carries authoring intent. Before switching directly from one Volume to another,
 close and reconcile the current Volume using the previous path. Looking only at the new path
 produces false `volume_moved` findings and leaves protection stale. One module is the only place
-the extension assigns `model.active_path`; a test refuses any other assignment. Its `close_volume`
-is the boundary that export, save and every navigation command share.
+the extension assigns `model.active_path`, `session/edit_context.rb`; a test refuses any other
+assignment. `EditContext.enter` runs every registered boundary with the path being left and the
+path being entered before it changes the path, and `EditContext.close` runs them without a path
+change, which is what a save needs. A feature registers its boundary by name in `install`; the
+Spaces boundary protects the Volume being left. That boundary is what export, save and every
+navigation command share.
 
 Selecting another Volume or the Space from the panel closes and protects the current Volume
 before selection, because SketchUp cannot select outside the open context. Derive open state from
