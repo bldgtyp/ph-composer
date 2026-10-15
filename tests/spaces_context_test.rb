@@ -209,6 +209,7 @@ class SpacesContextTest < PhComposerTestCase
     copy = Sketchup::Group.new(120, @space.entities)
     SPACES::SPACE_STORE.write(copy, SPACES::SPACE_STORE.read(@space))
     @zone.entities << copy
+    treat_duplicates_as_existing(@model)
     @first.locked = false
     @model.active_path = [@zone, @space, @first]
     volumes = API.query(:context => @context, :name => "ph_composer.spaces.all").dig("value", "spaces")

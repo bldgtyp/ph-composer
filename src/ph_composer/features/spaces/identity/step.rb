@@ -9,9 +9,12 @@ module PhComposer
     # Restorable: `restore` writes the captured records back for a follow-up that cannot abort; isolated
     # storage stays isolated, which is consistent (the copy keeps its finding and its repair).
     class IdentityStep
-      attr_reader :affected
+      attr_reader :affected, :number, :zone_path
 
-      def initialize(target:, plan:)
+      # `zone_path` is the Zone occurrence the target is in, nil outside every Zone: where its number is
+      # reserved.
+      def initialize(target:, plan:, zone_path: nil)
+        @zone_path = zone_path&.dup&.freeze
         @path = target.path.dup.freeze
         @kind = Resolve.kind_of(target.reference)
         @record = DeepCopy.frozen(target.record)
@@ -22,6 +25,8 @@ module PhComposer
         end.freeze
         @affected = []
         @captured = nil
+        renamed = plan.rows.find { |row| row.kind == @kind && row.before == target.record }
+        @number = @kind == SPACE_KIND && renamed ? renamed.after["number"] : nil
       end
 
       def descriptor
@@ -58,7 +63,7 @@ module PhComposer
       end
 
       # Writes back what apply replaced; nothing when apply did not reach its writes.
-      def restore(_model)
+      def restore
         return unless @captured
 
         @captured.each do |store, entity, record, name|

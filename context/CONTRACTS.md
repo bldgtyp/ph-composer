@@ -564,8 +564,9 @@ pairing share one transaction. Geometry never selects an identity.
   with its prerequisite; the Zones read offers it only where its plan succeeds. Identity repair (`repair_identity`) remains for scripts and refuses shared storage.
   Both derive the new Zone id from the occurrence path and each new Face id from the id it was
   copied with (not its entity path, which Make Unique replaces), so a preview's ids hold at apply.
-- Limited Restore regroups only stamped Faces and their bounding edges in one parent context and
-  recovers only the Zone id, Building-Segment, Level and a new default name.
+- Limited Restore regroups only stamped Faces and their bounding edges, and stamped nested
+  containers, in one parent context and recovers only the Zone id, Building-Segment, Level and a new
+  default name.
 
 **Reconciliation.** Zones keeps one state object per session. Observers only mark what changed
 dirty and queue a deferred pass, which reports missing or duplicate ids, changed paths and stamps,
@@ -576,7 +577,13 @@ host follow-up joined to the copy (D-1). A copy is an occurrence the gesture add
 original holds; a duplicate already in the Model, a copy whose path crosses a ComponentInstance and
 anything Undo or Redo restores are left alone. The repair joins the latest transaction; if an
 unrelated operation committed before the deferred pass, undoing it takes the repair back with it, and
-the watcher tells the user the copy is read only again.
+the watcher tells the user the copy is read only again. Spaces follows the same rule for a Space Group
+copied on its own (its `CopyWatch`): the Space is made independent through Make independent with the
+next free number; a copy inside a component keeps its finding with one notice, and a copied plain
+Group holding a Space is left to its finding, since it may be a Zone whose copy Zones handles. The
+Spaces watcher hears the copy through the session's `container_added` host event, which reports each
+Group or ComponentInstance added to any container; the Zones watcher still hears it through Zones' own
+container observers until issue #143 moves it onto the same event.
 
 **Host follow-ups.** `HostFollowUp.run(session, action, params_list)` is internal; nothing registers
 it where the panel or the API can reach it. It runs the registered action's handler once per params

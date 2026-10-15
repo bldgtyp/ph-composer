@@ -30,6 +30,7 @@ class SpacesIdentityTest < PhComposerTestCase
       dictionary.each { |key, value| copy.set_attribute(dictionary.name, key, value) }
     end
     parent.entities << copy
+    treat_duplicates_as_existing(@model)
     copy
   end
 
@@ -160,6 +161,7 @@ class SpacesIdentityTest < PhComposerTestCase
     extension = register_extension
     nested = space_group(180, space_record("S", :number => "1"), [])
     @space.entities << nested
+    treat_duplicates_as_existing(@model)
     other = space_group(150, space_record("O", :number => "9").merge(
       "extension_data" => { extension.namespace => extension.envelope("volume" => "vol_AAAAAAAAAAAA") }
     ), [])
@@ -238,7 +240,7 @@ class SpacesIdentityTest < PhComposerTestCase
     step = PhComposer::Spaces::IdentityStep.new(:target => target, :plan => plan)
     step.apply(@model, {})
     assert_equal "2", copy.name
-    step.restore(@model)
+    step.restore
     assert_equal "1", copy.name
     assert_equal "spc_SSSSSSSSSSSS", PhComposer::Spaces::SPACE_STORE.read(copy)["id"]
   end

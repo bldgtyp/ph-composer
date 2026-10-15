@@ -124,7 +124,7 @@ module PhComposer
         @unlocked = volume.entity
       end
 
-      def restore(_model)
+      def restore
         @unlocked.locked = true if @unlocked && Protection.valid?(@unlocked)
       end
     end

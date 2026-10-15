@@ -1,0 +1,200 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+require_relative "support/space_fixtures"
+
+# A native copy of a Space Group is made independent in the copy's own Undo step (context/CONTRACTS.md,
+# "Reconciliation"). Copies arrive as the host delivers them: the commit, then the added Group already
+# carrying its instance dictionaries (context/SKETCHUP_HOST_BEHAVIOR.md, "Observers and edit contexts").
+class SpacesCopyWatchTest < PhComposerTestCase
+  include SpaceFixtures
+
+  API = PhComposer::API
+
+  def setup
+    super
+    @model = Sketchup.active_model
+    @volume = volume_group(111, volume_record("A"), [floor_face(112, rectangle(0, 0, 2, 2), segment_record("A"))])
+    @space = space_group(110, space_record("S", :number => "1"), [@volume])
+    @zone = zone_group(100, "Z", [@space])
+    @model.entities << @zone
+    @session = PhComposer::Sessions.for(@model)
+    @context = API.connect(:session_id => @session.id)
+    @notices = []
+    @unsubscribe = PhComposer::Sessions.on_notice { |_session, message, tone| @notices << [tone, message] }
+  end
+
+  def teardown
+    @unsubscribe.call
+    super
+  end
+
+  def watcher
+    SPACES::CopyWatch.state(@session)
+  end
+
+  # What a native copy leaves: a new Group over the same entities with the original's dictionaries.
+  def copy_natively(group, persistent_id, parent = @zone)
+    copy = Sketchup::Group.new(persistent_id, group.entities, {}, :transformation => group.transformation)
+    Array(group.attribute_dictionaries).each do |dictionary|
+      dictionary.each { |key, value| copy.set_attribute(dictionary.name, key, value) }
+    end
+    @session.host_event(:transaction_committed)
+    parent.entities << copy
+    copy
+  end
+
+  def copy_in_operation(group, persistent_id)
+    copy = Sketchup::Group.new(persistent_id, group.entities)
+    SPACES::SPACE_STORE.write(copy, SPACES::SPACE_STORE.read(group))
+    @model.start_operation("Copy")
+    @zone.entities << copy
+    @model.commit_operation
+    copy
+  end
+
+  def spaces
+    API.query(:context => @context, :name => "ph_composer.spaces.all").dig("value", "spaces")
+  end
+
+  def test_a_native_copy_is_made_independent_in_the_copys_undo_step
+    copy_natively(@space, 120)
+    assert watcher.pending?
+    UI.run_timers
+    refute watcher.pending?
+    original, copy = spaces
+    assert_equal %w[spc_SSSSSSSSSSSS 1], [original["id"], original.dig("values", "number")]
+    refute_equal "spc_SSSSSSSSSSSS", copy["id"]
+    assert_equal "2", copy.dig("values", "number")
+    refute_equal "vol_AAAAAAAAAAAA", copy.dig("volumes", 0, "id")
+    assert_equal ["Make Space Independent", true, false, true], @model.operation_starts.last
+    assert_equal [[:success, "Made the copied Space independent."]], @notices
+  end
+
+  # The follow-up cannot abort the copy it joined: a failure after the writes puts the records back
+  # (HostFollowUp calls `restore`), and the notice says the copy's records are as copied.
+  def test_a_failed_follow_up_restores_the_copy_and_says_so
+    copy = copy_natively(@space, 120)
+    SPACES::IdentityStep.class_eval do
+      alias_method :real_apply, :apply
+      define_method(:apply) do |model, slots|
+        real_apply(model, slots)
+        raise "injected"
+      end
+    end
+    begin
+      UI.run_timers
+    ensure
+      SPACES::IdentityStep.class_eval do
+        alias_method :apply, :real_apply
+        remove_method :real_apply
+      end
+    end
+    assert_equal "spc_SSSSSSSSSSSS", SPACES::SPACE_STORE.read(copy)["id"]
+    assert_equal :warning, @notices.last.first
+    assert_includes @notices.last.last, "records are as copied"
+  end
+
+  def test_an_array_of_copies_takes_the_next_free_numbers
+    5.times { |index| copy_natively(@space, 120 + index) }
+    UI.run_timers
+    assert_equal %w[1 2 3 4 5 6], spaces.map { |row| row.dig("values", "number") }
+    assert_equal 6, spaces.map { |row| row["id"] }.uniq.length
+    assert_equal [[:success, "Made the 5 copied Spaces independent."]], @notices
+  end
+
+  # Copies in two Zones in one batch each take their own Zone's next number.
+  def test_copies_in_two_zones_take_each_zones_next_number
+    SPACES::SPACE_STORE.write(@space, SPACES::SPACE_STORE.read(@space).merge("number" => "100"))
+    other = space_group(210, space_record("T", :number => "1"), [])
+    @model.entities << zone_group(200, "Y", [other])
+    treat_duplicates_as_existing(@model)
+    copy_natively(@space, 120)
+    copy_natively(other, 220, @model.entities.to_a.last)
+    UI.run_timers
+    numbers = spaces.to_h { |row| [row.dig("reference", "entity_path"), row.dig("values", "number")] }
+    assert_equal "101", numbers.fetch([100, 120])
+    assert_equal "2", numbers.fetch([200, 220])
+  end
+
+  # An unrelated operation committed between the copy and the deferred pass takes the repair with it on
+  # Undo, and the copy stays: the watcher says so.
+  def test_an_undo_that_takes_back_the_repair_but_not_the_copy_warns
+    copy = Sketchup::Group.new(120, @space.entities)
+    SPACES::SPACE_STORE.write(copy, SPACES::SPACE_STORE.read(@space))
+    @model.start_operation("Copy")
+    @zone.entities << copy
+    @model.commit_operation
+    @model.start_operation("Other")
+    @model.commit_operation
+    UI.run_timers
+    @model.undo
+    assert_equal %w[spc_SSSSSSSSSSSS spc_SSSSSSSSSSSS], spaces.map { |row| row["id"] }
+    assert_equal :warning, @notices.last.first
+    assert_includes @notices.last.last, "Undo also took back"
+  end
+
+  # A later batch does not forget an earlier repair: undoing back past it still warns.
+  def test_an_undo_of_an_earlier_batch_still_warns
+    copy_in_operation(@space, 120)
+    @model.start_operation("Other")
+    @model.commit_operation
+    UI.run_timers
+    copy_in_operation(@space, 130)
+    UI.run_timers
+    @model.undo
+    assert_empty(@notices.select { |tone, _message| tone == :warning })
+    @model.undo
+    assert_includes @notices.last.last, "Undo also took back"
+  end
+
+  def test_a_cut_and_paste_leaves_no_duplicate_and_nothing_is_queued
+    @zone.entities.delete(@space)
+    @session.host_event(:transaction_committed)
+    @zone.entities << @space
+    refute watcher.pending?
+  end
+
+  def test_undo_and_redo_drop_a_pending_pass
+    copy_natively(@space, 120)
+    @session.host_event(:transaction_undone)
+    refute watcher.pending?
+    UI.run_timers
+    assert_equal %w[spc_SSSSSSSSSSSS spc_SSSSSSSSSSSS], spaces.map { |row| row["id"] }
+  end
+
+  # Two occurrences already sharing the id are both originals: a third copy of them is not guessed at.
+  def test_two_pre_existing_holders_are_never_rewritten
+    existing = Sketchup::Group.new(130, @space.entities)
+    SPACES::SPACE_STORE.write(existing, SPACES::SPACE_STORE.read(@space))
+    @zone.entities << existing
+    treat_duplicates_as_existing(@model)
+    copy_natively(@space, 120)
+    UI.run_timers
+    assert_equal ["spc_SSSSSSSSSSSS"] * 3, spaces.map { |row| row["id"] }
+    assert_empty @notices
+  end
+
+  # A copy inside a component keeps the finding and gets one notice.
+  def test_a_copy_inside_a_component_keeps_its_finding_with_one_notice
+    @zone.entities.delete(@space)
+    definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([@space]))
+    @zone.entities << Sketchup::ComponentInstance.new(140, definition)
+    @session.host_event(:transaction_committed)
+    @zone.entities << Sketchup::ComponentInstance.new(141, definition)
+    UI.run_timers
+    assert_equal ["spc_SSSSSSSSSSSS"] * 2, spaces.map { |row| row["id"] }
+    assert_equal 1, @notices.length
+    assert_equal :warning, @notices.first.first
+  end
+
+  # A copied plain Group holding a Space may be a Zone, whose copy Zones handles: no pass, no notice.
+  def test_a_copied_plain_group_holding_a_space_is_left_to_its_finding
+    wrapper = Sketchup::Group.new(150, Sketchup::Entities.new([]))
+    @zone.entities.delete(@space)
+    wrapper.entities << @space
+    @zone.entities << wrapper
+    copy_natively(wrapper, 151)
+    refute watcher.pending?
+  end
+end

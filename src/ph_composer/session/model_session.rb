@@ -97,6 +97,7 @@ module PhComposer
         @export_generation += 1
       end
       @export_path = path if kind == :transaction_committed || kind == :active_path_changed
+      ContainerWatch.for(self).host_event(kind) unless @detached
       Sessions.notify_host_event(self, kind, *arguments)
     end
 

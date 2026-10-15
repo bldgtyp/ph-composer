@@ -64,7 +64,7 @@ module PhComposer
         entity
       end
 
-      def restore(_model)
+      def restore
         return unless @applied
 
         entity, name = @applied
