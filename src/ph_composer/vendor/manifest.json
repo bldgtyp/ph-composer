@@ -31,19 +31,19 @@
       "sha256": "ee5f63dc1e8eac11b0c01454b186e2e2952abe64d788d3f26b2a37081794ea85"
     },
     "html/features/assemblies/assembly.css": {
-      "bytes": 10916,
+      "bytes": 12196,
       "mime": "text/css; charset=utf-8",
-      "sha256": "ada2645e85bf99ef21f89e370a8681b89e78103975e2fcd146d5e8caf917714e"
+      "sha256": "9b5717cd43df3e0a53e7446c93153befbbb98b717e6f5423fa793a31b8e22a69"
     },
     "html/features/assemblies/canvas.js": {
       "bytes": 8977,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "26dd9be61afef5f1ea60d36b85486f4b832dea81ad8ad75bcad8f5591f489813"
+      "sha256": "2211ddb5d6685650906da297a2aeda4d99b9f1e951450ad1753747dc007a4521"
     },
     "html/features/assemblies/editor.js": {
-      "bytes": 21934,
+      "bytes": 22356,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "c17a89d6531bb36dc7a544f2adaf439afa6d61197712971150768c768779a962"
+      "sha256": "957fd1c6d147bbd3cbcff42f3ae0949dc9ce975d56f167e37817d86ae8d4763f"
     },
     "html/features/assemblies/editor_shared.js": {
       "bytes": 2713,
@@ -64,6 +64,11 @@
       "bytes": 7004,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "41cf389b7db968076a84100cf8bb2480834a48c413d447805c640d99f4e668ed"
+    },
+    "html/features/assemblies/layer_drag.js": {
+      "bytes": 7785,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "1c8c3262a7bccbe13f45d8d12343c25a7a9ea6bc873d6439219edbda1c6408e1"
     },
     "html/features/assemblies/layer_tools.js": {
       "bytes": 3496,
@@ -86,9 +91,9 @@
       "sha256": "90594517a600e0e3e0eefdea286c026e4ad953c8e1271f9b0ddc52b4b983e717"
     },
     "html/features/assemblies/stage.js": {
-      "bytes": 18171,
+      "bytes": 18960,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "5e69846e295fd29c4f6aa70a0deb0f0bd800545b97bbdde32c59116917467241"
+      "sha256": "eda6ea45c74703b8779547bc220411664ee3fda12fa74c183777838f9c4f5355"
     },
     "html/features/windows/audit.js": {
       "bytes": 3740,
@@ -236,14 +241,14 @@
       "sha256": "2660cb7dcce7b80171d3291e2d6e73f9e38d7d1491039985a27ea160be58e2dd"
     },
     "html/icons.js": {
-      "bytes": 10628,
+      "bytes": 11048,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "50ecb3c72c978c4a304481ebecfe5213f5f79f165d3769a8f88fbc1762b0d704"
+      "sha256": "32cc7b6c39918da562237aba1209b358ec087c9238146cdcc16cf4c415b7754d"
     },
     "html/index.html": {
-      "bytes": 6440,
+      "bytes": 6502,
       "mime": "text/html; charset=utf-8",
-      "sha256": "c06ba530c34403f8caa756abaa2ee04b943538fdb0b2a741f694270c6154242d"
+      "sha256": "ad90dc90a01a108aa48419a29e666aa94728e76eff6fda64d6cb982b71be8bf6"
     },
     "html/inventory.js": {
       "bytes": 9047,

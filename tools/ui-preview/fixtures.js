@@ -228,6 +228,18 @@
         notes: "Revised library notes", datasheet_links: [] } }
   ], other: [] };
 
+  // The Builder reference with five uneven Layers, one a membrane, for dragging whole Layers.
+  FIXTURES.layerdrag = JSON.parse(JSON.stringify(FIXTURES.builder));
+  FIXTURES.layerdrag.materials.records.push(Object.assign(JSON.parse(JSON.stringify(
+    FIXTURES.builder.materials.records[1])), { id: "mat_m", uses: [], use_count: 0 }));
+  Object.assign(FIXTURES.layerdrag.materials.records[2].values, { name: "Membrane", category: "membrane",
+    color: "#90a4ae", conductivity_w_mk: null });
+  FIXTURES.layerdrag.assemblies.records[0].values.layers.splice(2, 0,
+    { id: "lyr_membrane_0", thickness_mm: 1, segments: [{ id: "seg_membrane_0", width_mm: 600, material_id: "mat_m",
+      is_continuous_insulation: false, steel_stud_spacing_mm: null }] },
+    { id: "lyr_insulation_0", thickness_mm: 50, segments: [{ id: "seg_insulation_0", width_mm: 600,
+      material_id: "mat_a", is_continuous_insulation: true, steel_stud_spacing_mm: null }] });
+
   FIXTURES.windows = JSON.parse(JSON.stringify(FIXTURES.inventories));
   FIXTURES.windows.windows = {
   "types": {

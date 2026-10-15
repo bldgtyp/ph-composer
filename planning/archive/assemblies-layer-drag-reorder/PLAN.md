@@ -1,9 +1,9 @@
 # Assembly Layer drag reordering: implementation plan
 
 DATE: 2026-10-15
-STATUS: Scoped. Stages LR-01 to LR-04 planned; none authorized.
+STATUS: Complete 2026-10-15; delivery as recorded in [STATUS.md](STATUS.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#128](https://github.com/bldgtyp/ph-composer/issues/128)
 
 ## Outcome
 

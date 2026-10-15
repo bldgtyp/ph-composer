@@ -60,6 +60,19 @@ module PhComposer
         end
       end
 
+      def reorder_layer(record, layer_id:, index:)
+        mutate(record) do |assembly|
+          layers = assembly.fetch("layers")
+          layer = layer!(assembly, layer_id)
+          unless index.is_a?(Integer) && index.between?(0, layers.length - 1)
+            raise CodedError.new("params.invalid",
+                                 "The Layer index must be a whole number from 0 to #{layers.length - 1}.")
+          end
+
+          layers.insert(index, layers.delete(layer))
+        end
+      end
+
       def flip_layers(record)
         mutate(record) { |assembly| assembly.fetch("layers").reverse! }
       end

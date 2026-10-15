@@ -28,6 +28,39 @@ class AssemblyRecordsCommandsTest < PhComposerTestCase
     assert_equal "last_layer_outside", Assemblies::Commands.flip_orientation(@record).record["orientation"]
   end
 
+  def test_reorder_moves_one_whole_layer_and_keeps_every_other_value
+    @record["layers"][1]["segments"][0]["steel_stud_spacing_mm"] = 600
+    @record["air_barrier"] = { "layer_id" => @record["layers"][2]["id"], "face" => "interior" }
+    snapshot = Marshal.load(Marshal.dump(@record))
+    ids = @record["layers"].map { |layer| layer["id"] }
+    { 2 => [ids[1], ids[2], ids[0]], 0 => ids, 1 => [ids[1], ids[0], ids[2]] }.each do |index, order|
+      moved = Assemblies::Commands.reorder_layer(@record, :layer_id => ids[0], :index => index).record
+      assert_equal order, moved["layers"].map { |layer| layer["id"] }
+      assert_equal @record["layers"].sort_by { |layer| layer["id"] }, moved["layers"].sort_by { |layer| layer["id"] }
+      assert_equal @record.reject { |key, _| key == "layers" }, moved.reject { |key, _| key == "layers" }
+    end
+    last = Assemblies::Commands.reorder_layer(@record, :layer_id => ids[2], :index => 0).record
+    assert_equal [ids[2], ids[0], ids[1]], last["layers"].map { |layer| layer["id"] }
+    assert_equal snapshot, @record
+    assert_equal @record, Assemblies::Commands.reorder_layer(@record, :layer_id => ids[1], :index => 1).record
+  end
+
+  def test_reorder_refuses_destinations_outside_the_stored_order_and_ignores_orientation
+    [3, -1, 1.0, "1"].each do |index|
+      error = assert_raises(PhComposer::CodedError) do
+        Assemblies::Commands.reorder_layer(@record, :layer_id => @layer["id"], :index => index)
+      end
+      assert_equal "params.invalid", error.code
+    end
+    missing = assert_raises(PhComposer::CodedError) do
+      Assemblies::Commands.reorder_layer(@record, :layer_id => "lyr_MISSING00000", :index => 0)
+    end
+    assert_equal "target.not_found", missing.code
+    reversed = @record.merge("orientation" => "last_layer_outside")
+    assert_equal Assemblies::Commands.reorder_layer(@record, :layer_id => @layer["id"], :index => 2).record["layers"],
+                 Assemblies::Commands.reorder_layer(reversed, :layer_id => @layer["id"], :index => 2).record["layers"]
+  end
+
   def test_segments_edit_width_flags_material_and_mirror_by_explicit_ids
     added = Assemblies::Commands.add_segment(@record, :layer_id => @layer["id"], :width_mm => 38)
     layer = added.record["layers"][0]

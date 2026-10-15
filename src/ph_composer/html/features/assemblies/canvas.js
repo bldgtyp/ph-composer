@@ -5,7 +5,7 @@ PhComposerUI.define("features/assemblies/canvas", ["workspace"], function (ui) {
   var MEMBRANE_BAND_HEIGHT_MM = 9;
   var ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2, 3];
   /* Matches each balanced gutter in assembly.css (.assembly-canvas-frame, .assembly-dimensions). */
-  var ASSEMBLY_CANVAS_ORIGIN_X_PX = 104;
+  var ASSEMBLY_CANVAS_ORIGIN_X_PX = 128;
 
   function materialById(materials, id) { return materials && materials[id]; }
 

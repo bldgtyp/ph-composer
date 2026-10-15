@@ -1234,6 +1234,20 @@
         "src/ph_composer/session/*"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "E18",
+      "label": "Assembly Layer drag: one native Undo and Redo per drop, refusals, reversed orientation and reopen",
+      "mode": "mixed",
+      "authority": "planning/archive/assemblies-layer-drag-reorder/PRD.md",
+      "paths": [
+        "src/ph_composer/html/features/assemblies/*",
+        "src/ph_composer/features/assemblies/*",
+        "tests/assembly_builder*",
+        "tests/assembly_layer_drag*",
+        "tools/ui-preview/assembly_layer_drag*"
+      ],
+      "native_control_required": true
     }
   ]
 }

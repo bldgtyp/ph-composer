@@ -16578,6 +16578,439 @@ Example params:
 }
 ```
 
+### `ph_composer.assemblies.assemblies.layers.reorder`
+
+Move one Layer to a position in the stored order, keeping the other Layers' relative order. Its current position changes nothing. Owner: `ph_composer.assemblies`.
+
+Undo step: Move Assembly Layer. Changes only the Layer order.
+
+Refuses: `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.not_found`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "expected_values",
+    "layer_id",
+    "index"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^asm_[A-Za-z0-9]{12}$",
+      "description": "The Assembly to edit."
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "datasheet_links": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "provider_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "library_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "record_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "copied_at": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "manual",
+                "derived",
+                "library"
+              ]
+            },
+            "fingerprint_version": {
+              "type": "integer",
+              "enum": [
+                1
+              ]
+            },
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "datasheet_links": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "Wall",
+                    "RoofCeiling",
+                    "Floor"
+                  ]
+                },
+                "orientation": {
+                  "type": "string",
+                  "enum": [
+                    "first_layer_outside",
+                    "last_layer_outside"
+                  ]
+                },
+                "exterior_condition": {
+                  "type": "string",
+                  "enum": [
+                    "Outdoors",
+                    "Ground",
+                    "AttachedZone",
+                    "Adiabatic"
+                  ]
+                },
+                "ventilated_cladding": {
+                  "type": "boolean"
+                },
+                "color": {
+                  "type": "string"
+                },
+                "layers": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "thickness_mm",
+                      "segments"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "thickness_mm": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "x-unit": "mm"
+                      },
+                      "segments": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "id",
+                            "width_mm",
+                            "material_id",
+                            "is_continuous_insulation",
+                            "steel_stud_spacing_mm"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "width_mm": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "x-unit": "mm"
+                            },
+                            "material_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "is_continuous_insulation": {
+                              "type": "boolean"
+                            },
+                            "steel_stud_spacing_mm": {
+                              "type": [
+                                "number",
+                                "null"
+                              ],
+                              "exclusiveMinimum": 0,
+                              "x-unit": "mm"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "air_barrier": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "additionalProperties": false,
+                  "required": [
+                    "layer_id",
+                    "face"
+                  ],
+                  "properties": {
+                    "layer_id": {
+                      "type": "string"
+                    },
+                    "face": {
+                      "type": "string",
+                      "enum": [
+                        "interior",
+                        "exterior"
+                      ]
+                    }
+                  }
+                },
+                "photo_collections": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "Wall",
+            "RoofCeiling",
+            "Floor",
+            null
+          ]
+        },
+        "orientation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "first_layer_outside",
+            "last_layer_outside",
+            null
+          ]
+        },
+        "exterior_condition": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "Outdoors",
+            "Ground",
+            "AttachedZone",
+            "Adiabatic",
+            null
+          ]
+        },
+        "ventilated_cladding": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "color": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layers": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "thickness_mm",
+              "segments"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "thickness_mm": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "x-unit": "mm"
+              },
+              "segments": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "width_mm",
+                    "material_id",
+                    "is_continuous_insulation",
+                    "steel_stud_spacing_mm"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "width_mm": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "x-unit": "mm"
+                    },
+                    "material_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "is_continuous_insulation": {
+                      "type": "boolean"
+                    },
+                    "steel_stud_spacing_mm": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "exclusiveMinimum": 0,
+                      "x-unit": "mm"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "air_barrier": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "layer_id",
+            "face"
+          ],
+          "properties": {
+            "layer_id": {
+              "type": "string"
+            },
+            "face": {
+              "type": "string",
+              "enum": [
+                "interior",
+                "exterior"
+              ]
+            }
+          }
+        },
+        "photo_collections": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
+    },
+    "layer_id": {
+      "type": "string",
+      "pattern": "^lyr_[A-Za-z0-9]{12}$",
+      "description": "The Layer, by its id within this Assembly."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The Layer's position in the resulting stored order, 0 first; the other Layers keep their relative order."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "layer_id": "lyr_Ab12Cd34Ef56",
+  "index": 0,
+  "id": "asm_Ab12Cd34Ef56",
+  "expected_values": {}
+}
+```
+
 ### `ph_composer.assemblies.assemblies.layers.set_air_barrier`
 
 Mark one face of one Layer as the Assembly's air barrier, or clear it. Owner: `ph_composer.assemblies`.

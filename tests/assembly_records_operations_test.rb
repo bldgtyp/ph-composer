@@ -22,7 +22,7 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     assert_empty registry.features.fetch(Assemblies::FEATURE_ID).requires
     declarations = registry.queries.values + registry.actions.values
     owned = declarations.select { |declaration| declaration.owner == Assemblies::FEATURE_ID }
-    assert_equal 25, owned.length
+    assert_equal 26, owned.length
     owned.each do |declaration|
       refute_empty declaration.examples, declaration.name
       declaration.examples.each do |example|
@@ -200,6 +200,33 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
                    "id" => id, "layer_id" => layer["id"],
                    "segment_id" => "seg_MISSING00000", "values" => { "width_mm" => 150 }, "expected_values" => {})
     assert_equal %w[refused target.not_found none], wrong.values_at("status", "code", "effect")
+  end
+
+  def test_layer_reorder_is_one_undo_step_refuses_a_stale_order_and_writes_nothing_in_place
+    values = fixture_assembly([[12, [[1000, nil]]], [140, [[1000, nil]]], [40, [[1000, nil]]]])
+    id = create("assemblies", Assemblies::Assembly::Schema::KIND.values(values))
+    original = record(Assemblies::ASSEMBLY_KIND, id)
+    last = original["layers"].last
+    revision = @session.revision
+    moved = invoke("assemblies.layers.reorder", "id" => id, "layer_id" => last["id"], "index" => 0,
+                                                "expected_values" => { "layers" => original["layers"] })
+    assert_equal %w[completed committed], moved.values_at("status", "effect")
+    assert_equal [revision + 1, "Move Assembly Layer"], [@session.revision, @model.operations.last.first]
+    assert_equal last["id"], record(Assemblies::ASSEMBLY_KIND, id)["layers"].first["id"]
+    stale = invoke("assemblies.layers.reorder", "id" => id, "layer_id" => last["id"], "index" => 2,
+                                                "expected_values" => { "layers" => original["layers"] })
+    assert_equal %w[refused target.changed none], stale.values_at("status", "code", "effect")
+    assert stale["message"].end_with?("Nothing was written."), stale["message"]
+    current = record(Assemblies::ASSEMBLY_KIND, id)
+    assert_equal last["id"], current["layers"].first["id"]
+    operations = @model.operations.length
+    revision = @session.revision
+    same = invoke("assemblies.layers.reorder", "id" => id, "layer_id" => last["id"], "index" => 0,
+                                               "expected_values" => { "layers" => current["layers"] })
+    assert_equal %w[completed none], same.values_at("status", "effect")
+    assert_equal [operations, revision], [@model.operations.length, @session.revision]
+    @model.undo
+    assert_equal original, record(Assemblies::ASSEMBLY_KIND, id)
   end
 
   def test_unreadable_inventory_rows_are_reported_without_repair

@@ -1,6 +1,6 @@
 # Planning archive
 
-DATE: 2026-10-12
+DATE: 2026-10-15
 STATUS: Index of completed and superseded planning work, newest first.
 AUTHOR: Ed May, BLDGTYP
 
@@ -9,6 +9,7 @@ reached.
 
 | Slug | Date | Outcome | Issue or PR |
 | --- | --- | --- | --- |
+| [assemblies-layer-drag-reorder](assemblies-layer-drag-reorder/README.md) | 2026-10-15 | Drag a whole Assembly Layer by a six-dot grip beside its gear to any position: one new `layers.reorder` action, one native Undo step, a ghost and drop line with the drawing still, and nothing written on Escape, blur, a lost release, an outside release, a repaint or disposal. Offline gates, the Playwright drag check and native case `E18` passed; reviewed by gpt-6-astra (three findings fixed, second pass clean) | [PR #129](https://github.com/bldgtyp/ph-composer/pull/129); [#128](https://github.com/bldgtyp/ph-composer/issues/128) |
 | [code-review](code-review/README.md) | 2026-10-14 | The Ruby and JavaScript architecture and extensibility review against `cfe01a6`: 17 findings, architecture diagrams, the Windows boundary rationale and baseline evidence. Every finding resolved by [code-review-refactoring](code-review-refactoring/README.md); F06's last geometry stages continue in `features/cross-phase/geometry-contribution-contracts/` | PRs [#99](https://github.com/bldgtyp/ph-composer/pull/99) to [#126](https://github.com/bldgtyp/ph-composer/pull/126) |
 | [copied-zone-windows](copied-zone-windows/README.md) | 2026-10-14 | Product request: a copied Zone's Window Units get their own ids in the same follow-up and Undo step as the Zone. Delivered by [zone-child-lifecycle](zone-child-lifecycle/PLAN.md) | [#113](https://github.com/bldgtyp/ph-composer/issues/113) |
 | [code-review-refactoring](code-review-refactoring/README.md) | 2026-10-14 | The architecture refactoring program: twelve packets from the 2026-10-13 code review (17 findings), delivered in eight groups of one branch and PR each, every PR reviewed by gpt-6-astra; native host receipts for registration, Windows, metadata, library and Zone-copy work; the accepted Zone-child pattern. Eleven packets archived beside it; the geometry packet moved to `features/cross-phase/` with three stages deferred to phase 3b | PRs [#99](https://github.com/bldgtyp/ph-composer/pull/99) to [#126](https://github.com/bldgtyp/ph-composer/pull/126) |

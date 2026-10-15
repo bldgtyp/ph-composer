@@ -685,6 +685,12 @@
         if (destination >= 0 && destination < layers.length) {
           layers[position] = layers[destination]; layers[destination] = layer;
         }
+      } else if (operation === "reorder") {
+        if (params.index < 0 || params.index >= layers.length) {
+          return refused("params.invalid", "Layer index out of range.", this.revision);
+        }
+        layers.splice(layers.indexOf(layer), 1);
+        layers.splice(params.index, 0, layer);
       } else if (operation === "flip") layers.reverse();
       else if (operation === "flip_orientation") values.orientation = values.orientation === "first_layer_outside" ?
         "last_layer_outside" : "first_layer_outside";

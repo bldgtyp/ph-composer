@@ -1,9 +1,10 @@
 /* One Assembly work surface. Every authored gesture sends one registered action and awaits its outcome. */
 PhComposerUI.define("features/assemblies/editor", ["features/assemblies/editor_shared", "features/assemblies/header",
-  "features/assemblies/inspector", "features/assemblies/stage", "features/assemblies/form", "fields",
-  "inventory_forms", "library/sidebar", "record_edits", "request", "snapshot", "unit_field", "workspace"],
-function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar, RecordEdits, request, snapshot,
-  unitFields, ui) {
+  "features/assemblies/inspector", "features/assemblies/layer_drag", "features/assemblies/stage",
+  "features/assemblies/form", "fields", "inventory_forms", "library/sidebar", "record_edits", "request", "snapshot",
+  "unit_field", "workspace"],
+function (shared, header, inspector, layerDrag, stage, AssemblyForm, fields, forms, Sidebar, RecordEdits, request,
+  snapshot, unitFields, ui) {
   "use strict";
   // A Material, local or a library row, is labelled by its name.
   function materialName(row) { return row.display_label || row.values.name; }
@@ -23,6 +24,7 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     this.zoom = null;
     this.enabled = false;
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    this.layerDrag = new layerDrag.LayerDrag(this);
     this.edits = new RecordEdits(session, send, notice, { action: SECTION + ".update",
       fields: ["name", "type", "exterior_condition", "notes"], requiredFields: ["name"],
       selectFields: { type: AssemblyForm.types, exterior_condition: AssemblyForm.exteriors },
@@ -63,7 +65,7 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
         return self.action("segments.set_material", Object.assign({}, target, { material_id: row.id }));
       } });
     this.sidebar.dropHost = this.main;
-    // While a Material is dragged from the library, the edge insert control stays out of the way.
+    // While a Material or a Layer is dragged, the edge insert control and the Layer tools stay out of the way.
     this.sidebar.onDragChange = function (dragging) { self.dragging = Boolean(dragging); };
     this.root.appendChild(this.main);
     this.root.appendChild(this.sidebar.root);
@@ -99,6 +101,8 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
   };
   Editor.prototype.guard = function () {
     if (this.disposed || !this.enabled) return "This Builder is no longer available.";
+    // Not the shared dragging flag: the Material drag reads this guard on every move and would end itself.
+    if (this.layerDrag.active()) return "Finish moving the Layer first.";
     if (this.sidebar && this.sidebar.guard()) return this.sidebar.guard();
     if (this.busy()) return "Wait for the Assembly change to finish.";
     if (this.hasDimensionDraft() || this.hasRecordDraft() || !this.color.root.hidden || !this.removal.hidden) {
@@ -331,6 +335,8 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
   };
   Editor.prototype.refresh = function (state, id) {
     if (this.disposed) return false;
+    // A held Layer was measured against the drawing this repaint replaces.
+    this.layerDrag.end();
     var payload = snapshot.value(state, SECTION);
     var record = payload && payload.records.filter(function (row) { return row.id === id; })[0];
     if (!record) {
@@ -404,6 +410,7 @@ function (shared, header, inspector, stage, AssemblyForm, fields, forms, Sidebar
     return true;
   };
   Editor.prototype.dispose = function () {
+    this.layerDrag.end();
     this.disposed = true;
     this.enabled = false;
     this.requests.reset();
