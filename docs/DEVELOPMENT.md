@@ -95,7 +95,10 @@ Homebrew, rbenv and pnpm to `PATH` themselves, so a graphical git client finds t
 The hooks are a fast first check, not the gate: `make ci` still runs the full suite before a
 change is proposed. Chain the two, as in `make ci && git commit -s`, so a failed gate stops the
 commit. Do not bypass a hook with `--no-verify`; fix what it reports instead. A file with unstaged
-changes is checked as it is on disk, and the hook says which files that applied to.
+changes is checked as it is on disk, and the hook says which files that applied to. Three checks
+read more than the staged files, so another contributor's unfinished file in a shared checkout can
+fail them: the type check reads its whole configured set, the manifest checks read what they hash,
+and a configuration change lints the whole tree.
 
 ## Ruby versions
 

@@ -58,6 +58,8 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 
 # ty, Astral's type checker, pinned exactly while it is in beta. It does not require annotations, so
 # ruff's ANN rules above hold every function to typed parameters and returns.
+# `root` (where first-party imports resolve) and `include` (what is checked) list the same directories;
+# change both together.
 [tool.ty.environment]
 python-version = "3.11"
 root = [
@@ -70,3 +72,7 @@ include = [
     "src/ph_composer/python", "tools/examples/foundation", "tools/rbz", "tools/hostkit", "tools/runtime", "tests/python",
     "tools/githooks",
 ]
+
+# A suppression that no longer suppresses anything fails the check, so none outlives its reason.
+[tool.ty.rules]
+unused-ignore-comment = "error"

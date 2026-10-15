@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import re
 import subprocess
 from pathlib import Path
@@ -156,3 +157,9 @@ def test_pre_commit_reports_each_failure_and_its_fix(
     assert [c[2] for c in calls] == ["lint-python", "python-check"]
     assert "ruff failed" in out and "E501 Line too long" in out and "uv run ruff format tools/a.py" in out
     assert "Nothing was committed." in out
+
+
+def test_the_hook_script_parses_as_python_3_9() -> None:
+    # The hooks start it on the system python3, which on macOS is 3.9 (staged_checks.py, module docstring).
+    source = Path(staged_checks.__file__).read_text(encoding="utf-8")
+    ast.parse(source, feature_version=(3, 9))

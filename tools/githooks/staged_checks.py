@@ -1,9 +1,11 @@
 """The checks the repository's git hooks run (docs/DEVELOPMENT.md, "Git hooks").
 
 `pre-commit` runs the parts of `make lint`, `make python-check` and the two manifest checks that the
-staged files can affect, on those files only, through the same Makefile targets CI runs. Narrowing to
-the staged paths matters here: the checkout is shared, and another contributor's unfinished file must
-not fail this commit. `commit-msg` refuses a message without a DCO sign-off (docs/DCO.md).
+staged files can affect, through the same Makefile targets CI runs. The linters read only the staged
+files, because the checkout is shared and another contributor's unfinished file should not fail this
+commit. Three things still read more: the type check reads its whole configured set, since a subset
+changes its verdict; the manifest checks read the tree they hash; and a change to a linter's own
+configuration lints the whole tree. `commit-msg` refuses a message without a DCO sign-off (docs/DCO.md).
 
 Nothing here fixes or re-stages a file. A failure names the command that fixes it and writes nothing.
 The hook starts this file with whatever `python3` is on PATH, which on macOS can be 3.9, so it uses the
