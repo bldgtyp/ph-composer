@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Proposed bindings, drafted from source at `70c340f` and re-read against `main` at `87bdc62` on 2026-10-15. P3a-01 confirms or corrects every table against the code with the architecture review before any feature stage starts. Rows that depend on an open decision say so.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 The [Spaces PRD](PRD.md) defers exact names and schemas to its plan. This file is that
 binding. It restates no behavior. Where a row and the PRD disagree about behavior, the PRD wins

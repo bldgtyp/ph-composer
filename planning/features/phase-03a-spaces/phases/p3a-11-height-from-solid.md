@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 **Revised 2026-10-15.** The route in step 4 is a row action on a Volume row of the Spaces view
 (P3a-07) and a SketchUp context-menu entry.

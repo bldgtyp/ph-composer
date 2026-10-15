@@ -2,6 +2,7 @@
 
 DATE: 2026-10-15
 STATUS: Accepted direction from the Spaces UI and UX discussion, 2026-10-15 (D3a-16, D3a-17). Static mockup, not a screen.
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 `zone-views.html` is a static page that links the panel's real stylesheets and reuses the live
 Zones / Faces markup; no panel script runs. Serve the repository root (`make ui-preview`) and open

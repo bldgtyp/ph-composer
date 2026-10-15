@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Every decision answered and the interview record confirmed on 2026-10-15. No Spaces stage authorized or implemented.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 This is the one place Phase 3a completeness is read from. Update it in the same change as any
 stage's state. States use the canon vocabulary: `Requested`, `Scoped`, `In progress`, `Blocked`,
@@ -47,12 +47,14 @@ interview record (2026-10-15). The PRD carries every amendment.
 
 ## Next step
 
-Create the phase issue on `bldgtyp/ph-composer` and point every header's `ISSUE` line at it, then
-Ed says go on [P3a-01](phases/p3a-01-contracts-and-groundwork.md). P3a-06 needs no Spaces record
-and can start on its own branch once authorized. No stage starts before that. The stages keep the order the interview left, with three foundation stages added ahead of
-the features that need them: groundwork (P3a-01), edit contexts and reconciliation (P3a-03) and
-the Colour-by extension (P3a-05). Phase 3b's thermal-bridge track waits on P3a-01 and P3a-05; see
-its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
+The phase issue is [#133](https://github.com/bldgtyp/ph-composer/issues/133), and every header
+points at it. Ed says go on [P3a-01](phases/p3a-01-contracts-and-groundwork.md); P3a-06 needs no
+Spaces record and can start on its own branch once authorized. No stage starts before that.
+
+The stages keep the order the interview left, with four foundation stages ahead of the features
+that need them: groundwork (P3a-01), edit contexts and reconciliation (P3a-03), the Colour-by
+extension (P3a-05) and the Zone view contract (P3a-06). Phase 3b's thermal-bridge track waits on
+P3a-01 and P3a-05; see its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
 
 ## Blockers
 
@@ -70,7 +72,7 @@ its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
 | D3a-1 answered (blocks P3a-01) | Closed 2026-10-15 |
 | D3a-2 to D3a-5, D3a-9, D3a-10, D3a-12, D3a-15 and D3a-18 answered, each before the stage it blocks | Closed 2026-10-15 |
 | The Spaces UI and UX discussion held and the screen stages revised | Closed 2026-10-15: D3a-16 and D3a-17; P3a-06 to P3a-08 restructured |
-| A phase issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Open. Create on Ed's say |
+| A phase issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Closed 2026-10-15: [#133](https://github.com/bldgtyp/ph-composer/issues/133) |
 | Ed authorizes implementation, stage by stage or for a run of stages | Open |
 | Phase 2 review refactors that touch the same shared files are merged or parked | Closed: [shared-deep-freeze](../../archive/shared-deep-freeze.md) merged through PR #83 on 2026-10-07 |
 
@@ -184,3 +186,4 @@ and not reproduced.
 | 2026-10-15 | Re-baselined against `main` at `87bdc62`: DECISIONS Part 1b re-reads F1 to F22 and adds F23 to F27; recommendations refreshed for D3a-3, D3a-4, D3a-5, D3a-6, D3a-9 and D3a-11; D3a-14 and D3a-15 added; CONTRACTS, PLAN, ACCEPTANCE and the foundation stages corrected; screen stages noted and held for the UI and UX discussion. No decision answered, no stage authorized. |
 | 2026-10-15 | UI and UX discussion: Spaces is a view of the Zones tab (D3a-16), the factor is a numeric weighting factor (D3a-17), D3a-6, D3a-7, D3a-11 and D3a-14 answered, D3a-8 superseded, D3a-18 raised. P3a-06 is now Zone views, P3a-07 the Spaces view (absorbing the former airflow and balance stage) and P3a-08 Mark floor and Create Space. PRD, CONTRACTS, PLAN and ACCEPTANCE amended; mockups added. |
 | 2026-10-15 | Ed answered D3a-1 to D3a-5, D3a-9, D3a-10, D3a-12, D3a-15 and D3a-18, each as recommended, and confirmed the interview record. Remaining entry gates: the phase issue and Ed's go. |
+| 2026-10-15 | Phase issue [#133](https://github.com/bldgtyp/ph-composer/issues/133) created; every header in the packet points at it. The only open entry gate is Ed's go. |

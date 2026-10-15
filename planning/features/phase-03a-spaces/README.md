@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Interviewed 2026-09-18 and confirmed 2026-10-15; P3a-01 to P3a-12 planned; re-baselined on `main` at `87bdc62`; every decision answered 2026-10-15; no stage authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 Roadmap item 3.1 from [ROADMAP.md](../../ROADMAP.md). Spaces finishes the room-by-room half of
 the model that the predecessor started: floor area toward iCFA, net volume, and per-Space

@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. No row has evidence. Rows re-read against `main` at `87bdc62` on 2026-10-15; S06 to S08 rewritten for the Zone views the same day.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 The [Spaces PRD](PRD.md), "Acceptance shape", supplies the detailed cases. This register
 supplies the closure gates. Record a source-controlled evidence summary per stage under

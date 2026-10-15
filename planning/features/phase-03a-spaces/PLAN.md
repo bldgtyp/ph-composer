@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Stages P3a-01 to P3a-12 planned; none authorized. Re-baselined on `main` at `87bdc62` on 2026-10-15; the screen stages were restructured the same day after the UI and UX discussion (Zone views: P3a-06 to P3a-08).
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 ## Outcome and scope
 
@@ -117,7 +117,7 @@ Stages that change the same shared file and must not overlap:
 | `python/ph_composer_translation/model_sections.py`, `composition.py` | P3a-01 (empty Room), P3a-10 (the section) |
 | `extension.rb` | P3a-02 only |
 
-Each stage is one pull request against `main`, with `Refs` to the phase issue once it exists. A
+Each stage is one pull request against `main`, with `Refs #133`, the phase issue. A
 stage that grows past one coherent review splits along the slices its document names; it does not
 merge half a gate.
 

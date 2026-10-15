@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the design note must also settle Phase 3b's competing `LineEntry` proposal and fit the mode `group`, occurrence filter and column-header toggles added since planning
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 ## Entry and scope
 

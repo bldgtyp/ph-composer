@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Revised 2026-10-15 after the UI and UX discussion
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 **Revised 2026-10-15.** Colour-by modes are toggled from table column headers, may declare a
 `group`, and are masked by the service's occurrence filter; the panel legend strip is gone. Each

@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Every decision answered or superseded on 2026-10-15; the interview record confirmed the same day. Part 1 is findings read from source on `main` at `70c340f` and the predecessor at `f358ebf`, re-verified against `87bdc62` in Part 1b. D3a-13's mechanism exists on `main`.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 The [Spaces PRD](PRD.md) was interviewed on 2026-09-18, before the foundation existed and
 before Phases 1 and 2 were built. It says its PLAN "follows the overlay spike and the foundation

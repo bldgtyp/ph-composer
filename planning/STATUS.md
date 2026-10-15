@@ -19,7 +19,7 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
-| 3a | Spaces | feature | Scoped; P3a-01 to P3a-12 planned; re-baselined on `main` at `87bdc62` 2026-10-15; Spaces is a view of the Zones tab (D3a-16); every decision answered and the interview confirmed 2026-10-15; waits for the phase issue and Ed's go | none (local planning draft) | [features/phase-03a-spaces/](features/phase-03a-spaces/README.md); stage ledger in its [STATUS](features/phase-03a-spaces/STATUS.md) |
+| 3a | Spaces | feature | Scoped; P3a-01 to P3a-12 planned; re-baselined on `main` at `87bdc62` 2026-10-15; Spaces is a view of the Zones tab (D3a-16); every decision answered and the interview confirmed 2026-10-15; waits for Ed's go | [#133](https://github.com/bldgtyp/ph-composer/issues/133) | [features/phase-03a-spaces/](features/phase-03a-spaces/README.md); stage ledger in its [STATUS](features/phase-03a-spaces/STATUS.md) |
 | 3b | Thermal bridges | feature | Scoped, interviewed 2026-10-03; planned as P3b-01 to P3b-09, none authorized | none (local planning draft) | [features/phase-03b-thermal-bridges/](features/phase-03b-thermal-bridges/README.md); tracked in its [ledger](features/phase-03b-thermal-bridges/STATUS.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
 | 4 | ERV ducting | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/erv-ducting/](features/phase-04-mechanical/erv-ducting/README.md) |

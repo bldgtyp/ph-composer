@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 18 decisions recorded below. Architecture review folded in 2026-09-18 (Q19 to Q24). D3a-13 qualifies Q20 on 2026-10-12. The 2026-10-15 decisions amend Q4, Q9, Q12, Q16, Q19 and Q20. Ed confirmed this record, as amended, on 2026-10-15. Implementation gates remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 **Reading this against `main` (2026-10-15).** This contract predates the foundation and Phases 1
 and 2. [DECISIONS](DECISIONS.md), Part 1b, re-reads it against `main` at `87bdc62`. The UI and UX

@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the Ruby units and the section-cycle refusal are already merged and leave this stage
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 ## Entry and scope
 

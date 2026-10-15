@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Re-baselined on `main` at `87bdc62`: deferred work builds on `HostFollowUp` and the Zones copy watcher, which landed after this stage was planned
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 ## Entry and scope
 

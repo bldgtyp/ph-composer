@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 ## Entry and scope
 

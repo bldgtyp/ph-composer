@@ -3,7 +3,7 @@
 DATE: 2026-10-15
 STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the Zone-copy contract this stage joins now exists; D3a-14 (answered 2026-10-15) adds a Space copy watcher
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 ## Entry and scope
 

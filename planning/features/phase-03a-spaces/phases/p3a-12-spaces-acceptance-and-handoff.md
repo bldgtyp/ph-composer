@@ -3,7 +3,7 @@
 DATE: 2026-10-03
 STATUS: Scoped. Integrated run updated 2026-10-15 for the Zone views
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 ## Entry and scope
 
