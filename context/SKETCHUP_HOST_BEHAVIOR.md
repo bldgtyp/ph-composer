@@ -147,6 +147,15 @@ Measured in PH-Composer on 26.1.188, 2026-09-20
 | Endpoints created in one Entities collection merged through 0.0254 mm (0.001 in) separation and remained distinct at 0.0255 mm. | Phase 1 freezes 0.0254 mm as its coincidence tolerance pending SketchUp 2023 and Windows evidence. Do not infer a wider tolerance from drawing inference. |
 | A nested Zone under a wrapper rotated 30 degrees and scaled -1.0, 1.5, 0.75 retained manifold geometry and produced the expected world points and negative handedness through one accumulated transform. | Geometry reads keep the complete occurrence path, accumulate transforms once and preserve mirror handedness. |
 
+## Re-placing a Group's definition
+
+Measured in PH-Composer on 26.1.188, 2026-10-15
+([P3a-04](../planning/features/phase-03a-spaces/evidence/p3a-04-copies-and-move.md)).
+
+| Fact | Consequence |
+| --- | --- |
+| `Entities#add_instance(group.definition, transform)` in another Group's entities returns a `Sketchup::Group` there, over the same definition. It carries none of the original's instance dictionaries and not its name. The entities inside keep their persistent ids, dictionaries and lock state. After the original is erased, the definition reports one instance. | Moving a Group to another parent is `add_instance`, writing its instance dictionaries and name again, then erasing the original. Everything inside keeps its identity and paths below the moved Group. Stub `Entities#add_instance` and `#delete` |
+
 ## Overlays
 
 | Fact | Consequence |

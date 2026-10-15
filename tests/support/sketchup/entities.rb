@@ -600,9 +600,12 @@ module Sketchup
       @values[index]
     end
 
+    # An erased Group is no longer an instance of its definition (measured on 26.1.188, 2026-10-15:
+    # context/SKETCHUP_HOST_BEHAVIOR.md, "Re-placing a Group's definition").
     def delete(entity)
       deleted = @values.delete(entity)
       entity.parent_entities = nil if deleted && entity.respond_to?(:parent_entities=)
+      entity.entities.group_instances.delete(entity) if deleted && entity.is_a?(Group)
       deleted
     end
 
@@ -645,8 +648,17 @@ module Sketchup
       face
     end
 
+    # A Group's definition places a new Group over the same entities, carrying none of the original's
+    # instance dictionaries or name (measured on 26.1.188, 2026-10-15: context/SKETCHUP_HOST_BEHAVIOR.md,
+    # "Re-placing a Group's definition").
     def add_instance(definition, transformation)
       persistent_id = self.class.allocate_persistent_id
+      if definition.is_a?(GroupDefinition)
+        group = Group.new(persistent_id, definition.entities, {}, :transformation => transformation)
+        self << group
+        return group
+      end
+
       instance = ComponentInstance.new(persistent_id, definition, {}, :transformation => transformation)
       self << instance
       instance

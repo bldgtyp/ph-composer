@@ -5,6 +5,11 @@ module PhComposer
     # `transform` maps the entity's own contents to world; for a Floor Segment, which has no contents,
     # it maps the Face's vertices (its Volume's contents) to world. Paths run from the Model root.
     SegmentOccurrence = Struct.new(:entity, :path, :transform, :record, :shared, :locked, keyword_init: true) do
+      # A Face has no storage of its own: whatever shares it is above it.
+      def shared_above
+        shared
+      end
+
       def reference
         { "floor_segment_id" => record.fetch("id"), "entity_path" => path.dup }
       end
@@ -13,17 +18,19 @@ module PhComposer
     # `nested` is a Volume below another container inside its Space rather than directly in it. On
     # every occurrence `shared` is storage another placement writes through and `locked` a lock the user
     # set, on the entity or a container above it. A Volume's own lock is its protection and is not one.
-    VolumeOccurrence = Struct.new(:entity, :path, :transform, :record, :segments, :nested, :shared, :locked,
-                                  keyword_init: true) do
+    # `shared_above` is storage shared by a container above the entity rather than by its own definition:
+    # making the entity unique cannot isolate that.
+    VolumeOccurrence = Struct.new(:entity, :path, :transform, :record, :segments, :nested, :shared, :shared_above,
+                                  :locked, keyword_init: true) do
       def reference
         { "volume_id" => record.fetch("id"), "entity_path" => path.dup }
       end
     end
 
-    # `shared` is storage another placement writes through; `locked` a lock on the Space or above it;
-    # `outer` the Space this one sits inside, when it is nested.
-    SpaceOccurrence = Struct.new(:entity, :path, :transform, :record, :volumes, :shared, :locked, :outer,
-                                 keyword_init: true) do
+    # `shared` is storage another placement writes through, `shared_above` as for a Volume; `locked` a
+    # lock on the Space or above it; `outer` the Space this one sits inside, when it is nested.
+    SpaceOccurrence = Struct.new(:entity, :path, :transform, :record, :volumes, :shared, :shared_above, :locked,
+                                 :outer, keyword_init: true) do
       def reference
         { "space_id" => record.fetch("id"), "entity_path" => path.dup }
       end
@@ -91,15 +98,15 @@ module PhComposer
         context = { :found => found, :shared => child_shared, :locked => child_locked }
         if space_record
           inner = SpaceOccurrence.new(:entity => entity, :path => path, :transform => carried, :record => space_record,
-                                      :volumes => [], :shared => child_shared, :locked => child_locked,
-                                      :outer => space)
+                                      :volumes => [], :shared => child_shared, :shared_above => shared,
+                                      :locked => child_locked, :outer => space)
           found.spaces << inner
           walk(contents(entity), path, carried, **context, :space => inner, :direct => true)
         elsif volume_record
           occurrence = VolumeOccurrence.new(:entity => entity, :path => path, :transform => carried,
                                             :record => volume_record, :segments => [],
                                             :nested => !(direct && volume.nil?), :shared => child_shared,
-                                            :locked => child_locked)
+                                            :shared_above => shared, :locked => child_locked)
           space ? space.volumes << occurrence : found.orphan_volumes << occurrence
           walk(contents(entity), path, carried, **context, :space => space, :volume => occurrence, :direct => true)
         else

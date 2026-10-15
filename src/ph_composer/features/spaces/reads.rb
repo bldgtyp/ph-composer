@@ -39,15 +39,21 @@ module PhComposer
                          zone.dig("display", "building_segment") || values["building_segment"]] }
         end
         ids = scan.spaces.map { |space| space.record.fetch("id") }.tally
-        rows = scan.spaces.sort_by(&:path).map { |space| space_row(space, zones, ids, catalog, request.model) }
+        counts = Resolve::TARGETS.transform_values do |(_key, _label, list)|
+          list.call(scan).map { |occurrence| occurrence.record.fetch("id") }.tally
+        end
+        rows = scan.spaces.sort_by(&:path).map do |space|
+          space_row(space, zones, ids, catalog, request.model, counts)
+        end
         flag_duplicate_numbers(rows)
         [rows, zone_rows(zones, rows), stray_findings(scan)]
       end
 
-      def space_row(space, zones, ids, catalog, model)
+      def space_row(space, zones, ids, catalog, model, counts)
         zone_path = Occurrences.zone_path(space.path, zones.map { |zone| zone.fetch("zone_path") })
         zone = zone_path && zones.find { |row| row.fetch("zone_path") == zone_path }
-        volumes = space.volumes.sort_by(&:path).map { |volume| volume_row(volume, catalog, model) }
+        repeated = space.shared_above
+        volumes = space.volumes.sort_by(&:path).map { |volume| volume_row(volume, catalog, model, counts, repeated) }
         record = space.record
         row = Spaces.view(record).merge(
           "extension_status" => Records::Metadata.status_map(record, catalog), "reference" => space.reference,
@@ -59,11 +65,12 @@ module PhComposer
           "airflow_mode" => Metrics.airflow_mode(record), "airflows" => Metrics.airflows(record),
           "volumes" => volumes
         )
-        row.merge("findings" => Findings.space(row, :duplicate => false))
+        row.merge("findings" => Findings.space(row, :duplicate => false) +
+                                 duplicate(counts, SPACE_KIND, record, repeated))
       end
 
-      def volume_row(volume, catalog, model)
-        segments = volume.segments.sort_by(&:path).map { |segment| segment_row(segment, catalog) }
+      def volume_row(volume, catalog, model, counts, repeated)
+        segments = volume.segments.sort_by(&:path).map { |segment| segment_row(segment, catalog, counts, repeated) }
         row = Spaces.view(volume.record).merge(
           "extension_status" => Records::Metadata.status_map(volume.record, catalog),
           "reference" => volume.reference, "nested" => volume.nested,
@@ -73,17 +80,23 @@ module PhComposer
           "metrics" => Metrics.volume(volume.record, segments.map { |segment| segment.fetch("metrics") }),
           "floor_segments" => segments
         )
-        row.merge("findings" => Findings.volume(row))
+        row.merge("findings" => Findings.volume(row) + duplicate(counts, VOLUME_KIND, volume.record, repeated))
       end
 
-      def segment_row(segment, catalog)
+      def segment_row(segment, catalog, counts, repeated)
         geometry = FaceCapture.call(segment.entity, segment.transform)
         row = Spaces.view(segment.record).merge(
           "extension_status" => Records::Metadata.status_map(segment.record, catalog),
           "reference" => segment.reference,
           "metrics" => Metrics.segment(geometry.loops_m, geometry.normal, segment.record)
         )
-        row.merge("findings" => Findings.segment(row))
+        row.merge("findings" => Findings.segment(row) + duplicate(counts, FLOOR_SEGMENT_KIND, segment.record, repeated))
+      end
+
+      def duplicate(counts, kind, record, repeated)
+        return [] unless counts.fetch(kind).fetch(record.fetch("id")) > 1
+
+        [Findings.duplicate(Resolve::TARGETS.fetch(kind)[1], :repeated => repeated)]
       end
 
       def state(space, ids)
@@ -98,7 +111,10 @@ module PhComposer
         rows.group_by { |row| [row["zone"], row.dig("values", "number")] }.each do |(zone, number), group|
           next if zone.nil? || number.to_s.empty? || group.length < 2
 
-          group.each { |row| row["findings"] = Findings.space(row, :duplicate => true) }
+          group.each do |row|
+            row["findings"] = Findings.space(row, :duplicate => true) +
+                              (row["findings"] - Findings.space(row, :duplicate => false))
+          end
         end
       end
 

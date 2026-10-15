@@ -117,8 +117,8 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 | `volumes.unprotect` | action (P3a-03, built) | P3a-03 | Unlocks a protected Volume in its own Undo step, Unprotect Volume; the path does not move. Opening a protected Volume is this action, then `context.open` |
 | `locate` | view command | P3a-03 (built) | Select and frame an explicit Space, Volume or Floor Segment. Unlocks nothing: the path opens up to the first locked Group, a protected Volume included, and that Group is selected instead |
 | `volumes.restore_position` | action | P3a-03 (built; refuses `space.volume_open` and `space.position_unknown`) | Puts a moved Volume back at `home_transform` |
-| `make_independent` | action | P3a-04 | New ids for an explicit copied Space, Volume or Floor Segment and everything inside it; the next free number for a Space |
-| `move_to_zone` | action | P3a-04 | An explicit Space reference and a target Zone reference |
+| `make_independent` | action | P3a-04 (built, slice A) | New ids for an explicit copied Space, Volume or Floor Segment and everything inside it; the next free number for a Space. Isolates the named occurrence's own storage; refuses `target.shared_definition` for storage shared above it and `space.identity_unique` for an occurrence with its own id |
+| `move_to_zone` | action | P3a-04 (built, slice A) | An explicit Space reference and a target Zone reference. Re-places the Space Group in the target, keeping ids, numbers and values; refuses `space.context_open` unless the edit path is at the root, and `space.same_zone` |
 | `mark_tool.start`, `mark_tool.stop` | view command | P3a-08 | Start Mark floor with one weighting factor value, from the Weighting factor column menu, as Classify's column-scoped paint starts its tool; stop it (D3a-7) |
 | Mark floor state | in the `spaces` snapshot section | P3a-08 | The value being painted and whether the tool has the viewport, for the column header's pressed paint glyph |
 | Create Space entry | native context menu (`menu_entries`) | P3a-08 | Create Space on a Face selection, with Make Zone's availability rules (D3a-7) |

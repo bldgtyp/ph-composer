@@ -24403,6 +24403,214 @@ Example params:
 }
 ```
 
+### `ph_composer.spaces.make_independent`
+
+Give the named copy of a Space, Volume or Floor Segment, and every record inside it, new ids in one step. The named occurrence is the one rewritten; a Space takes the next free number in its Zone. Owner: `ph_composer.spaces`.
+
+Undo step: Make Space Independent. Gives the copy storage of its own and rewrites its records with new ids.
+
+Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `space.identity_unique`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reference"
+  ],
+  "properties": {
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "volume_id": {
+          "type": "string"
+        },
+        "floor_segment_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "A Space, Volume or Floor Segment reference, as list returns it."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ids"
+  ],
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "before",
+          "after"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "before": {
+            "type": "string"
+          },
+          "after": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "reference": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300
+    ]
+  }
+}
+```
+
+### `ph_composer.spaces.move_to_zone`
+
+Move one Space, with its Volumes and Floor Segments, into another Zone where it stands. Ids, numbers and values are kept; the edit context must be closed. Owner: `ph_composer.spaces`.
+
+Undo step: Move Space to Zone. Places the Space Group in the target Zone, stamps it and erases the original.
+
+Calls: `ph_composer.zones.stamp_container`.
+
+Refuses: `operation.participant_cycle`, `operation.proposal_required`, `proposal.contribution_replaced`, `proposal.foreign_write`, `record.unreadable`, `space.context_open`, `space.same_zone`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space",
+    "zone"
+  ],
+  "properties": {
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "space_id",
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Space, as list returns it."
+    },
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "The Zone occurrence, as ph_composer.zones.list returns it."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space_id",
+    "zone_id"
+  ],
+  "properties": {
+    "space_id": {
+      "type": "string"
+    },
+    "zone_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "space": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300
+    ]
+  },
+  "zone": {
+    "zone_id": "zon_Ab12Cd34Ef56",
+    "zone_path": [
+      1201
+    ]
+  }
+}
+```
+
 ### `ph_composer.spaces.settings.update`
 
 Set the Model's last-entered height, guarded by the value last read. Owner: `ph_composer.spaces`.
@@ -45850,15 +46058,19 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 
 | Code | Meaning |
 | --- | --- |
+| `space.context_open` | An edit context is open; close it to the root first. |
 | `space.context_required` | The edit context holding the Faces must be open to group them. |
+| `space.duplicate_identity` | Another occurrence carries this Space, Volume or Floor Segment's id: a copy. |
 | `space.empty` | A Space has no Volume. |
 | `space.floor_projected` | A Floor Segment is not horizontal; its plan area is used. |
 | `space.height_missing` | A Volume has no average clear ceiling height. |
+| `space.identity_unique` | The occurrence already has an identity of its own; there is nothing to repair. |
 | `space.nested` | A Space is inside another Space. |
 | `space.nothing_to_create` | None of the Faces given can become a Space. |
 | `space.number_duplicate` | Two Spaces in one Zone share a number. |
 | `space.outside_zone` | A Space is in no Zone. |
 | `space.position_unknown` | The Volume has no stored position to restore. |
+| `space.same_zone` | The Space is already in that Zone. |
 | `space.segment_misplaced` | A Floor Segment record is on a Face that is not directly inside a Volume. |
 | `space.shares_edge` | A Face shares an Edge with a Face outside the set being grouped. |
 | `space.volume_empty` | A Volume has no Floor Segment. |

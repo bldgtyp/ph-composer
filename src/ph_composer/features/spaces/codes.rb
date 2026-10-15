@@ -6,13 +6,17 @@ module PhComposer
     module Codes
       ALL = {
         "space.context_required" => "The edit context holding the Faces must be open to group them.",
+        "space.context_open" => "An edit context is open; close it to the root first.",
+        "space.duplicate_identity" => "Another occurrence carries this Space, Volume or Floor Segment's id: a copy.",
         "space.empty" => "A Space has no Volume.",
         "space.floor_projected" => "A Floor Segment is not horizontal; its plan area is used.",
         "space.height_missing" => "A Volume has no average clear ceiling height.",
+        "space.identity_unique" => "The occurrence already has an identity of its own; there is nothing to repair.",
         "space.nested" => "A Space is inside another Space.",
         "space.nothing_to_create" => "None of the Faces given can become a Space.",
         "space.number_duplicate" => "Two Spaces in one Zone share a number.",
         "space.outside_zone" => "A Space is in no Zone.",
+        "space.same_zone" => "The Space is already in that Zone.",
         "space.shares_edge" => "A Face shares an Edge with a Face outside the set being grouped.",
         "space.segment_misplaced" => "A Floor Segment record is on a Face that is not directly inside a Volume.",
         "space.position_unknown" => "The Volume has no stored position to restore.",
