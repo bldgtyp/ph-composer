@@ -298,6 +298,16 @@ behavior already recorded in `context/SKETCHUP_HOST_BEHAVIOR.md`.
    protection needs no transparent path of its own. What `HostFollowUp` does not give is the keyed
    coalescing and the per-Model ledger that decides when protection runs; that stays H6.
 
+**Revised in P3a-03 (2026-10-15).** Answer 3: `context/TECH_STACK.md`, "Join the user's Undo step",
+outranks the recommendation: a panel or script command that writes is a named one-step operation,
+as the predecessor's Enter Volume was. `context.enter_volume`, which unlocks the Volume it opens,
+is therefore an action ("Enter Volume"); `context.open`, `context.close` and `locate` only move the
+path and stay view commands, and the protection their boundary writes is automatic work. Answer
+9: protection writes only lock state, which `TECH_STACK.md` lets commit directly in a transparent
+operation that never aborts, as Zone name restoration does; it does not go through `HostFollowUp`,
+which is for record steps and would need protection registered as a public action. `home_transform`
+is written only by Create Space, a new Volume and Restore position, each inside its own action.
+
 Corrections to the tables above:
 
 1. **The snapshot keeps container Faces (H1).** The stage document asked for the rule in
