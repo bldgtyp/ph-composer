@@ -561,6 +561,221 @@ Values:
 }
 ```
 
+### `ph_composer.spaces.floor_segment`
+
+Floor Segment, a entity kind owned by `ph_composer.spaces`, schema version 1.
+
+Values:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "display_name",
+    "weighting_factor",
+    "net_area_factor"
+  ],
+  "properties": {
+    "display_name": {
+      "type": "string"
+    },
+    "weighting_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The share of the area that counts toward the weighted floor area (iCFA, or TFA)."
+    },
+    "net_area_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The share of the area that counts toward net volume."
+    }
+  }
+}
+```
+
+Occurrence reference:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "floor_segment_id",
+    "entity_path"
+  ],
+  "properties": {
+    "floor_segment_id": {
+      "type": "string"
+    },
+    "entity_path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1,
+      "description": "The root-to-entity persistent-id path."
+    }
+  }
+}
+```
+
+### `ph_composer.spaces.space`
+
+Space, a entity kind owned by `ph_composer.spaces`, schema version 1.
+
+Values:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "number",
+    "default_height_m",
+    "next_volume_sequence"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "number": {
+      "type": "string"
+    },
+    "default_height_m": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-unit": "m",
+      "description": "The height a new Volume takes."
+    },
+    "next_volume_sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "v_sup_m3h": {
+      "type": "number",
+      "minimum": 0,
+      "x-unit": "m3/h",
+      "description": "Supply airflow. Absent is unset, distinct from 0."
+    },
+    "v_eta_m3h": {
+      "type": "number",
+      "minimum": 0,
+      "x-unit": "m3/h",
+      "description": "Extract airflow. Absent is unset, distinct from 0."
+    },
+    "v_tran_m3h": {
+      "type": "number",
+      "minimum": 0,
+      "x-unit": "m3/h",
+      "description": "Transfer airflow. Absent is unset, distinct from 0."
+    }
+  }
+}
+```
+
+Occurrence reference:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space_id",
+    "entity_path"
+  ],
+  "properties": {
+    "space_id": {
+      "type": "string"
+    },
+    "entity_path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1,
+      "description": "The root-to-entity persistent-id path."
+    }
+  }
+}
+```
+
+### `ph_composer.spaces.volume`
+
+Volume, a entity kind owned by `ph_composer.spaces`, schema version 1.
+
+Values:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "number",
+    "display_name",
+    "floor_id"
+  ],
+  "properties": {
+    "number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "avg_ceiling_height_m": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-unit": "m",
+      "description": "Average clear ceiling height; absent until entered."
+    },
+    "floor_id": {
+      "type": "string",
+      "pattern": "^flr_[A-Za-z0-9]{12}$",
+      "description": "The logical Space Floor's id."
+    },
+    "home_transform": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 16,
+      "maxItems": 16,
+      "description": "The Volume's transform relative to its Space at the last reconcile, for Restore position."
+    }
+  }
+}
+```
+
+Occurrence reference:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volume_id",
+    "entity_path"
+  ],
+  "properties": {
+    "volume_id": {
+      "type": "string"
+    },
+    "entity_path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1,
+      "description": "The root-to-entity persistent-id path."
+    }
+  }
+}
+```
+
 ### `ph_composer.windows.frame`
 
 Frame, a catalog kind owned by `ph_composer.windows`, schema version 1.
@@ -5397,6 +5612,1599 @@ Example params:
   "kind": "example.foundation.part",
   "limit": 20
 }
+```
+
+### `ph_composer.spaces.all`
+
+Every Space occurrence in one complete projection, for the panel. Scripts page ph_composer.spaces.list instead. Owner: `ph_composer.spaces`.
+
+Refuses: `geometry.invalid`, `record.unreadable`, `validation.failed`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "spaces",
+    "zones",
+    "findings",
+    "units"
+  ],
+  "properties": {
+    "spaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema_version",
+          "values",
+          "user_data",
+          "extension_data",
+          "extension_status",
+          "reference",
+          "zone",
+          "state",
+          "nested",
+          "metrics",
+          "airflow_mode",
+          "airflows",
+          "findings",
+          "volumes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "number",
+              "default_height_m",
+              "next_volume_sequence"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "number": {
+                "type": "string"
+              },
+              "default_height_m": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "x-unit": "m",
+                "description": "The height a new Volume takes."
+              },
+              "next_volume_sequence": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "v_sup_m3h": {
+                "type": "number",
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Supply airflow. Absent is unset, distinct from 0."
+              },
+              "v_eta_m3h": {
+                "type": "number",
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Extract airflow. Absent is unset, distinct from 0."
+              },
+              "v_tran_m3h": {
+                "type": "number",
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Transfer airflow. Absent is unset, distinct from 0."
+              }
+            }
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status against what is installed."
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "space_id",
+              "entity_path"
+            ],
+            "properties": {
+              "space_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "description": "The root-to-entity persistent-id path."
+              }
+            }
+          },
+          "zone": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "The Zone whose Group holds the Space, or null outside every Zone."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "found",
+              "ambiguous",
+              "shared_definition"
+            ]
+          },
+          "nested": {
+            "type": "boolean"
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "floor_area_m2",
+              "weighted_area_m2",
+              "net_area_m2",
+              "net_volume_m3",
+              "average_height_m"
+            ],
+            "properties": {
+              "floor_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Plan area, projected onto the horizontal plane."
+              },
+              "weighted_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Summed weighted area."
+              },
+              "net_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Summed net area."
+              },
+              "net_volume_m3": {
+                "type": "number",
+                "x-unit": "m3",
+                "description": "Summed over Volumes with a height."
+              },
+              "average_height_m": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m",
+                "description": "Floor-area-weighted, read only."
+              }
+            }
+          },
+          "airflow_mode": {
+            "type": "string",
+            "enum": [
+              "inheriting",
+              "user_specified"
+            ]
+          },
+          "airflows": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "v_sup_m3h",
+              "v_eta_m3h",
+              "v_tran_m3h"
+            ],
+            "properties": {
+              "v_sup_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "The rate the Space contributes: a set value, 0 when unset in a user-specified Space, null in an inheriting one."
+              },
+              "v_eta_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "The rate the Space contributes: a set value, 0 when unset in a user-specified Space, null in an inheriting one."
+              },
+              "v_tran_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "The rate the Space contributes: a set value, 0 when unset in a user-specified Space, null in an inheriting one."
+              }
+            }
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "blocks_export"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "blocks_export": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "volumes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "schema_version",
+                "values",
+                "user_data",
+                "extension_data",
+                "extension_status",
+                "reference",
+                "nested",
+                "metrics",
+                "findings",
+                "floor_segments"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "schema_version": {
+                  "type": "integer"
+                },
+                "values": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "number",
+                    "display_name",
+                    "floor_id"
+                  ],
+                  "properties": {
+                    "number": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "display_name": {
+                      "type": "string"
+                    },
+                    "avg_ceiling_height_m": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "x-unit": "m",
+                      "description": "Average clear ceiling height; absent until entered."
+                    },
+                    "floor_id": {
+                      "type": "string",
+                      "pattern": "^flr_[A-Za-z0-9]{12}$",
+                      "description": "The logical Space Floor's id."
+                    },
+                    "home_transform": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 16,
+                      "maxItems": 16,
+                      "description": "The Volume's transform relative to its Space at the last reconcile, for Restore position."
+                    }
+                  }
+                },
+                "user_data": {
+                  "type": "object",
+                  "description": "Contributor metadata, preserved as written."
+                },
+                "extension_data": {
+                  "type": "object",
+                  "description": "Versioned payloads registered extensions own."
+                },
+                "extension_status": {
+                  "type": "object",
+                  "description": "Each extension envelope's status against what is installed."
+                },
+                "reference": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "volume_id",
+                    "entity_path"
+                  ],
+                  "properties": {
+                    "volume_id": {
+                      "type": "string"
+                    },
+                    "entity_path": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      },
+                      "minItems": 1,
+                      "description": "The root-to-entity persistent-id path."
+                    }
+                  }
+                },
+                "nested": {
+                  "type": "boolean"
+                },
+                "metrics": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "floor_area_m2",
+                    "weighted_area_m2",
+                    "net_area_m2",
+                    "net_volume_m3"
+                  ],
+                  "properties": {
+                    "floor_area_m2": {
+                      "type": "number",
+                      "x-unit": "m2",
+                      "description": "Plan area, projected onto the horizontal plane."
+                    },
+                    "weighted_area_m2": {
+                      "type": "number",
+                      "x-unit": "m2",
+                      "description": "Summed weighted area."
+                    },
+                    "net_area_m2": {
+                      "type": "number",
+                      "x-unit": "m2",
+                      "description": "Summed net area."
+                    },
+                    "net_volume_m3": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "x-unit": "m3",
+                      "description": "Net area times height; null until a height is entered."
+                    }
+                  }
+                },
+                "findings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "code",
+                      "message",
+                      "blocks_export"
+                    ],
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "blocks_export": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "floor_segments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "schema_version",
+                      "values",
+                      "user_data",
+                      "extension_data",
+                      "extension_status",
+                      "reference",
+                      "metrics",
+                      "findings"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "schema_version": {
+                        "type": "integer"
+                      },
+                      "values": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "display_name",
+                          "weighting_factor",
+                          "net_area_factor"
+                        ],
+                        "properties": {
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "weighting_factor": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "The share of the area that counts toward the weighted floor area (iCFA, or TFA)."
+                          },
+                          "net_area_factor": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "The share of the area that counts toward net volume."
+                          }
+                        }
+                      },
+                      "user_data": {
+                        "type": "object",
+                        "description": "Contributor metadata, preserved as written."
+                      },
+                      "extension_data": {
+                        "type": "object",
+                        "description": "Versioned payloads registered extensions own."
+                      },
+                      "extension_status": {
+                        "type": "object",
+                        "description": "Each extension envelope's status against what is installed."
+                      },
+                      "reference": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "floor_segment_id",
+                          "entity_path"
+                        ],
+                        "properties": {
+                          "floor_segment_id": {
+                            "type": "string"
+                          },
+                          "entity_path": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer"
+                            },
+                            "minItems": 1,
+                            "description": "The root-to-entity persistent-id path."
+                          }
+                        }
+                      },
+                      "metrics": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "floor_area_m2",
+                          "weighted_area_m2",
+                          "net_area_m2",
+                          "horizontal"
+                        ],
+                        "properties": {
+                          "floor_area_m2": {
+                            "type": "number",
+                            "x-unit": "m2",
+                            "description": "Plan area, projected onto the horizontal plane."
+                          },
+                          "weighted_area_m2": {
+                            "type": "number",
+                            "x-unit": "m2",
+                            "description": "Area times weighting factor."
+                          },
+                          "net_area_m2": {
+                            "type": "number",
+                            "x-unit": "m2",
+                            "description": "Area times net area factor."
+                          },
+                          "horizontal": {
+                            "type": "boolean"
+                          }
+                        }
+                      },
+                      "findings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "code",
+                            "message",
+                            "blocks_export"
+                          ],
+                          "properties": {
+                            "code": {
+                              "type": "string"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "blocks_export": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "description": "Every Space occurrence."
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "name",
+          "space_count",
+          "floor_area_m2",
+          "weighted_area_m2",
+          "net_volume_m3",
+          "airflows",
+          "inheriting_count",
+          "imbalanced"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "space_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "floor_area_m2": {
+            "type": "number",
+            "x-unit": "m2",
+            "description": "Plan area, projected onto the horizontal plane."
+          },
+          "weighted_area_m2": {
+            "type": "number",
+            "x-unit": "m2",
+            "description": "Summed weighted area (iCFA)."
+          },
+          "net_volume_m3": {
+            "type": "number",
+            "x-unit": "m3",
+            "description": "Summed net volume."
+          },
+          "airflows": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "v_sup_m3h",
+              "v_eta_m3h",
+              "v_tran_m3h"
+            ],
+            "properties": {
+              "v_sup_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "Summed over user-specified Spaces; null while any Space inherits."
+              },
+              "v_eta_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "Summed over user-specified Spaces; null while any Space inherits."
+              },
+              "v_tran_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "Summed over user-specified Spaces; null while any Space inherits."
+              }
+            }
+          },
+          "inheriting_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "imbalanced": {
+            "type": "boolean",
+            "description": "Supply and extract differ by more than 10 percent of the larger."
+          }
+        }
+      },
+      "description": "Each Zone's sums."
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "blocks_export",
+          "reference"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "blocks_export": {
+            "type": "boolean"
+          },
+          "reference": {
+            "type": "object",
+            "description": "The misplaced record's reference."
+          }
+        }
+      },
+      "description": "Records outside the hierarchy that holds them."
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area",
+        "height",
+        "volume",
+        "airflow"
+      ],
+      "properties": {
+        "area": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        },
+        "height": {
+          "type": "string",
+          "enum": [
+            "m"
+          ]
+        },
+        "volume": {
+          "type": "string",
+          "enum": [
+            "m3"
+          ]
+        },
+        "airflow": {
+          "type": "string",
+          "enum": [
+            "m3/h"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.spaces.list`
+
+One page of Space occurrences with their Volumes and Floor Segments, SI metrics, states and findings, and every Zone's sums. Owner: `ph_composer.spaces`.
+
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `validation.failed`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "description": "Only occurrences of these Space ids."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "spaces",
+    "zones",
+    "findings",
+    "units",
+    "next_cursor",
+    "total"
+  ],
+  "properties": {
+    "spaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema_version",
+          "values",
+          "user_data",
+          "extension_data",
+          "extension_status",
+          "reference",
+          "zone",
+          "state",
+          "nested",
+          "metrics",
+          "airflow_mode",
+          "airflows",
+          "findings",
+          "volumes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "number",
+              "default_height_m",
+              "next_volume_sequence"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "number": {
+                "type": "string"
+              },
+              "default_height_m": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "x-unit": "m",
+                "description": "The height a new Volume takes."
+              },
+              "next_volume_sequence": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "v_sup_m3h": {
+                "type": "number",
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Supply airflow. Absent is unset, distinct from 0."
+              },
+              "v_eta_m3h": {
+                "type": "number",
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Extract airflow. Absent is unset, distinct from 0."
+              },
+              "v_tran_m3h": {
+                "type": "number",
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Transfer airflow. Absent is unset, distinct from 0."
+              }
+            }
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status against what is installed."
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "space_id",
+              "entity_path"
+            ],
+            "properties": {
+              "space_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "description": "The root-to-entity persistent-id path."
+              }
+            }
+          },
+          "zone": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "The Zone whose Group holds the Space, or null outside every Zone."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "found",
+              "ambiguous",
+              "shared_definition"
+            ]
+          },
+          "nested": {
+            "type": "boolean"
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "floor_area_m2",
+              "weighted_area_m2",
+              "net_area_m2",
+              "net_volume_m3",
+              "average_height_m"
+            ],
+            "properties": {
+              "floor_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Plan area, projected onto the horizontal plane."
+              },
+              "weighted_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Summed weighted area."
+              },
+              "net_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Summed net area."
+              },
+              "net_volume_m3": {
+                "type": "number",
+                "x-unit": "m3",
+                "description": "Summed over Volumes with a height."
+              },
+              "average_height_m": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m",
+                "description": "Floor-area-weighted, read only."
+              }
+            }
+          },
+          "airflow_mode": {
+            "type": "string",
+            "enum": [
+              "inheriting",
+              "user_specified"
+            ]
+          },
+          "airflows": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "v_sup_m3h",
+              "v_eta_m3h",
+              "v_tran_m3h"
+            ],
+            "properties": {
+              "v_sup_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "The rate the Space contributes: a set value, 0 when unset in a user-specified Space, null in an inheriting one."
+              },
+              "v_eta_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "The rate the Space contributes: a set value, 0 when unset in a user-specified Space, null in an inheriting one."
+              },
+              "v_tran_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "The rate the Space contributes: a set value, 0 when unset in a user-specified Space, null in an inheriting one."
+              }
+            }
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "blocks_export"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "blocks_export": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "volumes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "schema_version",
+                "values",
+                "user_data",
+                "extension_data",
+                "extension_status",
+                "reference",
+                "nested",
+                "metrics",
+                "findings",
+                "floor_segments"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "schema_version": {
+                  "type": "integer"
+                },
+                "values": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "number",
+                    "display_name",
+                    "floor_id"
+                  ],
+                  "properties": {
+                    "number": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "display_name": {
+                      "type": "string"
+                    },
+                    "avg_ceiling_height_m": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "x-unit": "m",
+                      "description": "Average clear ceiling height; absent until entered."
+                    },
+                    "floor_id": {
+                      "type": "string",
+                      "pattern": "^flr_[A-Za-z0-9]{12}$",
+                      "description": "The logical Space Floor's id."
+                    },
+                    "home_transform": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 16,
+                      "maxItems": 16,
+                      "description": "The Volume's transform relative to its Space at the last reconcile, for Restore position."
+                    }
+                  }
+                },
+                "user_data": {
+                  "type": "object",
+                  "description": "Contributor metadata, preserved as written."
+                },
+                "extension_data": {
+                  "type": "object",
+                  "description": "Versioned payloads registered extensions own."
+                },
+                "extension_status": {
+                  "type": "object",
+                  "description": "Each extension envelope's status against what is installed."
+                },
+                "reference": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "volume_id",
+                    "entity_path"
+                  ],
+                  "properties": {
+                    "volume_id": {
+                      "type": "string"
+                    },
+                    "entity_path": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      },
+                      "minItems": 1,
+                      "description": "The root-to-entity persistent-id path."
+                    }
+                  }
+                },
+                "nested": {
+                  "type": "boolean"
+                },
+                "metrics": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "floor_area_m2",
+                    "weighted_area_m2",
+                    "net_area_m2",
+                    "net_volume_m3"
+                  ],
+                  "properties": {
+                    "floor_area_m2": {
+                      "type": "number",
+                      "x-unit": "m2",
+                      "description": "Plan area, projected onto the horizontal plane."
+                    },
+                    "weighted_area_m2": {
+                      "type": "number",
+                      "x-unit": "m2",
+                      "description": "Summed weighted area."
+                    },
+                    "net_area_m2": {
+                      "type": "number",
+                      "x-unit": "m2",
+                      "description": "Summed net area."
+                    },
+                    "net_volume_m3": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "x-unit": "m3",
+                      "description": "Net area times height; null until a height is entered."
+                    }
+                  }
+                },
+                "findings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "code",
+                      "message",
+                      "blocks_export"
+                    ],
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "blocks_export": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "floor_segments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "schema_version",
+                      "values",
+                      "user_data",
+                      "extension_data",
+                      "extension_status",
+                      "reference",
+                      "metrics",
+                      "findings"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "schema_version": {
+                        "type": "integer"
+                      },
+                      "values": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "display_name",
+                          "weighting_factor",
+                          "net_area_factor"
+                        ],
+                        "properties": {
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "weighting_factor": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "The share of the area that counts toward the weighted floor area (iCFA, or TFA)."
+                          },
+                          "net_area_factor": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "The share of the area that counts toward net volume."
+                          }
+                        }
+                      },
+                      "user_data": {
+                        "type": "object",
+                        "description": "Contributor metadata, preserved as written."
+                      },
+                      "extension_data": {
+                        "type": "object",
+                        "description": "Versioned payloads registered extensions own."
+                      },
+                      "extension_status": {
+                        "type": "object",
+                        "description": "Each extension envelope's status against what is installed."
+                      },
+                      "reference": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "floor_segment_id",
+                          "entity_path"
+                        ],
+                        "properties": {
+                          "floor_segment_id": {
+                            "type": "string"
+                          },
+                          "entity_path": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer"
+                            },
+                            "minItems": 1,
+                            "description": "The root-to-entity persistent-id path."
+                          }
+                        }
+                      },
+                      "metrics": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "floor_area_m2",
+                          "weighted_area_m2",
+                          "net_area_m2",
+                          "horizontal"
+                        ],
+                        "properties": {
+                          "floor_area_m2": {
+                            "type": "number",
+                            "x-unit": "m2",
+                            "description": "Plan area, projected onto the horizontal plane."
+                          },
+                          "weighted_area_m2": {
+                            "type": "number",
+                            "x-unit": "m2",
+                            "description": "Area times weighting factor."
+                          },
+                          "net_area_m2": {
+                            "type": "number",
+                            "x-unit": "m2",
+                            "description": "Area times net area factor."
+                          },
+                          "horizontal": {
+                            "type": "boolean"
+                          }
+                        }
+                      },
+                      "findings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "code",
+                            "message",
+                            "blocks_export"
+                          ],
+                          "properties": {
+                            "code": {
+                              "type": "string"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "blocks_export": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "description": "One page in path order."
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "name",
+          "space_count",
+          "floor_area_m2",
+          "weighted_area_m2",
+          "net_volume_m3",
+          "airflows",
+          "inheriting_count",
+          "imbalanced"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "space_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "floor_area_m2": {
+            "type": "number",
+            "x-unit": "m2",
+            "description": "Plan area, projected onto the horizontal plane."
+          },
+          "weighted_area_m2": {
+            "type": "number",
+            "x-unit": "m2",
+            "description": "Summed weighted area (iCFA)."
+          },
+          "net_volume_m3": {
+            "type": "number",
+            "x-unit": "m3",
+            "description": "Summed net volume."
+          },
+          "airflows": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "v_sup_m3h",
+              "v_eta_m3h",
+              "v_tran_m3h"
+            ],
+            "properties": {
+              "v_sup_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "Summed over user-specified Spaces; null while any Space inherits."
+              },
+              "v_eta_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "Summed over user-specified Spaces; null while any Space inherits."
+              },
+              "v_tran_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3/h",
+                "description": "Summed over user-specified Spaces; null while any Space inherits."
+              }
+            }
+          },
+          "inheriting_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "imbalanced": {
+            "type": "boolean",
+            "description": "Supply and extract differ by more than 10 percent of the larger."
+          }
+        }
+      },
+      "description": "Each Zone's sums."
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "blocks_export",
+          "reference"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "blocks_export": {
+            "type": "boolean"
+          },
+          "reference": {
+            "type": "object",
+            "description": "The misplaced record's reference."
+          }
+        }
+      },
+      "description": "Records outside the hierarchy that holds them."
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area",
+        "height",
+        "volume",
+        "airflow"
+      ],
+      "properties": {
+        "area": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        },
+        "height": {
+          "type": "string",
+          "enum": [
+            "m"
+          ]
+        },
+        "volume": {
+          "type": "string",
+          "enum": [
+            "m3"
+          ]
+        },
+        "airflow": {
+          "type": "string",
+          "enum": [
+            "m3/h"
+          ]
+        }
+      }
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "limit": 20
+}
+```
+
+### `ph_composer.spaces.settings.get`
+
+The Model's last-entered height, which new Spaces take. Owner: `ph_composer.spaces`.
+
+Refuses: `record.unreadable`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "last_height_m"
+  ],
+  "properties": {
+    "last_height_m": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0,
+      "x-unit": "m",
+      "description": "The last average clear ceiling height entered; null until one is."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
 ```
 
 ### `ph_composer.windows.export_preflight`
@@ -21688,6 +23496,103 @@ Example params:
   "library_id": "synthetic",
   "record_id": "one",
   "choice": "create"
+}
+```
+
+### `ph_composer.spaces.settings.update`
+
+Set the Model's last-entered height, guarded by the value last read. Owner: `ph_composer.spaces`.
+
+Undo step: Change Spaces Height. Stores the height in this SKP.
+
+Refuses: `record.unreadable`, `target.changed`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "values",
+    "expected_values"
+  ],
+  "properties": {
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "last_height_m"
+      ],
+      "properties": {
+        "last_height_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "x-unit": "m",
+          "description": "The last average clear ceiling height entered; null until one is."
+        }
+      },
+      "description": "The complete new settings."
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "last_height_m"
+      ],
+      "properties": {
+        "last_height_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "x-unit": "m",
+          "description": "The last average clear ceiling height entered; null until one is."
+        }
+      },
+      "description": "The settings last read; a change refuses."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "last_height_m"
+  ],
+  "properties": {
+    "last_height_m": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0,
+      "x-unit": "m",
+      "description": "The last average clear ceiling height entered; null until one is."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "values": {
+    "last_height_m": 2.7
+  },
+  "expected_values": {
+    "last_height_m": null
+  }
 }
 ```
 
@@ -41390,6 +43295,83 @@ Example params:
 }
 ```
 
+### `ph_composer.zones.stamp_container`
+
+Stamp a Group the calling action's own earlier step creates inside a Zone occurrence, making it a nested container of that Zone. The step leaves the Group's root-to-Group path in its slot as entity_path. Owner: `ph_composer.zones`.
+
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `participant` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zone",
+    "slot"
+  ],
+  "properties": {
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "The Zone occurrence the container is inside."
+    },
+    "slot": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The proposal slot the calling step fills with the new Group's entity_path."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zone_id"
+  ],
+  "properties": {
+    "zone_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "zone": {
+    "zone_id": "zon_Ab12Cd34Ef56",
+    "zone_path": [
+      1201
+    ]
+  },
+  "slot": "spc_Ab12Cd34Ef56"
+}
+```
+
 ## Export tasks
 
 HBJSON runtime exports use retained task methods. Each params key is the method's keyword argument.
@@ -42130,6 +44112,21 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `material.invalid` | The Material record does not satisfy its schema. |
 | `material.specific_heat_too_low` | A Material's specific heat is below the Honeybee minimum. |
 | `material.thermal_mass_defaulted` | A Material has no density or specific heat; export uses disclosed defaults. |
+
+### `ph_composer.spaces`
+
+| Code | Meaning |
+| --- | --- |
+| `space.empty` | A Space has no Volume. |
+| `space.floor_projected` | A Floor Segment is not horizontal; its plan area is used. |
+| `space.height_missing` | A Volume has no average clear ceiling height. |
+| `space.nested` | A Space is inside another Space. |
+| `space.number_duplicate` | Two Spaces in one Zone share a number. |
+| `space.outside_zone` | A Space is in no Zone. |
+| `space.segment_misplaced` | A Floor Segment record is on a Face that is not directly inside a Volume. |
+| `space.volume_empty` | A Volume has no Floor Segment. |
+| `space.volume_nested` | A Volume is below another Group inside its Space rather than directly in it. |
+| `space.volume_orphan` | A Volume record is on a Group outside every Space. |
 
 ### `ph_composer.windows`
 

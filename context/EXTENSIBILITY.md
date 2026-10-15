@@ -770,7 +770,9 @@ live Model. `index:` is nil when the caller has none or the owner declares no in
 what a valid target is, so a rule it adds reaches every caller. The permitted use is to read the
 entity's geometry and glue to it. Writes to its records stay with the owner, through its actions.
 Ruby cannot enforce that limit; it is a rule of this contract and is checked in review. The Face
-target `ph_composer.zones.faces.face` is locatable; Window placement locates its host Face this way
+target `ph_composer.zones.faces.face` and the Zone target `ph_composer.zones.zone` are locatable (a
+located Zone's `transform` is its parent-to-world transform, so its contents map through
+`transform * entity.transformation`); Window placement locates its host Face this way
 (`features/windows/placement/host.rb`). Zones' frame-and-outline view command,
 `ph_composer.zones.faces.locate`, is a different thing with the same verb; its sibling
 `ph_composer.zones.faces.select` replaces the selection.

@@ -1,7 +1,7 @@
 # Phase 3a: Spaces, tracking ledger
 
 DATE: 2026-10-15
-STATUS: In progress. Ed authorized the whole packet on 2026-10-15, stage by stage as one pull request each. P3a-01 implemented on branch.
+STATUS: In progress. Ed authorized the whole packet on 2026-10-15, stage by stage as one pull request each. P3a-01 merged to main (PR #135); P3a-02 in progress in two slices.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -48,8 +48,10 @@ interview record (2026-10-15). The PRD carries every amendment.
 ## Next step
 
 Ed authorized the packet on 2026-10-15: each stage on its own branch as one pull request, reviewed,
-merged on green CI, then the next. P3a-01 is implemented on `feature/spaces-p3a-01`; P3a-02 follows
-it.
+merged on green CI, then the next. P3a-01 merged through PR #135. P3a-02 is too large for one
+coherent review, so it lands as two pull requests: slice A (the records, scan, metrics, findings,
+reads, settings and the Zones seams Spaces needs) and slice B (the operations and the walkthrough).
+Its host gate runs once, after slice B, and only then is the stage `Implemented on branch`.
 
 The stages keep the order the interview left, with four foundation stages ahead of the features
 that need them: groundwork (P3a-01), edit contexts and reconciliation (P3a-03), the Colour-by
@@ -84,8 +86,8 @@ only when all three are done and its evidence file exists.
 
 | Stage | Title | State | Blocked by | Branch / PR | Offline | Host | Review | Evidence | Register |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts and groundwork | Implemented on branch | | `feature/spaces-p3a-01` | `make ci` pass (Ruby 3.2.2 local; 2.7.2 in CI) | S01 pass with two stated limits, 26.1.188 | Codex gpt-6-astra, two passes: 1 P1 and 4 P2, all fixed | [p3a-01](evidence/p3a-01-groundwork.md) | S01 |
-| [P3a-02](phases/p3a-02-space-records-and-operations.md) | Space records and operations | Scoped | P3a-01 | | | | ordinary | | S02 |
+| [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts and groundwork | Merged to main | | PR [#135](https://github.com/bldgtyp/ph-composer/pull/135), `a501ac3` | `make ci` pass (Ruby 3.2.2 local; 2.7.2 in CI) | S01 pass with two stated limits, 26.1.188 | Codex gpt-6-astra, two passes: 1 P1 and 4 P2, all fixed | [p3a-01](evidence/p3a-01-groundwork.md) | S01 |
+| [P3a-02](phases/p3a-02-space-records-and-operations.md) | Space records and operations | In progress: slice A (records, scan, metrics, findings, reads, settings, Zones seams) in review; slice B (operations, walkthrough) next; one host gate after slice B | | `feature/spaces-p3a-02` | slice A: `make ci` pass | | ordinary | | S02 |
 | [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | Edit contexts, protection and reconciliation | Scoped | P3a-02 | | | | strong | | S03 |
 | [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | Copies and Move Space to Zone | Scoped | P3a-03 | | | | strong | | S04 |
 | [P3a-05](phases/p3a-05-colour-by-derived-geometry-and-readouts.md) | Colour-by derived geometry and readouts | Scoped | P3a-01 | | | | strong | | S05 |
@@ -188,3 +190,4 @@ and not reproduced.
 | 2026-10-15 | Ed answered D3a-1 to D3a-5, D3a-9, D3a-10, D3a-12, D3a-15 and D3a-18, each as recommended, and confirmed the interview record. Remaining entry gates: the phase issue and Ed's go. |
 | 2026-10-15 | Phase issue [#133](https://github.com/bldgtyp/ph-composer/issues/133) created; every header in the packet points at it. The only open entry gate is Ed's go. |
 | 2026-10-15 | Ed authorized the whole packet, one stage per pull request. P3a-01 implemented on `feature/spaces-p3a-01`: the nested-container rule, the empty-Room refusal, CONTRACTS section 8; S01 passed on the host. |
+| 2026-10-15 | P3a-01 merged to main through PR #135 (`a501ac3`) after two Codex gpt-6-astra passes (1 P1, 4 P2, all fixed). P3a-02 split into slices A and B, one host gate after B. |

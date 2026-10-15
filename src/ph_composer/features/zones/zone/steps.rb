@@ -79,10 +79,70 @@ module PhComposer
         occurrence.entity.name = @after.fetch("name") if occurrence.entity.respond_to?(:name=)
         Names.track(model, occurrence.entity)
         stamp = Schema.stamp(@after)
-        Occurrences.faces(occurrence).each do |face|
-          existing = STAMP_STORE.read(face.entity)
-          STAMP_STORE.write(face.entity, stamp) if existing && existing["zone_id"] == @after.fetch("id")
+        stamped = Occurrences.faces(occurrence).map(&:entity) + Occurrences.containers(occurrence).map(&:first)
+        stamped.each do |entity|
+          existing = STAMP_STORE.read(entity)
+          STAMP_STORE.write(entity, stamp) if existing && existing["zone_id"] == @after.fetch("id")
         end
+      end
+    end
+
+    # Stamps a Group the calling feature's own earlier step created in this proposal, making it a nested
+    # container of the Zone (context/CONTRACTS.md, "Zones geometry rules"). That step leaves the Group's
+    # root-to-Group path in `slots[slot]` as `{ "entity_path" => [...] }`; Zones writes the stamp, so the
+    # stamp stays Zones' to write wherever it is stored.
+    class StampContainerStep
+      attr_reader :affected
+
+      def initialize(zone:, slot:)
+        @zone = DeepCopy.call(zone).freeze
+        @slot = slot.dup.freeze
+        @affected = []
+        @written = nil
+      end
+
+      def descriptor
+        { "name" => "stamp_container", "zone" => @zone, "slot" => @slot }
+      end
+
+      def apply(model, slots)
+        zone = Occurrences.resolve_zone(model, @zone, :mutable => true)
+        raise CodedError.new("target.locked", "The Zone is locked.") if zone.entity.locked?
+
+        path = Array(slots.fetch(@slot) { raise InternalError, "No step filled the container slot #{@slot}." }
+                          .fetch("entity_path"))
+        group = container_at(zone, path)
+        @written = [group, STAMP_STORE.read(group)]
+        STAMP_STORE.write(group, Schema.stamp(zone.record))
+      end
+
+      def restore(_model)
+        return unless @written
+
+        group, before = @written
+        before ? STAMP_STORE.write(group, before) : STAMP_STORE.delete(group)
+      end
+
+      private
+
+      # The Group must lie inside this Zone occurrence through plain Groups only, as `containers` finds it.
+      def container_at(zone, path)
+        inside = path[zone.path.length..-1]
+        unless path[0, zone.path.length] == zone.path && inside && !inside.empty?
+          raise CodedError.new("target.wrong_hierarchy", "The container is not inside that Zone.")
+        end
+
+        entities = zone.entity.entities
+        group = nil
+        inside.each do |persistent_id|
+          group = Occurrences.unique_entity(entities, persistent_id)
+          unless group.is_a?(Sketchup::Group) && !ZONE_STORE.read(group)
+            raise CodedError.new("target.wrong_kind", "A container is a Group inside the Zone, through Groups only.")
+          end
+
+          entities = group.entities
+        end
+        group
       end
     end
 

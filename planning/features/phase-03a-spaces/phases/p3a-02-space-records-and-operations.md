@@ -1,7 +1,7 @@
 # P3a-02: Space records and operations
 
 DATE: 2026-10-15
-STATUS: Scoped. Re-baselined on `main` at `87bdc62`: adds the metadata action and `extension_status` the entity owners gained since planning
+STATUS: In progress in two slices. Slice A (steps 0 to 6, 10, 11 and the reads' share of 12's `extension_status`): the Zones seams, records, scan, metrics, findings, reads and settings. Slice B (steps 7 to 9, 12, 13): the operations, the metadata action and the walkthrough. The host gate runs once, after slice B
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

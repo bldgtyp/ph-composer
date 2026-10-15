@@ -200,4 +200,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-15 | Spaces UI and UX settled with Ed: the Zones / Faces tab becomes Zones, with Faces and Spaces as views and loads and equipment views to follow; Spaces stages P3a-06 to P3a-08 restructured. No implementation authorized. |
 | 2026-10-15 | Spaces decisions D3a-1 to D3a-18 all answered and the interview record confirmed; the packet waits for its phase issue and Ed's go on P3a-01. |
 | 2026-10-15 | Spaces phase issue [#133](https://github.com/bldgtyp/ph-composer/issues/133) created; the packet waits for Ed's go on P3a-01. |
-| 2026-10-15 | Ed authorized the Spaces packet, one stage per pull request; P3a-01 implemented on branch. |
+| 2026-10-15 | Ed authorized the Spaces packet, one stage per pull request; P3a-01 merged through PR #135. |
