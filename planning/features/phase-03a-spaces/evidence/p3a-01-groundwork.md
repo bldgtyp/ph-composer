@@ -69,4 +69,18 @@ Suggest, Solve and preflight read exactly as the rule predicts. They were not re
 
 ## Architecture review
 
-Pending: the stronger independent review runs on the pull request.
+Codex `gpt-6-astra` on PR #135, with the repository architecture rubric: one P1, two P2, all
+accepted and fixed in the same pull request.
+
+- P1: a classified Face inside a stamped container vanished from inventories but its record still
+  reached the Face export, which then blocked as `face.wrong_zone`. The Face contributor now skips
+  container Faces (`Zones::ExportProjection.contained?`); a test exports the two Zone Faces and not
+  the container's.
+- P2: the snapshot's container test read the stamp's truthiness while the live rule read its
+  presence, so a stamp stored as `false` split them. Both now test presence; a parity test covers it.
+- P2: contract answer 2 named `Zones::Occurrences.resolve_zone`, which is Zones-internal: the Zone
+  target declares no public `locate:`. Corrected, and the public Zone locator is allocated to P3a-02
+  as its step 0.
+
+The review also restated the two host limits already recorded above (Shift-click offline; the 35
+screened cases judged unaffected). The S01 row now says "pass with two stated limits".

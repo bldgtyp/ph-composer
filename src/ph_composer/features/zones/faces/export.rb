@@ -160,8 +160,11 @@ module PhComposer
           "invalid"
         end
 
+        # A Face in a nested container is not a Zone Face, so a record left on one is not exported.
         def records(reader)
-          reader.snapshot.records(FACE_DICTIONARY, :kind => "face").map do |entry, record|
+          reader.snapshot.records(FACE_DICTIONARY, :kind => "face").filter_map do |entry, record|
+            next if Zones::ExportProjection.contained?(reader.snapshot, entry)
+
             Schema.validate!(record)
             geometry = entry.geometry
             stamp = entry.record(Zones::STAMP_DICTIONARY)

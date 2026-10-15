@@ -114,6 +114,30 @@ class ZoneNestedContainerTest < PhComposerTestCase
     assert_equal zone_entry, Zones::ExportProjection.zone_owner(snapshot, wall).first
   end
 
+  def test_a_classified_face_inside_a_container_is_left_out_of_the_face_export
+    fixture
+    result = invoke("ph_composer.zones.faces.auto_classify", "zone" => @zone.fetch("reference"))
+    assert_equal "completed", result["status"], result.inspect
+    assert Zones::Faces::FACE_STORE.read(@floor)
+    stamp!(@container)
+    snapshot = PhComposer::Export::GeometrySnapshot.capture(@model, :revision => @session.revision)
+    engine = PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog)
+    records = PhComposer::Export::RecordReader.new(engine, PhComposer::Registry.current.catalog)
+    reader = PhComposer::Export::SnapshotReader.new(records, snapshot)
+    exported = Zones::Faces::ExportProjection.records(reader).map { |row| row.fetch("id") }
+    assert_equal 2, exported.length
+    refute_includes exported, Zones::Faces::FACE_STORE.read(@floor).fetch("id")
+  end
+
+  def test_live_reads_and_export_agree_on_a_stamp_that_does_not_read
+    fixture
+    @container.set_attribute(Zones::STAMP_DICTIONARY, Zones::STAMP_STORE.key, false)
+    assert_equal [[101], [110, 111]], face_paths
+    snapshot = PhComposer::Export::GeometrySnapshot.capture(@model, :revision => @session.revision)
+    zone_entry = snapshot.entry_at([100], :kind => "group")
+    assert_equal [[100, 101], [100, 110, 111]], Zones::ExportProjection.zone_faces(snapshot, zone_entry).map(&:path)
+  end
+
   private
 
   def query(name)

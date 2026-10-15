@@ -484,8 +484,8 @@ and explicit Face resolution skip it, and a Face path through one refuses as
 it reads, so a mismatched stamp is the stamping feature's finding and not Zones'. Only Groups
 qualify: a stamped Face is a classified Zone Face, a Zone nested in a Zone keeps its own refusal and
 cutting components keep theirs. The shared export snapshot still captures the container's Faces,
-for the feature that stamped it; the Zones export leaves them out of the Zone's Faces and gives
-them no owning Zone. Zones reads only the stamp it owns and never learns what the container is.
+for the feature that stamped it; the Zones export leaves them out of the Zone's Faces, gives them no
+owning Zone and does not export a Face record left on one. Zones reads only the stamp it owns and never learns what the container is.
 Spaces is the first feature to stamp one.
 
 Solve reports `adjacency.glued_instances` when a proposed partial match would cut a Face with

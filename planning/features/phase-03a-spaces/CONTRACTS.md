@@ -132,7 +132,7 @@ prefix. The finding codes are in section 6.
 
 | From | To | Mechanism | Used for |
 | --- | --- | --- | --- |
-| Spaces | Zones | The Zone read through `request.query`; `Zones::Occurrences` paths through the registered read only | The Zone a Space is in, its Level and Building-Segment, the stamp values |
+| Spaces | Zones | The Zone read through `request.query`; the live Zone through `request.locate` on `ph_composer.zones.zone` (added in P3a-02, section 8 answer 2) | The Zone a Space is in, its Level and Building-Segment, the stamp values |
 | Zones Make independent | Spaces | `transition_contributor` on `ph_composer.zones.occurrence_independent` | Copied Spaces become independent in the Zone's own step (D3a-13) |
 | Zones | Any stamped Group | The nested-container rule (D3a-1). Zones reads the stamp it owns and names no feature | Floor Segment faces are not Zone Faces |
 | Zones Restore Zone | Stamped Space Groups | The same stamp read that Faces use | Limited Restore and orphaned-contents detection (zones Q14) |
@@ -231,9 +231,15 @@ behavior already recorded in `context/SKETCHUP_HOST_BEHAVIOR.md`.
    Group arrives with the original's `spc_` id, which is what D3a-14's watcher relies on. P3a-02's
    host check: copy, cut and paste, and Make Unique a Space Group with a Volume inside it, then read
    every Space, Volume and Floor Segment record back.
-2. **A Zone, Space, Volume, Face path through `ReferenceTarget`.** Yes, through the owner's
-   `locate:`: `Records::ReferenceTarget` calls the feature's resolver, so Spaces resolves the Zone
-   with `Zones::Occurrences.resolve_zone` (through the Zones read) and walks the rest itself.
+2. **A Zone, Space, Volume, Face path through `ReferenceTarget`.** Yes, through Spaces' own
+   `locate:` on its targets, once it can reach the live Zone publicly. That reach is missing today:
+   the Zone target (`ZoneRegistration::TARGET`) declares no `locate:`, so `request.locate` on
+   `ph_composer.zones.zone` refuses `operation.locate_missing`, and the Zones query returns detached
+   rows, not entities. Calling `Zones::Occurrences.resolve_zone` from Spaces would be the
+   cross-feature internal access `context/EXTENSIBILITY.md` forbids. **Allocated to P3a-02:** Zones
+   declares `locate:` and `locate_index:` on its Zone target, wrapping its strict resolver as the
+   Face target already does, with a test that a requiring feature reaches the live Zone and meets
+   the same `target.*` refusals. Spaces then walks the Space, Volume and Face part itself.
    `Zones::Occurrences.resolve_face` now refuses that path by design (`target.wrong_hierarchy`), so
    Spaces must not reuse it. Shared storage and the user's lock are checked the same way Zones does
    (`shared_storage?`, `locked?`). "Locked by protection" is told apart by Spaces' own protection
