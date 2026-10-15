@@ -1,7 +1,7 @@
 # P3a-04 evidence: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: Slice A merged (#141); B1 (Zones container stamps, Restore Zone for stamped Groups) merged (#142); B2 (the `container_added` event and the copy watcher) merged (#144); B3 (the Zone-copy contributor, the walkthrough) in review; S04 bridge rows pass, native rows pending
+STATUS: Merged in four slices: A #141, B1 #142, B2 #144, B3 #146. S04 bridge rows pass; native rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -177,4 +177,8 @@ keyed by Ruby wrapper identity, which the host makes fresh on every call; a late
 repairs). Each was reproduced by a test and fixed; the last two were gated by `make ci` only, at the
 review cap. A `restore` signature mismatch with `HostFollowUp` was found and fixed before review.
 
-B3: Codex `gpt-6-astra` on its pull request.
+B3: Codex `gpt-6-astra` on #146, two passes. The first found three P2 (an unreadable Space anywhere
+blocked a Zone copy; the walkthrough's fallback Make Zone failed after earlier writes; no combined
+Spaces and Windows regression); the second one P2 (reference resolution still scanned strictly) and one
+P3 (stale evidence text). Each was fixed, the defects reproduced by tests; the last fix was gated by
+`make ci` only, at the review cap.

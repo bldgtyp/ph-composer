@@ -18,6 +18,16 @@ module PhComposer
         resolved.equal?(entity) && visible
       end
 
+      # Whether the occurrence a path names is drawn, for shapes or text with no entity of their own:
+      # every entity along it exists and is visible. No path is no constraint.
+      def path_visible?(path)
+        return true if path.nil?
+        return false unless path.is_a?(Array) && !path.empty?
+
+        resolved, visible = resolve(path)
+        !resolved.nil? && visible
+      end
+
       private
 
       def resolve(path)
@@ -49,6 +59,8 @@ module PhComposer
       HATCH_SPACING = 6.0
       MAX_HATCH_SEGMENTS = 8_192
       HATCH_EPSILON = 1.0e-8
+      # A derived polygon's points must lie within this many inches of its plane.
+      PLANAR_TOLERANCE = 1.0e-3
       HatchTriangle = Struct.new(:vertices, :coordinates, :minimum, :maximum, keyword_init: true)
 
       module_function
@@ -260,6 +272,52 @@ module PhComposer
         ((first.x - second.x)**2) + ((first.y - second.y)**2) + ((first.z - second.z)**2)
       end
 
+      # World triangles, outline segments and line segments for an entry's derived shapes
+      # (ColourBy::Derived). A polygon that is not a planar loop of three or more distinct points draws
+      # nothing; a shape that is not points at all raises, which fails the mode through the service.
+      def derived(shapes)
+        triangles = []
+        outlines = []
+        lines = []
+        Array(shapes.polygons).each do |loop|
+          points = points!(loop, "A derived polygon")
+          polygon_triangles = triangulate(points)
+          next if polygon_triangles.empty?
+
+          triangles.concat(polygon_triangles)
+          ring = distinct(points)
+          ring.each_with_index { |point, index| outlines << point << ring[(index + 1) % ring.length] }
+        end
+        Array(shapes.segments).each do |segment|
+          points = points!(segment, "A derived segment")
+          raise ArgumentError, "A derived segment has two points." unless points.length == 2
+          next unless points.all? { |point| finite?(point) }
+
+          lines.concat(points)
+        end
+        [triangles, outlines, lines]
+      end
+
+      # Triangles covering one simple planar loop, convex or concave, by ear clipping in the loop's own
+      # plane. Empty for a degenerate loop: fewer than three distinct points, a repeated or non-finite
+      # point, collinear, not planar within PLANAR_TOLERANCE inches, or crossing itself.
+      def triangulate(points)
+        return [] unless points.all? { |point| finite?(point) }
+
+        loop = distinct(points)
+        return [] if loop.length < 3 || repeated?(loop)
+
+        normal = newell(loop)
+        length = Math.sqrt(normal.sum { |component| component**2 })
+        return [] if length < HATCH_EPSILON
+
+        normal = normal.map { |component| component / length }
+        origin = loop.first
+        return [] if loop.any? { |point| dot(difference(point, origin), normal).abs > PLANAR_TOLERANCE }
+
+        ear_clip(loop, normal)
+      end
+
       # The same points, lifted toward the camera by about `pixels` screen pixels.
       #
       # A fill drawn exactly on the Face it colours z-fights with that Face, and the host blinks
@@ -279,6 +337,99 @@ module PhComposer
         end
       end
 
+      def points!(value, label)
+        points = value.is_a?(Array) && value.all? { |point| %i[x y z].all? { |axis| point.respond_to?(axis) } }
+        raise ArgumentError, "#{label} is a list of points." unless points
+
+        value
+      end
+
+      def finite?(point)
+        [point.x, point.y, point.z].all? { |value| value.is_a?(Numeric) && value.to_f.finite? }
+      end
+
+      # The loop without consecutive repeats, its closing repeat included.
+      def distinct(points)
+        loop = points.each_with_object([]) do |point, kept|
+          kept << point if kept.empty? || squared_distance(kept.last, point) > HATCH_EPSILON**2
+        end
+        loop.pop if loop.length > 1 && squared_distance(loop.first, loop.last) <= HATCH_EPSILON**2
+        loop
+      end
+
+      # Any point the loop passes through twice, consecutive or not, makes it degenerate.
+      def repeated?(loop)
+        loop.combination(2).any? { |first, second| squared_distance(first, second) <= HATCH_EPSILON**2 }
+      end
+
+      def newell(loop)
+        loop.each_with_index.each_with_object([0.0, 0.0, 0.0]) do |(point, index), normal|
+          following = loop[(index + 1) % loop.length]
+          normal[0] += (point.y - following.y) * (point.z + following.z)
+          normal[1] += (point.z - following.z) * (point.x + following.x)
+          normal[2] += (point.x - following.x) * (point.y + following.y)
+        end
+      end
+
+      def difference(point, origin)
+        Geom::Point3d.new(point.x - origin.x, point.y - origin.y, point.z - origin.z)
+      end
+
+      # Clips ears from the loop projected onto the plane perpendicular to its dominant normal axis,
+      # mirrored when that projection winds clockwise so every ear turns the same way.
+      def ear_clip(loop, normal)
+        axis = normal.map(&:abs).each_with_index.max.last
+        flat = loop.map do |point|
+          coordinates = [point.x, point.y, point.z]
+          coordinates.delete_at(axis)
+          coordinates
+        end
+        signed = flat.each_with_index.sum do |point, index|
+          following = flat[(index + 1) % flat.length]
+          (point[0] * following[1]) - (following[0] * point[1])
+        end
+        flat.map!(&:reverse) if signed.negative?
+        remaining = (0...loop.length).to_a
+        triangles = []
+        guard = remaining.length * remaining.length
+        while remaining.length > 3 && guard.positive?
+          guard -= 1
+          ear = remaining.each_index.find { |index| ear?(flat, remaining, index) }
+          break unless ear
+
+          previous = remaining[(ear - 1) % remaining.length]
+          following = remaining[(ear + 1) % remaining.length]
+          triangles << loop[previous] << loop[remaining[ear]] << loop[following]
+          remaining.delete_at(ear)
+        end
+        # A loop that runs out of ears is not simple (it crosses itself): it draws nothing, not a part.
+        return [] unless remaining.length == 3
+
+        triangles.concat(remaining.map { |index| loop[index] })
+      end
+
+      def ear?(flat, remaining, index)
+        a = flat[remaining[(index - 1) % remaining.length]]
+        b = flat[remaining[index]]
+        c = flat[remaining[(index + 1) % remaining.length]]
+        return false if cross(a, b, c) <= HATCH_EPSILON
+
+        remaining.none? do |other|
+          point = flat[other]
+          ![a, b, c].include?(point) && inside_triangle?(point, a, b, c)
+        end
+      end
+
+      def cross(a, b, c)
+        ((b[0] - a[0]) * (c[1] - a[1])) - ((b[1] - a[1]) * (c[0] - a[0]))
+      end
+
+      def inside_triangle?(point, a, b, c)
+        cross(a, b, point) >= 0 && cross(b, c, point) >= 0 && cross(c, a, point) >= 0
+      end
+
+      private_class_method :points!, :finite?, :distinct, :repeated?, :newell, :difference, :ear_clip, :ear?, :cross,
+                           :inside_triangle?
       private_class_method :each_face, :add_face, :stripe_range, :stripe_count, :zero_length_extremum?,
                            :hatch_at_spacing, :hatch_across, :projected_axis, :dot, :squared_distance
     end

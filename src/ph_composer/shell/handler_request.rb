@@ -10,20 +10,24 @@ module PhComposer
   # cannot alter what a nested read or the dispatcher's digest sees. The foundation derives a nested
   # one with `with`; feature code passes the values it needs to its operations as arguments and never
   # derives or alters a request.
+  # `selection` is the selected occurrences as full persistent-id paths, given only to a Colour-by readout
+  # that declares it reads the selection; nil everywhere else.
   HandlerRequest = Struct.new(:session, :model, :params, :engine, :revision, :registry, :owner, :proposal, :query_stack,
-                              :memos, :approval, keyword_init: true) do
+                              :memos, :approval, :selection, keyword_init: true) do
     # The one place a request is built from a session. `name` is the declaration the request runs
     # for, so a nested read of the same name is refused as recursive.
-    def self.for(session, owner:, name:, registry: Registry.current, params: {}, proposal: nil, approval: nil)
+    def self.for(session, owner:, name:, registry: Registry.current, params: {}, proposal: nil, approval: nil,
+                 selection: nil)
       new(:session => session, :model => session.model, :params => params,
           :engine => Records::Engine.new(session.model, registry.catalog), :revision => session.revision,
           :registry => registry, :owner => owner, :proposal => proposal, :query_stack => [name],
-          :approval => approval)
+          :approval => approval, :selection => selection)
     end
 
     def initialize(**fields)
       super
       self.params = DeepCopy.frozen(params || {})
+      self.selection = DeepCopy.frozen(selection) if selection
       self.query_stack ||= []
       self.memos ||= {}.compare_by_identity
       freeze
