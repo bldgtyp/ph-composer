@@ -1,0 +1,55 @@
+# Assembly Layer drag reordering: status
+
+DATE: 2026-10-15
+STATUS: Complete. LR-01 to LR-04 delivered on `feat/assemblies-layer-drag-reorder` through [PR #129](https://github.com/bldgtyp/ph-composer/pull/129); native case `E18` passed; archived 2026-10-15.
+AUTHOR: Ed May, BLDGTYP, with Claude
+ISSUE: [#128](https://github.com/bldgtyp/ph-composer/issues/128)
+
+The action, the grip and its drag gesture pass the offline gates, the browser check and the native
+host gate (`E18`). Packet created on 2026-10-07
+under the owner's standing instruction to scope larger new features for dedicated branches. The
+refactor's hover gear and the existing directional Move actions are separate and merged.
+
+## Stages
+
+| Stage | State | Review | Gate | Notes |
+| --- | --- | --- | --- | --- |
+| [LR-01](phases/lr-01-reorder-action.md) `layers.reorder` | Complete | gpt-6-astra, PR #129 | Ruby suite 1621 runs green on 3.2.2 and 2.7.2; rubocop clean; `make fixtures` adds one API reference section | Tests 1 to 8 as planned, in the commands and operations suites |
+| [LR-02](phases/lr-02-grip-and-drag-gesture.md) grip and gesture | Complete | gpt-6-astra, PR #129 | `make ci` exit 0 on 3.2.2 and 2.7.2 (1621 Ruby runs, 546 JS tests); `make coverage` Ruby 97.1%, JS 96.6% | Tests 1 to 7 in `tests/assembly_layer_drag_test.js` (own file: the Builder test file is 600 lines and registers tests, so it cannot be required); test 8 in `tests/icons_test.js`; the zoom-fit boundary in `tests/assembly_canvas_test.js` moved with the 128 px gutter |
+| [LR-03](phases/lr-03-browser-checks.md) browser checks | Complete | gpt-6-astra, PR #129 | `make ui-checks` with a scratch Playwright: every Assembly check passes, including the new `assembly_layer_drag_checks.cjs`; `library_checks` and `windows_checks` fail identically on `main` at 87bdc62 (pre-existing, filed as a follow-up task); `make ci` exit 0 | Own fixture `?fixture=layerdrag` (five uneven Layers with a membrane) so the shared `builder` fixture and its checks stay unchanged; the preview host gains `reorder`. The check found two LR-02 defects, fixed in their own commit: the grip's press stole focus and so applied an open thickness draft, and the Layer-Segment under the pointer kept its hover outline during a drag |
+| [LR-04](phases/lr-04-host-gate-and-closeout.md) host gate and closeout | Complete | gpt-6-astra second pass over `93f3bbb`: no findings | `E18` pass on the installed build of `93f3bbb` from a fresh process: native drag, one native Undo and Redo, draft/Escape/blur refusals, reversed orientation, fresh-process reopen; [evidence](../../native-acceptance/evidence/assembly-layer-drag-2026-10-15.md). `make ci` and `make ui-checks` on the closeout head | Ledger case `E18` added; `patterns.md` records the grip pattern; `context/NATIVE_CONTROL_CAPABILITIES.md` gains the HtmlDialog late-callback limit found during the run. The Design System artifact needs no sync: no token, type style or kit part changed (one glyph joined the icon registry) |
+
+## Decisions
+
+LR-D1 to LR-D11 in [PLAN.md](PLAN.md), "Decisions proposed", are taken as proposed. The PRD's open
+decisions map to them: action name and schema (LR-D1), auto-scroll and thin-Layer reach
+(LR-D5, LR-D7), ghost versus reserved space (LR-D6). The gutter widening (LR-D11) is new.
+
+## Review
+
+[PR #129](https://github.com/bldgtyp/ph-composer/pull/129), gpt-6-astra over `ddad1b18`: one P1,
+one P2, one P3, all confirmed and fixed. P1: a lost release (no mouseup, later moves report the
+primary button up) left the drag live, so a later click could drop; a move with the button up now
+ends it. P2: any button's mouseup finished the drag; only the primary button's does now. P3: the
+STATUS and PLAN summaries contradicted the stage rows. One focused test covers P1 and P2.
+
+## Delivery, as authorized on 2026-10-15
+
+Ed started the packet through `implement-loop` on 2026-10-15 with these instructions, which
+override the plan where they differ. Veto any of them here.
+
+- One branch, `feat/assemblies-layer-drag-reorder`, and one pull request for the whole packet
+  instead of one per stage. Each stage is its own signed commit on that branch.
+- The review is one Codex pass through `pr-loop`, which also stands for LR-04 step 12's
+  "stronger independent pass". Ed named gpt-6.1-sol; it refused three times on 2026-10-15 ("not
+  supported when using Codex with a ChatGPT account", no OpenAI incident), and Ed chose
+  gpt-6-astra for this PR. The second pass over the fixes found nothing.
+- Claude merges the PR once the review findings are resolved, then archives the packet and deletes
+  the branch locally and on the remote.
+- Guard detail settled during LR-02 design: `Editor.guard()` refuses while a Layer drag is active,
+  not while `Editor.dragging` is set, because the Material drag's own busy check reads `guard()`
+  on every move and would end itself.
+
+Offline gates and browser checks passed (two unrelated browser checks, `library_checks` and
+`windows_checks`, fail on `main` too and are filed separately). Native acceptance: `E18` passed on
+SketchUp 26.1.188, macOS. No SketchUp 2023, Windows or release claim.

@@ -22,6 +22,8 @@ these are observed limitations of this run, not permanent limits of SketchUp or 
 | Escape inside the panel | The background controller's `app_key escape` on the panel window, with the bridge reading the Model before and after | On 2026-10-04 (ZT-07) background Escape reached the web view and drove its Escape layers. On 2026-10-03 a synthesized Escape did not, while Backspace, Enter and letters did; if it fails again, ask for one physical keypress. |
 | Panel clicks and Edit > Undo | SketchUp frontmost under full-screen control, with the model window clicked before the Edit menu | Under background control, clicks stopped reaching the panel after a few interactions and Undo stayed disabled (2026-10-03). Undo reads "Undo <operation>" only while the model window is key. `Sketchup.send_action("editUndo:")` did nothing while SketchUp was in the background. |
 | Controls shown only on hover (header and row icons) | Inject a dev-only style through `dialog.execute_script` that sets them visible, target them by coordinate, then remove the style before any at-rest check | Background control cannot hover. Never leave the style in place while judging what shows at rest (2026-10-04, ZT-07). |
+| Reading panel DOM state into Ruby | A development callback registered before the panel's `show`, or window pixels | On SketchUp 26.1.188 (2026-10-15, E18) `add_action_callback` on an already shown HtmlDialog never reached `window.sketchup`, even after `set_file` reloaded the page. Read pixels instead, or wrap the dialog's construction in a development helper. |
+| Pointer drags inside the panel | Full-screen native control: `left_mouse_down`, stepped moves, a capture while held, `left_mouse_up` | Hover-revealed handles appear for the real pointer, so no visibility style is needed when the pointer passes over the row first (E18). Bridge-driven focus changes (`Sketchup.focus`) work while the button is held, to test blur. |
 | Fresh process / install | Existing hostkit launch and build/install workflow | Inspect all open documents first. `launch` quits the host and may kill it after timeout; a scratch save does not authorize discarding unrelated work. |
 
 A human handoff names one action, its starting state, when to release/stop, the expected visible cue,
@@ -45,4 +47,5 @@ Sources: [Phase 2 groundwork observations](../planning/archive/phase-02-envelope
 [held gesture/context continuation](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-keyboard-context.md),
 [export lifecycle and restoration](../planning/archive/phase-01-faces-and-zones/evidence/p1-e-export-workflow.md),
 [R06 rerun](../planning/native-acceptance/evidence/r06-rerun-2026-09-30.md),
-[Library product tabs](../planning/native-acceptance/evidence/library-product-tab-headers-2026-10-03.md).
+[Library product tabs](../planning/native-acceptance/evidence/library-product-tab-headers-2026-10-03.md),
+[Assembly Layer drag](../planning/native-acceptance/evidence/assembly-layer-drag-2026-10-15.md).

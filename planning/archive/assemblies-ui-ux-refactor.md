@@ -329,7 +329,7 @@ and accepted moves, even when its displayed Layer number changes.
 Actual six-dot drag reordering is deferred under the agreed larger-feature scope rule. The current
 `layers.move` operation swaps adjacent Layers; an arbitrary drop needs one atomic reorder operation
 and native Undo/Redo acceptance. Its separate packet is
-[Assembly Layer drag reordering](../features/unscheduled/assemblies-layer-drag-reorder/README.md).
+[Assembly Layer drag reordering](assemblies-layer-drag-reorder/README.md).
 No inert grip or new Model operation ships in this slice.
 
 Verification:

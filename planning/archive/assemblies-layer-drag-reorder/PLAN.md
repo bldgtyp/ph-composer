@@ -1,7 +1,7 @@
 # Assembly Layer drag reordering: implementation plan
 
 DATE: 2026-10-15
-STATUS: In progress. Authorized 2026-10-15; delivery as recorded in [STATUS.md](STATUS.md).
+STATUS: Complete 2026-10-15; delivery as recorded in [STATUS.md](STATUS.md).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#128](https://github.com/bldgtyp/ph-composer/issues/128)
 

@@ -1,7 +1,7 @@
 # LR-01: the `layers.reorder` action
 
 DATE: 2026-10-15
-STATUS: Scoped
+STATUS: Complete 2026-10-15
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#128](https://github.com/bldgtyp/ph-composer/issues/128)
 

@@ -1,7 +1,7 @@
 # Assembly Layer drag reordering
 
 DATE: 2026-10-07
-STATUS: Requested
+STATUS: Complete 2026-10-15 (implemented and host-verified; see STATUS.md)
 ISSUE: [#128](https://github.com/bldgtyp/ph-composer/issues/128)
 
 ## Problem and accepted visual direction

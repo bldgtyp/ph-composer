@@ -109,8 +109,17 @@ Paths under **Local** are in this repository at `src/ph_composer/html/`. The UI 
   owns that space. The gear targets its explicit Layer without changing Layer-Segment selection.
   The drawing gear is the sole Layer tools entry point; keep the toolbar focused on segment actions.
   Mount the feature-owned menu outside the scrollport, retain stable Layer identity
-  across repaint/reordering, and return focus on Escape. Actual drag grips require an implemented
-  reorder gesture and atomic Model operation; never show an inert grip as decoration.
+  across repaint/reordering, and return focus on Escape.
+- Assembly Layer drag (`features/assemblies/layer_drag.js`, `stage.js`, `assembly.css`): a six-dot
+  grip sits beside the gear and shares its reveal and its hiding under an inline thickness field.
+  Past a 6 px threshold a small ghost follows the pointer and a red `--drawing-highlight` line marks
+  the nearest Layer boundary, muted on the Layer's own place; the drawing and selection stay still
+  and no Layer-Segment takes a hover outline. Boundaries come from layout millimetres and the zoom,
+  so thin Layers are as reachable as thick ones. One changed drop sends one atomic action and one
+  Undo step; Escape, blur, a lost release, a release outside the frame, a repaint and disposal send
+  nothing, and a press over a draft or request refuses with its notice without taking focus. The
+  grip has no tab stop; Move outward and Move inward in the gear's menu are the keyboard route. A
+  grip ships only with its working gesture and Model operation; never show an inert one.
 - Assembly thickness applicability: if a Material category snapshot makes a Layer a membrane during
   an unfinished thickness edit, retain the draft visibly with a reason and require Escape to cancel.
   Keep Enter/blur writes and navigation blocked. A clean membrane has no numeric editor; cancellation
