@@ -109,9 +109,10 @@ class WindowColourModesTest < PhComposerTestCase
       U::DefinitionWriter.create(:model => @model, :type => values.merge("id" => @type_id),
                                  :plan => U::DefinitionPlan.build(values))
     assert_equal 2, W::ColourModes.entries(read).first.derived.segments.length
-    result = assignment_invoke("ph_composer.windows.types.update", "id" => @type_id,
-                               "values" => { "columns_m" => values["columns_m"].map { |width| width * 2 } },
-                               "expected_values" => { "columns_m" => values["columns_m"] })
+    widths = values["columns_m"]
+    result = assignment_invoke("ph_composer.windows.types.update",
+                               "id" => @type_id, "values" => { "columns_m" => widths.map { |width| width * 2 } },
+                               "expected_values" => { "columns_m" => widths })
     assert_equal "completed", result.fetch("status"), result.inspect
     entries = W::ColourModes.entries(read)
     assert_equal [@type_id, @type_id], entries.map(&:value)
