@@ -139,6 +139,10 @@ module PhComposer
           unless group.is_a?(Sketchup::Group) && !ZONE_STORE.read(group)
             raise CodedError.new("target.wrong_kind", "A container is a Group inside the Zone, through Groups only.")
           end
+          raise CodedError.new("target.locked", "A Group on the container's path is locked.") if group.locked?
+          if Occurrences.shared_storage?(group)
+            raise CodedError.new("target.shared_definition", "The container's path runs through shared storage.")
+          end
 
           entities = group.entities
         end

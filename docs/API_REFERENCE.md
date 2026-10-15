@@ -5618,7 +5618,7 @@ Example params:
 
 Every Space occurrence in one complete projection, for the panel. Scripts page ph_composer.spaces.list instead. Owner: `ph_composer.spaces`.
 
-Refuses: `geometry.invalid`, `record.unreadable`, `validation.failed`, and the `query` common set.
+Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 
@@ -6372,7 +6372,7 @@ Example params:
 
 One page of Space occurrences with their Volumes and Floor Segments, SI metrics, states and findings, and every Zone's sums. Owner: `ph_composer.spaces`.
 
-Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `validation.failed`, and the `query` common set.
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
 

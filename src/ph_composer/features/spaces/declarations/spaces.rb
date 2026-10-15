@@ -91,7 +91,8 @@ module PhComposer
         "spaces" => Shapes.list(SPACE_ROW, :description => "One page in path order."),
         "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL
       ))
-      READ = %w[record.unreadable validation.failed geometry.invalid].freeze
+      # What the Spaces walk refuses, and what the Zones read it depends on can.
+      READ = %w[geometry.invalid record.unreadable target.wrong_kind validation.failed].freeze
 
       module_function
 

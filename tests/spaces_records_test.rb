@@ -48,6 +48,14 @@ class SpacesRecordsTest < PhComposerTestCase
     assert METRICS.horizontal?([0.0, 0.0, -1.0])
   end
 
+  def test_projected_area_does_not_depend_on_where_the_face_is
+    square = [[0, 0, 0], [0.1, 0, 0], [0.1, 0.1, 0], [0, 0.1, 0]]
+    [[0, 0], [584_000, 4_500_000], [10_000_000, 10_000_000]].each do |x, y|
+      moved = square.map { |px, py, pz| [px + x, py + y, pz] }
+      assert_in_delta 0.01, METRICS.projected_area_m2([moved]), 1e-9, "at #{x}, #{y}"
+    end
+  end
+
   def test_imbalance_is_measured_against_the_larger_sum
     assert METRICS.imbalanced?(100.0, 89.0)
     refute METRICS.imbalanced?(100.0, 90.0)

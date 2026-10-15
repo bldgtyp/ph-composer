@@ -33,8 +33,9 @@ module PhComposer
         spaces.flat_map(&:volumes)
       end
 
+      # Every Floor Segment in a Volume, a Volume outside every Space included.
       def segments
-        volumes.flat_map(&:segments)
+        (volumes + orphan_volumes).flat_map(&:segments)
       end
     end
 

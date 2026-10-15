@@ -50,7 +50,9 @@ module PhComposer
           "extension_status" => Records::Metadata.status_map(record, catalog), "reference" => space.reference,
           "zone" => zone && { "zone_id" => zone.fetch("zone_id"), "zone_path" => zone_path },
           "state" => state(space, ids), "nested" => !space.outer.nil?,
-          "metrics" => Metrics.space(volumes.map { |volume| volume.fetch("metrics") }),
+          "metrics" => Metrics.space(volumes.map do |volume|
+            [volume.fetch("metrics"), volume.dig("values", "avg_ceiling_height_m")]
+          end),
           "airflow_mode" => Metrics.airflow_mode(record), "airflows" => Metrics.airflows(record),
           "volumes" => volumes
         )

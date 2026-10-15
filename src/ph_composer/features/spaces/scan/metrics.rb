@@ -13,15 +13,18 @@ module PhComposer
 
       module_function
 
-      # Plan area of the outer loop less its holes, in m2, from world loops in metres.
+      # Plan area of the outer loop less its holes, in m2, from world loops in metres. Coordinates are
+      # taken relative to the outer loop's first point, so a Face far from the origin loses no precision.
       def projected_area_m2(loops_m)
         outer, *holes = loops_m
-        [plan_area(outer) - holes.sum { |hole| plan_area(hole) }, 0.0].max
+        origin = outer.first
+        [plan_area(outer, origin) - holes.sum { |hole| plan_area(hole, origin) }, 0.0].max
       end
 
-      def plan_area(loop)
-        twice = loop.each_with_index.sum do |(x, y, _z), index|
-          next_x, next_y, = loop[(index + 1) % loop.length]
+      def plan_area(loop, origin)
+        local = loop.map { |x, y, _z| [x - origin[0], y - origin[1]] }
+        twice = local.each_with_index.sum do |(x, y), index|
+          next_x, next_y = local[(index + 1) % local.length]
           (x * next_y) - (next_x * y)
         end
         twice.abs / 2.0
@@ -44,19 +47,20 @@ module PhComposer
         totals.merge("net_volume_m3" => height && (totals.fetch("net_area_m2") * height))
       end
 
-      # The Space's height is the floor-area-weighted average over Volumes that have one, read only.
+      # `volumes` pairs each Volume's metrics with its height, nil when it has none. The Space's height
+      # is the floor-area-weighted average over the Volumes that have one, read only.
       def space(volumes)
-        totals = sums(volumes, %w[floor_area_m2 weighted_area_m2 net_area_m2])
-        with_height = volumes.reject { |volume| volume["net_volume_m3"].nil? }
-        totals.merge("net_volume_m3" => with_height.sum { |volume| volume.fetch("net_volume_m3") },
-                     "average_height_m" => average_height(with_height))
+        metrics = volumes.map(&:first)
+        totals = sums(metrics, %w[floor_area_m2 weighted_area_m2 net_area_m2])
+        totals.merge("net_volume_m3" => metrics.sum { |volume| volume.fetch("net_volume_m3") || 0.0 },
+                     "average_height_m" => average_height(volumes.reject { |_metrics, height| height.nil? }))
       end
 
       def average_height(volumes)
-        net = volumes.sum { |volume| volume.fetch("net_area_m2") }
-        return nil unless net.positive?
+        area = volumes.sum { |metrics, _height| metrics.fetch("floor_area_m2") }
+        return nil unless area.positive?
 
-        volumes.sum { |volume| volume.fetch("net_volume_m3") } / net
+        volumes.sum { |metrics, height| metrics.fetch("floor_area_m2") * height } / area
       end
 
       # The any-set rule: a Space with any airflow set is user-specified and its unset rates are zero;

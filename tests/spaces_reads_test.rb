@@ -124,6 +124,25 @@ class SpacesReadsTest < PhComposerTestCase
     assert_equal ["201"], ids.map { |row| row.dig("values", "number") }
   end
 
+  def test_the_space_height_is_weighted_by_floor_area
+    low = volume_group(111, volume_record("L", :height => 2.0),
+                       [floor_face(112, rectangle(0, 0, 2, 5), segment_record("L"))])
+    high = volume_group(113, volume_record("H", :number => 2, :height => 4.0),
+                        [floor_face(114, rectangle(2, 0, 2, 5), segment_record("H", :net_area_factor => 0.5))])
+    @model.entities << zone_group(100, "Z", [space_group(110, space_record("S", :number => "1"), [low, high])])
+    assert_in_delta 3.0, all.dig("spaces", 0, "metrics", "average_height_m"), 1e-9
+  end
+
+  def test_a_zone_read_refusal_reaches_the_caller_declared
+    instance = Sketchup::ComponentInstance.new(100, Sketchup::ComponentDefinition.new(Sketchup::Entities.new([])))
+    PhComposer::Zones::ZONE_STORE.write(instance, { "id" => "zon_ZZZZZZZZZZZZ", "schema_version" => 1,
+                                                    "name" => "Zone", "building_segment" => "B", "level" => nil,
+                                                    "ground_depth_mm" => 0.0 })
+    @model.entities << instance
+    result = API.query(:context => @context, :name => "ph_composer.spaces.all")
+    assert_equal %w[refused target.wrong_kind], result.values_at("status", "code")
+  end
+
   def test_reference_targets_list_every_occurrence
     reference_model
     engine = PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog)
@@ -131,5 +150,11 @@ class SpacesReadsTest < PhComposerTestCase
     assert_equal [1000, 1300], space.key
     segment = engine.resolve_reference(PhComposer::Spaces::FLOOR_SEGMENT_KIND, "fsg_IIIIIIIIIIII")
     assert_equal [1000, 1300, 1320, 1321], segment.key
+    @model.entities << volume_group(3000, volume_record("O"), [floor_face(3001, rectangle(0, 0, 1, 1),
+                                                                          segment_record("I"))])
+    error = assert_raises(PhComposer::CodedError) do
+      engine.resolve_reference(PhComposer::Spaces::FLOOR_SEGMENT_KIND, "fsg_IIIIIIIIIIII")
+    end
+    assert_equal "target.ambiguous", error.code
   end
 end

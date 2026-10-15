@@ -18,8 +18,9 @@ module ContainerFixture
                                  :refuses => [], :participants => ["ph_composer.zones.stamp_container"]) do |
                                    request, proposal|
       zone = request.params.fetch("zone")
-      proposal.add_step(GroupStep.new(zone.fetch("zone_path"), request.params.fetch("face_id")),
-                        :scopes => [PhComposer::Operations::EntityScope.new(zone.fetch("zone_path"))])
+      context = request.params.fetch("context_path", zone.fetch("zone_path"))
+      proposal.add_step(GroupStep.new(context, request.params.fetch("face_id")),
+                        :scopes => [PhComposer::Operations::EntityScope.new(context)])
       request.participate("ph_composer.zones.stamp_container", "zone" => zone, "slot" => "container")
     end
   end
@@ -205,6 +206,19 @@ class ZoneNestedContainerTest < PhComposerTestCase
     group = @zone_group.entities.to_a.find { |entity| entity.is_a?(Sketchup::Group) && entity.entities.include?(loose) }
     assert_equal Zones::Schema.stamp(Zones::ZONE_STORE.read(@zone_group)), Zones::STAMP_STORE.read(group)
     refute_includes face_paths, [group.persistent_id, 141]
+  end
+
+  def test_the_participant_refuses_a_container_under_a_locked_group
+    PhComposer::Registry.install([ContainerFixture])
+    fixture
+    loose = Sketchup::Face.new(141)
+    @plain.entities << loose
+    @plain.locked = true
+    result = invoke("test.container.make", "zone" => @zone.fetch("reference"), "context_path" => [100, 110],
+                                           "face_id" => 141)
+    refute_equal "completed", result["status"], result.inspect
+    stamped = Zones::Occurrences.zones(@model).map { |zone| Zones::Occurrences.containers(zone) }.flatten(1)
+    assert_empty stamped
   end
 
   def test_the_zone_edit_step_rewrites_the_stamps_of_its_containers
