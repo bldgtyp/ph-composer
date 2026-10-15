@@ -23,16 +23,24 @@ Slice B: the standalone copy watcher (D3a-14), Restore Zone reading stamped Grou
   binds each record by kind, id and its ordinal in path order inside the named occurrence, re-scans
   after isolation and refuses drift with `target.changed`. It is restorable, so slice B's watcher can
   reuse it under `HostFollowUp`.
-- **What is rewritten.** The named occurrence and every Spaces record at or below its path take new
-  ids; each Volume takes a new `floor_id`; a Space takes the next free number in its Zone. `user_data`
-  is kept. Extension payloads are copied under their declared rules with the mapping typed by the
-  rewritten records.
+- **What is rewritten.** The named occurrence takes a new id. A record inside it takes one only when
+  an occurrence outside it holds the id too, or when it is not the first holder inside it, so no
+  identity disappears from the Model and a reference from outside the copy keeps its target (the
+  stage's "everything inside it" was narrowed by review). A renamed Volume takes a new `floor_id`; the
+  named Space the next free number in its Zone. `user_data` is kept. Each extension payload is remapped
+  to its own record's new id and to renamed siblings whose old id only one renamed record held; a
+  payload naming an id several renamed records held refuses `reference.invalid`. The action reports
+  each rewritten record with the path it has after isolation.
+- **No storage of its own.** A Space inside a single component placement has no copy and still no
+  storage of its own, so it carries the finding with the draw-directly message, and Make independent
+  refuses `target.shared_definition` before considering its id count. Orphan Volumes and misplaced
+  Floor Segments carry the finding as contained ones do.
 - **Move is a re-placement.** The Space Group's definition is placed again in the target Zone and the
   original erased; the Volumes, Faces and records inside are the same entities. Ids, numbers, values
   and every `home_transform`, which is relative to the Space, are unchanged by construction rather than
   recomputed. The Space Group's instance dictionaries and name are written again, the Zone stamp is
   written by Zones through its participant, unprotected Volumes are locked, and the original is erased,
-  in one operation.
+  in one operation. Name, tag, material and hidden state are carried with the dictionaries.
 - **Move needs a closed edit context.** Transforms read through an open context are not the stored
   ones, so `move_to_zone` refuses `space.context_open` unless the path is at the root. The panel
   (P3a-07) closes the context first.
@@ -66,4 +74,7 @@ intact and no new Group.
 
 ## Reviews
 
-Strong review (Codex `gpt-6-astra`) on the slice A pull request.
+Slice A: Codex `gpt-6-astra` on #141. The first pass found two P1 (descendants with unique ids were
+renamed, breaking outside references; repeated descendants shared one remapping) and five P2 (native
+names not restored, hidden state lost on Move, no finding for a single component placement or for
+stray occurrences, no final references after isolation). Each was reproduced by a test and fixed.

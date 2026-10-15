@@ -95,6 +95,16 @@ class SpacesMoveTest < PhComposerTestCase
     assert_equal [190, 200], hall.path[0, 2]
   end
 
+  def test_a_hidden_space_stays_hidden_through_move_undo_and_redo
+    @space.hidden = true
+    move
+    assert hall.entity.hidden?
+    @model.undo
+    assert hall.entity.hidden?
+    @model.redo
+    assert hall.entity.hidden?
+  end
+
   def test_move_refuses_with_an_edit_context_open_and_writes_nothing
     @model.active_path = [@zone_a, @space]
     before = @model.operations.length

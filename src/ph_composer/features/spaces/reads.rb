@@ -46,7 +46,7 @@ module PhComposer
           space_row(space, zones, ids, catalog, request.model, counts)
         end
         flag_duplicate_numbers(rows)
-        [rows, zone_rows(zones, rows), stray_findings(scan)]
+        [rows, zone_rows(zones, rows), stray_findings(scan, counts)]
       end
 
       def space_row(space, zones, ids, catalog, model, counts)
@@ -93,8 +93,10 @@ module PhComposer
         row.merge("findings" => Findings.segment(row) + duplicate(counts, FLOOR_SEGMENT_KIND, segment.record, repeated))
       end
 
+      # A copy, or storage shared above the Space such as a single component placement: either way the
+      # record has no identity of its own to export.
       def duplicate(counts, kind, record, repeated)
-        return [] unless counts.fetch(kind).fetch(record.fetch("id")) > 1
+        return [] unless repeated || counts.fetch(kind).fetch(record.fetch("id")) > 1
 
         [Findings.duplicate(Resolve::TARGETS.fetch(kind)[1], :repeated => repeated)]
       end
@@ -137,9 +139,14 @@ module PhComposer
           "model" => Metrics.sums(rows.map { |row| row.fetch("metrics") }, Metrics::TOTALS) }
       end
 
-      def stray_findings(scan)
-        scan.orphan_volumes.map { |volume| Findings.orphan_volume.merge("reference" => volume.reference) } +
-          scan.misplaced_segments.map { |segment| Findings.misplaced_segment.merge("reference" => segment.reference) }
+      def stray_findings(scan, counts)
+        strays = scan.orphan_volumes.map { |volume| [VOLUME_KIND, volume, Findings.orphan_volume] } +
+                 scan.misplaced_segments.map { |segment| [FLOOR_SEGMENT_KIND, segment, Findings.misplaced_segment] }
+        strays.flat_map do |kind, occurrence, finding|
+          ([finding] + duplicate(counts, kind, occurrence.record, occurrence.shared_above)).map do |item|
+            item.merge("reference" => occurrence.reference)
+          end
+        end
       end
     end
   end

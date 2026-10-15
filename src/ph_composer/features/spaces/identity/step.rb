@@ -11,26 +11,27 @@ module PhComposer
     class IdentityStep
       attr_reader :affected
 
-      def initialize(target:, rows:)
+      def initialize(target:, plan:)
         @path = target.path.dup.freeze
         @kind = Resolve.kind_of(target.reference)
         @record = DeepCopy.frozen(target.record)
-        @rows = rows.map do |row|
+        @counts = plan.counts.dup.freeze
+        @rows = plan.rows.map do |row|
           { "kind" => row.kind, "ordinal" => row.ordinal, "before" => DeepCopy.call(row.before),
             "after" => DeepCopy.call(row.after) }
         end.freeze
-        @affected = @rows.map do |row|
-          { "kind" => row.fetch("kind"), "id" => row.dig("after", "id"), "change" => "identity_repaired" }
-        end
+        @affected = []
         @captured = nil
       end
 
       def descriptor
-        { "name" => "make_space_independent", "path" => @path, "record" => @record, "rows" => DeepCopy.call(@rows) }
+        { "name" => "make_space_independent", "path" => @path, "record" => @record,
+          "counts" => @counts.map { |(kind, id), count| [kind, id, count] }.sort, "rows" => DeepCopy.call(@rows) }
       end
 
       def temporary_ids
-        @rows.flat_map { |row| [row.dig("after", "id"), row.dig("after", "floor_id")] }.compact
+        @rows.reject { |row| row.dig("after", "id") == row.dig("before", "id") }
+             .flat_map { |row| [row.dig("after", "id"), row.dig("after", "floor_id")] }
       end
 
       def apply(model, _slots)
@@ -38,31 +39,50 @@ module PhComposer
         isolate(target.entity) if target.entity.is_a?(Sketchup::Group)
         inside = Authoring.inside(Occurrences.scan(model), @path).sort_by { |_kind, occurrence| occurrence.path }
         groups = inside.group_by { |kind, occurrence| [kind, occurrence.record.fetch("id")] }
-        unless groups.transform_values(&:length) == @rows.group_by { |row| [row["kind"], row.dig("before", "id")] }
-                                                         .transform_values(&:length)
+        unless groups.transform_values(&:length) == @counts
           raise CodedError.new("target.changed", "The copy's contents changed after it was previewed.")
         end
 
         resolved = @rows.map do |row|
           _kind, occurrence = groups.fetch([row.fetch("kind"), row.dig("before", "id")]).fetch(row.fetch("ordinal"))
           check!(occurrence, row)
-          [STORES.fetch(row.fetch("kind")), occurrence.entity, row.fetch("after")]
+          [row, occurrence]
         end
-        @captured = resolved.map { |store, entity, _record| [store, entity, store.read(entity)] }
-        resolved.each do |store, entity, record|
-          store.write(entity, record)
-          entity.name = Names.space(record) if store.equal?(SPACE_STORE) && entity.respond_to?(:name=)
+        @captured = resolved.map do |row, occurrence|
+          entity = occurrence.entity
+          [STORES.fetch(row.fetch("kind")), entity, STORES.fetch(row.fetch("kind")).read(entity),
+           entity.respond_to?(:name) ? entity.name : nil]
         end
+        resolved.each { |row, occurrence| write(row, occurrence.entity) }
+        @affected = resolved.map { |row, occurrence| affected_row(row, occurrence.path) }
       end
 
       # Writes back what apply replaced; nothing when apply did not reach its writes.
       def restore(_model)
         return unless @captured
 
-        @captured.each { |store, entity, record| record ? store.write(entity, record) : store.delete(entity) }
+        @captured.each do |store, entity, record, name|
+          record ? store.write(entity, record) : store.delete(entity)
+          entity.name = name if name && store.equal?(SPACE_STORE) && entity.respond_to?(:name=)
+        end
       end
 
       private
+
+      def write(row, entity)
+        store = STORES.fetch(row.fetch("kind"))
+        store.write(entity, row.fetch("after"))
+        entity.name = Names.space(row.fetch("after")) if store.equal?(SPACE_STORE) && entity.respond_to?(:name=)
+      end
+
+      # Each rewritten record with the path it has after isolation, which the caller can resolve.
+      def affected_row(row, path)
+        id = row.dig("after", "id")
+        key = Resolve::TARGETS.fetch(row.fetch("kind")).first
+        { "kind" => row.fetch("kind"), "id" => id,
+          "change" => id == row.dig("before", "id") ? "updated" : "identity_repaired",
+          "reference" => { key => id, "entity_path" => path } }
+      end
 
       # The eligibility the plan checked holds again at apply.
       def target_occurrence(model)

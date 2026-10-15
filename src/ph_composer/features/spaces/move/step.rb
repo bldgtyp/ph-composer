@@ -49,7 +49,8 @@ module PhComposer
 
       private
 
-      # A Group's instance dictionaries and name stay with the instance, not its definition.
+      # A Group's instance dictionaries, name, tag, material and visibility stay with the instance, not its
+      # definition.
       def carry(source, moved)
         Array(source.attribute_dictionaries).each do |dictionary|
           dictionary.each { |key, value| moved.set_attribute(dictionary.name, key, value) }
@@ -57,6 +58,7 @@ module PhComposer
         moved.name = source.name if source.respond_to?(:name)
         moved.layer = source.layer if source.respond_to?(:layer) && moved.respond_to?(:layer=)
         moved.material = source.material if source.respond_to?(:material) && moved.respond_to?(:material=)
+        moved.hidden = source.hidden? if source.respond_to?(:hidden?) && moved.respond_to?(:hidden=)
       end
 
       def protect(space)

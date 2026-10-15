@@ -147,13 +147,15 @@ module PhComposer
         kind = Resolve.kind_of(reference)
         target = Resolve.occurrence(scan, reference, :mutable => false)
         number = (next_number(scan, zone_of(request, target.path), zone_paths(request)) if kind == SPACE_KIND)
-        rows = IdentityPlan.build(scan, target, :number => number,
+        plan = IdentityPlan.build(scan, target, :number => number,
                                                 :allocate => Records::Identity.allocator(request, request.params),
                                                 :catalog => request.registry.catalog, :engine => request.engine)
         scope = kind == FLOOR_SEGMENT_KIND ? target.path[0...-2] : target.path[0...-1]
-        proposal.add_step(IdentityStep.new(:target => target, :rows => rows),
+        proposal.add_step(IdentityStep.new(:target => target, :plan => plan),
                           :scopes => [Operations::EntityScope.new(scope)])
-        { "ids" => rows.map { |row| { "kind" => row.kind, "before" => row.before["id"], "after" => row.after["id"] } } }
+        renamed = plan.rows.reject { |row| row.after["id"] == row.before["id"] }
+        ids = renamed.map { |row| { "kind" => row.kind, "before" => row.before["id"], "after" => row.after["id"] } }
+        { "ids" => ids }
       end
 
       # Moves a Space Group, with everything in it, into another Zone where it stands; the new Group takes
