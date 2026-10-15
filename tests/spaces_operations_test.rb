@@ -1,0 +1,242 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+require_relative "support/space_fixtures"
+
+class SpacesOperationsTest < PhComposerTestCase
+  include SpaceFixtures
+
+  API = PhComposer::API
+  ROTATION = Geom::Transformation.new([0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 5, 0, 0, 1])
+
+  def setup
+    super
+    @model = Sketchup.active_model
+    @session = PhComposer::Sessions.for(@model)
+    @context = API.connect(:session_id => @session.id)
+    @sequence = 0
+  end
+
+  # Zone Z under a rotated wrapper, holding two loose floor outlines and one classified wall.
+  def zone_with_outlines
+    @living = floor_face(101, rectangle(0, 0, 3, 4))
+    @bath = floor_face(102, rectangle(3, 0, 2, 2))
+    @zone_group = zone_group(100, "Z", [@living, @bath])
+    @wrapper = Sketchup::Group.new(90, Sketchup::Entities.new([@zone_group]), :transformation => ROTATION)
+    @model.entities << @wrapper
+    @zone = query("ph_composer.zones.list").dig("zones", 0, "reference")
+    @model.active_path = [@wrapper, @zone_group]
+  end
+
+  def face_reference(face)
+    @zone.merge("entity_path" => [face.persistent_id], "entity_id" => nil)
+  end
+
+  def create(faces, **extra)
+    invoke("ph_composer.spaces.create", { "zone" => @zone, "faces" => faces.map { |face| face_reference(face) } }
+      .merge(extra))
+  end
+
+  def spaces
+    query("ph_composer.spaces.all").fetch("spaces")
+  end
+
+  def test_create_groups_faces_into_a_space_under_a_rotated_wrapper_in_one_undo_step
+    zone_with_outlines
+    before = @model.operations.length
+    result = create([@living], "name" => "Living")
+    assert_equal "completed", result["status"], result.inspect
+    assert_equal before + 1, @model.operations.length
+    row = spaces.first
+    assert_equal({ "zone_id" => "zon_ZZZZZZZZZZZZ", "zone_path" => [90, 100] }, row["zone"])
+    assert_equal %w[1 Living 2.5], [row.dig("values", "number"), row.dig("values", "name"),
+                                    row.dig("values", "default_height_m").to_s]
+    assert_in_delta 12.0, row.dig("metrics", "floor_area_m2"), 1e-9
+    assert_in_delta 30.0, row.dig("metrics", "net_volume_m3"), 1e-9
+    segment = row.dig("volumes", 0, "floor_segments", 0)
+    assert_equal 101, segment.dig("reference", "entity_path").last
+    space_group = @zone_group.entities.to_a.find { |entity| PhComposer::Spaces::SPACE_STORE.read(entity) }
+    zone_record = PhComposer::Zones::ZONE_STORE.read(@zone_group)
+    assert_equal PhComposer::Zones::Schema.stamp(zone_record), PhComposer::Zones::STAMP_STORE.read(space_group)
+    assert_equal "1 Living", space_group.name
+    faces = query("ph_composer.zones.faces.list").fetch("faces").map { |face| face.dig("reference", "entity_path") }
+    assert_equal [[102]], faces, "the Floor Segment is no longer a Zone Face"
+    second = create([@bath])
+    assert_equal "completed", second["status"], second.inspect
+    assert_equal %w[1 2], spaces.map { |space| space.dig("values", "number") }
+  end
+
+  def test_create_preview_names_each_left_out_face_and_writes_nothing
+    zone_with_outlines
+    classified = floor_face(103, rectangle(0, 5, 1, 1))
+    PhComposer::Zones::Faces::FACE_STORE.write(classified, { "id" => "fac_CCCCCCCCCCCC", "schema_version" => 1,
+                                                             "face_type" => "Floor" })
+    nested = floor_face(105, rectangle(0, 7, 1, 1))
+    edge = Sketchup::Edge.new(200, Geom::Point3d.new(7 * INCHES, 0, 0), Geom::Point3d.new(7 * INCHES, INCHES, 0))
+    left, right = [[106, 6], [107, 7]].map do |id, x|
+      points = rectangle(x, 0, 1, 1).map { |px, py, pz| Geom::Point3d.new(px * INCHES, py * INCHES, pz * INCHES) }
+      Sketchup::Face.new(id, {}, :points => points, :edges => [edge])
+    end
+    @zone_group.entities << classified << Sketchup::Group.new(104, Sketchup::Entities.new([nested])) << left << right
+    before = @model.operations.length
+    params = { "zone" => @zone,
+               "faces" => [face_reference(@living), face_reference(left),
+                           face_reference(classified).merge("entity_id" => "fac_CCCCCCCCCCCC"),
+                           @zone.merge("entity_path" => [104, 105], "entity_id" => nil),
+                           { "zone_id" => "zon_OTHER0000001", "zone_path" => [1], "entity_path" => [1],
+                             "entity_id" => nil }] }
+    preview = query("ph_composer.spaces.create_preview", params)
+    assert_equal [[101]], preview.fetch("accepted").map { |face| face["entity_path"] }
+    assert_equal %w[shares_edge classified not_in_zone_context other_zone].sort,
+                 preview.fetch("left_out").map { |row| row["reason"] }.sort
+    assert_equal before, @model.operations.length
+    assert_empty spaces
+  end
+
+  def test_create_refuses_outside_the_zone_context_and_with_nothing_to_take
+    zone_with_outlines
+    @model.active_path = nil
+    assert_equal %w[refused space.context_required], create([@living]).values_at("status", "code")
+    @model.active_path = [@wrapper, @zone_group]
+    stamped = floor_face(108, rectangle(0, 9, 1, 1), segment_record("Q"))
+    @zone_group.entities << stamped
+    assert_equal %w[refused space.nothing_to_create], create([stamped]).values_at("status", "code")
+    assert_empty spaces
+  end
+
+  def test_a_second_volume_adds_its_net_volume_and_the_space_counts_on
+    zone_with_outlines
+    create([@living])
+    space_group = @zone_group.entities.to_a.find { |entity| PhComposer::Spaces::SPACE_STORE.read(entity) }
+    hall = floor_face(109, rectangle(0, 4, 1, 2))
+    space_group.entities << hall
+    @model.active_path = [@wrapper, @zone_group, space_group]
+    space = spaces.first.fetch("reference")
+    result = invoke("ph_composer.spaces.volumes.create",
+                    "space" => space, "faces" => [space.fetch("entity_path") + [109]], "weighting_factor" => 0.0)
+    assert_equal "completed", result["status"], result.inspect
+    row = spaces.first
+    assert_equal [1, 2], row.fetch("volumes").map { |volume| volume.dig("values", "number") }
+    assert_equal 3, row.dig("values", "next_volume_sequence")
+    assert_in_delta 35.0, row.dig("metrics", "net_volume_m3"), 1e-9
+    assert_in_delta 12.0, row.dig("metrics", "weighted_area_m2"), 1e-9
+  end
+
+  def test_airflows_set_clear_and_a_stale_or_unknown_edit_refuses_with_nothing_written
+    zone_with_outlines
+    create([@living])
+    row = spaces.first
+    set = edit(row, { "v_sup_m3h" => 60.0, "v_eta_m3h" => 0.0 }, {})
+    assert_equal "completed", set["status"], set.inspect
+    assert_equal "user_specified", spaces.first["airflow_mode"]
+    clear = edit(spaces.first, { "v_sup_m3h" => nil, "v_eta_m3h" => nil },
+                 { "v_sup_m3h" => 60.0, "v_eta_m3h" => 0.0 })
+    assert_equal "completed", clear["status"], clear.inspect
+    assert_equal "inheriting", spaces.first["airflow_mode"]
+    stale = edit(spaces.first, { "name" => "Kitchen" }, { "name" => "Other" })
+    assert_equal %w[refused target.changed], stale.values_at("status", "code")
+    unknown = edit(spaces.first, { "next_volume_sequence" => 9 }, {})
+    assert_equal %w[refused params.invalid], unknown.values_at("status", "code")
+  end
+
+  def test_a_batch_with_one_stale_target_writes_none_and_a_height_edit_records_the_last_height
+    zone_with_outlines
+    create([@living])
+    create([@bath])
+    first, second = spaces
+    batch = invoke("ph_composer.spaces.batch_update", "edits" => [
+      { "reference" => first.fetch("reference"), "values" => { "name" => "A" },
+        "expected_values" => {} },
+      { "reference" => second.fetch("reference"), "values" => { "name" => "B" },
+        "expected_values" => { "name" => "stale" } }
+    ])
+    assert_equal %w[refused target.changed], batch.values_at("status", "code")
+    assert_equal ["", ""], spaces.map { |row| row.dig("values", "name") }
+    volume = first.dig("volumes", 0)
+    height = invoke("ph_composer.spaces.update", "reference" => volume.fetch("reference"),
+                                                 "values" => { "avg_ceiling_height_m" => 2.7 },
+                                                 "expected_values" => { "avg_ceiling_height_m" => 2.5 })
+    assert_equal "completed", height["status"], height.inspect
+    assert_equal 2.7, query("ph_composer.spaces.settings.get")["last_height_m"]
+    third = floor_face(110, rectangle(6, 6, 1, 1))
+    @zone_group.entities << third
+    create([third])
+    assert_equal 2.7, spaces.last.dig("values", "default_height_m")
+  end
+
+  def test_floors_mark_update_and_unmark_keep_the_face
+    zone_with_outlines
+    create([@living])
+    volume = spaces.first.dig("volumes", 0)
+    extra = floor_face(111, rectangle(0, 4, 1, 1))
+    volume_group = @zone_group.entities.to_a.find { |entity| PhComposer::Spaces::SPACE_STORE.read(entity) }
+                              .entities.to_a.first
+    volume_group.entities << extra
+    path = volume.dig("reference", "entity_path") + [111]
+    marked = invoke("ph_composer.spaces.floors.mark", "faces" => [path], "weighting_factor" => 0.6)
+    assert_equal "completed", marked["status"], marked.inspect
+    segment = spaces.first.dig("volumes", 0, "floor_segments").find { |row|
+      row.dig("reference", "entity_path") == path
+    }
+    assert_equal 0.6, segment.dig("values", "weighting_factor")
+    factor = invoke("ph_composer.spaces.update", "reference" => segment.fetch("reference"),
+                                                 "values" => { "net_area_factor" => 0.9 },
+                                                 "expected_values" => { "net_area_factor" => 1.0 })
+    assert_equal "completed", factor["status"], factor.inspect
+    unmarked = invoke("ph_composer.spaces.floors.unmark", "floor_segments" => [segment.fetch("reference")])
+    assert_equal "completed", unmarked["status"], unmarked.inspect
+    assert_nil PhComposer::Spaces::FLOOR_SEGMENT_STORE.read(extra)
+    assert volume_group.entities.include?(extra)
+  end
+
+  def test_metadata_survives_edits_and_a_stale_metadata_write_refuses
+    zone_with_outlines
+    create([@living])
+    reference = spaces.first.fetch("reference")
+    written = invoke("ph_composer.spaces.update_metadata", "updates" => [{
+      "reference" => reference, "user_data" => { "example" => { "note" => "kept" } },
+      "expected_metadata" => { "user_data" => {}, "extension_data" => {} }
+    }])
+    assert_equal "completed", written["status"], written.inspect
+    edit(spaces.first, { "name" => "Kitchen" }, {})
+    assert_equal({ "example" => { "note" => "kept" } }, spaces.first["user_data"])
+    stale = invoke("ph_composer.spaces.update_metadata", "updates" => [{
+      "reference" => reference, "user_data" => {},
+      "expected_metadata" => { "user_data" => {}, "extension_data" => {} }
+    }])
+    assert_equal %w[refused target.changed], stale.values_at("status", "code")
+  end
+
+  def test_remove_volume_and_delete_space
+    zone_with_outlines
+    create([@living])
+    volume = spaces.first.dig("volumes", 0)
+    removed = invoke("ph_composer.spaces.volumes.remove", "volume" => volume.fetch("reference"))
+    assert_equal "completed", removed["status"], removed.inspect
+    row = spaces.first
+    assert_empty row.fetch("volumes")
+    assert_equal ["space.empty"], row.fetch("findings").map { |finding| finding["code"] }
+    deleted = invoke("ph_composer.spaces.delete", "space" => row.fetch("reference"))
+    assert_equal "completed", deleted["status"], deleted.inspect
+    assert_empty spaces
+  end
+
+  private
+
+  def edit(row, values, expected)
+    invoke("ph_composer.spaces.update", "reference" => row.fetch("reference"), "values" => values,
+                                        "expected_values" => expected)
+  end
+
+  def query(name, params = {})
+    result = API.query(:context => @context, :name => name, :params => params)
+    assert_equal "completed", result["status"], result.inspect
+    result.fetch("value")
+  end
+
+  def invoke(name, params)
+    @sequence += 1
+    API.invoke(:context => @context, :name => name, :params => params,
+               :request => { "sequence" => @sequence, "expected_revision" => @session.revision })
+  end
+end

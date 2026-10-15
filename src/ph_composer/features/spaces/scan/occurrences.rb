@@ -4,14 +4,17 @@ module PhComposer
   module Spaces
     # `transform` maps the entity's own contents to world; for a Floor Segment, which has no contents,
     # it maps the Face's vertices (its Volume's contents) to world. Paths run from the Model root.
-    SegmentOccurrence = Struct.new(:entity, :path, :transform, :record, keyword_init: true) do
+    SegmentOccurrence = Struct.new(:entity, :path, :transform, :record, :shared, :locked, keyword_init: true) do
       def reference
         { "floor_segment_id" => record.fetch("id"), "entity_path" => path.dup }
       end
     end
 
-    # `nested` is a Volume below another container inside its Space rather than directly in it.
-    VolumeOccurrence = Struct.new(:entity, :path, :transform, :record, :segments, :nested, keyword_init: true) do
+    # `nested` is a Volume below another container inside its Space rather than directly in it. On
+    # every occurrence `shared` is storage another placement writes through and `locked` a lock on the
+    # entity or a container above it.
+    VolumeOccurrence = Struct.new(:entity, :path, :transform, :record, :segments, :nested, :shared, :locked,
+                                  keyword_init: true) do
       def reference
         { "volume_id" => record.fetch("id"), "entity_path" => path.dup }
       end
@@ -61,7 +64,7 @@ module PhComposer
         entities.each do |entity|
           child_path = path + [entity.persistent_id]
           if entity.is_a?(Sketchup::Face)
-            face(entity, child_path, transform, found, volume, direct)
+            face(entity, child_path, transform, found, volume, direct, :shared => shared, :locked => locked)
           elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
             container(entity, child_path, transform, found, :shared => shared, :locked => locked, :space => space,
                                                             :volume => volume, :direct => direct)
@@ -69,11 +72,12 @@ module PhComposer
         end
       end
 
-      def face(entity, path, transform, found, volume, direct)
+      def face(entity, path, transform, found, volume, direct, shared:, locked:)
         record = read(FLOOR_SEGMENT_STORE, FLOOR_SEGMENT, entity)
         return unless record
 
-        occurrence = SegmentOccurrence.new(:entity => entity, :path => path, :transform => transform, :record => record)
+        occurrence = SegmentOccurrence.new(:entity => entity, :path => path, :transform => transform, :record => record,
+                                           :shared => shared, :locked => locked)
         volume && direct ? volume.segments << occurrence : found.misplaced_segments << occurrence
       end
 
@@ -93,7 +97,8 @@ module PhComposer
         elsif volume_record
           occurrence = VolumeOccurrence.new(:entity => entity, :path => path, :transform => carried,
                                             :record => volume_record, :segments => [],
-                                            :nested => !(direct && volume.nil?))
+                                            :nested => !(direct && volume.nil?), :shared => child_shared,
+                                            :locked => child_locked)
           space ? space.volumes << occurrence : found.orphan_volumes << occurrence
           walk(contents(entity), path, carried, **context, :space => space, :volume => occurrence, :direct => true)
         else
@@ -112,6 +117,23 @@ module PhComposer
 
       def contents(container)
         container.is_a?(Sketchup::Group) ? container.entities : container.definition.entities
+      end
+
+      # The entity a root-to-entity path names, through Groups and ComponentInstances; nil when the path
+      # no longer resolves to exactly one entity at each step.
+      def entity_at(model, path)
+        entities = model.entities
+        entity = nil
+        path.each do |persistent_id|
+          return nil unless entities
+
+          matches = entities.to_a.select { |candidate| candidate.persistent_id == persistent_id }
+          return nil unless matches.length == 1
+
+          entity = matches.first
+          entities = entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance) ? contents(entity) : nil
+        end
+        entity
       end
 
       # The Zone occurrence a Space is in: the Zone whose Group is the Space's nearest Zone ancestor, as

@@ -239,3 +239,17 @@ confirm the new record is chosen at once. Stop classifying and confirm the viewp
 
 Last, the stale case: with the panel open, change a Face through the Ruby Console, then use that
 row's chip in the panel. The edit must refuse and the row must go back to what the Model holds.
+
+## P3a-02 Spaces: records and operations with the panel closed
+
+`spaces_walkthrough.rb` needs a Model with one Zone. It draws three 1 m floor outlines loose in the
+first Zone, 0.5 m up, opens the Zone's edit context and then works only through `PhComposer::API`:
+Create Space from the three, a second Volume from a fourth outline drawn in the Space, one Floor
+Segment marked as not counting, a height, two airflows and one cleared, the read-back, and recovery
+from a stale edit. Create Space and a new Volume group Faces, which SketchUp does reliably only in
+the open edit context, so the script opens it as a user would.
+
+```sh
+uv run tools/hostkit/host_bridge.py eval \
+  'load "/absolute/path/to/ph-composer/tools/examples/authoring/spaces_walkthrough.rb"; SpacesWalkthrough.run'
+```

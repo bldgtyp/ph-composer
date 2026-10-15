@@ -5,10 +5,12 @@ module PhComposer
     # The codes Spaces reports under its own noun, published in docs/API_REFERENCE.md.
     module Codes
       ALL = {
+        "space.context_required" => "The edit context holding the Faces must be open to group them.",
         "space.empty" => "A Space has no Volume.",
         "space.floor_projected" => "A Floor Segment is not horizontal; its plan area is used.",
         "space.height_missing" => "A Volume has no average clear ceiling height.",
         "space.nested" => "A Space is inside another Space.",
+        "space.nothing_to_create" => "None of the Faces given can become a Space.",
         "space.number_duplicate" => "Two Spaces in one Zone share a number.",
         "space.outside_zone" => "A Space is in no Zone.",
         "space.segment_misplaced" => "A Floor Segment record is on a Face that is not directly inside a Volume.",

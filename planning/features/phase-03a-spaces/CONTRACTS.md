@@ -74,8 +74,10 @@ Reference target ids: `ph_composer.spaces.space`, `ph_composer.spaces.volume`,
 a Space can sit outside every Zone, and its Zone is read from the path, not from the reference.
 
 Native names: the Space Group's name is `number` and `name` joined; the stored fields are
-authoritative and the Group name is presentation, rewritten by the reconciler. P3a-02 confirms or
-reverses this against how `Zones::Names` treats the Zone Group name, where the native name wins.
+authoritative and the Group name is presentation, written by every Spaces write. Confirmed by P3a-02
+(2026-10-15): unlike a Zone, whose native rename wins, a Space's number and name are table fields
+the panel edits, so a native rename is not read back. Whether the reconciler rewrites a renamed
+Group, or leaves it, is P3a-03's.
 
 ## 3. Operations
 
@@ -96,19 +98,19 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 | --- | --- | --- | --- |
 | `list` | query | P3a-02 (built, slice A) | Spaces with their Volumes and Floor Segments, each with its reference, values, metrics in SI, state and findings, each Zone's sums, each Building-Segment's and the Model's totals, and the stray-record findings. Paged by Space path; the sums and totals always cover every Space |
 | `all`, section `ph_composer.spaces.spaces` | query, snapshot section | P3a-02 (built, slice A) | The same projection whole, for the panel |
-| `create_preview` | query | P3a-02 | For explicit Face references and a Zone reference: accepted, left out and why. Writes nothing |
-| `create` | action | P3a-02 | Explicit Face references and a Zone reference. One Space, one Volume, the Floor Segments. One Undo step |
-| `update` | action | P3a-02 | Name, number, default height, the three airflows, with `expected_values`. An airflow is set, or cleared to absent |
-| `delete` | action | P3a-02 | An explicit Space reference |
-| `batch_update` | action | P3a-02 | Many Spaces, Volumes and Floor Segments in one all-or-nothing step, for range edit and paste |
-| `volumes.create` | action | P3a-02 | Explicit Face references at a Space's root become the next Volume |
-| `volumes.update` | action | P3a-02 | `avg_ceiling_height_m`, `display_name` |
-| `volumes.remove` | action | P3a-02 | Removes the Volume structure; the PRD's rule for what happens to its faces |
-| `floors.mark` | action | P3a-02 | Explicit Face references inside a Volume, and `weighting_factor`. Creates or updates Floor Segment records |
-| `floors.unmark` | action | P3a-02 | Removes the Floor Segment record; the face stays |
-| `floors.update` | action | P3a-02 | `weighting_factor`, `net_area_factor`, `display_name` |
+| `create_preview` | query | P3a-02 (built, slice B) | For explicit Face references and a Zone reference: accepted, left out and why. Writes nothing |
+| `create` | action | P3a-02 (built, slice B) | Explicit loose Face references in the Zone's own context and a Zone reference. One Space, one Volume, the Floor Segments, and the Zone stamp through `ph_composer.zones.stamp_container`. One Undo step. The Zone's edit context must be open (`space.context_required`): SketchUp groups reliably only in the active context, as Make Zone found |
+| `update` | action | P3a-02 (built, slice B) | Any one Space, Volume or Floor Segment, by its reference: a Space's name, number, default height and airflows; a Volume's `display_name` and height; a Floor Segment's `display_name` and factors. `expected_values` names each value as last read; null clears an optional value. It replaces the separate `volumes.update` and `floors.update` below |
+| `delete` | action | P3a-02 (built, slice B) | An explicit Space reference; erases the Space Group |
+| `batch_update` | action | P3a-02 (built, slice B) | Many Spaces, Volumes and Floor Segments in one all-or-nothing step, for range edit and paste |
+| `volumes.create` | action | P3a-02 (built, slice B) | Explicit root-to-Face paths loose at a Space's root become the next Volume; the Space's edit context must be open |
+| `volumes.update` | action | Folded into `update` (P3a-02) | `avg_ceiling_height_m`, `display_name` |
+| `volumes.remove` | action | P3a-02 (built, slice B) | Removes the Volume structure: its Floor Segment records go, the Group is exploded and the Faces stay loose in the Space |
+| `floors.mark` | action | P3a-02 (built, slice B) | Explicit Face references inside a Volume, and `weighting_factor`. Creates or updates Floor Segment records |
+| `floors.unmark` | action | P3a-02 (built, slice B) | Removes the Floor Segment record; the face stays |
+| `floors.update` | action | Folded into `update` (P3a-02) | `weighting_factor`, `net_area_factor`, `display_name` |
 | `settings.get`, `settings.update` | query, action | P3a-02 (built, slice A) | The model's last-entered height |
-| `update_metadata` | action | P3a-02 | `user_data` and extension payloads on explicit Spaces, Volumes and Floor Segments, with `expected_metadata`, one step, as the Zones, Faces and Window Units actions do (F23). `list` reports `extension_status` beside `extension_data` |
+| `update_metadata` | action | P3a-02 (built, slice B; one action for the three kinds) | `user_data` and extension payloads on explicit Spaces, Volumes and Floor Segments, with `expected_metadata`, one step, as the Zones, Faces and Window Units actions do (F23). `list` reports `extension_status` beside `extension_data` |
 | `follow_zone_copy` | transition contributor | P3a-04 | Joins `ph_composer.zones.occurrence_independent`: new ids for every Space, Volume, Floor Segment and Space Floor in the copied occurrence whose id another occurrence holds, stamps naming the new Zone, internal references remapped (D3a-13) |
 | Space copy watcher | internal, through `HostFollowUp` | P3a-04 (D3a-14) | A native copy of a Space Group made independent in the gesture's Undo step; no public name |
 | `context.open`, `context.enter_volume`, `context.close` | view command; protection writes in a host follow-up (section 8, answer 3) | P3a-03 | Enter and leave a Space or Volume edit context through the edit-context writer |
