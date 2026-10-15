@@ -108,6 +108,9 @@ module PhComposer
         end
         raise CodedError.new("target.wrong_hierarchy", "A Zone cannot be nested inside another Zone.") if zone.nested
 
+        refusal = container_refusal(zone, :isolating => isolating)
+        raise refusal if refusal
+
         copies = Occurrences.zones(model).count { |other| other.record.fetch("id") == zone.record.fetch("id") }
         return if copies > 1
 
@@ -141,8 +144,42 @@ module PhComposer
                          "design. Explode or make that component unique first.")
         elsif member_containers(zone).any? { |entity| entity.respond_to?(:locked?) && entity.locked? }
           CodedError.new("target.locked", "A Group holding some of this Zone's Faces is locked. Unlock it first.")
+        elsif (refusal = container_refusal(zone, :isolating => true))
+          refusal
         elsif ids < 2
           CodedError.new("zone.identity_unique", "This Zone already has an identity of its own.")
+        end
+      end
+
+      # Why the nested containers' stamps cannot be rewritten in this occurrence alone, or nil. A stamp is
+      # an instance dictionary, so a container is written alone however its own definition is shared; but
+      # every container above it must be storage the step can give the copy: a Group the isolation makes
+      # unique when `isolating`, otherwise a Group no other placement shares, and never a component.
+      # Neither a container nor any Group above it may be locked.
+      def container_refusal(zone, isolating:)
+        paths = Occurrences.containers(zone).map { |_group, path| path_inside(zone, path) }
+        above = paths.flat_map { |entities| entities[0...-1] }.uniq
+        entities = paths.flatten.uniq
+        if above.any? { |entity| entity.is_a?(Sketchup::ComponentInstance) }
+          CodedError.new("target.shared_definition",
+                         "A Group another feature keeps in this Zone is inside a component, which its placements " \
+                         "share by design. Explode or make that component unique first.")
+        elsif !isolating && above.any? { |entity| Occurrences.shared_storage?(entity) }
+          CodedError.new("target.shared_definition",
+                         "A Group another feature keeps in this Zone still shares its contents with the original. " \
+                         "Use Make Zone independent instead.")
+        elsif entities.any? { |entity| entity.respond_to?(:locked?) && entity.locked? }
+          CodedError.new("target.locked", "A Group another feature keeps in this Zone, or one holding it, is " \
+                                          "locked. Unlock it first.")
+        end
+      end
+
+      def path_inside(zone, path)
+        entities = zone.entity.entities
+        path.map do |persistent_id|
+          entity = Occurrences.unique_entity(entities, persistent_id)
+          entities = entity.is_a?(Sketchup::ComponentInstance) ? entity.definition.entities : entity.entities
+          entity
         end
       end
 
@@ -297,19 +334,26 @@ module PhComposer
         entities.each do |entity|
           next unless entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Group)
 
-          stamp = STAMP_STORE.read(entity)
-          # A stamp this feature did not write cannot name a Zone to restore; it is left alone
-          # rather than failing the whole Zones read.
+          stamped = !entity.get_attribute(STAMP_DICTIONARY, STAMP_STORE.key).nil?
+          stamp = readable_stamp(entity) if stamped
+          # A stamp this feature did not write, or that does not read, cannot name a Zone to restore; it
+          # is left alone rather than failing the whole Zones read, and a Group carrying one stays opaque.
           if Schema.stamp?(stamp) && !live.include?(stamp["zone_id"])
             found << { :zone_id => stamp["zone_id"], :stamp => stamp, :parent_path => path,
                        :persistent_id => entity.persistent_id, :entity => entity }
-          elsif entity.is_a?(Sketchup::Group) && ZONE_STORE.read(entity).nil? && stamp.nil?
+          elsif entity.is_a?(Sketchup::Group) && !stamped && ZONE_STORE.read(entity).nil?
             walk_orphans(entity.entities, path + [entity.persistent_id], live, found)
           end
         end
       end
-      private_class_method :orphan_group, :orphan_refusal, :shared_edge?, :walk_orphans, :repaired_face, :face_plans,
-                           :member_entries, :path_entities, :member_containers
+
+      def readable_stamp(entity)
+        STAMP_STORE.read(entity)
+      rescue CodedError
+        nil
+      end
+      private_class_method :orphan_group, :readable_stamp, :path_inside, :orphan_refusal, :shared_edge?, :walk_orphans,
+                           :repaired_face, :face_plans, :member_entries, :path_entities, :member_containers
     end
   end
 end

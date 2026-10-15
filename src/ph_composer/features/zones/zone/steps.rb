@@ -243,6 +243,7 @@ module PhComposer
         @contents = MakeIndependentStep.contents(plan).freeze
         @catalog = catalog
         @captured = nil
+        @stamps = []
         new_id = @record.fetch("id")
         @affected = [{ "kind" => "zone", "id" => new_id, "change" => "updated",
                        "reference" => @reference.merge("zone_id" => new_id) }]
@@ -307,9 +308,12 @@ module PhComposer
       def restore
         return 0 unless @captured
 
+        @stamps.each do |group, raw|
+          raw.nil? ? STAMP_STORE.delete(group) : group.set_attribute(STAMP_DICTIONARY, STAMP_STORE.key, raw)
+        end
         @captured.each do |store, entity, record|
           record ? store.write(entity, record) : store.delete(entity)
-        end.length
+        end.length + @stamps.length
       end
 
       private
@@ -324,7 +328,9 @@ module PhComposer
           @captured << [STAMP_STORE, occurrence.entity, STAMP_STORE.read(occurrence.entity)]
         end
         containers = Occurrences.containers(zone).map(&:first)
-        @captured.concat(containers.map { |group| [STAMP_STORE, group, STAMP_STORE.read(group)] })
+        # A container's stamp attribute is captured as stored: its presence makes the Group a container
+        # whatever its value reads as, and restore must not turn its Faces into the Zone's.
+        @stamps = containers.map { |group| [group, group.get_attribute(STAMP_DICTIONARY, STAMP_STORE.key)] }
         ZONE_STORE.write(zone.entity, @record)
         resolved.each do |occurrence, face|
           after = face.fetch(:after)
