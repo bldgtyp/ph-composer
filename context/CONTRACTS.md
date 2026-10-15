@@ -580,9 +580,10 @@ unrelated operation committed before the deferred pass, undoing it takes the rep
 the watcher tells the user the copy is read only again. Spaces follows the same rule for a Space Group
 copied on its own (its `CopyWatch`): the Space is made independent through Make independent with the
 next free number; a copy inside a component keeps its finding with one notice, and a copied plain
-Group holding a Space is left to its finding, since it may be a Zone whose copy Zones handles. Both
-watchers hear the copy through the session's `container_added` host event, which reports each Group or
-ComponentInstance added to any container.
+Group holding a Space is left to its finding, since it may be a Zone whose copy Zones handles. The
+Spaces watcher hears the copy through the session's `container_added` host event, which reports each
+Group or ComponentInstance added to any container; the Zones watcher still hears it through Zones' own
+container observers until issue #143 moves it onto the same event.
 
 **Host follow-ups.** `HostFollowUp.run(session, action, params_list)` is internal; nothing registers
 it where the panel or the API can reach it. It runs the registered action's handler once per params

@@ -148,14 +148,14 @@ module PhComposer
         target = Resolve.occurrence(scan, reference, :mutable => false)
         # A host follow-up plans every copy against one Model state: numbers earlier repairs in this
         # proposal took are taken.
-        taken = proposal.steps.grep(IdentityStep).filter_map(&:number)
-        zone = zone_of(request, target.path) if kind == SPACE_KIND
+        zone = zone_of(request, target.path)
+        taken = proposal.steps.grep(IdentityStep).select { |step| step.zone_path == zone }.filter_map(&:number)
         number = (next_number(scan, zone, zone_paths(request), taken) if kind == SPACE_KIND)
         plan = IdentityPlan.build(scan, target, :number => number,
                                                 :allocate => Records::Identity.allocator(request, request.params),
                                                 :catalog => request.registry.catalog, :engine => request.engine)
         scope = kind == FLOOR_SEGMENT_KIND ? target.path[0...-2] : target.path[0...-1]
-        proposal.add_step(IdentityStep.new(:target => target, :plan => plan),
+        proposal.add_step(IdentityStep.new(:target => target, :plan => plan, :zone_path => zone),
                           :scopes => [Operations::EntityScope.new(scope)])
         renamed = plan.rows.reject { |row| row.after["id"] == row.before["id"] }
         ids = renamed.map { |row| { "kind" => row.kind, "before" => row.before["id"], "after" => row.after["id"] } }

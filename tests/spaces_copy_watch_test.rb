@@ -94,6 +94,37 @@ class SpacesCopyWatchTest < PhComposerTestCase
     assert_equal [[:success, "Made the 5 copied Spaces independent."]], @notices
   end
 
+  # Copies in two Zones in one batch each take their own Zone's next number.
+  def test_copies_in_two_zones_take_each_zones_next_number
+    SPACES::SPACE_STORE.write(@space, SPACES::SPACE_STORE.read(@space).merge("number" => "100"))
+    other = space_group(210, space_record("T", :number => "1"), [])
+    @model.entities << zone_group(200, "Y", [other])
+    treat_duplicates_as_existing(@model)
+    copy_natively(@space, 120)
+    copy_natively(other, 220, @model.entities.to_a.last)
+    UI.run_timers
+    numbers = spaces.to_h { |row| [row.dig("reference", "entity_path"), row.dig("values", "number")] }
+    assert_equal "101", numbers.fetch([100, 120])
+    assert_equal "2", numbers.fetch([200, 220])
+  end
+
+  # An unrelated operation committed between the copy and the deferred pass takes the repair with it on
+  # Undo, and the copy stays: the watcher says so.
+  def test_an_undo_that_takes_back_the_repair_but_not_the_copy_warns
+    copy = Sketchup::Group.new(120, @space.entities)
+    SPACES::SPACE_STORE.write(copy, SPACES::SPACE_STORE.read(@space))
+    @model.start_operation("Copy")
+    @zone.entities << copy
+    @model.commit_operation
+    @model.start_operation("Other")
+    @model.commit_operation
+    UI.run_timers
+    @model.undo
+    assert_equal %w[spc_SSSSSSSSSSSS spc_SSSSSSSSSSSS], spaces.map { |row| row["id"] }
+    assert_equal :warning, @notices.last.first
+    assert_includes @notices.last.last, "Undo also took back"
+  end
+
   def test_a_cut_and_paste_leaves_no_duplicate_and_nothing_is_queued
     @zone.entities.delete(@space)
     @session.host_event(:transaction_committed)

@@ -32,7 +32,7 @@ module PhComposer
     def initialize(session)
       @session = session
       @observer = Observer.new(self)
-      @observed = []
+      @observed = {}.compare_by_identity
       @timer = CoalescedTimer.new
     end
 
@@ -46,47 +46,48 @@ module PhComposer
     def added(entity)
       return unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
 
-      fresh = []
+      fresh = {}.compare_by_identity
       walk(contents(entity), fresh)
-      fresh.each { |entities| observe(entities) }
+      fresh.each_key { |entities| observe(entities) }
       @session.host_event(:container_added, entity)
     rescue StandardError => error
       # An observer callback must not raise into SketchUp; a subscriber's failure is its own.
       Diagnostics.exception("container_added", error)
     end
 
-    # Observes every container now in the Model and stops observing those gone.
+    # Observes every container now in the Model and stops observing those gone. Membership is keyed by
+    # identity, so one pass is linear in the containers it visits.
     def discover
       @timer.cancel
-      found = []
+      found = {}.compare_by_identity
       walk(@session.model.entities, found)
-      (@observed - found).each { |entities| unobserve(entities) }
-      (found - @observed).each { |entities| entities.add_observer(@observer) }
+      @observed.each_key { |entities| unobserve(entities) unless found.key?(entities) }
+      found.each_key { |entities| entities.add_observer(@observer) unless @observed.key?(entities) }
       @observed = found
     end
 
     def detach
       @timer.cancel
-      @observed.each { |entities| unobserve(entities) }
-      @observed = []
+      @observed.each_key { |entities| unobserve(entities) }
+      @observed = {}.compare_by_identity
     end
 
     private
 
     def walk(entities, found)
-      return if found.any? { |known| known.equal?(entities) }
+      return if found.key?(entities)
 
-      found << entities
+      found[entities] = true
       entities.each do |entity|
         walk(contents(entity), found) if entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
       end
     end
 
     def observe(entities)
-      return if @observed.any? { |known| known.equal?(entities) }
+      return if @observed.key?(entities)
 
       entities.add_observer(@observer)
-      @observed << entities
+      @observed[entities] = true
     end
 
     def contents(container)

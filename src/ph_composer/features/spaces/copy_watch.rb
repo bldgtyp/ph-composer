@@ -15,6 +15,11 @@ module PhComposer
     #
     # Undo and Redo drop a pending pass and never repair: an array count (`5x`) undoes the first copy and
     # commits every copy in one transaction, and Redo restores a repaired copy without an addition.
+    #
+    # The repair joins the latest transaction. A native copy commits once more after its addition, inside
+    # the copy's own Undo step, but an unrelated operation committed before the deferred pass looks the
+    # same. Undoing that operation then takes the repair back while the copy stays; the watcher says so,
+    # and the copy keeps its finding and its explicit repair.
     module CopyWatch
       ACTION = "#{FEATURE_ID}.make_independent"
 
@@ -26,15 +31,15 @@ module PhComposer
 
       def install(feature)
         feature.on_host_event(:container_added) { |session, entity| state(session).added(entity) }
-        %i[transaction_undone transaction_redone].each do |kind|
-          feature.on_host_event(kind) { |session| state(session).reset }
-        end
+        feature.on_host_event(:transaction_undone) { |session| state(session).undone }
+        feature.on_host_event(:transaction_redone) { |session| state(session).reset }
       end
 
       class State
         def initialize(session)
           @session = session
           @work = DeferredWork.new { |jobs| run(jobs.fetch(:added)) }
+          @repaired = {}
         end
 
         # Only an added Space Group, or an added component holding one, whose Space id another occurrence
@@ -59,6 +64,23 @@ module PhComposer
           @work.cancel
         end
 
+        # Undo: drop a pending pass, and say so if it took back a repair but left its copy.
+        def undone
+          reset
+          return if @repaired.empty?
+
+          reverted = @repaired.select do |path, id|
+            occurrences.any? { |space| space.path == path && space.record.fetch("id") != id }
+          end
+          return if reverted.empty?
+
+          @repaired = {}
+          count = reverted.length
+          @session.notice("Undo also took back making the #{spaces(count)} independent, because it had joined a " \
+                          "later change. Use Make independent on #{count == 1 ? 'its row' : 'their rows'}.",
+                          :tone => :warning)
+        end
+
         def pending?
           @work.pending?
         end
@@ -69,6 +91,7 @@ module PhComposer
 
         def detach
           @work.detach
+          @repaired = {}
         end
 
         private
@@ -114,11 +137,21 @@ module PhComposer
 
           result = HostFollowUp.run(@session, ACTION, repairable.map { |space| { "reference" => space.reference } })
           @session.changed(:spaces, :copy_watch) if result.fetch("status") != "refused"
+          remember(repairable, result)
           announce(repairable.length, result)
         rescue StandardError => error
           Diagnostics.exception("space_copy_watch", error)
           @session.notice("The copied Space could not be made independent. Use Make independent on its row.",
                           :tone => :warning)
+        end
+
+        # Each repaired copy's path and the id it took, to tell on Undo whether the copy outlived its repair.
+        def remember(repairable, result)
+          return unless result.fetch("status") == "completed"
+
+          @repaired = repairable.zip(result.fetch("values")).to_h do |space, value|
+            [space.path, value.fetch("ids").find { |row| row.fetch("kind") == SPACE_KIND }.fetch("after")]
+          end
         end
 
         def announce_shared(shared)
