@@ -44,18 +44,37 @@ class SpacesContextTest < PhComposerTestCase
     SPACES::Reconciler.for(@session)
   end
 
-  def test_entering_a_volume_unlocks_it_in_one_named_step_and_opens_the_path
+  # Opening a protected Volume is two calls: the action unlocks it as its own Undo step, the view command
+  # opens it.
+  def enter(volume)
+    result = invoke("ph_composer.spaces.volumes.unprotect", "volume" => reference(volume))
+    assert_equal "completed", result["status"], result.inspect
+    view("ph_composer.spaces.context.open", "reference" => reference(volume))
+  end
+
+  def test_unprotect_unlocks_in_one_named_step_and_open_opens_the_path
+    refused = API.view(:context => @context, :name => "ph_composer.spaces.context.open",
+                       :params => { "reference" => reference(@first) })
+    assert_equal %w[refused space.volume_protected], refused.values_at("status", "code")
     before = @model.operations.length
-    assert_equal({ "path" => [100, 110, 111] }, view("ph_composer.spaces.context.enter_volume",
-                                                     "volume" => reference(@first)))
+    assert_equal({ "path" => [100, 110, 111] }, enter(@first))
     refute @first.locked?
     assert_equal [@zone, @space, @first], @model.active_path
-    assert_equal [["Enter Volume", true, :committed]], @model.operations[before..-1]
+    assert_equal [["Unprotect Volume", true, :committed]], @model.operations[before..-1]
+  end
+
+  def test_unprotect_needs_model_write
+    viewer = API.connect(:session_id => @session.id, :capabilities => %w[read view])
+    result = API.invoke(:context => viewer, :name => "ph_composer.spaces.volumes.unprotect",
+                        :params => { "volume" => reference(@first) },
+                        :request => { "sequence" => 1, "expected_revision" => @session.revision })
+    assert_equal %w[refused request.capability_denied], result.values_at("status", "code")
+    assert @first.locked?
   end
 
   def test_a_direct_switch_protects_the_first_volume_and_finds_nothing_moved
-    view("ph_composer.spaces.context.enter_volume", "volume" => reference(@first))
-    view("ph_composer.spaces.context.enter_volume", "volume" => reference(@second))
+    enter(@first)
+    enter(@second)
     assert @first.locked?
     refute @second.locked?
     assert_equal [@zone, @space, @second], @model.active_path
@@ -65,7 +84,7 @@ class SpacesContextTest < PhComposerTestCase
   end
 
   def test_leaving_by_any_callback_order_queues_one_transparent_protection
-    view("ph_composer.spaces.context.enter_volume", "volume" => reference(@first))
+    enter(@first)
     before = @model.operations.length
     # The host's exit: the path is already outside when the commit arrives, then the path change.
     @model.instance_variable_set(:@active_path, [@zone, @space])
@@ -92,21 +111,59 @@ class SpacesContextTest < PhComposerTestCase
     assert_equal revision + 2, @session.revision, "only the two callbacks advanced it"
   end
 
+  # Protection still pending for one Volume while another is open: settling it commits inside the save,
+  # and that commit must not cost the open Volume its protection in the saved file.
+  def test_save_protects_pending_and_open_volumes_before_the_file_is_written
+    enter(@first)
+    @second.locked = false
+    @model.instance_variable_set(:@active_path, [@zone, @space, @second])
+    @session.host_event(:active_path_changed)
+    assert reconciler.pending?
+    saved = nil
+    Sketchup.stub(:store_model, ->(_path, _model) { saved = [@first.locked?, @second.locked?] }) do
+      @model.save(File.join(Dir.tmpdir, "spaces-context-pending.skp"))
+    end
+    assert_equal [true, true], saved
+  end
+
+  # Undo leaves the Volume with nothing on the path to remember it by; Redo then restores its unlocked
+  # state. The stub's Undo moves the path to the root, as the host's can.
+  def test_redo_that_restores_an_unlocked_volume_off_the_path_protects_it
+    enter(@first)
+    @model.instance_variable_set(:@active_path, [@zone, @space])
+    @first.locked = true
+    @session.host_event(:transaction_undone)
+    refute reconciler.pending?
+    @first.locked = false
+    @session.host_event(:transaction_redone)
+    assert reconciler.pending?
+    UI.run_timers
+    assert @first.locked?
+  end
+
+  def test_an_unprotected_volume_not_yet_opened_survives_an_ordinary_commit
+    invoke("ph_composer.spaces.volumes.unprotect", "volume" => reference(@first))
+    @session.host_event(:transaction_committed)
+    @session.host_event(:active_path_changed)
+    refute reconciler.pending?
+    refute @first.locked?
+  end
+
   def test_save_protects_the_open_volume_without_moving_the_path_then_closes_it
-    view("ph_composer.spaces.context.enter_volume", "volume" => reference(@first))
+    enter(@first)
     @model.save(File.join(Dir.tmpdir, "spaces-context-test.skp"))
     assert @first.locked?
     assert_equal [@zone, @space], @model.active_path
   end
 
   def test_close_and_open_move_the_path_and_protect_on_the_way_out
-    view("ph_composer.spaces.context.enter_volume", "volume" => reference(@first))
+    enter(@first)
     assert_equal({ "path" => [100, 110] }, view("ph_composer.spaces.context.close"))
     assert @first.locked?
     assert_equal({ "path" => [100] }, view("ph_composer.spaces.context.close"))
     assert_equal({ "path" => [100, 110] },
-                 view("ph_composer.spaces.context.open", "space" => { "space_id" => "spc_SSSSSSSSSSSS",
-                                                                      "entity_path" => [100, 110] }))
+                 view("ph_composer.spaces.context.open", "reference" => { "space_id" => "spc_SSSSSSSSSSSS",
+                                                                          "entity_path" => [100, 110] }))
   end
 
   def test_a_moved_volume_is_found_and_restore_position_clears_it_in_one_step
@@ -162,8 +219,34 @@ class SpacesContextTest < PhComposerTestCase
     assert_equal world.to_a, written.to_a
   end
 
+  # Locate never unlocks: the path opens up to the first locked Group and that Group is selected.
+  def test_locate_selects_the_protected_volume_for_its_floor_segment_and_unlocks_nothing
+    before = @model.operations.length
+    segment = { "floor_segment_id" => "fsg_AAAAAAAAAAAA", "entity_path" => [100, 110, 111, 112] }
+    assert_equal({ "path" => [100, 110] }, view("ph_composer.spaces.locate", "reference" => segment))
+    assert @first.locked?
+    assert_equal [@first], @model.selection.to_a
+    assert_equal before, @model.operations.length
+  end
+
+  def test_locate_reaches_the_references_a_misplaced_and_an_orphan_floor_segment_report
+    loose = floor_face(120, rectangle(0, 4, 1, 1), segment_record("M"))
+    orphan = volume_group(130, volume_record("O", :number => 3), [floor_face(131, rectangle(4, 4, 1, 1),
+                                                                             segment_record("O"))])
+    orphan.locked = false
+    @zone.entities << loose
+    @model.entities << orphan
+    spaces = API.query(:context => @context, :name => "ph_composer.spaces.all").fetch("value")
+    misplaced = spaces.fetch("findings").find { |finding| finding["code"] == "space.segment_misplaced" }
+    assert misplaced, spaces.inspect
+    assert_equal({ "path" => [100] }, view("ph_composer.spaces.locate", "reference" => misplaced.fetch("reference")))
+    assert_equal [loose], @model.selection.to_a
+    inside = { "floor_segment_id" => "fsg_OOOOOOOOOOOO", "entity_path" => [130, 131] }
+    assert_equal({ "path" => [130] }, view("ph_composer.spaces.locate", "reference" => inside))
+  end
+
   def test_detach_drops_pending_protection
-    view("ph_composer.spaces.context.enter_volume", "volume" => reference(@first))
+    enter(@first)
     @model.instance_variable_set(:@active_path, [@zone])
     @session.host_event(:transaction_committed)
     assert reconciler.pending?

@@ -75,7 +75,8 @@ Two slices. Slice A is foundation and merges first if the stage splits.
    change itself queues it, because the host can deliver them in either order.
 7. **Pre-save and post-save.** In `pre_save`, synchronously protect the Volume last seen and
    never touch the path. In `post_save`, close the boundary on the restored path.
-8. **Context operations.** `context.open`, `context.enter_volume`, `context.close` and `locate`,
+8. **Context operations.** `context.open`, `volumes.unprotect` (in review, replacing
+   `context.enter_volume`; CONTRACTS section 8), `context.close` and `locate`,
    with the verb CONTRACTS section 8 settled. Selecting or entering another Volume closes and
    protects the current one first, using the previous path. Row commands carry the issuing
    session. Port `operations/context.rb`.

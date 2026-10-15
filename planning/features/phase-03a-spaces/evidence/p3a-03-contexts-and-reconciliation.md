@@ -12,20 +12,28 @@ edit-context commands, Restore position) is on `feature/spaces-p3a-03b`. Registe
 ## Design answers recorded with the stage
 
 - **Context verbs.** `context.open`, `context.close` and `locate` are view commands that only move
-  the path. `context.enter_volume` is a view command that commits one named step (Enter Volume, the
-  unlock) and then opens the path, as the predecessor did; a path change cannot sit inside a
-  proposal step. CONTRACTS section 8 records the revision of answers 3 and 9.
+  the path and select. Opening a protected Volume is two calls: the action `volumes.unprotect`
+  (Unprotect Volume, its own Undo step) and then `context.open`. The bridge rows below ran the first
+  form, `context.enter_volume`, a view command that committed the unlock itself; the strong review
+  found that it let a view-only caller write, so it was replaced (CONTRACTS section 8, second revision
+  of answer 3). The rows' path and lock observations are unchanged by the split.
 - **Protection is lock state.** A Volume's own lock is its protection, written in a transparent
   operation that never aborts; not a `HostFollowUp` record step. Locks on the Space or above are
   the user's and still refuse Spaces writes.
 - **No Undo ledger.** The predecessor's ledger tracked the Volume its TFA transition created and
   entered automatically; the explicit mark removed that transition.
 - **Undo and Redo.** The reconciler looks on Undo and Redo as on a commit (the predecessor's rule),
-  so an Undo that leaves a Volume does not leave it unprotected. The Zones copy watcher instead
+  so an Undo that leaves a Volume does not leave it unprotected. It also looks at every Volume seen
+  open this session, because a Redo can restore one's unlocked state with the path already outside
+  it. Two host questions stay with the pending native rows: whether a transparent operation after an
+  Undo clears the Redo stack, and whether a Redo reopens the path before the deferred pass runs. The Zones copy watcher instead
   drops its pass on Undo and Redo, because its repair must never follow a gesture the user took
   back.
 - **`pending?` only for real work.** A pass is queued only for a Volume left unlocked, so ordinary
   edits never make the session busy (`ModelSession#busy_reason`).
+- **Save with protection pending.** Settling pending protection inside `onPreSaveModel` commits, and
+  that commit's callback reads the save's empty path; the reconciler ignores callbacks during
+  pre-save so the Volume still open is protected before the file is written.
 - **Group renames.** The reconciler does not rename Groups from their records (`TECH_STACK.md`).
 
 ## Host gate

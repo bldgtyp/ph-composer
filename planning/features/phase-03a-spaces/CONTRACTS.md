@@ -113,8 +113,9 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 | `update_metadata` | action | P3a-02 (built, slice B; one action for the three kinds) | `user_data` and extension payloads on explicit Spaces, Volumes and Floor Segments, with `expected_metadata`, one step, as the Zones, Faces and Window Units actions do (F23). `list` reports `extension_status` beside `extension_data` |
 | `follow_zone_copy` | transition contributor | P3a-04 | Joins `ph_composer.zones.occurrence_independent`: new ids for every Space, Volume, Floor Segment and Space Floor in the copied occurrence whose id another occurrence holds, stamps naming the new Zone, internal references remapped (D3a-13) |
 | Space copy watcher | internal, through `HostFollowUp` | P3a-04 (D3a-14) | A native copy of a Space Group made independent in the gesture's Undo step; no public name |
-| `context.open`, `context.enter_volume`, `context.close` | view commands (P3a-03, built); `enter_volume` commits one named step, Enter Volume, that unlocks the Volume; a Volume being left is protected by the EditContext boundary in a transparent operation (section 8, revised answers 3 and 9) | P3a-03 | Enter and leave a Space or Volume edit context through the edit-context writer |
-| `locate` | view command | P3a-03 (built) | Select and reveal explicit Spaces, Volumes or Floor Segments, closing and protecting the open Volume first |
+| `context.open`, `context.close` | view commands (P3a-03, built); `open` refuses a protected Volume with `space.volume_protected`; a Volume being left is protected by the EditContext boundary in a transparent operation (section 8, revised answers 3 and 9) | P3a-03 | Enter and leave a Space or an unprotected Volume through the edit-context writer |
+| `volumes.unprotect` | action (P3a-03, built) | P3a-03 | Unlocks a protected Volume in its own Undo step, Unprotect Volume; the path does not move. Opening a protected Volume is this action, then `context.open` |
+| `locate` | view command | P3a-03 (built) | Select and frame an explicit Space, Volume or Floor Segment. Unlocks nothing: the path opens up to the first locked Group, a protected Volume included, and that Group is selected instead |
 | `volumes.restore_position` | action | P3a-03 (built; refuses `space.volume_open` and `space.position_unknown`) | Puts a moved Volume back at `home_transform` |
 | `make_independent` | action | P3a-04 | New ids for an explicit copied Space, Volume or Floor Segment and everything inside it; the next free number for a Space |
 | `move_to_zone` | action | P3a-04 | An explicit Space reference and a target Zone reference |
@@ -310,6 +311,15 @@ only move the path, and the protection their boundary writes is automatic work. 
 operation that never aborts, as Zone name restoration does; it does not go through `HostFollowUp`,
 which is for record steps and would need protection registered as a public action. `home_transform`
 is written only by Create Space, a new Volume and Restore position, each inside its own action.
+
+**Revised again in P3a-03 review (2026-10-15).** Answer 3: a view command writes nothing and leaves no
+Undo entry (`context/CONTRACTS.md`, "Public interface"), so the named unlock cannot sit in one; the
+first revision let a caller granted only `view` unlock a Volume and reported the commit as `effect:
+none`. The unlock is the action `volumes.unprotect`, with its own Undo step, model_write grant and
+outcome; `context.open` then opens the unprotected Volume, and refuses a protected one. `locate`
+never unlocks. The protection the EditContext boundary writes while a view command leaves a Volume
+is the reconciler's automatic work done one callback earlier, not a write of the command's. The panel's
+Enter control (P3a-07) is the two calls.
 
 Corrections to the tables above:
 

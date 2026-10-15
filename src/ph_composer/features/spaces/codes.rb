@@ -18,6 +18,7 @@ module PhComposer
         "space.position_unknown" => "The Volume has no stored position to restore.",
         "space.volume_moved" => "A Volume moved inside its Space since it was last left.",
         "space.volume_open" => "The Volume is open for editing; close it first.",
+        "space.volume_protected" => "The Volume is protected; unprotect it before opening it.",
         "space.volume_unprotected" => "A closed Volume is unlocked, so its Faces can be edited from the Space.",
         "space.volume_empty" => "A Volume has no Floor Segment.",
         "space.volume_nested" => "A Volume is below another Group inside its Space rather than directly in it.",
