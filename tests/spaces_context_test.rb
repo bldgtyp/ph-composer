@@ -141,6 +141,24 @@ class SpacesContextTest < PhComposerTestCase
     assert_equal ["space.volume_unprotected"], codes.map { |finding| finding["code"] }
   end
 
+  # The host reports the open context's children in world coordinates; the stub does not, so the child's
+  # transform is stubbed to what the host would answer.
+  def test_a_child_of_the_open_context_reads_and_writes_relative_to_its_parent
+    @space.transformation = Geom::Transformation.translation([0, 0, 20])
+    @model.active_path = [@zone, @space]
+    local = Geom::Transformation.translation([5, 0, 0])
+    world = @model.edit_transform * local
+    @first.stub(:transformation, world) do
+      assert_equal local.to_a, SPACES::Protection.local_transform(@model, @first, [100, 110]).to_a
+    end
+    assert_nil SPACES::Protection.local_transform(@model, @space, [100])
+    written = nil
+    @first.stub(:transformation=, ->(value) { written = value }) do
+      SPACES::Protection.set_local_transform(@model, @first, [100, 110], local)
+    end
+    assert_equal world.to_a, written.to_a
+  end
+
   def test_detach_drops_pending_protection
     view("ph_composer.spaces.context.enter_volume", "volume" => reference(@first))
     @model.instance_variable_set(:@active_path, [@zone])

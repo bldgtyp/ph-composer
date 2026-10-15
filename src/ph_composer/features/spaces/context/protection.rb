@@ -9,6 +9,24 @@ module PhComposer
     module Protection
       module_function
 
+      # A Group's transform relative to its parent, read through the open edit context: while a context is
+      # open the host reports its direct children in world coordinates (composed with `edit_transform`)
+      # and the open Groups on the path as identity (context/SKETCHUP_HOST_BEHAVIOR.md). Nil for a Group on
+      # the open path, whose own transform cannot be read there.
+      def local_transform(model, entity, parent_ids)
+        open_ids = Array(model.active_path).map(&:persistent_id)
+        return nil if open_ids.include?(entity.persistent_id)
+        return entity.transformation unless !open_ids.empty? && open_ids == parent_ids
+
+        model.edit_transform.inverse * entity.transformation
+      end
+
+      # Sets a Group's transform relative to its parent, through the open edit context as above.
+      def set_local_transform(model, entity, parent_ids, local)
+        open_ids = Array(model.active_path).map(&:persistent_id)
+        entity.transformation = !open_ids.empty? && open_ids == parent_ids ? model.edit_transform * local : local
+      end
+
       def volume?(entity)
         entity.is_a?(Sketchup::Group) && !entity.get_attribute(VOLUME_STORE.dictionary, VOLUME_STORE.key).nil?
       end

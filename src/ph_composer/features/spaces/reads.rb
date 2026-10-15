@@ -39,16 +39,15 @@ module PhComposer
                          zone.dig("display", "building_segment") || values["building_segment"]] }
         end
         ids = scan.spaces.map { |space| space.record.fetch("id") }.tally
-        open_ids = Array(request.model.active_path).map(&:persistent_id)
-        rows = scan.spaces.sort_by(&:path).map { |space| space_row(space, zones, ids, catalog, open_ids) }
+        rows = scan.spaces.sort_by(&:path).map { |space| space_row(space, zones, ids, catalog, request.model) }
         flag_duplicate_numbers(rows)
         [rows, zone_rows(zones, rows), stray_findings(scan)]
       end
 
-      def space_row(space, zones, ids, catalog, open_ids)
+      def space_row(space, zones, ids, catalog, model)
         zone_path = Occurrences.zone_path(space.path, zones.map { |zone| zone.fetch("zone_path") })
         zone = zone_path && zones.find { |row| row.fetch("zone_path") == zone_path }
-        volumes = space.volumes.sort_by(&:path).map { |volume| volume_row(volume, catalog, open_ids) }
+        volumes = space.volumes.sort_by(&:path).map { |volume| volume_row(volume, catalog, model) }
         record = space.record
         row = Spaces.view(record).merge(
           "extension_status" => Records::Metadata.status_map(record, catalog), "reference" => space.reference,
@@ -63,13 +62,15 @@ module PhComposer
         row.merge("findings" => Findings.space(row, :duplicate => false))
       end
 
-      def volume_row(volume, catalog, open_ids)
+      def volume_row(volume, catalog, model)
         segments = volume.segments.sort_by(&:path).map { |segment| segment_row(segment, catalog) }
         row = Spaces.view(volume.record).merge(
           "extension_status" => Records::Metadata.status_map(volume.record, catalog),
           "reference" => volume.reference, "nested" => volume.nested,
-          "open" => open_ids.include?(volume.entity.persistent_id), "protected" => volume.entity.locked?,
-          "moved" => Navigation.moved?(volume, open_ids),
+          "open" => Array(model.active_path).any? { |entity|
+            entity.equal?(volume.entity)
+          }, "protected" => volume.entity.locked?,
+          "moved" => Navigation.moved?(model, volume),
           "metrics" => Metrics.volume(volume.record, segments.map { |segment| segment.fetch("metrics") }),
           "floor_segments" => segments
         )

@@ -75,11 +75,12 @@ module PhComposer
 
       # Whether a Volume stands where its record says it was left. A Volume open on the path reports its
       # transform in world coordinates, so it is not compared.
-      def moved?(occurrence, open_ids)
+      def moved?(model, occurrence)
         home = occurrence.record["home_transform"]
-        return false unless home && !open_ids.include?(occurrence.entity.persistent_id)
+        local = home && Protection.local_transform(model, occurrence.entity, occurrence.path[0...-1])
+        return false unless local
 
-        occurrence.entity.transformation.to_a.zip(home).any? { |actual, stored| (actual - stored).abs > TOLERANCE }
+        local.to_a.zip(home).any? { |actual, stored| (actual - stored).abs > TOLERANCE }
       end
     end
 
@@ -105,7 +106,8 @@ module PhComposer
         end
 
         volume.locked = false
-        volume.transformation = Geom::Transformation.new(@before.fetch("home_transform"))
+        Protection.set_local_transform(model, volume, @path[0...-1],
+                                       Geom::Transformation.new(@before.fetch("home_transform")))
         volume.locked = true
       end
     end

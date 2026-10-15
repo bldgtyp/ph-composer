@@ -123,7 +123,7 @@ module PhComposer
           raise CodedError.new("space.position_unknown", "The Volume has no stored position. Nothing was written.")
         end
 
-        moved = Navigation.moved?(occurrence, [])
+        moved = Navigation.moved?(model, occurrence)
         if moved
           proposal.add_step(RestorePositionStep.new(:path => occurrence.path, :before => occurrence.record),
                             :scopes => [Operations::EntityScope.new(occurrence.path[0...-1])])
