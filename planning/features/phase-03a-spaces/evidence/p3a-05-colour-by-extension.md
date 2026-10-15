@@ -1,7 +1,7 @@
 # P3a-05 evidence: Colour-by derived geometry and readouts
 
 DATE: 2026-10-15
-STATUS: Slice A (the contract) in review (#147); slice B (Window Type operation marks) implemented on `feature/spaces-p3a-05b`; host gate not run
+STATUS: Slice A merged (#147); slice B (Window Type operation marks) in review; host gate not run
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -77,4 +77,7 @@ S03 and S04 native rows.
 Design: the architecture review above. Slice A code: Codex `gpt-6-astra` on #147; the first pass found
 two P1 (cached readout anchors ignored the occurrence mask; malformed readout output reached `draw`) and
 three P2 (shapes on an entity entry skipped its identity check; a non-finite vertex was de-duplicated
-away; the overlay stayed after the last readout failed). Each was reproduced by a test and fixed.
+away; the overlay stayed after the last readout failed). The second found one P1 (shapes on a path-less
+entry ignored its hidden entity) and two P2 (non-numeric anchor coordinates; non-consecutive repeated
+vertices). Each of the eight was reproduced by a test and fixed; the last three were gated by `make ci`
+only, at the review cap.
