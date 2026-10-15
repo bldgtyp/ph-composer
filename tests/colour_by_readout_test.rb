@@ -111,6 +111,53 @@ class ColourByReadoutTest < PhComposerTestCase
     refute_includes drawn_texts, "Hidden"
   end
 
+  def test_applying_and_clearing_the_occurrence_mask_refreshes_the_anchors
+    @model.entities << Sketchup::Group.new(42, Sketchup::Entities.new([]))
+    install_readouts(:anchors => [ColourBy::Anchor.new(:point => Geom::Point3d.new(0, 0, 0), :parts => ["Masked"],
+                                                       :path => [42])])
+    toggle(READOUT, true)
+    assert_includes drawn_texts, "Masked"
+    ColourBy.for(@session).filter([])
+    refute_includes drawn_texts, "Masked"
+    ColourBy.for(@session).filter(nil)
+    assert_includes drawn_texts, "Masked"
+  end
+
+  # Malformed output is caught where the readout is built: that readout goes off with a notice and the
+  # others keep drawing; nothing raises inside draw.
+  def test_malformed_output_turns_only_that_readout_off
+    install_readouts(:anchors => [ColourBy::Anchor.new(:point => Geom::Point3d.new(0, 0, 0),
+                                                       :parts => [["unknown_quantity", 1]])])
+    toggle(SELECTED, true)
+    toggle(READOUT, true)
+    refute ColourBy.for(@session).readouts_on.include?(READOUT)
+    assert_equal :warning, @notices.last.first
+    assert_includes drawn_texts, "0 selected"
+  end
+
+  def test_the_overlay_goes_when_the_last_readout_fails_on_a_later_rebuild
+    failing = [false]
+    calls = @calls
+    probe = Module.new do
+      define_singleton_method(:install) do |registry|
+        registry.feature("outside.later", :contract_version => 1).colour_readout("outside.later.text",
+                                                                                 :label => "Later") do |_read|
+          calls["later"] += 1
+          raise "the Model could not be read" if failing.first
+
+          ColourBy::Readout.new(:anchors => [], :hud => [["ok"]])
+        end
+      end
+    end
+    Registry.install([probe])
+    toggle("outside.later.text", true)
+    assert_equal 1, @model.overlays.to_a.length
+    failing[0] = true
+    ColourBy.for(@session).invalidate!(:force => true)
+    assert_empty ColourBy.for(@session).readouts_on
+    assert_empty @model.overlays.to_a
+  end
+
   def test_a_readout_that_raises_is_turned_off_with_a_notice
     install_readouts(:raising => true)
     toggle(READOUT, true)

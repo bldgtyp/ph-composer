@@ -110,6 +110,27 @@ class ColourByDerivedTest < PhComposerTestCase
     assert_equal 1, service.rows.first.count
   end
 
+  def test_a_non_finite_vertex_anywhere_makes_the_polygon_degenerate
+    nan = Float::NAN
+    polygons = [0, 2, 4].map { |index| square.insert(index, point(nan, 0)) }
+    service = install_mode { [entry(:derived => ColourBy::Derived.new(:polygons => polygons, :segments => []))] }
+    assert_empty service.fills
+    assert_empty service.lines
+  end
+
+  # An entry with an entity keeps the identity check: shapes are not drawn when the path names another
+  # entity, just as the entity is not.
+  def test_shapes_on_an_entity_entry_whose_path_names_another_entity_are_not_drawn
+    face = Sketchup::Face.new(9001, {}, :points => square(4))
+    other = Sketchup::Face.new(9002, {}, :points => square(4))
+    @model.entities << face << other
+    service = install_mode do
+      [entry(:entity => face, :transform => Geom::Transformation.new, :path => [9002],
+             :derived => ColourBy::Derived.new(:polygons => [square(10, 20)], :segments => []))]
+    end
+    assert_empty service.fills
+  end
+
   def test_a_malformed_shape_turns_the_mode_off_with_a_warning
     service = install_mode { [entry(:derived => ColourBy::Derived.new(:polygons => ["not points"], :segments => []))] }
     refute service.active?

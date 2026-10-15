@@ -302,8 +302,10 @@ module PhComposer
       # Empty for a degenerate loop: fewer than three distinct points, non-finite, collinear or not
       # planar within PLANAR_TOLERANCE inches.
       def triangulate(points)
+        return [] unless points.all? { |point| finite?(point) }
+
         loop = distinct(points)
-        return [] if loop.length < 3 || !loop.all? { |point| finite?(point) }
+        return [] if loop.length < 3
 
         normal = newell(loop)
         length = Math.sqrt(normal.sum { |component| component**2 })

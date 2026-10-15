@@ -217,6 +217,7 @@ module PhComposer
           path.each_index { |index| @filter_ancestors[path[0..index]] = true }
         end
         rebuild if active?
+        rebuild_readouts unless @readouts_on.empty?
         self
       end
 
@@ -328,7 +329,10 @@ module PhComposer
       def add_derived(entry, state, colour, fills, unclassified, unclassified_triangles, wash)
         triangles, outlines, segments = Tessellation.derived(entry.derived)
         @building_frames[[entry.value, state]].concat(triangles + segments)
-        return unless @visibility.path_visible?(entry.path)
+        # With an entity, the path must name it, as for the entity's own geometry; without one, the path
+        # names the occurrence the shapes belong to.
+        visible = entry.entity ? @visibility.visible?(entry.path, entry.entity) : @visibility.path_visible?(entry.path)
+        return unless visible
         return wash.concat(triangles) if set_aside?(entry.value, state) || !matches_filter?(entry.path)
 
         if state == :unclassified
@@ -340,11 +344,13 @@ module PhComposer
         end
       end
 
-      # Rebuilds `names`, every readout on by default, keeping the others' drawings.
+      # Rebuilds `names`, every readout on by default, keeping the others' drawings. A readout that fails
+      # goes off, and the overlay goes with the last thing it was drawing.
       def rebuild_readouts(names = @readouts_on)
         @readouts_built = readout_key if names.equal?(@readouts_on)
         rebuilt = names.to_h { |name| [name, readout_drawing(name)] }
         @readout_drawings = @readout_drawings.merge(rebuilt).slice(*@readouts_on).compact
+        detach_overlay if @readouts_on.empty? && !active?
         invalidate_view
       end
 
@@ -358,7 +364,7 @@ module PhComposer
         declaration = Registry.current.colour_readouts.fetch(name)
         read = HandlerRequest.for(@session, :owner => declaration.owner, :name => declaration.name,
                                             :selection => declaration.selection ? selected_paths : nil)
-        result = declaration.projection.call(read)
+        result = ReadoutOutput.check!(declaration.projection.call(read))
         visibility = OccurrenceVisibility.new(@session.model)
         anchors = Array(result.anchors).select do |anchor|
           masked = anchor.path.nil? ? !@filter_paths.nil? : !matches_filter?(anchor.path)
