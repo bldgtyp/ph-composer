@@ -24,8 +24,9 @@ edit-context commands, Restore position) is on `feature/spaces-p3a-03b`. Registe
   entered automatically; the explicit mark removed that transition.
 - **Undo and Redo.** The reconciler looks on Undo and Redo as on a commit (the predecessor's rule),
   so an Undo that leaves a Volume does not leave it unprotected. It also looks at every Volume seen
-  open this session, because a Redo can restore one's unlocked state with the path already outside
-  it. Two host questions stay with the pending native rows: whether a transparent operation after an
+  open and not protected by Spaces since, because a Redo can restore one's unlocked state with the
+  path already outside it; a Volume Spaces protected on the way out is excluded, so the Redo of a
+  later `volumes.unprotect` keeps it unprotected. Two host questions stay with the pending native rows: whether a transparent operation after an
   Undo clears the Redo stack, and whether a Redo reopens the path before the deferred pass runs. The Zones copy watcher instead
   drops its pass on Undo and Redo, because its repair must never follow a gesture the user took
   back.
@@ -78,4 +79,8 @@ and the context-aware transform reader. `make ci` passes on Ruby 3.2.2 locally; 
 ## Reviews
 
 Slice A: Codex `gpt-6-astra` two passes on #138, one P1 and one P2 in the deferred-work queue,
-both fixed; the second pass approved. Slice B: on its pull request.
+both fixed; the second pass approved. Slice B: Codex `gpt-6-astra` two passes on #140. The first
+found three P1 and one P2 (a view command that unlocked, pre-save losing the open Volume, Redo leaving
+a Volume unprotected, Locate on misplaced Floor Segments); the second found one P1 and one P2 in those
+fixes (Redo of an explicit Unprotect relocked it; `open` compared entity identity across shared
+placements). All six were reproduced by tests and fixed; the review cap of two cycles was reached.

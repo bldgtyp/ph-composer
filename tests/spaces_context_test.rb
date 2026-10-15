@@ -141,6 +141,19 @@ class SpacesContextTest < PhComposerTestCase
     assert @first.locked?
   end
 
+  # Leaving protected the Volume, so a later Unprotect is the user's own state, and its Redo keeps it.
+  def test_redo_of_unprotect_after_an_earlier_visit_keeps_the_volume_unprotected
+    enter(@first)
+    view("ph_composer.spaces.context.close")
+    invoke("ph_composer.spaces.volumes.unprotect", "volume" => reference(@first))
+    @first.locked = true
+    @session.host_event(:transaction_undone)
+    @first.locked = false
+    @session.host_event(:transaction_redone)
+    refute reconciler.pending?
+    refute @first.locked?
+  end
+
   def test_an_unprotected_volume_not_yet_opened_survives_an_ordinary_commit
     invoke("ph_composer.spaces.volumes.unprotect", "volume" => reference(@first))
     @session.host_event(:transaction_committed)
@@ -189,6 +202,19 @@ class SpacesContextTest < PhComposerTestCase
     refused = invoke("ph_composer.spaces.update", "reference" => segment, "values" => { "weighting_factor" => 1.0 },
                                                   "expected_values" => { "weighting_factor" => 0.5 })
     assert_equal %w[refused target.locked], refused.values_at("status", "code")
+  end
+
+  # Two Spaces sharing a definition place one Volume entity at two paths; only the path opened is open.
+  def test_a_volume_is_open_only_at_the_occurrence_path_opened
+    copy = Sketchup::Group.new(120, @space.entities)
+    SPACES::SPACE_STORE.write(copy, SPACES::SPACE_STORE.read(@space))
+    @zone.entities << copy
+    @first.locked = false
+    @model.active_path = [@zone, @space, @first]
+    volumes = API.query(:context => @context, :name => "ph_composer.spaces.all").dig("value", "spaces")
+                 .map { |space| space.fetch("volumes").first }
+    assert_equal({ [100, 110, 111] => true, [100, 120, 111] => false },
+                 volumes.to_h { |volume| [volume.dig("reference", "entity_path"), volume["open"]] })
   end
 
   def test_an_unlocked_volume_outside_the_path_is_unprotected

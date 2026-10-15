@@ -79,13 +79,14 @@ module PhComposer
       end
 
       # The EditContext boundary: leaving a path that holds an open Volume for one that does not hold it
-      # at the same place protects it first.
+      # at the same place protects it first. Answers the Volume it left protected, or nil.
       def leaving(model, from, to)
         volume, index = open_volume(from)
-        return unless volume
-        return if to.length > index && to[0..index].each_with_index.all? { |entity, i| entity.equal?(from[i]) }
+        return nil unless volume
+        return nil if to.length > index && to[0..index].each_with_index.all? { |entity, i| entity.equal?(from[i]) }
 
         protect(model, volume)
+        volume
       end
     end
   end

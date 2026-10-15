@@ -81,7 +81,10 @@ module PhComposer
         end
         feature.on_host_event(:pre_save) { |session| Reconciler.for(session).pre_save }
         feature.on_host_event(:post_save) { |session| Reconciler.for(session).post_save }
-        EditContext.boundary(:spaces) { |model, from, to| Protection.leaving(model, from, to) }
+        EditContext.boundary(:spaces) do |model, from, to|
+          volume = Protection.leaving(model, from, to)
+          Reconciler.for(Sessions.for(model)).protected(volume) if volume
+        end
       end
     end
   end

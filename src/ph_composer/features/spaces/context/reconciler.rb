@@ -8,16 +8,17 @@ module PhComposer
     # before the path change on exit, with the path already outside the Volume, so every commit, Undo,
     # Redo and path change looks. Only a Volume left unlocked is queued, so a pass that would write
     # nothing never makes the session busy. Undo and Redo look as a commit does, the predecessor's rule:
-    # an Undo that leaves a Volume must not leave it unprotected. They also look at every Volume seen open
-    # this session, because a Redo can restore one's unlocked state with the path already outside it and
-    # no baseline left to say so. A Volume unlocked by `volumes.unprotect` and not yet opened is not one,
-    # so an ordinary commit between the two calls leaves it alone. The Zones copy watcher instead drops
+    # an Undo that leaves a Volume must not leave it unprotected. They also look at every Volume exposed:
+    # seen open and not protected by Spaces since. A Redo can restore such a Volume's unlocked state with
+    # the path already outside it and no baseline left to say so. A Volume Spaces protected on the way out
+    # is no longer exposed, so a later `volumes.unprotect` and its Undo and Redo are the user's to keep,
+    # and so is one unprotected and not yet opened. The Zones copy watcher instead drops
     # its pass on Undo and Redo, because its repair must never follow a gesture the user took back.
     class Reconciler
       def initialize(session)
         @session = session
         @baseline = nil
-        @visited = []
+        @exposed = []
         @saving = false
         @work = DeferredWork.new { |jobs| jobs.each_value { |volume| protect_unless_open(volume) } }
       end
@@ -30,7 +31,7 @@ module PhComposer
         return if @saving
 
         current, = Protection.open_volume(path)
-        @visited << current if current && @visited.none? { |volume| volume.equal?(current) }
+        @exposed << current if current && @exposed.none? { |volume| volume.equal?(current) }
         prior = @baseline
         @baseline = current
         return unless prior && !prior.equal?(current) && Protection.valid?(prior) && !prior.locked?
@@ -38,13 +39,13 @@ module PhComposer
         @work.queue(prior.persistent_id, prior)
       end
 
-      # Undo and Redo: as a commit, then every Volume seen open that is unlocked and off the path.
+      # Undo and Redo: as a commit, then every exposed Volume that is unlocked and off the path.
       def reverted
         observed
         return if @saving
 
-        @visited.select! { |volume| Protection.valid?(volume) }
-        @visited.each do |volume|
+        @exposed.select! { |volume| Protection.valid?(volume) }
+        @exposed.each do |volume|
           next if volume.locked? || path.any? { |entity| entity.equal?(volume) }
 
           @work.queue(volume.persistent_id, volume)
@@ -60,7 +61,10 @@ module PhComposer
         volume = @baseline
         @saving = true
         @work.settle
-        Protection.protect(model, volume) if volume && Protection.valid?(volume)
+        if volume && Protection.valid?(volume)
+          Protection.protect(model, volume)
+          protected(volume)
+        end
       rescue StandardError => error
         Diagnostics.exception("space_pre_save", error)
         @session.notice("Save could not protect the open Volume.", :tone => :error)
@@ -79,6 +83,11 @@ module PhComposer
         @session.notice("The saved Volume could not be closed.", :tone => :error)
       end
 
+      # Spaces protected `volume` itself, on a pass, at a save or at the EditContext boundary.
+      def protected(volume)
+        @exposed.reject! { |entity| entity.equal?(volume) }
+      end
+
       def pending?
         @work.pending?
       end
@@ -90,7 +99,7 @@ module PhComposer
       def detach
         @work.detach
         @baseline = nil
-        @visited = []
+        @exposed = []
       end
 
       private
@@ -108,6 +117,7 @@ module PhComposer
         return if path.any? { |entity| entity.equal?(volume) }
 
         Protection.protect(model, volume)
+        protected(volume)
         @session.changed(:spaces)
       end
     end

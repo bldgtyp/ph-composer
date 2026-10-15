@@ -67,9 +67,8 @@ module PhComposer
         row = Spaces.view(volume.record).merge(
           "extension_status" => Records::Metadata.status_map(volume.record, catalog),
           "reference" => volume.reference, "nested" => volume.nested,
-          "open" => Array(model.active_path).any? { |entity|
-            entity.equal?(volume.entity)
-          }, "protected" => volume.entity.locked?,
+          "open" => EditContext.current_ids(model)[0, volume.path.length] == volume.path,
+          "protected" => volume.entity.locked?,
           "moved" => Navigation.moved?(model, volume),
           "metrics" => Metrics.volume(volume.record, segments.map { |segment| segment.fetch("metrics") }),
           "floor_segments" => segments
