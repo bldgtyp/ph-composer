@@ -70,7 +70,9 @@ function page(options) {
           return settings.hang ? new Promise(function () {}) : Promise.resolve(pyodide);
         };
         log.push(["script", script.src]);
-        setTimeout(settings.scriptFails ? script.onerror : script.onload, 0);
+        /* A microtask, not a timer: the whole stand-in boot then drains before settle()'s timer, however
+           late the event loop runs. A timer here raced settle() under load. */
+        Promise.resolve().then(settings.scriptFails ? script.onerror : script.onload);
       } },
       createElement: function () { return {}; }
     }
