@@ -2,12 +2,15 @@
 
 require_relative "test_helper"
 require_relative "support/zone_child_fixture"
+require_relative "support/space_fixtures"
 
 # Window Units follow their Zone when it becomes independent: the copy's Units get new ids in the
 # Zone's own proposal, by the explicit action and by the copy watcher, alongside a second child
 # feature. The copy is made as the host makes one (a second Group over the same contents carrying the
 # Zone record), and Make Unique gives every member a new entity, as measured (ZC-01).
 class WindowZoneCopyTest < PhComposerTestCase
+  include SpaceFixtures
+
   API = PhComposer::API
   U = PhComposer::Windows::Units
   ZONE_STORE = PhComposer::Zones::ZONE_STORE
@@ -89,6 +92,44 @@ class WindowZoneCopyTest < PhComposerTestCase
     assert_equal ZONE_STORE.read(@original).fetch("id"), ZONE_STORE.read(copy).fetch("id"), "the Zone restored"
     assert_equal units_under(@original).map { |row| row["id"] }, units_under(copy).map { |row| row["id"] }
     assert_equal :error, @notices.last.last, "the failed child restore is reported"
+  end
+
+  # Spaces and Window Units follow one copied Zone in its one step: each child's ids are new in the copy,
+  # the Units keep their Types, the Space keeps its number and takes the new Zone's stamp, and the
+  # original keeps everything. One Undo takes back all of it and Redo repeats it.
+  def test_spaces_and_units_follow_one_copied_zone_together
+    space_in(@original)
+    copy = shared_copy(@original, 400)
+    units = units_under(@original)
+    result = invoke(MAKE_INDEPENDENT, { "zone_path" => [copy.persistent_id] })
+    assert_equal %w[completed committed], result.values_at("status", "effect"), result.inspect
+    assert_equal units, units_under(@original)
+    assert_equal space_ids(@original), %w[spc_SSSSSSSSSSSS vol_AAAAAAAAAAAA fsg_AAAAAAAAAAAA]
+    assert_empty space_ids(copy) & space_ids(@original)
+    assert_empty units_under(copy).map { |row| row["id"] } & units.map { |row| row["id"] }
+    assert_equal(units.map { |row| row["window_type_id"] }, units_under(copy).map { |row| row["window_type_id"] })
+    assert_equal ZONE_STORE.read(copy).fetch("id"), PhComposer::Zones::STAMP_STORE.read(space_of(copy))["zone_id"]
+    repaired = space_ids(copy)
+    assert @model.undo
+    assert_equal space_ids(@original), space_ids(zone_groups.last)
+    assert @model.redo
+    assert_equal repaired, space_ids(zone_groups.last)
+  end
+
+  # A contributor failing after Spaces and Windows wrote, in the copy watcher's follow-up, restores the
+  # Zone, its stamps, the Space records and the Unit records.
+  def test_a_fault_after_spaces_and_units_wrote_restores_all_of_them
+    PhComposer::Registry.install([fault_feature])
+    space_in(@original)
+    native_copy(@original, 400)
+    UI.run_timers
+    copy = zone_groups.last
+    zone_id = ZONE_STORE.read(@original).fetch("id")
+    assert_equal zone_id, ZONE_STORE.read(copy).fetch("id")
+    assert_equal space_ids(@original), space_ids(copy)
+    assert_equal zone_id, PhComposer::Zones::STAMP_STORE.read(space_of(copy))["zone_id"]
+    assert_equal units_under(@original).map { |row| row["id"] }, units_under(copy).map { |row| row["id"] }
+    assert_equal :warning, @notices.last.last
   end
 
   def test_copied_extension_references_follow_their_sibling_unit_and_zone_and_keep_the_type
@@ -280,6 +321,27 @@ class WindowZoneCopyTest < PhComposerTestCase
       group.entities << unit
     end
     group
+  end
+
+  # A Space with one Volume and one Floor Segment, stamped by Zones as its nested container.
+  def space_in(group)
+    volume = volume_group(group.persistent_id + 40, volume_record("A"),
+                          [floor_face(group.persistent_id + 41, rectangle(0, 0, 1, 1), segment_record("A"))])
+    space = space_group(group.persistent_id + 42, space_record("S", :number => "1"), [volume])
+    PhComposer::Zones::STAMP_STORE.write(space, PhComposer::Zones::Schema.stamp(ZONE_STORE.read(group)))
+    group.entities << space
+    treat_duplicates_as_existing(@model)
+  end
+
+  def space_of(group)
+    group.entities.to_a.find { |entity| PhComposer::Spaces::SPACE_STORE.read(entity) }
+  end
+
+  def space_ids(group)
+    space = space_of(group)
+    volume = space.entities.to_a.first
+    [PhComposer::Spaces::SPACE_STORE.read(space)["id"], PhComposer::Spaces::VOLUME_STORE.read(volume)["id"],
+     PhComposer::Spaces::FLOOR_SEGMENT_STORE.read(volume.entities.to_a.first)["id"]]
   end
 
   def tag(group, id)

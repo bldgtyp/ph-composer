@@ -1,7 +1,7 @@
 # P3a-04 evidence: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: Slice A merged (#141); B1 (Zones container stamps, Restore Zone for stamped Groups) merged (#142); B2 (the `container_added` event and the copy watcher) in review; B3 (the Zone-copy contributor, the walkthrough) next; host gate not run
+STATUS: Slice A merged (#141); B1 (Zones container stamps, Restore Zone for stamped Groups) merged (#142); B2 (the `container_added` event and the copy watcher) merged (#144); B3 (the Zone-copy contributor, the walkthrough) in review; S04 bridge rows pass, native rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -71,6 +71,17 @@ Register row S04.
 - **Array numbers (B2).** `HostFollowUp` plans every copy against one Model state, so Make independent
   skips numbers that earlier repairs in the same proposal took; a `5x` array takes 2 to 6.
 
+- **`follow_zone_copy` reuses Make independent (B3).** The contributor runs the same plan and step
+  over the copied Zone's path with no named target: every Spaces record inside whose id an occurrence
+  outside the Zone holds takes a new id, an id held only inside keeps one holder, numbers and values
+  are kept, and payloads follow the Zone's `mapping` and `references` too. The Zone's own step isolates
+  storage first, so the Spaces step binds by kind, id and ordinal under the Zone's path and isolates
+  nothing. It reports kind, new id and change before apply, as `Units::ZoneCopy` does. Windows'
+  contributor runs in the same transition; contributors apply in name order, Spaces before Windows.
+- **The walkthrough copies a Volume, not a Space (B3).** A scripted Space copy is repaired by the copy
+  watcher after the script returns, so the panel-closed walkthrough copies a Volume, which the watcher
+  leaves to the explicit repair, reads the duplicate, repairs it and moves the Space to a second Zone.
+
 ## Host
 
 SketchUp 26.1.188, Ruby 3.2.2, macOS, 2026-10-15. A probe in a throwaway operation (aborted) on a
@@ -81,7 +92,35 @@ dictionaries and not its name; the Group inside keeps its persistent id, diction
 Face its persistent id; after the original is erased the definition reports one instance. The stub
 follows.
 
-The S04 host gate has not run.
+### S04 bridge rows
+
+SketchUp 26.1.188, Ruby 3.2.2, macOS, 2026-10-15. Installed RBZ built from `feature/spaces-p3a-04b3`
+at `fdddb4d` (P3a-04 complete: slice A, B1, B2 and B3), SHA-256
+`f8e8698ca9064561cc5c3f184c998074a233648ad3a33f98ba135d68602e53f2`. Fixture: a copy of the P3a-03 run
+model (the synthetic Phase 2 reference model with the walkthrough's Space; Zones west and east), SHA-256
+`243d4db1212c839a0c7153ab22e871f1400da0328711f92a42748bfe1cbe7249`. Every gesture was made from Ruby
+through the development bridge as SketchUp makes it (a copy is `add_instance` of the definition with the
+instance dictionaries carried, inside its own operation), then the bridge waited for deferred work
+before reading through `PhComposer::API`. Probe scripts are in `_private/host/spaces/p3a04/`.
+
+| Row | Observation |
+| --- | --- |
+| Space copy | `container_added` fired for the Ruby `add_instance`; after the deferred pass the copy had new ids throughout and number 2; the original was unchanged |
+| Five copies in one operation | Numbers 3 to 7, seven unique ids, no duplicate finding left |
+| Cut and paste | Placed again and the original erased in one operation: nothing queued, the id kept. The host delivered the addition after the erase |
+| Volume copy, Floor Segment copy | Each raised `space.duplicate_identity` on both occurrences; `make_independent` on the copy committed one operation and cleared it |
+| Space in a component placed twice | The draw-directly finding, `make_independent` refused `target.shared_definition`, one notice. The notice read "2 copied spaces": `String#capitalize` lowercased the rest; fixed in `44bffc6` |
+| Move Space to Zone | Refused `space.context_open` with a Volume open. Closed, it moved the Space into the east Zone under a wrapper rotated 30 degrees and shifted, one committed operation: every Floor Segment's world loop unchanged at 1 nm, ids and records kept, the stamp naming east, every Volume protected, none moved |
+| Zone copy with six Spaces | Through the Zones copy watcher's follow-up: the copy took a new Zone id, its Spaces new ids with numbers kept and stamps naming the copy; the original unchanged |
+| Restore Zone | Exploding the east Zone with the moved Space in it offered its six stamped Faces and the Space Group; Restore regrouped them and the Space read as in that Zone again |
+| Save and reopen | Saved, then reopened twice in fresh processes (second session `1e50853c-bfbb-49c4-9418-8adadc538476`): 13 Spaces identical to the pre-save read, 13 unique ids, no findings |
+
+Not run, because they need SketchUp in front with native input (Ed's screen-takeover approval): a
+native Option-drag copy and a typed `5x` array, Undo and Redo counted against those gestures (including
+the joined-transaction warning), a Zone copy with Window Units, and the per-commit cost of container
+discovery on a container-heavy model. The acceptance ledger refuses a bridge-only result for S04, which
+requires native control, so the case stays open in `planning/native-acceptance/cases.json` with no result
+recorded.
 
 ## Offline
 
@@ -96,6 +135,17 @@ free number; a `5x` array numbered 2 to 6; a cut and paste and an Undo leave not
 holders are not rewritten; a copy inside a component keeps its finding with one notice; a copied plain
 Group is left to its finding. `tests/zone_nested_container_test.rb` and `tests/spaces_restore_zone_test.rb`
 (B1): container stamps through make independent and repair, their refusals, and Restore around a Space.
+`tests/spaces_zone_copy_test.rb` (B3): a copied Zone with two Spaces and three Volumes made
+independent in one step, with new ids throughout the copy, numbers kept, stamps naming the new Zone
+and the original untouched; payloads following the copied Volume and the new Zone; an unsupported
+payload refusing the whole Zone; one Undo for Zone and Spaces; a native Zone copy repaired by the Zones
+watcher with its Spaces; an unreadable Space record outside the copy, with and without a payload
+resolving through the Spaces inventory, does not block it. `tests/window_zone_copy_test.rb`: a Zone
+holding a Space and Window Units together made independent in one step, with new ids for both
+children, Types kept, the stamp naming the copy, and one Undo and Redo; and a later contributor's
+failure in the copy watcher's follow-up restoring the Zone, the stamp, the Space and the Units. The
+same case natively is an S04 host row. `tests/spaces_walkthrough_test.rb`: the
+extended walkthrough.
 `tests/spaces_move_test.rb`: a move under a rotated, shifted wrapper keeps every Floor Segment's world
 loop, every record and the Volume's position, stamps the target, in one step; a number collision is
 kept and flagged; one Undo restores and Redo moves again; refusals with a context open, into the
@@ -119,3 +169,12 @@ one P1 (a stamped Group made a live Zone was offered to Restore and nested) and 
 member regrouped, a stamp stored as a native value failed the read, `repair_identity` refused an
 undeclared `target.locked`). Each was reproduced by a test and fixed; the last four were gated by
 `make ci` only, at the review cap.
+
+B2: Codex `gpt-6-astra` on #144, two passes. The first found three P2 (number reservations across Zones,
+no warning when Undo took back a repair the copy outlived, quadratic container discovery) and one P3 (a
+contract sentence naming both watchers as `container_added` consumers); the second two P2 (discovery
+keyed by Ruby wrapper identity, which the host makes fresh on every call; a later batch forgot earlier
+repairs). Each was reproduced by a test and fixed; the last two were gated by `make ci` only, at the
+review cap. A `restore` signature mismatch with `HostFollowUp` was found and fixed before review.
+
+B3: Codex `gpt-6-astra` on its pull request.

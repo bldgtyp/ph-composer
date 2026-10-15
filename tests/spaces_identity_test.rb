@@ -237,7 +237,7 @@ class SpacesIdentityTest < PhComposerTestCase
     plan = PhComposer::Spaces::IdentityPlan.build(scan, target, :number => "2", :allocate => lambda { |prefix|
       "#{prefix}_#{format('%012d', counter += 1)}"
     }, :catalog => PhComposer::Registry.current.catalog, :engine => nil)
-    step = PhComposer::Spaces::IdentityStep.new(:target => target, :plan => plan)
+    step = PhComposer::Spaces::IdentityStep.new(:plan => plan, :target => target)
     step.apply(@model, {})
     assert_equal "2", copy.name
     step.restore

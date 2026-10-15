@@ -155,7 +155,7 @@ module PhComposer
                                                 :allocate => Records::Identity.allocator(request, request.params),
                                                 :catalog => request.registry.catalog, :engine => request.engine)
         scope = kind == FLOOR_SEGMENT_KIND ? target.path[0...-2] : target.path[0...-1]
-        proposal.add_step(IdentityStep.new(:target => target, :plan => plan, :zone_path => zone),
+        proposal.add_step(IdentityStep.new(:plan => plan, :target => target, :zone_path => zone),
                           :scopes => [Operations::EntityScope.new(scope)])
         renamed = plan.rows.reject { |row| row.after["id"] == row.before["id"] }
         ids = renamed.map { |row| { "kind" => row.kind, "before" => row.before["id"], "after" => row.after["id"] } }

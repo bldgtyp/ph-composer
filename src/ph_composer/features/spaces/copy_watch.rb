@@ -156,7 +156,7 @@ module PhComposer
         end
 
         def announce_shared(shared)
-          @session.notice("#{spaces(shared.length).capitalize} inside shared storage, such as a component, " \
+          @session.notice("#{spaces(shared.length).sub(/\A./, &:upcase)} inside shared storage, such as a component, " \
                           "#{shared.length == 1 ? 'keeps' : 'keep'} the copy's identity. Draw the Space directly.",
                           :tone => :warning)
         end

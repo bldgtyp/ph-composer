@@ -240,14 +240,19 @@ confirm the new record is chosen at once. Stop classifying and confirm the viewp
 Last, the stale case: with the panel open, change a Face through the Ruby Console, then use that
 row's chip in the panel. The edit must refuse and the row must go back to what the Model holds.
 
-## P3a-02 Spaces: records and operations with the panel closed
+## P3a-02 and P3a-04 Spaces: records, operations, copies and moves with the panel closed
 
-`spaces_walkthrough.rb` needs a Model with one Zone. It draws three 1 m floor outlines loose in the
+`spaces_walkthrough.rb` needs a Model with two Zones, and refuses before writing anything without
+them. It draws three 1 m floor outlines loose in the
 first Zone, 0.5 m up, opens the Zone's edit context and then works only through `PhComposer::API`:
 Create Space from the three, a second Volume from a fourth outline drawn in the Space, one Floor
 Segment marked as not counting, a height, two airflows and one cleared, the read-back, and recovery
 from a stale edit. Create Space and a new Volume group Faces, which SketchUp does reliably only in
-the open edit context, so the script opens it as a user would.
+the open edit context, so the script opens it as a user would. It then copies a Volume as SketchUp
+copies a Group, reads the duplicate identity on both, makes the copy independent, and moves the Space
+into the second Zone. A Space
+copied on its own is not part of the script: the copy watcher makes it independent after the script
+returns.
 
 ```sh
 uv run tools/hostkit/host_bridge.py eval \

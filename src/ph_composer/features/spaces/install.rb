@@ -11,6 +11,7 @@
 #   identity/       Make independent: the pure plan and its step
 #   move/           Move Space to Zone: the pure plan and its step
 #   copy_watch.rb   makes a native Space copy independent in the copy's own Undo step
+#   zone_copy.rb    Spaces' part of a copied Zone becoming independent
 #   settings.rb     the Model's last-entered height
 #   declarations/   what Spaces registers
 require_relative "schema"
@@ -28,6 +29,7 @@ require_relative "identity/step"
 require_relative "move/plan"
 require_relative "move/step"
 require_relative "copy_watch"
+require_relative "zone_copy"
 require_relative "authoring"
 require_relative "declarations/shapes"
 require_relative "settings"
@@ -46,6 +48,7 @@ module PhComposer
       OperationRegistration.install(feature)
       ContextRegistration.install(feature)
       CopyWatch.install(feature)
+      ZoneCopy.install(feature)
       Settings.install(feature)
       Codes.install(feature)
     end
