@@ -164,6 +164,11 @@ def run_with_dialog_guard(version: str, code: str, timeout: float = 120.0, escap
     return out.decode("utf-8", "replace").strip()
 
 
+# Saves a modified Model to a scratch path so terminate meets no save prompt; with no document open
+# the active Model is nil and there is nothing to save.
+DISCARD_SAVE = 'm = Sketchup.active_model; m.save("/private/tmp/ph_composer_discard.skp") if m && m.modified?; :ok'
+
+
 def quit_sketchup(version: str) -> str:
     """Quit without a save dialog: discard-save a modified Model to a scratch path, then terminate."""
     if not sketchup_running():
@@ -172,11 +177,7 @@ def quit_sketchup(version: str) -> str:
     if state is not None:
         # SketchUp running with no document has no active Model; the save step must not stop the quit.
         with contextlib.suppress(BridgeError, OSError, TimeoutError):
-            run_with_dialog_guard(
-                version,
-                'm = Sketchup.active_model; m.save("/private/tmp/ph_composer_discard.skp") if m && m.modified?; :ok',
-                timeout=60.0,
-            )
+            run_with_dialog_guard(version, DISCARD_SAVE, timeout=60.0)
         with contextlib.suppress(BridgeError, OSError, TimeoutError):
             request(state, {"code": 'Sketchup.send_action("terminate:")'}, timeout=10.0)
     for _ in range(30):
