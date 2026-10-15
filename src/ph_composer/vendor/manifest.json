@@ -246,9 +246,9 @@
       "sha256": "32cc7b6c39918da562237aba1209b358ec087c9238146cdcc16cf4c415b7754d"
     },
     "html/index.html": {
-      "bytes": 6502,
+      "bytes": 6545,
       "mime": "text/html; charset=utf-8",
-      "sha256": "ad90dc90a01a108aa48419a29e666aa94728e76eff6fda64d6cb982b71be8bf6"
+      "sha256": "57180c5d00d2469bf575363a767a871c2fde4f8057ed9d9c2c25880265335a2b"
     },
     "html/inventory.js": {
       "bytes": 9047,
@@ -424,6 +424,11 @@
       "bytes": 2905,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "6e166290e44905826f16ed56e5ff865ec6c2f853c8ea12a9c2dd8a0863929e4c"
+    },
+    "html/table_views.js": {
+      "bytes": 2294,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "f8e483d1c4319dd2c60570963942cb3fb626a87e6458f48c54617d714eedb203"
     },
     "html/unit_field.js": {
       "bytes": 11373,
