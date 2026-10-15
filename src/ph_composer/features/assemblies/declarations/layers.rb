@@ -86,6 +86,18 @@ module PhComposer
                :side_effects => "Swaps two neighbouring Layers.") do |record, params|
           Commands.move_layer(record, :layer_id => params.fetch("layer_id"), :direction => params.fetch("direction"))
         end
+        action(feature, "reorder", { "layer_id" => Shapes.id("lyr", LAYER_ID),
+                                     "index" => { "type" => "integer", "minimum" => 0,
+                                                  "description" => "The Layer's position in the resulting stored " \
+                                                                   "order, 0 first; the other Layers keep their " \
+                                                                   "relative order." } },
+               { "layer_id" => Shapes::EXAMPLE_LAYER, "index" => 0 },
+               :description => "Move one Layer to a position in the stored order, keeping the other Layers' " \
+                               "relative order. Its current position changes nothing.",
+               :undo_name => "Move Assembly Layer",
+               :side_effects => "Changes only the Layer order.") do |record, params|
+          Commands.reorder_layer(record, :layer_id => params.fetch("layer_id"), :index => params.fetch("index"))
+        end
       end
 
       def declare_order(feature)

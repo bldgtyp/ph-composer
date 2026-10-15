@@ -2,7 +2,7 @@
 
 DATE: 2026-10-07
 STATUS: Requested
-ISSUE: none (local planning draft)
+ISSUE: [#128](https://github.com/bldgtyp/ph-composer/issues/128)
 
 ## Problem and accepted visual direction
 
