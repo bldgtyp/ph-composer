@@ -1,9 +1,11 @@
 # Assembly Layer drag reordering
 
-Requested during the Assemblies UI refactor on 2026-10-07. Implement on a dedicated branch after
-scoping and authorization, following Ed's rule that larger new behavior leaves the simple refactor.
-The current refactor adds the contextual Layer gear and retains Move outward/inward; it ships no
-inert grip.
+Requested during the Assemblies UI refactor on 2026-10-07 and planned in detail on 2026-10-15.
+Implement on a dedicated branch per stage after authorization, following Ed's rule that larger new
+behavior leaves the simple refactor. The refactor added the contextual Layer gear and retains Move
+outward/inward; it shipped no inert grip.
 
-Read [PRD.md](PRD.md), then [STATUS.md](STATUS.md). The related refactor is
-[assemblies-ui-ux-refactor.md](../../../archive/assemblies-ui-ux-refactor.md).
+Read [PRD.md](PRD.md) for the behavior, [PLAN.md](PLAN.md) for the stages and the proposed
+decisions, then [STATUS.md](STATUS.md) for the ledger. Each stage document under
+[phases/](phases) is written to be handed to a coding agent on its own with the PRD and the plan.
+The related refactor is [assemblies-ui-ux-refactor.md](../../../archive/assemblies-ui-ux-refactor.md).
