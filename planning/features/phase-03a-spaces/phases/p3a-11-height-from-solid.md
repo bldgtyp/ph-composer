@@ -1,9 +1,13 @@
 # P3a-11: Height from solid
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Waits for the Spaces UI and UX discussion; see the re-baseline note
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
+
+**Re-baseline note, 2026-10-15 (`main` at `87bdc62`).** Unaffected by `main` apart from the
+route in step 4, which follows the table's row actions as the Spaces UI and UX discussion
+settles them.
 
 ## Entry and scope
 

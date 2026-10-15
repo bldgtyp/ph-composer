@@ -1,7 +1,7 @@
 # P3a-02: Space records and operations
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Re-baselined on `main` at `87bdc62`: adds the metadata action and `extension_status` the entity owners gained since planning
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -73,8 +73,13 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
     primitive; a height edit records the last value entered; a new Space's default height is that
     value, else 2.5 m.
 11. **Reads.** `list` and the `spaces` snapshot section return canonical SI values, references,
-    states and findings. Ruby formats no unit-bearing text. Adapt `snapshot.rb` and `names.rb`.
-12. **Walkthrough and reference.** `tools/examples/authoring/spaces_walkthrough.rb`: panel
+    states and findings, and `extension_status` beside `extension_data` as the Zones and Window
+    Units reads do. Ruby formats no unit-bearing text. Adapt `snapshot.rb` and `names.rb`.
+12. **Metadata (F23).** `update_metadata`, one action for the three record kinds or one per
+    kind, following `ph_composer.zones.update_metadata` and `core/records/metadata.rb`: whole
+    `user_data` maps and installed payloads, `expected_metadata`, one step, no step when nothing
+    changes.
+13. **Walkthrough and reference.** `tools/examples/authoring/spaces_walkthrough.rb`: panel
     closed, discover, create a Space from three Faces in a Zone, add a second Volume, mark one
     Face as Does not count, set a height and two airflows, clear one, read back, recover from a
     stale edit. Regenerate `docs/API_REFERENCE.md` with `make fixtures`.
@@ -104,7 +109,8 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 6. The any-set rule: all unset inherits; one set makes the other two read zero in metrics;
    clearing the last returns to inheriting.
 7. Stale `expected_values` refuses with nothing written. A batch with one bad target writes none.
-8. `user_data` and an unavailable extension payload survive every edit in this stage.
+8. `user_data` and an unavailable extension payload survive every edit in this stage;
+   `update_metadata` writes them in one step and refuses a stale `expected_metadata`.
 9. Every finding in step 6 from a minimal fixture; the reference model's hand-calculated totals
    in [ACCEPTANCE](../ACCEPTANCE.md).
 10. Every registered operation has schemas and a validating example.

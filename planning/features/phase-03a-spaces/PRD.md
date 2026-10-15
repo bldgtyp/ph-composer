@@ -1,9 +1,16 @@
 # Spaces: behavior contract
 
-DATE: 2026-10-12
+DATE: 2026-10-15
 STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 18 decisions recorded below. Architecture review folded in 2026-09-18 (Q19 to Q24). D3a-13 qualifies Q20 on 2026-10-12; architecture/UI decisions and implementation gates remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
+
+**Reading this against `main` (2026-10-15).** This contract predates the foundation and Phases 1
+and 2. [DECISIONS](DECISIONS.md), Part 1b, re-reads it against `main` at `87bdc62`. Sections that
+are known to differ from what exists, and are amended only when Ed answers the decision named:
+the port disposition's reconciler row (D3a-4), Records identity (D3a-2) and copies (D3a-14),
+Mark floor's toolbar wording (D3a-7), the model tree (D3a-6, now against the table-first Zones /
+Faces screen), `user_data` export (D3a-15), and the PHX steps in "Acceptance shape" (F19).
 
 ## Problem
 
@@ -152,7 +159,8 @@ Floor Segment   identifier, display_name, icfa_factor (default 1.0),
 - **`user_data`.** All three records carry the `user_data` mapping and structured extension
   payloads that [EXTENSIBILITY.md](../../../context/EXTENSIBILITY.md) requires, under the
   foundation's storage contract. Move Space to Zone keeps it. Make independent keeps it, since a
-  copy is the user's own. None of it is exported.
+  copy is the user's own. Whether it reaches the HBJSON is D3a-15: when this was written nothing
+  did, and since 2026-10-13 Zones, Faces, Window Units and Assemblies opt in (PR #125).
 
 Not stored: the predecessor's per-Space colour is dropped in favour of a categorical ramp keyed
 by Space id (Q13). `quantity` is always 1, because every Space is drawn (zones packet Q4), and

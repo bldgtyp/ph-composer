@@ -1,9 +1,13 @@
 # P3a-08: airflows and the balance view
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Waits for the Spaces UI and UX discussion; see the re-baseline note
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
+
+**Re-baseline note, 2026-10-15 (`main` at `87bdc62`).** The balance read and the any-set
+rule are unaffected by `main`. The airflow columns and the balance subtab follow whatever table
+shape the Spaces UI and UX discussion settles for P3a-07 (D3a-6, D3a-12).
 
 ## Entry and scope
 

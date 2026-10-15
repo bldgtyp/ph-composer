@@ -1,7 +1,7 @@
 # P3a-05: Colour-by derived geometry and readouts
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the design note must also settle Phase 3b's competing `LineEntry` proposal and fit the mode `group`, occurrence filter and column-header toggles added since planning
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -36,7 +36,12 @@ Paths are relative to `src/ph_composer/`.
    contributor task for each user: "add the By height mode with its prism" and "add operation
    marks to By type". The questions it must answer: what a derived shape may be, who owns
    world-space conversion, how visibility along a path applies to shapes with no entity, what the
-   legend counts, and what a readout may read.
+   legend counts, and what a readout may read. Added 2026-10-15: name thermal bridges as the third
+   user and settle, once, the deferred geometry stage G-03's `ColourBy::LineEntry` against Phase
+   3b's D3b-11 `derived` segments, so the contract gets one line primitive
+   ([geometry contribution contracts](../../cross-phase/geometry-contribution-contracts/STATUS.md)).
+   Say how derived shapes interact with the occurrence mask (`Service#filter`) and with a mode's
+   `group`, both added since this stage was planned.
 2. **Derived geometry (H7).** `ColourBy::Entry` gains `derived`: a list of world-space polygons,
    each filled and outlined in the entry's colour, and world-space segments, each drawn as a
    line. An entry may carry an entity, derived shapes or both. The projection computes the

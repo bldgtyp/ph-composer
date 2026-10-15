@@ -41,7 +41,7 @@ on 2026-10-01. See [PLAN.md](PLAN.md) for the original allocation; later scope r
 Added 2026-10-02 from [R05](../../../archive/phase-02-envelope-review/R05-export-layering.md)'s follow-ups.
 None is authorized yet.
 
-Phase 3 planning (2026-10-03) allocates items 1 and 2 to
+Phase 3 planning (2026-10-03) allocates item 1 (and allocated item 2, since delivered) to
 [P3a-01](../../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md) and item 3
 to [P3a-10](../../phase-03a-spaces/phases/p3a-10-spaces-export.md), with the Spaces
 contributor, section and report schedule. Item 4 stays here if Ed confirms D3a-9, which makes the
@@ -51,9 +51,10 @@ Spaces section required for export, so it is not the first optional attaching se
    and the diagnostic canonical model then fails to reload. It predates R05, which made it reachable
    without an Aperture. Reproduce it in a focused test first, then refuse or omit the empty Room
    with a declared code. Do it before Spaces adds its first export section, or sooner.
-2. **Section-read cycles.** Two contributors that read each other's projections would recurse;
-   registration does not check for a cycle in declared section reads. Refuse a cycle at
-   registration. Spaces is the first feature likely to add a cross-section read.
+2. **Section-read cycles.** Delivered: registration refuses export sections that require each
+   other, or themselves, as `registration.cycle` (`shell/registry_validation.rb`,
+   `check_section_cycles`), merged through PR #122 with EC-03. Confirmed against `main` at
+   `87bdc62` during the Spaces re-baseline on 2026-10-15.
 3. **Results from runs that cannot publish.** `construction_usage` and `window_face_areas` are
    reported from runs that write no canonical pair. Decide whether a blocked run reports them and
    say so in the report.

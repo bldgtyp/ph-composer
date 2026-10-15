@@ -1,7 +1,7 @@
 # P3a-01: contracts and groundwork
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the Ruby units and the section-cycle refusal are already merged and leave this stage
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -9,8 +9,10 @@ ISSUE: none (local planning draft)
 
 Requires the entry gates in [STATUS](../STATUS.md) and D3a-1. Owns what must be true before any
 file exists under `features/spaces/`: the bindings confirmed against code, the Zones rule that
-keeps Floor Segment faces out of the Zone's Faces, the Ruby unit rows, and the two export-run
-items the first Spaces section would otherwise meet. No Spaces code and no screen.
+keeps Floor Segment faces out of the Zone's Faces, and the empty-Room export item the first
+Spaces section would otherwise meet. No Spaces code and no screen. The Ruby `volume` and
+`airflow` rows (PR #84) and the section-cycle refusal (`registration.cycle`, PR #122) are on
+`main`; this stage only confirms them.
 
 Behavior owners: [face-assignment](../../../archive/face-assignment/PRD.md) and
 [zones-and-adjacency](../../../archive/phase-01-zones-and-adjacency/PRD.md) for the Face walk;
@@ -23,11 +25,11 @@ Paths are relative to `src/ph_composer/`.
 
 1. **Reproduce the findings this stage acts on.** Before changing anything, write the failing
    test for each: a plain Group holding one Face inside a Zone is returned by
-   `ph_composer.zones.faces.list` (F8); two contributors that read each other's sections register
-   without refusal (F21); a Zone whose Faces are all omitted builds a Room with no Faces and the
-   diagnostic model fails to reload (F21). A finding that does not reproduce is corrected in
+   `ph_composer.zones.faces.list` (F8); a Zone whose Faces are all omitted builds a Room with no
+   Faces and the diagnostic model fails to reload (F21 item 1). The section-cycle reproduction is
+   no longer needed: PR #122 refuses it. A finding that does not reproduce is corrected in
    [DECISIONS](../DECISIONS.md) Part 1 and its step is dropped.
-2. **Answer CONTRACTS section 7.** Each of the seven questions gets a focused test or a read of
+2. **Answer CONTRACTS section 7.** Each of the nine questions gets a focused test or a read of
    the code, and its answer is written into CONTRACTS as section 8, "P3a-01 contract answers", in
    the shape Phase 2 used. Correct any table the answers change. Run the architecture review on
    the corrected CONTRACTS and record its outcome in the evidence file.
@@ -41,21 +43,17 @@ Paths are relative to `src/ph_composer/`.
 4. **What the rule must not change.** A classified Face keeps its stamp and is still a Zone Face:
    the rule applies to Groups only. A Zone Group nested in a Zone keeps its existing treatment.
    Cutting components keep D2-5's.
-5. **Ruby units (H2).** Reuse the standalone `volume` (m3) and `airflow` (m3/h) groundwork
-   merged through PR #84, tracked by the [units receipt](../../cross-phase/units/STATUS.md).
-   The existing agreement and formatting tests cover the quantity ids, factors and rounding in `html/unit_tables.js`; do not add a second table
-   or duplicate test.
-6. **Section-read cycle refusal (H3).** In `shell/registry_validation.rb`, refuse at registration
-   a cycle among declared contributor section reads, with a `registration.` code and every
-   section on the cycle named in the diagnostic. Follow the existing feature-cycle check.
+5. **Ruby units (H2).** Done on `main` (PR #84). Nothing to add; do not add a second table or a
+   duplicate test.
+6. **Section-read cycle refusal (H3).** Done on `main` (PR #122, `registration.cycle` in
+   `shell/registry_validation.rb`). validation-and-export's STATUS records it as delivered.
 7. **Empty Room (H4).** Decide in code review, against `context/CONTRACTS.md`, "Translation
    sections and artifacts", between refusing the Zone with a declared blocking finding and
    omitting the Room with a declared disclosure, and implement the one that keeps the diagnostic
    model loadable. Record the choice in validation-and-export's STATUS. The owed item says
    "refuse or omit the empty Room with a declared code"; either satisfies it.
 8. **Context.** Fold the container rule into `context/TECH_STACK.md` beside the cutting-instance
-   rules and into `context/CONTRACTS.md`, "Geometry records and occurrence references". Fold the
-   cycle refusal into `context/CONTRACTS.md`, registration.
+   rules and into `context/CONTRACTS.md`, "Zones geometry rules", next to "Cutting components".
 
 ## Source
 
@@ -69,10 +67,8 @@ No predecessor source. The predecessor had no Zones and no export sections of th
    An unstamped Group's Faces are still present.
 3. A stamped Group nested two deep and one under a rotated wrapper are both skipped.
 4. A mutable Face path through a stamped Group refuses with a target code and writes nothing.
-5. Volume and airflow convert both ways and agree with the panel table to the stored precision.
-6. A two-section cycle and a three-section cycle each refuse; an acyclic chain registers.
-7. The all-omitted Zone produces the chosen outcome and the diagnostic model reloads.
-8. Every existing Zones, Colour-by and export test passes unchanged.
+5. The all-omitted Zone produces the chosen outcome and the diagnostic model reloads.
+6. Every existing Zones, Colour-by and export test passes unchanged.
 
 ## Host gate
 
@@ -90,7 +86,6 @@ Colour-by extension (P3a-05). R05 items 3 and 4 (P3a-10).
 ## Done when
 
 - S01 has evidence in `evidence/p3a-01-groundwork.md`, with the architecture review recorded.
-- CONTRACTS section 8 answers all seven questions; every table agrees with the code.
+- CONTRACTS section 8 answers all nine questions; every table agrees with the code.
 - `make ci` passes on both Rubies.
-- validation-and-export's STATUS records items 1 and 2 as delivered; the units STATUS records
-  the two Ruby rows.
+- validation-and-export's STATUS records item 1 as delivered.

@@ -1,9 +1,15 @@
 # P3a-06: Mark floor and Create Space
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Waits for the Spaces UI and UX discussion; see the re-baseline note
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
+
+**Re-baseline note, 2026-10-15 (`main` at `87bdc62`).** Still no toolbar and no shared tool
+state (F12). Classify's palette now lives in the Zones / Faces table, scoped to its column, and the
+floating selection bar (`html/selection_bar.js`) holds bulk Face edits; this stage's palette and
+Create Space routes predate that pattern. Revised after the Spaces UI and UX discussion settles
+D3a-7 and D3a-14; until then the steps below are the 2026-10-03 plan.
 
 ## Entry and scope
 

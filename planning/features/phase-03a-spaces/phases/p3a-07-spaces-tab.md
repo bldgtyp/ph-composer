@@ -1,9 +1,17 @@
 # P3a-07: the Spaces tab
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Waits for the Spaces UI and UX discussion; see the re-baseline note
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
+
+**Re-baseline note, 2026-10-15 (`main` at `87bdc62`).** Planned before Zones / Faces went
+table-first (PR #73): one full-width table with a hierarchy column, editable cells, Colour by and
+value filters in the column headers (`column_menu.js`), a checkbox set separate from Locate, a
+floating selection bar and no inspector. Level is now a managed Zone choice (PR #80). Steps 2, 5,
+9 and 11 below (a tree, an inspector, a cell context menu, a saved layout) need revising to that
+pattern; D3a-6 and D3a-11 are refreshed accordingly. This stage is revised after the Spaces UI and
+UX discussion; until then the steps below are the 2026-10-03 plan.
 
 ## Entry and scope
 

@@ -1,7 +1,7 @@
 # Phase 3a: Spaces
 
-DATE: 2026-10-12
-STATUS: Scoped. Interviewed 2026-09-18; P3a-01 to P3a-12 planned; decisions D3a-1 to D3a-12 open; D3a-13 confirmed; no stage authorized.
+DATE: 2026-10-15
+STATUS: Scoped. Interviewed 2026-09-18; P3a-01 to P3a-12 planned; re-baselined on `main` at `87bdc62` on 2026-10-15; decisions D3a-1 to D3a-12, D3a-14 and D3a-15 open; D3a-13 confirmed; no stage authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -18,7 +18,10 @@ ends when both close: a model carries its Spaces and its thermal bridges and mat
 designPH export gave. That is the first internal envelope-model release candidate (D1).
 
 This folder holds the feature's PRD and the coordinating files that sequence the work and bind it
-to the code merged on `main` at `70c340f`.
+to the code on `main`. Planned at `70c340f`; re-read against `87bdc62` on 2026-10-15
+([DECISIONS](DECISIONS.md), Part 1b). The foundation stages are corrected to `87bdc62`. The
+screen stages (P3a-06 to P3a-09, P3a-11) carry a note and are revised after the Spaces UI and UX
+discussion, because Zones / Faces became table-first after they were planned.
 
 ## Read order
 
@@ -28,8 +31,9 @@ to the code merged on `main` at `70c340f`.
    decisions.
 2. [STATUS.md](STATUS.md): the tracking ledger. One row per stage, the entry gates, the open
    decisions and what each stage still owes.
-3. [DECISIONS.md](DECISIONS.md): what the merged foundation changed in the PRD (F1 to F22), and
-   the choices D3a-1 to D3a-12 that need Ed's answer before a stage starts.
+3. [DECISIONS.md](DECISIONS.md): what the merged foundation changed in the PRD (F1 to F22, re-read
+   on `87bdc62` with F23 to F27 added in Part 1b), and the choices D3a-1 to D3a-15 that need Ed's
+   answer before a stage starts.
 4. [PLAN.md](PLAN.md): the stages, their order, owners and gates.
 5. [CONTRACTS.md](CONTRACTS.md): feature id, records, operation names, cross-feature seams and
    foundation additions H1 to H10. Proposed until P3a-01 confirms them against code.
@@ -55,7 +59,7 @@ P3a-10).
 Thermal bridges runs on its own track, but three of its stages wait for stages here:
 [P3b-03](../phase-03b-thermal-bridges/phases/p3b-03-edge-assignment.md) and
 [P3b-08](../phase-03b-thermal-bridges/phases/p3b-08-thermal-bridge-export.md) need P3a-01 (the
-nested-container rule and R05 items 1 and 2), and
+nested-container rule and R05 item 1; item 2 is already on `main`), and
 [P3b-06](../phase-03b-thermal-bridges/phases/p3b-06-thermal-bridge-colour-by.md) needs P3a-05 (the
 `derived` geometry it draws edges with). The files both tracks change are listed in
 [PLAN.md](PLAN.md), "Order and parallel work".
@@ -66,13 +70,14 @@ nested-container rule and R05 items 1 and 2), and
   by Spaces (spaces Q22) and by the Window Type mode's operation marks. It is designed once, in
   [P3a-05](phases/p3a-05-colour-by-derived-geometry-and-readouts.md), against both users, and
   thermal bridges is its third user. Whether the marks themselves are built there is decision
-  D3a-5. Phase 2 adds Assembly and Window modes without implementing this extension; see the
+  D3a-5, which now also settles Phase 3b's competing `LineEntry` proposal (G-03). Phase 2 adds Assembly and Window modes without implementing this extension; see the
   [accepted decision](../../archive/phase-02-envelope/DECISIONS.md) and the Colour-by contract in
   `context/EXTENSIBILITY.md`.
 - **From the Phase 2 review (R05).** Four export-run items recorded in
   [validation and export](../cross-phase/validation-and-export/STATUS.md), "Owed from the Phase 2
-  review". Items 1 and 2 are allocated to [P3a-01](phases/p3a-01-contracts-and-groundwork.md), so
-  they are settled before the first Spaces export section. Item 3 is allocated to
+  review". Item 1 is allocated to [P3a-01](phases/p3a-01-contracts-and-groundwork.md), so it is
+  settled before the first Spaces export section. Item 2, the section-cycle refusal, merged through
+  PR #122. Item 3 is allocated to
   [P3a-10](phases/p3a-10-spaces-export.md). Item 4 moved to Phase 3b's P3b-08 when Ed made the
   thermal-bridge section the first optional attaching section (D3b-20).
 
@@ -81,8 +86,9 @@ nested-container rule and R05 items 1 and 2), and
 Confirmed copy behavior, 2026-10-12: [D3a-13](DECISIONS.md#confirmed-copy-decision-d3a-13)
 requires Spaces included in a Zone copy to become independent authored instances. P3a-04 owns
 the participation binding; S04/S12 prove the host state and S10 verifies HBJSON ownership.
-Windows remain new instances of their existing Type under their protocol. The twelve earlier
-decisions and all implementation gates remain open.
+Windows remain new instances of their existing Type under their protocol. The contract it uses,
+`transition_contributor` on the Zone's independence transition, is on `main` with Windows as its
+first adopter. The other decisions and all implementation gates remain open.
 
 - The PRD owns behavior, CONTRACTS binds names, the stage document sequences the work. A stage
   that needs a behavior the PRD does not state stops and records the question in DECISIONS.

@@ -1,9 +1,14 @@
 # P3a-09: modes, preview, labels and totals
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Waits for the Spaces UI and UX discussion; see the re-baseline note
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
+
+**Re-baseline note, 2026-10-15 (`main` at `87bdc62`).** Colour-by modes are now toggled from
+table column headers, may declare a `group`, and are masked by the service's occurrence filter.
+The four Spaces modes bind to Spaces table columns the same way; P3a-05's design note settles
+derived geometry against that. Revised after the Spaces UI and UX discussion.
 
 ## Entry and scope
 

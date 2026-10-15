@@ -1,18 +1,25 @@
 # P3a-04: copies and Move Space to Zone
 
-DATE: 2026-10-12
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the Zone-copy contract this stage joins now exists, and D3a-14 asks whether standalone copies follow the Zones copy watcher
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 ## Entry and scope
 
-Requires P3a-03 and D3a-3. Owns the two operations that change identity or parentage: the
-`duplicate_identity` finding with its Make independent repair, and Move Space to Zone. Also
-carries the Space half of Restore Zone and the confirmed Zone-child copy behavior
-[D3a-13](../DECISIONS.md#confirmed-copy-decision-d3a-13). M1 closes here. Reconcile the then-current
-[copied-Zone plan](../../../archive/copied-zone-edit-refusal/PLAN.md) before binding participation;
-this stage cannot close with parent-only independence leaving shared Space storage or IDs.
+Requires P3a-03, D3a-3 and D3a-14. Owns the operations that change identity or parentage: the
+`duplicate_identity` finding with its Make independent repair, Spaces' contributor to the Zone's
+independence transition, the Space copy watcher if D3a-14 asks for one, and Move Space to Zone.
+Also carries the Space half of Restore Zone and the confirmed Zone-child copy behavior
+[D3a-13](../DECISIONS.md#confirmed-copy-decision-d3a-13). M1 closes here. This stage cannot close
+with parent-only independence leaving shared Space storage or ids.
+
+The Zone-copy mechanism is on `main` (zone-child lifecycle ZC-02 and ZC-03, PRs #115 and #116):
+`ph_composer.zones.make_independent` emits `ph_composer.zones.occurrence_independent`, for the
+explicit action and for the copy watcher's `HostFollowUp`, and `features/windows/units/zone_copy.rb`
+is the adopter to copy. The rules are `context/CONTRACTS.md`, "Compound proposals", and
+`context/EXTENSIBILITY.md`, "Records inside a Zone occurrence"; the host facts are in
+`context/SKETCHUP_HOST_BEHAVIOR.md`, "Window Units inside a copied Zone".
 
 Behavior owner: [Spaces PRD](../PRD.md), Records "Copies (Q20)" and "`user_data`",
 Behaviors "Move Space to Zone" (Q18, Q24), and "Carried from zones-and-adjacency". Names:
@@ -36,9 +43,15 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    kept, since the copy is the user's own. Shape it after `features/windows/units/identity_plan.rb`
    and `identity_step.rb`; port the rules from `operations/recovery.rb` (`repair_copied_space`,
    `adopt_copied_volume`).
-3. **No guessed reissue.** The standalone Spaces reconciler never guesses which occurrence
-   should take a new id. Tests hold this for standalone copies; the proven parent-copy scope
-   in step 9 is a separate, owner-authorized duplication path.
+3. **Standalone copies (D3a-14).** As Ed answers D3a-14. If a copy watcher: a Space Group added
+   in a native gesture with an id another live occurrence holds is a copy, and Spaces makes it
+   independent through `HostFollowUp` with step 2's plan, in the gesture's Undo step, with the
+   next free number; a cut and paste leaves no duplicate and is untouched; Undo and Redo drop the
+   pending pass; a copy through a ComponentInstance or one the plan refuses is left with the
+   finding and one notice. Model it on `features/zones/zone/copy_watch.rb`. Volumes and Floor
+   Segments copied inside an open Space follow the same rule only after the host gate measures
+   what their gestures deliver. Whatever D3a-14 says, the reconciler never guesses which of two
+   pre-existing occurrences should take a new id.
 4. **Repeated components.** A Space inside a ComponentInstance, or inside a Group whose
    definition another Group shares, raises the same finding with no repair and the message to
    draw the Space directly. Make independent refuses there with `target.shared_definition` and
@@ -61,15 +74,17 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    inside it, then restored.
 8. **Walkthrough.** Extend `tools/examples/authoring/spaces_walkthrough.rb`, panel closed: copy,
    detect, make independent, move to a second Zone, read back.
-9. **Zone-child copy participation (D3a-13).** Bind Spaces' pure copy plan and native application
-   into the proven Zone-copy scope through a declared contribution contract. Keep Zones,
-   shell and session free of Space-specific dictionary logic. Allocate independent child
-   identities and isolate child storage; rewrite Zone stamps and declared internal references;
-   preserve values and metadata through the copy rules. Join the complete gesture's atomic
-   proposal, failure policy and one Undo step. Unsafe/unavailable child payloads must not yield
-   partial success. Confirm preview/commit correspondence and stale-target refusal. The exact
-   participation mechanism remains part of D3a-3's unresolved architecture, not a new API already
-   provided by this packet. Windows participants follow their own protocol and retain Type references.
+9. **Zone-child copy participation (D3a-13).** Declare `follow_zone_copy` with
+   `feature.transition_contributor(..., transition: "ph_composer.zones.occurrence_independent")`,
+   shaped like `Units::ZoneCopy`. Plan only inside `zone_path`; give every Space, Volume, Floor
+   Segment and Space Floor whose id another occurrence holds a new id with step 2's plan; rewrite
+   each Zone stamp from the description's `new_zone_id` and Zones' stamp writer; remap internal
+   references from `mapping`; keep values and metadata under their copy rules. Bind logically by
+   record id and pre-image, re-enumerate at apply after Make Unique, refuse drift with
+   `target.changed`, and add only restorable steps, since the copy watcher's follow-up cannot
+   abort. Unsafe or unavailable child payloads refuse the whole proposal. No file under
+   `features/zones/`, `shell/` or `session/` changes. Windows contributes its own step and keeps
+   its Type references.
 
 ## Source
 
@@ -87,7 +102,10 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 2. Make independent on each clears it in one Undo step; ids are new throughout the copy and
    unchanged in the original; the copied Space takes the next free number; `user_data` survives.
 3. Naming the original rather than the copy is honored: the named one is rewritten.
-4. A standalone reconciler pass over a model with an unproven copy changes no id.
+4. Standalone copies as D3a-14 decides: either the watcher makes a native Space copy independent
+   in the gesture's Undo step and leaves a cut and paste alone, or a reconciler pass over a copy
+   changes no id. In both cases two pre-existing occurrences with one id are never rewritten
+   without an explicit request.
 5. A Space inside a repeated component: finding, no repair, refusal.
 6. Move under a rotated wrapper Zone to a Zone with a different rotation: every Floor Segment's
    world loop is unchanged to the stored precision; ids and all record values are unchanged; the

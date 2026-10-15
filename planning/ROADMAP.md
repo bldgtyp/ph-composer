@@ -1,6 +1,6 @@
 # Roadmap
 
-DATE: 2026-10-01
+DATE: 2026-10-15
 STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 merged to main through PR #15 on 2026-10-01 and archived; its eleven review refactors merged by 2026-10-02 and are archived.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
@@ -111,7 +111,7 @@ library file. METr conversion stays deferred.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | Scoped; planned as P3a-01 to P3a-12, none authorized | Mostly a port, with the reconciler, edit-context and Colour-by foundation it was expected to inherit still to build. Phase 3a, its own packet |
+| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | Scoped; planned as P3a-01 to P3a-12, re-baselined 2026-10-15, none authorized | Mostly a port. The Zone-copy contract, units and section-cycle check are on `main`; the reconciler, edit-context writer and Colour-by derived geometry are still to build. Phase 3a, its own packet |
 | 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09, none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
 
 Ed split Phase 3 on 2026-10-03 into two sub-phases, each one packet planned and worked on its own:
@@ -196,3 +196,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-03 | Spaces planned in detail in the Phase 3 coordinating packet: twelve stages, P3a-01 to P3a-12, and twelve decisions for Ed. Thermal bridges not planned. No implementation authorized. |
 | 2026-10-03 | Thermal bridges planned in detail in the same packet: nine stages, P3b-01 to P3b-09, and twenty-one decisions plus the PRD's interview questions for Ed. No implementation authorized. |
 | 2026-10-03 | Phase 3 split into two sub-phase packets, `phase-03a-spaces/` and `phase-03b-thermal-bridges/`, with ids restarted per sub-phase (P3a-, D3a-; P3b-, D3b-). |
+| 2026-10-15 | Spaces re-baselined against `main` at `87bdc62`: findings re-read, two decisions added (D3a-14, D3a-15), foundation stages corrected, screen stages held for a UI and UX discussion. No implementation authorized. |

@@ -1,7 +1,7 @@
 # P3a-03: edit contexts, protection and reconciliation
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Re-baselined on `main` at `87bdc62`: deferred work builds on `HostFollowUp` and the Zones copy watcher, which landed after this stage was planned
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -12,6 +12,12 @@ edits natively: the one module that assigns the active edit path, the deferred-w
 Volume protection, exit and pre-save protection, the Spaces reconciler and the recovery of a
 moved Volume. This is the highest-risk stage of the plan. It is the first code here to write lock
 state, to change `active_path`, and to act on `:pre_save` and `:post_save`.
+
+Since planning, `main` gained the pieces of deferred work that Zones needed (DECISIONS F1, Part
+1b): `HostFollowUp` (`shell/host_follow_up.rb`) applies restorable steps in one transparent
+operation and never aborts; `features/zones/zone/copy_watch.rb` is a worked deferred pass over
+`CoalescedTimer` that drops its pass on Undo and Redo; feature state objects answer `pending?`
+and `settle`. This stage reuses all three and ports only what they do not cover.
 
 Behavior owner: [Spaces PRD](../PRD.md): "Volume protection, exit protection, the pre-save
 rule and the recovery states are the predecessor's, unchanged. Their evidence is its B1 and B2
@@ -38,11 +44,15 @@ Two slices. Slice A is foundation and merges first if the stage splits.
    its Volume knowledge; the hook is how Spaces protects on exit. Add the test that scans `src/`
    and refuses any other assignment. Extend the SketchUp stub to refuse a path change inside
    `onPreSaveModel`, if it does not already.
-2. **Deferred work (H6).** In `session/`: a coalesced queue of keyed jobs over `CoalescedTimer`,
-   with `pending?`, `settle` and `detach` so `ModelSession` handles it as feature state without a
-   new line; and the Undo ledger that records the automatic entry and spans commit, abort, Undo
-   and Redo with its suppression. Port `pending_work.rb` and `undo_ledger.rb`. Both take blocks
-   and name no feature.
+2. **Deferred work (H6).** First answer CONTRACTS section 7, question 9: whether lock-state and
+   `home_transform` writes can run as restorable steps under `HostFollowUp`. Then, in `session/`,
+   add only what is missing: a coalesced queue of keyed jobs over `CoalescedTimer`, with
+   `pending?`, `settle` and `detach` so `ModelSession` handles it as feature state without a new
+   line, and the Undo ledger that records the automatic entry and spans commit, abort, Undo and
+   Redo with its suppression, unless `HostFollowUp` already covers it. Port from `pending_work.rb`
+   and `undo_ledger.rb` only the parts not already on `main`. Both take blocks and name no
+   feature. Compare against the copy watcher's Undo and Redo handling and say in the evidence
+   why any difference exists.
 3. **Context for both.** Rewrite `context/TECH_STACK.md` lines on "In the predecessor ..." to
    name the modules that now exist.
 
@@ -82,7 +92,7 @@ Two slices. Slice A is foundation and merges first if the stage splits.
 | Predecessor file | Lines | Disposition |
 | --- | --- | --- |
 | `features/spaces/active_path.rb` | 67 | Split: the writer to `session/`, Volume closing to Spaces |
-| `features/spaces/pending_work.rb`, `undo_ledger.rb` | 145 | Port to `session/`, feature-free |
+| `features/spaces/pending_work.rb`, `undo_ledger.rb` | 145 | Port to `session/`, feature-free, only where `HostFollowUp` and `CoalescedTimer` do not already cover it |
 | `features/spaces/reconciler.rb`, `baseline.rb`, `session_state.rb` | 344 | Adapt; the TFA transition goes |
 | `features/spaces/operations/context.rb`, `operations/recovery.rb`, `entry_transforms.rb` | 353 | Adapt; `adopt_copied_volume` and `repair_copied_space` wait for P3a-04 |
 | `tests/reconciler_test.rb`, `pending_work_test.rb`, `undo_ledger_test.rb`, `baseline_test.rb`, `active_path_test.rb`, `space_context_test.rb`, `space_recovery_test.rb`, `entry_transforms_test.rb` | about 840 | Port with the code |
@@ -124,7 +134,8 @@ difference on this host in `context/SKETCHUP_HOST_BEHAVIOR.md`.
 ## Out of scope
 
 Copies and Move Space to Zone (P3a-04). Any panel row that calls the context operations (P3a-07).
-Migrating `Zones::Names::State` onto the primitive (recorded as a follow-up).
+Migrating `Zones::Names::State` or the Zones copy watcher onto the primitive (recorded as a
+follow-up).
 
 ## Done when
 

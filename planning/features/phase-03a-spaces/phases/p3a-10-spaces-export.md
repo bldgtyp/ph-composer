@@ -1,15 +1,16 @@
 # P3a-10: Spaces export
 
-DATE: 2026-10-03
-STATUS: Scoped
+DATE: 2026-10-15
+STATUS: Scoped. Re-baselined on `main` at `87bdc62`: R05 item 4 is Phase 3b's; `user_data` pass-through is D3a-15; Spaces is the first section to attach to `ROOM`
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 ## Entry and scope
 
-Requires P3a-04, D3a-9 and D3a-10. Owns the path from Space records to honeybee-ph: the Ruby
+Requires P3a-04, D3a-9, D3a-10 and D3a-15. Owns the path from Space records to honeybee-ph: the Ruby
 contributor with its preflight, the Python section that attaches each `Space` to its Zone's Room,
-the report schedule, and the two remaining export-run items from the Phase 2 review. M3 closes
+the report schedule, and R05 item 3 from the Phase 2 review. Spaces is the first section to use
+`Attachment(ROOM)`; the attachment code exists and is untested by a real section (F18). M3 closes
 here. It can run beside P3a-06 to P3a-08, since it needs only records and findings.
 
 `SpaceVolume.geometry` is the prism from `volume/prism.rb`. If P3a-09 has not landed, this stage
@@ -45,8 +46,10 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    `translate` builds one honeybee-ph `Space` with `name`, `number`, `quantity` 1, and per Volume
    a `SpaceVolume` with `avg_ceiling_height`, a `SpaceFloor` of `SpaceFloorSegment`s whose
    geometry is the projected face, `weighting_factor` from `icfa_factor` and `net_area_factor`
-   as stored, and `geometry` from the prism. Identifiers derive from the record ids. `attach`
-   adds the Spaces to the Room's PH properties. Adapt `spaces/authored.py`; replace the flatten
+   as stored, and `geometry` from the prism. Identifiers derive from the record ids. If D3a-15
+   says yes, each object carries its record's `user_data` beside the reserved `ph_composer` key,
+   as `model_sections.py` does for Rooms and Faces. `attach` adds the Spaces to the Room's PH
+   properties. Adapt `spaces/authored.py`; replace the flatten
    rule of `spaces/geometry.py` with the projection (F17); do not port `legacy_tfa.py`. List the
    section in `composition.py`.
 6. **Airflows.** The any-set rule in one place: an inheriting Space writes none of `_v_sup`,
@@ -61,8 +64,7 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 9. **R05 item 3 (D3a-10).** Apply the decision to `construction_usage`, `window_face_areas` and
    the Spaces schedule alike, in `export/report.rb` or the result view, generally, and state the
    rule in `context/CONTRACTS.md`.
-10. **R05 item 4.** Under D3a-9 Spaces is required, so no optional attaching section exists yet.
-    Record in validation-and-export's STATUS that the item stays owed and why.
+10. **R05 item 4.** Phase 3b's P3b-08 owns it (D3b-20). Nothing here.
 11. **Fixtures and manifest.** Regenerate fixtures through their owning tests; refresh the
     vendor manifest for the shipped Python.
 12. **Context and docs.** Fold the section into `context/CONTRACTS.md`'s section table and the
@@ -116,5 +118,5 @@ the schedule. Zone loads. `wufi_type` and Space Types.
 ## Done when
 
 - S10 has evidence in `evidence/p3a-10-spaces-export.md`, with the stronger review recorded.
-- validation-and-export's STATUS records item 3 as delivered and item 4 as still owed.
+- validation-and-export's STATUS records item 3 as delivered.
 - `make ci` passes on both Rubies; the vendor manifest is current. STATUS records M3.
