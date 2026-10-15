@@ -503,6 +503,9 @@ cutting components keep theirs. The shared export snapshot still captures the co
 for the feature that stamped it; the Zones export leaves them out of the Zone's Faces, gives them no
 owning Zone, reads nothing stored on them and does not export a Face record left on one; a Surface
 pair whose counterpart sits in a container exports as unresolved. Zones reads only the stamp it owns and never learns what the container is.
+Zones keeps the stamp current as it keeps its Faces' stamps: editing the Zone, Make Zone independent
+and repairing a copied Zone's identity rewrite every container's stamp, and Restore Zone recovers a
+stamped container as a member, regrouping it whole with the Zone's stamped Faces.
 Spaces is the first feature to stamp one.
 
 Solve reports `adjacency.glued_instances` when a proposed partial match would cut a Face with

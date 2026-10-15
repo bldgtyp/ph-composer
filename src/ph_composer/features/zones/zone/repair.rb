@@ -206,8 +206,9 @@ module PhComposer
         Faces::Schema.validate!(after)
       end
 
-      # Faces carrying a Zone stamp whose Zone is gone, grouped by the id they remember and the one
-      # parent context they sit in. This is the only membership evidence Restore accepts.
+      # Faces and nested container Groups carrying a Zone stamp whose Zone is gone, grouped by the id
+      # they remember and the one parent context they sit in. This is the only membership evidence
+      # Restore accepts.
       def orphans(model)
         live = Occurrences.zones(model).map { |zone| zone.record.fetch("id") }
         found = []
@@ -290,17 +291,19 @@ module PhComposer
         [record, offer]
       end
 
+      # A stamped Face, or a stamped Group (a nested container another feature had Zones stamp), is a
+      # member; the walk does not look inside a member Group, whose contents travel with it.
       def walk_orphans(entities, path, live, found)
         entities.each do |entity|
-          if entity.is_a?(Sketchup::Face)
-            stamp = STAMP_STORE.read(entity)
-            # A stamp this feature did not write cannot name a Zone to restore; it is left alone
-            # rather than failing the whole Zones read.
-            next unless Schema.stamp?(stamp) && !live.include?(stamp["zone_id"])
+          next unless entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Group)
 
+          stamp = STAMP_STORE.read(entity)
+          # A stamp this feature did not write cannot name a Zone to restore; it is left alone
+          # rather than failing the whole Zones read.
+          if Schema.stamp?(stamp) && !live.include?(stamp["zone_id"])
             found << { :zone_id => stamp["zone_id"], :stamp => stamp, :parent_path => path,
                        :persistent_id => entity.persistent_id, :entity => entity }
-          elsif entity.is_a?(Sketchup::Group) && ZONE_STORE.read(entity).nil?
+          elsif entity.is_a?(Sketchup::Group) && ZONE_STORE.read(entity).nil? && stamp.nil?
             walk_orphans(entity.entities, path + [entity.persistent_id], live, found)
           end
         end

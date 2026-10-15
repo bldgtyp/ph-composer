@@ -1,14 +1,16 @@
 # P3a-04 evidence: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: Slice A implemented on `feature/spaces-p3a-04a`; slice B (the copy watcher, the Zone-copy contributor, Restore Zone for stamped Groups, the walkthrough) not started; host gate not run
+STATUS: Slice A in review (#141); slice B1 (Zones: container stamps on Make Zone independent and repair, Restore Zone for stamped Groups) implemented; B2 (the copy watcher) and B3 (the Zone-copy contributor, the walkthrough) next; host gate not run
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
-The stage splits in two pull requests. Slice A: the `space.duplicate_identity` finding, Make independent,
-the repeated-component refusal, Move Space to Zone and number collisions (steps 1, 2, 4, 5 and 6).
-Slice B: the standalone copy watcher (D3a-14), Restore Zone reading stamped Groups, the walkthrough and
-`follow_zone_copy` (steps 3, 7, 8 and 9). Register row S04.
+The stage splits into four pull requests. Slice A: the `space.duplicate_identity` finding, Make
+independent, the repeated-component refusal, Move Space to Zone and number collisions (steps 1, 2, 4, 5
+and 6). B1, Zones only: container stamps kept current by Make Zone independent and the identity
+repair, and Restore Zone reading stamped Groups (step 7). B2: the `container_added` host event and the
+standalone copy watcher (D3a-14, step 3). B3: `follow_zone_copy` and the walkthrough (steps 8 and 9).
+Register row S04.
 
 ## Design answers recorded with the stage
 
@@ -47,6 +49,17 @@ Slice B: the standalone copy watcher (D3a-14), Restore Zone reading stamped Grou
   (P3a-07) closes the context first.
 - **Numbers are kept.** A moved Space keeps its number; a collision in the target raises
   `space.number_duplicate`, the PRD's reading.
+
+- **Container stamps are Zones' to rewrite (B1).** Step 9 says no file under `features/zones/`
+  changes. But Make Zone independent and the identity repair walk only the Zone's Faces, which since
+  P3a-01 skip stamped containers, so both left a copied Zone's container stamps naming the original
+  Zone, whatever feature stamped them. A transition contributor also cannot call Zones' stamp
+  participant, because Zones' action does not name it. The fix is therefore in Zones, which owns the
+  stamp: both steps rewrite every container's stamp, and Make Zone independent captures them for
+  `restore`. Zones still names no feature, and `follow_zone_copy` never touches a stamp.
+- **Restore recovers stamped Groups (B1).** A stamped Group whose Zone is gone is a member of the
+  restore offer, regrouped whole with the stamped Faces; Restore always groups anew, so a lone Space
+  Group never becomes the Zone's own Group.
 
 ## Host
 

@@ -137,7 +137,7 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | Section-read cycle refusal | R05 item 2 | none | Delivered on `main` by PR #122 (`registration.cycle`); P3a-01 corrects validation-and-export's STATUS |
 | Results from runs that cannot publish | R05 item 3 | P3a-10 | Scoped |
 | Optional attaching section rule | R05 item 4 | Moved to Phase 3b, [P3b-08](../phase-03b-thermal-bridges/phases/p3b-08-thermal-bridge-export.md), which delivers the first optional attaching section (D3b-20) | Moved |
-| Restore Zone reads Space stamps | zones Q14 | P3a-04 | Scoped |
+| Restore Zone reads Space stamps | zones Q14 | P3a-04 | Implemented in slice B1 |
 | Where Zones appear, re-ruled | zones Q13 | none | Settled 2026-10-15 by D3a-16: every view of the Zones tab shows the Zone rows |
 | Unit-switch repaint cost on a large table | units U1-F1 | P3a-07, measure first | Scoped |
 | Ruby `volume` and `airflow` quantities | [units packet](../cross-phase/units/STATUS.md), standalone extraction confirmed 2026-10-07 | none | Merged through PR #84. Nothing left for Spaces but to use them |

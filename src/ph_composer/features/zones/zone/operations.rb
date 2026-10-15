@@ -80,7 +80,7 @@ module PhComposer
       end
       parent_path = Occurrences.integer_path(parent_path)
       step = MakeZoneStep.new(:parent_path => parent_path, :entity_ids => offer.fetch("entity_ids"),
-                              :record => record)
+                              :record => record, :regroup => true)
       proposal.add_step(step, :scopes => [Operations::EntityScope.new(parent_path)])
       proposal.add_finding(
         "code" => "zone.restore_is_limited", "severity" => "info",

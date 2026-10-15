@@ -5,15 +5,19 @@ module PhComposer
     class MakeZoneStep
       attr_reader :affected
 
-      def initialize(parent_path:, entity_ids:, record:)
+      # `regroup` always groups the members anew, as Restore does: they may include a stamped Group, which
+      # is a member and never the Zone's own Group.
+      def initialize(parent_path:, entity_ids:, record:, regroup: false)
         @parent_path = parent_path.freeze
         @entity_ids = entity_ids.freeze
         @record = DeepCopy.call(record).freeze
+        @regroup = regroup
         @affected = [{ "kind" => "zone", "id" => record.fetch("id"), "change" => "grouped" }]
       end
 
       def descriptor
-        { "name" => "make_zone", "parent_path" => @parent_path, "entity_ids" => @entity_ids, "record" => @record }
+        { "name" => "make_zone", "parent_path" => @parent_path, "entity_ids" => @entity_ids, "record" => @record,
+          "regroup" => @regroup }
       end
 
       def temporary_ids
@@ -24,7 +28,7 @@ module PhComposer
         verify_edit_path!(model)
         entities = Operations::EntityScope.new(@parent_path).resolve(model)
         selected = @entity_ids.map { |id| Occurrences.unique_entity(entities, id) }
-        group = existing_group(selected) || entities.add_group(selected)
+        group = (existing_group(selected) unless @regroup) || entities.add_group(selected)
         if group.respond_to?(:locked?) && group.locked?
           raise CodedError.new("target.locked", "The selected Group is locked.")
         end
@@ -156,7 +160,8 @@ module PhComposer
 
     # Gives one copied Zone occurrence an identity of its own. Every write lands inside that
     # occurrence's path, so the Zone it was copied from and that Zone's pairs are left exactly as
-    # they were. The copy's own pairs go: a copied adjacency envelope was never a relationship.
+    # they were. The copy's own pairs go: a copied adjacency envelope was never a relationship. Its
+    # nested containers' stamps name the new identity, as its Faces' do.
     class RepairIdentityStep
       attr_reader :affected
 
@@ -192,6 +197,7 @@ module PhComposer
           Faces::FACE_STORE.write(occurrence.entity, after) if after
           STAMP_STORE.write(occurrence.entity, face.fetch(:stamp))
         end
+        Occurrences.containers(zone).each { |group, _path| STAMP_STORE.write(group, Schema.stamp(@record)) }
       end
 
       private
@@ -317,12 +323,15 @@ module PhComposer
           @captured << [Faces::FACE_STORE, occurrence.entity, Faces::FACE_STORE.read(occurrence.entity)]
           @captured << [STAMP_STORE, occurrence.entity, STAMP_STORE.read(occurrence.entity)]
         end
+        containers = Occurrences.containers(zone).map(&:first)
+        @captured.concat(containers.map { |group| [STAMP_STORE, group, STAMP_STORE.read(group)] })
         ZONE_STORE.write(zone.entity, @record)
         resolved.each do |occurrence, face|
           after = face.fetch(:after)
           Faces::FACE_STORE.write(occurrence.entity, after) if after
           STAMP_STORE.write(occurrence.entity, face.fetch(:stamp))
         end
+        containers.each { |group| STAMP_STORE.write(group, Schema.stamp(@record)) }
         @affected = @affected.take(1) + resolved.filter_map { |_occurrence, face| face_affected(face) }
       end
 

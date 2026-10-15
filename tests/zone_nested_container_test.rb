@@ -243,6 +243,27 @@ class ZoneNestedContainerTest < PhComposerTestCase
     assert_equal "lvl_Ab12Cd34Ef56", Zones::STAMP_STORE.read(@container).fetch("level_id")
   end
 
+  # A copied Zone made independent, or repaired, stamps the copy's containers with its new id and leaves
+  # the original's stamps naming the original.
+  def test_make_independent_and_repair_rewrite_the_stamps_of_the_copys_containers
+    fixture
+    stamp!(@container)
+    original_id = Zones::ZONE_STORE.read(@zone_group).fetch("id")
+    [["ph_composer.zones.make_independent", 500, false], ["ph_composer.zones.repair_identity", 600, true]]
+      .each do |name, persistent_id, unique|
+        copy = Sketchup::Group.new(persistent_id, @zone_group.entities)
+        Zones::ZONE_STORE.write(copy, Zones::ZONE_STORE.read(@zone_group))
+        @model.entities << copy
+        treat_duplicates_as_existing(@model)
+        copy.make_unique if unique
+        result = invoke(name, "zone_path" => [persistent_id])
+        assert_equal "completed", result["status"], "#{name}: #{result.inspect}"
+        copied = copy.entities.to_a.find { |entity| Zones::STAMP_STORE.read(entity) }
+        assert_equal Zones::ZONE_STORE.read(copy).fetch("id"), Zones::STAMP_STORE.read(copied).fetch("zone_id"), name
+        assert_equal original_id, Zones::STAMP_STORE.read(@container).fetch("zone_id"), name
+      end
+  end
+
   private
 
   def query(name)
