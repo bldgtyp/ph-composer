@@ -142,6 +142,8 @@
 /* A held Layer: the drawing stays still, a red line marks the boundary it would land on (muted on its own
    place) and a small ghost follows the pointer. */
 body.assembly-layer-dragging, body.assembly-layer-dragging * { cursor: grabbing !important; }
+/* The line is the one drop cue: no Layer-Segment takes a hover outline under a held Layer. */
+body.assembly-layer-dragging .assembly-hit-target { pointer-events: none; }
 .assembly-drop-line { position: absolute; left: 0; right: 0; height: 3px; margin-top: -1.5px; z-index: 5;
   background: var(--drawing-highlight); pointer-events: none; }
 .assembly-drop-line.is-noop { background: #8a979c; }

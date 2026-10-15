@@ -31,9 +31,9 @@
       "sha256": "ee5f63dc1e8eac11b0c01454b186e2e2952abe64d788d3f26b2a37081794ea85"
     },
     "html/features/assemblies/assembly.css": {
-      "bytes": 12025,
+      "bytes": 12196,
       "mime": "text/css; charset=utf-8",
-      "sha256": "74bedb350aa9439c6f169e149aa7753af0554e21f2919cb79b7a76e1f3a2dabb"
+      "sha256": "9b5717cd43df3e0a53e7446c93153befbbb98b717e6f5423fa793a31b8e22a69"
     },
     "html/features/assemblies/canvas.js": {
       "bytes": 8977,
@@ -66,9 +66,9 @@
       "sha256": "41cf389b7db968076a84100cf8bb2480834a48c413d447805c640d99f4e668ed"
     },
     "html/features/assemblies/layer_drag.js": {
-      "bytes": 7297,
+      "bytes": 7434,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "f943be570da28b596a8ee2b90e978476a72863b16685655c1912b13a9fae28e0"
+      "sha256": "244065b21334be05f501d37bb94ebd5c3690e18458fd1223946afe598a66889e"
     },
     "html/features/assemblies/layer_tools.js": {
       "bytes": 3496,

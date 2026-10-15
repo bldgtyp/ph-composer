@@ -59,6 +59,8 @@ PhComposerUI.define("features/assemblies/layer_drag", ["workspace"], function (u
   LayerDrag.prototype.press = function (event, context) {
     var owner = this.owner;
     if (event.button !== 0) return;
+    // Focus stays where it was: a thickness field losing it would apply its draft before the refusal below.
+    event.preventDefault();
     this.end();
     if (owner.dragging) { owner.notice("Finish dragging the Material first."); return; }
     if (!owner.allowed()) return;
