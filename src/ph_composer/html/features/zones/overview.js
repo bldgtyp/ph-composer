@@ -1,8 +1,8 @@
 /* The Zones screen: one table of Zones read through views (context/EXTENSIBILITY.md, "Zone views"). Zones are
  * rows; a Zone's own fields are columns on its row, and the active view supplies the rows beneath each Zone
  * and the columns that describe them. Views register with the kit's `table_views` under this screen's host
- * id; this file names none of them. Faces (faces_view.js) is one, registered as any other. A row of view
- * tabs above the heading switches between them, shown while more than one is listed.
+ * id; this file names none of them. Faces is one, registered as any other. A row of view tabs above the
+ * heading switches between them, shown while more than one is listed.
  *
  * Colour by, sort and value filters live in the column headers, the shared view controls above the table
  * hold the text filter, the count and Table options, and a view may float a selection bar over the bottom of
@@ -446,24 +446,31 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
 
   /* ---------------------------------------------------------------- gestures */
 
-  /* A press in the panel outside a Locate control clears the shown view's Locate outline. */
+  /* A Locate outline outlasts a view switch, so its clear reaches whichever view drew it; each answers
+     whether it cleared anything. */
+  function clearLocates(state) {
+    return Object.keys(state.slots).filter(function (id) {
+      return call(state.slots[id], "clearLocate", [], false);
+    }).length > 0;
+  }
+
+  /* A press in the panel outside a Locate control clears Locate's outline. */
   document.addEventListener("pointerdown", function (event) {
-    var own = screen && active(screen);
-    if (!own) return;
+    if (!screen) return;
     for (var node = event.target; node; node = node.parentNode) {
       if (node.getAttribute && node.getAttribute("data-row-action") === "locate") return;
     }
-    call(own, "clearLocate");
+    clearLocates(screen);
   }, true);
 
   /* Escape unwinds one layer on this screen: an open bubble or menu takes its own first (it marks the event
-     handled), then the shown view's. */
+     handled), then the shown view's, then an outline another view's Locate left. */
   document.addEventListener("keydown", function (event) {
     var own = screen && active(screen);
     if (event.key !== "Escape" || event.defaultPrevented || !own || !panel.state ||
         panel.state.ui.activeTab !== "overview") return;
     if (Array.from(document.querySelectorAll("dialog")).some(function (dialog) { return dialog.open; })) return;
-    if (call(own, "escape", [], false)) event.preventDefault();
+    if (call(own, "escape", [], false) || clearLocates(screen)) event.preventDefault();
   });
 
   /* Make Zone independent names the occurrence it acts on and what it costs before it writes. Either

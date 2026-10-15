@@ -178,10 +178,32 @@ test("each view keeps its own column filters and sort; the Zone filters stay acr
   click(tab(p, "Areas"));
   assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "1 Zone",
     "a Face filter is the Faces view's and leaves with it");
+  var text = byLabel(p, "Filter Zones");
+  text.value = "Zone"; text.listeners.input({});
   click(tab(p, "Faces"));
   assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "1 Zone · 1 filter",
     "and comes back with it");
+  assert.strictEqual(byLabel(p, "Filter Zones").value, "Zone", "the text filter is the host's and stays");
   assert.deepStrictEqual(rowKinds(p), ["Zone", "Unclassified", "Face"]);
+});
+
+test("the checked set and Locate's outline outlast a switch; Escape in the other view clears it", function () {
+  var p = page(), state = snapshot();
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  click(byLabel(p, "Check Wall 1"));
+  click(p.section().querySelectorAll("[data-row-action='locate']")[1]);
+  var locate = p.sent.filter(function (message) { return message.payload.name === "ph_composer.zones.faces.locate"; });
+  assert.strictEqual(locate.length, 1);
+  p.panel.receive({ type: "view.result", payload: { request_id: locate[0].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { found: 1, missing: 0 } } } });
+  click(tab(p, "Areas"));
+  function names() { return p.sent.map(function (message) { return message.payload.name || message.type; }); }
+  assert.strictEqual(names().indexOf("ph_composer.zones.faces.clear_locate"), -1, "a switch leaves the outline");
+  var escape = dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+  assert.strictEqual(escape.defaultPrevented, true);
+  assert.strictEqual(names()[names().length - 1], "ph_composer.zones.faces.clear_locate");
+  click(tab(p, "Faces"));
+  assert.ok(byLabel(p, "Uncheck Wall 1").checked, "Faces' checked set came back with it");
 });
 
 test("leaving Faces stops its paint tool", function () {
@@ -219,4 +241,13 @@ test("a view registered under a host that never declares itself is reported at r
   modules.table_views.register("example.missing", { id: "example.missing.view", label: "Orphan" });
   modules.panel.ready();
   assert.deepStrictEqual(errors, ["table views with no host: example.missing.view (host example.missing)"]);
+});
+
+test("the host names no view and no feature beyond Zones", function () {
+  var host = fs.readFileSync(path.join(root, "src/ph_composer/html/features/zones/overview.js"), "utf8");
+  ["faces_view", "ph_composer.zones.faces", "classify", "spaces", "example."].forEach(function (name) {
+    assert.strictEqual(host.indexOf(name), -1, "overview.js names " + name);
+  });
+  var kit = fs.readFileSync(path.join(root, "src/ph_composer/html/table_views.js"), "utf8");
+  assert.strictEqual(/ph_composer\./.test(kit), false, "table_views.js names no feature");
 });

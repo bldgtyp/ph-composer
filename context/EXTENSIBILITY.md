@@ -662,16 +662,16 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
   filters stay. All of it survives a switch away and back.
 - **Switching** is a host action that sends nothing to the Model and never changes the SketchUp
   selection. It is refused while `draftReason` or `leaveReason` answers; otherwise it calls the old
-  view's `leave` (Faces stops its paint tool, clears its Locate outline and hides its bar), restores
+  view's `leave` (Faces stops its paint tool and hides its bar), restores
   the new view's filters and sort, repaints the page header's settings slot from the new view, and
   remembers the choice on this computer (the `table_view` display preference, keyed by host id), as
   the last Colour-by mode is remembered. A view state is never written to the Model, which would
   dirty it and add an Undo entry. A session opens on the remembered view while it is listed, else the
   first.
-- **Gestures.** The host owns the gestures that clear Locate (a pointer press elsewhere, Escape) and
-  routes them to the shown view. Escape unwinds one layer at a time: an open bubble or column menu,
-  then the shown view's `escape` (Faces: the Classify palette, then the checked set, then the Locate
-  outline). A navigation intent names its view (`panel.navigate("overview", { view, check, locate })`)
+- **Gestures.** The host owns the gestures that clear Locate (a pointer press elsewhere, Escape). A
+  Locate outline outlasts a switch, so they reach every view's `clearLocate`. Escape unwinds one layer
+  at a time: an open bubble or column menu, then the shown view's `escape` (Faces: the Classify
+  palette, then the checked set, then its Locate outline), then an outline another view left. A navigation intent names its view (`panel.navigate("overview", { view, check, locate })`)
   and the host switches to it, guards included, before applying `check`.
 - **The view row** is the shared subtabs nav (`subtabs.js`, `aria-label` "Zone views") above the
   "Zones" heading, as Window Types places its row, with one surface per view.

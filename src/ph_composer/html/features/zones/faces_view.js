@@ -525,11 +525,10 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
     return clearLocate(vs);
   }
 
-  /* Leaving this view turns the paint tool off, clears Locate's outline and hides the checked-Face bar; an
-     open Attached zone draft holds the view until it is saved or cancelled. */
+  /* Leaving this view turns the paint tool off and hides the checked-Face bar; the checked set and Locate's
+     outline stay. An open Attached zone draft holds the view until it is saved or cancelled. */
   function leave(vs) {
     classify.stop();
-    clearLocate(vs);
     if (vs.bar) vs.bar.hide();
   }
 
