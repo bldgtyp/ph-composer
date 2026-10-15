@@ -32,6 +32,17 @@ What this feeds P3a-04: a native copy duplicates every Spaces record, so the D3a
 sees a Space added with an id another live Space holds; a cut and paste leaves one occurrence with
 its ids and a new persistent id, as the Zones copy watcher assumes; Make Unique keeps the records.
 
+Reviews: slice A, Codex `gpt-6.1-sol` two passes on #136, 3 P1 and 4 P2, all fixed (orphan-Volume
+Floor Segments in the inventory, locks and shared storage on the stamped container's path,
+floor-area-weighted height, local-origin plan area, a forwarded refusal declared, a container inside
+a container refused, Building-Segment and Model totals). Slice B, two passes on #137, 6 P1 and 3 P2,
+all fixed (incoming-reference checks before every identity removal, including every record a deleted
+Space erases; edge closure of the grouped set; strict resolution of a marked Face and its Volume,
+orphan copies included; writes recheck locks, shared storage and copies at apply; kind-specific
+reference schemas; repeated targets; two test preconditions). Two cycles is the loop's cap, so the
+last fixes were not reviewed a third time. Fixes after the host run change refusals and checks, not
+the behavior the run observed; they are covered offline.
+
 Limits: SketchUp was killed at the end of the run because the second document's save prompt held
 the quit; nothing was saved over a fixture. The panel table was not opened; the Zone Face list was
 read through `ph_composer.zones.faces.list`.

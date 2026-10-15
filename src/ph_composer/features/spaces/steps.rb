@@ -33,9 +33,7 @@ module PhComposer
       end
 
       def apply(model, _slots)
-        entity = Occurrences.entity_at(model, @path)
-        raise CodedError.new("target.not_found", "The occurrence no longer exists. Nothing was written.") unless entity
-
+        entity = writable_entity(model)
         store = STORES.fetch(@kind)
         unless store.read(entity) == @before
           raise CodedError.new("target.changed", "The record changed after it was previewed. Nothing was written.")
@@ -44,6 +42,26 @@ module PhComposer
         @applied = [entity, entity.respond_to?(:name) ? entity.name : nil]
         @after ? store.write(entity, @after) : store.delete(entity)
         entity.name = @name if @name && entity.respond_to?(:name=)
+      end
+
+      # The write contract holds at apply as at planning: a copied identity, shared storage or a lock set
+      # since refuses. A new Floor Segment answers to its Volume.
+      def writable_entity(model)
+        scan = Occurrences.scan(model)
+        if @before
+          key = Resolve::TARGETS.fetch(@kind).first
+          return Resolve.occurrence(scan, { key => @before.fetch("id"), "entity_path" => @path },
+                                    :mutable => true).entity
+        end
+
+        volumes = scan.volumes + scan.orphan_volumes
+        volume = volumes.find { |candidate| candidate.path == @path[0...-1] }
+        entity = Occurrences.entity_at(model, @path)
+        raise CodedError.new("target.not_found",
+                             "The Face no longer exists. Nothing was written.") unless volume && entity
+
+        Resolve.writable!(volume, volumes, "Volume")
+        entity
       end
 
       def restore(_model)

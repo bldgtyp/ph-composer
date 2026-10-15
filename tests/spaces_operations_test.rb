@@ -297,6 +297,72 @@ class SpacesOperationsTest < PhComposerTestCase
     assert_equal %w[refused target.ambiguous], result.values_at("status", "code")
   end
 
+  def test_deleting_a_space_checks_every_record_it_erases
+    zone_with_outlines
+    create([@living])
+    create([@bath])
+    first, second = spaces
+    first_group, second_group = @zone_group.entities.to_a.select { |entity|
+      PhComposer::Spaces::SPACE_STORE.read(entity)
+    }
+    misplaced = floor_face(150, rectangle(0, 9, 1, 1), segment_record("M"))
+    first_group.entities << misplaced
+    stored = PhComposer::Spaces::SPACE_STORE.read(second_group)
+    envelope = { "schema_version" => 1, "payload" => { "segment" => "fsg_MMMMMMMMMMMM" },
+                 "export_relevance" => "local_only",
+                 "references" => [{ "path" => "$.segment", "target_kind" => PhComposer::Spaces::FLOOR_SEGMENT_KIND,
+                                    "cardinality" => "one" }] }
+    PhComposer::Spaces::SPACE_STORE.write(second_group, stored.merge("extension_data" => { "other.tool" => envelope }))
+    result = invoke("ph_composer.spaces.delete", "space" => first.fetch("reference"))
+    assert_equal %w[refused reference.in_use], result.values_at("status", "code")
+    assert_equal [first.fetch("id"), second.fetch("id")], spaces.map { |row| row["id"] }
+  end
+
+  def test_a_write_rechecks_the_lock_when_it_applies
+    zone_with_outlines
+    create([@living])
+    row = spaces.first
+    space_group = @zone_group.entities.to_a.find { |entity| PhComposer::Spaces::SPACE_STORE.read(entity) }
+    step = PhComposer::Spaces::RecordStep.new(:kind => PhComposer::Spaces::SPACE_KIND,
+                                              :path => row.dig("reference", "entity_path"),
+                                              :before => PhComposer::Spaces::SPACE_STORE.read(space_group),
+                                              :after => PhComposer::Spaces::SPACE_STORE.read(space_group)
+                                                                                       .merge("name" => "Late"))
+    space_group.locked = true
+    error = assert_raises(PhComposer::CodedError) { step.apply(@model, {}) }
+    assert_equal "target.locked", error.code
+    assert_equal "", PhComposer::Spaces::SPACE_STORE.read(space_group)["name"]
+  end
+
+  def test_marking_refuses_when_an_orphan_volume_copies_the_volume_id
+    zone_with_outlines
+    create([@living])
+    volume = spaces.first.dig("volumes", 0)
+    copy = volume_group(160, PhComposer::Spaces::VOLUME_STORE.read(@zone_group.entities.to_a.find do |entity|
+      PhComposer::Spaces::SPACE_STORE.read(entity)
+    end.entities.to_a.first), [])
+    @model.entities << copy
+    result = invoke("ph_composer.spaces.floors.mark", "faces" => [volume.dig("reference", "entity_path") + [101]],
+                                                      "weighting_factor" => 0.5)
+    assert_equal %w[refused target.ambiguous], result.values_at("status", "code")
+  end
+
+  def test_repeated_floor_targets_count_once
+    zone_with_outlines
+    create([@living])
+    volume_group = @zone_group.entities.to_a.find { |entity| PhComposer::Spaces::SPACE_STORE.read(entity) }
+                              .entities.to_a.first
+    volume_group.entities << floor_face(170, rectangle(0, 4, 1, 1))
+    path = spaces.first.dig("volumes", 0, "reference", "entity_path") + [170]
+    marked = invoke("ph_composer.spaces.floors.mark", "faces" => [path, path], "weighting_factor" => 1.0)
+    assert_equal "completed", marked["status"], marked.inspect
+    segment = spaces.first.dig("volumes", 0, "floor_segments").find { |row|
+      row.dig("reference", "entity_path") == path
+    }
+    unmarked = invoke("ph_composer.spaces.floors.unmark", "floor_segments" => [segment.fetch("reference")] * 2)
+    assert_equal "completed", unmarked["status"], unmarked.inspect
+  end
+
   def test_a_kind_specific_param_refuses_another_kinds_reference
     zone_with_outlines
     create([@living])

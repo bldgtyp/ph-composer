@@ -112,11 +112,9 @@ module PhComposer
       end
 
       def delete(request, proposal, space:)
-        occurrence = Resolve.occurrence(Occurrences.scan(request.model), space, :mutable => true)
-        removed = [[SPACE_KIND, occurrence]] + occurrence.volumes.flat_map do |volume|
-          [[VOLUME_KIND, volume]] + volume.segments.map { |segment| [FLOOR_SEGMENT_KIND, segment] }
-        end
-        check_removals!(request, proposal, removed)
+        scan = Occurrences.scan(request.model)
+        occurrence = Resolve.occurrence(scan, space, :mutable => true)
+        check_removals!(request, proposal, inside(scan, occurrence.path))
         proposal.add_step(DeleteSpaceStep.new(:path => occurrence.path, :before => occurrence.record),
                           :scopes => [Operations::EntityScope.new(occurrence.path[0...-1])])
         { "space_id" => occurrence.record.fetch("id") }
@@ -127,14 +125,14 @@ module PhComposer
       def mark_floors(request, proposal, faces:, weighting_factor:)
         scan = Occurrences.scan(request.model)
         allocate = Records::Identity.allocator(request, request.params)
-        ids = faces.map do |path|
-          path = Resolve.integer_path(path)
+        volumes = scan.volumes + scan.orphan_volumes
+        ids = faces.map { |path| Resolve.integer_path(path) }.uniq.map do |path|
           volume = scan.volumes.find { |candidate| candidate.path == path[0...-1] }
           unless volume
             raise CodedError.new("target.wrong_hierarchy", "Mark floor takes Faces directly inside a Volume.")
           end
 
-          Resolve.writable!(volume, scan.volumes, "Volume")
+          Resolve.writable!(volume, volumes, "Volume")
           face = Occurrences.entity_at(request.model, path)
           raise CodedError.new("target.wrong_kind",
                                "Only Faces become Floor Segments.") unless face.is_a?(Sketchup::Face)
@@ -156,12 +154,20 @@ module PhComposer
       # The Floor Segment records go; the Faces stay.
       def unmark_floors(request, proposal, floor_segments:)
         scan = Occurrences.scan(request.model)
-        occurrences = floor_segments.map { |reference| Resolve.occurrence(scan, reference, :mutable => true) }
+        occurrences = floor_segments.uniq.map { |reference| Resolve.occurrence(scan, reference, :mutable => true) }
         check_removals!(request, proposal, occurrences.map { |occurrence| [FLOOR_SEGMENT_KIND, occurrence] })
         occurrences.each do |occurrence|
           record_step(proposal, FLOOR_SEGMENT_KIND, occurrence.path, occurrence.record, nil)
         end
         { "floor_segment_ids" => occurrences.map { |occurrence| occurrence.record.fetch("id") } }
+      end
+
+      # Every Spaces record at or below `path`, whatever the hierarchy holds it as: what erasing it removes.
+      def inside(scan, path)
+        Resolve::TARGETS.flat_map do |kind, (_key, _label, list)|
+          list.call(scan).select { |occurrence| occurrence.path[0, path.length] == path }
+              .map { |occurrence| [kind, occurrence] }
+        end
       end
 
       # Refuses `reference.in_use` when any record, a readable unavailable extension's included, would
