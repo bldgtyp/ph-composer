@@ -1,20 +1,24 @@
-/* The Zones screen: one table spanning the pane, with no inspector. Zones are rows; a Zone's own fields are
- * columns on its row, and the Faces view (faces_view.js) supplies the rows beneath each Zone and the columns
- * that describe them. Colour by, sort and value filters live in the column headers, the shared view controls
- * above the table hold the text filter, the count and Table options, and a selection bar floats over the
- * bottom of the table while Faces are checked.
+/* The Zones screen: one table of Zones read through views (context/EXTENSIBILITY.md, "Zone views"). Zones are
+ * rows; a Zone's own fields are columns on its row, and the active view supplies the rows beneath each Zone
+ * and the columns that describe them. Views register with the kit's `table_views` under this screen's host
+ * id; this file names none of them. Faces (faces_view.js) is one, registered as any other. A row of view
+ * tabs above the heading switches between them, shown while more than one is listed.
  *
- * The table is the shared record table; this file holds the Zone rows, the Name column, the Zone's own cells,
- * the filter, the expansion and the one call that paints the table, and asks the view for everything else
- * through the hooks the view module returns. The view reaches this screen's state only through `host`.
+ * Colour by, sort and value filters live in the column headers, the shared view controls above the table
+ * hold the text filter, the count and Table options, and a view may float a selection bar over the bottom of
+ * the table. The table is the shared record table; this file holds the Zone rows, the Name column, the
+ * Zone's own cells, the filter, the expansion and the one call that paints the table, and asks the active
+ * view for everything else through its hooks. Every hook receives the view's own state first; the view
+ * reaches this screen's state only through the `host` handle it was created with.
  */
 PhComposerUI.define("features/zones/overview", ["panel", "workspace", "request", "snapshot", "units",
-  "unit_preferences", "table", "view_controls", "column_menu", "sections/colour_by", "fields",
-  "features/zones/zone_cells", "features/zones/classify", "features/zones/zone_options",
-  "features/zones/option_dialog", "features/zones/faces_view"],
+  "unit_preferences", "table", "view_controls", "column_menu", "sections/colour_by", "fields", "subtabs",
+  "table_views", "features/zones/zone_cells", "features/zones/zone_options", "features/zones/option_dialog"],
 function (panel, ui, requests, snapshot, units, preferences, tables, viewControls, columnMenus, colourBy, fields,
-          ZoneCells, classify, zoneOptions, OptionDialog, view) {
+          Subtabs, tableViews, ZoneCells, zoneOptions, OptionDialog) {
   "use strict";
+  var HOST = "ph_composer.zones";
+  var registry = tableViews.host(HOST);
   var AREA = fields.AREA_M2;
   var ORDER_FIELDS = [["name", "Name"], ["area_m2", "Area"]];
   // What the Zones read says is wrong with a Zone occurrence, in the words the user needs. Both the
@@ -32,11 +36,28 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       tooltip: "This Zone sits inside another Zone. A Zone is one Room, so a Zone within a Zone " +
         "cannot be exported as it stands." }
   };
+  // The Zone's own columns and the Colour-by mode each shows; a view lists in `zoneFields` which of the
+  // in-place cells it shows beside its own columns, all three when it says nothing.
+  var ZONE_FIELDS = ["building_segment", "level", "ground_depth_mm"];
+  var ZONE_COLOUR_BY = { name: { mode: "ph_composer.zones.by_zone" },
+    building_segment: { mode: "ph_composer.zones.by_building_segment" },
+    level: { mode: "ph_composer.zones.by_level" } };
+  var ZONE_SORTED = ["name", "building_segment", "level", "ground_depth_mm"];
+  var ZONE_FILTERED = { building_segment: true, level: true };
+  var ZONE_WIDTHS = { name: 142, building_segment: 136, level: 84, ground_depth_mm: 128 };
+  // Listed while no view is: the Zone rows alone, with nothing beneath them.
+  var NO_VIEW = { id: "", label: "Zones" };
 
   var screen = null;
   var ZONE_DRAFT = "Finish or cancel the Zone edit first.";
   var HELP = "Select Faces in SketchUp, or check their rows, to edit them together in the bar under the table. " +
     "A column's palette icon colours the Model by that column; its menu sorts and filters.";
+
+  /* One view's hook, called with its own state first; `fallback` when the view does not supply it. */
+  function call(slot, name, args, fallback) {
+    var hook = slot.view[name];
+    return hook ? hook.apply(slot.view, [slot.vs].concat(args || [])) : fallback;
+  }
 
   /* This screen's own state, rebuilt whenever the panel shows a different Model. */
   function forSession(session, send) {
@@ -44,17 +65,16 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (screen) { screen.disposed = screen.host.disposed = true; screen.edits.reset(); screen.look.reset(); }
     if (screen && screen.optionDialog) screen.optionDialog.dispose();
     if (screen && screen.zoneCells) screen.zoneCells.dispose();
-    if (screen && screen.view) view.dispose(screen.view);
+    if (screen) Object.keys(screen.slots).forEach(function (id) { call(screen.slots[id], "dispose"); });
     if (screen && screen.independenceDialog) {
       screen.independenceDialog.closeModal();
       var stale = screen.independenceDialog;
       if (stale.parentNode) stale.parentNode.removeChild(stale);
     }
-    screen = { session: session, expanded: Object.create(null),
-      columnWidths: {}, menus: Object.create(null), toggles: Object.create(null), hiddenColumns: {},
+    screen = { session: session, expanded: Object.create(null), slots: Object.create(null), viewId: null,
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
-    // What the view may reach of this screen; `render` keeps its snapshot fields current.
+    // What a view may reach of this screen; `render` keeps its snapshot fields current.
     screen.host = { session: session, send: send, edits: screen.edits, look: screen.look, disposed: false,
       gated: Object.create(null), draftReason: function () { return draftReason(screen); }, refuse: refuse };
     screen.zoneCells = new ZoneCells(session, send, refuse, function (field) { screen.optionDialog.open(field); },
@@ -64,8 +84,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         reconcileOptionFilters(screen, collection, result);
       });
     screen.options = tableOptions(screen);
-    screen.help = ui.helpButton("Zones / Faces", HELP);
-    screen.view = view.create(screen.host);
+    screen.help = ui.helpButton("Zones", HELP);
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone, type or boundary", fields: ORDER_FIELDS, initialOrder: "name",
       columnSort: true,
@@ -75,13 +94,31 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     return screen;
   }
 
+  /* One view's place on this screen for one Model: its state, its surface and table mount, and the column
+     widths, hidden columns, menus, filters and sort it keeps while another view is shown. */
+  function slot(state, view) {
+    var id = view.id, existing = state.slots[id];
+    if (existing) return existing;
+    var surface = ui.element("div", "phc-zone-view"), mount = ui.element("div", "phc-table-mount");
+    surface.appendChild(mount);
+    var made = state.slots[id] = { view: view, vs: view.create ? view.create(state.host) : {}, surface: surface,
+      mount: mount, columnWidths: {}, hiddenColumns: {}, menus: Object.create(null), toggles: Object.create(null),
+      filters: Object.create(null), sort: null };
+    return made;
+  }
+
+  function active(state) {
+    return state.slots[state.viewId];
+  }
+
   /* Work in hand that a filter, a tab change or another assignment must not hide or race. */
   function draftReason(state, skipCells) {
     if (state && state.optionDialog && state.optionDialog.active()) return "Finish the managed options draft first.";
     if (!skipCells && state && state.zoneCells && state.zoneCells.active()) {
       return ZONE_DRAFT;
     }
-    return state && state.view ? view.draftReason(state.view) : null;
+    var current = state && active(state);
+    return current ? call(current, "draftReason", [], null) : null;
   }
 
   /* A refusal because a Zone edit is held offers to cancel it from the notice, so the way out is in view. */
@@ -91,7 +128,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       run: function () { cells.cancelAll(); panel.repaint(); } } : null);
   }
 
-  /* Held category filters follow explicit merge/removal results; rename keeps the same ID. */
+  /* Held category filters follow explicit merge/removal results; rename keeps the same ID. They are Zone
+     filters, which stay in the controls whichever view is shown. */
   function reconcileOptionFilters(state, collection, result) {
     var replacements = result.replacement_ids || {};
     if (state.optionDialog.adopting) {
@@ -113,13 +151,97 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     return columnFilters ? text + " · " + columnFilters + (columnFilters === 1 ? " filter" : " filters") : text;
   }
 
-  /* What each column's menu offers. A Zone field orders the Zones and the view's fields order the rows
-     beneath each Zone; the Zone fields with a value filter are listed here, the view's with the view. */
-  var SORTED = ["name", "building_segment", "level", "ground_depth_mm"].concat(view.sorted);
-  var ZONE_FILTERED = { building_segment: true, level: true };
+  /* ---------------------------------------------------------------- switching views */
 
-  function filtered(field) {
-    return Boolean(ZONE_FILTERED[field] || view.filteredFields[field]);
+  /* The views listed for this snapshot and the one shown: the session's choice while it is listed, else the
+     one this computer last showed, else the first. The view row is rebuilt when the listed views change. */
+  function settle(state, root, snapshotState) {
+    var listed = registry.views(snapshotState);
+    if (!listed.length) listed = [NO_VIEW];
+    var ids = listed.map(function (view) { return view.id; });
+    if (ids.indexOf(state.viewId) < 0) {
+      var remembered = preferences.tableView(HOST);
+      state.viewId = ids.indexOf(remembered) >= 0 ? remembered : ids[0];
+      // A view first shown, or shown again after it was not listed, has no filters of its own held over.
+      restore(state, slot(state, listed[ids.indexOf(state.viewId)]));
+    }
+    var surfaces = root.querySelector(".phc-zone-views"), owned = listed.map(function (view) {
+      return slot(state, view).surface;
+    });
+    // Another Model's surfaces leave with it; this one's are placed in listing order.
+    Array.from(surfaces.children).forEach(function (node) {
+      if (owned.indexOf(node) < 0) surfaces.removeChild(node);
+    });
+    owned.forEach(function (surface) { if (surface.parentNode !== surfaces) surfaces.appendChild(surface); });
+    var signature = ids.join("\n");
+    if (state.tabsSignature !== signature) {
+      state.tabsSignature = signature;
+      if (state.tabs) state.tabs.disposed = true;
+      state.tabs = new Subtabs({ label: "Zone views", state: state, stateKey: "viewId",
+        tabs: listed.map(function (view) {
+          return { id: view.id, label: view.label, surface: slot(state, view).surface };
+        }),
+        guard: function () { return draftReason(state) || call(active(state), "leaveReason", [], null); },
+        refused: function (reason) { refuse(reason); },
+        changed: function (id) { switched(state, id); } });
+      root.querySelector(".phc-view-tabs").replaceChildren(state.tabs.root);
+    }
+    root.querySelector(".phc-view-tabs").hidden = listed.length < 2;
+    return active(state);
+  }
+
+  /* The Subtabs control has already moved `viewId`; the view switched from leaves, the controls take the new
+     view's own filters and sort, the page header's settings slot repaints from it, and this computer
+     remembers the choice. Nothing is sent to the Model and the SketchUp selection is untouched. */
+  function switched(state, id) {
+    var previous = Object.keys(state.slots).filter(function (key) {
+      return key !== id && state.slots[key].shown;
+    })[0];
+    if (previous) {
+      var old = state.slots[previous];
+      call(old, "leave");
+      stash(state, old);
+    }
+    restore(state, state.slots[id]);
+    if (id) panel.setPreference("table_view", id, { scope: HOST });
+    panel.repaint();
+  }
+
+  /* A view's column filters and sort leave the shared controls with it; the Zone filters stay. */
+  function stash(state, own) {
+    var filters = state.controls.columnFilters, fieldsOwned = own.view.filteredFields || {};
+    own.filters = Object.create(null);
+    Object.keys(filters).forEach(function (field) {
+      if (fieldsOwned[field]) { own.filters[field] = filters[field]; delete filters[field]; }
+    });
+    own.sort = state.controls.columnSort;
+    own.shown = false;
+  }
+
+  function restore(state, own) {
+    Object.keys(state.slots).forEach(function (id) { state.slots[id].shown = state.slots[id] === own; });
+    Object.keys(own.filters).forEach(function (field) { state.controls.columnFilters[field] = own.filters[field]; });
+    state.controls.columnSort = own.sort || { field: "name", direction: "asc" };
+  }
+
+  /* ---------------------------------------------------------------- columns, filters and sort */
+
+  function zoneFields(own) {
+    return own.view.zoneFields || ZONE_FIELDS;
+  }
+
+  function viewField(own, field) {
+    return call(own, "columns", [units.profile(AREA, preferences.current())], []).some(function (column) {
+      return column[0] === field;
+    });
+  }
+
+  function filtered(own, field) {
+    return Boolean(ZONE_FILTERED[field] || (own.view.filteredFields || {})[field]);
+  }
+
+  function colourBindings(own) {
+    return Object.assign({}, ZONE_COLOUR_BY, own.view.colourBy || {});
   }
 
   /* A Zone record keeps its stored values in `values`. */
@@ -129,8 +251,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   }
 
   /* A value's words in a filter. */
-  function filterLabel(state, field, value) {
-    if (view.filteredFields[field]) return view.filterLabel(state.view, field, value);
+  function filterLabel(state, own, field, value) {
+    if ((own.view.filteredFields || {})[field]) return call(own, "filterLabel", [field, value], value);
     if (field === "building_segment" || field === "level") {
       var choice = zoneOptions.find(zoneOptions.read(state.snapshot), field, value);
       if (choice) return choice.values.name;
@@ -141,13 +263,14 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     return value || "Not set";
   }
 
-  function columnMenu(state, field, label) {
-    var menu = state.menus[field];
+  function columnMenu(state, own, field, label) {
+    var menu = own.menus[field];
     if (!menu) {
-      menu = state.menus[field] = new columnMenus.ColumnMenu({ label: label,
-        valueAction: function (entry) { return classify.paint(field, entry.value, entry.label); },
+      var ownColumn = viewField(own, field);
+      menu = own.menus[field] = new columnMenus.ColumnMenu({ label: label,
+        valueAction: function (entry) { return ownColumn ? call(own, "menuValueAction", [field, entry], null) : null; },
         extra: function (root, anchor, close, reopen) {
-          classify.extra(field, root, anchor, close, reopen);
+          if (ownColumn) call(own, "menuExtra", [field, root, anchor, close, reopen]);
           if (field === "building_segment" || field === "level") {
             var manage = ui.button("Manage " + zoneOptions.title(field) + "…", function () {
               close(); anchor.focus(); state.optionDialog.open(field);
@@ -157,7 +280,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         },
         sort: { current: function () { return state.controls.columnDirection(field); },
           choose: function (direction) { state.controls.sortBy(field, direction); } },
-        filter: filtered(field) ? { values: function () { return filterValues(state, field); },
+        filter: filtered(own, field) ? { values: function () { return filterValues(state, own, field); },
           shown: function () { return state.controls.columnFilter(field); },
           set: function (values) { return state.controls.filterColumn(field, values); } } : null });
     }
@@ -169,9 +292,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
 
   /* Present values plus every declared choice, in reading order, with the blank last. A view's field lists
      its own. */
-  function filterValues(state, field) {
+  function filterValues(state, own, field) {
     var seen = Object.create(null), values = [];
-    if (view.filteredFields[field]) values = view.filterValues(state.view, field);
+    if ((own.view.filteredFields || {})[field]) values = call(own, "filterValues", [field], []);
     else {
       (state.zoneRecords || []).forEach(function (record) {
         var value = filterValue(record, field);
@@ -181,42 +304,38 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         if (!seen[choice.id]) { seen[choice.id] = true; values.push(choice.id); }
       });
     }
-    return values.map(function (value) { return { value: value, label: filterLabel(state, field, value),
-      colour: filterColour(state, field, value) }; })
+    return values.map(function (value) { return { value: value, label: filterLabel(state, own, field, value),
+      colour: filterColour(state, own, field, value) }; })
       .sort(function (a, b) { return Number(!a.value) - Number(!b.value) || ui.compareText(a.label, b.label); });
   }
 
-  function filterColour(state, field, value) {
+  function filterColour(state, own, field, value) {
     var choice = zoneOptions.find(zoneOptions.read(state.snapshot), field, value);
     if (choice && /^#[0-9a-f]{6}$/i.test(choice.values.colour)) {
       return [1, 3, 5].map(function (start) { return parseInt(choice.values.colour.slice(start, start + 2), 16); });
     }
-    return colourBy.colour(state.snapshot, COLOUR_BY[field], value);
+    return colourBy.colour(state.snapshot, colourBindings(own)[field], value);
   }
 
-  /* The Colour-by mode each column shows the values of: the Zone columns' own, then the view's. */
-  var COLOUR_BY = Object.assign({ name: { mode: "ph_composer.zones.by_zone" },
-    building_segment: { mode: "ph_composer.zones.by_building_segment" }, level: { mode: "ph_composer.zones.by_level" }
-  }, view.colourBy);
-
-  function headerActions(state, field, label) {
-    var actions = [];
-    if (COLOUR_BY[field] && !state.hiddenColumns[field]) {
-      var toggle = state.toggles[field] || (state.toggles[field] = new colourBy.HeaderToggle(COLOUR_BY[field]));
+  function headerActions(state, own, field, label) {
+    var actions = [], binding = colourBindings(own)[field];
+    if (binding && !own.hiddenColumns[field]) {
+      var toggle = own.toggles[field] || (own.toggles[field] = new colourBy.HeaderToggle(binding));
       if (toggle.paint(state.snapshot)) actions.push({ node: toggle.node, persistent: toggle.pressed });
     }
-    var paint = classify.header(field, label);
+    var paint = viewField(own, field) ? call(own, "headerAction", [field, label], null) : null;
     if (paint) actions.push(paint);
-    if (SORTED.indexOf(field) < 0) return actions;
-    var menu = columnMenu(state, field, label);
+    if (ZONE_SORTED.concat(own.view.sorted || []).indexOf(field) < 0) return actions;
+    var menu = columnMenu(state, own, field, label);
     return actions.concat([{ node: menu.root, persistent: menu.filtered() }]);
   }
 
   /* A mode a visible column offers; every other registered mode is offered in Table options. */
-  function boundToColumn(state, mode) {
-    return Object.keys(COLOUR_BY).some(function (field) {
-      var binding = COLOUR_BY[field];
-      return !state.hiddenColumns[field] && (binding.mode ? binding.mode === mode.name : binding.group === mode.group);
+  function boundToColumn(own, mode) {
+    var bindings = colourBindings(own);
+    return Object.keys(bindings).some(function (field) {
+      var binding = bindings[field];
+      return !own.hiddenColumns[field] && (binding.mode ? binding.mode === mode.name : binding.group === mode.group);
     });
   }
 
@@ -229,13 +348,15 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       item.setAttribute("aria-pressed", String(pressed));
     }
     function fill() {
-      var legend = snapshot.value(panel.state, "ph_composer.colour_by.legend") || { mode: null };
+      var own = active(state), legend = snapshot.value(panel.state, "ph_composer.colour_by.legend") || { mode: null };
       menu.content.replaceChildren();
-      toggle("Ground depth column", !state.hiddenColumns.ground_depth_mm, function () {
-        state.hiddenColumns.ground_depth_mm = !state.hiddenColumns.ground_depth_mm;
-        panel.repaint();
-      });
-      colourBy.modes(panel.state).filter(function (mode) { return !boundToColumn(state, mode); })
+      if (zoneFields(own).indexOf("ground_depth_mm") >= 0) {
+        toggle("Ground depth column", !own.hiddenColumns.ground_depth_mm, function () {
+          own.hiddenColumns.ground_depth_mm = !own.hiddenColumns.ground_depth_mm;
+          panel.repaint();
+        });
+      }
+      colourBy.modes(panel.state).filter(function (mode) { return !boundToColumn(own, mode); })
         .forEach(function (mode) {
           var on = legend.mode === mode.name;
           toggle("Colour by " + mode.label, on, function () { colourBy.activate(panel.state, on ? null : mode.name); });
@@ -246,7 +367,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   }
 
   /* Collapse all and Expand all act on the tree, because this screen groups by the tree rather than
-     by a field: a Zone is the group its Faces sit in. */
+     by a field: a Zone is the group its rows sit in. */
   function expansion(state) {
     return {
       collapseAll: function () { state.zoneKeys.forEach(function (key) { state.expanded[key] = false; }); },
@@ -260,25 +381,28 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     return Object.prototype.hasOwnProperty.call(state.expanded, key) ? state.expanded[key] : true;
   }
 
-  function columns(profile) {
-    var depth = units.profile(ZoneCells.GROUND_DEPTH, preferences.current());
-    return [["actions", "Actions"], ["hierarchy", "Hierarchy"], ["name", "Name"]].concat(ZoneCells.columns(depth),
-      view.columns(profile));
+  function columns(own, profile) {
+    var depth = units.profile(ZoneCells.GROUND_DEPTH, preferences.current()), shown = zoneFields(own);
+    return [["actions", "Actions"], ["hierarchy", "Hierarchy"], ["name", "Name"]].concat(
+      ZoneCells.columns(depth).filter(function (column) { return shown.indexOf(column[0]) >= 0; }),
+      call(own, "columns", [profile], []));
   }
+
+  /* ---------------------------------------------------------------- rows */
 
   /* One row per Zone occurrence from the Zones read, each followed by the rows the view puts beneath it.
      A Zone row is keyed by the path that names one Zone occurrence, not by the Zone's record id: a copied Zone
      Group shares its original's dictionary until the copy is repaired, so two occurrences can carry one id,
      and the Zones read reports both and says so in `state`. Keying on the id would put the copy's rows under
      the original's and drop one Zone off the screen entirely. */
-  function project(zones, state) {
+  function project(zones, own) {
     var rows = [];
     zones.forEach(function (zone) {
-      var key = JSON.stringify(["Zone", zone.reference.zone_path]);
-      var row = { key: key, parent: null, tier: "Zone", depth: 0,
-        record: view.zoneRecord(state.view, { id: key, name: zone.values.name, zone: zone, state: zone.state }) };
+      var key = JSON.stringify(["Zone", zone.reference.zone_path]), record = { id: key, name: zone.values.name,
+        zone: zone, state: zone.state };
+      var row = { key: key, parent: null, tier: "Zone", depth: 0, record: call(own, "zoneRecord", [record], record) };
       rows.push(row);
-      rows.push.apply(rows, view.children(state.view, row));
+      rows.push.apply(rows, call(own, "children", [row], []));
     });
     return rows;
   }
@@ -287,22 +411,20 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     return JSON.stringify(path || []);
   }
 
-  function value(row, field, profile) {
+  function value(own, row, field, profile) {
     if (field === "name") return row.record.name;
-    if (ZONE_FIELDS[field]) return "";
-    return view.value(row, field, profile);
+    if (ZONE_FIELDS.indexOf(field) >= 0) return "";
+    return call(own, "value", [row, field, profile], "");
   }
-
-  var ZONE_FIELDS = { building_segment: true, level: true, ground_depth_mm: true };
 
   /* What is wrong with the Zone comes before what the view says of it. A Zone that shares its identity with a
      copy is the first thing to say, because every edit made here names one occurrence and nothing else on the
      screen tells the user there are two. */
-  function marker(row) {
+  function marker(own, row) {
     var trouble = ZONE_STATES[row.record.state];
     if (trouble) return { text: trouble.text, icon: trouble.icon, tooltip: (trouble.tooltip + " " +
       independenceHint(row.record.zone && row.record.zone.independence)).trim() };
-    return view.zoneMarker(row);
+    return call(own, "zoneMarker", [row], null);
   }
 
   /* What the user can do about a shared Zone: the row's Make independent action, or what comes first. */
@@ -312,41 +434,46 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   }
 
   /* The view's row actions, with Make independent on a Zone row before the view's own Zone actions. */
-  function actions(state, row) {
-    var items = view.actions(state.view, row);
+  function actions(own, row) {
+    var items = call(own, "actions", [row], []).slice();
     if (row.depth !== 0) return items;
     var independence = row.record.zone.independence;
     if (independence && independence.available) {
       items.push({ id: "independent", icon: "repair", label: "Make " + row.record.name + " independent" });
     }
-    return items.concat(view.zoneActions(row));
+    return items.concat(call(own, "zoneActions", [row], []));
   }
 
-  /* A press in the panel outside a Locate control clears Locate's outline. */
+  /* ---------------------------------------------------------------- gestures */
+
+  /* A press in the panel outside a Locate control clears the shown view's Locate outline. */
   document.addEventListener("pointerdown", function (event) {
-    if (!screen) return;
+    var own = screen && active(screen);
+    if (!own) return;
     for (var node = event.target; node; node = node.parentNode) {
       if (node.getAttribute && node.getAttribute("data-row-action") === "locate") return;
     }
-    view.clearLocate(screen.view);
+    call(own, "clearLocate");
   }, true);
 
   /* Escape unwinds one layer on this screen: an open bubble or menu takes its own first (it marks the event
-     handled), then the view's. */
+     handled), then the shown view's. */
   document.addEventListener("keydown", function (event) {
-    if (event.key !== "Escape" || event.defaultPrevented || !screen || !panel.state ||
+    var own = screen && active(screen);
+    if (event.key !== "Escape" || event.defaultPrevented || !own || !panel.state ||
         panel.state.ui.activeTab !== "overview") return;
     if (Array.from(document.querySelectorAll("dialog")).some(function (dialog) { return dialog.open; })) return;
-    if (view.escape(screen.view)) event.preventDefault();
+    if (call(own, "escape", [], false)) event.preventDefault();
   });
 
   /* Make Zone independent names the occurrence it acts on and what it costs before it writes. Either
      occurrence can be the one that takes the new identity, and both can carry the same name, so the
-     dialog offers Locate and says what the other keeps. */
+     dialog offers the shown view's Locate, when it has one, and says what the other keeps. */
   function confirmIndependent(state, row) {
     var reason = draftReason(state);
     if (reason) return refuse(reason);
-    var zone = row.record.zone, retired = zone.independence.retired_pairs, dialog = state.independenceDialog;
+    var own = active(state), zone = row.record.zone, retired = zone.independence.retired_pairs;
+    var dialog = state.independenceDialog;
     if (!dialog) {
       dialog = state.independenceDialog = ui.formDialog("", function () { dialog.closeModal(); });
       document.body.appendChild(dialog);
@@ -363,26 +490,35 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         state.edits.run("ph_composer.zones.make_independent", { zone_path: zone.reference.zone_path });
         panel.repaint();
       }));
-    footer.insertBefore(ui.button("Locate", function () { view.locate(state.view, row); }), footer.firstChild);
+    if (own.view.locate) {
+      footer.insertBefore(ui.button("Locate", function () { call(own, "locate", [row]); }), footer.firstChild);
+    }
     dialog.replaceChildren(ui.element("h2", "", "Make " + row.record.name + " independent"),
       ui.element("p", "", consequence), footer);
     dialog.openModal();
     cancel.focus();
   }
 
+  /* ---------------------------------------------------------------- paint */
+
   /* The page header is built once a session and repainted in place, so a press on any of its controls
      (Classify faces, the gear) keeps its focus through the snapshot that follows.
-     It holds the authoring toolbar and settings gear. Make Zone lives in SketchUp's context menu;
+     It holds the authoring toolbar and the shown view's settings. Make Zone lives in SketchUp's context menu;
      view controls stay in the control row. */
   function header(state, pane) {
-    if (state.header) return state.header;
-    var parts = { toolbar: ui.element("div", "phc-toolbar") };
-    parts.toolbar.setAttribute("role", "toolbar");
-    parts.toolbar.setAttribute("aria-label", "Zone and Face tools");
-    parts.toolbar.appendChild(panel.region(pane, "actions"));
-    parts.page = ui.pageHeader({ title: "Zones", actions: [parts.toolbar, view.settings(state.view)] });
-    state.header = parts;
-    return parts;
+    if (!state.header) {
+      var parts = { toolbar: ui.element("div", "phc-toolbar"), settings: ui.element("div", "phc-view-settings") };
+      parts.toolbar.setAttribute("role", "toolbar");
+      parts.toolbar.setAttribute("aria-label", "Zone and Face tools");
+      parts.toolbar.appendChild(panel.region(pane, "actions"));
+      parts.page = ui.pageHeader({ title: "Zones", actions: [parts.toolbar, parts.settings] });
+      state.header = parts;
+    }
+    var settings = call(active(state), "settings", [], null), holder = state.header.settings;
+    if (holder.children[0] !== (settings || undefined) || holder.children.length > 1) {
+      if (settings) holder.replaceChildren(settings); else holder.replaceChildren();
+    }
+    return state.header;
   }
 
   function render(root, state, send) {
@@ -398,31 +534,36 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     });
     screenState.revision = host.revision = state.revision;
     screenState.optionDialog.consume(state, zoneOptions.read(state));
-    view.consume(screenState.view, state, send);
-    var rows = project(zones.zones, screenState);
+    if (!root.querySelector(".phc-zone-views")) {
+      root.className = "phc-overview";
+      root.replaceChildren(ui.element("div", "phc-view-tabs"), ui.element("div", "phc-heading-mount"),
+        screenState.controls.root, ui.element("div", "phc-zone-views"));
+      screenState.tabsSignature = null;
+    }
+    var own = settle(screenState, root, state);
+    call(own, "consume", [state, send]);
+    var rows = project(zones.zones, own);
     // A row the view adds may open by default. That is decided once, when the row first appears, so it does
     // not snap shut or open under the user as what it holds changes.
     rows.forEach(function (row) {
-      var open = row.depth === 0 ? null : view.initiallyOpen(row);
-      if (open !== null && !Object.prototype.hasOwnProperty.call(screenState.expanded, row.key)) {
-        screenState.expanded[row.key] = open;
+      var initial = row.depth === 0 ? null : call(own, "initiallyOpen", [row], null);
+      if (initial !== null && !Object.prototype.hasOwnProperty.call(screenState.expanded, row.key)) {
+        screenState.expanded[row.key] = initial;
       }
     });
     screenState.edits.consume(state);
     screenState.look.consume(state);
-    // Collapse all and Expand all reach everything that opens: Zones and the view's rows that open by default.
+    // Collapse all and Expand all reach everything that opens: Zones and the view's rows that open by default,
+    // each while it has rows beneath it.
+    var parents = Object.create(null);
+    rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     screenState.zoneKeys = rows.filter(function (row) {
-      return row.depth === 0 || view.initiallyOpen(row) !== null;
+      return parents[row.key] && (row.depth === 0 || call(own, "initiallyOpen", [row], null) !== null);
     }).map(function (row) { return row.key; });
-    if (!root.querySelector(".phc-table-mount")) {
-      root.className = "phc-overview";
-      root.replaceChildren(ui.element("div", "phc-heading-mount"), screenState.controls.root,
-        ui.element("div", "phc-table-mount"));
-    }
     // The pane's tools (whatever sections registered there) end this screen's control row. Found before the
     // row changes hands, so a new session's row inherits them instead of leaving them in the old one.
     var tools = panel.region(root.closest("[data-pane]").getAttribute("data-pane"), "tools");
-    var row = root.children[1];
+    var row = root.children[2];
     if (row !== screenState.controls.root) {
       root.insertBefore(screenState.controls.root, row);
       root.removeChild(row);
@@ -438,17 +579,17 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     // Set before the tree paints, so the selection bar never works from an earlier pass if painting fails.
     screenState.rows = rows;
     screenState.zoneCells.refresh(rows.filter(depth(0)), state);
-    paintTable(root.querySelector(".phc-table-mount"), rows, screenState, profile);
+    paintTable(own, rows, screenState, profile);
   }
 
-  /* The view's selection bar floats over the bottom of the table. */
+  /* The shown view's selection bar floats over the bottom of its table. */
   function renderBar(root, state) {
     var overview = document.querySelector("[data-section='ph_composer.overview']");
-    if (!screen || screen.session !== state.session || !overview) return;
-    var bar = view.selectionBar(screen.view, overview);
     root.hidden = true;
-    var mount = overview.querySelector(".phc-table-mount");
-    if (mount) bar.reserve(mount);
+    var own = screen && screen.session === state.session && active(screen);
+    if (!own || !overview) return;
+    var bar = call(own, "selectionBar", [overview], null);
+    if (bar) bar.reserve(own.mount);
   }
 
   function depth(wanted) {
@@ -459,8 +600,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
      follow it, ordered among themselves by the same field. They project the Zone records, and `rows` tells
      them how a view's row traces back to the Zone that decides whether it shows. Filtering reads the view's
      rows too, so a search for "Ground" keeps the Zone that has a Ground Face. */
-  function paintTable(mount, rows, state, profile) {
-    var zoneRows = rows.filter(depth(0));
+  function paintTable(own, rows, state, profile) {
+    var zoneRows = rows.filter(depth(0)), viewFields = own.view.filteredFields || {};
     var byId = Object.create(null);
     zoneRows.forEach(function (row) { byId[row.record.id] = row; });
     var projection = state.controls.project(zoneRows.map(function (row) { return row.record; }), {
@@ -468,88 +609,89 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       value: function (record, field) {
         if (field === "area_m2") return record.area;
         if (field === "name") return record.name;
-        return view.filteredFields[field] ? null : field === "building_segment" || field === "level" ?
+        return viewFields[field] ? null : field === "building_segment" || field === "level" ?
           zoneOptions.label(zoneOptions.read(state.snapshot), record.zone, field) : record.zone.values[field];
       },
-      search: function (record) { return searchText(record, state); },
+      search: function (record) { return searchText(own, record, state); },
       // A Zone shows while its own values pass the Zone filters and the view's filters pass it too; a view's
       // row shows while the view says it does.
       columnMatch: function (record, filters) {
-        return zoneMatches(record, filters) && view.zoneMatch(record, filters);
+        return zoneMatches(own, record, filters) && call(own, "zoneMatch", [record, filters], true);
       },
-      rowMatch: function (row, filters) { return view.rowMatch(row, filters); },
+      rowMatch: function (row, filters) { return call(own, "rowMatch", [row, filters], true); },
       rows: function () { return rows; }
     });
-    var labels = Object.create(null);
-    columns(profile).forEach(function (column) { labels[column[0]] = column[1]; });
-    var shown = ordered(projection.records, byId, rows, state.controls, state);
+    var labels = Object.create(null), shownColumns = columns(own, profile);
+    shownColumns.forEach(function (column) { labels[column[0]] = column[1]; });
+    var shown = ordered(own, projection.records, byId, rows, state.controls);
     var visible = shown.filter(function (row) { return !projection.hidden(row); });
     var filters = state.controls.columnFilters;
-    var filterFaces = view.filterFaces(visible.filter(depth(0)), filters);
     // Only column Show filters affect the viewport. Text search and collapsed rows remain table navigation.
     var matchingPaths = state.controls.filterCount() ? zoneRows.reduce(function (all, row) {
-      if (!zoneMatches(row.record, filters)) return all;
-      return all.concat(view.viewportPaths(row.record, filters));
+      if (!zoneMatches(own, row.record, filters)) return all;
+      return all.concat(call(own, "viewportPaths", [row.record, filters], [row.record.zone.reference.zone_path]));
     }, []).sort(function (a, b) { return ui.compareText(JSON.stringify(a), JSON.stringify(b)); }) : null;
     colourBy.filter(state.snapshot, matchingPaths);
-    view.painted(state.view, zoneRows, filterFaces);
+    var check = call(own, "check", [{ visible: visible, zoneRows: visible.filter(depth(0)), allZoneRows: zoneRows,
+      filters: filters }], null);
     var parents = Object.create(null);
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
-    tables.table(mount, rows, {
+    tables.table(own.mount, rows, {
       // Sized so the whole table shows at the panel's usual width; labels have their own band above the icons,
       // and the user can still drag any column wider.
-      defaultWidths: { name: 142, building_segment: 136, level: 84, ground_depth_mm: 128, face_type: 126,
-        boundary_condition: 110, area_m2: 104, assembly_id: 156 },
-      tree: true, rows: shown, columns: columns(profile),
+      defaultWidths: Object.assign({}, ZONE_WIDTHS, own.view.widths || {}),
+      tree: true, rows: shown, columns: shownColumns,
       expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
-      decorate: view.decorate,
-      columnWidths: state.columnWidths, visibleCount: projection.visibleCount, disabled: state.edits.busy(),
+      decorate: function (td, row, field) { call(own, "decorate", [td, row, field]); },
+      columnWidths: own.columnWidths, visibleCount: projection.visibleCount, disabled: state.edits.busy(),
       empty: zoneRows.length ? "No Zones match this filter." :
         "No Zones yet. Select geometry in SketchUp, then right-click and choose Make Zone.",
-      value: function (row, field) { return value(row, field, profile); },
+      value: function (row, field) { return value(own, row, field, profile); },
       cell: function (td, row, field) {
-        return state.zoneCells.render(td, row, field) || view.cell(state.view, td, row, field);
+        return state.zoneCells.render(td, row, field) || call(own, "cell", [td, row, field], false);
       },
-      marker: marker, actions: function (row) { return actions(state, row); }, rowHidden: projection.hidden,
-      hiddenColumns: state.hiddenColumns, revealRowActions: true,
-      check: view.check(state.view, visible, filterFaces),
-      headerActions: function (field) { return headerActions(state, field, labels[field]); },
-      inspect: function (row) { view.inspect(state.view, row); },
+      marker: function (row) { return marker(own, row); }, actions: function (row) { return actions(own, row); },
+      rowHidden: projection.hidden, hiddenColumns: own.hiddenColumns, revealRowActions: true,
+      check: check || undefined,
+      headerActions: function (field) { return headerActions(state, own, field, labels[field]); },
+      inspect: function (row) { call(own, "inspect", [row]); },
       columnResize: function (field, width) {
-        if (field === null) state.columnWidths = {};
-        else if (width === null) delete state.columnWidths[field];
-        else state.columnWidths[field] = width;
+        if (field === null) own.columnWidths = {};
+        else if (width === null) delete own.columnWidths[field];
+        else own.columnWidths[field] = width;
       },
       action: function (row, item) {
         if (item.id === "independent") confirmIndependent(state, row);
-        else view.action(state.view, row, item);
+        else call(own, "action", [row, item]);
       }
     });
   }
 
   /* Whether a Zone's own values pass the Zone filters; the view's fields are the view's to judge. */
-  function zoneMatches(record, filters) {
+  function zoneMatches(own, record, filters) {
+    var viewFields = own.view.filteredFields || {};
     return Object.keys(filters).every(function (field) {
-      return view.filteredFields[field] || filters[field].indexOf(filterValue(record.zone, field)) >= 0;
+      return viewFields[field] || filters[field].indexOf(filterValue(record.zone, field)) >= 0;
     });
   }
 
-  function searchText(record, state) {
+  function searchText(own, record, state) {
     return [record.name, zoneOptions.label(zoneOptions.read(state.snapshot), record.zone, "building_segment"),
       zoneOptions.label(zoneOptions.read(state.snapshot), record.zone, "level"),
-      view.search(state.view, record)].join(" ");
+      call(own, "search", [record], "")].join(" ");
   }
 
   /* The Zone order the controls settled on, each Zone followed by its own rows in the order the view gives
      them for the sorted column. */
-  function ordered(records, byId, rows, controls, state) {
+  function ordered(own, records, byId, rows, controls) {
     var children = Object.create(null), field = controls.sortField(), direction = controls.sortDirection();
     rows.forEach(function (row) {
       if (row.parent) (children[row.parent] = children[row.parent] || []).push(row);
     });
     function withChildren(row) {
-      return view.sort(state.view, children[row.key] || [], field, direction).reduce(function (all, child) {
+      var list = children[row.key] || [];
+      return call(own, "sort", [list, field, direction], list).reduce(function (all, child) {
         return all.concat(withChildren(child));
       }, [row]);
     }
@@ -566,12 +708,15 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (!screen || result.session !== screen.session || !screen.zoneCells.owns(result.request_id)) return null;
     return ZoneCells.refusalText(result.outcome);
   }, { owner: "ph_composer.zones" });
-  /* Another tab can open this one with Faces checked and, with `locate: true`, framed
-     (`panel.navigate("overview", { check: references, locate: true })`), as the Assemblies tab's "Select
-     faces using" does. Locating here keeps the outline this screen's to clear. */
+  /* Another tab can open this one on a view with rows checked and, with `locate: true`, framed
+     (`panel.navigate("overview", { view, check: references, locate: true })`), as the Assemblies tab's
+     "Select faces using" does. The named view is shown first; a refused switch applies nothing. */
   panel.section("ph_composer.overview", render, { order: 10, onNavigate: function (root, intent) {
     if (!screen || !intent.check) return;
-    view.navigate(screen.view, intent);
+    if (intent.view && intent.view !== screen.viewId) {
+      if (!screen.tabs || !screen.slots[intent.view] || !screen.tabs.select(intent.view)) return;
+    }
+    call(active(screen), "navigate", [intent]);
     panel.repaint();
   } });
   panel.workedOn("ph_composer.zones", "overview");

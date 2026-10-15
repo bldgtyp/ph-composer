@@ -75,7 +75,7 @@ fs.mkdirSync(output, { recursive: true });
     });
     assert(actionsFit, "resizing keeps both buttons inside their column");
     await resize.press("Enter");
-    const mount = page.locator(".phc-overview .phc-table-mount");
+    const mount = page.locator(".phc-overview .phc-zone-view:not([hidden]) .phc-table-mount");
     const before = await table.locator("th.col-name").boundingBox();
     await mount.evaluate(node => { node.style.maxHeight = "100px"; node.scrollTop = 100; });
     const after = await table.locator("th.col-name").boundingBox();

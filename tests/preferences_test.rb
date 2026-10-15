@@ -63,6 +63,20 @@ class PreferencesTest < PhComposerTestCase
     assert_equal "m", Preferences.dimension_formats.dig("example.scope_0", "SI"), "a known scope still changes"
   end
 
+  def test_each_host_table_remembers_its_last_view_and_refuses_a_bad_name
+    assert_equal({}, Preferences.snapshot.fetch("table_views"))
+    Preferences.set("table_view", "example.zones.areas", :scope => "example.zones")
+    Preferences.set("table_view", "example.other.view", :scope => "example.other")
+    Preferences.set("table_view", "example.zones.faces", :scope => "example.zones")
+
+    assert_equal({ "example.zones" => "example.zones.faces", "example.other" => "example.other.view" },
+                 Preferences.snapshot.fetch("table_views"))
+    assert_raises(PhComposer::UserError) { Preferences.set("table_view", "Faces", :scope => "example.zones") }
+    assert_raises(PhComposer::UserError) { Preferences.set("table_view", "example.zones.faces", :scope => nil) }
+    Sketchup.write_default(SECTION, "table_views", [JSON.generate("example.zones" => 3, "Bad" => "x.y")].pack("m0"))
+    assert_equal({}, Preferences.table_views)
+  end
+
   def test_the_regional_format_takes_the_macos_region_and_the_sketchup_decimal
     Sketchup::RegionalSettings.decimal_separator = ","
     Preferences.apple_locale_reader = proc { "de_DE" }

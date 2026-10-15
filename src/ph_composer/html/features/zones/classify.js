@@ -260,8 +260,21 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     return Boolean(screen && (screen.active || screen.draft));
   }
 
+  /* Why the palette's screen cannot be left now: an Attached zone draft is open. */
+  function draftReason() {
+    return screen && screen.draft ? "Save or cancel the Attached zone first." : null;
+  }
+
+  /* Turns the paint tool off, as its header button does; nothing when it is not on. */
+  function stop() {
+    if (!screen || screen.disposed || !screen.active) return;
+    if (screen.view.busy()) screen.view.send("ph_composer.zones.faces.stop_classifying", {});
+    else screen.view.run("ph_composer.zones.faces.stop_classifying", {});
+  }
+
   panel.navigationGuard("ph_composer.zones.paint", function (tab) {
-    return screen && screen.draft && tab !== "overview" ? "Save or cancel the Attached zone first." : null;
+    return tab !== "overview" ? draftReason() : null;
   });
-  return { refresh: refresh, values: values, paint: paint, extra: extra, header: header, showing: showing };
+  return { refresh: refresh, values: values, paint: paint, extra: extra, header: header, showing: showing,
+    draftReason: draftReason, stop: stop };
 });

@@ -1,0 +1,222 @@
+"use strict";
+
+/* The Zones screen as a host of views (context/EXTENSIBILITY.md, "Zone views"): the view row, switching
+   between Faces and the synthetic example view (tools/examples/zones/example_zone_view.js), what each view
+   keeps across a switch, the remembered view and a navigation intent that names its view. */
+
+var assert = require("assert");
+var fs = require("fs");
+var path = require("path");
+var test = require("node:test");
+var vm = require("vm");
+var dom = require("./support/dom_stub");
+var panelSource = require("./support/panel_source");
+var root = require("./support/panel_files").root;
+
+var HOST = "ph_composer.zones";
+var AREAS = "example.zones.areas";
+
+function page(options) {
+  var sent = [];
+  var context = {
+    document: dom.buildDocument(panelSource.markup("index.html")), Intl: Intl,
+    innerWidth: 1280, innerHeight: 800, setTimeout: setTimeout, clearTimeout: clearTimeout,
+    sketchup: { ph_composer_message: function (message) { sent.push(JSON.parse(message)); } }
+  };
+  context.window = context;
+  dom.attachEvents(context);
+  var modules = panelSource.start(context, ["sections/shell", "features/zones/overview", "features/zones/faces_view"]);
+  if (!options || options.example !== false) {
+    var file = path.join(root, "tools/examples/zones/example_zone_view.js");
+    vm.runInContext(fs.readFileSync(file, "utf8"), context, { filename: file });
+  }
+  var p = { context: context, panel: modules.panel, modules: modules, sent: sent };
+  p.section = function () { return context.document.querySelector("[data-section='ph_composer.overview']"); };
+  return p;
+}
+
+function snapshot(remembered) {
+  return {
+    product: "PH-Composer", version: "0.1.0-dev", session: "session-a", revision: 4, file_name: "house.skp",
+    edit_path: [], preferences: { unit_system: "SI", dimension_formats: {}, number_format: { decimal: ".",
+      locale: "en-US" }, table_views: remembered ? { "ph_composer.zones": remembered } : {} },
+    sections: {
+      "ph_composer.zones.faces.palette": { status: "completed", value: {
+        active: false, palette: {}, face_types: ["Wall", "RoofCeiling", "Floor"],
+        boundary_conditions: ["Outdoors", "Ground", "Adiabatic", "AttachedZone", "Surface"]
+      } },
+      "ph_composer.zones.overview": { status: "completed", value: {
+        zones: [{ id: "zon_a", schema_version: 1, user_data: {}, extension_data: {},
+          reference: { zone_id: "zon_a", zone_path: [100] }, state: "found", face_count: 2,
+          face_area_m2: 20, unclassified_face_area_m2: 8,
+          values: { name: "Zone 1", building_segment: "house", level: null, ground_depth_mm: 0 } }],
+        make_zone: { parent_path: [], entity_ids: [200] },
+        units: { ground_depth_mm: "mm", face_area_m2: "m2", unclassified_face_area_m2: "m2" }
+      } },
+      "ph_composer.zones.faces.faces": { status: "completed", value: { units: { area_m2: "m2" }, faces: [{
+        reference: { zone_id: "zon_a", zone_path: [100], entity_path: [101], entity_id: "fac_a" },
+        zone_name: "Zone 1", area_m2: 12, state: "classified",
+        values: { face_type: "Wall", boundary_condition: "Outdoors" },
+        suggested: { face_type: "Wall", boundary_condition: "Outdoors" }
+      }, {
+        reference: { zone_id: "zon_a", zone_path: [100], entity_path: [102], entity_id: null },
+        zone_name: "Zone 1", area_m2: 8, state: "unclassified", values: {},
+        suggested: { face_type: "Floor", boundary_condition: "Ground" }
+      }] } }
+    }
+  };
+}
+
+function click(node) { node.listeners.click({ preventDefault: function () {} }); }
+
+function viewRow(p) {
+  return p.section().querySelector(".phc-view-tabs");
+}
+
+function tab(p, label) {
+  return viewRow(p).querySelectorAll("button").filter(function (node) { return node.textContent === label; })[0];
+}
+
+/* The header fields the shown view's table paints, in order. */
+function shownColumns(p) {
+  var surface = p.section().querySelectorAll(".phc-zone-view").filter(function (node) { return !node.hidden; })[0];
+  return surface.querySelectorAll("th").map(function (th) { return th.className.split(" ")[0].replace("col-", ""); });
+}
+
+function rowKinds(p) {
+  var surface = p.section().querySelectorAll(".phc-zone-view").filter(function (node) { return !node.hidden; })[0];
+  return surface.querySelectorAll("[data-row-key]").filter(function (node) { return !node.hidden; })
+    .map(function (node) { return JSON.parse(node.getAttribute("data-row-key"))[0]; });
+}
+
+function byLabel(p, label) {
+  return p.section().closest("[data-pane]").querySelectorAll("input, select, button").filter(function (node) {
+    return node.getAttribute("aria-label") === label;
+  })[0];
+}
+
+test("one listed view hides the view row; a second shows it, Faces first", function () {
+  var p = page({ example: false });
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  assert.strictEqual(viewRow(p).hidden, true, "Faces alone needs no view row");
+  var q = page();
+  q.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  assert.strictEqual(viewRow(q).hidden, false);
+  assert.strictEqual(viewRow(q).querySelector("nav").getAttribute("aria-label"), "Zone views");
+  assert.deepStrictEqual(viewRow(q).querySelectorAll("button").map(function (node) { return node.textContent; }),
+    ["Faces", "Areas"]);
+  assert.strictEqual(tab(q, "Faces").getAttribute("aria-selected"), "true");
+  var faceless = snapshot();
+  delete faceless.sections["ph_composer.zones.faces.faces"];
+  q.panel.receive({ type: "panel.snapshot", payload: faceless });
+  assert.strictEqual(viewRow(q).hidden, true, "a view whose sections are not published is not listed");
+  assert.deepStrictEqual(shownColumns(q), ["actions", "hierarchy", "name", "gross_m2", "unclassified_m2"]);
+});
+
+test("switching shows the other view's columns and rows, sends nothing to the Model and is remembered", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  assert.deepStrictEqual(rowKinds(p), ["Zone", "Face", "Unclassified", "Face"]);
+  click(tab(p, "Areas"));
+  assert.deepStrictEqual(shownColumns(p), ["actions", "hierarchy", "name", "gross_m2", "unclassified_m2"],
+    "the example lists no Zone cells and no Face columns");
+  assert.deepStrictEqual(rowKinds(p), ["Zone"], "a view with no child rows shows the Zone rows alone");
+  var collapse = p.section().querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Collapse all";
+  })[0];
+  assert.strictEqual(collapse.disabled, true, "nothing opens, so nothing collapses");
+  var surface = p.section().querySelectorAll(".phc-zone-view").filter(function (node) { return !node.hidden; })[0];
+  assert.deepStrictEqual(surface.querySelectorAll("td").filter(function (td) {
+    return /col-(gross|unclassified)_m2/.test(td.className);
+  }).map(function (td) { return td.textContent; }), ["20", "8"]);
+  assert.strictEqual(surface.querySelectorAll("input").filter(function (node) {
+    return node.classList.contains("row-check");
+  }).length, 0, "a view that checks nothing has no checkboxes");
+  assert.deepStrictEqual(p.sent.map(function (message) { return message.type; }), ["preferences.set"]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent[0].payload)), { request_id: p.sent[0].payload.request_id,
+    key: "table_view", value: AREAS, scope: HOST });
+  assert.strictEqual(p.modules.unit_preferences.tableView(HOST), AREAS);
+  click(tab(p, "Faces"));
+  assert.deepStrictEqual(rowKinds(p), ["Zone", "Face", "Unclassified", "Face"], "Faces keeps its rows and expansion");
+});
+
+test("another Model gets its own view surfaces and the previous Model's leave the screen", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  click(tab(p, "Areas"));
+  var other = snapshot(AREAS);
+  other.session = "session-b";
+  p.panel.receive({ type: "panel.snapshot", payload: other });
+  assert.strictEqual(p.section().querySelectorAll(".phc-zone-view").length, 2, "one surface per listed view");
+  assert.strictEqual(p.section().querySelectorAll(".phc-zone-view").filter(function (node) {
+    return !node.hidden;
+  }).length, 1);
+  assert.deepStrictEqual(rowKinds(p), ["Zone"], "the new Model opens on the view this computer remembers");
+});
+
+test("the view last shown on this computer is the one a new session opens on", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(AREAS) });
+  assert.strictEqual(tab(p, "Areas").getAttribute("aria-selected"), "true");
+  assert.deepStrictEqual(rowKinds(p), ["Zone"]);
+  var q = page();
+  q.panel.receive({ type: "panel.snapshot", payload: snapshot("example.zones.retired") });
+  assert.strictEqual(tab(q, "Faces").getAttribute("aria-selected"), "true", "a remembered view no longer listed");
+});
+
+test("each view keeps its own column filters and sort; the Zone filters stay across a switch", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  click(byLabel(p, "Type column menu"));
+  var wall = byLabel(p, "Type column menu").parentNode.querySelectorAll("input").filter(function (box) {
+    return box.parentNode.children[1].textContent === "Wall";
+  })[0];
+  wall.checked = false; wall.listeners.change({});
+  assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "1 Zone · 1 filter");
+  // A press elsewhere closes the menu and takes focus from its checkbox before the tab is pressed.
+  p.context.document.activeElement.blur();
+  click(tab(p, "Areas"));
+  assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "1 Zone",
+    "a Face filter is the Faces view's and leaves with it");
+  click(tab(p, "Faces"));
+  assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "1 Zone · 1 filter",
+    "and comes back with it");
+  assert.deepStrictEqual(rowKinds(p), ["Zone", "Unclassified", "Face"]);
+});
+
+test("leaving Faces stops its paint tool", function () {
+  var p = page(), state = snapshot();
+  state.sections["ph_composer.zones.faces.palette"].value.active = true;
+  state.sections["ph_composer.zones.faces.palette"].value.palette = { face_type: "Wall" };
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  click(tab(p, "Areas"));
+  var stop = p.sent.filter(function (message) {
+    return message.type === "view.invoke" && message.payload.name === "ph_composer.zones.faces.stop_classifying";
+  });
+  assert.strictEqual(stop.length, 1, "the paint tool does not keep painting a view that is not shown");
+});
+
+test("a navigation intent that names its view switches to it before checking rows", function () {
+  var p = page();
+  var state = snapshot(AREAS);
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  var reference = state.sections["ph_composer.zones.faces.faces"].value.faces[0].reference;
+  assert.strictEqual(p.panel.navigate("overview", { view: "ph_composer.zones.faces", check: [reference] }), true);
+  assert.strictEqual(tab(p, "Faces").getAttribute("aria-selected"), "true");
+  var box = byLabel(p, "Uncheck Wall 1");
+  assert.ok(box && box.checked, "the named Face is checked in the view that was switched to");
+});
+
+test("a view registered under a host that never declares itself is reported at ready", function () {
+  var errors = [], context = {
+    document: dom.buildDocument(panelSource.markup("index.html")), Intl: Intl, innerWidth: 1280, innerHeight: 800,
+    setTimeout: setTimeout, clearTimeout: clearTimeout, console: { error: function (text) { errors.push(text); } },
+    sketchup: { ph_composer_message: function () {} }
+  };
+  context.window = context;
+  dom.attachEvents(context);
+  var modules = panelSource.start(context, ["sections/shell", "features/zones/overview", "features/zones/faces_view"]);
+  modules.table_views.register("example.missing", { id: "example.missing.view", label: "Orphan" });
+  modules.panel.ready();
+  assert.deepStrictEqual(errors, ["table views with no host: example.missing.view (host example.missing)"]);
+});

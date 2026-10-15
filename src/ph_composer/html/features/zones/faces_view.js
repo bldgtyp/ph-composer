@@ -1,8 +1,9 @@
 /* The Faces view of the Zones table: each Zone's Faces as rows beneath it, their type, boundary, area and
  * Assembly as editable columns, the Classify column paint, the checked-Face selection bar and checked-Zone
- * Solve. The Zones screen (overview.js) is the host: it owns the Zone rows, the Name column, the Zone's own
- * cells, the text filter and the expansion, and calls this view for everything below a Zone. The view keeps
- * its own state in the object `create` returns and reaches the host's only through `vs.host`.
+ * Solve. It registers under the Zones screen's host id (context/EXTENSIBILITY.md, "Zone views") as any other
+ * view does. The Zones screen (overview.js) is the host: it owns the Zone rows, the Name column, the Zone's
+ * own cells, the text filter and the expansion, and calls this view for everything below a Zone. The view
+ * keeps its own state in the object `create` returns and reaches the host's only through `vs.host`.
  *
  * A Face with no record is a row too, under its Zone's "N unclassified Faces" summary. The Zone's row carries
  * their count and the Suggest classification action that gives them all a record. Every write goes through a
@@ -11,11 +12,11 @@
  * command, which frames and outlines Faces and changes neither the selection nor the Model.
  */
 PhComposerUI.define("features/zones/faces_view", ["panel", "workspace", "snapshot", "units", "fields", "face_words",
-  "features/zones/attached_zone_assignment", "features/zones/zone_settings", "features/zones/selection_assignment",
-  "features/zones/assembly_assignment", "features/zones/zone_cells", "features/zones/checked_faces",
-  "features/zones/classify", "selection_bar"],
-function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSettings, SelectionAssignment,
-          assemblies, ZoneCells, CheckedFaces, classify, selectionBars) {
+  "table_views", "features/zones/attached_zone_assignment", "features/zones/zone_settings",
+  "features/zones/selection_assignment", "features/zones/assembly_assignment", "features/zones/zone_cells",
+  "features/zones/checked_faces", "features/zones/classify", "selection_bar"],
+function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignment, ZoneSettings,
+          SelectionAssignment, assemblies, ZoneCells, CheckedFaces, classify, selectionBars) {
   "use strict";
   var AREA = fields.AREA_M2;
   var SHARED_FACE = "Read only while this Face's Zone is shared with another occurrence.";
@@ -140,7 +141,7 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
 
   /* Whether a row this view adds opens by default: a short unclassified list, decided once when it first
      appears so it does not snap shut or open under the user as the count changes. */
-  function initiallyOpen(row) {
+  function initiallyOpen(vs, row) {
     return row.record.summary ? row.record.faces.length <= OPEN_UP_TO : null;
   }
 
@@ -156,14 +157,14 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
     return (face.values.face_type ? words.faceType(face.values.face_type) : "Face") + " " + place;
   }
 
-  function columns(profile) {
+  function columns(vs, profile) {
     return [["face_type", "Type"], ["boundary_condition", "Boundary"],
       ["area_m2", units.header("Gross area", AREA, profile)], ["assembly_id", "Assembly"]];
   }
 
   /* The Zone row's marker for this view, after the host's own (a shared or nested Zone): its unclassified
      Faces. */
-  function zoneMarker(row) {
+  function zoneMarker(vs, row) {
     var count = row.record.unclassified;
     if (!count) return null;
     return { text: String(count),
@@ -172,7 +173,7 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
   }
 
   /* A Zone row and its unclassified summary show the totals the host published for the occurrence. */
-  function value(row, field, profile) {
+  function value(vs, row, field, profile) {
     var face = row.record.face;
     if (!face) return field === "area_m2" && !row.record.more ? area(row.record.area, profile) : "";
     if (field === "assembly_id") return "";
@@ -217,7 +218,7 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
     ui.tooltip(td, issue || hint || "");
   }
 
-  function decorate(td, row, field) {
+  function decorate(vs, td, row, field) {
     flag(td, problem(row.record.face, field));
   }
 
@@ -406,11 +407,11 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
 
   /* A Zone passes this view's filters while one of its Faces does; a Face row shows while it passes, and a
      summary row while one of its Faces does. */
-  function zoneMatch(record, filters) {
+  function zoneMatch(vs, record, filters) {
     return !filtered(filters) || record.every.some(function (face) { return matches(face, filters); });
   }
 
-  function rowMatch(row, filters) {
+  function rowMatch(vs, row, filters) {
     if (row.record.face) return matches(row.record.face, filters);
     return row.record.more ? true : row.record.faces.some(function (face) { return matches(face, filters); });
   }
@@ -449,7 +450,7 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
 
   /* The occurrence mask the viewport shows under this view's filters: every Face that passes, or, with only
      Zone filters, each passing Zone whole (its Window units beside its Faces included). */
-  function viewportPaths(record, filters) {
+  function viewportPaths(vs, record, filters) {
     if (!filtered(filters)) return [record.zone.reference.zone_path];
     return record.every.filter(function (face) { return matches(face, filters); })
       .map(function (face) { return face.reference.zone_path.concat(face.reference.entity_path); });
@@ -467,7 +468,7 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
 
   /* The Zone row's own action for this view, after the host's: Suggest classification for its unclassified
      Faces. */
-  function zoneActions(row) {
+  function zoneActions(vs, row) {
     if (!row.record.unclassified) return [];
     var shared = ZoneCells.gated(row.record.zone);
     return [{ id: "suggest", icon: "sort", disabled: shared, label: shared ?
@@ -524,6 +525,14 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
     return clearLocate(vs);
   }
 
+  /* Leaving this view turns the paint tool off, clears Locate's outline and hides the checked-Face bar; an
+     open Attached zone draft holds the view until it is saved or cancelled. */
+  function leave(vs) {
+    classify.stop();
+    clearLocate(vs);
+    if (vs.bar) vs.bar.hide();
+  }
+
   /* Another tab can open this view with Faces checked and, with `locate`, framed (the Assemblies tab's
      "Select faces using"). Locating here keeps the outline this view's to clear. */
   function navigate(vs, intent) {
@@ -535,8 +544,13 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
   /* ---------------------------------------------------------------- the checked set and its bar */
 
   /* What the shared table's checkboxes do in this view: a Face row checks its Face, a Zone or summary row
-     checks the Faces beneath it, and the header box checks every Face the filters show. */
-  function check(vs, visible, filterFaces) {
+     checks the Faces beneath it, and the header box checks every Face the filters show. Called as the table
+     paints, with the rows it shows, the Zone rows that pass the filters and every Zone row. */
+  function check(vs, context) {
+    var visible = context.visible, filterFaces = facesShown(context.zoneRows, context.filters);
+    vs.checkedZones = context.allZoneRows.filter(function (row) { return vs.checked.state(row) === true; })
+      .map(function (row) { return row.record.zone; });
+    vs.hiddenChecked = vs.checked.among(vs.faces).length - vs.checked.among(filterFaces).length;
     return { state: function (row) { return vs.checked.state(row); },
       toggle: function (row, event) { vs.checked.toggle(row, event, visible); panel.repaint(); },
       header: function () { return Boolean(filterFaces.length) && vs.checked.stateOf(filterFaces); },
@@ -548,20 +562,13 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
 
   /* The Faces the filters show, whether or not their rows are open or painted (a long unclassified list
      paints only its first fifty): what the header box checks, and what "hidden" in the bar counts against. */
-  function filterFaces(visibleZones, filters) {
+  function facesShown(visibleZones, filters) {
     var faceFiltered = filtered(filters);
     return visibleZones.reduce(function (all, row) {
       return all.concat(row.record.every.filter(function (face) {
         return !faceFiltered || matches(face, filters);
       }));
     }, []);
-  }
-
-  /* After the table paints: the checked Zones Solve acts on and how many checked Faces the filters hide. */
-  function painted(vs, zoneRows, shownFaces) {
-    vs.checkedZones = zoneRows.filter(function (row) { return vs.checked.state(row) === true; })
-      .map(function (row) { return row.record.zone; });
-    vs.hiddenChecked = vs.checked.among(vs.faces).length - vs.checked.among(shownFaces).length;
   }
 
   /* A selection bar belongs to one Model and leaves with it. */
@@ -716,16 +723,26 @@ function (panel, ui, snapshot, units, fields, words, attachedAssignment, ZoneSet
     return { root: root, paint: paint };
   }
 
-  return {
+  var VIEW = {
     id: "ph_composer.zones.faces", label: "Faces", order: 10, sections: ["ph_composer.zones.faces.faces"],
     colourBy: COLOUR_BY, sorted: SORTED, filteredFields: FACE_FIELDS,
+    // Sized so the whole table shows at the panel's usual width with the Zone columns beside them.
+    widths: { face_type: 126, boundary_condition: 110, area_m2: 104, assembly_id: 156 },
     create: create, dispose: dispose, draftReason: draftReason, consume: consume, zoneRecord: zoneRecord,
     children: children, initiallyOpen: initiallyOpen, columns: columns, zoneMarker: zoneMarker, value: value,
-    cell: cell, decorate: decorate, filterValue: filterValue, filterLabel: filterLabel, filterValues: filterValues,
+    cell: cell, decorate: decorate, filterLabel: filterLabel, filterValues: filterValues,
     zoneMatch: zoneMatch, rowMatch: rowMatch, search: search, sort: sort, viewportPaths: viewportPaths,
     actions: actions, zoneActions: zoneActions, action: action, inspect: inspect, locate: locate,
-    clearLocate: clearLocate, escape: escape, navigate: navigate, check: check, filterFaces: filterFaces,
-    painted: painted, selectionBar: selectionBar,
-    settings: function (vs) { return vs.settings.bubble.root; }
+    clearLocate: clearLocate, escape: escape, navigate: navigate, check: check, selectionBar: selectionBar,
+    settings: function (vs) { return vs.settings.bubble.root; },
+    leave: leave, leaveReason: function () { return classify.draftReason(); },
+    // The Classify palette paints this view's columns from their header and their menu.
+    headerAction: function (vs, field, label) { return classify.header(field, label); },
+    menuValueAction: function (vs, field, entry) { return classify.paint(field, entry.value, entry.label); },
+    menuExtra: function (vs, field, root, anchor, close, reopen) {
+      classify.extra(field, root, anchor, close, reopen);
+    }
   };
+  tableViews.register("ph_composer.zones", VIEW);
+  return VIEW;
 });

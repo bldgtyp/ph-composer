@@ -9,7 +9,7 @@
  * The panel acts only on the Model it shows: `action.invoke` carries the shown session and the revision the
  * panel last rendered, and a result or notice for another session is not painted.
  */
-PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (preferences, ui) {
+PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views"], function (preferences, ui, tableViews) {
   "use strict";
 
   var sections = [];
@@ -377,14 +377,17 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   function preferenceValue(key, extra) {
     var current = preferences.current();
     if (key === "unit_system") return current.unitSystem;
+    if (key === "table_view") return preferences.tableView(extra.scope);
     return preferences.dimensionFormat(extra.scope, extra.system);
   }
 
   /* Applies a display preference at once and asks the host to remember it; a refusal restores the previous
-     value. `extra` is `{ scope, system }` for a dimension format. */
+     value. `extra` is `{ scope, system }` for a dimension format and `{ scope }`, the host id, for a table
+     view. */
   function setPreference(key, value, extra) {
     var details = extra || {};
-    var name = key === "dimension_format" ? key + "." + details.scope + "." + details.system : key;
+    var name = key === "dimension_format" ? key + "." + details.scope + "." + details.system :
+      key === "table_view" ? key + "." + details.scope : key;
     var pending = copy(state.ui.preferencePending);
     var requestId = "preferences:" + String(preferenceSequence += 1);
     var payload = { request_id: requestId, key: key, value: value };
@@ -392,6 +395,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
       payload.scope = details.scope;
       payload.system = details.system;
     }
+    if (key === "table_view") payload.scope = details.scope;
     pending[name] = { requestId: requestId, key: key, value: value, extra: details,
       previous: preferenceValue(key, details) };
     state = withUI(state, { preferencePending: pending });
@@ -472,7 +476,12 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace"], function (prefer
   }
 
   /* Sent once the page has started, so the first snapshot has somewhere to render. */
-  function ready() { send("panel.ready", {}); }
+  /* Every module has started: a table view whose host never declared itself is a registration mistake. */
+  function ready() {
+    var orphans = tableViews.unhosted();
+    if (orphans.length && window.console) window.console.error("table views with no host: " + orphans.join(", "));
+    send("panel.ready", {});
+  }
 
   /* A presentation-only change: a section that owns local view state (a selection, a filter, an open
      row) repaints every section from the state already in hand. It never reaches the host. */

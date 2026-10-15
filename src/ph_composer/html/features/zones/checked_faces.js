@@ -1,4 +1,4 @@
-/* The Faces checked in the Zones / Faces table: the set a bulk assignment acts on.
+/* The Faces checked in the Zones tab's Faces view: the set a bulk assignment acts on.
  *
  * The set belongs to the panel. It can span Zones, and checking a row never changes SketchUp's selection,
  * because SketchUp's selection holds only entities in the open edit context, so a mirrored set could not

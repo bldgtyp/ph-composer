@@ -14,7 +14,7 @@ function page() {
   };
   context.window = context;
   dom.attachEvents(context);
-  var modules = panelSource.start(context, ["sections/shell", "features/zones/overview"]);
+  var modules = panelSource.start(context, ["sections/shell", "features/zones/overview", "features/zones/faces_view"]);
   return { context: context, panel: modules.panel, modules: modules, sent: sent,
     query: function (selector) { return context.document.querySelector(selector); } };
 }
@@ -89,14 +89,14 @@ function settingsPage() {
   } };
   p.panel.receive({ type: "panel.snapshot", payload: state });
   p.section = p.query("[data-section='ph_composer.overview']");
-  p.settings = byLabel(p.section, "Zones / Faces settings");
+  p.settings = byLabel(p.section, "Faces settings");
   p.settings.listeners.click({});
   return p;
 }
 
-test("Zones / Faces settings commit Enter once with the reviewed values and revision", function () {
+test("Faces settings commit Enter once with the reviewed values and revision", function () {
   var p = settingsPage(), roof = byLabel(p.section, "Roof maximum tilt [deg]");
-  assert.ok(panelSource.markup("index.html").includes('data-tab="overview">Zones / Faces'));
+  assert.ok(panelSource.markup("index.html").includes('data-tab="overview">Zones<'));
   roof.value = "45";
   roof.listeners.keydown({ key: "Enter", preventDefault: function () {} });
   roof.listeners.change({});
@@ -115,7 +115,7 @@ test("Zones / Faces settings commit Enter once with the reviewed values and revi
   assert.strictEqual(bubble.hidden, false, "the pending operation keeps its work surface visible");
 });
 
-test("Zones / Faces settings reject invalid angles locally and Escape restores the field", function () {
+test("Faces settings reject invalid angles locally and Escape restores the field", function () {
   var p = settingsPage(), roof = byLabel(p.section, "Roof maximum tilt [deg]");
   roof.value = "140";
   roof.listeners.change({});
@@ -881,7 +881,7 @@ test("native assignment retries a refused tab switch after the guard releases", 
   assert.strictEqual(p.sent.length, 0);
 });
 
-test("native batch assignment switches to Zones / Faces and freezes heterogeneous targets and revision", function () {
+test("native batch assignment switches to the Zones tab and freezes heterogeneous targets and revision", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   p.panel.showTab("export");
@@ -1155,7 +1155,7 @@ test("the header groups the authoring tools, the pane has no inspector, and help
   assert.strictEqual(p.query("[data-pane='overview'] [data-phc-region='inspector']"), null, "the table spans the pane");
   assert.strictEqual(p.query("[data-pane='overview']").classList.contains("has-inspector"), false);
   var help = section.querySelector(".phc-inventory-controls").querySelector(".phc-help");
-  assert.match(help.getAttribute("aria-label"), /^Zones \/ Faces: Select Faces in SketchUp, or check their rows/);
+  assert.match(help.getAttribute("aria-label"), /^Zones: Select Faces in SketchUp, or check their rows/);
   var header = section.querySelector(".phc-heading");
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
   assert.ok(section.querySelector(".phc-heading") === header, "the header is repainted in place, not rebuilt");
@@ -1282,7 +1282,7 @@ test("Locate frames without touching the checked set; a press elsewhere and Esca
   assert.strictEqual(p.sent.length, 4, "once");
 });
 
-test("another tab can open Zones / Faces with Faces checked", function () {
+test("another tab can open the Faces view with Faces checked", function () {
   var p = checkPage();
   p.panel.showTab("export");
   assert.strictEqual(p.panel.navigate("overview", { check: [p.payload.sections["ph_composer.zones.faces.faces"]

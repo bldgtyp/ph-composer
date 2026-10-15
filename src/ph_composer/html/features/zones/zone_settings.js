@@ -9,8 +9,8 @@ PhComposerUI.define("features/zones/zone_settings", ["workspace", "request"], fu
     this.channel = requests.channel(session, function (type, payload) {
       send(type, Object.assign({}, payload, { expected_revision: self.revision }));
     }, "zone_settings");
-    this.trigger = ui.iconButton("Zones / Faces settings", "settings");
-    this.bubble = new ui.Bubble(this.trigger, "Zones / Faces settings", { ownTrigger: true,
+    this.trigger = ui.iconButton("Faces settings", "settings");
+    this.bubble = new ui.Bubble(this.trigger, "Faces settings", { ownTrigger: true,
       guard: function () { return self.channel.busy() ? "Changing settings…" : null; },
       refused: function (reason) { self.error.textContent = reason; } });
     this.fields = {};

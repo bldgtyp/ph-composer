@@ -65,7 +65,6 @@ fs.mkdirSync(output, { recursive: true });
     await page.screenshot({ path: path.join(output, "tooltip-modal.png") });
     await dialog.getByRole("button", { name: "Close", exact: true }).click();
     assert.equal(await tip.isVisible(), false);
-    await hint(page.getByRole("button", { name: "Spaces, planned", exact: true }), "Planned");
     assert.equal(await page.locator(".row-tooltip").count(), 1, "the dialog did not create a second layer");
     assert.deepEqual(errors, []);
     console.log(`Shared tooltip checks passed; evidence in ${output}`);

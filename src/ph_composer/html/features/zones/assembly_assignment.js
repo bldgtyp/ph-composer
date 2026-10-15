@@ -19,7 +19,7 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
     records.forEach(function (record) { select.appendChild(ui.option(record.id, record.name)); });
   }
   /* The Assembly for a set of Faces: those selected in the viewport, or those `targets()` answers (the
-     Zones / Faces checked set). It rests on the Assembly they all share, reads "Mixed" when they differ and
+     Faces view's checked set). It rests on the Assembly they all share, reads "Mixed" when they differ and
      "Choose Assembly" when none has one. Choosing one assigns it at once, as one Undo step, to the targets
      named when the choice was made; a refusal says why and returns the control to its resting value. A Face
      with no record yet cannot hold an Assembly, so the control waits, and says so, while one is among them. */
@@ -229,10 +229,12 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
       if (usageView && usageView.busy()) return;
       if (!usageView) usageView = requests.channel(state.session, send, "assembly-usage", "view.invoke");
       if (action.id === "select_assembly_faces") {
-        // The Faces are checked in the Zones / Faces table, ready for a bulk assignment, and framed there, so the
+        // The Faces are checked in the Zones tab's Faces view, ready for a bulk assignment, and framed there, so the
         // outline is that screen's to clear; SketchUp's selection is left alone.
         var references = usage(live, id).faces;
-        if (references.length) panel.navigate("overview", { check: clone(references), locate: true });
+        if (references.length) {
+          panel.navigate("overview", { view: "ph_composer.zones.faces", check: clone(references), locate: true });
+        }
       } else if (action.id === "paint_assembly") {
         panel.showTab("overview");
         if (panel.state.ui.activeTab !== "overview") return;
