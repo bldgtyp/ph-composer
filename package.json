@@ -6,6 +6,6 @@
     "eslint": "9.15.0"
   },
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "git config --get core.hooksPath >/dev/null 2>&1 || git config core.hooksPath .githooks 2>/dev/null || true"
   }
 }

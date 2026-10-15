@@ -12,13 +12,14 @@ RUBY := $(shell rbenv which ruby 2>/dev/null || command -v ruby)
 endif
 export RUBY
 # Each lint target takes its file list from a variable so the pre-commit hook can run the same target on
-# the staged files alone (tools/githooks/staged_checks.py). The defaults are the whole tree.
-RB_FILES ?= $(shell find src tests tools -name '*.rb' -type f | sort)
-RUBOCOP_ARGS ?=
-ESLINT_ARGS ?= .
-RUFF_ARGS ?= tools tests/python src/ph_composer/python
-CITATION_FLAGS ?= --untracked
-CITATION_PATHS ?= src tests
+# the staged files alone (tools/githooks/staged_checks.py). The defaults are the whole tree. A command-line
+# assignment overrides them; an environment variable of the same name does not, so CI cannot be narrowed by one.
+RB_FILES = $(shell find src tests tools -name '*.rb' -type f | sort)
+RUBOCOP_ARGS =
+ESLINT_ARGS = .
+RUFF_ARGS = tools tests/python src/ph_composer/python
+CITATION_FLAGS = --untracked
+CITATION_PATHS = src tests
 JS_TESTS := $(wildcard tests/*_test.js)
 # Rubocop is reached through the bundler that belongs to $(RUBY), never whatever `bundle` is first
 # on PATH: on macOS that is the system Ruby's, which cannot read this lock.
@@ -26,8 +27,8 @@ BUNDLE := $(dir $(RUBY))bundle
 SKETCHUP_VERSION ?= 2026
 
 # Every target docs/DEVELOPMENT.md claims for the offline loop that exists today.
-ci: hooks-auto syntax lint test fixtures-check panel-manifest-check runtime-check runtime-pin-check hostkit-test python-check rbz \
-    rbz-check
+ci: hooks-auto syntax lint test fixtures-check panel-manifest-check runtime-check runtime-pin-check hostkit-test \
+    python-check rbz rbz-check
 
 syntax:
 	@for file in $(RB_FILES); do $(RUBY) -c "$$file" >/dev/null || exit 1; done
@@ -215,12 +216,14 @@ hooks:
 	@git config core.hooksPath .githooks && echo "git hooks: installed from .githooks"
 
 # Installs the hooks once from the targets every contributor runs, so no one has to remember `make hooks`.
-# It never replaces a hooks path someone set on purpose, and does nothing outside a git checkout.
+# It never replaces a hooks path someone set on purpose, does nothing outside a git checkout, and never fails
+# the target that called it: a locked or read-only git config only prints a line.
 hooks-auto:
 	@if git rev-parse --git-dir >/dev/null 2>&1; then \
 	  current=$$(git config --get core.hooksPath || true); \
 	  if [ -z "$$current" ]; then \
-	    git config core.hooksPath .githooks && echo "git hooks: installed from .githooks"; \
+	    { git config core.hooksPath .githooks && echo "git hooks: installed from .githooks"; } || \
+	      echo "git hooks: could not set core.hooksPath; run 'make hooks' later"; \
 	  elif [ "$$current" != ".githooks" ]; then \
 	    echo "git hooks: core.hooksPath is $$current, not .githooks; run 'make hooks' to use this repository's"; \
 	  fi; \

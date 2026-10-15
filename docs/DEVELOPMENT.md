@@ -76,15 +76,19 @@ alone, with a line saying so.
   for Python, mypy over its whole configured set when any Python file is staged, `ruby -c` and
   rubocop for Ruby, eslint for JavaScript, the panel and runtime manifest checks when panel or
   translation assets change, and the planning-citation check for shipped code and tests. Each is
-  the Makefile target CI runs, given the staged file list. A commit that touches only
-  documentation runs nothing. A failure prints the tool's output and the command that fixes it,
-  and nothing is committed. The hook never edits or re-stages a file.
-- `commit-msg` refuses a message without a `Signed-off-by:` line ([DCO.md](DCO.md)).
+  the Makefile target CI runs, given the staged file list. A deleted or renamed file runs the
+  checks that read the whole set, and a change to a linter's configuration (`pyproject.toml`,
+  `.rubocop.yml`, `package.json`, the `Makefile`) runs that linter over the whole tree. A commit
+  that touches only documentation runs nothing. A failure prints the tool's output and the command
+  that fixes it, and nothing is committed. The hook never edits or re-stages a file.
+- `commit-msg` refuses a message without a `Signed-off-by:` line ([DCO.md](DCO.md)). The message
+  git writes to conclude a merge is left alone.
 
 Rubocop matters here beyond style: it parses at the Ruby 2.7 floor, so it catches syntax that the
 3.2 interpreter accepts and SketchUp 2023 would not load. A missing rubocop or eslint prints the
-same named skip `make lint` prints, and CI still runs both. The hooks need `uv` on `PATH`; they add
-its usual install locations themselves, so a graphical git client finds it too.
+same named skip `make lint` prints, and CI still runs both. The hooks start on the system
+`python3` and need `uv` only when a check runs; they add the usual install locations of `uv`,
+Homebrew, rbenv and pnpm to `PATH` themselves, so a graphical git client finds them too.
 
 The hooks are a fast first check, not the gate: `make ci` still runs the full suite before a
 change is proposed. Chain the two, as in `make ci && git commit -s`, so a failed gate stops the

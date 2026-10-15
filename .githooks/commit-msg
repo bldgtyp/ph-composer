@@ -2,13 +2,16 @@
 # The repository's commit-msg hook, installed by `make hooks` (or automatically by `make lint`, `make test`,
 # `make ci` or `pnpm install`). The checks are in tools/githooks/staged_checks.py; docs/DEVELOPMENT.md,
 # "Git hooks", says what runs. Do not bypass it with --no-verify.
-# A GUI git client starts hooks with a minimal PATH, so the usual install locations of uv, Homebrew and
-# rbenv are added first.
-PATH="$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$HOME/.rbenv/shims:$PATH"
+# A GUI git client starts hooks with a minimal PATH, so the usual install locations of uv, Homebrew,
+# rbenv and pnpm are added first. The script needs only the standard library, so it runs on the system
+# python3 and a commit that needs no check never touches the project environment.
+PATH="$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$HOME/.rbenv/shims:$HOME/Library/pnpm:$PATH"
 export PATH
-if ! command -v uv >/dev/null 2>&1; then
-  echo "commit-msg: uv is not on PATH; install it (docs/DEVELOPMENT.md, Prerequisites). Nothing was committed."
-  exit 1
-fi
 cd "$(git rev-parse --show-toplevel)" || exit 1
-exec uv run --quiet python tools/githooks/staged_checks.py commit-msg "$@"
+if command -v python3 >/dev/null 2>&1; then
+  exec python3 tools/githooks/staged_checks.py commit-msg "$@"
+elif command -v uv >/dev/null 2>&1; then
+  exec uv run --quiet --no-project python tools/githooks/staged_checks.py commit-msg "$@"
+fi
+echo "commit-msg: neither python3 nor uv is on PATH (docs/DEVELOPMENT.md, Prerequisites). Nothing was committed."
+exit 1
