@@ -1,7 +1,7 @@
 # P3a-04 evidence: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: Slice A merged (#141); B1 (Zones container stamps, Restore Zone for stamped Groups) in review; B2 (the `container_added` event and the copy watcher) implemented; B3 (the Zone-copy contributor, the walkthrough) next; host gate not run
+STATUS: Slice A merged (#141); B1 (Zones container stamps, Restore Zone for stamped Groups) merged (#142); B2 (the `container_added` event and the copy watcher) in review; B3 (the Zone-copy contributor, the walkthrough) next; host gate not run
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -111,3 +111,11 @@ stray occurrences, no final references after isolation). The second found two P1
 inside the target lost every holder; a remap ignored kept holders when judging ambiguity) and one P2
 (an unsupported envelope failed instead of refusing with its copy rule). Each of the ten was reproduced
 by a test and fixed; the review cap of two cycles was reached.
+
+B1: Codex `gpt-6-astra` on #142, two passes. The first found one P1 (a container below storage the copy
+still shares was rewritten in the original) and three P2 (container locks unchecked, an unreadable
+container stamp failed the Zones read, restore dropped a stamp whose value read as false); the second
+one P1 (a stamped Group made a live Zone was offered to Restore and nested) and three P2 (a locked
+member regrouped, a stamp stored as a native value failed the read, `repair_identity` refused an
+undeclared `target.locked`). Each was reproduced by a test and fixed; the last four were gated by
+`make ci` only, at the review cap.
