@@ -66,6 +66,12 @@ Systems, with one work surface at a time. Do not add separate primary Ducting or
 
 ## 1. Spaces
 
+Superseded in part on 2026-10-15 by the Spaces packet's D3a-16 and D3a-17: Spaces is a view of the
+Zones tab, beside Faces, in the table-first pattern, with no Levels rail, no Airflow balance subtab
+and a numeric weighting factor rather than two chips. The rulings below record the predecessor
+screen; where they disagree with D3a-16 or D3a-17, those win. See
+[the Spaces mockups](../features/phase-03a-spaces/mockups/README.md).
+
 What the screenshot shows: a Levels rail on the left with All levels and one checkbox per level,
 each with a count. A control row with Filter, Order by, Direction, Collapse all and Expand all.
 A tree table with Actions (Locate, Enter, Delete), Hierarchy (Space with a chevron, Volume rows
@@ -196,7 +202,7 @@ in the polish skill's `patterns.md` once Ed accepts it.
 | Overview's pane order, built 2026-09-20 in P1-D D7 | The Zone tree first as the work surface, then Colour by, then the Classify palette. Each is its own section with its own heading, and the palette shows its Stop control only while the tool has the viewport. Needs Ed's ruling: the alternative is one heading with the two controls in the tree's action bar | ui-polish "Layout" |
 | Classify tool palette: face type chips, boundary condition chips, assembly picker | Enum chips and the Builder's floating toolbar | face-assignment |
 | Colour-by control and the viewport HUD legend | None. The legend draws in the viewport, not the panel | face-assignment Q16 to Q18 |
-| Airflow balance | An inventory table with group headings | spaces Q9, Q16 |
+| Airflow balance | Superseded 2026-10-15 (spaces D3a-8): sums and a marker on the Spaces view's Zone rows | spaces Q9, Q16 |
 | Place tool's panel side: chosen type, anchor picker, the measurement box hint | The "Before placing" alert and header actions | window-types |
 | Window Schedule for our own units | The predecessor's Schedule layout, minus adoption | window-types |
 | Preferences / Libraries | The predecessor's Library setup surface | libraries |

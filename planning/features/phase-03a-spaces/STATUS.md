@@ -1,7 +1,7 @@
 # Phase 3a: Spaces, tracking ledger
 
 DATE: 2026-10-15
-STATUS: Scoped. No Spaces stage authorized or implemented. Re-baselined on `main` at `87bdc62` on 2026-10-15; the UI and UX discussion comes next.
+STATUS: Scoped. No Spaces stage authorized or implemented. Re-baselined on `main` at `87bdc62` and the UI and UX discussion held on 2026-10-15; the screen stages are restructured around Zone views.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -36,13 +36,18 @@ with Windows as the first adopter); Zones copies are made independent automatica
 corrected; screen stages carry a note and wait for the UI discussion. Two decisions added:
 D3a-14 and D3a-15.
 
+The UI and UX discussion with Ed on 2026-10-15, worked through a [mockup](mockups/README.md),
+made Spaces a view of the Zones tab (D3a-16) with a numeric weighting factor (D3a-17), answered
+D3a-6, D3a-7, D3a-11 and D3a-14, superseded D3a-8 and raised D3a-18. The screen stages are now
+P3a-06 (Zone views), P3a-07 (the Spaces view, absorbing airflows and the balance) and P3a-08 (Mark
+floor and Create Space).
+
 ## Next step
 
-First, the Spaces UI and UX discussion with Ed, with mockups: it settles D3a-6, D3a-7, D3a-11,
-D3a-12 and D3a-14 against the table-first pattern, and P3a-06 to P3a-09 and P3a-11 are then
-revised. Then Ed answers the code decisions in [DECISIONS.md](DECISIONS.md), Part 2, confirms the
-interview record, and says go on [P3a-01](phases/p3a-01-contracts-and-groundwork.md). No stage
-starts before that. The stages keep the order the interview left, with three foundation stages added ahead of
+Ed answers the remaining decisions in [DECISIONS.md](DECISIONS.md), Part 2 (D3a-1 to D3a-5,
+D3a-9, D3a-10, D3a-12, D3a-15 and D3a-18), confirms the interview record, and says go on
+[P3a-01](phases/p3a-01-contracts-and-groundwork.md). P3a-06 needs no Spaces record and can start
+on its own branch once authorized. No stage starts before that. The stages keep the order the interview left, with three foundation stages added ahead of
 the features that need them: groundwork (P3a-01), edit contexts and reconciliation (P3a-03) and
 the Colour-by extension (P3a-05). Phase 3b's thermal-bridge track waits on P3a-01 and P3a-05; see
 its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
@@ -53,7 +58,7 @@ its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
   depth-tested fills work on the proving host, so the volume preview needs no edge fallback.
 - The foundation transplant landed without the deferred-reconciliation primitives, the
   edit-context writer or Volume protection this PRD expected from it. P3a-03 builds them.
-- The fourteen open decisions, D3a-1 first.
+- The ten open decisions, D3a-1 first.
 
 ## Entry gates
 
@@ -61,8 +66,8 @@ its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
 | --- | --- |
 | Ed confirms the Spaces PRD's interview record (pending since 2026-09-18) | Open |
 | D3a-1 answered (blocks P3a-01) | Open |
-| D3a-2 to D3a-12, D3a-14 and D3a-15 answered, each before the stage it blocks | Open |
-| The Spaces UI and UX discussion held and the screen stages revised | Open |
+| D3a-2 to D3a-5, D3a-9, D3a-10, D3a-12, D3a-15 and D3a-18 answered, each before the stage it blocks | Open |
+| The Spaces UI and UX discussion held and the screen stages revised | Closed 2026-10-15: D3a-16 and D3a-17; P3a-06 to P3a-08 restructured |
 | A phase issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Open. Create on Ed's say |
 | Ed authorizes implementation, stage by stage or for a run of stages | Open |
 | Phase 2 review refactors that touch the same shared files are merged or parked | Closed: [shared-deep-freeze](../../archive/shared-deep-freeze.md) merged through PR #83 on 2026-10-07 |
@@ -80,10 +85,10 @@ only when all three are done and its evidence file exists.
 | [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | Edit contexts, protection and reconciliation | Scoped | P3a-02, D3a-4 | | | | strong | | S03 |
 | [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | Copies and Move Space to Zone | Scoped | P3a-03, D3a-3, D3a-14 | | | | strong | | S04 |
 | [P3a-05](phases/p3a-05-colour-by-derived-geometry-and-readouts.md) | Colour-by derived geometry and readouts | Scoped | P3a-01, D3a-5 | | | | strong | | S05 |
-| [P3a-06](phases/p3a-06-mark-floor-and-create-space.md) | Mark floor and Create Space | Scoped | P3a-03, D3a-7 | | | | ordinary, UI | | S06 |
-| [P3a-07](phases/p3a-07-spaces-tab.md) | The Spaces tab | Scoped | P3a-04, P3a-06, D3a-6, D3a-11 | | | | ordinary, UI | | S07 |
-| [P3a-08](phases/p3a-08-airflows-and-balance-view.md) | Airflows and the balance view | Scoped | P3a-07, D3a-8, D3a-12 | | | | ordinary, UI | | S08 |
-| [P3a-09](phases/p3a-09-space-modes-preview-labels-totals.md) | Modes, preview, labels and totals | Scoped | P3a-05, P3a-06 | | | | ordinary, UI | | S09 |
+| [P3a-06](phases/p3a-06-zone-views.md) | Zone views | Scoped | Entry gates | | | | strong, UI | | S06 |
+| [P3a-07](phases/p3a-07-spaces-view.md) | The Spaces view | Scoped | P3a-04, P3a-06, D3a-12, D3a-18 | | | | ordinary, UI | | S07 |
+| [P3a-08](phases/p3a-08-mark-floor-and-create-space.md) | Mark floor and Create Space | Scoped | P3a-03, P3a-07 | | | | ordinary, UI | | S08 |
+| [P3a-09](phases/p3a-09-space-modes-preview-labels-totals.md) | Modes, preview, labels and totals | Scoped | P3a-05, P3a-07, P3a-08 | | | | ordinary, UI | | S09 |
 | [P3a-10](phases/p3a-10-spaces-export.md) | Spaces export | Scoped | P3a-04, D3a-9, D3a-10, D3a-15 | | | | strong | | S10 |
 | [P3a-11](phases/p3a-11-height-from-solid.md) | Height from solid | Scoped | P3a-07 | | | | ordinary, UI | | S11 |
 | [P3a-12](phases/p3a-12-spaces-acceptance-and-handoff.md) | Spaces acceptance and handoff | Scoped | all | | | | none; consolidation | | S12 |
@@ -101,16 +106,19 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | D3a-3 | Code | `duplicate_identity` local to Spaces | P3a-04 | Open |
 | D3a-4 | Code | Edit-context writer and deferred work live in `session/` | P3a-03 | Open |
 | D3a-5 | Code | The Colour-by extension; operation marks in the same stage | P3a-05 | Open |
-| D3a-6 | UI | A Spaces tab with its own tree | P3a-07 | Open |
-| D3a-7 | UI | No toolbar; panel, menu and right-click routes | P3a-06 | Open |
-| D3a-8 | Code | Balance grouping as a function; registration deferred to equipment | P3a-08 | Open |
+| D3a-6 | UI | Where Spaces live on screen | P3a-07 | Answered 2026-10-15: a view of the Zones tab (D3a-16) |
+| D3a-7 | UI | How Mark floor and Create Space start | P3a-08 | Answered 2026-10-15: column-menu paint; native context menu |
+| D3a-8 | Code | Balance grouping as a function | none | Superseded 2026-10-15: no balance view; sums on Zone rows |
 | D3a-9 | Code | The Spaces export section is required for export | P3a-10 | Open |
 | D3a-10 | Code | A blocked run still reports its schedules, labelled | P3a-10 | Open |
-| D3a-11 | UI | Keep saved column layout; drop the Level rail | P3a-07 | Open |
-| D3a-12 | UI | What the 10 percent imbalance is measured against | P3a-08 | Open |
+| D3a-11 | UI | The Level rail and saved column layout | P3a-07 | Answered 2026-10-15: no rail; layout follows the shared table |
+| D3a-12 | UI | What the 10 percent imbalance is measured against | P3a-07 | Open |
 | D3a-13 | Behavior | Independent Space children in a proven Zone copy; Windows follow their Type protocol | P3a-04; acceptance S04/S10/S12 | Confirmed 2026-10-12; the transition contract exists on `main`; Spaces' contributor and evidence pending |
-| D3a-14 | UI and behavior | A standalone native Space copy made independent automatically, as Zones' copy watcher does | P3a-04 | Open |
+| D3a-14 | UI and behavior | A standalone native Space copy made independent automatically, as Zones' copy watcher does | P3a-04 | Answered 2026-10-15: yes |
 | D3a-15 | Code | Spaces opts in to `user_data` pass-through to HBJSON | P3a-10 | Open |
+| D3a-16 | UI | One Zones tab with views: Faces, Spaces, later loads and equipment | P3a-06, P3a-07 | Answered 2026-10-15 |
+| D3a-17 | UI and code | Weighting factor, a number from 0 to 1 with quick picks | P3a-02, P3a-07, P3a-08 | Answered 2026-10-15 |
+| D3a-18 | UI | Select by through column filters and check-all, no cell menu | P3a-07 | Open |
 
 ## Owed from elsewhere, allocated here
 
@@ -123,7 +131,7 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | Results from runs that cannot publish | R05 item 3 | P3a-10 | Scoped |
 | Optional attaching section rule | R05 item 4 | Moved to Phase 3b, [P3b-08](../phase-03b-thermal-bridges/phases/p3b-08-thermal-bridge-export.md), which delivers the first optional attaching section (D3b-20) | Moved |
 | Restore Zone reads Space stamps | zones Q14 | P3a-04 | Scoped |
-| Where Zones appear, re-ruled | zones Q13 | P3a-07 through D3a-6 | Scoped |
+| Where Zones appear, re-ruled | zones Q13 | none | Settled 2026-10-15 by D3a-16: every view of the Zones tab shows the Zone rows |
 | Unit-switch repaint cost on a large table | units U1-F1 | P3a-07, measure first | Scoped |
 | Ruby `volume` and `airflow` quantities | [units packet](../cross-phase/units/STATUS.md), standalone extraction confirmed 2026-10-07 | none | Merged through PR #84. Nothing left for Spaces but to use them |
 
@@ -134,7 +142,8 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | "Through PHX" and METr room checks | [metr-export](../unscheduled/metr-export/README.md) |
 | Height drag handle (Q6) | Spaces PRD, non-goals |
 | Toolbar buttons for Classify, Place and Mark floor | [zones-entry-points](../unscheduled/zones-entry-points/README.md) E1 |
-| Balance view grouped by ventilator; by-unit and by-system modes | [equipment](../phase-04-mechanical/equipment/README.md) |
+| Airflow balance by ventilator; by-unit and by-system modes; the Ventilation and Heat pump assignment views, or Systems tabs listing the Zones each unit serves | [equipment](../phase-04-mechanical/equipment/README.md) |
+| Occupancy, Electric loads and appliances, Lighting and Hot water Zone views | The Zone loads packet, not yet drafted; P3a-06's contract admits a view with no child rows |
 | Inherited airflow values from Zone loads | The Zone loads packet, not yet drafted |
 | One shared duplicate-identity contract across Zones, Windows and Spaces | A refactor candidate recorded when P3a-04 closes (D3a-3) |
 | `Zones::Names::State` and the Zones copy watcher on the deferred-work primitive | A refactor candidate recorded when P3a-03 closes (D3a-4) |
@@ -171,3 +180,4 @@ and not reproduced.
 | 2026-10-03 | Ed split Phase 3 into two flat packets, `phase-03a-spaces/` and `phase-03b-thermal-bridges/`. The Spaces feature packet (PRD, README, STATUS) merged into this folder; stages P3-01 to P3-12 became P3a-01 to P3a-12 and decisions D3-1 to D3-12 became D3a-1 to D3a-12. S ids, F ids and H numbers are unchanged. R05 item 4 moved to Phase 3b. |
 | 2026-10-07 | Ed authorized extracting Ruby volume/airflow groundwork into the units branch. P3a-01 reuses it; all Spaces stage gates remain open. |
 | 2026-10-15 | Re-baselined against `main` at `87bdc62`: DECISIONS Part 1b re-reads F1 to F22 and adds F23 to F27; recommendations refreshed for D3a-3, D3a-4, D3a-5, D3a-6, D3a-9 and D3a-11; D3a-14 and D3a-15 added; CONTRACTS, PLAN, ACCEPTANCE and the foundation stages corrected; screen stages noted and held for the UI and UX discussion. No decision answered, no stage authorized. |
+| 2026-10-15 | UI and UX discussion: Spaces is a view of the Zones tab (D3a-16), the factor is a numeric weighting factor (D3a-17), D3a-6, D3a-7, D3a-11 and D3a-14 answered, D3a-8 superseded, D3a-18 raised. P3a-06 is now Zone views, P3a-07 the Spaces view (absorbing the former airflow and balance stage) and P3a-08 Mark floor and Create Space. PRD, CONTRACTS, PLAN and ACCEPTANCE amended; mockups added. |

@@ -1,7 +1,7 @@
 # Phase 3a: Spaces
 
 DATE: 2026-10-15
-STATUS: Scoped. Interviewed 2026-09-18; P3a-01 to P3a-12 planned; re-baselined on `main` at `87bdc62` on 2026-10-15; decisions D3a-1 to D3a-12, D3a-14 and D3a-15 open; D3a-13 confirmed; no stage authorized.
+STATUS: Scoped. Interviewed 2026-09-18; P3a-01 to P3a-12 planned; re-baselined on `main` at `87bdc62` and UI and UX discussion held on 2026-10-15; D3a-6, D3a-7, D3a-11, D3a-13, D3a-14, D3a-16 and D3a-17 answered, ten decisions open; no stage authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -19,35 +19,38 @@ designPH export gave. That is the first internal envelope-model release candidat
 
 This folder holds the feature's PRD and the coordinating files that sequence the work and bind it
 to the code on `main`. Planned at `70c340f`; re-read against `87bdc62` on 2026-10-15
-([DECISIONS](DECISIONS.md), Part 1b). The foundation stages are corrected to `87bdc62`. The
-screen stages (P3a-06 to P3a-09, P3a-11) carry a note and are revised after the Spaces UI and UX
-discussion, because Zones / Faces became table-first after they were planned.
+([DECISIONS](DECISIONS.md), Part 1b). The foundation stages are corrected to `87bdc62`. The UI
+and UX discussion the same day made Spaces a view of the Zones tab, beside Faces, and the screen
+stages were restructured around it ([DECISIONS](DECISIONS.md), "UI and UX discussion";
+[mockups](mockups/README.md)).
 
 ## Read order
 
 1. [PRD.md](PRD.md): where a Space sits, the records, floor marking, volume as a height with a
-   preview and a from-solid helper, airflows, the model tree, the Colour-by modes, labels and
+   preview and a from-solid helper, airflows, the Spaces view, the Colour-by modes, labels and
    selection totals, validation, export mapping, the port disposition, and twenty-four recorded
    decisions.
 2. [STATUS.md](STATUS.md): the tracking ledger. One row per stage, the entry gates, the open
    decisions and what each stage still owes.
 3. [DECISIONS.md](DECISIONS.md): what the merged foundation changed in the PRD (F1 to F22, re-read
-   on `87bdc62` with F23 to F27 added in Part 1b), and the choices D3a-1 to D3a-15 that need Ed's
-   answer before a stage starts.
+   on `87bdc62` with F23 to F27 added in Part 1b), the choices D3a-1 to D3a-18, and the record of
+   the UI and UX discussion.
 4. [PLAN.md](PLAN.md): the stages, their order, owners and gates.
 5. [CONTRACTS.md](CONTRACTS.md): feature id, records, operation names, cross-feature seams and
-   foundation additions H1 to H10. Proposed until P3a-01 confirms them against code.
+   foundation additions H1 to H10, H18 and H19. Proposed until P3a-01 confirms them against code.
 6. [ACCEPTANCE.md](ACCEPTANCE.md): S01 to S12 and the synthetic reference model.
-7. The stage document being worked, under [phases/](phases). Each is written to be handed to a
+7. [mockups/](mockups/README.md): the accepted Zone views direction, as images and a static page.
+8. The stage document being worked, under [phases/](phases). Each is written to be handed to a
    coding agent on its own, with this packet's CONTRACTS and the PRD.
 
 ## Scope
 
 In: Space, Volume and Floor Segment records mapped to honeybee-ph; Create Space and Mark floor;
-iCFA; average clear ceiling height, volume preview and Height from solid; supply, extract and
-transfer airflows; the tree and table; four Colour-by modes, Space labels and selection totals.
+weighted area (iCFA); average clear ceiling height, volume preview and Height from solid; supply,
+extract and transfer airflows; the Zone view contract and the Spaces view of the Zones tab; four
+Colour-by modes, Space labels and selection totals.
 
-Out: loads, schedules, equipment, Space Types, LayOut, CSV, PHPP.
+Out: loads, schedules, equipment and their future Zone views, Space Types, LayOut, CSV, PHPP.
 
 [validation-and-export](../cross-phase/validation-and-export/README.md) and
 [units](../cross-phase/units/README.md) span phases and stay in `cross-phase/`. Their Phase 3a

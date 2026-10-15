@@ -39,7 +39,9 @@ features/spaces/
   identity/   plan.rb  step.rb
   move/       plan.rb  step.rb
   mark_tool.rb
-  declarations/  shapes.rb  spaces.rb  volumes.rb  floors.rb  context.rb  viewport.rb  balance.rb
+  declarations/  shapes.rb  spaces.rb  volumes.rb  floors.rb  context.rb  viewport.rb
+html/features/spaces/
+  view.js  (the Spaces view, registered with the Zones tab's views; P3a-06 settles the path)
 ```
 
 ## 2. Records
@@ -53,7 +55,7 @@ engine has no migrations.
 | --- | --- | --- | --- | --- |
 | Space | `ph_composer.space` | The Space Group | `spc` | `name`, `number`, `default_height_m`, `next_volume_sequence`, `v_sup_m3h`, `v_eta_m3h`, `v_tran_m3h` |
 | Volume | `ph_composer.space_volume` | The Volume Group, directly inside a Space | `vol` | `number`, `display_name`, `avg_ceiling_height_m`, `floor_id`, `home_transform` |
-| Floor Segment | `ph_composer.floor_segment` | A Face inside a Volume | `fsg` | `display_name`, `icfa_factor` (default 1.0), `net_area_factor` (default 1.0) |
+| Floor Segment | `ph_composer.floor_segment` | A Face inside a Volume | `fsg` | `display_name`, `weighting_factor` (0 to 1, default 1.0, D3a-17), `net_area_factor` (default 1.0) |
 | Zone stamp (exists) | `ph_composer.zone_stamp` | The Space Group | none | As on a Face: schema 2 holds `zone_id`, `building_segment_id`, `level_id` and `choice_evidence` (PR #80); schema 1 names are still read. Written through Zones' stamp writer, never by hand |
 
 - Each airflow field is absent or a number in m3/h. Absent is not zero (Q21). No field is null.
@@ -101,9 +103,9 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 | `volumes.create` | action | P3a-02 | Explicit Face references at a Space's root become the next Volume |
 | `volumes.update` | action | P3a-02 | `avg_ceiling_height_m`, `display_name` |
 | `volumes.remove` | action | P3a-02 | Removes the Volume structure; the PRD's rule for what happens to its faces |
-| `floors.mark` | action | P3a-02 | Explicit Face references inside a Volume, and `icfa_factor`. Creates or updates Floor Segment records |
+| `floors.mark` | action | P3a-02 | Explicit Face references inside a Volume, and `weighting_factor`. Creates or updates Floor Segment records |
 | `floors.unmark` | action | P3a-02 | Removes the Floor Segment record; the face stays |
-| `floors.update` | action | P3a-02 | `icfa_factor`, `net_area_factor`, `display_name` |
+| `floors.update` | action | P3a-02 | `weighting_factor`, `net_area_factor`, `display_name` |
 | `settings.get`, `settings.update` | query, action | P3a-02 | The model's last-entered height |
 | `update_metadata` | action | P3a-02 | `user_data` and extension payloads on explicit Spaces, Volumes and Floor Segments, with `expected_metadata`, one step, as the Zones, Faces and Window Units actions do (F23). `list` reports `extension_status` beside `extension_data` |
 | `follow_zone_copy` | transition contributor | P3a-04 | Joins `ph_composer.zones.occurrence_independent`: new ids for every Space, Volume, Floor Segment and Space Floor in the copied occurrence whose id another occurrence holds, stamps naming the new Zone, internal references remapped (D3a-13) |
@@ -113,13 +115,13 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 | `volumes.restore_position` | action | P3a-03 | Puts a moved Volume back at `home_transform` |
 | `make_independent` | action | P3a-04 | New ids for an explicit copied Space, Volume or Floor Segment and everything inside it; the next free number for a Space |
 | `move_to_zone` | action | P3a-04 | An explicit Space reference and a target Zone reference |
-| `mark_tool.choose`, `mark_tool.stop` | view command | P3a-06 | Tool state, as Classify's palette |
-| `mark_tool` | snapshot section | P3a-06 | The palette's chip and whether the tool has the viewport |
-| Spaces menu entries | `menu_item`, `menu_entries` | P3a-06 | Create Space, Mark floor, Stop |
-| `select_by` | view command | P3a-07 | Select every Space whose named column holds the named value |
-| `balance` | query, snapshot section | P3a-08 | Per Zone: supply, extract and transfer sums over user-specified Spaces, the inheriting count, the imbalance flag, the model total |
+| `mark_tool.start`, `mark_tool.stop` | view command | P3a-08 | Start Mark floor with one weighting factor value, from the Weighting factor column menu, as Classify's column-scoped paint starts its tool; stop it (D3a-7) |
+| Mark floor state | in the `spaces` snapshot section | P3a-08 | The value being painted and whether the tool has the viewport, for the column header's pressed paint glyph |
+| Create Space entry | native context menu (`menu_entries`) | P3a-08 | Create Space on a Face selection, with Make Zone's availability rules (D3a-7) |
+| Zone sums | in `list` and the `spaces` snapshot section | P3a-02 values, P3a-07 display | Per Zone: floor area, weighted area, net volume, and supply, extract and transfer sums over user-specified Spaces, the inheriting count and the imbalance flag. Replaces the `balance` query (D3a-8) |
+| The Spaces view | Zone view contribution (H18) | P3a-07 | Rows, columns, header Colour-by toggles and selection-bar controls under each Zone (D3a-16) |
 | `volumes.height_from_solid` | action | P3a-11 | An explicit Volume reference and an explicit closed Group reference. Sets the height and returns both numbers |
-| `by_icfa_factor` | colour mode | P3a-06; prism added in P3a-09 | Counts, Does not count, other. Entity kind `floor_segment` |
+| `by_weighting_factor` | colour mode | P3a-07 on Floor Segment faces; prism added in P3a-09 | One band per value in use (D3a-17). Entity kind `floor_segment` |
 | `by_space`, `by_ventilation`, `by_height` | colour mode | P3a-09 | Entity kind `volume` |
 | `labels`, `selection_totals` | colour readout (new, D3a-5) | P3a-09 | Viewport text and HUD lines |
 
@@ -136,6 +138,7 @@ prefix. The finding codes are in section 6.
 | Zones Restore Zone | Stamped Space Groups | The same stamp read that Faces use | Limited Restore and orphaned-contents detection (zones Q14) |
 | Spaces reconciler | `session/` edit context and deferred work | Direct calls to the foundation modules | Protection, exit, pre-save, the coalesced pass |
 | Spaces modes and readouts | `colour_by/` | `colour_mode` with `derived`; `colour_readout` | Prisms, labels, totals |
+| Spaces view (panel) | Zones tab | The Zone view contribution (H18). Zones hosts views and names none | The Spaces view beside Faces |
 | Mark floor tool | Spaces actions | `API.invoke` with its own caller handle | One gesture, one action, one Undo step |
 | Spaces section (Python) | Zones section | `Attachment(ROOM, key=zone id)` and a declared `Requirement` on the zones section | `Space` on its Room |
 
@@ -155,8 +158,10 @@ Each is shared, names no feature, and lands in the stage listed with its own tes
 | H6 | The deferred-work primitive: a keyed coalescing queue over `CoalescedTimer`, and the Undo ledger for the automatic entry and its suppressions. Reuses `HostFollowUp` for restorable record writes; adds only what lock-state writes need (D3a-4) | `session/` | P3a-03 |
 | H7 | `ColourBy::Entry#derived`: world-space polygons and segments drawn in the entry's colour | `colour_by/service.rb`, `overlay.rb`, `tessellation.rb` | P3a-05 |
 | H8 | `FeatureScope#colour_readout`, with registration diagnostics | `shell/registry.rb`, `declarations.rb`, `registry_validation.rb`, `colour_by/` | P3a-05 |
-| H9 | A cell context menu in the shared table | `html/table.js` or `html/inventory_grid.js` | P3a-07 |
-| H10 | The Spaces pane and its subtabs, enabled by the stage that lands the first section | `html/index.html` | P3a-07, P3a-08 |
+| H9 | A cell context menu in the shared table. Not needed if D3a-18 is answered as recommended | `html/table.js` or `html/inventory_grid.js` | P3a-07, only if D3a-18 keeps it |
+| H10 | Superseded by H18: there is no Spaces pane. `html/index.html` loses the reserved Spaces tab and renames Zones / Faces to Zones | `html/index.html` | P3a-06 |
+| H18 | The Zone view contribution: a view row (the shared subtabs nav) over the Zones table; views registered by features, each with its rows, columns, header actions and selection-bar controls; Zone rows, Name, filter, expansion, checked rows and Locate shared across views; a view may have no child rows. Faces moves onto it. Names no feature (D3a-16) | `html/` kit and `html/features/zones/` | P3a-06 |
+| H19 | A fourth tree tier in the shared table | `html/table.css`, `html/table.js` | P3a-07 |
 
 `tools/ui-preview/host.js` knows a fixed list of section names. Every stage that adds a panel
 section adds its preview fixture there and a check in `tools/ui-preview/`.
@@ -173,7 +178,7 @@ preflight query and the Python section, and the same codes appear per row in `li
 | `space.volume_moved` | Volume moved outside its edit context | no | `volumes.restore_position` |
 | `space.volume_unprotected` | Predecessor's protection finding | no | Reconcile |
 | `space.height_missing` | Volume height missing | yes | Enter a height |
-| `space.airflow_imbalance` | Supply and extract differ by more than 10 percent in a Zone | no | Review; shown in the balance view |
+| `space.airflow_imbalance` | Supply and extract differ by more than 10 percent in a Zone | no | Review; the marker on the Zone row |
 | `space.number_duplicate` | Duplicate Space number within a Zone | no | Renumber |
 | `space.duplicate_identity` | Two records share an id | yes | `make_independent`; none inside a repeated component |
 | `space.floor_projected` | Floor Segment not horizontal | no | Review |

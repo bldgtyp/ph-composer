@@ -34,7 +34,7 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    both factors and the projected world loop in metres. Read through the export snapshot, never
    the live Model. Adapt `features/spaces/contract.rb`.
 2. **Preflight.** The contributor's preflight returns the rows of CONTRACTS section 6 with their
-   `blocks_export` values and a `locate` for each, and the imbalance warning from P3a-08 when it
+   `blocks_export` values and a `locate` for each, and the imbalance warning from P3a-07 when it
    exists. Repairs offered where an action exists: Make independent, Restore position.
 3. **Off-to-the-side line (Q17).** A Space whose Floor Segments lie outside its Zone's bounding
    extents adds `space.offset_from_zone`, non-blocking, and one line in the report.
@@ -45,7 +45,7 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    section, `attaches = Attachment(ROOM, key=zone id)`, `required_for_export = True` (D3a-9).
    `translate` builds one honeybee-ph `Space` with `name`, `number`, `quantity` 1, and per Volume
    a `SpaceVolume` with `avg_ceiling_height`, a `SpaceFloor` of `SpaceFloorSegment`s whose
-   geometry is the projected face, `weighting_factor` from `icfa_factor` and `net_area_factor`
+   geometry is the projected face, `weighting_factor` and `net_area_factor`
    as stored, and `geometry` from the prism. Identifiers derive from the record ids. If D3a-15
    says yes, each object carries its record's `user_data` beside the reserved `ph_composer` key,
    as `model_sections.py` does for Rooms and Faces. `attach` adds the Spaces to the Room's PH
@@ -56,7 +56,7 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    `_v_eta`, `_v_tran`; a user-specified Space writes all three, 0 for an unset rate. The
    conversion from m3/h to m3/s happens here and nowhere else.
 7. **Result fields and conformance.** The section's `result_fields` carry per Zone and per
-   Building-Segment iCFA, floor area and net volume. `conformance` checks the reloaded model's
+   Building-Segment weighted area, floor area and net volume. `conformance` checks the reloaded model's
    `weighted_floor_area` and `net_volume` against those fields and raises when they differ.
 8. **Report schedule.** The contributor's `report:` hook returns one section: a Spaces schedule
    per Zone with the table's columns and totals per Zone and Building-Segment, formatted in the

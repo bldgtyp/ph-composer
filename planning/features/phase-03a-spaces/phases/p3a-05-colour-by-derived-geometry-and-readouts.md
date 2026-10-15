@@ -111,7 +111,7 @@ against that baseline. Repeat the Phase 1 and Phase 2 Colour-by cases the ledger
 
 ## Out of scope
 
-Any Spaces mode or readout (P3a-06, P3a-09). A height drag handle or any interactive derived
+Any Spaces mode or readout (P3a-07, P3a-09). A height drag handle or any interactive derived
 geometry. Hit testing against derived shapes.
 
 ## Done when

@@ -86,7 +86,7 @@ Files both sub-phases change, which must not be changed by two open branches at 
 | `Makefile` (`PLANNING_IDS`) | P3a-01, if it extends the pattern | P3b-01 |
 | `features/zones/zone/occurrences.rb` and the Zones declarations | P3a-01, P3a-04 | P3b-03 |
 | `colour_by/overlay.rb`, `shell/registry.rb`, `shell/declarations.rb` | P3a-05 | P3b-06 |
-| `html/index.html` | P3a-07, P3a-08 | P3b-05 |
+| `html/index.html` | P3a-06 | P3b-05 |
 | `export/geometry_snapshot.rb` | P3a-01, P3a-04 | P3b-08 |
 | `python/ph_composer_translation/composition.py`, `assembly.py` | P3a-01, P3a-10 | P3b-08 |
 

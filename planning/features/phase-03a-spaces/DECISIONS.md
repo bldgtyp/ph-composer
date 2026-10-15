@@ -1,7 +1,7 @@
 # Phase 3a, Spaces: what the merged foundation changed, and the decisions that follow
 
 DATE: 2026-10-15
-STATUS: Scoped. Part 1 is findings read from source on `main` at `70c340f` and from the predecessor at `f358ebf`, re-verified against `main` at `87bdc62` on 2026-10-15 (Part 1b). Part 2's decisions remain unanswered: D3a-1 to D3a-12, with recommendations refreshed where `main` changed, and D3a-14 and D3a-15 added. D3a-13 is confirmed; its mechanism now exists on `main`.
+STATUS: Scoped. Part 1 is findings read from source on `main` at `70c340f` and from the predecessor at `f358ebf`, re-verified against `main` at `87bdc62` on 2026-10-15 (Part 1b). Answered 2026-10-15 in the UI and UX discussion: D3a-6, D3a-7, D3a-11, D3a-14, D3a-16, D3a-17; D3a-8 superseded. Open: D3a-1 to D3a-5, D3a-9, D3a-10, D3a-12, D3a-15, D3a-18. D3a-13 is confirmed; its mechanism exists on `main`.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -115,10 +115,9 @@ written at `70c340f`; this table is the current reading.
 ## Part 2: decisions for Ed
 
 Each row says whether it is a UI choice or a code-structure choice, gives a recommendation and
-names the stage it blocks. None is answered. Recommendations for D3a-3, D3a-4, D3a-5, D3a-6,
-D3a-9 and D3a-11 were refreshed on 2026-10-15 against Part 1b; D3a-14 and D3a-15 are new. The UI
-rows (D3a-6, D3a-7, D3a-11, D3a-12, D3a-14) are the agenda for the Spaces UI and UX discussion
-that precedes P3a-06.
+names the stage it blocks. Recommendations for D3a-3, D3a-4, D3a-5, D3a-6, D3a-9 and D3a-11 were
+refreshed on 2026-10-15 against Part 1b; D3a-14 to D3a-18 are new. The UI and UX discussion of
+2026-10-15 answered the rows whose last column carries Ed's answer.
 
 | ID | Kind | Question | Recommendation | Blocks | Ed's answer |
 | --- | --- | --- | --- | --- | --- |
@@ -127,34 +126,81 @@ that precedes P3a-06.
 | D3a-3 | Code | Is `duplicate_identity` with Make independent Spaces-local or a shared contract? (F5) | Refreshed 2026-10-15. The Zone-copy half is no longer open: Spaces joins `ph_composer.zones.occurrence_independent` through `transition_contributor`, as `Units::ZoneCopy` does, and builds nothing shared for it. For a standalone Space, Volume or Floor Segment copy, keep the repair Spaces-local: a pure plan and a restorable step shaped like Windows' `IdentityPlan` and `IdentityStep`, reused by the Zone-copy contributor and by whatever D3a-14 decides. Zones, Windows and Spaces would then be three repairs with different keeper rules; record the consolidation as a refactor candidate when P3a-04 closes. The reason is design evidence, not protecting existing code | P3a-04 | |
 | D3a-4 | Code | Where do the edit-context writer and the deferred-work primitives live? (F1, F2) | Refreshed 2026-10-15. In `session/`, naming no feature: one edit-context module that is the only `active_path=` writer. For deferred work, reuse what `main` now has (`CoalescedTimer`, the `pending?` and `settle` convention, `HostFollowUp` for restorable transparent writes) and add only what is missing: a keyed coalescing queue, and the Undo ledger for protection writes that are not record changes (lock state and `home_transform` do not fit `HostFollowUp`'s record-step rule as written; P3a-03 confirms). Spaces composes them in its own reconciler in `features/spaces/`. `Zones::Names::State` and the copy watcher are not migrated in this phase; with Spaces they become three callers, and the migration is a refactor candidate when P3a-03 closes | P3a-03 | |
 | D3a-5 | Code | What is the Colour-by extension, and are the Window Type operation marks built with it? (F10) | Two additions to the existing contract and no new framework. One: an `Entry` may carry `derived`, a list of world-space polygons and segments the service fills and outlines in the entry's colour, with or without a backing entity. Two: `FeatureScope#colour_readout`, a separately registered pure projection that returns viewport text anchors or HUD lines, shown with any mode and with none. Build the operation marks in the same stage as the second real user: a contract proven only by a synthetic mode and one feature is not proven, and D2-6 asked for one design against both. Added 2026-10-15: the deferred geometry stage G-03 proposes a separate `ColourBy::LineEntry` for Edges, while Phase 3b's D3b-11 draws Edges as `derived` segments. Settle that once, in P3a-05's design note, with thermal bridges as the third named user, so Colour-by does not grow two line primitives. The design note must also fit the column-header toggles and mode `group` added since `70c340f` | P3a-05 | |
-| D3a-6 | UI | Where does the Space tree live? (F14) | Refreshed 2026-10-15. On its own Spaces tab, enabling the reserved pane, built in the table-first pattern Zones / Faces now uses rather than the tree and inspector this row first assumed: one full-width table with a Zone, Space, Volume, Floor Segment hierarchy column, editable cells, Colour by and value filters in the column headers, a checkbox set separate from Locate, and the floating selection bar for bulk edits. The airflow balance view is a second subtab. The Zones / Faces table stays unchanged. This amends spaces Q11 and face-assignment Q11 ("one tree") and settles zones Q13. The two tables answer different questions, envelope versus rooms, and Zones / Faces has no row contribution point | P3a-07 | |
-| D3a-7 | UI | How do Mark floor and Create Space start, with no toolbar? (F12) | From the Spaces tab, the Extensions menu and the right-click menu, as Classify and Place start. A toolbar button waits with [zones-entry-points](../unscheduled/zones-entry-points/README.md) E1 and covers all three tools together. "One pressed at a time" is met by SketchUp's single active tool: each panel palette already derives its pressed state from its own tool's `active?`, so no shared tool-state rule is added | P3a-06 | |
-| D3a-8 | Code | How does the equipment packet regroup the airflow balance view later? | Build the grouping as a pure function the balance read takes as an argument, with Zone grouping as the only caller. Do not add a registration point now. The PRD's promise that equipment "edits nothing in this feature's folder" is kept by adding the registration when the equipment packet is planned, against its real shape | P3a-08 | |
+| D3a-6 | UI | Where does the Space tree live? (F14) | Refreshed 2026-10-15. On its own Spaces tab, enabling the reserved pane, built in the table-first pattern Zones / Faces now uses rather than the tree and inspector this row first assumed: one full-width table with a Zone, Space, Volume, Floor Segment hierarchy column, editable cells, Colour by and value filters in the column headers, a checkbox set separate from Locate, and the floating selection bar for bulk edits. The airflow balance view is a second subtab. The Zones / Faces table stays unchanged. This amends spaces Q11 and face-assignment Q11 ("one tree") and settles zones Q13. The two tables answer different questions, envelope versus rooms, and Zones / Faces has no row contribution point | P3a-07 | Ed, 2026-10-15: neither its own tab nor a tree inside Zones / Faces. Spaces is a view of the Zones tab, beside Faces (D3a-16) |
+| D3a-7 | UI | How do Mark floor and Create Space start, with no toolbar? (F12) | From the Spaces tab, the Extensions menu and the right-click menu, as Classify and Place start. A toolbar button waits with [zones-entry-points](../unscheduled/zones-entry-points/README.md) E1 and covers all three tools together. "One pressed at a time" is met by SketchUp's single active tool: each panel palette already derives its pressed state from its own tool's `active?`, so no shared tool-state rule is added | P3a-08 | Ed, 2026-10-15, accepting the mockup: Mark floor starts from the paint choices in the Weighting factor column menu, as Classify's column-scoped paint does; Create Space is in SketchUp's native context menu, as Make Zone is. No toolbar, no palette |
+| D3a-8 | Code | How does the equipment packet regroup the airflow balance view later? | Build the grouping as a pure function the balance read takes as an argument, with Zone grouping as the only caller. Do not add a registration point now. The PRD's promise that equipment "edits nothing in this feature's folder" is kept by adding the registration when the equipment packet is planned, against its real shape | none | Superseded 2026-10-15: there is no separate balance view. Balance by Zone is on the Spaces view's Zone rows; balance by ventilator belongs with the Ventilation assignments, which may become a Systems tab. No grouping function or provider |
 | D3a-9 | Code | Is the Spaces export section required for export? (R05 item 4) | Yes. A Space that fails to translate blocks the canonical pair, consistent with the PRD's blocking findings. So Spaces is not the first optional attaching section. R05 item 4 is allocated to Phase 3b's P3b-08, whose thermal-bridge section is the first optional one (D3b-20) | P3a-10 | |
 | D3a-10 | Code | Does a blocked run report `construction_usage`, `window_face_areas` and the Spaces schedule? (R05 item 3) | A blocked run reports them, and the report says in one line that the figures come from a run that published nothing. Hiding them removes the numbers a user needs to fix the block | P3a-10 | |
-| D3a-11 | UI | Does the Spaces tab keep the predecessor's Level rail and saved column layout? | Refreshed 2026-10-15. Drop the Level rail: Level is a managed Zone choice (PR #80), and the Level column's header filter does the rail's job in the table-first pattern. Keep column layout only to the extent the shared table already persists it; add no Spaces-specific layout store. `docs/PRODUCT.md` still describes the rail and is corrected when P3a-07 lands | P3a-07 | |
-| D3a-12 | UI | The PRD warns where supply and extract "differ by more than 10 percent" and does not say of what | Of the larger of the two sums: warn when the absolute difference exceeds 0.10 times the larger. A Zone with one sum at zero and the other not is always warned | P3a-08 | |
-| D3a-14 | UI and behavior | A user copies a Space, Volume or Floor Segment natively, outside a Zone copy. Is the copy made independent automatically? (F26) | Follow the Zones precedent for a Space Group: a copy watcher in Spaces treats a Space Group added with an id another live occurrence holds as a copy and makes it independent through `HostFollowUp` in the same Undo step, with the next free number; a cut and paste leaves no duplicate and is untouched; a copy through a ComponentInstance is left alone with the existing finding. Keep the blocking `duplicate_identity` finding and the explicit Make independent repair for the cases the watcher declines and for Volumes and Floor Segments until P3a-04 measures their copy gestures on the host. This amends Q20's "no silent reissue", which rested on a premise Zones has since disproved on the host | P3a-04 | |
+| D3a-11 | UI | Does the Spaces tab keep the predecessor's Level rail and saved column layout? | Refreshed 2026-10-15. Drop the Level rail: Level is a managed Zone choice (PR #80), and the Level column's header filter does the rail's job in the table-first pattern. Keep column layout only to the extent the shared table already persists it; add no Spaces-specific layout store. `docs/PRODUCT.md` still describes the rail and is corrected when P3a-07 lands | P3a-07 | Ed, 2026-10-15, accepting the mockup: no Level rail. Level is the Zone's column, hidden by default in the Spaces view, with its header filter. Column layout follows the shared table |
+| D3a-12 | UI | The PRD warns where supply and extract "differ by more than 10 percent" and does not say of what | Of the larger of the two sums: warn when the absolute difference exceeds 0.10 times the larger. A Zone with one sum at zero and the other not is always warned | P3a-07 | |
+| D3a-14 | UI and behavior | A user copies a Space, Volume or Floor Segment natively, outside a Zone copy. Is the copy made independent automatically? (F26) | Follow the Zones precedent for a Space Group: a copy watcher in Spaces treats a Space Group added with an id another live occurrence holds as a copy and makes it independent through `HostFollowUp` in the same Undo step, with the next free number; a cut and paste leaves no duplicate and is untouched; a copy through a ComponentInstance is left alone with the existing finding. Keep the blocking `duplicate_identity` finding and the explicit Make independent repair for the cases the watcher declines and for Volumes and Floor Segments until P3a-04 measures their copy gestures on the host. This amends Q20's "no silent reissue", which rested on a premise Zones has since disproved on the host | P3a-04 | Ed, 2026-10-15: yes |
 | D3a-15 | Code | Does Spaces opt in to the `user_data` pass-through to HBJSON? (F24) | Yes, for all three records, on the honeybee-ph object each maps to (`Space`, `SpaceVolume`, `SpaceFloorSegment`), beside the reserved `ph_composer` key, as Zones, Faces, Window Units and Assemblies do. P3a-01 confirms each honeybee-ph class carries `user_data` through `to_dict` at 1.33.65; any class that does not is recorded and left out. Amends the PRD's "None of it is exported" | P3a-10 | |
+| D3a-16 | UI | How is the Zones tab organized now that Spaces lives there? | Asked by Ed. See "UI and UX discussion" below | P3a-06, P3a-07 | Ed, 2026-10-15: one Zones tab with views, as recorded below |
+| D3a-17 | UI and code | What is the factor that decides whether a Floor Segment's area counts, and how is it entered? | Asked by Ed. See "UI and UX discussion" below | P3a-02, P3a-07, P3a-08 | Ed, 2026-10-15: "Weighting factor", a number from 0 to 1 with quick picks |
+| D3a-18 | UI | Spaces Q12 asked for Select by from a right-click on any cell. In the table-first pattern, a column's value filter plus the header checkbox ("check every row the filter shows") does the same job with no cell context menu. Is that enough? | Yes. Drop the cell context menu (H9) and the `select_by` command; the column menu's Show list and the check-all box are Select by. A value the user wants to select by is always a column value, so nothing is lost | P3a-07 | |
 
 Also needed, and not new: Ed's confirmation of the interview record in the Spaces PRD, which its
 STATUS has carried as pending since 2026-09-18.
 
+## UI and UX discussion, 2026-10-15
+
+Ed's direction, worked through a mockup ([mockups/](mockups/README.md)). It answers D3a-6, D3a-7,
+D3a-11, D3a-14, D3a-16 and D3a-17 and supersedes D3a-8.
+
+**D3a-16, Zone views.** The Zones / Faces tab becomes the Zones tab. Data managed per Zone is shown
+in views of one Zones table, chosen from a view row:
+
+| View | Rows under each Zone | State |
+| --- | --- | --- |
+| Faces | The Zone's Faces, as the Zones / Faces table shows them today | Exists; moves onto the view contract in P3a-06 |
+| Spaces | Space, Volume, Floor Segment | This packet, P3a-07 |
+| Occupancy, Electric loads and appliances, Lighting, Hot water | None expected: loads and schedules sit on the Zone (honeybee-energy's Room) | Future packets |
+| Ventilation system assignments, Heat pump assignments | Equipment assignments | Future; Ed may instead flip these into Systems tabs that list the Zones each unit serves. Decided when equipment is planned |
+
+- The view row is the shared subtabs nav, the same part Window Types / U-Values / Schedule uses,
+  placed above the "Zones" heading as Window Types places it. No new visual style.
+- A view is listed only once it is built. Planned views are not shown.
+- Shared by every view: the Zone rows and the Zone Name column, the text filter, which Zones are
+  expanded, which rows are checked where the row exists in both views, and Locate. Each view
+  supplies its own child rows, columns, column-header Colour-by toggles, selection-bar controls and
+  settings.
+- Views are registered contributions. Zones hosts them and names none; Faces registers through the
+  same contract as Spaces. The contract must also admit a view with no child rows (Occupancy) so
+  it is not shaped around two tree views. P3a-06 builds it.
+- The Spaces view follows honeybee-ph's nesting: rows are Zone (the Room), Space, Volume
+  (`SpaceVolume`) and Segment (`SpaceFloorSegment`). `SpaceFloor` is exactly one per Volume; it is
+  stored (`floor_id`) and has no row. Columns: No., Name, Floor area (`floor_area`), Weighting
+  factor, Weighted area (`weighted_floor_area`), Height, Net volume (`net_floor_area` times
+  height), Supply, Extract, Transfer. Net area factor, Building-Segment and Level are hidden by
+  default (Table options). Height is edited on Volume rows; the Space row shows honeybee-ph's
+  floor-area-weighted `avg_clear_height`, read only. Zone rows carry the sums and the airflow
+  imbalance marker. The table needs a fourth tree tier.
+
+**D3a-17, Weighting factor.** The neutral term, and honeybee-ph's own field name
+(`weighting_factor`), replaces "iCFA factor" on screen and in the record. The weighted area is
+iCFA for a Phius model and TFA for a PHI one; the label stays neutral. The cell is a number from 0
+to 1, not the two Counts / Does not count chips of Q4, so PHI's partial weights fit. Quick picks
+are 1.0 and 0 always, plus every other value the model already uses: they are the paint choices
+in the column menu that start Mark floor, and Colour by weighting factor shows one band per value.
+Amends Q4.
+
 ## PRD amendments that follow
 
-Applied to [PRD.md](PRD.md) only after Ed answers, one change per decision:
+Applied to [PRD.md](PRD.md) only after Ed answers, one change per decision. The rows marked
+applied were applied on 2026-10-15.
 
 | From | Amendment |
 | --- | --- |
 | F1, D3a-4 | Disposition row for `reconciler`, `undo_ledger`, `pending_work`, `session_state`: the generic primitives land in P3a-03, not with the foundation transplant |
 | F4, D3a-2 | Records, Identity: foundation ids, not UUIDs. Disposition row for `identifiers`: Drop |
-| F12, D3a-7 | Mark floor: no toolbar wording; the pressed-state sentence restated |
-| F14, D3a-6 | "The model tree and the table": a Spaces tab with its own table-first hierarchy |
-| F26, D3a-14 | Records, "Copies (Q20)": the copy-watcher rule as Ed answers it |
+| F12, D3a-7 | Mark floor: no toolbar wording; the pressed-state sentence restated. Applied |
+| F14, D3a-6, D3a-16 | "The model tree and the table": the Spaces view of the Zones tab. Applied |
+| F26, D3a-14 | Records, "Copies (Q20)": the copy-watcher rule. Applied |
 | F24, D3a-15 | Records, "`user_data`": exported, or not, as Ed answers it |
 | F17 | Disposition row for Python `geometry.py`: Replace the flatten rule |
 | F19 | Acceptance shape: PHX and METr steps point at metr-export |
-| D3a-8 | Airflows: the grouping provider's registration is deferred to the equipment packet |
+| D3a-8 | Airflows: no separate balance view; balance on the Zone rows. Applied |
+| D3a-17 | Vocabulary, Records, Mark floor, modes and export: weighting factor as a number. Applied |
 
 ## Confirmed copy decision D3a-13
 
@@ -198,3 +244,4 @@ implemented (zone-child lifecycle ZC-02 and ZC-03): a `transition_contributor` f
 | 2026-10-03 | Drafted from a source review at `70c340f`, the predecessor at `f358ebf` and the Spaces PRD. Twenty-two findings, twelve decisions, none answered. |
 | 2026-10-12 | Ed confirmed D3a-13 through the copied-Zone review: Spaces copied with a Zone become independent authored instances; Window Units remain instances of their existing Type. Q20 and P3a-04 qualified; the twelve earlier decisions and implementation gates remain open. |
 | 2026-10-15 | Re-verified F1 to F22 against `main` at `87bdc62` (Part 1b): F6 settled, F21 item 2 settled, F5, F10, F14, F15 changed, the rest hold. Added F23 to F27. Refreshed the recommendations for D3a-3, D3a-4, D3a-5, D3a-6, D3a-9 and D3a-11; added D3a-14 (automatic independence for a standalone Space copy) and D3a-15 (`user_data` pass-through). No decision answered. |
+| 2026-10-15 | UI and UX discussion with Ed, worked through a mockup: D3a-6, D3a-7, D3a-11 and D3a-14 answered, D3a-8 superseded, D3a-16 (Zone views) and D3a-17 (weighting factor) recorded as Ed's direction, D3a-18 (Select by) raised. PRD amendments for those applied. |

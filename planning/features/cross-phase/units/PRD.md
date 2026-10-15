@@ -153,7 +153,8 @@ tests for reused quantities as well as for genuinely new rows.
 | U1-F4 | The predecessor window editor branched between a plain input and a unit field | Delivered in P2-11, merged through PR #15. Current numeric dimension bubbles share `editQuantity`/`UnitField` |
 
 The other inherited deferral, table editing, is partially closed: shared cell drafts and
-resizing exist. Persisted column order/widths still belong to P3a-07 and its open D3a-11 decision.
+resizing exist. D3a-11 (answered 2026-10-15) gives the Spaces view no layout store of its own;
+persisted column order and widths, if wanted, are a shared-table change.
 
 ## Decision disposition
 

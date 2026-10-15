@@ -1,7 +1,7 @@
 # P3a-12: Spaces acceptance and handoff
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: Scoped. Integrated run updated 2026-10-15 for the Zone views
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -28,9 +28,10 @@ Register: [ACCEPTANCE](../ACCEPTANCE.md). Host procedure:
 4. **Integrated host run.** Fresh process, the installed RBZ, the PRD's host gate in order on a
    new copy of the reference model: draw three room outlines in a Zone, Create Space from each,
    set heights, see the prisms, draw a fourth room off to the side from inside the Zone, run
-   Height from solid on the sloped room, enter airflows by range paste, open the balance view and
-   read the imbalance label, move one Space to the second Zone, copy a Space and repair it,
-   switch between Classify and Mark floor and confirm one pressed state, switch through the four
+   Height from solid on the sloped room, enter airflows by range paste, read the Zone rows' sums
+   and imbalance marker, move one Space to the second Zone, copy a Space and see it made
+   independent, switch between the Faces and Spaces views and between Classify and Mark floor and
+   confirm one tool and one pressed glyph, switch through the four
    modes and read the HUD, select two Spaces and read the totals, Undo each step, save, reopen
    inside an open Volume, export, and read back the honeybee-ph Spaces, volumes, factors and
    airflow overrides. The PRD's last clause, PHX writing the METr rooms, is excluded (F19).

@@ -23,7 +23,9 @@ Paths are relative to `src/ph_composer/`.
 
 1. **The pane.** Enable the reserved tab in `html/index.html`: a `data-tab` and a
    `data-pane="thermal_bridges"`. This is the composition-root edit the rules permit. Coordinate
-   with P3a-07, which edits the same file for Spaces; whichever lands second rebases.
+   with P3a-06, which edits the same file to rename Zones / Faces to Zones and remove the reserved
+   Spaces tab (Spaces became a view of the Zones tab on 2026-10-15); whichever lands second
+   rebases.
 2. **Types subtab.** `html/features/thermal_bridges/types.js` on `html/inventory.js`: name,
    psi-value (`LINEAR_PSI` field, signed), group (a chip showing METr's word, storing honeybee-ph's
    string), colour swatch through `inventory_forms.js`, used length (`LENGTH_M`), notes and a

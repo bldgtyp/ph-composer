@@ -1,7 +1,7 @@
 # Phase 3a delivery plan: Spaces
 
 DATE: 2026-10-15
-STATUS: Scoped. Stages P3a-01 to P3a-12 planned; none authorized. Re-baselined on `main` at `87bdc62` on 2026-10-15; the screen stages (P3a-06 to P3a-09, P3a-11) wait for the Spaces UI and UX discussion before they are revised.
+STATUS: Scoped. Stages P3a-01 to P3a-12 planned; none authorized. Re-baselined on `main` at `87bdc62` on 2026-10-15; the screen stages were restructured the same day after the UI and UX discussion (Zone views: P3a-06 to P3a-08).
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -15,14 +15,17 @@ stay instances of their existing Type under the Windows protocol. D3a-1 to D3a-1
 D3a-15 remain open; no stage is authorized.
 
 Re-baseline, 2026-10-15: [DECISIONS](DECISIONS.md), Part 1b, re-reads every finding on
-`87bdc62`. The foundation stages (P3a-01 to P3a-05, P3a-10) are corrected to it. The screen
-stages keep their 2026-10-03 shape, with a note naming what changed under them, until the UI
-discussion settles D3a-6, D3a-7, D3a-11, D3a-12 and D3a-14 against the table-first pattern
-Zones / Faces now uses.
+`87bdc62`, and the foundation stages (P3a-01 to P3a-05, P3a-10) are corrected to it. The UI and
+UX discussion the same day (DECISIONS, "UI and UX discussion") made Spaces a view of the Zones
+tab (D3a-16) with a numeric weighting factor (D3a-17), and restructured the screen stages:
+P3a-06 builds the Zone view contract and moves Faces onto it, P3a-07 is the Spaces view
+(absorbing the airflow columns and the balance, which now sits on Zone rows), and P3a-08 is
+Mark floor and Create Space. The [mockup](mockups/README.md) shows the accepted direction.
 
 On the Phase 2 two-Zone reference model: draw room outlines inside a Zone, make Spaces from them,
-mark which floor counts toward iCFA, set heights and see the volumes in the viewport, enter
-supply, extract and transfer airflows, read the balance per Zone, and export. Reload the exact
+set each floor's weighting factor (what counts toward iCFA), set heights and see the volumes in
+the viewport, enter supply, extract and transfer airflows, read the balance on each Zone row, and
+export. Reload the exact
 HBJSON in the pinned honeybee stack and read back each `Space`, its `SpaceVolume`s, floor
 segments, factors and airflow overrides.
 
@@ -31,7 +34,7 @@ is [Phase 3b](../phase-03b-thermal-bridges/PLAN.md).
 
 Out of this plan: METr conversion and import
 (D12; every "through PHX" step waits with [metr-export](../unscheduled/metr-export/README.md)),
-Zone loads and schedules, equipment, Space Types, the height drag handle (Q6), a toolbar
+Zone loads and schedules and their future Zone views, equipment and its assignment views, Space Types, the height drag handle (Q6), a toolbar
 (zones-entry-points E1), SketchUp 2023 and Windows host proof, public distribution.
 
 ## What Phases 1 and 2 supply
@@ -54,8 +57,8 @@ Paths are relative to `src/ph_composer/`. Planning baseline `70c340f`, re-read a
 | `export/` contributors, preflight, snapshot, report hook, `registration.cycle`, `user_data` pass-through | One Spaces contributor with a schedule section | The empty-Room refusal (R05 item 1). The cycle check merged through PR #122 |
 | Python `Section`, `Requirement`, `Attachment(ROOM)`, coordinator | One Spaces section attaching to the Zone's Room | Nothing in the coordinator |
 | Eight pinned wheels, honeybee-ph 1.33.65 among them | `Space`, `SpaceVolume`, `SpaceFloor`, `SpaceFloorSegment` | Confirmation by running. No new wheel expected |
-| `html/` table, `inventory_grid`, `record_edits`, subtabs, unit field, overlay | The Spaces table, range edit and paste, the balance subtab | The Spaces pane, a cell context menu for Select by |
-| `html/` table-first kit from Zones / Faces: header actions and Colour-by toggles, `column_menu.js`, `selection_bar.js`, `table_contributions.js` | The Spaces table's shape (D3a-6, to be settled in the UI discussion) | Nothing known; the discussion decides |
+| `html/` table, `inventory_grid`, `record_edits`, `subtabs.js`, unit field, overlay | The Spaces view's table, range edit and paste, the view row | A fourth tree tier (H19); a cell context menu only if D3a-18 keeps one (H9) |
+| `html/` table-first kit from Zones / Faces: header actions and Colour-by toggles, `column_menu.js`, `selection_bar.js`, `table_contributions.js`, Classify's column paint | The Spaces view's shape, Mark floor's start (D3a-7, D3a-16) | The Zone view contribution (H18), built in P3a-06 |
 | `core/units.rb` and `html/unit_tables.js` `volume` and `airflow` | Display of m3, ft3, m3/h, cfm | Nothing. Ruby rows merged through PR #84 |
 
 ## Stages
@@ -70,19 +73,19 @@ source, tests to write first, the host gate and the done condition.
 | [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | The edit-context writer, the deferred-work primitive, Volume protection, exit and pre-save protection, the Spaces reconciler, recovery states | P3a-02, D3a-4 | session, spaces | The native-edit matrix in a fresh process |
 | [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | `duplicate_identity` and Make independent; the Zone-copy contributor; the Space copy watcher if D3a-14 says so; Move Space to Zone; Restore Zone reading Space stamps | P3a-03, D3a-3, D3a-14 | spaces, zones | Copy and repair; move under a rotated wrapper; one Undo each |
 | [P3a-05](phases/p3a-05-colour-by-derived-geometry-and-readouts.md) | Derived geometry and readouts in the Colour-by contract; Window Type operation marks if D3a-5 says so | P3a-01, D3a-5 | colour_by, windows | A synthetic mode and readout draw; depth, tags and performance |
-| [P3a-06](phases/p3a-06-mark-floor-and-create-space.md) | The Mark floor tool, the Create Space routes and preview, the By iCFA factor mode on faces | P3a-03, D3a-7 | spaces | Gestures with Ed at the mouse |
-| [P3a-07](phases/p3a-07-spaces-tab.md) | The Spaces tab: tree, table, inspector, range edit and paste, Select by, Locate, findings | P3a-04, P3a-06, D3a-6, D3a-11 | spaces, UI kit | Edit, paste, navigate contexts from rows |
-| [P3a-08](phases/p3a-08-airflows-and-balance-view.md) | Airflow columns and the any-set display; the airflow balance view and its warning | P3a-07, D3a-8, D3a-12 | spaces | Range paste; imbalance label; partly inherited |
-| [P3a-09](phases/p3a-09-space-modes-preview-labels-totals.md) | Four Colour-by modes on Volumes, the volume preview, Space labels, selection totals | P3a-05, P3a-06 | spaces | Prisms, labels and totals in the viewport |
+| [P3a-06](phases/p3a-06-zone-views.md) | The Zone view contract; the Zones tab renamed; Faces moved onto it unchanged; a synthetic Zone-only view | Entry gates, D3a-16 | UI kit, zones panel | Switching views keeps Zone state; Faces unchanged |
+| [P3a-07](phases/p3a-07-spaces-view.md) | The Spaces view: rows, columns, editing, airflows, Zone sums and imbalance marker, selection bar, row actions, findings, Colour by weighting factor | P3a-04, P3a-06, D3a-12, D3a-18 | spaces, UI kit | Edit, paste, airflows, navigate contexts from rows |
+| [P3a-08](phases/p3a-08-mark-floor-and-create-space.md) | Mark floor from the Weighting factor column menu; Create Space in the native context menu | P3a-03, P3a-07 | spaces | Gestures with Ed at the mouse |
+| [P3a-09](phases/p3a-09-space-modes-preview-labels-totals.md) | Four Colour-by modes on Volumes, the volume preview, Space labels, selection totals | P3a-05, P3a-07, P3a-08 | spaces | Prisms, labels and totals in the viewport |
 | [P3a-10](phases/p3a-10-spaces-export.md) | The Spaces contributor and Python section, export findings, the report schedule; R05 item 3 | P3a-04, D3a-9, D3a-10, D3a-15 | spaces, export | Normal RBZ exports; exact HBJSON reloads |
 | [P3a-11](phases/p3a-11-height-from-solid.md) | Height from solid | P3a-07 | spaces | A wedge sets the height; both numbers reported |
 | [P3a-12](phases/p3a-12-spaces-acceptance-and-handoff.md) | Acceptance register closed; packets, context and docs updated | all | integration | Fresh-process integrated run |
 
 ```
-P3a-01 ─┬─ P3a-02 ── P3a-03 ─┬─ P3a-04 ─┬───────── P3a-10 ═ M3 ─┐
-       │                  │         └─ P3a-07 ─┬─ P3a-08 ═ M2 ┤
-       │                  └─ P3a-06 ─┬─┘       └─ P3a-11 ─────┼─ P3a-12
-       └─ P3a-05 ────────────────────┴─ P3a-09 ───────────────┘
+P3a-01 ─┬─ P3a-02 ── P3a-03 ── P3a-04 ─┬─────────────────── P3a-10 ═ M3 ─┐
+        │                              └─ P3a-07 ─┬─ P3a-08 ═ M2 ─┬─ P3a-09 ┼─ P3a-12
+        ├─ P3a-06 (own branch) ─────────────┘     └─ P3a-11 ──────┼────────┘
+        └─ P3a-05 ────────────────────────────────────────────────┘
                           M1 = after P3a-04
 ```
 
@@ -90,8 +93,9 @@ P3a-01 ─┬─ P3a-02 ── P3a-03 ─┬─ P3a-04 ─┬──────�
 
 - **M1, after P3a-04.** Spaces exist as data and survive the host: a panel-closed script creates,
   edits, copies, repairs and moves Spaces, and the native-edit matrix passes. No screen yet.
-- **M2, after P3a-08.** Authoring is complete on screen: the tool, the tab, airflows and the
-  balance view. This is the earliest point worth a hands-on pass by Ed.
+- **M2, after P3a-08.** Authoring is complete on screen: the Zone views, the Spaces view with
+  its airflows and Zone sums, Mark floor and Create Space. This is the earliest point worth a
+  hands-on pass by Ed.
 - **M3, after P3a-10.** Spaces on the reference model, exported and read back.
 
 P3a-09, P3a-11 and P3a-12 complete Phase 3a.
@@ -100,7 +104,8 @@ P3a-09, P3a-11 and P3a-12 complete Phase 3a.
 
 The default is one branch at a time in stage order. P3a-05 touches only `colour_by/`, `shell/`
 and, under D3a-5, `features/windows/`, so it can run on a second branch from P3a-01. P3a-10 needs
-only records and P3a-04's findings, so it can run beside P3a-06 to P3a-08.
+only records and P3a-04's findings, so it can run beside P3a-06 to P3a-08. P3a-06 needs no
+Spaces record and touches only the panel, so it can run on its own branch from the entry gates.
 
 Stages that change the same shared file and must not overlap:
 
@@ -108,7 +113,7 @@ Stages that change the same shared file and must not overlap:
 | --- | --- |
 | `features/zones/zone/occurrences.rb`, `export/geometry_snapshot.rb` | P3a-01 (container rule), P3a-04 (stamp reads) |
 | `shell/registry.rb`, `shell/declarations.rb`, `shell/registry_validation.rb` | P3a-05 (`colour_readout`) |
-| `html/index.html` | P3a-07 (the pane), P3a-08 (the balance subtab) |
+| `html/index.html`, `html/features/zones/overview.js` | P3a-06 (the tab, the view contract, Faces moved onto it), P3a-07 (registers Spaces; no Zones file changes) |
 | `python/ph_composer_translation/model_sections.py`, `composition.py` | P3a-01 (empty Room), P3a-10 (the section) |
 | `extension.rb` | P3a-02 only |
 
@@ -128,8 +133,9 @@ Spaces is a layer 3 feature (D2-1): things placed on geometry.
   a Zone is a container; it never learns what the container is.
 - `session/` owns the edit-context writer and the deferred-work primitive. `colour_by/` owns
   derived geometry and readouts. Both name no feature.
-- Export orchestration, `shell/` and the UI kit name no feature. The balance view's later
-  regrouping by ventilator is the equipment packet's registration, not a branch here (D3a-8).
+- Export orchestration, `shell/` and the UI kit name no feature. The Zones tab hosts views and
+  names none of them (D3a-16). Balance by ventilator belongs with the equipment packet's
+  Ventilation assignments (D3a-8).
 
 ## Verification profile and review
 
@@ -141,9 +147,10 @@ fixtures only through their owning tests (`make fixtures`), and run the stage's 
 fresh process with the installed build.
 
 Review ladder, one review per coherent diff, given the architecture rubric. An ordinary stage
-gets one diff-focused review. P3a-01, P3a-03, P3a-04, P3a-05 and P3a-10 change public contracts,
-native lifecycle or serialization and get the stronger independent pass instead. P3a-06 to P3a-09
-and P3a-11 apply the UI polish skill in the same review.
+gets one diff-focused review. P3a-01, P3a-03, P3a-04, P3a-05, P3a-06 and P3a-10 change public
+contracts, native lifecycle or serialization and get the stronger independent pass instead; P3a-06's
+is the contributor contract for every later Zone view. P3a-06 to P3a-09 and P3a-11 apply the UI
+polish skill in the same review.
 
 Add each stage's native cases to [`native-acceptance/cases.json`](../../native-acceptance/cases.json)
 when the stage is implemented, with dependency patterns for the files it adds, and record
@@ -164,7 +171,7 @@ once:
 | `Makefile` (`PLANNING_IDS`) | P3a-01, if it extends the pattern | P3b-01 |
 | `features/zones/zone/occurrences.rb` and the Zones declarations | P3a-01, P3a-04 | P3b-03 |
 | `colour_by/overlay.rb`, `shell/registry.rb`, `shell/declarations.rb` | P3a-05 | P3b-06 |
-| `html/index.html` | P3a-07, P3a-08 | P3b-05 |
+| `html/index.html` | P3a-06 | P3b-05 |
 | `export/geometry_snapshot.rb` | P3a-01, P3a-04 | P3b-08 |
 | `python/ph_composer_translation/composition.py`, `assembly.py` | P3a-01, P3a-10 | P3b-08 |
 

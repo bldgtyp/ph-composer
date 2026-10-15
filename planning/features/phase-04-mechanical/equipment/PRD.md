@@ -62,8 +62,11 @@ family 7.
 - Delete of an item in use asks, then clears the ids from the Zones. One Undo step.
 - An item that serves no Zone is a warning and is not exported, since honeybee-ph has nowhere
   to put it.
-- Registers Colour-by modes `By ventilator` and `By hot water system`, and regroups the Spaces
-  airflow balance view by ventilator, as the spaces packet recorded.
+- Registers Colour-by modes `By ventilator` and `By hot water system`, and owns airflow balance
+  by ventilator. Since 2026-10-15 the Spaces packet has no separate balance view: balance by Zone
+  sits on the Spaces view's Zone rows (spaces D3a-8). Ventilation and Heat pump assignments are
+  planned as views of the Zones tab or, as Ed may prefer, Systems tabs listing the Zones each unit
+  serves (spaces D3a-16); this packet decides.
 
 ### Export
 

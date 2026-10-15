@@ -1,18 +1,19 @@
 # P3a-09: modes, preview, labels and totals
 
 DATE: 2026-10-15
-STATUS: Scoped. Waits for the Spaces UI and UX discussion; see the re-baseline note
+STATUS: Scoped. Revised 2026-10-15 after the UI and UX discussion
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
-**Re-baseline note, 2026-10-15 (`main` at `87bdc62`).** Colour-by modes are now toggled from
-table column headers, may declare a `group`, and are masked by the service's occurrence filter.
-The four Spaces modes bind to Spaces table columns the same way; P3a-05's design note settles
-derived geometry against that. Revised after the Spaces UI and UX discussion.
+**Revised 2026-10-15.** Colour-by modes are toggled from table column headers, may declare a
+`group`, and are masked by the service's occurrence filter; the panel legend strip is gone. Each
+Spaces mode is toggled from its Spaces view column header (P3a-07), and the readout toggles live in
+that view's Table options. P3a-05's design note settles derived geometry against this.
 
 ## Entry and scope
 
-Requires P3a-05 and P3a-06. Owns everything Spaces draws in the viewport beyond P3a-06's one mode:
+Requires P3a-05, P3a-07 and P3a-08. Owns everything Spaces draws in the viewport beyond P3a-07's
+one mode:
 the four Colour-by modes on Volumes, the volume preview prism as their derived geometry, Space
 labels and selection totals. Nothing here writes to the Model.
 
@@ -33,31 +34,35 @@ Paths are relative to `src/ph_composer/`.
 2. **Four modes.** `colour_modes.rb` registers, with entity kind `volume`, each entry carrying
    the Volume Group as its entity, its occurrence path, and the prism as `derived`:
    - `by_space`: value is the Space id; a categorical ramp keyed by id so colours are stable
-     across sessions (Q13); legend label number and name, with iCFA.
+     across sessions (Q13); legend label number and name, with weighted area. Toggled from the
+     Name column header.
    - `by_ventilation`: supply only, extract only, both, transfer only, none, from the any-set
-     metrics; legend counts and flow sums.
-   - `by_icfa_factor`: widen P3a-06's mode to the Volume. A Volume whose segments differ in
+     metrics; legend counts and flow sums. Toggled from the Supply column header, with Extract
+     and Transfer bound to the same mode through a `group`.
+   - `by_weighting_factor`: widen P3a-07's mode to the Volume. A Volume whose segments differ in
      factor needs a rule: colour per segment, so this mode's entries stay per Floor Segment with
      each segment's own prism. Legend area per band.
-   - `by_height`: bands of average clear ceiling height; legend net volume per band.
+   - `by_height`: bands of average clear ceiling height; legend net volume per band. Toggled
+     from the Height column header.
    A Volume with a blocking finding says `state: :incomplete`.
 3. **Preview follows the mode.** The prism is on while one of the four modes is active and off
    otherwise, because it is that mode's derived geometry. There is no separate preview switch.
-4. **Legend extras.** The legend's second figure per row (iCFA, flow sums, area, net volume) is a
+4. **Legend extras.** The legend's second figure per row (weighted area, flow sums, area, net volume) is a
    message part with a quantity id. If the legend row contract carries only a count today, extend
    `ColourBy::Row` once, generally, in `colour_by/`, and say so in the evidence; do not format in
    the mode.
 5. **Space labels.** `readouts.rb` registers `labels` through `colour_readout`: one text anchor
-   per Space at its reference point, number and name by default, with iCFA, net volume and
+   per Space at its reference point, number and name by default, with weighted area, net volume and
    airflows as toggles (Q11). The reference point is the centroid of the Space's largest Floor
    Segment, projected, raised by a fixed pixel lift; state the rule in the code's comment and in
-   `context/`. Toggles are readout options stored per Model session, set from the panel legend
+   `context/`. Toggles are readout options stored per Model session, set from the Spaces view's Table options
    and the menu.
 6. **Selection totals.** `selection_totals` through `colour_readout`: with one or more Spaces,
-   Volumes or Floor Segments selected, HUD lines for summed iCFA, net volume, supply and extract.
+   Volumes or Floor Segments selected, HUD lines for summed weighted area, net volume, supply and extract.
    Selected Volumes and Floor Segments count toward their Space once. Independent of the mode.
-7. **Panel legend.** The existing Colour-by panel section lists the readouts with their toggles
-   once P3a-05 reports them; add only the label options. Preview fixtures and checks.
+7. **Panel toggles.** The Spaces view's Table options list the two readouts and the label
+   options once P3a-05 reports them; the colour key stays beside each column's Show choices, as
+   in Zones / Faces. Preview fixtures and checks.
 8. **Walkthrough.** `tools/examples/authoring/spaces_colour_by_walkthrough.rb`: activate each
    mode, read `colour_by.state`, toggle the readouts.
 
@@ -90,8 +95,8 @@ Fresh process on the reference model: switch through the four modes and read the
 see translucent prisms depth-tested against the Zone's walls; Space 103's 5.0 m Volume stands
 above its neighbour; Space 201's prism sits on the projected base of its sloped floor, off to the
 side; turn labels on with no mode and with a mode, and toggle each line; select Spaces 101 and
-102 and read 16.0 m2 and 39.6 m3 in SI and the same in IP; hide a tag; Mark floor still forces
-and releases By iCFA factor. Save, and confirm by comparing entity and dictionary counts before and
+102 and read 16.0 m2 and 39.6 m3 in SI and the same in IP; hide a tag; Mark floor still turns
+Colour by weighting factor on. Save, and confirm by comparing entity and dictionary counts before and
 after that nothing was added to the SKP.
 
 ## Out of scope

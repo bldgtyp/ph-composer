@@ -13,8 +13,8 @@ on what the scan sees, and the registered operations. A script can create and ed
 this stage closes. Nothing reacts to native edits yet, nothing is locked, and nothing is exported.
 
 Behavior owner: [Spaces PRD](../PRD.md), sections "Where a Space sits", Records, "Creating
-Spaces, Volumes and Floor Segments" less Mark floor's tool and Move Space to Zone, iCFA, Volume
-less the preview and Height from solid, Airflows less the balance view, and Validation rows.
+Spaces, Volumes and Floor Segments" less Mark floor's tool and Move Space to Zone, "Weighted area (iCFA)", Volume
+less the preview and Height from solid, Airflows, and Validation rows.
 Names: [CONTRACTS](../CONTRACTS.md) sections 1, 2, 3 and 6.
 
 Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
@@ -29,7 +29,7 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    under `features/spaces/` names Windows or Assemblies.
 2. **Record schemas.** `space/schema.rb`, `volume/schema.rb`, `floor/schema.rb`: the three stores
    and values schemas of CONTRACTS section 2, each with its `ReferenceTarget`. Airflow fields are
-   optional numbers, never null. `icfa_factor` and `net_area_factor` are floats in 0 to 1. Port
+   optional numbers, never null. `weighting_factor` and `net_area_factor` are floats in 0 to 1 (D3a-17). Port
    the field set from `features/spaces/attrs.rb`; drop `entity_type`, `color`, `floor_level` and
    the model flag.
 3. **Occurrences and scan.** `scan/occurrences.rb` walks from a Zone occurrence to its Space
@@ -42,7 +42,7 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    `Zones::Index` is.
 5. **Metrics.** `scan/metrics.rb`, pure: per Floor Segment the projected horizontal area in m2
    (`floor/projection.rb`: project the face's world loop onto the horizontal plane at its mean z;
-   F17), iCFA as area times `icfa_factor`, net area as area times `net_area_factor`; per Volume
+   F17), weighted area as area times `weighting_factor`, net area as area times `net_area_factor`; per Volume
    net volume as net area times height; sums per Space, Zone, Building-Segment and Model. The
    any-set rule (Q21) lives here as one function: a Space is `inheriting` or `user_specified`,
    and for a user-specified Space an absent rate is zero. No rounding beyond what
@@ -128,7 +128,7 @@ and paste of a Space Group do to its dictionaries; the result feeds P3a-04.
 ## Out of scope
 
 Locking, edit contexts, the reconciler, recovery of moved Volumes (P3a-03). Copies and Move Space
-to Zone (P3a-04). Any screen or tool (P3a-06, P3a-07). The balance read (P3a-08). Export (P3a-10).
+to Zone (P3a-04). Any screen or tool (P3a-06 to P3a-08). Export (P3a-10).
 
 ## Done when
 

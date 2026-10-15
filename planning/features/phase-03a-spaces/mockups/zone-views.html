@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zone views mockup</title>
+<!-- Static mockup for the Spaces UI discussion. Uses the panel's real stylesheets; no panel script runs. -->
+<link rel="stylesheet" href="../../../../src/ph_composer/html/base.css">
+<link rel="stylesheet" href="../../../../src/ph_composer/html/overlay.css">
+<link rel="stylesheet" href="../../../../src/ph_composer/html/shell.css">
+<link rel="stylesheet" href="../../../../src/ph_composer/html/table.css">
+<link rel="stylesheet" href="../../../../src/ph_composer/html/features/zones/zones.css">
+<style>
+  .mk { position: absolute; z-index: 50; width: 22px; height: 22px; border-radius: 50%; background: #c8930a;
+        color: #fff; font: 600 12px/22px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.num, th.num { text-align: right; }
+  .muted-val { color: var(--muted); }
+  .phc-table td.col-hierarchy { white-space: nowrap; }
+  /* Proposed kit addition: a fourth tree tier. */
+  .phc-table .tier-3 .col-hierarchy { padding-left: 40px; color: var(--muted); }
+  td.num .phc-cell-input { text-align: right; }
+  .phc-selection-bar.mock-show { display: flex; }
+  .warn-marker { background: var(--warning-tint, #fbecc4); color: #7a5400; }
+</style>
+</head>
+<body class="phc-workspace live-panel">
+<div class="phc-app-header">
+  <nav class="phc-tabs" aria-label="Sections">
+    <button type="button" aria-selected="true" aria-pressed="true" class="is-active">Zones</button>
+    <button type="button">Assemblies</button>
+    <button type="button">Window Types</button>
+    <button type="button">Library</button>
+    <button type="button">Export</button>
+    <button type="button" disabled>Thermal Bridges</button>
+    <button type="button" disabled>Systems</button>
+  </nav>
+  <div class="phc-unit-toggle" role="group" aria-label="Display units">
+    <button type="button" aria-pressed="false">IP</button><button type="button" aria-pressed="true">SI</button>
+  </div>
+</div>
+<main class="panel-panes">
+  <div data-pane="overview"><div class="phc-pane-main" id="pane"></div></div>
+</main>
+<footer class="phc-footer"><span>PH-Composer</span><span>Editing: Model</span></footer>
+
+<script>
+(function () {
+  var state = (location.search.match(/state=(\w+)/) || [])[1] || "faces";
+  var I = {
+    locate: '<circle cx="12" cy="12" r="6"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>',
+    chevron: '<path d="m4.5 3 3 3-3 3"/>',
+    palette: '<path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>',
+    more: '<circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m10 10 2.1 2.1M4.9 19.1 7 17m10-10 2.1-2.1"/>',
+    paint: '<path d="M11 7 6 2"/><path d="M18.992 12H2.041"/><path d="M21.145 18.38A3.34 3.34 0 0 1 20 16.5a3.3 3.3 0 0 1-1.145 1.88c-.575.46-.855 1.02-.855 1.595A2 2 0 0 0 20 22a2 2 0 0 0 2-2.025c0-.58-.285-1.13-.855-1.595"/><path d="m8.5 4.5 2.148-2.148a1.205 1.205 0 0 1 1.704 0l7.296 7.296a1.205 1.205 0 0 1 0 1.704l-7.592 7.592a3.615 3.615 0 0 1-5.112 0l-3.888-3.888a3.615 3.615 0 0 1 0-5.112L5.67 7.33"/>',
+    sortA: '<path d="m3 8 4-4 4 4M7 4v16M11 12h4M11 16h7M11 20h10"/>',
+    sortZ: '<path d="m3 16 4 4 4-4M7 20V4M11 4h10M11 8h7M11 12h4"/>',
+    alert: '<path d="M12 4 3 20h18Z"/><path d="M12 10v4m0 3v.01"/>',
+    clear: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+  };
+  function svg(name, size) {
+    size = size || 18;
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + I[name] + '</svg>';
+  }
+  function chev() { return '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">' + I.chevron + '</svg>'; }
+  function iconBtn(icon, label, pressed) {
+    return '<button type="button" class="phc-icon-button assembly-tool-icon" aria-label="' + label + '"' +
+      (pressed === undefined ? '' : ' aria-pressed="' + pressed + '"') + '>' + svg(icon) + '</button>';
+  }
+
+  // ---- Columns per view. Zone rows and the Name column are shared by every view. ----
+  var FACES_COLS = [
+    { k: "name", t: "Name", w: 142, colour: true },
+    { k: "seg", t: "Building-Segment", w: 136, colour: true },
+    { k: "level", t: "Level", w: 84, colour: true },
+    { k: "depth", t: "Ground depth mm", w: 128 },
+    { k: "type", t: "Type", w: 126, colour: true },
+    { k: "bc", t: "Boundary", w: 126, colour: true },
+    { k: "area", t: "Gross area m²", w: 112, num: true },
+    { k: "asm", t: "Assembly", w: 160, colour: true }
+  ];
+  var SPACES_COLS = [
+    { k: "no", t: "No.", w: 52 },
+    { k: "name", t: "Name", w: 120, colour: true, colourOn: state === "spaces" },
+    { k: "area", t: "Floor area m²", w: 98, num: true },
+    { k: "factor", t: "Weighting factor", w: 132, num: true, colour: true, colourOn: state === "menu" || state === "checked" },
+    { k: "icfa", t: "Weighted area m²", w: 96, num: true },
+    { k: "height", t: "Height m", w: 80, num: true, colour: true },
+    { k: "vol", t: "Net volume m³", w: 96, num: true },
+    { k: "sup", t: "Supply m³/h", w: 94, num: true, colour: true },
+    { k: "eta", t: "Extract m³/h", w: 96, num: true },
+    { k: "tran", t: "Transfer m³/h", w: 96, num: true }
+  ];
+  var view = state === "faces" ? "faces" : "spaces";
+  var COLS = view === "faces" ? FACES_COLS : SPACES_COLS;
+
+  function chip(text, fill, select) {
+    if (select) return '<select class="phc-cell-input phc-enum-cell" style="--category-fill:' + fill + '"><option>' + text + '</option></select>';
+    return '<span class="phc-enum-pill" style="--category-fill:' + fill + '">' + text + '</span>';
+  }
+  function input(v, cls) { return '<input type="text" class="phc-cell-input' + (cls ? ' ' + cls : '') + '" value="' + v + '">'; }
+  var COUNTS = "rgb(204, 228, 210)", NOTCOUNT = "rgb(226, 226, 226)";
+  var muted = function (v, tip) { return '<span class="muted-val" title="' + (tip || "") + '">' + v + '</span>'; };
+
+  // ---- Rows ----
+  var faceRows = [
+    { tier: 0, kind: "Zone", open: true, marker: "1", c: { name: input("Living Zone"), seg: chip("House", "#e8eef2"), level: chip("Ground", "#e8eef2"), depth: input("0"), area: "54.25" } },
+    { tier: 1, kind: "Face", c: { name: "Wall 1", type: chip("Wall", "rgb(249, 236, 204)", 1), bc: chip("Outdoors", "rgb(204, 228, 247)", 1), area: "12", asm: chip("None", "#eef1f3", 1) } },
+    { tier: 1, kind: "Face", c: { name: "Floor 2", type: chip("Floor", "rgb(222, 222, 222)", 1), bc: chip("Ground", "rgb(236, 214, 196)", 1), area: "20.5", asm: chip("None", "#eef1f3", 1) } },
+    { tier: 1, kind: "Face", c: { name: "Roof 3", type: chip("Roof or ceiling", "rgb(222, 194, 194)", 1), bc: chip("Outdoors", "rgb(204, 228, 247)", 1), area: "21.75", asm: chip("None", "#eef1f3", 1) } },
+    { tier: 0, kind: "Zone", open: false, c: { name: input("Upper Zone"), seg: chip("House", "#e8eef2"), level: chip("Upper", "#e8eef2"), depth: input("0"), area: "40.5" } }
+  ];
+  var inh = function () { return muted("Zone", "Inherits the Zone's ventilation load: no rate is set on this Space"); };
+  var spaceRows = [
+    { tier: 0, kind: "Zone", open: true, warn: true, c: { name: input("Living Zone"), area: "22.00", icfa: "20.00", vol: "59.60", sup: "60", eta: "40", tran: "20" } },
+    { tier: 1, kind: "Space", open: true, c: { no: input("101"), name: input("Living"), area: "12.00", icfa: "12.00", height: muted("2.50", "Floor-area-weighted average of the Space's Volumes"), vol: "30.00", sup: input("60"), eta: input("0", "muted-val"), tran: input("0", "muted-val") } },
+    { tier: 2, kind: "Volume", open: true, c: { name: "Volume 1", area: "12.00", icfa: "12.00", height: input("2.50", "num"), vol: "30.00" } },
+    { tier: 3, kind: "Segment", key: "s101", c: { name: "Segment 1", area: "12.00", factor: input("1.00"), icfa: "12.00" } },
+    { tier: 1, kind: "Space", open: false, c: { no: input("102"), name: input("Bath"), area: "4.00", icfa: "4.00", height: muted("2.40", "Floor-area-weighted average of the Space's Volumes"), vol: "9.60", sup: input("0", "muted-val"), eta: input("40"), tran: input("0", "muted-val") } },
+    { tier: 1, kind: "Space", open: true, c: { no: input("103"), name: input("Hall"), area: "6.00", icfa: "4.00", height: muted("3.33", "Floor-area-weighted average of the Space's Volumes"), vol: "20.00", sup: input("0", "muted-val"), eta: input("0", "muted-val"), tran: input("20") } },
+    { tier: 2, kind: "Volume", open: true, c: { name: "Volume 1", area: "4.00", icfa: "4.00", height: input("2.50", "num"), vol: "10.00" } },
+    { tier: 3, kind: "Segment", key: "s103a", c: { name: "Segment 1", area: "4.00", factor: input("1.00"), icfa: "4.00" } },
+    { tier: 2, kind: "Volume", open: true, c: { name: "Volume 2", area: "2.00", icfa: "0.00", height: input("5.00", "num"), vol: "10.00" } },
+    { tier: 3, kind: "Segment", key: "s103b", c: { name: "Segment 1", area: "2.00", factor: input("0.00"), icfa: "0.00" } },
+    { tier: 0, kind: "Zone", open: true, c: { name: input("Upper Zone"), area: "12.00", icfa: "12.00", vol: "36.00", sup: muted("—", "1 Space inherits the Zone's ventilation load"), eta: muted("—", "1 Space inherits the Zone's ventilation load"), tran: muted("—", "1 Space inherits the Zone's ventilation load") } },
+    { tier: 1, kind: "Space", open: false, c: { no: input("201"), name: input("Loft"), area: "12.00", icfa: "12.00", height: muted("3.00", "Floor-area-weighted average of the Space's Volumes"), vol: "36.00", sup: inh(), eta: inh(), tran: inh() } }
+  ];
+  var ROWS = view === "faces" ? faceRows : spaceRows;
+  var checked = state === "checked" ? { s101: 1, s103a: 1 } : {};
+
+  function headerCell(col) {
+    var actions = "";
+    if (col.colour) actions += '<span class="phc-colour-toggle phc-header-action' + (col.colourOn ? ' is-persistent' : '') + '">' + iconBtn("palette", "Colour by " + col.t, !!col.colourOn) + '</span>';
+    actions += '<div class="phc-bubble-anchor phc-action-menu-anchor phc-column-menu-anchor phc-header-action" data-col="' + col.k + '">' + iconBtn("more", col.t + " column menu") + '</div>';
+    return '<th class="col-' + col.k + ' has-header-actions' + (col.num ? ' num' : '') + '" style="width:' + col.w + 'px"><span class="phc-header-label-row"><span class="phc-th-label">' + col.t +
+      '</span></span><span class="phc-header-actions">' + actions + '</span></th>';
+  }
+  function row(r) {
+    var isChecked = r.key && checked[r.key];
+    var acts = '<input class="row-check" type="checkbox"' + (isChecked ? ' checked' : '') + '><button type="button" class="row-icon" aria-label="Locate">' + svg("locate", 16) + '</button>';
+    var leaf = r.kind === "Face" || r.kind === "Segment";
+    var hier = '<button type="button" class="row-chevron' + (leaf ? ' is-leaf' : '') + '" aria-expanded="' + !!r.open + '">' + chev() + '</button>' +
+      '<button type="button" class="row-target">' + r.kind + '</button>' +
+      (r.marker ? '<span class="phc-row-marker">' + r.marker + '</span>' : '') +
+      (r.warn ? '<span class="phc-row-marker is-icon warn-marker" title="Supply and extract differ by more than 10 percent">' + svg("alert", 14) + '</span>' : '');
+    var cells = COLS.map(function (col) {
+      var v = r.c[col.k]; if (v === undefined) v = "";
+      var editable = typeof v === "string" && /<(input|select)/.test(v);
+      return '<td class="col-' + col.k + (col.num ? ' num' : '') + (editable ? ' phc-editable-cell' : '') + '">' + v + '</td>';
+    }).join("");
+    return '<tr class="tier-' + r.tier + (isChecked ? ' is-checked' : '') + '"' + (isChecked ? ' aria-selected="true"' : '') + '><td class="col-actions">' + acts + '</td><td class="col-hierarchy">' + hier + '</td>' + cells + '</tr>';
+  }
+
+  var subtabs = '<nav class="phc-subtabs" role="tablist" aria-label="Zone views">' +
+    (/views=all/.test(location.search)
+      ? ['Faces', 'Spaces', 'Occupancy', 'Electric loads', 'Lighting', 'Hot water', 'Ventilation', 'Heat pumps']
+      : ['Faces', 'Spaces']).map(function (t) {
+      var planned = ['Faces', 'Spaces'].indexOf(t) < 0;
+      var on = !planned && (t === "Faces") === (view === "faces");
+      return '<button type="button" role="tab"' + (planned ? ' disabled title="Planned"' : '') + ' aria-selected="' + on + '" aria-pressed="' + on + '">' + t + '</button>';
+    }).join("") + '</nav>';
+
+  var heading = '<div class="phc-heading-mount"><div class="phc-heading"><h1>Zones</h1><div class="phc-heading-actions">' +
+    '<div class="phc-bubble-anchor">' + iconBtn("settings", view === "faces" ? "Zones settings" : "Spaces settings") + '</div></div></div></div>';
+
+  var controls = '<div class="phc-inventory-controls"><label class="phc-view-control"><input type="search" placeholder="' +
+    (view === "faces" ? "Zone, type or boundary" : "Zone, number or name") + '" aria-label="Filter"></label>' +
+    '<button type="button">Collapse all</button><button type="button">Expand all</button>' +
+    '<span class="phc-view-count">' + (view === "faces" ? "2 Zones" : "2 Zones · 4 Spaces") + '</span>' +
+    '<div class="phc-bubble-anchor phc-table-options">' + iconBtn("more", "Table options") + '</div>' +
+    '<button type="button" class="phc-help" aria-label="Help">?</button></div>';
+
+  var HW = view === "faces" ? 110 : 140;
+  var widths = 108 + HW + COLS.reduce(function (a, c) { return a + c.w; }, 0);
+  var table = '<div class="phc-table-mount" style="--row-actions-width:108px"><table class="phc-table is-tree reveals-row-actions has-header-action-row" style="--col-hierarchy-width:' + HW + 'px; min-width:' + widths + 'px">' +
+    '<colgroup><col class="col-actions"><col class="col-hierarchy" style="width:' + HW + 'px">' + COLS.map(function (c) { return '<col style="width:' + c.w + 'px">'; }).join("") + '</colgroup>' +
+    '<thead><tr><th class="col-actions"><span class="phc-header-label-row"><input class="row-check" type="checkbox"><span class="phc-th-label">Actions</span></span><span class="phc-header-actions"></span></th>' +
+    '<th class="col-hierarchy"><span class="phc-header-label-row"><span class="phc-th-label">Hierarchy</span></span><span class="phc-header-actions"></span></th>' +
+    COLS.map(headerCell).join("") + '</tr></thead><tbody>' + ROWS.map(row).join("") + '</tbody></table></div>';
+
+  var bar = "";
+  if (state === "checked") {
+    bar = '<div class="phc-selection-bar mock-show" role="region" aria-label="Checked Floor Segments"><span class="phc-selection-bar-count" role="status">2 Floor Segments selected</span>' +
+      '<div class="phc-selection-bar-controls"><div class="phc-selection-controls">' +
+      '<label class="phc-selection-field"><span>Weighting factor</span><input type="text" value="1.00" style="width:64px"></label>' +
+      '<label class="phc-selection-field"><span>Net area factor</span><input type="text" value="1.00" style="width:64px"></label>' +
+      '</div></div>' + iconBtn("clear", "Clear selection") + '</div>';
+  }
+
+  document.getElementById("pane").innerHTML = '<section class="phc-overview">' + subtabs + heading + controls + table + bar + '</section>';
+
+  // Column menu for the Weighting factor column: Mark floor as column-scoped paint, as Classify does for Type.
+  if (state === "menu") {
+    var anchor = document.querySelector('[data-col="factor"]');
+    var r = anchor.getBoundingClientRect();
+    var menu = document.createElement("section");
+    menu.className = "phc-bubble phc-action-menu phc-column-menu";
+    menu.setAttribute("role", "dialog");
+    menu.style.cssText = "position:fixed; left:" + (r.left - 150) + "px; top:" + (r.bottom + 8) + "px; --bubble-pointer: 160px;";
+    menu.innerHTML = '<div class="phc-bubble-heading"><strong>Weighting factor</strong><button type="button">×</button></div><div class="phc-bubble-content">' +
+      '<button type="button" class="phc-action-menu-item phc-setting-choice"><span class="phc-glyph">' + svg("sortA", 16) + '</span><span>Sort A to Z</span></button>' +
+      '<button type="button" class="phc-action-menu-item phc-setting-choice"><span class="phc-glyph">' + svg("sortZ", 16) + '</span><span>Sort Z to A</span></button>' +
+      '<div class="phc-column-filter" role="group"><span class="phc-column-filter-heading">Show</span>' +
+      ['1.00', '0.00'].map(function (v) {
+        return '<div class="phc-column-value-row"><label class="phc-column-filter-value"><input type="checkbox" checked><span>' + v + '</span></label>' +
+          iconBtn("paint", "Mark floor at " + v, v === "1.00") + '</div>';
+      }).join("") + '</div><button type="button" class="phc-column-filter-clear" disabled>Clear filter</button></div>';
+    document.body.appendChild(menu);
+  }
+
+  // Numbered markers keyed to the notes in the discussion.
+  function mark(n, el, dx, dy) {
+    if (!el) return; var b = el.getBoundingClientRect(); var m = document.createElement("span");
+    m.className = "mk"; m.textContent = n; m.style.left = (b.left + window.scrollX + (dx || 0)) + "px"; m.style.top = (b.top + window.scrollY + (dy || 0)) + "px";
+    document.body.appendChild(m);
+  }
+  var tabs = document.querySelectorAll(".phc-subtabs button");
+  mark(1, tabs[tabs.length - 1], 64, -4);
+  if (view === "spaces") {
+    mark(2, document.querySelector("tbody tr .col-hierarchy"), 108, 6);
+    mark(3, document.querySelector("th.col-height"), 4, -6);
+    mark(4, document.querySelector("th.col-sup"), 4, -6);
+    if (state === "menu") mark(5, document.querySelector(".phc-column-menu .phc-column-value-row"), -28, 4);
+    if (state === "checked") mark(6, document.querySelector(".phc-selection-bar-count"), -30, 0);
+  }
+})();
+</script>
+</body>
+</html>
