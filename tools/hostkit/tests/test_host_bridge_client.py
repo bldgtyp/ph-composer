@@ -189,6 +189,32 @@ class DialogGuardTest(unittest.TestCase):
         self.assertIn("RuntimeError", str(raised.exception))
 
 
+class QuitTest(unittest.TestCase):
+    """A SketchUp with no document open must still quit cleanly, not be killed."""
+
+    def test_a_failed_save_step_still_terminates_and_the_save_guards_a_missing_model(self) -> None:
+        sent: list[str] = []
+        guarded: list[str] = []
+
+        def guard(_version: str, code: str, **_options: float) -> str:
+            guarded.append(code)
+            raise hb.BridgeError("NoMethodError: undefined method `modified?' for nil")
+
+        running = iter([True, False])
+        with (
+            patch.object(hb, "sketchup_running", side_effect=lambda: next(running)),
+            patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}),
+            patch.object(hb, "run_with_dialog_guard", side_effect=guard),
+            patch.object(hb, "request", side_effect=lambda _state, payload, **_kw: sent.append(payload["code"])),
+            patch.object(hb.time, "sleep"),
+        ):
+            outcome = hb.quit_sketchup("2026")
+
+        self.assertEqual(outcome, "SketchUp quit cleanly")
+        self.assertEqual(sent, ['Sketchup.send_action("terminate:")'])
+        self.assertIn("m && m.modified?", guarded[0])
+
+
 class TailTest(unittest.TestCase):
     def test_tail_names_a_missing_file_instead_of_printing_nothing(self) -> None:
         with TemporaryDirectory() as directory:
