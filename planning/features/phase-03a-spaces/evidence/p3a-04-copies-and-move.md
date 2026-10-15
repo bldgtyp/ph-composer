@@ -1,7 +1,7 @@
 # P3a-04 evidence: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: Slice A merged (#141); slice B1 (Zones: container stamps on Make Zone independent and repair, Restore Zone for stamped Groups) implemented; B2 (the copy watcher) and B3 (the Zone-copy contributor, the walkthrough) next; host gate not run
+STATUS: Slice A merged (#141); B1 (Zones container stamps, Restore Zone for stamped Groups) in review; B2 (the `container_added` event and the copy watcher) implemented; B3 (the Zone-copy contributor, the walkthrough) next; host gate not run
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -61,6 +61,16 @@ Register row S04.
   restore offer, regrouped whole with the stamped Faces; Restore always groups anew, so a lone Space
   Group never becomes the Zone's own Group.
 
+- **The copy watcher hears additions through the session (B2).** A native copy arrives as an added
+  Group after its commit, so a commit-only watcher cannot tell a copy from a cut and paste, and Spaces
+  may not use Zones' private container observers. The foundation gained `session/ContainerWatch` and
+  the `container_added` host event; Zones' name state keeps its own observers until #143 moves it. The
+  Spaces watcher reacts to an added Space Group, or an added component holding one, whose id another
+  occurrence holds. A copied plain Group holding a Space is left to its finding, because it may be a
+  Zone whose copy Zones makes independent with its Spaces (B3). Undo and Redo drop a pending pass.
+- **Array numbers (B2).** `HostFollowUp` plans every copy against one Model state, so Make independent
+  skips numbers that earlier repairs in the same proposal took; a `5x` array takes 2 to 6.
+
 ## Host
 
 SketchUp 26.1.188, Ruby 3.2.2, macOS, 2026-10-15. A probe in a throwaway operation (aborted) on a
@@ -80,6 +90,12 @@ Segment, blocking export; Make independent of a copied Space in one step, with n
 copy, the next free number, a new Space Floor, `user_data` kept and storage isolated; naming the
 original rewrites the original; Volume and Floor Segment copies; a Space repeated through shared
 storage above it has the no-repair message and refuses; an occurrence with its own identity refuses.
+`tests/container_watch_test.rb` and `tests/spaces_copy_watch_test.rb` (B2): additions at any depth
+reported with the entity; a native copy made independent in a transparent follow-up with the next
+free number; a `5x` array numbered 2 to 6; a cut and paste and an Undo leave nothing; two pre-existing
+holders are not rewritten; a copy inside a component keeps its finding with one notice; a copied plain
+Group is left to its finding. `tests/zone_nested_container_test.rb` and `tests/spaces_restore_zone_test.rb`
+(B1): container stamps through make independent and repair, their refusals, and Restore around a Space.
 `tests/spaces_move_test.rb`: a move under a rotated, shifted wrapper keeps every Floor Segment's world
 loop, every record and the Volume's position, stamps the target, in one step; a number collision is
 kept and flagged; one Undo restores and Redo moves again; refusals with a context open, into the

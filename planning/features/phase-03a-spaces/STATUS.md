@@ -154,6 +154,7 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | Inherited airflow values from Zone loads | The Zone loads packet, not yet drafted |
 | One shared duplicate-identity contract across Zones, Windows and Spaces | A refactor candidate recorded when P3a-04 closes (D3a-3) |
 | `Zones::Names::State` and the Zones copy watcher on the deferred-work primitive | [#139](https://github.com/bldgtyp/ph-composer/issues/139) (D3a-4) |
+| `Zones::Names::State` container observation on `session/ContainerWatch` | [#143](https://github.com/bldgtyp/ph-composer/issues/143) (P3a-04 B2) |
 
 ## Verification
 

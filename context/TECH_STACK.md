@@ -95,9 +95,12 @@ queued pass makes reads and writes wait (`ModelSession#busy_reason`) and a closi
 Queue a job only for work that may write: a pass that would find nothing to do should not make the
 session busy. The predecessor's `UndoLedger` is not carried over: it tracked a Volume the TFA
 transition created and entered automatically, and the explicit mark removed that transition.
-`session/host_observers.rb` only translates SketchUp callbacks into session host events. Each feature subscribes in its
-`install`, subscribers run in install order, and a feature subscribes once per process so a
-reloaded `install` does not subscribe twice.
+`session/host_observers.rb` only translates SketchUp callbacks into session host events, and
+`session/container_watch.rb` adds one: `container_added`, with the Group or ComponentInstance added to
+any container, observed through one EntitiesObserver per container and found again after each commit,
+Undo, Redo and activation. Zones' name state still keeps its own container observers (issue #143).
+Each feature subscribes in its `install`, subscribers run in install order, and a feature subscribes
+once per process so a reloaded `install` does not subscribe twice.
 
 ### Per-Model state lives on the session
 
