@@ -1262,6 +1262,20 @@
         "tests/zone_nested_container*"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "S02",
+      "label": "Spaces records and operations: panel-closed walkthrough, one native Undo and Redo per write, native copy, cut and Make Unique of a Space Group, airflow states and user_data through save and reopen, two Models isolated",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/spaces/*",
+        "src/ph_composer/features/zones/zone/steps.rb",
+        "src/ph_composer/features/zones/zone/occurrences.rb",
+        "tools/examples/authoring/spaces_walkthrough.rb",
+        "tests/spaces_*"
+      ],
+      "native_control_required": true
     }
   ]
 }

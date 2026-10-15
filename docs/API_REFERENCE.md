@@ -6443,6 +6443,218 @@ Example params:
 {}
 ```
 
+### `ph_composer.spaces.create_preview`
+
+Which explicit Faces Create Space would take into a new Space, and why it leaves each other one out. Writes nothing. Owner: `ph_composer.spaces`.
+
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zone",
+    "faces"
+  ],
+  "properties": {
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "The Zone occurrence, as ph_composer.zones.list returns it."
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "Loose Faces of the Zone, as its Face list returns them."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "accepted",
+    "left_out"
+  ],
+  "properties": {
+    "accepted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+      }
+    },
+    "left_out": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "reason",
+          "message"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+          },
+          "reason": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "zone": {
+    "zone_id": "zon_Ab12Cd34Ef56",
+    "zone_path": [
+      1201
+    ]
+  },
+  "faces": [
+    {
+      "zone_id": "zon_Ab12Cd34Ef56",
+      "zone_path": [
+        1201
+      ],
+      "entity_path": [
+        1202
+      ],
+      "entity_id": null
+    }
+  ]
+}
+```
+
 ### `ph_composer.spaces.list`
 
 One page of Space occurrences with their Volumes and Floor Segments, SI metrics, states and findings, and every Zone's sums. Owner: `ph_composer.spaces`.
@@ -23649,6 +23861,518 @@ Example params:
 }
 ```
 
+### `ph_composer.spaces.batch_update`
+
+Change many Spaces, Volumes and Floor Segments in one all-or-nothing step. Owner: `ph_composer.spaces`.
+
+Undo step: Edit Spaces. Rewrites every named record in one Undo step.
+
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "edits"
+  ],
+  "properties": {
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "values",
+          "expected_values"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entity_path"
+            ],
+            "properties": {
+              "space_id": {
+                "type": "string"
+              },
+              "volume_id": {
+                "type": "string"
+              },
+              "floor_segment_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "description": "The root-to-entity persistent-id path."
+              }
+            },
+            "description": "A Space, Volume or Floor Segment reference, as list returns it."
+          },
+          "values": {
+            "type": "object",
+            "description": "The values to change. A Space takes name, number, default_height_m and the three airflows; a Volume display_name and avg_ceiling_height_m; a Floor Segment display_name, weighting_factor and net_area_factor. null removes an optional value."
+          },
+          "expected_values": {
+            "type": "object",
+            "description": "Each named value as last read; a key absent here expects the value absent."
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "The edits, all or none."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ids"
+  ],
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "edits": [
+    {
+      "reference": {
+        "volume_id": "vol_Ab12Cd34Ef56",
+        "entity_path": [
+          1201,
+          1300,
+          1310
+        ]
+      },
+      "values": {
+        "avg_ceiling_height_m": 2.7
+      },
+      "expected_values": {
+        "avg_ceiling_height_m": 2.5
+      }
+    }
+  ]
+}
+```
+
+### `ph_composer.spaces.create`
+
+Group explicit loose Faces of an open Zone into one new Space with one Volume, each Face a Floor Segment. The Zone's edit context must be open. Owner: `ph_composer.spaces`.
+
+Undo step: Create Space. Groups the Faces and writes the Space, Volume, Floor Segment and Zone stamp.
+
+Calls: `ph_composer.zones.stamp_container`.
+
+Refuses: `operation.participant_cycle`, `operation.proposal_required`, `proposal.contribution_replaced`, `proposal.foreign_write`, `record.unreadable`, `space.context_required`, `space.nothing_to_create`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zone",
+    "faces"
+  ],
+  "properties": {
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "The Zone occurrence, as ph_composer.zones.list returns it."
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "Loose Faces of the Zone, as its Face list returns them."
+    },
+    "name": {
+      "type": "string",
+      "description": "The new Space's name; empty when absent."
+    },
+    "number": {
+      "type": "string",
+      "description": "The new Space's number; the next free one in the Zone when absent."
+    },
+    "weighting_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The weighting factor to write, 0 to 1; 1 counts the whole area."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space_id",
+    "volume_id",
+    "floor_segment_ids"
+  ],
+  "properties": {
+    "space_id": {
+      "type": "string"
+    },
+    "volume_id": {
+      "type": "string"
+    },
+    "floor_segment_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "zone": {
+    "zone_id": "zon_Ab12Cd34Ef56",
+    "zone_path": [
+      1201
+    ]
+  },
+  "faces": [
+    {
+      "zone_id": "zon_Ab12Cd34Ef56",
+      "zone_path": [
+        1201
+      ],
+      "entity_path": [
+        1202
+      ],
+      "entity_id": null
+    }
+  ],
+  "name": "Living"
+}
+```
+
+### `ph_composer.spaces.delete`
+
+Erase one Space and everything in it. Owner: `ph_composer.spaces`.
+
+Undo step: Delete Space. Erases the Space Group.
+
+Refuses: `copy.rule_missing`, `record.unreadable`, `reference.in_use`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space"
+  ],
+  "properties": {
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "space_id",
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Space, as list returns it."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space_id"
+  ],
+  "properties": {
+    "space_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "space": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300
+    ]
+  }
+}
+```
+
+### `ph_composer.spaces.floors.mark`
+
+Mark explicit Faces directly inside Volumes as Floor Segments with one weighting factor; a marked Face takes the factor. Owner: `ph_composer.spaces`.
+
+Undo step: Mark Floor. Writes Floor Segment records on the Faces.
+
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "faces",
+    "weighting_factor"
+  ],
+  "properties": {
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "minItems": 1,
+        "description": "The root-to-entity persistent-id path."
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "Root-to-Face persistent-id paths."
+    },
+    "weighting_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The weighting factor to write, 0 to 1; 1 counts the whole area."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "floor_segment_ids"
+  ],
+  "properties": {
+    "floor_segment_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "faces": [
+    [
+      1201,
+      1300,
+      1310,
+      1311
+    ]
+  ],
+  "weighting_factor": 1.0
+}
+```
+
+### `ph_composer.spaces.floors.unmark`
+
+Remove explicit Floor Segment records; the Faces stay. Owner: `ph_composer.spaces`.
+
+Undo step: Unmark Floor. Removes Floor Segment records.
+
+Refuses: `copy.rule_missing`, `record.unreadable`, `reference.in_use`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "floor_segments"
+  ],
+  "properties": {
+    "floor_segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "floor_segment_id",
+          "entity_path"
+        ],
+        "properties": {
+          "floor_segment_id": {
+            "type": "string"
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 1,
+            "description": "The root-to-entity persistent-id path."
+          }
+        }
+      },
+      "minItems": 1,
+      "description": "The Floor Segments whose records go."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "floor_segment_ids"
+  ],
+  "properties": {
+    "floor_segment_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "floor_segments": [
+    {
+      "floor_segment_id": "fsg_Ab12Cd34Ef56",
+      "entity_path": [
+        1201,
+        1300,
+        1310,
+        1311
+      ]
+    }
+  ]
+}
+```
+
 ### `ph_composer.spaces.settings.update`
 
 Set the Model's last-entered height, guarded by the value last read. Owner: `ph_composer.spaces`.
@@ -23742,6 +24466,468 @@ Example params:
   },
   "expected_values": {
     "last_height_m": null
+  }
+}
+```
+
+### `ph_composer.spaces.update`
+
+Change one Space, Volume or Floor Segment's values, guarded by the values last read. Owner: `ph_composer.spaces`.
+
+Undo step: Edit Space. Rewrites the record; a height edit also records the Model's last height.
+
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reference",
+    "values",
+    "expected_values"
+  ],
+  "properties": {
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "volume_id": {
+          "type": "string"
+        },
+        "floor_segment_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "A Space, Volume or Floor Segment reference, as list returns it."
+    },
+    "values": {
+      "type": "object",
+      "description": "The values to change. A Space takes name, number, default_height_m and the three airflows; a Volume display_name and avg_ceiling_height_m; a Floor Segment display_name, weighting_factor and net_area_factor. null removes an optional value."
+    },
+    "expected_values": {
+      "type": "object",
+      "description": "Each named value as last read; a key absent here expects the value absent."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ids"
+  ],
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "reference": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300
+    ]
+  },
+  "values": {
+    "v_sup_m3h": 60.0
+  },
+  "expected_values": {}
+}
+```
+
+### `ph_composer.spaces.update_metadata`
+
+Replace the user_data and installed extension payloads of explicit Spaces, Volumes and Floor Segments, guarded by the metadata last read. Owner: `ph_composer.spaces`.
+
+Undo step: Edit Space Metadata. Rewrites only the named records' metadata.
+
+Refuses: `extension.invalid`, `extension.migration_required`, `extension.schema_unsupported`, `extension.unavailable`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "updates"
+  ],
+  "properties": {
+    "updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "expected_metadata"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entity_path"
+            ],
+            "properties": {
+              "space_id": {
+                "type": "string"
+              },
+              "volume_id": {
+                "type": "string"
+              },
+              "floor_segment_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "description": "The root-to-entity persistent-id path."
+              }
+            },
+            "description": "The occurrence to update, as a read returns it."
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Replaces the whole user_data map."
+          },
+          "extension_payloads": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            },
+            "description": "Replaces the payload of each named installed extension."
+          },
+          "expected_metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "user_data",
+              "extension_data"
+            ],
+            "properties": {
+              "user_data": {
+                "type": "object"
+              },
+              "extension_data": {
+                "type": "object"
+              }
+            },
+            "description": "The user_data and extension_data last read; a change refuses."
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "The occurrences to update, written in one step and one Undo."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "updates"
+  ],
+  "properties": {
+    "updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "extension_status"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entity_path"
+            ],
+            "properties": {
+              "space_id": {
+                "type": "string"
+              },
+              "volume_id": {
+                "type": "string"
+              },
+              "floor_segment_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "description": "The root-to-entity persistent-id path."
+              }
+            },
+            "description": "A Space, Volume or Floor Segment reference, as list returns it."
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each envelope's status after the update."
+          }
+        }
+      },
+      "description": "Each occurrence the batch names, in order."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "updates": [
+    {
+      "reference": {
+        "space_id": "spc_Ab12Cd34Ef56",
+        "entity_path": [
+          1201,
+          1300
+        ]
+      },
+      "user_data": {
+        "example": {
+          "note": "kept"
+        }
+      },
+      "expected_metadata": {
+        "user_data": {},
+        "extension_data": {}
+      }
+    }
+  ]
+}
+```
+
+### `ph_composer.spaces.volumes.create`
+
+Group explicit loose Faces at an open Space's root into its next Volume. Owner: `ph_composer.spaces`.
+
+Undo step: Add Volume. Groups the Faces and writes their records.
+
+Refuses: `record.unreadable`, `space.context_required`, `space.shares_edge`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space",
+    "faces"
+  ],
+  "properties": {
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "space_id",
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Space, as list returns it."
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "minItems": 1,
+        "description": "The root-to-entity persistent-id path."
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "Root-to-Face persistent-id paths."
+    },
+    "weighting_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The weighting factor to write, 0 to 1; 1 counts the whole area."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volume_id",
+    "floor_segment_ids"
+  ],
+  "properties": {
+    "volume_id": {
+      "type": "string"
+    },
+    "floor_segment_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "space": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300
+    ]
+  },
+  "faces": [
+    [
+      1201,
+      1300,
+      1320
+    ]
+  ]
+}
+```
+
+### `ph_composer.spaces.volumes.remove`
+
+Remove one Volume's structure: its Floor Segment records go and its Faces stay loose in the Space. Owner: `ph_composer.spaces`.
+
+Undo step: Remove Volume. Explodes the Volume Group and removes its records.
+
+Refuses: `copy.rule_missing`, `record.unreadable`, `reference.in_use`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volume"
+  ],
+  "properties": {
+    "volume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume_id",
+        "entity_path"
+      ],
+      "properties": {
+        "volume_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Volume, as list returns it."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volume_id"
+  ],
+  "properties": {
+    "volume_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "volume": {
+    "volume_id": "vol_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300,
+      1310
+    ]
   }
 }
 ```
@@ -44267,13 +45453,16 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 
 | Code | Meaning |
 | --- | --- |
+| `space.context_required` | The edit context holding the Faces must be open to group them. |
 | `space.empty` | A Space has no Volume. |
 | `space.floor_projected` | A Floor Segment is not horizontal; its plan area is used. |
 | `space.height_missing` | A Volume has no average clear ceiling height. |
 | `space.nested` | A Space is inside another Space. |
+| `space.nothing_to_create` | None of the Faces given can become a Space. |
 | `space.number_duplicate` | Two Spaces in one Zone share a number. |
 | `space.outside_zone` | A Space is in no Zone. |
 | `space.segment_misplaced` | A Floor Segment record is on a Face that is not directly inside a Volume. |
+| `space.shares_edge` | A Face shares an Edge with a Face outside the set being grouped. |
 | `space.volume_empty` | A Volume has no Floor Segment. |
 | `space.volume_nested` | A Volume is below another Group inside its Space rather than directly in it. |
 | `space.volume_orphan` | A Volume record is on a Group outside every Space. |
