@@ -184,8 +184,9 @@ class SpacesCopyWatchTest < PhComposerTestCase
     @zone.entities << Sketchup::ComponentInstance.new(141, definition)
     UI.run_timers
     assert_equal ["spc_SSSSSSSSSSSS"] * 2, spaces.map { |row| row["id"] }
-    assert_equal 1, @notices.length
-    assert_equal :warning, @notices.first.first
+    notice = "Copied Space inside shared storage, such as a component, keeps the copy's identity. Draw the Space " \
+             "directly."
+    assert_equal [[:warning, notice]], @notices
   end
 
   # A copied plain Group holding a Space may be a Zone, whose copy Zones handles: no pass, no notice.

@@ -1291,6 +1291,28 @@
         "tests/edit_context*"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "S04",
+      "label": "Spaces copies and moves: a Space copy and an array made independent in the copy's Undo step with the next numbers, cut and paste left alone, Volume and Floor Segment copies found and made independent, a Space in a component found with no repair, Move Space to Zone under a rotated wrapper, a Zone copy with its Spaces, Restore Zone around a Space, save and reopen",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/session/container_watch.rb",
+        "src/ph_composer/features/spaces/identity/*",
+        "src/ph_composer/features/spaces/move/*",
+        "src/ph_composer/features/spaces/copy_watch.rb",
+        "src/ph_composer/features/spaces/zone_copy.rb",
+        "src/ph_composer/features/zones/zone/repair.rb",
+        "src/ph_composer/features/zones/zone/steps.rb",
+        "tests/spaces_identity*",
+        "tests/spaces_move*",
+        "tests/spaces_copy_watch*",
+        "tests/spaces_zone_copy*",
+        "tests/spaces_restore_zone*",
+        "tests/container_watch*"
+      ],
+      "native_control_required": true
     }
   ]
 }
