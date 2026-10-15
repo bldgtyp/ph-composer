@@ -39,6 +39,10 @@ module PhComposer
                                 "floor_segment_ids" => Shapes.list(Shapes::TEXT) })
       TARGET = %w[record.unreadable target.ambiguous target.changed target.locked target.not_found
                   target.shared_definition validation.failed].freeze
+      SPACE_PARAM = SPACE_REFERENCE.merge("description" => "The Space, as list returns it.").freeze
+      VOLUME_PARAM = VOLUME_REFERENCE.merge("description" => "The Volume, as list returns it.").freeze
+      # Removing an identity checks that nothing still names it.
+      REMOVAL = (TARGET + %w[copy.rule_missing reference.in_use]).freeze
       ZONE_TARGET = %w[record.unreadable target.ambiguous target.changed target.locked target.not_found
                        target.shared_definition target.wrong_hierarchy target.wrong_kind validation.failed].freeze
       EXAMPLE_ZONE = { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201] }.freeze
@@ -71,8 +75,10 @@ module PhComposer
         }],
         ["volumes.create", {
           :description => "Group explicit loose Faces at an open Space's root into its next Volume.",
-          :refuses => (TARGET + %w[space.context_required target.wrong_hierarchy target.wrong_kind]).uniq,
-          :params => Shapes.object({ "space" => REFERENCE, "faces" => PATHS, "weighting_factor" => FACTOR },
+          :refuses => (TARGET + %w[space.context_required space.shares_edge target.wrong_hierarchy
+                                   target.wrong_kind]).uniq,
+          :params => Shapes.object({ "space" => SPACE_PARAM,
+                                     "faces" => PATHS, "weighting_factor" => FACTOR },
                                    :optional => ["weighting_factor"]),
           :result => Shapes.object({ "volume_id" => Shapes::TEXT, "floor_segment_ids" => Shapes.list(Shapes::TEXT) }),
           :undo_name => "Add Volume", :side_effects => "Groups the Faces and writes their records.",
@@ -107,7 +113,7 @@ module PhComposer
         ["volumes.remove", {
           :description => "Remove one Volume's structure: its Floor Segment records go and its Faces stay loose in " \
                           "the Space.",
-          :refuses => TARGET, :params => Shapes.object({ "volume" => REFERENCE }),
+          :refuses => REMOVAL, :params => Shapes.object({ "volume" => VOLUME_PARAM }),
           :result => Shapes.object({ "volume_id" => Shapes::TEXT }), :undo_name => "Remove Volume",
           :side_effects => "Explodes the Volume Group and removes its records.",
           :examples => [{ "volume" => EXAMPLE_VOLUME }]
@@ -115,8 +121,9 @@ module PhComposer
           Authoring.remove_volume(request, proposal, :volume => params.fetch("volume"))
         }],
         ["delete", {
-          :description => "Erase one Space and everything in it.", :refuses => TARGET,
-          :params => Shapes.object({ "space" => REFERENCE }), :result => Shapes.object({ "space_id" => Shapes::TEXT }),
+          :description => "Erase one Space and everything in it.", :refuses => REMOVAL,
+          :params => Shapes.object({ "space" => SPACE_PARAM }),
+          :result => Shapes.object({ "space_id" => Shapes::TEXT }),
           :undo_name => "Delete Space", :side_effects => "Erases the Space Group.",
           :examples => [{ "space" => EXAMPLE_SPACE }]
         }, ->(request, proposal, params) { Authoring.delete(request, proposal, :space => params.fetch("space")) }],
@@ -147,8 +154,8 @@ module PhComposer
                                                    :weighting_factor => params.fetch("weighting_factor"))
         }],
         ["floors.unmark", {
-          :description => "Remove explicit Floor Segment records; the Faces stay.", :refuses => TARGET,
-          :params => Shapes.object({ "floor_segments" => Shapes.list(REFERENCE).merge(
+          :description => "Remove explicit Floor Segment records; the Faces stay.", :refuses => REMOVAL,
+          :params => Shapes.object({ "floor_segments" => Shapes.list(FLOOR_SEGMENT_REFERENCE).merge(
             "minItems" => 1, "description" => "The Floor Segments whose records go."
           ) }),
           :result => Shapes.object({ "floor_segment_ids" => Shapes.list(Shapes::TEXT) }),

@@ -146,7 +146,7 @@ class SpacesOperationsTest < PhComposerTestCase
     first, second = spaces
     batch = invoke("ph_composer.spaces.batch_update", "edits" => [
       { "reference" => first.fetch("reference"), "values" => { "name" => "A" },
-        "expected_values" => {} },
+        "expected_values" => { "name" => "" } },
       { "reference" => second.fetch("reference"), "values" => { "name" => "B" },
         "expected_values" => { "name" => "stale" } }
     ])
@@ -198,10 +198,18 @@ class SpacesOperationsTest < PhComposerTestCase
       "expected_metadata" => { "user_data" => {}, "extension_data" => {} }
     }])
     assert_equal "completed", written["status"], written.inspect
-    edit(spaces.first, { "name" => "Kitchen" }, {})
-    assert_equal({ "example" => { "note" => "kept" } }, spaces.first["user_data"])
+    space_group = @zone_group.entities.to_a.find { |entity| PhComposer::Spaces::SPACE_STORE.read(entity) }
+    stored = PhComposer::Spaces::SPACE_STORE.read(space_group)
+    unavailable = { "schema_version" => 3, "payload" => { "kept" => true }, "export_relevance" => "local_only" }
+    PhComposer::Spaces::SPACE_STORE.write(space_group,
+                                          stored.merge("extension_data" => { "other.tool" => unavailable }))
+    renamed = edit(spaces.first, { "name" => "Kitchen" }, { "name" => "" })
+    assert_equal "completed", renamed["status"], renamed.inspect
+    row = spaces.first
+    assert_equal({ "example" => { "note" => "kept" } }, row["user_data"])
+    assert_equal({ "other.tool" => unavailable }, row["extension_data"])
     stale = invoke("ph_composer.spaces.update_metadata", "updates" => [{
-      "reference" => reference, "user_data" => {},
+      "reference" => spaces.first.fetch("reference"), "user_data" => {},
       "expected_metadata" => { "user_data" => {}, "extension_data" => {} }
     }])
     assert_equal %w[refused target.changed], stale.values_at("status", "code")
@@ -219,6 +227,81 @@ class SpacesOperationsTest < PhComposerTestCase
     deleted = invoke("ph_composer.spaces.delete", "space" => row.fetch("reference"))
     assert_equal "completed", deleted["status"], deleted.inspect
     assert_empty spaces
+  end
+
+  def test_removing_an_identity_another_record_still_names_refuses_with_nothing_written
+    zone_with_outlines
+    create([@living])
+    create([@bath])
+    first, second = spaces
+    segment = first.dig("volumes", 0, "floor_segments", 0)
+    group = @zone_group.entities.to_a.find do |entity|
+      PhComposer::Spaces::SPACE_STORE.read(entity)&.fetch("id") == second.fetch("id")
+    end
+    stored = PhComposer::Spaces::SPACE_STORE.read(group)
+    envelope = { "schema_version" => 1, "payload" => { "segment" => segment.fetch("id") },
+                 "export_relevance" => "local_only",
+                 "references" => [{ "path" => "$.segment", "target_kind" => PhComposer::Spaces::FLOOR_SEGMENT_KIND,
+                                    "cardinality" => "one" }] }
+    PhComposer::Spaces::SPACE_STORE.write(group, stored.merge("extension_data" => { "other.tool" => envelope }))
+    [["ph_composer.spaces.floors.unmark", { "floor_segments" => [segment.fetch("reference")] }],
+     ["ph_composer.spaces.volumes.remove", { "volume" => first.dig("volumes", 0, "reference") }],
+     ["ph_composer.spaces.delete", { "space" => first.fetch("reference") }]].each do |name, params|
+      result = invoke(name, params)
+      assert_equal %w[refused reference.in_use none], result.values_at("status", "code", "effect"), name
+    end
+    assert_equal 2, spaces.length
+  end
+
+  def test_a_face_whose_neighbour_is_left_out_is_left_out_too
+    zone_with_outlines
+    edges = [200, 201].map { |id| Sketchup::Edge.new(id, Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(0, INCHES, 0)) }
+    a, b, c = [[120, [edges[0]]], [121, edges], [122, [edges[1]]]].map do |id, face_edges|
+      points = rectangle(id - 120, 8, 1, 1).map { |x, y, z| Geom::Point3d.new(x * INCHES, y * INCHES, z * INCHES) }
+      Sketchup::Face.new(id, {}, :points => points, :edges => face_edges)
+    end
+    @zone_group.entities << a << b << c
+    preview = query("ph_composer.spaces.create_preview", "zone" => @zone,
+                                                         "faces" => [face_reference(a), face_reference(b)])
+    assert_empty preview.fetch("accepted")
+    assert_equal %w[shares_edge shares_edge], preview.fetch("left_out").map { |row| row["reason"] }
+  end
+
+  def test_a_new_volume_refuses_faces_that_share_an_edge_with_an_unselected_face
+    zone_with_outlines
+    create([@living])
+    space_group = @zone_group.entities.to_a.find { |entity| PhComposer::Spaces::SPACE_STORE.read(entity) }
+    edge = Sketchup::Edge.new(300, Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(0, INCHES, 0))
+    left, right = [130, 131].map do |id|
+      points = rectangle(id - 125, 0, 1, 1).map { |x, y, z| Geom::Point3d.new(x * INCHES, y * INCHES, z * INCHES) }
+      Sketchup::Face.new(id, {}, :points => points, :edges => [edge])
+    end
+    space_group.entities << left << right
+    @model.active_path = [@wrapper, @zone_group, space_group]
+    space = spaces.first.fetch("reference")
+    result = invoke("ph_composer.spaces.volumes.create", "space" => space,
+                                                         "faces" => [space.fetch("entity_path") + [130]])
+    assert_equal %w[refused space.shares_edge], result.values_at("status", "code")
+  end
+
+  def test_marking_a_face_whose_floor_segment_id_is_copied_refuses
+    zone_with_outlines
+    create([@living])
+    volume = spaces.first.dig("volumes", 0)
+    volume_group = @zone_group.entities.to_a.find { |entity| PhComposer::Spaces::SPACE_STORE.read(entity) }
+                              .entities.to_a.first
+    copied = floor_face(140, rectangle(0, 4, 1, 1), PhComposer::Spaces::FLOOR_SEGMENT_STORE.read(@living))
+    volume_group.entities << copied
+    result = invoke("ph_composer.spaces.floors.mark", "faces" => [volume.dig("reference", "entity_path") + [101]],
+                                                      "weighting_factor" => 0.5)
+    assert_equal %w[refused target.ambiguous], result.values_at("status", "code")
+  end
+
+  def test_a_kind_specific_param_refuses_another_kinds_reference
+    zone_with_outlines
+    create([@living])
+    result = invoke("ph_composer.spaces.volumes.remove", "volume" => spaces.first.fetch("reference"))
+    assert_equal %w[refused params.invalid], result.values_at("status", "code")
   end
 
   private

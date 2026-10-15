@@ -103,6 +103,8 @@ module PhComposer
 
       def remove_volume(request, proposal, volume:)
         occurrence = Resolve.occurrence(Occurrences.scan(request.model), volume, :mutable => true)
+        check_removals!(request, proposal, [[VOLUME_KIND, occurrence]] +
+                                           occurrence.segments.map { |segment| [FLOOR_SEGMENT_KIND, segment] })
         proposal.add_step(RemoveVolumeStep.new(:path => occurrence.path, :before => occurrence.record,
                                                :segments => occurrence.segments.map { |segment| segment.record["id"] }),
                           :scopes => [Operations::EntityScope.new(occurrence.path[0...-1])])
@@ -111,6 +113,10 @@ module PhComposer
 
       def delete(request, proposal, space:)
         occurrence = Resolve.occurrence(Occurrences.scan(request.model), space, :mutable => true)
+        removed = [[SPACE_KIND, occurrence]] + occurrence.volumes.flat_map do |volume|
+          [[VOLUME_KIND, volume]] + volume.segments.map { |segment| [FLOOR_SEGMENT_KIND, segment] }
+        end
+        check_removals!(request, proposal, removed)
         proposal.add_step(DeleteSpaceStep.new(:path => occurrence.path, :before => occurrence.record),
                           :scopes => [Operations::EntityScope.new(occurrence.path[0...-1])])
         { "space_id" => occurrence.record.fetch("id") }
@@ -133,7 +139,12 @@ module PhComposer
           raise CodedError.new("target.wrong_kind",
                                "Only Faces become Floor Segments.") unless face.is_a?(Sketchup::Face)
 
-          before = FLOOR_SEGMENT_STORE.read(face)
+          stored = FLOOR_SEGMENT_STORE.read(face)
+          if stored
+            reference = { "floor_segment_id" => stored.fetch("id"), "entity_path" => path }
+            stored = Resolve.occurrence(scan, reference, :mutable => true).record
+          end
+          before = stored
           after = (before || new_segment(allocate)).merge("weighting_factor" => weighting_factor)
           Spaces.validate!(FLOOR_SEGMENT, after)
           record_step(proposal, FLOOR_SEGMENT_KIND, path, before, after) unless before == after
@@ -145,12 +156,25 @@ module PhComposer
       # The Floor Segment records go; the Faces stay.
       def unmark_floors(request, proposal, floor_segments:)
         scan = Occurrences.scan(request.model)
-        ids = floor_segments.map do |reference|
-          occurrence = Resolve.occurrence(scan, reference, :mutable => true)
+        occurrences = floor_segments.map { |reference| Resolve.occurrence(scan, reference, :mutable => true) }
+        check_removals!(request, proposal, occurrences.map { |occurrence| [FLOOR_SEGMENT_KIND, occurrence] })
+        occurrences.each do |occurrence|
           record_step(proposal, FLOOR_SEGMENT_KIND, occurrence.path, occurrence.record, nil)
-          occurrence.record.fetch("id")
         end
-        { "floor_segment_ids" => ids }
+        { "floor_segment_ids" => occurrences.map { |occurrence| occurrence.record.fetch("id") } }
+      end
+
+      # Refuses `reference.in_use` when any record, a readable unavailable extension's included, would
+      # still name an identity this proposal removes (context/EXTENSIBILITY.md, "Entity-owned reference
+      # targets"). `removed` pairs each kind with the occurrence that goes.
+      def check_removals!(request, proposal, removed)
+        plan = Records::ReferencePlan.new(:entries => [], :removals => removed.map do |kind, occurrence|
+          Records::ReferenceRemoval.new(:kind => kind, :key => occurrence.path, :before => occurrence.record)
+        end)
+        removed.each do |kind, occurrence|
+          request.engine.check_identity_removal!(kind, occurrence.record.fetch("id"),
+                                                 :change_set => proposal.record_changes, :reference_plan => plan)
+        end
       end
 
       # Replaces whole `user_data` maps and installed extension payloads on explicit Spaces, Volumes and
@@ -186,8 +210,15 @@ module PhComposer
             accepted << [reference, Integer(reference.fetch("entity_path").last)]
           end
         end
-        shares = shared_edges(request, zone, accepted.map(&:last))
-        kept, sharing = accepted.partition { |_reference, id| !shares.include?(id) }
+        located = request.locate(ZONE_KIND, zone, :mutable => false)
+        kept = accepted
+        loop do
+          shares = Steps.sharing(located.entity.entities, kept.map(&:last))
+          break if shares.empty?
+
+          kept = kept.reject { |_reference, id| shares.include?(id) }
+        end
+        sharing = accepted - kept
         left_out.concat(sharing.map do |reference, _id|
           { "reference" => reference, "reason" => "shares_edge",
             "message" => "The Face shares an Edge with an unselected Face; grouping it would split that Face." }
@@ -210,17 +241,6 @@ module PhComposer
         LEFT_OUT.fetch(error.code) { raise }
       end
 
-      # The ids among `face_ids` bounded by an Edge another, unselected Face also uses.
-      def shared_edges(request, zone, face_ids)
-        return [] if face_ids.empty?
-
-        located = request.locate(ZONE_KIND, zone, :mutable => false)
-        faces = located.entity.entities.to_a.select { |entity| face_ids.include?(entity.persistent_id) }
-        faces.select do |face|
-          Array(face.edges).any? { |edge| Array(edge.faces).any? { |other| !face_ids.include?(other.persistent_id) } }
-        end.map(&:persistent_id)
-      end
-
       def space_root_faces(model, occurrence, faces)
         faces.map do |path|
           path = Resolve.integer_path(path)
@@ -234,7 +254,14 @@ module PhComposer
           end
 
           face.persistent_id
-        end.uniq
+        end.uniq.tap do |ids|
+          entities = Occurrences.entity_at(model, occurrence.path).entities
+          unless Steps.sharing(entities, ids).empty?
+            raise CodedError.new("space.shares_edge", "A Face shares an Edge with a Face that is not part of the " \
+                                                      "new Volume; grouping it would split that Face. Nothing was " \
+                                                      "written.")
+          end
+        end
       end
 
       def plan_edit(scan, reference, values, expected_values)

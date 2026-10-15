@@ -13,6 +13,7 @@ module PhComposer
         "space.nothing_to_create" => "None of the Faces given can become a Space.",
         "space.number_duplicate" => "Two Spaces in one Zone share a number.",
         "space.outside_zone" => "A Space is in no Zone.",
+        "space.shares_edge" => "A Face shares an Edge with a Face outside the set being grouped.",
         "space.segment_misplaced" => "A Floor Segment record is on a Face that is not directly inside a Volume.",
         "space.volume_empty" => "A Volume has no Floor Segment.",
         "space.volume_nested" => "A Volume is below another Group inside its Space rather than directly in it.",

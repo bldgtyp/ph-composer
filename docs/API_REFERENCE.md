@@ -24139,7 +24139,7 @@ Erase one Space and everything in it. Owner: `ph_composer.spaces`.
 
 Undo step: Delete Space. Erases the Space Group.
 
-Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+Refuses: `copy.rule_missing`, `record.unreadable`, `reference.in_use`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -24155,16 +24155,11 @@ Params:
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "space_id",
         "entity_path"
       ],
       "properties": {
         "space_id": {
-          "type": "string"
-        },
-        "volume_id": {
-          "type": "string"
-        },
-        "floor_segment_id": {
           "type": "string"
         },
         "entity_path": {
@@ -24176,7 +24171,7 @@ Params:
           "description": "The root-to-entity persistent-id path."
         }
       },
-      "description": "A Space, Volume or Floor Segment reference, as list returns it."
+      "description": "The Space, as list returns it."
     }
   }
 }
@@ -24298,7 +24293,7 @@ Remove explicit Floor Segment records; the Faces stay. Owner: `ph_composer.space
 
 Undo step: Unmark Floor. Removes Floor Segment records.
 
-Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+Refuses: `copy.rule_missing`, `record.unreadable`, `reference.in_use`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -24316,15 +24311,10 @@ Params:
         "type": "object",
         "additionalProperties": false,
         "required": [
+          "floor_segment_id",
           "entity_path"
         ],
         "properties": {
-          "space_id": {
-            "type": "string"
-          },
-          "volume_id": {
-            "type": "string"
-          },
           "floor_segment_id": {
             "type": "string"
           },
@@ -24336,8 +24326,7 @@ Params:
             "minItems": 1,
             "description": "The root-to-entity persistent-id path."
           }
-        },
-        "description": "A Space, Volume or Floor Segment reference, as list returns it."
+        }
       },
       "minItems": 1,
       "description": "The Floor Segments whose records go."
@@ -24763,7 +24752,7 @@ Group explicit loose Faces at an open Space's root into its next Volume. Owner: 
 
 Undo step: Add Volume. Groups the Faces and writes their records.
 
-Refuses: `record.unreadable`, `space.context_required`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+Refuses: `record.unreadable`, `space.context_required`, `space.shares_edge`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -24780,16 +24769,11 @@ Params:
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "space_id",
         "entity_path"
       ],
       "properties": {
         "space_id": {
-          "type": "string"
-        },
-        "volume_id": {
-          "type": "string"
-        },
-        "floor_segment_id": {
           "type": "string"
         },
         "entity_path": {
@@ -24801,7 +24785,7 @@ Params:
           "description": "The root-to-entity persistent-id path."
         }
       },
-      "description": "A Space, Volume or Floor Segment reference, as list returns it."
+      "description": "The Space, as list returns it."
     },
     "faces": {
       "type": "array",
@@ -24878,7 +24862,7 @@ Remove one Volume's structure: its Floor Segment records go and its Faces stay l
 
 Undo step: Remove Volume. Explodes the Volume Group and removes its records.
 
-Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+Refuses: `copy.rule_missing`, `record.unreadable`, `reference.in_use`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -24894,16 +24878,11 @@ Params:
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "volume_id",
         "entity_path"
       ],
       "properties": {
-        "space_id": {
-          "type": "string"
-        },
         "volume_id": {
-          "type": "string"
-        },
-        "floor_segment_id": {
           "type": "string"
         },
         "entity_path": {
@@ -24915,7 +24894,7 @@ Params:
           "description": "The root-to-entity persistent-id path."
         }
       },
-      "description": "A Space, Volume or Floor Segment reference, as list returns it."
+      "description": "The Volume, as list returns it."
     }
   }
 }
@@ -45483,6 +45462,7 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `space.number_duplicate` | Two Spaces in one Zone share a number. |
 | `space.outside_zone` | A Space is in no Zone. |
 | `space.segment_misplaced` | A Floor Segment record is on a Face that is not directly inside a Volume. |
+| `space.shares_edge` | A Face shares an Edge with a Face outside the set being grouped. |
 | `space.volume_empty` | A Volume has no Floor Segment. |
 | `space.volume_nested` | A Volume is below another Group inside its Space rather than directly in it. |
 | `space.volume_orphan` | A Volume record is on a Group outside every Space. |

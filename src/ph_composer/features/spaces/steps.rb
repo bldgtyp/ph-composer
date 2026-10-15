@@ -90,6 +90,10 @@ module PhComposer
 
         entities = Operations::EntityScope.new(@context_path).resolve(model)
         faces = @face_ids.map { |id| loose_face(entities, id) }
+        unless Steps.sharing(entities, @face_ids).empty?
+          raise CodedError.new("target.changed", "A Face now shares an Edge with another. Nothing was written.")
+        end
+
         volume = entities.add_group(faces + faces.flat_map { |face| Array(face.edges) }.uniq)
         space = nil
         if @space
@@ -198,6 +202,19 @@ module PhComposer
 
         parent = @path.length == 1 ? model.entities : Occurrences.entity_at(model, @path[0...-1]).entities
         parent.erase_entities(space)
+      end
+    end
+
+    module Steps
+      module_function
+
+      # The ids among `face_ids` bounded by an Edge another Face in `entities` uses that is not among
+      # them: grouping such a Face would carry the Edge away and split its neighbour.
+      def sharing(entities, face_ids)
+        entities.to_a.select { |entity| entity.is_a?(Sketchup::Face) && face_ids.include?(entity.persistent_id) }
+                .select do |face|
+          Array(face.edges).any? { |edge| Array(edge.faces).any? { |other| !face_ids.include?(other.persistent_id) } }
+        end.map(&:persistent_id)
       end
     end
 
