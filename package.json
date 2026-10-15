@@ -4,5 +4,8 @@
   "description": "Developer lint tooling for the HtmlDialog panel. The extension ships no JavaScript dependencies; nothing here is packaged into the RBZ.",
   "devDependencies": {
     "eslint": "9.15.0"
+  },
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true"
   }
 }

@@ -4,7 +4,9 @@ PH-Composer uses the Developer Certificate of Origin, version 1.1, reproduced be
 https://developercertificate.org. Sign off each commit with `git commit -s`, which adds a
 `Signed-off-by:` line carrying your name and email. By signing off you certify the statements
 below for that commit. You keep your copyright. Why the project uses this rather than a
-Contributor License Agreement is explained in [LICENSING.md](LICENSING.md).
+Contributor License Agreement is explained in [LICENSING.md](LICENSING.md). The repository's
+`commit-msg` hook refuses a commit without the line, so a missing sign-off shows up before review
+rather than at merge ([DEVELOPMENT.md](DEVELOPMENT.md), "Git hooks").
 
 ```
 Developer Certificate of Origin

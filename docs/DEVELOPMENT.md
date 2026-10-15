@@ -65,6 +65,32 @@ installs both. A local skip is not gate evidence.
 The line ceiling is 120 characters in every language. What the linters cannot express is in
 [`context/CODING_STANDARDS.md`](../context/CODING_STANDARDS.md).
 
+## Git hooks
+
+The repository keeps its git hooks in `.githooks/`. They install themselves the first time you run
+`make lint`, `make test`, `make ci` or `pnpm install`, which set `core.hooksPath` to `.githooks`;
+`make hooks` installs them on demand. An existing `core.hooksPath` pointing somewhere else is left
+alone, with a line saying so.
+
+- `pre-commit` runs, on the staged files only, the checks they can affect: ruff lint and format
+  for Python, mypy over its whole configured set when any Python file is staged, `ruby -c` and
+  rubocop for Ruby, eslint for JavaScript, the panel and runtime manifest checks when panel or
+  translation assets change, and the planning-citation check for shipped code and tests. Each is
+  the Makefile target CI runs, given the staged file list. A commit that touches only
+  documentation runs nothing. A failure prints the tool's output and the command that fixes it,
+  and nothing is committed. The hook never edits or re-stages a file.
+- `commit-msg` refuses a message without a `Signed-off-by:` line ([DCO.md](DCO.md)).
+
+Rubocop matters here beyond style: it parses at the Ruby 2.7 floor, so it catches syntax that the
+3.2 interpreter accepts and SketchUp 2023 would not load. A missing rubocop or eslint prints the
+same named skip `make lint` prints, and CI still runs both. The hooks need `uv` on `PATH`; they add
+its usual install locations themselves, so a graphical git client finds it too.
+
+The hooks are a fast first check, not the gate: `make ci` still runs the full suite before a
+change is proposed. Chain the two, as in `make ci && git commit -s`, so a failed gate stops the
+commit. Do not bypass a hook with `--no-verify`; fix what it reports instead. A file with unstaged
+changes is checked as it is on disk, and the hook says which files that applied to.
+
 ## Ruby versions
 
 The suite runs on Ruby 2.7 to 3.2 and refuses anything outside that span, because both ends are

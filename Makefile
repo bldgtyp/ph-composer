@@ -1,6 +1,7 @@
 .PHONY: ci syntax lint lint-ruby lint-js lint-python lint-citations test fixtures fixtures-check coverage hostkit-test python-check \
         panel-manifest panel-manifest-check ui-preview ui-checks rbz rbz-check install clean bridge-install \
-        bridge-uninstall runtime-check runtime-pin-check runtime-manifest runtime-browser-check phase-one-proof
+        bridge-uninstall runtime-check runtime-pin-check runtime-manifest runtime-browser-check phase-one-proof \
+        hooks hooks-auto
 
 # `.ruby-version` pins 3.2.2, the Ruby the current proving host embeds. rbenv resolves it when it
 # is installed; without rbenv this falls back to whatever `ruby` is on PATH, and the suite's own
@@ -10,7 +11,14 @@ ifeq ($(origin RUBY),undefined)
 RUBY := $(shell rbenv which ruby 2>/dev/null || command -v ruby)
 endif
 export RUBY
-RB_FILES := $(shell find src tests tools -name '*.rb' -type f | sort)
+# Each lint target takes its file list from a variable so the pre-commit hook can run the same target on
+# the staged files alone (tools/githooks/staged_checks.py). The defaults are the whole tree.
+RB_FILES ?= $(shell find src tests tools -name '*.rb' -type f | sort)
+RUBOCOP_ARGS ?=
+ESLINT_ARGS ?= .
+RUFF_ARGS ?= tools tests/python src/ph_composer/python
+CITATION_FLAGS ?= --untracked
+CITATION_PATHS ?= src tests
 JS_TESTS := $(wildcard tests/*_test.js)
 # Rubocop is reached through the bundler that belongs to $(RUBY), never whatever `bundle` is first
 # on PATH: on macOS that is the system Ruby's, which cannot read this lock.
@@ -18,7 +26,7 @@ BUNDLE := $(dir $(RUBY))bundle
 SKETCHUP_VERSION ?= 2026
 
 # Every target docs/DEVELOPMENT.md claims for the offline loop that exists today.
-ci: syntax lint test fixtures-check panel-manifest-check runtime-check runtime-pin-check hostkit-test python-check rbz \
+ci: hooks-auto syntax lint test fixtures-check panel-manifest-check runtime-check runtime-pin-check hostkit-test python-check rbz \
     rbz-check
 
 syntax:
@@ -35,7 +43,7 @@ export JS_TEST_MAX_RSS_MB
 
 # One run reports every language's failures instead of stopping at the first. The JavaScript files
 # are found by glob, so a new `tests/*_test.js` needs no Makefile line.
-test:
+test: hooks-auto
 	@$(RUBY) -Itests tests/all_tests.rb; ruby_status=$$?; \
 	 if [ -n "$(JS_TESTS)" ]; then \
 	   node tools/js_test_guard.js node --test --test-timeout=$(NODE_TEST_TIMEOUT_MS) $(JS_TESTS); js_status=$$?; \
@@ -46,18 +54,18 @@ test:
 # Three rule sets, one target. Rubocop and eslint are developer tools the extension does not
 # need, so each prints a named skip when absent and `make test` keeps working on a checkout with
 # neither. CI installs both, so nothing skips there; a local skip is not gate evidence.
-lint: lint-ruby lint-js lint-python lint-citations
+lint: hooks-auto lint-ruby lint-js lint-python lint-citations
 
 lint-ruby:
 	@if [ -x "$(BUNDLE)" ] && $(BUNDLE) check >/dev/null 2>&1; then \
-	  $(BUNDLE) exec rubocop; \
+	  $(BUNDLE) exec rubocop $(RUBOCOP_ARGS); \
 	else \
 	  echo "lint-ruby: skipped, rubocop is not installed (run 'bundle install')"; \
 	fi
 
 lint-js:
 	@if command -v pnpm >/dev/null 2>&1 && [ -d node_modules ]; then \
-	  pnpm exec eslint .; \
+	  pnpm exec eslint $(ESLINT_ARGS); \
 	else \
 	  echo "lint-js: skipped, eslint is not installed (run 'pnpm install')"; \
 	fi
@@ -68,7 +76,8 @@ lint-js:
 PLANNING_IDS := \b(P\d-[A-F]\d?|Q\d{1,2}|D\d{1,2}|R-D\d+|R0\d|A\d\d|B\d|C\d|I\d{1,2}|U\d|F\d)\b
 # Planning moves when it is archived; a citation into it breaks. The vendored payload is exempt.
 lint-citations:
-	@if git grep --untracked -nP 'planning/|\bPRD\b|CONTRACTS\.md C\d|$(PLANNING_IDS)' -- src tests ':!src/ph_composer/vendor' \
+	@if git grep $(CITATION_FLAGS) -nP 'planning/|\bPRD\b|CONTRACTS\.md C\d|$(PLANNING_IDS)' -- $(CITATION_PATHS) \
+	    ':!src/ph_composer/vendor' \
 	    ':!tests/fixtures'; then \
 	  echo "lint-citations: cite context/ instead of planning (context/CODING_STANDARDS.md)"; exit 1; \
 	else \
@@ -77,8 +86,8 @@ lint-citations:
 
 # No skip: `test` and `python-check` already require `uv`.
 lint-python:
-	@uv run ruff check tools tests/python src/ph_composer/python
-	@uv run ruff format --check tools tests/python src/ph_composer/python
+	@uv run ruff check $(RUFF_ARGS)
+	@uv run ruff format --check $(RUFF_ARGS)
 
 # The owning tests, one per golden: exactly one test may write each file (docs/DEVELOPMENT.md
 # "Fixtures and coverage"). A new golden adds its owner here and its path below.
@@ -199,3 +208,20 @@ bridge-install:
 bridge-uninstall:
 	@rm -f "$(PLUGINS_DIR)/ph_composer_host_bridge.rb" "$(PLUGINS_DIR)/../ph_composer_host_bridge.json"
 	@echo "host bridge removed"
+
+# The repository's git hooks (.githooks/, docs/DEVELOPMENT.md "Git hooks"): lint, type and manifest checks
+# on the staged files before each commit, and a DCO sign-off check on each message.
+hooks:
+	@git config core.hooksPath .githooks && echo "git hooks: installed from .githooks"
+
+# Installs the hooks once from the targets every contributor runs, so no one has to remember `make hooks`.
+# It never replaces a hooks path someone set on purpose, and does nothing outside a git checkout.
+hooks-auto:
+	@if git rev-parse --git-dir >/dev/null 2>&1; then \
+	  current=$$(git config --get core.hooksPath || true); \
+	  if [ -z "$$current" ]; then \
+	    git config core.hooksPath .githooks && echo "git hooks: installed from .githooks"; \
+	  elif [ "$$current" != ".githooks" ]; then \
+	    echo "git hooks: core.hooksPath is $$current, not .githooks; run 'make hooks' to use this repository's"; \
+	  fi; \
+	fi

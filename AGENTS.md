@@ -80,7 +80,10 @@ the owning packet.
 
 ## Verification
 
-- `make ci` is the implemented full offline gate. Use focused tests while editing.
+- `make ci` is the implemented full offline gate. Use focused tests while editing. The git hooks
+  in `.githooks/` lint and type-check the staged files on every commit and refuse a message without
+  a DCO sign-off (`docs/DEVELOPMENT.md`, "Git hooks"). Chain the gate, as in `make ci && git commit
+  -s`, never `;`, and never bypass a hook with `--no-verify`.
 - Real-host acceptance uses the development bridge plus native controls. A required host gate runs
   against the specified model and host state, often from a fresh process. Offline tests, an
   installed RBZ or a bridge command alone do not satisfy it. Ask Ed to operate the host only when
