@@ -94,7 +94,7 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 
 | Name | Verb | Stage | Purpose |
 | --- | --- | --- | --- |
-| `list` | query | P3a-02 (built, slice A) | Spaces with their Volumes and Floor Segments, each with its reference, values, metrics in SI, state and findings, each Zone's sums, and the stray-record findings. Paged by Space path; Zone sums always cover every Space of the Zone |
+| `list` | query | P3a-02 (built, slice A) | Spaces with their Volumes and Floor Segments, each with its reference, values, metrics in SI, state and findings, each Zone's sums, each Building-Segment's and the Model's totals, and the stray-record findings. Paged by Space path; the sums and totals always cover every Space |
 | `all`, section `ph_composer.spaces.spaces` | query, snapshot section | P3a-02 (built, slice A) | The same projection whole, for the panel |
 | `create_preview` | query | P3a-02 | For explicit Face references and a Zone reference: accepted, left out and why. Writes nothing |
 | `create` | action | P3a-02 | Explicit Face references and a Zone reference. One Space, one Volume, the Floor Segments. One Undo step |

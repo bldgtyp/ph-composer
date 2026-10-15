@@ -134,7 +134,7 @@ module PhComposer
 
         entities = zone.entity.entities
         group = nil
-        inside.each do |persistent_id|
+        inside.each_with_index do |persistent_id, index|
           group = Occurrences.unique_entity(entities, persistent_id)
           unless group.is_a?(Sketchup::Group) && !ZONE_STORE.read(group)
             raise CodedError.new("target.wrong_kind", "A container is a Group inside the Zone, through Groups only.")
@@ -142,6 +142,10 @@ module PhComposer
           raise CodedError.new("target.locked", "A Group on the container's path is locked.") if group.locked?
           if Occurrences.shared_storage?(group)
             raise CodedError.new("target.shared_definition", "The container's path runs through shared storage.")
+          end
+          # A container inside another is not one of the Zone's containers, so its stamp would go stale.
+          if index < inside.length - 1 && !group.get_attribute(STAMP_DICTIONARY, STAMP_STORE.key).nil?
+            raise CodedError.new("target.wrong_hierarchy", "The container would be inside another container.")
           end
 
           entities = group.entities

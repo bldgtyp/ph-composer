@@ -424,7 +424,7 @@ hierarchy does not put it (a Volume outside a Space, a Floor Segment not directl
 of a feature requiring Zones whose own earlier step creates a Group inside a Zone occurrence leaves
 the Group's root-to-Group path in a proposal slot as `{ "entity_path" => [...] }` and names the slot
 and the Zone; Zones' step stamps the Group in the same Undo step, refusing with the Zone's `target.*`
-codes. A Zone edit rewrites the stamps of its containers as it does its Faces'.
+codes, a lock or shared storage on the Group's path, and a Group inside another container. A Zone edit rewrites the stamps of its containers as it does its Faces'.
 
 **Copied Unit identities.** A native copy duplicates the Unit record, so several occurrences can
 carry one `wun_` id. Reads report the copy and never repair it. The next Windows action repairs

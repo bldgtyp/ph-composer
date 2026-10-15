@@ -5640,6 +5640,8 @@ Result:
   "required": [
     "spaces",
     "zones",
+    "building_segments",
+    "model",
     "findings",
     "units"
   ],
@@ -6293,6 +6295,79 @@ Result:
       },
       "description": "Each Zone's sums."
     },
+    "building_segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "name",
+          "zone_count",
+          "floor_area_m2",
+          "weighted_area_m2",
+          "net_volume_m3"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "zone_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "floor_area_m2": {
+            "type": "number",
+            "x-unit": "m2",
+            "description": "Plan area, projected onto the horizontal plane."
+          },
+          "weighted_area_m2": {
+            "type": "number",
+            "x-unit": "m2",
+            "description": "Summed weighted area (iCFA)."
+          },
+          "net_volume_m3": {
+            "type": "number",
+            "x-unit": "m3",
+            "description": "Summed net volume."
+          }
+        }
+      },
+      "description": "Each Building-Segment's sums over its Zones."
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "floor_area_m2",
+        "weighted_area_m2",
+        "net_volume_m3"
+      ],
+      "properties": {
+        "floor_area_m2": {
+          "type": "number",
+          "x-unit": "m2",
+          "description": "Plan area, projected onto the horizontal plane."
+        },
+        "weighted_area_m2": {
+          "type": "number",
+          "x-unit": "m2",
+          "description": "Summed weighted area (iCFA)."
+        },
+        "net_volume_m3": {
+          "type": "number",
+          "x-unit": "m3",
+          "description": "Summed net volume."
+        }
+      },
+      "description": "Sums over every Space in the Model."
+    },
     "findings": {
       "type": "array",
       "items": {
@@ -6411,6 +6486,8 @@ Result:
   "required": [
     "spaces",
     "zones",
+    "building_segments",
+    "model",
     "findings",
     "units",
     "next_cursor",
@@ -7065,6 +7142,79 @@ Result:
         }
       },
       "description": "Each Zone's sums."
+    },
+    "building_segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "name",
+          "zone_count",
+          "floor_area_m2",
+          "weighted_area_m2",
+          "net_volume_m3"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "zone_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "floor_area_m2": {
+            "type": "number",
+            "x-unit": "m2",
+            "description": "Plan area, projected onto the horizontal plane."
+          },
+          "weighted_area_m2": {
+            "type": "number",
+            "x-unit": "m2",
+            "description": "Summed weighted area (iCFA)."
+          },
+          "net_volume_m3": {
+            "type": "number",
+            "x-unit": "m3",
+            "description": "Summed net volume."
+          }
+        }
+      },
+      "description": "Each Building-Segment's sums over its Zones."
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "floor_area_m2",
+        "weighted_area_m2",
+        "net_volume_m3"
+      ],
+      "properties": {
+        "floor_area_m2": {
+          "type": "number",
+          "x-unit": "m2",
+          "description": "Plan area, projected onto the horizontal plane."
+        },
+        "weighted_area_m2": {
+          "type": "number",
+          "x-unit": "m2",
+          "description": "Summed weighted area (iCFA)."
+        },
+        "net_volume_m3": {
+          "type": "number",
+          "x-unit": "m3",
+          "description": "Summed net volume."
+        }
+      },
+      "description": "Sums over every Space in the Model."
     },
     "findings": {
       "type": "array",

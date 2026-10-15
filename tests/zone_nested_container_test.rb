@@ -221,6 +221,18 @@ class ZoneNestedContainerTest < PhComposerTestCase
     assert_empty stamped
   end
 
+  def test_the_participant_refuses_a_container_inside_another_container
+    PhComposer::Registry.install([ContainerFixture])
+    fixture
+    stamp!(@container)
+    @container.entities << Sketchup::Face.new(142)
+    result = invoke("test.container.make", "zone" => @zone.fetch("reference"), "context_path" => [100, 120],
+                                           "face_id" => 142)
+    refute_equal "completed", result["status"], result.inspect
+    inner = @container.entities.grep(Sketchup::Group)
+    assert(inner.none? { |group| Zones::STAMP_STORE.read(group) })
+  end
+
   def test_the_zone_edit_step_rewrites_the_stamps_of_its_containers
     fixture
     stamp!(@container)

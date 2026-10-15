@@ -70,11 +70,22 @@ module PhComposer
                           "description" => "Supply and extract differ by more than 10 " \
                                            "percent of the larger." }
       })
+      TOTAL_PROPERTIES = {
+        "floor_area_m2" => AREA, "weighted_area_m2" => Shapes.quantity("m2", "Summed weighted area (iCFA)."),
+        "net_volume_m3" => Shapes.quantity("m3", "Summed net volume.")
+      }.freeze
+      BUILDING_SEGMENT_ROW = Shapes.object({ "key" => Shapes::TEXT, "name" => { "type" => %w[string null] },
+                                             "zone_count" => Shapes::COUNT }.merge(TOTAL_PROPERTIES))
       STRAY = Shapes.with(FINDING, "reference" => { "type" => "object",
                                                     "description" => "The misplaced record's reference." })
       ALL_RESULT = Shapes.object({
         "spaces" => Shapes.list(SPACE_ROW, :description => "Every Space occurrence."),
         "zones" => Shapes.list(ZONE_ROW, :description => "Each Zone's sums."),
+        "building_segments" => Shapes.list(BUILDING_SEGMENT_ROW,
+                                           :description => "Each Building-Segment's sums " \
+                                                           "over its Zones."),
+        "model" => Shapes.object(TOTAL_PROPERTIES,
+                                 :description => "Sums over every Space in the Model."),
         "findings" => Shapes.list(STRAY, :description => "Records outside the " \
                                                          "hierarchy that holds them."),
         "units" => Shapes.object(Reads::UNITS.to_h { |key, unit|

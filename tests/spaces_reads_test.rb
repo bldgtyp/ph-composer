@@ -40,6 +40,19 @@ class SpacesReadsTest < PhComposerTestCase
     assert_in_delta 20.0 / 6.0, hall.dig("metrics", "average_height_m"), 1e-9
   end
 
+  def test_building_segment_and_model_totals_cover_every_space
+    reference_model
+    value = API.query(:context => @context, :name => "ph_composer.spaces.list", :params => { "limit" => 1 })
+               .fetch("value")
+    segment = value.fetch("building_segments").first
+    assert_equal ["Main Building", 2], segment.values_at("name", "zone_count")
+    assert_equal [32.0, 34.0, 95.6], segment.values_at("weighted_area_m2", "floor_area_m2", "net_volume_m3")
+                                            .map { |number| number.round(6) }
+    model = value.fetch("model")
+    assert_equal [32.0, 34.0, 95.6], model.values_at("weighted_area_m2", "floor_area_m2", "net_volume_m3")
+                                          .map { |number| number.round(6) }
+  end
+
   def test_zone_airflow_sums_follow_the_any_set_rule_and_flag_imbalance
     reference_model
     zone_a, zone_b = all.fetch("zones")

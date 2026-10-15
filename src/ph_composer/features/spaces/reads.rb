@@ -13,7 +13,7 @@ module PhComposer
       # Every Space occurrence, whole: the panel's projection. Scripts page `list` instead.
       def all(request)
         rows, zones, findings = assemble(request)
-        { "spaces" => rows, "zones" => zones, "findings" => findings, "units" => UNITS }
+        totals(rows, zones).merge("spaces" => rows, "findings" => findings, "units" => UNITS)
       end
 
       # One page of Space occurrences in path order, optionally only some ids. Zone sums always cover
@@ -24,16 +24,19 @@ module PhComposer
         rows = rows.select { |row| params["ids"].include?(row.fetch("id")) } if params.key?("ids")
         page, next_cursor = Pages.slice(request, "#{FEATURE_ID}.list", rows,
                                         :key => ->(row) { row.dig("reference", "entity_path") })
-        { "spaces" => page, "zones" => zones, "findings" => findings, "units" => UNITS,
-          "next_cursor" => next_cursor, "total" => rows.length }
+        totals(rows, zones).merge("spaces" => page, "findings" => findings, "units" => UNITS,
+                                  "next_cursor" => next_cursor, "total" => rows.length)
       end
 
       def assemble(request)
         scan = Occurrences.scan(request.model)
         catalog = request.registry.catalog
         zones = request.query(ZONES_READ).fetch("zones").map do |zone|
+          values = zone.fetch("values")
           { "zone_id" => zone.dig("reference", "zone_id"), "zone_path" => zone.dig("reference", "zone_path"),
-            "name" => zone.dig("values", "name") }
+            "name" => values["name"],
+            :segment => [values["building_segment_id"] || values["building_segment"],
+                         zone.dig("display", "building_segment") || values["building_segment"]] }
         end
         ids = scan.spaces.map { |space| space.record.fetch("id") }.tally
         rows = scan.spaces.sort_by(&:path).map { |space| space_row(space, zones, ids, catalog) }
@@ -101,6 +104,18 @@ module PhComposer
           spaces = rows.select { |row| row["zone"] && row.dig("zone", "zone_path") == zone.fetch("zone_path") }
           zone.merge("space_count" => spaces.length).merge(Metrics.zone(spaces))
         end
+      end
+
+      # The Zone rows, and the sums per Building-Segment and for the Model, over every Space whatever
+      # page a list returns. A Space outside every Zone counts toward the Model only.
+      def totals(rows, zones)
+        segments = zones.group_by { |zone| zone.fetch(:segment).first }.map do |key, members|
+          { "key" => key.to_s, "name" => members.first.fetch(:segment).last, "zone_count" => members.length }
+            .merge(Metrics.sums(members, Metrics::TOTALS))
+        end
+        { "zones" => zones.map { |zone| zone.reject { |key, _value| key == :segment } },
+          "building_segments" => segments,
+          "model" => Metrics.sums(rows.map { |row| row.fetch("metrics") }, Metrics::TOTALS) }
       end
 
       def stray_findings(scan)
