@@ -2,22 +2,25 @@
 
 module PhComposer
   module Spaces
-    # Applies an IdentityPlan. A Space or Volume copied natively shares its definition with the original,
+    # Applies an IdentityPlan over the records at or below `scope_path`. For Make independent the scope is
+    # the named target's path: a Space or Volume copied natively shares its definition with the original,
     # so the step first gives the target storage of its own (Make Unique, then every Group inside it still
-    # sharing, as Zones does: context/SKETCHUP_HOST_BEHAVIOR.md, "Group copies"). That replaces every
-    # entity inside, so each row is found again by kind, id and ordinal and must still hold its pre-image.
-    # Restorable: `restore` writes the captured records back for a follow-up that cannot abort; isolated
-    # storage stays isolated, which is consistent (the copy keeps its finding and its repair).
+    # sharing, as Zones does: context/SKETCHUP_HOST_BEHAVIOR.md, "Group copies"). For a Zone copy the scope
+    # is the Zone's path, whose storage the Zone's own step isolated first, and there is no target. Either
+    # way every entity inside was replaced, so each row is found again by kind, id and ordinal and must
+    # still hold its pre-image. Restorable: `restore` writes the captured records back for a follow-up
+    # that cannot abort; isolated storage stays isolated, which is consistent (the copy keeps its finding
+    # and its repair).
     class IdentityStep
-      attr_reader :affected, :number, :zone_path
+      attr_reader :affected, :number, :planned, :zone_path
 
-      # `zone_path` is the Zone occurrence the target is in, nil outside every Zone: where its number is
+      # `zone_path` is the Zone occurrence a target is in, nil outside every Zone: where its number is
       # reserved.
-      def initialize(target:, plan:, zone_path: nil)
+      def initialize(plan:, target: nil, scope_path: target.path, zone_path: nil)
         @zone_path = zone_path&.dup&.freeze
-        @path = target.path.dup.freeze
-        @kind = Resolve.kind_of(target.reference)
-        @record = DeepCopy.frozen(target.record)
+        @path = scope_path.dup.freeze
+        @kind = target && Resolve.kind_of(target.reference)
+        @record = target && DeepCopy.frozen(target.record)
         @counts = plan.counts.dup.freeze
         @rows = plan.rows.map do |row|
           { "kind" => row.kind, "ordinal" => row.ordinal, "before" => DeepCopy.call(row.before),
@@ -25,12 +28,14 @@ module PhComposer
         end.freeze
         @affected = []
         @captured = nil
-        renamed = plan.rows.find { |row| row.kind == @kind && row.before == target.record }
+        renamed = target && plan.rows.find { |row| row.kind == @kind && row.before == target.record }
         @number = @kind == SPACE_KIND && renamed ? renamed.after["number"] : nil
+        # What a contributor reports before apply: each rewritten record's kind, new id and change.
+        @planned = @rows.map { |row| affected_row(row, nil).reject { |key, _value| key == "reference" } }
       end
 
       def descriptor
-        { "name" => "make_space_independent", "path" => @path, "record" => @record,
+        { "name" => @record ? "make_space_independent" : "follow_zone_copy", "path" => @path, "record" => @record,
           "counts" => @counts.map { |(kind, id), count| [kind, id, count] }.sort, "rows" => DeepCopy.call(@rows) }
       end
 
@@ -40,8 +45,10 @@ module PhComposer
       end
 
       def apply(model, _slots)
-        target = target_occurrence(model)
-        isolate(target.entity) if target.entity.is_a?(Sketchup::Group)
+        if @record
+          target = target_occurrence(model)
+          isolate(target.entity) if target.entity.is_a?(Sketchup::Group)
+        end
         inside = Authoring.inside(Occurrences.scan(model), @path).sort_by { |_kind, occurrence| occurrence.path }
         groups = inside.group_by { |kind, occurrence| [kind, occurrence.record.fetch("id")] }
         unless groups.transform_values(&:length) == @counts

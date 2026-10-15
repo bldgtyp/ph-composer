@@ -334,7 +334,7 @@ installation in the MVP.
 
 ### Records inside a Zone occurrence
 
-A feature whose records live inside Zone occurrences (Window Units today, Spaces next) follows the
+A feature whose records live inside Zone occurrences (Window Units and Spaces) follows the
 Zone when an occurrence becomes independent by declaring a transition contributor for
 `ph_composer.zones.occurrence_independent` ([CONTRACTS.md](CONTRACTS.md), "Compound proposals").
 Zones names no child: its action lists the transition, and each child adds its own restorable step to
@@ -344,7 +344,9 @@ before the child's step applies (measured, [SKETCHUP_HOST_BEHAVIOR.md](SKETCHUP_
 "Window Units inside a copied Zone"), so the step binds logically, by record id and pre-image,
 re-enumerates at apply, refuses drift with `target.changed`, and restores what it wrote. Payload
 references are remapped with the description's `mapping` and typed `references`. Windows is the
-example: `features/windows/units/zone_copy.rb`. A test-only second child built from public contracts
+first example (`features/windows/units/zone_copy.rb`); Spaces the second (`features/spaces/zone_copy.rb`),
+which reuses the plan and step of its own Make independent over the Zone's path. A Zone stamp on a
+container a child keeps is Zones' to rewrite, never the child's. A test-only second child built from public contracts
 alone is in `tests/support/zone_child_fixture.rb`. The accepted pattern and why containment and
 implementation ownership stay separate are in
 [ZONE_CHILD_PATTERN.md](../planning/archive/code-review-refactoring/ZONE_CHILD_PATTERN.md).

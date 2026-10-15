@@ -71,6 +71,17 @@ Register row S04.
 - **Array numbers (B2).** `HostFollowUp` plans every copy against one Model state, so Make independent
   skips numbers that earlier repairs in the same proposal took; a `5x` array takes 2 to 6.
 
+- **`follow_zone_copy` reuses Make independent (B3).** The contributor runs the same plan and step
+  over the copied Zone's path with no named target: every Spaces record inside whose id an occurrence
+  outside the Zone holds takes a new id, an id held only inside keeps one holder, numbers and values
+  are kept, and payloads follow the Zone's `mapping` and `references` too. The Zone's own step isolates
+  storage first, so the Spaces step binds by kind, id and ordinal under the Zone's path and isolates
+  nothing. It reports kind, new id and change before apply, as `Units::ZoneCopy` does. Windows'
+  contributor runs in the same transition; contributors apply in name order, Spaces before Windows.
+- **The walkthrough copies a Volume, not a Space (B3).** A scripted Space copy is repaired by the copy
+  watcher after the script returns, so the panel-closed walkthrough copies a Volume, which the watcher
+  leaves to the explicit repair, reads the duplicate, repairs it and moves the Space to a second Zone.
+
 ## Host
 
 SketchUp 26.1.188, Ruby 3.2.2, macOS, 2026-10-15. A probe in a throwaway operation (aborted) on a
@@ -96,6 +107,13 @@ free number; a `5x` array numbered 2 to 6; a cut and paste and an Undo leave not
 holders are not rewritten; a copy inside a component keeps its finding with one notice; a copied plain
 Group is left to its finding. `tests/zone_nested_container_test.rb` and `tests/spaces_restore_zone_test.rb`
 (B1): container stamps through make independent and repair, their refusals, and Restore around a Space.
+`tests/spaces_zone_copy_test.rb` (B3): a copied Zone with two Spaces and three Volumes made
+independent in one step, with new ids throughout the copy, numbers kept, stamps naming the new Zone
+and the original untouched; payloads following the copied Volume and the new Zone; an unsupported
+payload refusing the whole Zone; one Undo for Zone and Spaces; a native Zone copy repaired by the Zones
+watcher with its Spaces. A Zone copy holding Spaces and Window Units together is not built offline,
+whose Windows fixtures are separate; S04 checks it on the host. `tests/spaces_walkthrough_test.rb`: the
+extended walkthrough.
 `tests/spaces_move_test.rb`: a move under a rotated, shifted wrapper keeps every Floor Segment's world
 loop, every record and the Volume's position, stamps the target, in one step; a number collision is
 kept and flagged; one Undo restores and Redo moves again; refusals with a context open, into the

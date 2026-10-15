@@ -19,10 +19,12 @@ module PhComposer
 
       module_function
 
-      def build(scan, target, number:, allocate:, catalog:, engine:)
-        kind = Resolve.kind_of(target.reference)
-        refuse!(scan, kind, target)
-        inside = Authoring.inside(scan, target.path).sort_by { |_kind, occurrence| occurrence.path }
+      # `scope` is the path whose records are rewritten: the named target's own, or a copied Zone's. With
+      # no target (a Zone copy), numbers are kept and `parent` carries the Zone's `mapping` of old to new
+      # ids and its `references` (Records::ReferenceEntry rows), so payloads follow the Zone's ids too.
+      def build(scan, target, number:, allocate:, catalog:, engine:, scope: target.path, parent: nil)
+        refuse!(scan, Resolve.kind_of(target.reference), target) if target
+        inside = Authoring.inside(scan, scope).sort_by { |_kind, occurrence| occurrence.path }
         inside.each { |_kind, occurrence| refuse_lock!(occurrence) }
         keys = inside.map { |row_kind, occurrence| [row_kind, occurrence.path] }
         everywhere = Resolve::TARGETS.flat_map do |row_kind, (_key, _label, list)|
@@ -40,11 +42,11 @@ module PhComposer
           unless keepers.any? { |keeper| keeper.equal?(occurrence) }
             after["id"] = fresh(allocate, KINDS.fetch(row_kind).id_prefix, taken)
             after["floor_id"] = fresh(allocate, FLOOR_PREFIX, taken) if row_kind == VOLUME_KIND
-            after["number"] = number if occurrence.equal?(target) && number
+            after["number"] = number if target && occurrence.equal?(target) && number
           end
           [row_kind, occurrence, Row.new(:kind => row_kind, :ordinal => ordinal, :before => before, :after => after)]
         end
-        copy_extensions(planned, catalog, engine)
+        copy_extensions(planned, catalog, engine, parent)
         rows = planned.map(&:last).reject { |row| row.after == row.before }
         rows.each { |row| Spaces.validate!(KINDS.fetch(row.kind), row.after) }
         Plan.new(:rows => rows,
@@ -73,7 +75,7 @@ module PhComposer
         inside.group_by { |row_kind, occurrence| [row_kind, occurrence.record.fetch("id")] }
               .reject { |(_row_kind, id), _group| held.include?(id) }
               .filter_map do |_key, group|
-                group.map(&:last).find { |occurrence| !occurrence.equal?(target) }
+                group.map(&:last).find { |occurrence| target.nil? || !occurrence.equal?(target) }
               end
       end
 
@@ -97,16 +99,17 @@ module PhComposer
       # Each payload inside the copy is remapped to its own record's new id and to every renamed record
       # whose old id no other record inside the copy holds. A payload naming another id that several
       # records inside the copy hold, renamed or kept, names none of them unambiguously, and refuses.
-      def copy_extensions(planned, catalog, engine)
+      def copy_extensions(planned, catalog, engine, parent)
         rows = planned.map(&:last)
         counts = rows.map { |row| row.before.fetch("id") }.tally
-        shared = rows.each_with_object({}) do |row, mapping|
+        shared = rows.each_with_object(DeepCopy.call(parent ? parent.fetch(:mapping) : {})) do |row, mapping|
           old_id = row.before.fetch("id")
           mapping[old_id] = row.after.fetch("id") if counts[old_id] == 1 && row.after.fetch("id") != old_id
         end
-        plan = Records::ReferencePlan.new(:entries => planned.map do |row_kind, occurrence, row|
+        entries = planned.map do |row_kind, occurrence, row|
           Records::ReferenceEntry.new(:kind => row_kind, :key => occurrence.path, :record => row.after)
-        end)
+        end
+        plan = Records::ReferencePlan.new(:entries => (parent ? parent.fetch(:references) : []) + entries)
         rows.each do |row|
           data = row.before.fetch("extension_data", {})
           next if data.empty?
