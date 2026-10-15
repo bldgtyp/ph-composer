@@ -22,17 +22,20 @@ module PhComposer
       end
 
       def draw(view)
-        return unless @service.active?
+        top = HUD_ORIGIN.last
+        if @service.active?
+          draw_wash(view)
+          @service.fills.each do |colour, points|
+            next if points.empty?
 
-        draw_wash(view)
-        @service.fills.each do |colour, points|
-          next if points.empty?
-
-          view.drawing_color = fill_colour(colour)
-          view.draw(GL_TRIANGLES, Tessellation.lift(points, view))
+            view.drawing_color = fill_colour(colour)
+            view.draw(GL_TRIANGLES, Tessellation.lift(points, view))
+          end
+          draw_lines(view)
+          draw_outlines(view)
+          top = draw_hud(view)
         end
-        draw_outlines(view)
-        draw_hud(view)
+        draw_readouts(view, top)
       end
 
       private
@@ -43,6 +46,62 @@ module PhComposer
         colour = Palette::ISOLATION_WASH
         view.drawing_color = Sketchup::Color.new(*colour, Palette::ISOLATION_WASH_ALPHA)
         view.draw(GL_TRIANGLES, Tessellation.lift(@service.wash_triangles, view))
+      end
+
+      # Derived outlines and segments, in each entry's colour at the outline weight.
+      def draw_lines(view)
+        return if @service.lines.empty?
+
+        view.line_width = LINE_WIDTH
+        view.line_stipple = "" if view.respond_to?(:line_stipple=)
+        @service.lines.each do |colour, points|
+          next if points.empty?
+
+          view.drawing_color = outline_colour(colour)
+          view.draw(GL_LINES, Tessellation.lift(points, view))
+        end
+      end
+
+      # Each readout's anchors at their points' screen positions, skipping any behind the camera, and its
+      # HUD lines under the legend, or at its place when no mode is on. Text is not depth-tested.
+      def draw_readouts(view, top)
+        system = Preferences.unit_system
+        @service.readout_drawings.each_value do |anchors, hud|
+          anchors.each do |anchor|
+            next if behind_camera?(view, anchor.point)
+
+            draw_hud_text(view, *screen(view, anchor.point), readout_text(anchor.parts, system))
+          end
+          hud.each do |parts|
+            top += HUD_ROW_HEIGHT
+            draw_hud_text(view, HUD_ORIGIN.first, top, readout_text(parts, system))
+          end
+        end
+      end
+
+      # Plain text, or `[quantity, si_value]` formatted in the display units (core/units.rb).
+      def readout_text(parts, system)
+        Array(parts).map do |part|
+          part.is_a?(Array) ? Units.format(part.last, :quantity => part.first, :system => system) : part.to_s
+        end.join
+      end
+
+      def behind_camera?(view, point)
+        return false unless view.respond_to?(:camera)
+
+        camera = view.camera
+        return false unless camera.respond_to?(:direction)
+
+        direction = camera.direction
+        eye = camera.eye
+        ((point.x - eye.x) * direction.x) + ((point.y - eye.y) * direction.y) + ((point.z - eye.z) * direction.z) <= 0
+      end
+
+      def screen(view, point)
+        return [point.x, point.y] unless view.respond_to?(:screen_coords)
+
+        projected = view.screen_coords(point)
+        [projected.x, projected.y]
       end
 
       def draw_outlines(view)
@@ -66,6 +125,7 @@ module PhComposer
 
       # The legend the HUD draws is the panel's legend: one source, so a QA screenshot and the panel
       # never disagree.
+      # Answers the last row's top, so readout lines follow the legend.
       def draw_hud(view)
         left, top = HUD_ORIGIN
         draw_hud_text(view, left, top, @service.mode&.label.to_s)
@@ -79,6 +139,7 @@ module PhComposer
           draw_swatch(view, left, row_top, row.colour)
           draw_hud_text(view, left + HUD_SWATCH + 6, row_top, "#{row.label} (#{row.count})")
         end
+        top + (@service.rows.length * HUD_ROW_HEIGHT)
       end
 
       def draw_swatch(view, left, top, colour)

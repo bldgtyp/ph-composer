@@ -61,7 +61,7 @@ that packet; this ledger owns when they run.
 | Stage | Scope | State | Picked up by | Note |
 | --- | --- | --- | --- | --- |
 | G-01 | Confirm the Edge facts (`vertex_ids`, `face_ids`, visibility), per-segment versus whole-run filtering, legend counting through `member`, line width | Deferred | P3b-01 | Document stage. G-03 proposes a `ColourBy::LineEntry` primitive, while D3b-11 draws Edges as P3a-05 `derived` segments with a stroke weight. One draw path, not two: since 2026-10-15 the choice is made once, in [P3a-05](../phase-03a-spaces/phases/p3a-05-colour-by-derived-geometry-and-readouts.md) step 1's design note (D3a-5), with thermal bridges as a named user; G-01 adopts it |
-| G-03 | `ColourBy::LineEntry`, the service branch, the overlay line pass | Deferred | P3b-06, after G-01 | Depends on the G-01 answer above |
+| G-03 | `ColourBy::LineEntry`, the service branch, the overlay line pass | Superseded 2026-10-15 | P3b-06, after G-01 | Not built: P3a-05's design note settled one line primitive, `derived` segments on an ordinary entry (`context/EXTENSIBILITY.md`, "Colour-by derived geometry"). An Edge entry carries the Edge as `entity` and its segment in `derived`; P3b-06 adds only a mode-level stroke weight |
 | G-04 | Thermal-bridge adoption: native drawing proof, export of runs, the 50,000 Edge measurement | Deferred | P3b-06 and P3b-08 | Closes F06 once G-02 and G-03 both have this adopter in use |
 
 G-02 is already on `main` ([PR #119](https://github.com/bldgtyp/ph-composer/pull/119)): the export

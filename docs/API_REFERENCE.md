@@ -4385,7 +4385,8 @@ Result:
     "mode",
     "modes",
     "rows",
-    "filter_paths"
+    "filter_paths",
+    "readouts"
   ],
   "properties": {
     "mode": {
@@ -4435,6 +4436,13 @@ Result:
         "type": "object"
       },
       "description": "The active mode's legend: value, label, colour, count and state."
+    },
+    "readouts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Every registered readout: name, label, whether it reads the selection and whether it is on."
     }
   }
 }
@@ -42186,7 +42194,8 @@ Result:
     "mode",
     "modes",
     "rows",
-    "filter_paths"
+    "filter_paths",
+    "readouts"
   ],
   "properties": {
     "mode": {
@@ -42236,6 +42245,13 @@ Result:
         "type": "object"
       },
       "description": "The active mode's legend: value, label, colour, count and state."
+    },
+    "readouts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Every registered readout: name, label, whether it reads the selection and whether it is on."
     }
   }
 }
@@ -42293,7 +42309,8 @@ Result:
     "mode",
     "modes",
     "rows",
-    "filter_paths"
+    "filter_paths",
+    "readouts"
   ],
   "properties": {
     "mode": {
@@ -42343,6 +42360,13 @@ Result:
         "type": "object"
       },
       "description": "The active mode's legend: value, label, colour, count and state."
+    },
+    "readouts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Every registered readout: name, label, whether it reads the selection and whether it is on."
     }
   }
 }
@@ -42429,7 +42453,8 @@ Result:
     "mode",
     "modes",
     "rows",
-    "filter_paths"
+    "filter_paths",
+    "readouts"
   ],
   "properties": {
     "mode": {
@@ -42479,6 +42504,13 @@ Result:
         "type": "object"
       },
       "description": "The active mode's legend: value, label, colour, count and state."
+    },
+    "readouts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Every registered readout: name, label, whether it reads the selection and whether it is on."
     }
   }
 }
@@ -42488,6 +42520,116 @@ Example params:
 
 ```json
 {}
+```
+
+### `ph_composer.colour_by.readout`
+
+Show or hide one readout's viewport text, with any mode or none. Owner: `ph_composer.colour_by`.
+
+Refuses: `validation.failed`, and the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "readout",
+    "on"
+  ],
+  "properties": {
+    "readout": {
+      "type": "string",
+      "description": "The readout's registered name."
+    },
+    "on": {
+      "type": "boolean",
+      "description": "Whether to show it, with any mode or none."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "required": [
+    "mode",
+    "modes",
+    "rows",
+    "filter_paths",
+    "readouts"
+  ],
+  "properties": {
+    "mode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The active mode's name, or null when off."
+    },
+    "label": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "entity_kind": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "filter_paths": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Occurrence paths to colour; null colours all, and an empty array mutes all.",
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "modes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Every registered mode: name, label, entity kind and group (null when none)."
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "The active mode's legend: value, label, colour, count and state."
+    },
+    "readouts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Every registered readout: name, label, whether it reads the selection and whether it is on."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "readout": "ph_composer.spaces.labels",
+  "on": true
+}
 ```
 
 ### `ph_composer.colour_by.select_row`

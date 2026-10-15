@@ -16,7 +16,23 @@ module PhComposer
     # plain legend key: the legend's select and isolate commands take a string or null.
     # `hatch_outline: false` keeps the unclassified hatch but leaves its boundary edges native.
     # Omission preserves the solid unclassified boundary used by other modes.
-    Entry = Struct.new(:entity, :transform, :value, :label, :state, :path, :colour, :hatch_outline, keyword_init: true)
+    # `derived`, when supplied, is a Derived: world-space shapes drawn in the entry's colour and state, with
+    # or without an entity (context/EXTENSIBILITY.md, "Colour-by derived geometry").
+    Entry = Struct.new(:entity, :transform, :value, :label, :state, :path, :colour, :hatch_outline, :derived,
+                       keyword_init: true)
+
+    # World-space shapes in SketchUp's inches: `polygons`, planar loops of points, filled and outlined;
+    # `segments`, pairs of points drawn as lines. The projection owns every conversion to world.
+    Derived = Struct.new(:polygons, :segments, keyword_init: true)
+
+    # What a readout's projection returns: `anchors`, text placed at world points, and `hud`, lines drawn
+    # under the legend. A line is a list of parts: plain text, or `[quantity, si_value]`, which the overlay
+    # formats in the session's display units.
+    Readout = Struct.new(:anchors, :hud, keyword_init: true)
+
+    # One line of viewport text at a world `point` (inches). `path`, when given, hides it with that
+    # occurrence and mutes it under the occurrence mask, as an entry's shapes are.
+    Anchor = Struct.new(:point, :parts, :path, keyword_init: true)
 
     # One legend row: a colour, what it means, how many entities carry it, and which of the three
     # states it is in (`classified`, `incomplete` or `unclassified`).
@@ -36,7 +52,7 @@ module PhComposer
     # visibility state is not verified; there is no general scene-change subscription here.
     class Service
       attr_reader :mode_name, :rows, :fills, :outlines, :unclassified_outlines, :unclassified_hatch, :isolated
-      attr_reader :wash_triangles
+      attr_reader :wash_triangles, :lines, :readouts_on, :readout_drawings
       attr_reader :filter_paths
       # How many times the drawing has been rebuilt for this Model. The host walkthrough reads it to
       # tell an invalidating event that fired from one that did not.
@@ -46,6 +62,9 @@ module PhComposer
         @session = session
         @rebuilds = 0
         @filter_paths = nil
+        @readouts_on = []
+        @readout_drawings = {}
+        @selection_generation = 0
         clear
         # An extension action can receive SketchUp's commit callback before ModelSession#mutate
         # advances the revision. Its later change publication is the first safe rebuild point.
@@ -86,7 +105,7 @@ module PhComposer
 
       def deactivate
         clear
-        detach_overlay
+        detach_overlay if @readouts_on.empty?
         invalidate_view
         self
       end
@@ -96,15 +115,39 @@ module PhComposer
       # user action, so a rebuild at a revision already drawn is skipped; `force` is for what the
       # revision does not cover, such as a tag being hidden.
       def invalidate!(force: false)
-        return self unless active?
-        return self if !force && @built_revision == @session.revision
+        rebuild if active? && (force || @built_revision != @session.revision)
+        rebuild_readouts if !@readouts_on.empty? && (force || @readouts_built != readout_key)
+        self
+      end
 
-        rebuild
+      # Turns a readout on or off for this Model session, whatever mode is on. Nothing is remembered
+      # across sessions and nothing about the Model changes.
+      def readout(name, on:)
+        known = Registry.current.colour_readouts.key?(name)
+        raise UserError, "There is no Colour-by readout named #{name}." unless known
+
+        @readouts_on = on ? (@readouts_on | [name]) : (@readouts_on - [name])
+        @readout_drawings = @readout_drawings.slice(*@readouts_on)
+        rebuild_readouts
+        @readouts_on.empty? && !active? ? detach_overlay : attach_overlay
+        invalidate_view
+        self
+      end
+
+      # The selection changed: readouts that read it are stale, and nothing else is.
+      def selection_changed
+        @selection_generation += 1
+        reading = @readouts_on.select { |name| Registry.current.colour_readouts[name]&.selection }
+        return self if reading.empty?
+
+        rebuild_readouts(reading)
         self
       end
 
       def detach
         clear
+        @readouts_on = []
+        @readout_drawings = {}
         detach_overlay
         @change_unsubscribe.call
         self
@@ -133,17 +176,21 @@ module PhComposer
         # The cache holds live entities from the last rebuild. One can be erased by something that
         # raised no event this service subscribes to, and `Selection#add` on an erased entity raises,
         # which would reach the client as a bare failure rather than as an answer.
-        placed = @entities.fetch([value, state.to_sym], [])
+        key = [value, state.to_sym]
+        placed = @entities.fetch(key, [])
                           .select { |entity, _transform| entity.respond_to?(:valid?) ? entity.valid? : true }
-        raise UserError, "That legend row is no longer part of this drawing." if placed.empty? || model.nil?
+        shapes = @frames.fetch(key, [])
+        raise UserError, "That legend row is no longer part of this drawing." if (placed.empty? && shapes.empty?) ||
+                                                                                 model.nil?
 
+        # Shapes with no entity are framed but select nothing: there is nothing to select.
         entities = placed.map(&:first)
         model.selection.clear
-        model.selection.add(entities)
+        model.selection.add(entities) unless entities.empty?
         view = model.respond_to?(:active_view) ? model.active_view : nil
         # Framed by where the entities are in the world, from the transforms the entries carried: a Face
         # inside a closed Zone Group is framed where it is, not by its Group's own coordinates.
-        points = placed.flat_map { |entity, transform| Tessellation.call(entity, transform).first }
+        points = placed.flat_map { |entity, transform| Tessellation.call(entity, transform).first } + shapes
         ViewFraming.call(view, points, entities)
         entities.length
       end
@@ -183,6 +230,8 @@ module PhComposer
         @unclassified_outlines = []
         @unclassified_hatch = []
         @wash_triangles = []
+        @lines = {}
+        @frames = {}
         @entities = {}
         @isolated = nil
         @built_revision = nil
@@ -195,8 +244,10 @@ module PhComposer
 
         rows = {}
         entities = Hash.new { |table, key| table[key] = [] }
+        @building_frames = Hash.new { |table, key| table[key] = [] }
         fills = Hash.new { |table, colour| table[colour] = [] }
         outlines = Hash.new { |table, colour| table[colour] = [] }
+        @building_lines = Hash.new { |table, colour| table[colour] = [] }
         unclassified = []
         unclassified_triangles = []
         wash = []
@@ -220,6 +271,8 @@ module PhComposer
         @unclassified_outlines = unclassified
         @unclassified_hatch = Tessellation.hatch(unclassified_triangles)
         @wash_triangles = wash
+        @lines = settled(@building_lines)
+        @frames = settled(@building_frames)
         @built_revision = @session.revision
         @rebuilds += 1
         invalidate_view
@@ -246,8 +299,9 @@ module PhComposer
         row = rows[[entry.value, state]] ||= Row.new(:value => entry.value, :label => label_for(entry),
                                                      :colour => colour, :count => 0, :state => state)
         row.count += 1
-        entities[[entry.value, state]] << [entry.entity, entry.transform]
-        return unless @visibility.visible?(entry.path, entry.entity)
+        entities[[entry.value, state]] << [entry.entity, entry.transform] if entry.entity
+        add_derived(entry, state, colour, fills, unclassified, unclassified_triangles, wash) if entry.derived
+        return unless entry.entity && @visibility.visible?(entry.path, entry.entity)
 
         # Set-aside geometry has its own wash pass, with no mode outline. A grey mode value and
         # the unclassified hatch therefore keep their meaning during isolation.
@@ -267,6 +321,62 @@ module PhComposer
           fills[colour].concat(triangles) unless triangles.empty?
           outlines[colour].concat(segments) unless segments.empty?
         end
+      end
+
+      # An entry's shapes: hidden with its occurrence, filtered and set aside as a whole, and otherwise
+      # drawn in its colour, or with the hatch when it is unclassified.
+      def add_derived(entry, state, colour, fills, unclassified, unclassified_triangles, wash)
+        triangles, outlines, segments = Tessellation.derived(entry.derived)
+        @building_frames[[entry.value, state]].concat(triangles + segments)
+        return unless @visibility.path_visible?(entry.path)
+        return wash.concat(triangles) if set_aside?(entry.value, state) || !matches_filter?(entry.path)
+
+        if state == :unclassified
+          unclassified_triangles.concat(triangles)
+          unclassified.concat(outlines + segments) unless entry.hatch_outline == false
+        else
+          fills[colour].concat(triangles) unless triangles.empty?
+          @building_lines[colour].concat(outlines + segments) unless outlines.empty? && segments.empty?
+        end
+      end
+
+      # Rebuilds `names`, every readout on by default, keeping the others' drawings.
+      def rebuild_readouts(names = @readouts_on)
+        @readouts_built = readout_key if names.equal?(@readouts_on)
+        rebuilt = names.to_h { |name| [name, readout_drawing(name)] }
+        @readout_drawings = @readout_drawings.merge(rebuilt).slice(*@readouts_on).compact
+        invalidate_view
+      end
+
+      def readout_key
+        [@session.revision, @selection_generation]
+      end
+
+      # One readout's anchors and HUD lines, with hidden and muted anchors left out. A readout that raises
+      # is turned off with a notice, as a mode is; the rest keep drawing.
+      def readout_drawing(name)
+        declaration = Registry.current.colour_readouts.fetch(name)
+        read = HandlerRequest.for(@session, :owner => declaration.owner, :name => declaration.name,
+                                            :selection => declaration.selection ? selected_paths : nil)
+        result = declaration.projection.call(read)
+        visibility = OccurrenceVisibility.new(@session.model)
+        anchors = Array(result.anchors).select do |anchor|
+          masked = anchor.path.nil? ? !@filter_paths.nil? : !matches_filter?(anchor.path)
+          visibility.path_visible?(anchor.path) && !masked
+        end
+        [anchors, Array(result.hud)]
+      rescue StandardError => error
+        Diagnostics.log("colour_readout_failed", "operation" => name, "error_class" => error.class.name)
+        @readouts_on -= [name]
+        @session.notice("#{declaration&.label || name} could not be drawn, so it is off.", :tone => :warning)
+        nil
+      end
+
+      # The selected occurrences as full persistent-id paths: the open edit path and each selected entity.
+      def selected_paths
+        model = @session.model
+        open = Array(model.active_path).map(&:persistent_id)
+        model.selection.to_a.map { |entity| open + [entity.persistent_id] }
       end
 
       def set_aside?(value, state)

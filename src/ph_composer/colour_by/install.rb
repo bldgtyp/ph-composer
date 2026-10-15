@@ -12,6 +12,10 @@ module PhComposer
   #     end
   #   end
   #
+  # An entry may also carry world-space shapes (`derived`), and a feature may register a readout,
+  # viewport text shown with any mode or none (context/EXTENSIBILITY.md, "Colour-by derived geometry"
+  # and "Colour-by readouts"; tools/examples/colour_by/ is the example).
+  #
   # The service owns registration, the host overlay, the viewport HUD and cache invalidation. A mode
   # owns a pure projection over its own feature's entities. Nothing here knows a face type, a
   # boundary condition or a Zone, and the shared renderer has no branch per mode.
@@ -34,7 +38,7 @@ module PhComposer
 
     STATE_RESULT = {
       "type" => "object",
-      "required" => %w[mode modes rows filter_paths],
+      "required" => %w[mode modes rows filter_paths readouts],
       "properties" => {
         "mode" => { "type" => %w[string null], "description" => "The active mode's name, or null when off." },
         "label" => { "type" => %w[string null] },
@@ -48,7 +52,18 @@ module PhComposer
         "modes" => { "type" => "array", "items" => { "type" => "object" },
                      "description" => "Every registered mode: name, label, entity kind and group (null when none)." },
         "rows" => { "type" => "array", "items" => { "type" => "object" },
-                    "description" => "The active mode's legend: value, label, colour, count and state." }
+                    "description" => "The active mode's legend: value, label, colour, count and state." },
+        "readouts" => { "type" => "array", "items" => { "type" => "object" },
+                        "description" => "Every registered readout: name, label, whether it reads the selection " \
+                                         "and whether it is on." }
+      }
+    }.freeze
+
+    READOUT_PARAMS = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[readout on],
+      "properties" => {
+        "readout" => { "type" => "string", "description" => "The readout's registered name." },
+        "on" => { "type" => "boolean", "description" => "Whether to show it, with any mode or none." }
       }
     }.freeze
 
@@ -103,6 +118,13 @@ module PhComposer
                            :result => STATE_RESULT, :examples => [{}]) do |request|
         state(request.session)
       end
+      declare_views(feature)
+      feature.snapshot_section("#{FEATURE_ID}.legend", :query => STATE)
+      subscribe_to_invalidation(feature)
+    end
+
+    # The view commands: the mode switch, the legend's row commands, the occurrence mask and readouts.
+    def declare_views(feature)
       feature.view_command("#{FEATURE_ID}.activate",
                            :description => "Turn one Colour-by mode on, or turn Colour-by off.",
                            :refuses => %w[validation.failed],
@@ -134,8 +156,13 @@ module PhComposer
         self.for(request.session).filter(request.params.fetch("paths"))
         state(request.session)
       end
-      feature.snapshot_section("#{FEATURE_ID}.legend", :query => STATE)
-      subscribe_to_invalidation(feature)
+      feature.view_command("#{FEATURE_ID}.readout",
+                           :description => "Show or hide one readout's viewport text, with any mode or none.",
+                           :refuses => %w[validation.failed], :params => READOUT_PARAMS, :result => STATE_RESULT,
+                           :examples => [{ "readout" => "ph_composer.spaces.labels", "on" => true }]) do |request|
+        self.for(request.session).readout(request.params.fetch("readout"), :on => request.params.fetch("on"))
+        state(request.session)
+      end
     end
 
     def subscribe_to_invalidation(feature)
@@ -143,8 +170,9 @@ module PhComposer
         feature.on_host_event(kind) { |session| self.for(session).invalidate! }
       end
       feature.on_host_event(:tags_changed) { |session| self.for(session).invalidate!(:force => true) }
+      feature.on_host_event(:selection_changed) { |session| self.for(session).selection_changed }
     end
-    private_class_method :subscribe_to_invalidation
+    private_class_method :declare_views, :subscribe_to_invalidation
 
     # This Model's Colour-by state, created inert on first reach. Nothing draws until a mode is on.
     def for(session)
@@ -161,7 +189,15 @@ module PhComposer
 
     def state(session)
       service = self.for(session)
-      service.legend.merge("modes" => modes)
+      service.legend.merge("modes" => modes, "readouts" => readouts(service))
+    end
+
+    # Every registered readout, in registration order, and whether this Model shows it.
+    def readouts(service)
+      Registry.current.colour_readouts.values.map do |readout|
+        { "name" => readout.name, "label" => readout.label, "selection" => readout.selection,
+          "on" => service.readouts_on.include?(readout.name) }
+      end
     end
 
     # Every registered mode, in registration order: what a menu or a panel offers.

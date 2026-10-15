@@ -21,7 +21,7 @@ module PhComposer
                 :reference_targets, :extensions,
                 :snapshot_sections,
                 :export_contributors, :reference_retargeters, :transition_contributors, :proposal_participants,
-                :library_providers, :library_kinds, :colour_modes, :menu_items, :codes,
+                :library_providers, :library_kinds, :colour_modes, :colour_readouts, :menu_items, :codes,
                 :subscriptions
 
     class << self
@@ -77,6 +77,7 @@ module PhComposer
       @library_providers = {}
       @library_kinds = {}
       @colour_modes = {}
+      @colour_readouts = {}
       @menu_items = {}
       @codes = {}
       @subscriptions = []
@@ -164,6 +165,7 @@ module PhComposer
       publish_each(staging.declared_library_providers, @library_providers, :name)
       publish_each(staging.declared_library_kinds, @library_kinds, :name)
       publish_each(staging.declared_colour_modes, @colour_modes, :name)
+      publish_each(staging.declared_colour_readouts, @colour_readouts, :name)
       publish_each(staging.declared_menu_items, @menu_items, :name)
       publish_each(staging.declared_codes, @codes, :code)
       prepared.owners.each { |name, owner| @owners[name] = owner }
@@ -191,6 +193,7 @@ module PhComposer
       Declarations::ExportContributor => %i[name owner section_version result preflight user_data_keys requires
                                             entity_projections],
       Declarations::ColourMode => %i[name owner label entity_kind group],
+      Declarations::ColourReadout => %i[name owner label selection],
       Declarations::MenuItem => %i[name owner label menu separator_after],
       Declarations::ReferenceRetargeter => %i[name owner target_kind],
       Declarations::TransitionContributor => %i[name owner transition refuses],
@@ -249,7 +252,7 @@ module PhComposer
                   :declared_export_contributors, :declared_reference_retargeters,
                   :declared_transition_contributors, :declared_proposal_participants,
                   :declared_library_providers, :declared_library_kinds,
-                  :declared_colour_modes,
+                  :declared_colour_modes, :declared_colour_readouts,
                   :declared_menu_items, :declared_codes,
                   :declared_subscriptions, :owners, :named, :admitted_dictionaries
 
@@ -272,6 +275,7 @@ module PhComposer
         @declared_library_providers = []
         @declared_library_kinds = []
         @declared_colour_modes = []
+        @declared_colour_readouts = []
         @declared_menu_items = []
         @declared_codes = []
         @declared_subscriptions = []
@@ -316,8 +320,8 @@ module PhComposer
       def declared_structs
         declared_features + declared_operations + declared_snapshot_sections + declared_export_contributors +
           declared_reference_retargeters + declared_transition_contributors + declared_proposal_participants +
-          declared_library_providers + declared_library_kinds + declared_colour_modes + declared_menu_items +
-          declared_codes + declared_subscriptions
+          declared_library_providers + declared_library_kinds + declared_colour_modes + declared_colour_readouts +
+          declared_menu_items + declared_codes + declared_subscriptions
       end
 
       # Every operation the batch declared, of every kind a client can call.
@@ -428,6 +432,15 @@ module PhComposer
           :sort => sort, :group => group, :projection => projection
         )
         @staging.add(:declared_colour_modes, id, name, declaration)
+      end
+
+      # One Colour-by readout: a pure projection returning ColourBy::Readout text for the viewport, on or
+      # off per Model session and shown with any mode or none. `selection: true` gives the projection
+      # `read.selection` and rebuilds it when the selection changes.
+      def colour_readout(name, label:, selection: false, &projection)
+        declaration = Declarations::ColourReadout.new(:name => name, :owner => id, :label => label,
+                                                      :selection => selection, :projection => projection)
+        @staging.add(:declared_colour_readouts, id, name, declaration)
       end
 
       # One native menu item under the named submenu. The handler receives the current ModelSession.

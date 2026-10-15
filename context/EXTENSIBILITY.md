@@ -518,6 +518,100 @@ nothing to the Model, so it is not a registered action: it is reached through th
 menu, which is built from whatever modes are registered, and read back through the registered
 `ph_composer.colour_by.state` query. Nothing in `shell/` or `session/` names a mode or a feature.
 
+### Colour-by derived geometry
+
+Implemented in P3a-05. An `Entry` may carry `derived:`, world-space shapes the service draws in the
+entry's colour and state, with or without a backing entity:
+
+```ruby
+ColourBy::Entry.new(path: volume.path, value: "2.50", label: "2.50 m",
+                    derived: ColourBy::Derived.new(polygons: [floor, roof, *sides], segments: []))
+```
+
+- **Shapes.** A polygon is one planar outer loop of three or more points, convex or concave, with
+  no holes; the service triangulates it in its own plane and outlines its loop. The projection owns
+  planarity: a loop whose points are not coplanar is degenerate, as are collinear, repeated or
+  non-finite points, and a degenerate polygon draws nothing rather than being fitted to a plane. A
+  segment is two points, drawn as a line. Nothing raises inside `draw`; a malformed `derived` (not
+  points, wrong arity) fails the mode through the existing route, so the viewport shows Off and a
+  warning.
+- **Coordinates.** Points are `Geom::Point3d` in world coordinates in SketchUp's inches, as every point
+  the host hands a projection already is, whatever the Model's display units. The projection owns the
+  conversion, from SI values or local coordinates, through the occurrence transform it already holds;
+  the service converts nothing.
+- **Appearance.** Polygons fill and outline in the entry's colour: translucent, lifted toward the eye
+  and depth-tested like Face fills; an unclassified entry's polygons take the hatch and an incomplete
+  one's the amber. Segments and outlines draw at the overlay's outline weight. An entry with both an
+  entity and shapes draws both.
+- **Visibility.** With `path`, shapes are drawn only while every entity along the path is visible
+  (not hidden, tag visible), the same walk the service makes for an entity; with no entity the path
+  still names the occurrence the shapes belong to, so the identity check against `entity` is
+  skipped. Without `path`, shapes are drawn whenever the mode is, and are muted under an explicit
+  occurrence mask, as an entity entry without a path is.
+- **Mask and isolation.** The occurrence mask (`filter`) and Show only this apply to the entry's path
+  as a whole; shapes are not partitioned. A muted or set-aside entry's polygons join the wash and its
+  segments are not drawn.
+- **Legend.** One entry counts once, whatever it carries. An entry with neither entity nor shapes
+  draws nothing and still counts. Select and Locate act on entries with an entity; shapes alone frame
+  the view but select nothing, so a row of shape-only entries is framed and answers that nothing was
+  selected rather than refusing.
+- **Cache.** Shapes are built at rebuild into the per-colour fill batches and one per-colour line
+  batch; the drawing stays whole and keyed on the session revision, and `draw` computes nothing.
+  Readouts are cached beside it, keyed on the revision and, for a `selection: true` readout, on a
+  selection generation the service advances on `selection_changed`, which the revision does not.
+- **One line primitive.** Coloured lines are derived segments. The deferred geometry stage's
+  `ColourBy::LineEntry` is not built: an Edge is drawn as an entry with the Edge as `entity` (so
+  Locate, Show only this and path visibility work) and its one world segment in `derived`. A mode that
+  needs a heavier stroke than the outline weight declares it on the mode when it needs it (thermal
+  bridges, Phase 3b); nothing per entry.
+- `group:` and the column-header toggles are unaffected: a shape belongs to its entry, an entry to its
+  mode.
+
+### Colour-by readouts
+
+Implemented in P3a-05. A readout is a separately registered pure projection that returns viewport
+text, shown with any mode and with none:
+
+```ruby
+feature.colour_readout("ph_composer.spaces.labels", label: "Space labels", selection: false) do |read|
+  ColourBy::Readout.new(anchors: [ColourBy::Anchor.new(point: centre, parts: ["101 ", ["area", 12.4]])],
+                        hud: [])
+end
+```
+
+- **Input.** The read request a mode's projection receives. A readout declared `selection: true` also
+  gets `read.selection`, the selected occurrences as full persistent-id paths, and is rebuilt when the
+  selection changes (the `selection_changed` host event); other readouts and every mode are not. Like
+  a mode's projection, a readout only reads: it never writes, connects to the public API, changes the
+  selection or touches the panel.
+- **Output.** `anchors`, each a world point (inches) and one line of parts, drawn with
+  `view.draw_text` at the point's screen position, not depth-tested; an anchor behind the camera is
+  skipped. An anchor may carry `path`, under the same visibility and mask rules as derived shapes;
+  without it, it is drawn whenever the readout is on. `hud` is lines of parts drawn under the legend,
+  or at the legend's place when no mode is on. A part is plain text or `[quantity, si_value]`; the
+  overlay formats quantities with `PhComposer::Units.format` in the session's display units
+  (`context/TECH_STACK.md`, "Display units"), so a readout never formats a unit-bearing number.
+- **State.** Readouts are on or off per Model session, independently of the active mode, and are not
+  remembered across sessions as the last mode is. The overlay is attached while a mode or any readout
+  is on. `ph_composer.colour_by.state` lists the registered
+  readouts and which are on; the view command `ph_composer.colour_by.readout` turns one on or off; the
+  native Colour by menu lists them under the modes. A readout that raises is turned off with a notice,
+  as a mode is.
+- **Registration.** `colour_readout` takes the same diagnostics as `colour_mode`: a duplicate name or
+  an owner that is not installed refuses the install.
+
+**The example and the contributor tasks.** `tools/examples/colour_by/example_colour_by.rb` is the
+example to copy: an outside feature with a prism mode and a selection-reading readout, tested by
+`tests/example_colour_by_test.rb`, with no line under `colour_by/` naming it. "Add the By height mode
+with its prism" (Spaces, P3a-09) changes only
+`features/spaces/`: a `colour_mode` whose projection makes one entry per Volume, with the Volume's
+path, no entity and a prism (the floor loop, a roof at the Volume's height and its sides) in
+`derived`. "Add operation marks to By type" (Windows, P3a-05 slice B) changes only
+`features/windows/colour_modes.rb`: each Unit entry keeps its entity and gains segments for its
+elements' operations, from the pane plan the Unit's definition is built from, placed by the Unit's
+transform. A thermal-bridge mode (Phase 3b) carries each Edge as `entity` and its segment in
+`derived`. None of the three adds a line under `colour_by/`.
+
 ### Native menu items
 
 Implemented in P1-D. Some things a user asks for change no record and open no operation: starting a

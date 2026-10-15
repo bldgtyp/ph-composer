@@ -170,6 +170,11 @@ module PhComposer
     ColourMode = Struct.new(:name, :owner, :label, :entity_kind, :colours, :sort, :group, :projection,
                             keyword_init: true)
 
+    # One Colour-by readout: viewport text a feature projects, shown with any mode and with none
+    # (context/EXTENSIBILITY.md, "Colour-by readouts"). `selection` says the projection reads the selection,
+    # so the service rebuilds it when the selection changes.
+    ColourReadout = Struct.new(:name, :owner, :label, :selection, :projection, keyword_init: true)
+
     # One native menu item: how a feature reaches SketchUp's own menus without `shell/` naming it.
     # `menu` is the submenu's label and items are grouped under it in registration order.
     # `handler` is `->(session) { }` and `state` an optional `->(session) { MF_CHECKED | MF_UNCHECKED }`

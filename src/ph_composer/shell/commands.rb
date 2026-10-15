@@ -44,6 +44,22 @@ module PhComposer
         end
         off = @colour_by_menu.add_item(COLOUR_BY_OFF) { colour_by(&:deactivate) }
         @colour_by_menu.set_validation_proc(off) { colour_by_check(nil) }
+        install_readouts
+      end
+
+      # Readouts are listed under the modes, each checked while it is on; they are independent of the
+      # mode, so choosing one never turns a mode on or off.
+      def install_readouts
+        readouts = Registry.current.colour_readouts.values
+        return if readouts.empty?
+
+        @colour_by_menu.add_separator
+        readouts.each do |readout|
+          item = @colour_by_menu.add_item(readout.label) do
+            colour_by { |service| service.readout(readout.name, :on => !service.readouts_on.include?(readout.name)) }
+          end
+          @colour_by_menu.set_validation_proc(item) { readout_check(readout.name) }
+        end
       end
 
       # One submenu per declared `menu` name, its items in registration order. The submenu name and
@@ -137,6 +153,11 @@ module PhComposer
         session = Sessions.current
         active = session && ColourBy.for(session).mode_name
         active == name ? MF_CHECKED : MF_UNCHECKED
+      end
+
+      def readout_check(name)
+        session = Sessions.current
+        session && ColourBy.for(session).readouts_on.include?(name) ? MF_CHECKED : MF_UNCHECKED
       end
 
       def reset_for_test

@@ -27,6 +27,7 @@ module PhComposer
         @diagnostics.concat(ParticipantValidation.new(@live, @staging).diagnostics)
         @diagnostics.concat(LibraryValidation.new(@live, @staging).diagnostics)
         check_colour_modes
+        check_colour_readouts
         check_menu_items
         check_subscriptions
         @diagnostics.concat(CodeValidation.new(@live, @staging).diagnostics)
@@ -311,6 +312,16 @@ module PhComposer
           add("registration.schema_invalid", mode.owner, mode.name,
               "#{mode.name} needs a label, an entity kind, a colour function and a projection block; " \
               "a group, when given, is a name.")
+        end
+      end
+
+      def check_colour_readouts
+        @staging.declared_colour_readouts.each do |readout|
+          next if text?(readout.label) && [true, false].include?(readout.selection) &&
+                  readout.projection.respond_to?(:call)
+
+          add("registration.schema_invalid", readout.owner, readout.name,
+              "#{readout.name} needs a label, a true or false selection flag and a projection block.")
         end
       end
 
