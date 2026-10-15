@@ -532,10 +532,9 @@ ColourBy::Entry.new(path: volume.path, value: "2.50", label: "2.50 m",
   no holes; the service triangulates it in its own plane and outlines its loop. The projection owns
   planarity: a loop whose points are not coplanar is degenerate, as are collinear, repeated or
   non-finite points and a loop that crosses itself, and a degenerate polygon draws nothing rather than
-  being fitted to a plane or drawn in part. A
-  segment is two points, drawn as a line. Nothing raises inside `draw`; a malformed `derived` (not
-  points, wrong arity) fails the mode through the existing route, so the viewport shows Off and a
-  warning.
+  being fitted to a plane or drawn in part. A segment is two points, drawn as a line. Nothing raises
+  inside `draw`; a malformed `derived` (not points, wrong arity) fails the mode through the existing
+  route, so the viewport shows Off and a warning.
 - **Coordinates.** Points are `Geom::Point3d` in world coordinates in SketchUp's inches, as every point
   the host hands a projection already is, whatever the Model's display units. The projection owns the
   conversion, from SI values or local coordinates, through the occurrence transform it already holds;
