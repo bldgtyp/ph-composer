@@ -331,7 +331,11 @@ module PhComposer
         @building_frames[[entry.value, state]].concat(triangles + segments)
         # With an entity, the path must name it, as for the entity's own geometry; without one, the path
         # names the occurrence the shapes belong to.
-        visible = entry.entity ? @visibility.visible?(entry.path, entry.entity) : @visibility.path_visible?(entry.path)
+        visible = if entry.entity
+                    @visibility.visible?(entry.path, entry.entity) && !Tessellation.skipped?(entry.entity)
+                  else
+                    @visibility.path_visible?(entry.path)
+                  end
         return unless visible
         return wash.concat(triangles) if set_aside?(entry.value, state) || !matches_filter?(entry.path)
 

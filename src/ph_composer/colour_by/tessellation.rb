@@ -298,14 +298,14 @@ module PhComposer
         [triangles, outlines, lines]
       end
 
-      # Triangles covering one planar loop, convex or concave, by ear clipping in the loop's own plane.
-      # Empty for a degenerate loop: fewer than three distinct points, non-finite, collinear or not
-      # planar within PLANAR_TOLERANCE inches.
+      # Triangles covering one simple planar loop, convex or concave, by ear clipping in the loop's own
+      # plane. Empty for a degenerate loop: fewer than three distinct points, a repeated or non-finite
+      # point, collinear, not planar within PLANAR_TOLERANCE inches, or crossing itself.
       def triangulate(points)
         return [] unless points.all? { |point| finite?(point) }
 
         loop = distinct(points)
-        return [] if loop.length < 3
+        return [] if loop.length < 3 || repeated?(loop)
 
         normal = newell(loop)
         length = Math.sqrt(normal.sum { |component| component**2 })
@@ -357,6 +357,11 @@ module PhComposer
         loop
       end
 
+      # Any point the loop passes through twice, consecutive or not, makes it degenerate.
+      def repeated?(loop)
+        loop.combination(2).any? { |first, second| squared_distance(first, second) <= HATCH_EPSILON**2 }
+      end
+
       def newell(loop)
         loop.each_with_index.each_with_object([0.0, 0.0, 0.0]) do |(point, index), normal|
           following = loop[(index + 1) % loop.length]
@@ -397,8 +402,10 @@ module PhComposer
           triangles << loop[previous] << loop[remaining[ear]] << loop[following]
           remaining.delete_at(ear)
         end
-        triangles.concat(remaining.map { |index| loop[index] }) if remaining.length == 3
-        triangles
+        # A loop that runs out of ears is not simple (it crosses itself): it draws nothing, not a part.
+        return [] unless remaining.length == 3
+
+        triangles.concat(remaining.map { |index| loop[index] })
       end
 
       def ear?(flat, remaining, index)
@@ -421,7 +428,7 @@ module PhComposer
         cross(a, b, point) >= 0 && cross(b, c, point) >= 0 && cross(c, a, point) >= 0
       end
 
-      private_class_method :points!, :finite?, :distinct, :newell, :difference, :ear_clip, :ear?, :cross,
+      private_class_method :points!, :finite?, :distinct, :repeated?, :newell, :difference, :ear_clip, :ear?, :cross,
                            :inside_triangle?
       private_class_method :each_face, :add_face, :stripe_range, :stripe_count, :zero_length_extremum?,
                            :hatch_at_spacing, :hatch_across, :projected_axis, :dot, :squared_distance

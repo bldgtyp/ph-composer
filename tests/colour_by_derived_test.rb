@@ -131,6 +131,28 @@ class ColourByDerivedTest < PhComposerTestCase
     assert_empty service.fills
   end
 
+  def test_shapes_on_a_hidden_or_tagged_entity_without_a_path_are_not_drawn
+    hidden = Sketchup::Face.new(9001, {}, :points => square(4))
+    hidden.hidden = true
+    tagged = Sketchup::Face.new(9002, {}, :points => square(4))
+    tagged.layer = Sketchup::Tag.new("Hidden", false)
+    @model.entities << hidden << tagged
+    service = install_mode do
+      [hidden, tagged].map do |face|
+        entry(:entity => face, :transform => Geom::Transformation.new,
+              :derived => ColourBy::Derived.new(:polygons => [square(10, 20)], :segments => []))
+      end
+    end
+    assert_empty service.fills
+    assert_equal 2, service.rows.first.count
+  end
+
+  def test_a_point_repeated_anywhere_in_the_loop_makes_it_degenerate
+    loop = [point(0, 0), point(10, 0), point(10, 10), point(0, 10), point(10, 0)]
+    service = install_mode { [entry(:derived => ColourBy::Derived.new(:polygons => [loop], :segments => []))] }
+    assert_empty service.fills
+  end
+
   def test_a_malformed_shape_turns_the_mode_off_with_a_warning
     service = install_mode { [entry(:derived => ColourBy::Derived.new(:polygons => ["not points"], :segments => []))] }
     refute service.active?

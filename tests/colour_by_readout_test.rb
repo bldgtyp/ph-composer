@@ -135,6 +135,14 @@ class ColourByReadoutTest < PhComposerTestCase
     assert_includes drawn_texts, "0 selected"
   end
 
+  def test_an_anchor_with_a_non_numeric_coordinate_turns_its_readout_off
+    point = Struct.new(:x, :y, :z).new("bad", 0, 0)
+    install_readouts(:anchors => [ColourBy::Anchor.new(:point => point, :parts => ["Bad"])])
+    toggle(READOUT, true)
+    refute ColourBy.for(@session).readouts_on.include?(READOUT)
+    refute_includes drawn_texts, "Bad"
+  end
+
   def test_the_overlay_goes_when_the_last_readout_fails_on_a_later_rebuild
     failing = [false]
     calls = @calls

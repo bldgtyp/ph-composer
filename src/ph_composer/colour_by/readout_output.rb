@@ -13,7 +13,10 @@ module PhComposer
 
         Array(result.anchors).each do |anchor|
           point = anchor.point
-          finite = %i[x y z].all? { |axis| point.respond_to?(axis) && point.public_send(axis).to_f.finite? }
+          finite = %i[x y z].all? do |axis|
+            value = point.respond_to?(axis) && point.public_send(axis)
+            value.is_a?(Numeric) && value.to_f.finite?
+          end
           raise ArgumentError, "A readout anchor needs a finite point." unless finite
 
           check_parts!(anchor.parts)
