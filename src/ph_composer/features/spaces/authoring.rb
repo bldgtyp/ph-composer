@@ -140,6 +140,44 @@ module PhComposer
         { "space_id" => occurrence.record.fetch("id") }
       end
 
+      # The explicit repair of a copy: the named occurrence and everything inside it take new ids, in one
+      # step. A Space takes the next free number in its Zone.
+      def make_independent(request, proposal, reference:)
+        scan = Occurrences.scan(request.model)
+        kind = Resolve.kind_of(reference)
+        target = Resolve.occurrence(scan, reference, :mutable => false)
+        number = (next_number(scan, zone_of(request, target.path), zone_paths(request)) if kind == SPACE_KIND)
+        plan = IdentityPlan.build(scan, target, :number => number,
+                                                :allocate => Records::Identity.allocator(request, request.params),
+                                                :catalog => request.registry.catalog, :engine => request.engine)
+        scope = kind == FLOOR_SEGMENT_KIND ? target.path[0...-2] : target.path[0...-1]
+        proposal.add_step(IdentityStep.new(:target => target, :plan => plan),
+                          :scopes => [Operations::EntityScope.new(scope)])
+        renamed = plan.rows.reject { |row| row.after["id"] == row.before["id"] }
+        ids = renamed.map { |row| { "kind" => row.kind, "before" => row.before["id"], "after" => row.after["id"] } }
+        { "ids" => ids }
+      end
+
+      # Moves a Space Group, with everything in it, into another Zone where it stands; the new Group takes
+      # the target Zone's stamp. Loose geometry beside the Space stays where it is.
+      def move_to_zone(request, proposal, space:, zone:)
+        scan = Occurrences.scan(request.model)
+        source = Resolve.occurrence(scan, space, :mutable => true)
+        zone = zone_reference(zone)
+        located = request.locate(ZONE_KIND, zone, :mutable => true)
+        MovePlan.refuse!(:space => source, :current_zone_path => zone_of(request, source.path),
+                         :target_zone_path => zone.fetch("zone_path"),
+                         :open_path => EditContext.current_ids(request.model))
+        transform = MovePlan.transform(source.transform, located.transform * located.entity.transformation)
+        slot = "#{source.record.fetch('id')}.moved"
+        proposal.add_step(MoveStep.new(:source => source, :target_zone_path => zone.fetch("zone_path"),
+                                       :transform => transform, :slot => slot),
+                          :scopes => [Operations::EntityScope.new(source.path[0...-1]),
+                                      Operations::EntityScope.new(zone.fetch("zone_path"))])
+        request.participate(STAMP, "zone" => zone, "slot" => slot)
+        { "space_id" => source.record.fetch("id"), "zone_id" => zone.fetch("zone_id") }
+      end
+
       # Marks explicit Faces directly inside Volumes as Floor Segments with one weighting factor; a Face
       # already marked keeps its record and takes the factor.
       def mark_floors(request, proposal, faces:, weighting_factor:)
@@ -368,11 +406,20 @@ module PhComposer
         end
       end
 
-      # The next free whole number among the Spaces already in this Zone.
-      def next_number(scan, zone_path)
-        numbers = scan.spaces.select { |space| Occurrences.zone_path(space.path, [zone_path]) == zone_path }
+      # The next free whole number among the Spaces already in this Zone, or outside every Zone when
+      # `zone_path` is nil; `zone_paths` are every Zone's, so a Space in a nested Zone counts only there.
+      def next_number(scan, zone_path, zone_paths = [zone_path])
+        numbers = scan.spaces.select { |space| Occurrences.zone_path(space.path, zone_paths.compact) == zone_path }
                       .map { |space| Integer(space.record.fetch("number"), 10, :exception => false) }.compact
         ((numbers.max || 0) + 1).to_s
+      end
+
+      def zone_paths(request)
+        request.query(Reads::ZONES_READ).fetch("zones").map { |zone| zone.dig("reference", "zone_path") }
+      end
+
+      def zone_of(request, path)
+        Occurrences.zone_path(path, zone_paths(request))
       end
 
       def zone_reference(zone)

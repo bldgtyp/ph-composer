@@ -1,7 +1,7 @@
 # P3a-04: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the Zone-copy contract this stage joins now exists; D3a-14 (answered 2026-10-15) adds a Space copy watcher
+STATUS: In progress. Slice A (steps 1, 2, 4, 5, 6) implemented on `feature/spaces-p3a-04a`; slice B (steps 3, 7, 8, 9) next; host gate not run ([evidence](../evidence/p3a-04-copies-and-move.md))
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

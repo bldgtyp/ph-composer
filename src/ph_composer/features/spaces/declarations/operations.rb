@@ -3,7 +3,8 @@
 module PhComposer
   module Spaces
     # The operations' public contract: Create Space and its preview, Volume and Floor Segment edits,
-    # update, batch, delete and metadata. The handlers are Authoring module functions.
+    # update, batch, delete, metadata, Make independent and Move Space to Zone. The handlers are
+    # Authoring module functions.
     module OperationRegistration
       ZONE = Shapes.object({ "zone_id" => Shapes::TEXT, "zone_path" => Shapes::ZONE_PATH },
                            :description => "The Zone occurrence, as ph_composer.zones.list returns it.")
@@ -140,6 +141,34 @@ module PhComposer
                                           "expected_metadata" => { "user_data" => {}, "extension_data" => {} } }] }]
         }, lambda { |request, proposal, params|
           Authoring.update_metadata(request, proposal, :updates => params.fetch("updates"))
+        }],
+        ["make_independent", {
+          :description => "Give the named copy of a Space, Volume or Floor Segment, and every record inside it, " \
+                          "new ids in one step. The named occurrence is the one rewritten; a Space takes the next " \
+                          "free number in its Zone.",
+          :refuses => (TARGET + %w[copy.rule_missing extension.invalid identity.conflict reference.invalid
+                                   space.identity_unique]).uniq,
+          :params => Shapes.object({ "reference" => REFERENCE }),
+          :result => Shapes.object({ "ids" => Shapes.list(Shapes.object({ "kind" => Shapes::TEXT,
+                                                                          "before" => Shapes::TEXT,
+                                                                          "after" => Shapes::TEXT })) }),
+          :undo_name => "Make Space Independent",
+          :side_effects => "Gives the copy storage of its own and rewrites its records with new ids.",
+          :examples => [{ "reference" => EXAMPLE_SPACE }]
+        }, lambda { |request, proposal, params|
+          Authoring.make_independent(request, proposal, :reference => params.fetch("reference"))
+        }],
+        ["move_to_zone", {
+          :description => "Move one Space, with its Volumes and Floor Segments, into another Zone where it stands. " \
+                          "Ids, numbers and values are kept; the edit context must be closed.",
+          :refuses => (ZONE_TARGET + %w[space.context_open space.same_zone]).uniq,
+          :params => Shapes.object({ "space" => SPACE_PARAM, "zone" => ZONE }),
+          :result => Shapes.object({ "space_id" => Shapes::TEXT, "zone_id" => Shapes::TEXT }),
+          :undo_name => "Move Space to Zone", :participants => [Authoring::STAMP],
+          :side_effects => "Places the Space Group in the target Zone, stamps it and erases the original.",
+          :examples => [{ "space" => EXAMPLE_SPACE, "zone" => EXAMPLE_ZONE }]
+        }, lambda { |request, proposal, params|
+          Authoring.move_to_zone(request, proposal, :space => params.fetch("space"), :zone => params.fetch("zone"))
         }],
         ["floors.mark", {
           :description => "Mark explicit Faces directly inside Volumes as Floor Segments with one weighting factor; " \

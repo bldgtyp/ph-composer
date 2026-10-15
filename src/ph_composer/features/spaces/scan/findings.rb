@@ -10,7 +10,7 @@ module PhComposer
         "space.height_missing" => true, "space.number_duplicate" => false, "space.floor_projected" => false,
         "space.nested" => true, "space.volume_nested" => true, "space.volume_orphan" => true,
         "space.segment_misplaced" => true, "space.volume_moved" => false,
-        "space.volume_unprotected" => false
+        "space.volume_unprotected" => false, "space.duplicate_identity" => true
       }.freeze
 
       module_function
@@ -51,6 +51,18 @@ module PhComposer
         return [] if row.dig("metrics", "horizontal")
 
         [finding("space.floor_projected", "This Floor Segment is not horizontal; its plan area is used.")]
+      end
+
+      # Another occurrence carries this record's id: a copy. `repeated` says storage above its Space is
+      # shared, a component or a copied Group, which no Spaces repair isolates.
+      def duplicate(label, repeated:)
+        message = if repeated
+                    "This #{label} is repeated through shared storage, such as a component. Draw the Space " \
+                      "directly; there is no repair."
+                  else
+                    "This #{label} shares its identity with a copy. Use Make independent on the copy."
+                  end
+        finding("space.duplicate_identity", message)
       end
 
       def orphan_volume

@@ -8,6 +8,8 @@
 #   reads.rb        the list and panel reads
 #   authoring.rb    the operations' handlers; steps.rb their native steps; scan/resolve.rb strict targets
 #   context/        Volume protection, the reconciler and the edit-context commands
+#   identity/       Make independent: the pure plan and its step
+#   move/           Move Space to Zone: the pure plan and its step
 #   settings.rb     the Model's last-entered height
 #   declarations/   what Spaces registers
 require_relative "schema"
@@ -20,6 +22,10 @@ require_relative "steps"
 require_relative "context/protection"
 require_relative "context/navigation"
 require_relative "context/reconciler"
+require_relative "identity/plan"
+require_relative "identity/step"
+require_relative "move/plan"
+require_relative "move/step"
 require_relative "authoring"
 require_relative "declarations/shapes"
 require_relative "settings"
