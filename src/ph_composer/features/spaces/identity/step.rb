@@ -60,7 +60,7 @@ module PhComposer
       end
 
       # Writes back what apply replaced; nothing when apply did not reach its writes.
-      def restore(_model)
+      def restore
         return unless @captured
 
         @captured.each do |store, entity, record, name|

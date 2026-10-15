@@ -240,7 +240,7 @@ class SpacesIdentityTest < PhComposerTestCase
     step = PhComposer::Spaces::IdentityStep.new(:target => target, :plan => plan)
     step.apply(@model, {})
     assert_equal "2", copy.name
-    step.restore(@model)
+    step.restore
     assert_equal "1", copy.name
     assert_equal "spc_SSSSSSSSSSSS", PhComposer::Spaces::SPACE_STORE.read(copy)["id"]
   end

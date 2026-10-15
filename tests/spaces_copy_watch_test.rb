@@ -62,6 +62,30 @@ class SpacesCopyWatchTest < PhComposerTestCase
     assert_equal [[:success, "Made the copied Space independent."]], @notices
   end
 
+  # The follow-up cannot abort the copy it joined: a failure after the writes puts the records back
+  # (HostFollowUp calls `restore`), and the notice says the copy's records are as copied.
+  def test_a_failed_follow_up_restores_the_copy_and_says_so
+    copy = copy_natively(@space, 120)
+    SPACES::IdentityStep.class_eval do
+      alias_method :real_apply, :apply
+      define_method(:apply) do |model, slots|
+        real_apply(model, slots)
+        raise "injected"
+      end
+    end
+    begin
+      UI.run_timers
+    ensure
+      SPACES::IdentityStep.class_eval do
+        alias_method :apply, :real_apply
+        remove_method :real_apply
+      end
+    end
+    assert_equal "spc_SSSSSSSSSSSS", SPACES::SPACE_STORE.read(copy)["id"]
+    assert_equal :warning, @notices.last.first
+    assert_includes @notices.last.last, "records are as copied"
+  end
+
   def test_an_array_of_copies_takes_the_next_free_numbers
     5.times { |index| copy_natively(@space, 120 + index) }
     UI.run_timers
