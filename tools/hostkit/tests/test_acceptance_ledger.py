@@ -25,7 +25,7 @@ class AcceptanceLedgerTest(unittest.TestCase):
         subprocess.run(["git", "add", "."], cwd=self.root, check=True)
         self.case: dict[str, Any] = {"id": "C1", "paths": ["src/*"], "mode": "native", "native_control_required": True}
         self.cases = {"C1": self.case}
-        self.result = {
+        self.result: dict[str, Any] = {
             "schema_version": 1,
             "case_id": "C1",
             "captured_at": "2026-09-30T12:00:00+00:00",

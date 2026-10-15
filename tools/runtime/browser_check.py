@@ -32,7 +32,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-import websocket  # type: ignore[import-not-found,unused-ignore]  # PEP 723 dependency, not in the dev venv
+import websocket  # ty: ignore[unresolved-import]  # PEP 723 dependency, not in the dev venv
 
 ROOT = Path(__file__).resolve().parents[2]
 EXTENSION = ROOT / "src" / "ph_composer"

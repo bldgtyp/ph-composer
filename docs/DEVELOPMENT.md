@@ -28,8 +28,8 @@ make ci
 `ci` runs, in order: `syntax` (every `.rb` under `src`, `tests` and `tools`), `lint`, `test`,
 `fixtures-check`, `panel-manifest-check`, `runtime-check` (the tree, the Pyodide pin, the gates
 and the installed-size budget against `src/ph_composer/vendor/manifest.json`), `runtime-pin-check`
-(shipped wheels against `pyproject.toml`), `hostkit-test`, `python-check` (mypy over the
-translation package, the tools and their tests), `rbz` and `rbz-check`, which also refuses an
+(shipped wheels against `pyproject.toml`), `hostkit-test`, `python-check` (ty, Astral's type
+checker, over the translation package, the tools and their tests), `rbz` and `rbz-check`, which also refuses an
 installed extension over the manifest's 24,000,000-byte ceiling.
 
 `test` loads the real extension code against a stub SketchUp API and runs the Ruby and Python
@@ -57,13 +57,48 @@ installs both. A local skip is not gate evidence.
   level, with post-88 runtime APIs refused. Install with `pnpm install`; the repository keeps
   pnpm's one-day minimum release age and refuses non-registry subdependencies.
 - `lint-python` runs ruff over `tools/`, `tests/python` and the translation package, lint and
-  format check.
+  format check. Its rules include the ones that require every parameter and return to be
+  annotated, which `python-check` relies on and ty does not enforce itself. ty is pinned to an
+  exact version while it is in beta.
 - `lint-citations` fails if shipped code or a test cites a planning document or a planning
   identifier (a phase stage, question, decision or acceptance number). Comments cite `context/`
   instead, because planning documents move when they are archived.
 
 The line ceiling is 120 characters in every language. What the linters cannot express is in
 [`context/CODING_STANDARDS.md`](../context/CODING_STANDARDS.md).
+
+## Git hooks
+
+The repository keeps its git hooks in `.githooks/`. They install themselves the first time you run
+`make lint`, `make test`, `make ci` or `pnpm install`, which set `core.hooksPath` to `.githooks`;
+`make hooks` installs them on demand. An existing `core.hooksPath` pointing somewhere else is left
+alone, with a line saying so.
+
+- `pre-commit` runs, on the staged files only, the checks they can affect: ruff lint and format
+  for Python, ty over its whole configured set when any Python file is staged, `ruby -c` and
+  rubocop for Ruby, eslint for JavaScript, the panel and runtime manifest checks when panel or
+  translation assets change, and the planning-citation check for shipped code and tests. Each is
+  the Makefile target CI runs, given the staged file list. A deleted or renamed file runs the
+  checks that read the whole set, and a change to a linter's configuration (`pyproject.toml`,
+  `.rubocop.yml`, `package.json`, the `Makefile`) runs that linter over the whole tree. A commit
+  that touches only documentation runs nothing. A failure prints the tool's output and the command
+  that fixes it, and nothing is committed. The hook never edits or re-stages a file.
+- `commit-msg` refuses a message without a `Signed-off-by:` line ([DCO.md](DCO.md)). The message
+  git writes to conclude a merge is left alone.
+
+Rubocop matters here beyond style: it parses at the Ruby 2.7 floor, so it catches syntax that the
+3.2 interpreter accepts and SketchUp 2023 would not load. A missing rubocop or eslint prints the
+same named skip `make lint` prints, and CI still runs both. The hooks start on the system
+`python3` and need `uv` only when a check runs; they add the usual install locations of `uv`,
+Homebrew, rbenv and pnpm to `PATH` themselves, so a graphical git client finds them too.
+
+The hooks are a fast first check, not the gate: `make ci` still runs the full suite before a
+change is proposed. Chain the two, as in `make ci && git commit -s`, so a failed gate stops the
+commit. Do not bypass a hook with `--no-verify`; fix what it reports instead. A file with unstaged
+changes is checked as it is on disk, and the hook says which files that applied to. Three checks
+read more than the staged files, so another contributor's unfinished file in a shared checkout can
+fail them: the type check reads its whole configured set, the manifest checks read what they hash,
+and a configuration change lints the whole tree.
 
 ## Ruby versions
 

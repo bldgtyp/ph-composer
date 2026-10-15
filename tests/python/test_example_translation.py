@@ -69,7 +69,7 @@ def exported(document: dict[str, Any]) -> dict[str, Any]:
     from ph_composer_translation.composition import SECTIONS as SHIPPING
     from ph_composer_translation.entry import export_json
 
-    return json.loads(export_json(json.dumps(document), (*SHIPPING, *SECTIONS)))  # type: ignore[no-any-return]
+    return json.loads(export_json(json.dumps(document), (*SHIPPING, *SECTIONS)))
 
 
 def test_a_claimed_face_review_reaches_its_face_in_the_canonical_hbjson_and_reloads() -> None:

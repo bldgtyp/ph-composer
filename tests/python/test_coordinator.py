@@ -87,7 +87,7 @@ def test_two_sections_with_one_id_are_structural() -> None:
             "payload.contract",
             "names record a1 twice",
         ),
-        ({**document(), "sections": {**document()["sections"], "other.x": {}}}, "payload.contract", "other.x"),  # type: ignore[dict-item]
+        ({**document(), "sections": {**document()["sections"], "other.x": {}}}, "payload.contract", "other.x"),  # ty: ignore[invalid-argument-type]
     ],
 )
 def test_a_malformed_document_or_section_stops_the_run(doc: object, code: str, detail: str) -> None:
@@ -151,7 +151,7 @@ def test_the_result_document_names_every_object_and_the_sections_own_fields() ->
 
     assert doc["state"] == "complete_with_findings" and doc["run_id"] == "run-1"
     assert doc["summary"] == {"objects": 3, "unavailable": 2, "findings": 2, "publishable": False}
-    assert doc["sections"][0] == {"id": "synthetic.a", "objects": ["a2"], "unavailable": ["a1"]}  # type: ignore[index]
+    assert doc["sections"][0] == {"id": "synthetic.a", "objects": ["a2"], "unavailable": ["a1"]}  # ty: ignore[invalid-argument-type, not-subscriptable]
     assert doc["synthetic.b"] == {"synthetic_panels": {"count": 1, "area_m2": 3.0}}
     assert "synthetic.a" not in doc, "a section with no fields has no key"
     assert doc["failure"] is None
