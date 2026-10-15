@@ -109,7 +109,7 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 | `settings.get`, `settings.update` | query, action | P3a-02 | The model's last-entered height |
 | `update_metadata` | action | P3a-02 | `user_data` and extension payloads on explicit Spaces, Volumes and Floor Segments, with `expected_metadata`, one step, as the Zones, Faces and Window Units actions do (F23). `list` reports `extension_status` beside `extension_data` |
 | `follow_zone_copy` | transition contributor | P3a-04 | Joins `ph_composer.zones.occurrence_independent`: new ids for every Space, Volume, Floor Segment and Space Floor in the copied occurrence whose id another occurrence holds, stamps naming the new Zone, internal references remapped (D3a-13) |
-| Space copy watcher | internal, through `HostFollowUp` | P3a-04, if D3a-14 says so | A native copy of a Space Group made independent in the gesture's Undo step; no public name |
+| Space copy watcher | internal, through `HostFollowUp` | P3a-04 (D3a-14) | A native copy of a Space Group made independent in the gesture's Undo step; no public name |
 | `context.open`, `context.enter_volume`, `context.close` | see section 7, question 3 | P3a-03 | Enter and leave a Space or Volume edit context through the edit-context writer |
 | `locate` | view command | P3a-03 | Select and reveal explicit Spaces, Volumes or Floor Segments, closing and protecting the open Volume first |
 | `volumes.restore_position` | action | P3a-03 | Puts a moved Volume back at `home_transform` |

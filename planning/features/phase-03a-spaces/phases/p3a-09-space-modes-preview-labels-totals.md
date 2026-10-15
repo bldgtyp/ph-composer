@@ -95,8 +95,8 @@ Fresh process on the reference model: switch through the four modes and read the
 see translucent prisms depth-tested against the Zone's walls; Space 103's 5.0 m Volume stands
 above its neighbour; Space 201's prism sits on the projected base of its sloped floor, off to the
 side; turn labels on with no mode and with a mode, and toggle each line; select Spaces 101 and
-102 and read 16.0 m2 and 39.6 m3 in SI and the same in IP; hide a tag; Mark floor still turns
-Colour by weighting factor on. Save, and confirm by comparing entity and dictionary counts before and
+102 and read 16.0 m2 and 39.6 m3 in SI and the same in IP; hide a tag; start Mark floor and see By
+weighting factor come on with each segment's prism. Save, and confirm by comparing entity and dictionary counts before and
 after that nothing was added to the SKP.
 
 ## Out of scope

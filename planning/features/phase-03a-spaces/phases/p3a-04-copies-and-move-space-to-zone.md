@@ -1,15 +1,15 @@
 # P3a-04: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the Zone-copy contract this stage joins now exists, and D3a-14 asks whether standalone copies follow the Zones copy watcher
+STATUS: Scoped. Re-baselined on `main` at `87bdc62`: the Zone-copy contract this stage joins now exists; D3a-14 (answered 2026-10-15) adds a Space copy watcher
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 ## Entry and scope
 
-Requires P3a-03, D3a-3 and D3a-14. Owns the operations that change identity or parentage: the
+Requires P3a-03 and D3a-3; D3a-14 is answered. Owns the operations that change identity or parentage: the
 `duplicate_identity` finding with its Make independent repair, Spaces' contributor to the Zone's
-independence transition, the Space copy watcher if D3a-14 asks for one, and Move Space to Zone.
+independence transition, the Space copy watcher (D3a-14), and Move Space to Zone.
 Also carries the Space half of Restore Zone and the confirmed Zone-child copy behavior
 [D3a-13](../DECISIONS.md#confirmed-copy-decision-d3a-13). M1 closes here. This stage cannot close
 with parent-only independence leaving shared Space storage or ids.
@@ -43,8 +43,8 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    kept, since the copy is the user's own. Shape it after `features/windows/units/identity_plan.rb`
    and `identity_step.rb`; port the rules from `operations/recovery.rb` (`repair_copied_space`,
    `adopt_copied_volume`).
-3. **Standalone copies (D3a-14).** As Ed answers D3a-14. If a copy watcher: a Space Group added
-   in a native gesture with an id another live occurrence holds is a copy, and Spaces makes it
+3. **Standalone copies (D3a-14, answered yes).** A Space Group added in a native gesture with an
+   id another live occurrence holds is a copy, and Spaces makes it
    independent through `HostFollowUp` with step 2's plan, in the gesture's Undo step, with the
    next free number; a cut and paste leaves no duplicate and is untouched; Undo and Redo drop the
    pending pass; a copy through a ComponentInstance or one the plan refuses is left with the
@@ -102,9 +102,9 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 2. Make independent on each clears it in one Undo step; ids are new throughout the copy and
    unchanged in the original; the copied Space takes the next free number; `user_data` survives.
 3. Naming the original rather than the copy is honored: the named one is rewritten.
-4. Standalone copies as D3a-14 decides: either the watcher makes a native Space copy independent
-   in the gesture's Undo step and leaves a cut and paste alone, or a reconciler pass over a copy
-   changes no id. In both cases two pre-existing occurrences with one id are never rewritten
+4. The watcher makes a native Space copy independent in the gesture's Undo step, with new ids
+   throughout and the next free number, and leaves a cut and paste alone; one Undo removes the
+   copy and its repair together. Two pre-existing occurrences with one id are never rewritten
    without an explicit request.
 5. A Space inside a repeated component: finding, no repair, refusal.
 6. Move under a rotated wrapper Zone to a Zone with a different rotation: every Floor Segment's
@@ -125,9 +125,13 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 
 ## Host gate
 
-Fresh process on the reference model. Copy Space 102 with Move and Ctrl, copy a Volume by
-entering its Space, copy one Floor Segment Face inside a Volume: read each finding; repair each
-with `make_independent`; Undo each. Cut and paste a Space within its Zone and confirm no finding.
+Fresh process on the reference model. Copy Space 102 with Move and Ctrl, then as a `5x` array:
+each copy is made independent in the gesture's Undo step, with the next free numbers, and one Undo
+removes copy and repair together. Copy a Volume by entering its Space and copy one Floor Segment
+Face inside a Volume: record what each gesture delivers, read each finding, repair each with
+`make_independent`, Undo each; whether the watcher should also cover these is decided from that
+record. Copy a Space inside a component and confirm the finding with no repair. Cut and paste a
+Space within its Zone and confirm no finding.
 Move Space 103 from Zone A to Zone B, where B sits under a rotated wrapper: confirm by
 measurement that the faces did not move, then Undo. Attempt the move with a Volume open. Save and
 reopen after a move and read the records back.

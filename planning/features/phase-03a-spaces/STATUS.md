@@ -83,7 +83,7 @@ only when all three are done and its evidence file exists.
 | [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts and groundwork | Scoped | D3a-1 | | | | strong | | S01 |
 | [P3a-02](phases/p3a-02-space-records-and-operations.md) | Space records and operations | Scoped | P3a-01, D3a-2 | | | | ordinary | | S02 |
 | [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | Edit contexts, protection and reconciliation | Scoped | P3a-02, D3a-4 | | | | strong | | S03 |
-| [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | Copies and Move Space to Zone | Scoped | P3a-03, D3a-3, D3a-14 | | | | strong | | S04 |
+| [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | Copies and Move Space to Zone | Scoped | P3a-03, D3a-3 | | | | strong | | S04 |
 | [P3a-05](phases/p3a-05-colour-by-derived-geometry-and-readouts.md) | Colour-by derived geometry and readouts | Scoped | P3a-01, D3a-5 | | | | strong | | S05 |
 | [P3a-06](phases/p3a-06-zone-views.md) | Zone views | Scoped | Entry gates | | | | strong, UI | | S06 |
 | [P3a-07](phases/p3a-07-spaces-view.md) | The Spaces view | Scoped | P3a-04, P3a-06, D3a-12, D3a-18 | | | | ordinary, UI | | S07 |

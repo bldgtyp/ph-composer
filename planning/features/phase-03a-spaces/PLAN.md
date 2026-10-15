@@ -11,8 +11,8 @@ Owner-confirmed addition, 2026-10-12: [D3a-13](DECISIONS.md#confirmed-copy-decis
 requires independent Space children when a Zone is copied. P3a-04 binds it as a
 `transition_contributor` on the Zone's independence transition, the contract Windows already
 uses on `main`; S04/S12 cover host state/Undo and S10 verifies HBJSON ownership. Window Units
-stay instances of their existing Type under the Windows protocol. D3a-1 to D3a-12, D3a-14 and
-D3a-15 remain open; no stage is authorized.
+stay instances of their existing Type under the Windows protocol. The decisions still open are
+listed in [STATUS](STATUS.md); no stage is authorized.
 
 Re-baseline, 2026-10-15: [DECISIONS](DECISIONS.md), Part 1b, re-reads every finding on
 `87bdc62`, and the foundation stages (P3a-01 to P3a-05, P3a-10) are corrected to it. The UI and
@@ -48,7 +48,7 @@ Paths are relative to `src/ph_composer/`. Planning baseline `70c340f`, re-read a
 | Zone record, Zone stamp store, `Zones::Occurrences` | The Zone a Space lives in, the stamp on the Space group, occurrence paths | The nested-container rule (D3a-1); Restore Zone reading Space stamps |
 | `shell/` registry, dispatch, API, outcomes, retries, `request.query` | Every Spaces operation | `colour_readout` registration (D3a-5) |
 | `shell/` `transition_contributor`, `request.contribute_transition`, `proposal_participant` | Space children following a Zone copy (D3a-13), as `Units::ZoneCopy` does | Nothing in the contract |
-| `shell/host_follow_up.rb`; the Zones copy watcher as a worked example | Restorable transparent writes after a native gesture; a Space copy watcher if D3a-14 says so | Nothing for record writes; lock-state writes are question 9 in CONTRACTS section 7 |
+| `shell/host_follow_up.rb`; the Zones copy watcher as a worked example | Restorable transparent writes after a native gesture; the Space copy watcher (D3a-14) | Nothing for record writes; lock-state writes are question 9 in CONTRACTS section 7 |
 | `core/records/metadata.rb`, the owners' `update_metadata` actions and `extension_status` | One metadata action and status for the three records (F23) | Nothing. Copy the Zones shape |
 | `session/` host events, `feature_state`, `CoalescedTimer`, `pending?` and `settle` | The reconciler's triggers and state | The edit-context writer, a keyed queue and the Undo ledger (D3a-4) |
 | `core/` Model settings primitive (Phase 2 G4) | The model's last-entered height (Q7) | Nothing. Copy the Windows settings shape |
@@ -71,7 +71,7 @@ source, tests to write first, the host gate and the done condition.
 | [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts confirmed; the Zones nested-container rule; R05 item 1 (item 2 and the Ruby units are on `main`) | Entry gates, D3a-1 | shared, zones, export | A stamped Group inside a Zone is skipped by the walk, Suggest and Solve; no regression in Zones / Faces or export |
 | [P3a-02](phases/p3a-02-space-records-and-operations.md) | The three records, scan, index, metrics, findings and public operations, panel closed | P3a-01, D3a-2 | spaces | Panel-closed script, Undo/Redo, reopen |
 | [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | The edit-context writer, the deferred-work primitive, Volume protection, exit and pre-save protection, the Spaces reconciler, recovery states | P3a-02, D3a-4 | session, spaces | The native-edit matrix in a fresh process |
-| [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | `duplicate_identity` and Make independent; the Zone-copy contributor; the Space copy watcher if D3a-14 says so; Move Space to Zone; Restore Zone reading Space stamps | P3a-03, D3a-3, D3a-14 | spaces, zones | Copy and repair; move under a rotated wrapper; one Undo each |
+| [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | `duplicate_identity` and Make independent; the Zone-copy contributor; the Space copy watcher (D3a-14); Move Space to Zone; Restore Zone reading Space stamps | P3a-03, D3a-3 | spaces, zones | Copy and repair; move under a rotated wrapper; one Undo each |
 | [P3a-05](phases/p3a-05-colour-by-derived-geometry-and-readouts.md) | Derived geometry and readouts in the Colour-by contract; Window Type operation marks if D3a-5 says so | P3a-01, D3a-5 | colour_by, windows | A synthetic mode and readout draw; depth, tags and performance |
 | [P3a-06](phases/p3a-06-zone-views.md) | The Zone view contract; the Zones tab renamed; Faces moved onto it unchanged; a synthetic Zone-only view | Entry gates, D3a-16 | UI kit, zones panel | Switching views keeps Zone state; Faces unchanged |
 | [P3a-07](phases/p3a-07-spaces-view.md) | The Spaces view: rows, columns, editing, airflows, Zone sums and imbalance marker, selection bar, row actions, findings, Colour by weighting factor | P3a-04, P3a-06, D3a-12, D3a-18 | spaces, UI kit | Edit, paste, airflows, navigate contexts from rows |
