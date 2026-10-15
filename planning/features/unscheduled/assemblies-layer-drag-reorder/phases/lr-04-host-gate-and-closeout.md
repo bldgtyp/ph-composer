@@ -51,14 +51,14 @@ capture the full screen.
 10. **Evidence.** Write the summary to
     `planning/native-acceptance/evidence/assembly-layer-drag-<date>.md`, append the result rows,
     `acceptance_ledger.py validate`. Raw Models and pixels stay in `_private/`.
-10. **Patterns.** In `.agents/skills/ph-composer-ui-polish/references/patterns.md`, replace the
+11. **Patterns.** In `.agents/skills/ph-composer-ui-polish/references/patterns.md`, replace the
     sentence that forbids an inert grip with the implemented pattern: grip beside the gear, same
     reveal, ghost and red insertion line, one action per drop, Move outward/inward as the keyboard
     route. Say in the stage report that the Design System artifact needs no sync (no token or kit
     part changed) or sync it.
-11. **Review.** One stronger independent pass over the whole feature (LR-01 to LR-03 as merged),
+12. **Review.** One stronger independent pass over the whole feature (LR-01 to LR-03 as merged),
     with both rubrics, before the closeout commit. Fix what is real on this branch.
-12. **Closeout.** `docs-pass`: STATUS rows, `planning/STATUS.md`, and a `context/` fold only if a
+13. **Closeout.** `docs-pass`: STATUS rows, `planning/STATUS.md`, and a `context/` fold only if a
     stage settled a durable rule (none is expected). Archive the packet to
     `planning/archive/assemblies-layer-drag-reorder/` with one row in `planning/archive/README.md`.
 
