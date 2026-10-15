@@ -81,3 +81,10 @@ away; the overlay stayed after the last readout failed). The second found one P1
 entry ignored its hidden entity) and two P2 (non-numeric anchor coordinates; non-consecutive repeated
 vertices). Each of the eight was reproduced by a test and fixed; the last three were gated by `make ci`
 only, at the review cap.
+
+Slice B code: Codex `gpt-6-astra` on #148; the first pass found one P2 (a Unit made unique and left
+behind by a later Type resize drew marks from the new Type plan, outside its own panes). Marks now draw
+only where `Units::DefinitionGeometry.matches?` holds for the Unit's definition against the Type's plan,
+checked once per definition; `test_a_unique_unit_left_behind_by_a_type_change_draws_no_marks` reproduced
+it first. The second pass approved with no findings. Merged through PR
+[#148](https://github.com/bldgtyp/ph-composer/pull/148) (`74365c7`).
