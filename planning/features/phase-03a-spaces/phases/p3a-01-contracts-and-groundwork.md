@@ -1,7 +1,7 @@
 # P3a-01: contracts and groundwork
 
 DATE: 2026-10-15
-STATUS: Implemented on branch `feature/spaces-p3a-01`, 2026-10-15. [Evidence](../evidence/p3a-01-groundwork.md)
+STATUS: Merged to main through PR #135 (`a501ac3`), 2026-10-15. [Evidence](../evidence/p3a-01-groundwork.md)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

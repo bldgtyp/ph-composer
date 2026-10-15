@@ -4,6 +4,48 @@ require_relative "test_helper"
 
 # A Group inside a Zone that carries a Zone stamp is a nested authoring container
 # (context/CONTRACTS.md, "Zones geometry rules"): its Faces are not the Zone's Faces.
+# A feature requiring Zones that groups one Face of a Zone in its own step and has Zones stamp the Group.
+module ContainerFixture
+  ID = "test.container"
+  OBJECT = { "type" => "object" }.freeze
+
+  module_function
+
+  def install(registry)
+    feature = registry.feature(ID, :contract_version => 1, :requires => ["ph_composer.zones"])
+    feature.action("#{ID}.make", :description => "Group one Zone Face and stamp the Group.", :params => OBJECT,
+                                 :result => OBJECT, :undo_name => "Make container", :side_effects => "Groups a Face.",
+                                 :refuses => [], :participants => ["ph_composer.zones.stamp_container"]) do |
+                                   request, proposal|
+      zone = request.params.fetch("zone")
+      context = request.params.fetch("context_path", zone.fetch("zone_path"))
+      proposal.add_step(GroupStep.new(context, request.params.fetch("face_id")),
+                        :scopes => [PhComposer::Operations::EntityScope.new(context)])
+      request.participate("ph_composer.zones.stamp_container", "zone" => zone, "slot" => "container")
+    end
+  end
+
+  class GroupStep
+    attr_reader :affected
+
+    def initialize(zone_path, face_id)
+      @zone_path = zone_path
+      @face_id = face_id
+      @affected = []
+    end
+
+    def descriptor
+      { "name" => "test_group", "zone_path" => @zone_path, "face_id" => @face_id }
+    end
+
+    def apply(model, slots)
+      entities = PhComposer::Operations::EntityScope.new(@zone_path).resolve(model)
+      group = entities.add_group([entities.to_a.find { |entity| entity.persistent_id == @face_id }])
+      slots["container"] = { "entity_path" => @zone_path + [group.persistent_id] }
+    end
+  end
+end
+
 class ZoneNestedContainerTest < PhComposerTestCase
   API = PhComposer::API
   Zones = PhComposer::Zones
@@ -149,6 +191,56 @@ class ZoneNestedContainerTest < PhComposerTestCase
     snapshot = PhComposer::Export::GeometrySnapshot.capture(@model, :revision => @session.revision)
     zone_entry = snapshot.entry_at([100], :kind => "group")
     assert_equal [[100, 101], [100, 110, 111]], Zones::ExportProjection.zone_faces(snapshot, zone_entry).map(&:path)
+  end
+
+  def test_a_requiring_feature_has_zones_stamp_the_group_its_step_created_in_one_undo_step
+    PhComposer::Registry.install([ContainerFixture])
+    fixture
+    loose = Sketchup::Face.new(141)
+    @zone_group.entities << loose
+    before = @model.operations.length
+    result = invoke("test.container.make", "zone" => @zone.fetch("reference"), "face_id" => 141)
+    assert_equal "completed", result["status"], result.inspect
+    assert_equal({ "zone_id" => @zone.dig("reference", "zone_id") }, result["value"])
+    assert_equal before + 1, @model.operations.length
+    group = @zone_group.entities.to_a.find { |entity| entity.is_a?(Sketchup::Group) && entity.entities.include?(loose) }
+    assert_equal Zones::Schema.stamp(Zones::ZONE_STORE.read(@zone_group)), Zones::STAMP_STORE.read(group)
+    refute_includes face_paths, [group.persistent_id, 141]
+  end
+
+  def test_the_participant_refuses_a_container_under_a_locked_group
+    PhComposer::Registry.install([ContainerFixture])
+    fixture
+    loose = Sketchup::Face.new(141)
+    @plain.entities << loose
+    @plain.locked = true
+    result = invoke("test.container.make", "zone" => @zone.fetch("reference"), "context_path" => [100, 110],
+                                           "face_id" => 141)
+    refute_equal "completed", result["status"], result.inspect
+    stamped = Zones::Occurrences.zones(@model).map { |zone| Zones::Occurrences.containers(zone) }.flatten(1)
+    assert_empty stamped
+  end
+
+  def test_the_participant_refuses_a_container_inside_another_container
+    PhComposer::Registry.install([ContainerFixture])
+    fixture
+    stamp!(@container)
+    @container.entities << Sketchup::Face.new(142)
+    result = invoke("test.container.make", "zone" => @zone.fetch("reference"), "context_path" => [100, 120],
+                                           "face_id" => 142)
+    refute_equal "completed", result["status"], result.inspect
+    inner = @container.entities.grep(Sketchup::Group)
+    assert(inner.none? { |group| Zones::STAMP_STORE.read(group) })
+  end
+
+  def test_the_zone_edit_step_rewrites_the_stamps_of_its_containers
+    fixture
+    stamp!(@container)
+    before = Zones::ZONE_STORE.read(@zone_group)
+    after = before.merge("level_id" => "lvl_Ab12Cd34Ef56")
+    step = Zones::UpdateZoneStep.new(:reference => @zone.fetch("reference"), :before => before, :after => after)
+    step.apply(@model, {})
+    assert_equal "lvl_Ab12Cd34Ef56", Zones::STAMP_STORE.read(@container).fetch("level_id")
   end
 
   private

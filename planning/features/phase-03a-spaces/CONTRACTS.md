@@ -56,7 +56,7 @@ engine has no migrations.
 | Space | `ph_composer.space` | The Space Group | `spc` | `name`, `number`, `default_height_m`, `next_volume_sequence`, `v_sup_m3h`, `v_eta_m3h`, `v_tran_m3h` |
 | Volume | `ph_composer.space_volume` | The Volume Group, directly inside a Space | `vol` | `number`, `display_name`, `avg_ceiling_height_m`, `floor_id`, `home_transform` |
 | Floor Segment | `ph_composer.floor_segment` | A Face inside a Volume | `fsg` | `display_name`, `weighting_factor` (0 to 1, default 1.0, D3a-17), `net_area_factor` (default 1.0) |
-| Zone stamp (exists) | `ph_composer.zone_stamp` | The Space Group | none | As on a Face: schema 2 holds `zone_id`, `building_segment_id`, `level_id` and `choice_evidence` (PR #80); schema 1 names are still read. Written through Zones' stamp writer, never by hand |
+| Zone stamp (exists) | `ph_composer.zone_stamp` | The Space Group | none | As on a Face: schema 2 holds `zone_id`, `building_segment_id`, `level_id` and `choice_evidence` (PR #80); schema 1 names are still read. Written only by Zones: Create Space and Move Space to Zone call the participant `ph_composer.zones.stamp_container` (P3a-02), and a Zone edit rewrites it |
 
 - Each airflow field is absent or a number in m3/h. Absent is not zero (Q21). No field is null.
 - `floor_id` is the Space Floor's identity, a `flr_` id issued with the Volume. The Space Floor
@@ -69,8 +69,9 @@ engine has no migrations.
   `ph_composer.spaces_settings`, key `last_height_m`, through the `core/` settings primitive.
 
 Reference target ids: `ph_composer.spaces.space`, `ph_composer.spaces.volume`,
-`ph_composer.spaces.floor_segment`. A reference is the record id plus the occurrence path, as for
-a Face.
+`ph_composer.spaces.floor_segment`. A reference is the record id plus the root-to-entity path,
+`{ "space_id" | "volume_id" | "floor_segment_id", "entity_path" }`, as a Window Unit's is (P3a-02):
+a Space can sit outside every Zone, and its Zone is read from the path, not from the reference.
 
 Native names: the Space Group's name is `number` and `name` joined; the stored fields are
 authoritative and the Group name is presentation, rewritten by the reconciler. P3a-02 confirms or
@@ -93,8 +94,8 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 
 | Name | Verb | Stage | Purpose |
 | --- | --- | --- | --- |
-| `list` | query | P3a-02 | Spaces with their Volumes and Floor Segments, each with its reference, values, metrics in SI, state and findings. Bounded |
-| `spaces` | snapshot section | P3a-02 | The same projection for the panel |
+| `list` | query | P3a-02 (built, slice A) | Spaces with their Volumes and Floor Segments, each with its reference, values, metrics in SI, state and findings, each Zone's sums, each Building-Segment's and the Model's totals, and the stray-record findings. Paged by Space path; the sums and totals always cover every Space |
+| `all`, section `ph_composer.spaces.spaces` | query, snapshot section | P3a-02 (built, slice A) | The same projection whole, for the panel |
 | `create_preview` | query | P3a-02 | For explicit Face references and a Zone reference: accepted, left out and why. Writes nothing |
 | `create` | action | P3a-02 | Explicit Face references and a Zone reference. One Space, one Volume, the Floor Segments. One Undo step |
 | `update` | action | P3a-02 | Name, number, default height, the three airflows, with `expected_values`. An airflow is set, or cleared to absent |
@@ -106,7 +107,7 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 | `floors.mark` | action | P3a-02 | Explicit Face references inside a Volume, and `weighting_factor`. Creates or updates Floor Segment records |
 | `floors.unmark` | action | P3a-02 | Removes the Floor Segment record; the face stays |
 | `floors.update` | action | P3a-02 | `weighting_factor`, `net_area_factor`, `display_name` |
-| `settings.get`, `settings.update` | query, action | P3a-02 | The model's last-entered height |
+| `settings.get`, `settings.update` | query, action | P3a-02 (built, slice A) | The model's last-entered height |
 | `update_metadata` | action | P3a-02 | `user_data` and extension payloads on explicit Spaces, Volumes and Floor Segments, with `expected_metadata`, one step, as the Zones, Faces and Window Units actions do (F23). `list` reports `extension_status` beside `extension_data` |
 | `follow_zone_copy` | transition contributor | P3a-04 | Joins `ph_composer.zones.occurrence_independent`: new ids for every Space, Volume, Floor Segment and Space Floor in the copied occurrence whose id another occurrence holds, stamps naming the new Zone, internal references remapped (D3a-13) |
 | Space copy watcher | internal, through `HostFollowUp` | P3a-04 (D3a-14) | A native copy of a Space Group made independent in the gesture's Undo step; no public name |
@@ -187,6 +188,23 @@ preflight query and the Python section, and the same codes appear per row in `li
 The predecessor's `nested_volume`, `nested_space`, `scaled_space`, `orphan_volume`,
 `stale_segment` and `segment_invalid` are structural states. P3a-02 maps each to a code above, to
 a new `space.` code, or to "cannot occur without designPH" and records the mapping here.
+
+**Mapping, P3a-02 (2026-10-15).** Four new codes, each blocking, since export cannot place a record
+the hierarchy does not hold: `space.nested` (a Space inside another Space), `space.volume_nested` (a
+Volume below another Group inside its Space), `space.volume_orphan` (a Volume record outside every
+Space) and `space.segment_misplaced` (a Floor Segment record on a Face not directly inside a
+Volume).
+
+| Predecessor | Here |
+| --- | --- |
+| `space_empty`, `volume_empty`, `height_invalid` | `space.empty`, `space.volume_empty`, `space.height_missing` |
+| `nested_space`, `nested_volume`, `orphan_volume` | `space.nested`, `space.volume_nested`, `space.volume_orphan` |
+| `loose_tfa`, `nested_tfa` | `space.segment_misplaced`: the mark replaces the TFA trigger |
+| `volume_unprotected`, `volume_moved` | `space.volume_unprotected`, `space.volume_moved` (P3a-03) |
+| `duplicate_identity`, `copied_volume` | `space.duplicate_identity` (P3a-04) |
+| `unregistered_tfa`, `stale_segment` | Cannot occur without designPH: there is no TFA state to fall out of step with |
+| `segment_invalid` | Cannot occur: metrics read the live Face each time, so there is no stored measure to go stale |
+| `scaled_space` | Not a finding: metrics read world geometry through the accumulated transform, so a scaled Space measures correctly. P3a-03 revisits it if Restore position needs it |
 
 | Section id | Object | Requires | Notes |
 | --- | --- | --- | --- |

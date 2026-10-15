@@ -130,6 +130,8 @@
         ["ph_composer.windows.settings"]: { status: "completed",
           value: JSON.parse(JSON.stringify(this.windows.settings || {
           default_psi_install_id: null, default_install_depth_m: 0 })) },
+        ["ph_composer.spaces.spaces"]: { status: "completed", value: JSON.parse(JSON.stringify(this.spaces || {
+          spaces: [], zones: [], findings: [], units: { area: "m2", height: "m", volume: "m3", airflow: "m3/h" } })) },
         [MATERIALS]: { status: "completed", value: JSON.parse(JSON.stringify(this.materials)) },
         [ASSEMBLIES]: { status: "completed", value: JSON.parse(JSON.stringify(this.assemblies)) },
         [ATTACHED]: { status: "completed", code: "ok", revision: this.revision,

@@ -357,12 +357,16 @@ access and never fall back to selection, display name, proximity or the active M
 | Owner | Dictionary | Entity | Durable identity |
 | --- | --- | --- | --- |
 | Zone | `ph_composer.zone` | Zone Group | `zon_` id |
-| Zone membership stamp | `ph_composer.zone_stamp` | Classified Face (and Space Groups when they exist) | Zone id plus Building-Segment and Level, as recovery data |
+| Zone membership stamp | `ph_composer.zone_stamp` | Classified Face, and a nested container Group such as a Space | Zone id plus Building-Segment and Level, as recovery data. Only Zones writes it; a feature that creates a container in a Zone has Zones stamp it through the participant below |
 | Face assignment | `ph_composer.face_assignment` | Face | `fac_` id |
 | Attached zone | `ph_composer.records.ph_composer.face_assignment.attached_zone` (a legacy name, kept so saved Models still read) | Model | `atz_` id through the record engine |
 | Window unit | `ph_composer.window_unit` | The Unit's ComponentInstance | `wun_` id; values `window_type_id` (a core reference to `ph_composer.windows.window_type`) and `anchor` |
 | Window definition mark | `ph_composer.window_definition` | The generated ComponentDefinition | `window_type_id`, plus optional derived `generated_size_m` (`width_m`, `height_m`) used only to repair a Unit whose Type is gone |
 | Pane stamp | `ph_composer.window_pane` | Each pane Face inside the definition | None; `window_type_id` and `element_id` as recovery data for Restore |
+| Space | `ph_composer.space` | The Space Group | `spc_` id; `name`, `number`, `default_height_m`, `next_volume_sequence`, and the optional airflows `v_sup_m3h`, `v_eta_m3h`, `v_tran_m3h` (absent is unset, distinct from 0) |
+| Volume | `ph_composer.space_volume` | A Volume Group directly inside a Space | `vol_` id; `number`, `display_name`, optional `avg_ceiling_height_m`, `floor_id` (the logical Space Floor, `flr_`), optional `home_transform` |
+| Floor Segment | `ph_composer.floor_segment` | A Face directly inside a Volume | `fsg_` id; `display_name`, `weighting_factor` and `net_area_factor`, each 0 to 1 |
+| Spaces settings | `ph_composer.spaces_settings` | Model | None; `last_height_m`, the height new Spaces take, null until entered |
 | Primary definition index | `ph_composer.window_definitions`, key `index` | Model | None; `{ "schema_version": 1, "definitions": { "wnt_...": persistent_id } }` |
 
 The Face values include an optional `assembly_id` reference to
@@ -409,6 +413,18 @@ outside every Zone and still blocks deletion of its Type:
 `ph_composer.windows.unit`; its occurrence inventory includes Units outside Zones and every
 placement of shared storage, so a pasted orphan or a repeated parent still makes a duplicate id
 visible.
+
+A Space, Volume or Floor Segment target is reached from the Model root too, as `{ "space_id" |
+"volume_id" | "floor_segment_id", "entity_path" }`: a Space may sit outside every Zone, and its Zone
+is whichever Zone Group its path passes through last, read from the Zones read, never from its stamp.
+The Spaces inventories include every placement of shared storage and every record found where the
+hierarchy does not put it (a Volume outside a Space, a Floor Segment not directly in a Volume).
+
+**Stamping a container.** `ph_composer.zones.stamp_container` is a proposal participant: an action
+of a feature requiring Zones whose own earlier step creates a Group inside a Zone occurrence leaves
+the Group's root-to-Group path in a proposal slot as `{ "entity_path" => [...] }` and names the slot
+and the Zone; Zones' step stamps the Group in the same Undo step, refusing with the Zone's `target.*`
+codes, a lock or shared storage on the Group's path, and a Group inside another container. A Zone edit rewrites the stamps of its containers as it does its Faces'.
 
 **Copied Unit identities.** A native copy duplicates the Unit record, so several occurrences can
 carry one `wun_` id. Reads report the copy and never repair it. The next Windows action repairs

@@ -114,6 +114,43 @@ module PhComposer
         { "code" => error.code, "message" => error.message }
       end
 
+      # The Zone reference target's `locate:` (Records::ReferenceTarget): the strict resolver, so a
+      # feature requiring Zones reaches the live Zone Group publicly, with the same refusals. As for
+      # every located entity, `transform` is the Zone's parent-to-world transform; the Zone's contents
+      # map to world through `transform * entity.transformation`. Its read-phase `index:` is a Zones::Index.
+      def locate_zone(model, reference, mutable:, index: nil)
+        zone = resolve_zone(model, reference, :mutable => mutable, :index => index)
+        unlocked_zone!(zone) if mutable
+        parent_path = zone.path[0...-1]
+        Records::LocatedEntity.new(:kind => REFERENCE_KIND, :reference => DeepCopy.call(reference),
+                                   :entity => zone.entity, :entities => collection_at(model, parent_path),
+                                   :transform => zone.transform * zone.entity.transformation.inverse,
+                                   :parent_path => parent_path)
+      end
+
+      # The nested containers inside one Zone occurrence: each stamped Group the Face walk stops at, as
+      # `[entity, path]` with the path inside the Zone. A nested Zone and a cutting component bound it, as
+      # they bound the walk.
+      def containers(zone)
+        found = []
+        pending = [[zone.entity.entities, []]]
+        until pending.empty?
+          entities, path = pending.shift
+          entities.each do |entity|
+            next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+            next if ZONE_STORE.read(entity) || cutting_component?(entity)
+
+            child_path = path + [entity.persistent_id]
+            if container?(entity)
+              found << [entity, child_path]
+            else
+              pending << [contents(entity), child_path]
+            end
+          end
+        end
+        found
+      end
+
       # The Face reference target's `locate:` (Records::ReferenceTarget): the owner's strict resolution,
       # so a reference read before the Face gained a record refuses rather than naming a different one.
       # Its read-phase `index:` is a Zones::Index.
@@ -342,6 +379,11 @@ module PhComposer
         end
       end
 
+      # The collection a root-to-container path names, through Groups and ComponentInstances alike.
+      def collection_at(model, path)
+        path.reduce(model.entities) { |entities, persistent_id| contents(unique_entity(entities, persistent_id)) }
+      end
+
       def contents(container)
         container.is_a?(Sketchup::Group) ? container.entities : container.definition.entities
       end
@@ -362,7 +404,7 @@ module PhComposer
         raise CodedError.new(code, message)
       end
       private_class_method :resolve_face_path, :walk_zones, :walk_faces, :raise_target,
-                           :zone_for_path, :cutting_component?, :container?, :contents, :writable_zone!,
+                           :zone_for_path, :cutting_component?, :container?, :contents, :collection_at, :writable_zone!,
                            :unlocked_zone!, :stamped_for!
     end
   end

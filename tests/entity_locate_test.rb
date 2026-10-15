@@ -54,6 +54,31 @@ class EntityLocateTest < PhComposerTestCase
     assert_equal wrapper.transformation.to_a, located.transform.to_a
   end
 
+  def test_a_feature_requiring_zones_locates_the_live_zone_with_its_refusals
+    wrapper_transform = Geom::Transformation.translation([4, 0, 0])
+    group = zone("zon_AAAAAAAAAAAA", 100, [])
+    wrapper = Sketchup::Group.new(90, Sketchup::Entities.new([]), :transformation => wrapper_transform)
+    @model.entities.delete(group)
+    wrapper.entities << group
+    @model.entities << wrapper
+    kind = PhComposer::Zones::REFERENCE_KIND
+    spaces = request(PhComposer::Spaces::FEATURE_ID)
+    located = spaces.locate(kind, { "zone_id" => "zon_AAAAAAAAAAAA", "zone_path" => [90, 100] })
+    assert_same group, located.entity
+    assert_same wrapper.entities, located.entities
+    assert_equal [90], located.parent_path
+    assert_equal wrapper_transform.to_a, located.transform.to_a
+    changed = assert_raises(PhComposer::CodedError) do
+      spaces.locate(kind, { "zone_id" => "zon_AAAAAAAAAAAA", "zone_path" => [100] })
+    end
+    assert_equal "target.changed", changed.code
+    group.locked = true
+    locked = assert_raises(PhComposer::CodedError) do
+      spaces.locate(kind, { "zone_id" => "zon_AAAAAAAAAAAA", "zone_path" => [90, 100] })
+    end
+    assert_equal "target.locked", locked.code
+  end
+
   def test_missing_ambiguous_and_locked_targets_refuse_with_the_owners_codes
     group = zone("zon_AAAAAAAAAAAA", 100, [Sketchup::Face.new(101)])
     assert_equal "target.not_found", refusal("zon_AAAAAAAAAAAA", [100, 999])
@@ -105,7 +130,7 @@ class EntityLocateTest < PhComposerTestCase
   def test_locator_requires_the_owner_a_registered_kind_and_a_declared_locate
     zone("zon_AAAAAAAAAAAA", 100, [Sketchup::Face.new(101)])
     codes = [[request("ph_composer.assemblies"), FACE_KIND], [request, "outside.missing"],
-             [request, PhComposer::Zones::REFERENCE_KIND]].map do |read, kind|
+             [request, W::Units::REFERENCE_KIND]].map do |read, kind|
       assert_raises(PhComposer::CodedError) { read.locator(kind) }.code
     end
     assert_equal %w[operation.dependency_missing reference.invalid operation.locate_missing], codes
