@@ -121,8 +121,11 @@ module PhComposer
             :id => kind.id, :label => kind.label, :schema_version => kind.schema_version,
             :values => kind.values_schema, :occurrence => reference, :references => kind.references,
             :validate => ->(record) { kind.problems(record) },
+            # The inventory answers which ids exist. A record that does not read cannot be a reference's
+            # target or a holder of one, so it is left out rather than refusing every resolution in the
+            # Model; a reference to it still refuses as naming nothing.
             :records => lambda { |model|
-              occurrences.call(Occurrences.scan(model)).map do |occurrence|
+              occurrences.call(Occurrences.scan(model, :strict => false)).map do |occurrence|
                 Records::ReferenceEntry.new(:kind => kind.id, :key => occurrence.path, :record => occurrence.record)
               end
             }

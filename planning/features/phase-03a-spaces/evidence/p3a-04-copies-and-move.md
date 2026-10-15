@@ -139,8 +139,12 @@ Group is left to its finding. `tests/zone_nested_container_test.rb` and `tests/s
 independent in one step, with new ids throughout the copy, numbers kept, stamps naming the new Zone
 and the original untouched; payloads following the copied Volume and the new Zone; an unsupported
 payload refusing the whole Zone; one Undo for Zone and Spaces; a native Zone copy repaired by the Zones
-watcher with its Spaces. A Zone copy holding Spaces and Window Units together is not built offline,
-whose Windows fixtures are separate; S04 checks it on the host. `tests/spaces_walkthrough_test.rb`: the
+watcher with its Spaces; an unreadable Space record outside the copy, with and without a payload
+resolving through the Spaces inventory, does not block it. `tests/window_zone_copy_test.rb`: a Zone
+holding a Space and Window Units together made independent in one step, with new ids for both
+children, Types kept, the stamp naming the copy, and one Undo and Redo; and a later contributor's
+failure in the copy watcher's follow-up restoring the Zone, the stamp, the Space and the Units. The
+same case natively is an S04 host row. `tests/spaces_walkthrough_test.rb`: the
 extended walkthrough.
 `tests/spaces_move_test.rb`: a move under a rotated, shifted wrapper keeps every Floor Segment's world
 loop, every record and the Volume's position, stamps the target, in one step; a number collision is

@@ -49,7 +49,7 @@ module PhComposer
           target = target_occurrence(model)
           isolate(target.entity) if target.entity.is_a?(Sketchup::Group)
         end
-        scan = Occurrences.scan(model, :strict => @record ? nil : @path)
+        scan = Occurrences.scan(model, :strict => @record ? true : @path)
         inside = Authoring.inside(scan, @path).sort_by { |_kind, occurrence| occurrence.path }
         groups = inside.group_by { |kind, occurrence| [kind, occurrence.record.fetch("id")] }
         unless groups.transform_values(&:length) == @counts

@@ -55,15 +55,16 @@ module PhComposer
     module Occurrences
       module_function
 
-      # `strict`, when given, is a path: a record at or below it that does not read refuses, and one
-      # elsewhere is left out, as though it were not there. A repair scoped to one occurrence then does
-      # not depend on every other record in the Model reading. Without it every record must read.
-      def scan(model, strict: nil)
+      # `strict` says which records must read: true, every one (the reads, which report what does not);
+      # a path, those at or below it, so a repair scoped to one occurrence does not depend on every other
+      # record in the Model reading; false, none, for an inventory that only answers which ids exist. A
+      # record that need not read and does not is left out, as though it were not there.
+      def scan(model, strict: true)
         found = Scan.new(:spaces => [], :orphan_volumes => [], :misplaced_segments => [])
         reader = lambda do |store, kind, entity, path|
           read(store, kind, entity)
         rescue CodedError
-          raise if strict.nil? || path[0, strict.length] == strict
+          raise if strict == true || (strict.is_a?(Array) && path[0, strict.length] == strict)
 
           nil
         end

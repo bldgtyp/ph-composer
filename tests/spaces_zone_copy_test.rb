@@ -123,6 +123,19 @@ class SpacesZoneCopyTest < PhComposerTestCase
     refute_equal ZONES::ZONE_STORE.read(@zone).fetch("id"), ZONES::ZONE_STORE.read(copy).fetch("id")
   end
 
+  # The same, with a payload whose typed reference resolves through the Spaces inventory.
+  def test_an_unreadable_space_outside_the_copy_does_not_block_its_payloads
+    extension = register_extension
+    data = { extension.namespace => extension.envelope("volume" => "vol_CCCCCCCCCCCC", "zone" => "zon_ZZZZZZZZZZZZ") }
+    SPACES::SPACE_STORE.write(@hall, SPACES::SPACE_STORE.read(@hall).merge("extension_data" => data))
+    stray = Sketchup::Group.new(700, Sketchup::Entities.new([]))
+    stray.set_attribute(SPACES::SPACE_STORE.dictionary, SPACES::SPACE_STORE.key, "{not json")
+    @model.entities << stray
+    copy_zone(500)
+    result = invoke(MAKE_INDEPENDENT, "zone_path" => [500])
+    assert_equal %w[completed committed], result.values_at("status", "effect"), result.inspect
+  end
+
   def test_one_undo_takes_back_the_zone_and_its_spaces_together
     copy_zone(500)
     invoke(MAKE_INDEPENDENT, "zone_path" => [500])
