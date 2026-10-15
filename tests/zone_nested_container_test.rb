@@ -243,7 +243,143 @@ class ZoneNestedContainerTest < PhComposerTestCase
     assert_equal "lvl_Ab12Cd34Ef56", Zones::STAMP_STORE.read(@container).fetch("level_id")
   end
 
+  # A copied Zone made independent, or repaired, stamps the copy's containers with its new id and leaves
+  # the original's stamps naming the original.
+  def test_make_independent_and_repair_rewrite_the_stamps_of_the_copys_containers
+    fixture
+    stamp!(@container)
+    original_id = Zones::ZONE_STORE.read(@zone_group).fetch("id")
+    [["ph_composer.zones.make_independent", 500, false], ["ph_composer.zones.repair_identity", 600, true]]
+      .each do |name, persistent_id, unique|
+        copy = Sketchup::Group.new(persistent_id, @zone_group.entities)
+        Zones::ZONE_STORE.write(copy, Zones::ZONE_STORE.read(@zone_group))
+        @model.entities << copy
+        treat_duplicates_as_existing(@model)
+        copy.make_unique if unique
+        result = invoke(name, "zone_path" => [persistent_id])
+        assert_equal "completed", result["status"], "#{name}: #{result.inspect}"
+        copied = copy.entities.to_a.find { |entity| Zones::STAMP_STORE.read(entity) }
+        assert_equal Zones::ZONE_STORE.read(copy).fetch("id"), Zones::STAMP_STORE.read(copied).fetch("zone_id"), name
+        assert_equal original_id, Zones::STAMP_STORE.read(@container).fetch("zone_id"), name
+      end
+  end
+
+  # Storage a step cannot give the copy alone, on the way to a container, refuses before any stamp is
+  # written: a wrapper the copy still shares for the repair, a component for Make Zone independent.
+  def test_a_container_in_storage_the_copy_shares_refuses_and_leaves_the_original_stamp
+    fixture
+    wrapper = Sketchup::Group.new(130, Sketchup::Entities.new([]))
+    @zone_group.entities.delete(@container)
+    wrapper.entities << @container
+    @zone_group.entities << wrapper
+    stamp!(@container)
+    original = Zones::STAMP_STORE.read(@container)
+    copy = shared_zone_copy(500)
+    copy.make_unique
+    result = invoke("ph_composer.zones.repair_identity", "zone_path" => [500])
+    assert_equal %w[refused target.shared_definition], result.values_at("status", "code")
+    assert_equal original, Zones::STAMP_STORE.read(@container)
+  end
+
+  def test_a_container_inside_a_component_refuses_make_independent
+    fixture
+    @zone_group.entities.delete(@container)
+    definition = Sketchup::ComponentDefinition.new(Sketchup::Entities.new([@container]))
+    @zone_group.entities << Sketchup::ComponentInstance.new(140, definition)
+    stamp!(@container)
+    original = Zones::STAMP_STORE.read(@container)
+    shared_zone_copy(500)
+    result = invoke("ph_composer.zones.make_independent", "zone_path" => [500])
+    assert_equal %w[refused target.shared_definition], result.values_at("status", "code")
+    assert_equal original, Zones::STAMP_STORE.read(@container)
+  end
+
+  def test_a_locked_container_refuses_make_independent
+    fixture
+    stamp!(@container)
+    @container.locked = true
+    shared_zone_copy(500)
+    result = invoke("ph_composer.zones.make_independent", "zone_path" => [500])
+    assert_equal %w[refused target.locked], result.values_at("status", "code")
+  end
+
+  # Presence decides a container, even of a stamp that does not read: an exploded Zone's unreadable
+  # container is opaque to Restore and does not fail the inventory.
+  def test_an_unreadable_container_stamp_left_by_an_exploded_zone_does_not_fail_the_inventory
+    fixture
+    @container.set_attribute(Zones::STAMP_DICTIONARY, Zones::STAMP_STORE.key, "{not json")
+    @zone_group.explode
+    assert_equal "completed", query("ph_composer.zones.list")["status"]
+  end
+
+  # Restore puts back the stamp attribute as it was, present even when its value is JSON false, so the
+  # Group is still a container and its Faces are still not the Zone's.
+  def test_restore_keeps_a_container_stamp_present_as_it_was
+    fixture
+    @container.set_attribute(Zones::STAMP_DICTIONARY, Zones::STAMP_STORE.key, "false")
+    copy = shared_zone_copy(500)
+    zone = Zones::Repair.occurrence_at(@model, [500])
+    plan = Zones::Repair.identity_plan(@model, zone, @session.revision, PhComposer::Registry.current.catalog, nil,
+                                       :isolating => true)
+    step = Zones::MakeIndependentStep.new(:reference => zone.reference, :plan => plan,
+                                          :catalog => PhComposer::Registry.current.catalog)
+    step.apply(@model, {})
+    step.restore
+    container = copy.entities.to_a.find { |entity| entity.get_attribute(Zones::STAMP_DICTIONARY, "record") }
+    assert_equal "false", container.get_attribute(Zones::STAMP_DICTIONARY, Zones::STAMP_STORE.key)
+  end
+
+  # A stamped Group made a live Zone after its own Zone was exploded is that Zone, not a member to
+  # restore inside the old one.
+  def test_a_stamped_group_that_is_now_a_live_zone_is_not_offered
+    fixture
+    stamp!(@container)
+    @zone_group.explode
+    result = invoke("ph_composer.zones.make", "parent_path" => [], "entity_ids" => [120])
+    assert_equal "completed", result["status"], result.inspect
+    offers = query("ph_composer.zones.all").dig("value", "restorable")
+    assert(offers.none? { |offer| offer.fetch("entity_ids").include?(120) }, offers.inspect)
+  end
+
+  def test_restore_refuses_a_locked_member_and_moves_nothing
+    fixture
+    stamp!(@container)
+    zone_id = Zones::ZONE_STORE.read(@zone_group).fetch("id")
+    @zone_group.explode
+    @container.locked = true
+    result = invoke("ph_composer.zones.restore", "parent_path" => [], "zone_id" => zone_id)
+    assert_equal %w[refused target.locked], result.values_at("status", "code")
+    assert @model.entities.include?(@container)
+  end
+
+  def test_a_stamp_stored_as_a_native_value_is_opaque_too
+    fixture
+    @zone_group.explode
+    [false, 17].each do |value|
+      @container.set_attribute(Zones::STAMP_DICTIONARY, Zones::STAMP_STORE.key, value)
+      assert_equal "completed", query("ph_composer.zones.all")["status"], value.inspect
+    end
+  end
+
+  def test_repair_refuses_a_locked_container_and_declares_it
+    fixture
+    stamp!(@container)
+    @container.locked = true
+    copy = shared_zone_copy(500)
+    copy.make_unique
+    result = invoke("ph_composer.zones.repair_identity", "zone_path" => [500])
+    assert_equal %w[refused target.locked], result.values_at("status", "code")
+  end
+
   private
+
+  def shared_zone_copy(persistent_id)
+    copy = Sketchup::Group.new(persistent_id, @zone_group.entities)
+    Zones::ZONE_STORE.write(copy, Zones::ZONE_STORE.read(@zone_group))
+    @model.entities << copy
+    treat_duplicates_as_existing(@model)
+    copy
+  end
 
   def query(name)
     API.query(:context => @context, :name => name)

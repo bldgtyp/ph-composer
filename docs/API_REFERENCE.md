@@ -40972,7 +40972,7 @@ Give one copied Zone occurrence an identity of its own. Owner: `ph_composer.zone
 
 Undo step: Repair Zone Identity. Reidentifies the named occurrence and its Faces; the original is left untouched.
 
-Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.identity_unique`, and the `action` common set.
+Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.invalid`, `target.ambiguous`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.identity_unique`, and the `action` common set.
 
 Params:
 
@@ -41286,7 +41286,7 @@ Regroup the stamped members of an exploded Zone, recovering only their stamp. Ow
 
 Undo step: Restore Zone. Groups stamped Faces in one parent context and writes a Zone record.
 
-Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, `zone.identity_in_use`, `zone.options_adoption_required`, `zone.restore_unsafe`, and the `action` common set.
+Refuses: `record.unreadable`, `reference.invalid`, `target.changed`, `target.locked`, `target.not_found`, `target.wrong_kind`, `validation.failed`, `zone.identity_in_use`, `zone.options_adoption_required`, `zone.restore_unsafe`, and the `action` common set.
 
 Params:
 

@@ -108,6 +108,9 @@ module PhComposer
         end
         raise CodedError.new("target.wrong_hierarchy", "A Zone cannot be nested inside another Zone.") if zone.nested
 
+        refusal = container_refusal(zone, :isolating => isolating)
+        raise refusal if refusal
+
         copies = Occurrences.zones(model).count { |other| other.record.fetch("id") == zone.record.fetch("id") }
         return if copies > 1
 
@@ -141,8 +144,42 @@ module PhComposer
                          "design. Explode or make that component unique first.")
         elsif member_containers(zone).any? { |entity| entity.respond_to?(:locked?) && entity.locked? }
           CodedError.new("target.locked", "A Group holding some of this Zone's Faces is locked. Unlock it first.")
+        elsif (refusal = container_refusal(zone, :isolating => true))
+          refusal
         elsif ids < 2
           CodedError.new("zone.identity_unique", "This Zone already has an identity of its own.")
+        end
+      end
+
+      # Why the nested containers' stamps cannot be rewritten in this occurrence alone, or nil. A stamp is
+      # an instance dictionary, so a container is written alone however its own definition is shared; but
+      # every container above it must be storage the step can give the copy: a Group the isolation makes
+      # unique when `isolating`, otherwise a Group no other placement shares, and never a component.
+      # Neither a container nor any Group above it may be locked.
+      def container_refusal(zone, isolating:)
+        paths = Occurrences.containers(zone).map { |_group, path| path_inside(zone, path) }
+        above = paths.flat_map { |entities| entities[0...-1] }.uniq
+        entities = paths.flatten.uniq
+        if above.any? { |entity| entity.is_a?(Sketchup::ComponentInstance) }
+          CodedError.new("target.shared_definition",
+                         "A Group another feature keeps in this Zone is inside a component, which its placements " \
+                         "share by design. Explode or make that component unique first.")
+        elsif !isolating && above.any? { |entity| Occurrences.shared_storage?(entity) }
+          CodedError.new("target.shared_definition",
+                         "A Group another feature keeps in this Zone still shares its contents with the original. " \
+                         "Use Make Zone independent instead.")
+        elsif entities.any? { |entity| entity.respond_to?(:locked?) && entity.locked? }
+          CodedError.new("target.locked", "A Group another feature keeps in this Zone, or one holding it, is " \
+                                          "locked. Unlock it first.")
+        end
+      end
+
+      def path_inside(zone, path)
+        entities = zone.entity.entities
+        path.map do |persistent_id|
+          entity = Occurrences.unique_entity(entities, persistent_id)
+          entities = entity.is_a?(Sketchup::ComponentInstance) ? entity.definition.entities : entity.entities
+          entity
         end
       end
 
@@ -206,8 +243,9 @@ module PhComposer
         Faces::Schema.validate!(after)
       end
 
-      # Faces carrying a Zone stamp whose Zone is gone, grouped by the id they remember and the one
-      # parent context they sit in. This is the only membership evidence Restore accepts.
+      # Faces and nested container Groups carrying a Zone stamp whose Zone is gone, grouped by the id
+      # they remember and the one parent context they sit in. This is the only membership evidence
+      # Restore accepts.
       def orphans(model)
         live = Occurrences.zones(model).map { |zone| zone.record.fetch("id") }
         found = []
@@ -243,9 +281,21 @@ module PhComposer
       def orphan_refusal(contexts, stamps, entries)
         return "mixed_context" if contexts.length > 1
         return "stamps_conflict" if stamps.length > 1
+        return "contains_zone" if entries.any? { |entry| holds_zone?(entry.fetch(:entity)) }
         return "shared_edge" if shared_edge?(entries)
 
         nil
+      end
+
+      # A member Group holding a live Zone would nest that Zone inside the restored one.
+      def holds_zone?(entity)
+        return false unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+
+        contents = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
+        contents.any? do |child|
+          (child.is_a?(Sketchup::Group) && !child.get_attribute(ZONE_STORE.dictionary, ZONE_STORE.key).nil?) ||
+            holds_zone?(child)
+        end
       end
 
       # Regrouping takes a Face's bounding Edges with it, so an Edge also used by a Face nobody
@@ -272,6 +322,11 @@ module PhComposer
           raise CodedError.new("target.changed", "Those stamped members are not in that parent context.")
         end
 
+        locked = offer.fetch("entity_ids").any? do |id|
+          entity = entities_at(model, wanted).find { |candidate| candidate.persistent_id == id }
+          entity.respond_to?(:locked?) && entity.locked?
+        end
+        raise CodedError.new("target.locked", "A stamped member of that Zone is locked. Unlock it first.") if locked
         if offer.fetch("refusal")
           raise CodedError.new("zone.restore_unsafe",
                                "Zone #{zone_id} cannot be restored: #{offer.fetch('refusal')}.")
@@ -290,23 +345,43 @@ module PhComposer
         [record, offer]
       end
 
+      # A stamped Face, or a stamped Group (a nested container another feature had Zones stamp), is a
+      # member; the walk does not look inside a member Group, whose contents travel with it.
       def walk_orphans(entities, path, live, found)
         entities.each do |entity|
-          if entity.is_a?(Sketchup::Face)
-            stamp = STAMP_STORE.read(entity)
-            # A stamp this feature did not write cannot name a Zone to restore; it is left alone
-            # rather than failing the whole Zones read.
-            next unless Schema.stamp?(stamp) && !live.include?(stamp["zone_id"])
+          next unless entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Group)
 
+          # A live Zone is never a member, whatever stamp it still carries from a Zone exploded around it.
+          next if entity.is_a?(Sketchup::Group) && !entity.get_attribute(ZONE_STORE.dictionary, ZONE_STORE.key).nil?
+
+          stamped = !entity.get_attribute(STAMP_DICTIONARY, STAMP_STORE.key).nil?
+          stamp = readable_stamp(entity) if stamped
+          # A stamp this feature did not write, or that does not read, cannot name a Zone to restore; it
+          # is left alone rather than failing the whole Zones read, and a Group carrying one stays opaque.
+          if Schema.stamp?(stamp) && !live.include?(stamp["zone_id"])
             found << { :zone_id => stamp["zone_id"], :stamp => stamp, :parent_path => path,
                        :persistent_id => entity.persistent_id, :entity => entity }
-          elsif entity.is_a?(Sketchup::Group) && ZONE_STORE.read(entity).nil?
+          elsif entity.is_a?(Sketchup::Group) && !stamped
             walk_orphans(entity.entities, path + [entity.persistent_id], live, found)
           end
         end
       end
-      private_class_method :orphan_group, :orphan_refusal, :shared_edge?, :walk_orphans, :repaired_face, :face_plans,
-                           :member_entries, :path_entities, :member_containers
+
+      # A stamp is stored as JSON text; any other stored value reads as no stamp.
+      def readable_stamp(entity)
+        return nil unless entity.get_attribute(STAMP_DICTIONARY, STAMP_STORE.key).is_a?(String)
+
+        STAMP_STORE.read(entity)
+      rescue CodedError
+        nil
+      end
+
+      def entities_at(model, path)
+        path.empty? ? model.entities.to_a : path_entities(model, path).last.entities.to_a
+      end
+      private_class_method :orphan_group, :readable_stamp, :holds_zone?, :entities_at, :path_inside, :orphan_refusal,
+                           :shared_edge?, :walk_orphans, :repaired_face, :face_plans, :member_entries, :path_entities,
+                           :member_containers
     end
   end
 end

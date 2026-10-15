@@ -24,14 +24,15 @@ module PhComposer
       REPAIR_SPLIT_FACE = (FACE_TARGET + %w[adjacency.unresolved copy.rule_missing extension.invalid
                                             face.identity_unique identity.choice_conflicts identity.choice_required
                                             reference.invalid scope.incomplete]).freeze
-      REPAIR_IDENTITY = (ZONE_TARGET - %w[target.changed target.locked] +
+      REPAIR_IDENTITY = (ZONE_TARGET - %w[target.changed] +
                          %w[copy.rule_missing extension.invalid reference.invalid zone.identity_unique]).freeze
       # Make Zone independent resolves by path, refuses a lock and isolates storage first, so a record
       # that changes between preview and apply is caught at apply. Contributors' codes are projected from
       # the action's declared transition (Refusals.declared).
-      MAKE_INDEPENDENT = (REPAIR_IDENTITY + %w[target.changed target.locked]).freeze
-      RESTORE = %w[record.unreadable target.changed target.not_found target.wrong_kind validation.failed
-                   zone.identity_in_use zone.restore_unsafe zone.options_adoption_required reference.invalid].freeze
+      MAKE_INDEPENDENT = (REPAIR_IDENTITY + %w[target.changed]).uniq.freeze
+      RESTORE = %w[record.unreadable target.changed target.locked target.not_found target.wrong_kind
+                   validation.failed zone.identity_in_use zone.restore_unsafe zone.options_adoption_required
+                   reference.invalid].freeze
       # Editing, copying and deleting an Attached zone through the record engine. An edit or copy checks
       # every reference the record carries, an extension's included, and an entity id may now occur twice.
       RECORD_EDIT = %w[record.unreadable reference.invalid target.ambiguous target.changed target.not_found
