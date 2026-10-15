@@ -531,7 +531,8 @@ ColourBy::Entry.new(path: volume.path, value: "2.50", label: "2.50 m",
 - **Shapes.** A polygon is one planar outer loop of three or more points, convex or concave, with
   no holes; the service triangulates it in its own plane and outlines its loop. The projection owns
   planarity: a loop whose points are not coplanar is degenerate, as are collinear, repeated or
-  non-finite points, and a degenerate polygon draws nothing rather than being fitted to a plane. A
+  non-finite points and a loop that crosses itself, and a degenerate polygon draws nothing rather than
+  being fitted to a plane or drawn in part. A
   segment is two points, drawn as a line. Nothing raises inside `draw`; a malformed `derived` (not
   points, wrong arity) fails the mode through the existing route, so the viewport shows Off and a
   warning.
