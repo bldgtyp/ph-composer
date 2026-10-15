@@ -612,6 +612,80 @@ elements' operations, from the pane plan the Unit's definition is built from, pl
 transform. A thermal-bridge mode (Phase 3b) carries each Edge as `entity` and its segment in
 `derived`. None of the three adds a line under `colour_by/`.
 
+### Zone views (proposed, P3a-06)
+
+Proposed, not built. This records the panel contract Phase 3a's P3a-06 will add; it is replaced with
+what was built when the stage lands.
+
+The Zones tab is one table of Zones read through views (D3a-16). A view is a panel contribution
+registered with the kit part `table_views` under a host id, as `table_contributions` keys tables by
+name. `table_views.js` is a kit module and names no feature. A screen declares itself a host
+(`table_views.host(id)`); Zones' screen (`features/zones/overview.js`) is the host for
+`"ph_composer.zones"`, may name Zones, and reads the views registered there without naming any. Faces
+is a view Zones registers through the same contract as any other.
+
+```js
+PhComposerUI.get("table_views").register("ph_composer.zones", {
+  id: "ph_composer.zones.faces", label: "Faces", order: 10,
+  sections: ["ph_composer.zones.faces.faces"],        // listed only while the snapshot publishes these
+  children: function (zone, context) { return [...]; }, // child rows under one Zone row, or none
+  columns: function (context) { return [...]; },        // [field, label] after the Name column
+  zoneFields: ["building_segment", "level", "ground_depth_mm"], // host-owned Zone columns it shows
+  zoneValue: function (zone, field, context) {},        // the Zone row's cell for a view column
+  value: function (row, field, context) {}, cell: function (td, row, field, text, context) {},
+  headerActions: function (field, context) {}, actions: function (row, context) {},
+  locate: function (rows, context) {}, clearLocate: function (context) {}, // clearLocate is optional
+  selectionBar: function (context) {},                  // controls for checked rows, or null
+  settings: function (context) {},                      // a settings bubble for the page header, or null
+  escape: function (context) {},                        // true when the view handled Escape
+  leave: function (context) {}                          // the view is switched away: stop its tools
+});
+```
+
+- **Listing.** A view is listed while the snapshot publishes every section it names, so a build
+  without a feature shows none of its views, with no line in the composition root. With one view
+  listed the view row is hidden.
+- **The host keeps** the Zone rows and their Name column, the text filter, which Zones are expanded,
+  the checked rows whose keys exist in both views (Zone rows always), the Zone row's own in-place
+  cells (`zone_cells.js`: Building-Segment, Level, Ground depth, which a view lists in `zoneFields`
+  to show, hidden by default or not) and the Zone row actions (Locate a Zone, Make independent). It
+  also keeps the panel hooks: `navigationGuard`, `outcomeText` and `workedOn` stay in the host.
+- **A view owns** its child rows, its columns and their header Colour-by toggles, its column filters
+  and sort, its checked child rows, its selection-bar controls, its settings and its tools. Each view
+  gets its own surface holding its own table mount, so its column widths and hidden columns are its
+  own; the host keeps one controls row and swaps the view's column filters and sort in and out of it
+  on a switch. All of it survives a switch away and back.
+- **Locate** of a child row is the view's: `locate(rows)` runs its own command (Faces frames and
+  outlines Faces; Spaces opens the edit context and selects). A view whose Locate leaves something to
+  clear supplies `clearLocate`; the host owns the gestures that clear it (a pointer press elsewhere,
+  Escape). A navigation intent that checks rows (`panel.navigate("overview", { view, check, locate })`)
+  names its view, and the host switches to it before applying `check`.
+- **The Zone row** shows the host's Zone cells and, for each view column, `zoneValue`: Faces gives
+  gross area; Spaces gives its sums and the airflow imbalance marker. A view with no child rows (an
+  Occupancy view) gives Zone values only and the Zone rows show no chevron.
+- **Switching** is a host action that sends nothing to the Model and never changes the SketchUp
+  selection. It calls the old view's `leave` before its surface hides (a running paint tool stops),
+  keeps the shared state above, restores the new view's own state and repaints the page header's
+  settings slot from the new view. The active view is session state, initialised from a machine-wide
+  preference the host writes on each switch, as the last Colour-by mode is remembered: a view state is
+  never written to the Model, which would dirty it and add an Undo entry.
+- **Escape** unwinds one layer at a time across views alike: an open bubble or column menu, then the
+  active view's tool (`escape`), then the checked set, then the Locate outline.
+- **The view row** is the shared subtabs nav (`subtabs.js`, `aria-label` "Zone views"), above the
+  "Zones" heading as Window Types places its row, with one surface per view.
+- **Registration** refuses a view without an id or label and a duplicate id under one host when it
+  registers. A view registered before its host declares itself is held and checked when it does; one
+  whose host never declares is reported once the panel is ready.
+
+**Contributor tasks traced.** "Move Faces onto it" (P3a-06) moves the Face rows, Face columns,
+Classify column paint, checked-Face selection bar and checked-Zone Solve from
+`features/zones/overview.js` into a Faces view module under `html/features/zones/`, leaving the host
+with Zone rows, Zone cells, filter, expansion, checks and the hooks above. "Add the Spaces view"
+(P3a-07) adds one module under `html/features/spaces/` registering under `"ph_composer.zones"`: Space,
+Volume and Floor Segment rows three deep, sums on the Zone row; no Zones file changes. "Add an
+Occupancy view" registers columns and `zoneValue` with no `children`; `tools/examples/` carries a
+synthetic view of that shape as the example to copy.
+
 ### Native menu items
 
 Implemented in P1-D. Some things a user asks for change no record and open no operation: starting a
