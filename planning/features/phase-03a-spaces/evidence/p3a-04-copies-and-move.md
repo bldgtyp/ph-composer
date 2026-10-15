@@ -23,14 +23,15 @@ Slice B: the standalone copy watcher (D3a-14), Restore Zone reading stamped Grou
   binds each record by kind, id and its ordinal in path order inside the named occurrence, re-scans
   after isolation and refuses drift with `target.changed`. It is restorable, so slice B's watcher can
   reuse it under `HostFollowUp`.
-- **What is rewritten.** The named occurrence takes a new id. A record inside it takes one only when
-  an occurrence outside it holds the id too, or when it is not the first holder inside it, so no
-  identity disappears from the Model and a reference from outside the copy keeps its target (the
-  stage's "everything inside it" was narrowed by review). A renamed Volume takes a new `floor_id`; the
-  named Space the next free number in its Zone. `user_data` is kept. Each extension payload is remapped
-  to its own record's new id and to renamed siblings whose old id only one renamed record held; a
-  payload naming an id several renamed records held refuses `reference.invalid`. The action reports
-  each rewritten record with the path it has after isolation.
+- **What is rewritten.** The named occurrence and every record inside it take new ids, except that
+  an id no occurrence outside the target holds keeps one holder inside it: the first in path order
+  that is not the target. So no identity disappears from the Model and a reference from outside the
+  copy keeps its target (the stage's "everything inside it", narrowed by review). A renamed Volume
+  takes a new `floor_id`; the named Space the next free number in its Zone. `user_data` is kept. Each
+  extension payload is checked against its copy rules first, then remapped to its own record's new id
+  and to renamed records whose old id no other record in the copy holds; a payload naming another id
+  that several records in the copy hold refuses `reference.invalid`. The action reports each rewritten
+  record with the path it has after isolation.
 - **No storage of its own.** A Space inside a single component placement has no copy and still no
   storage of its own, so it carries the finding with the draw-directly message, and Make independent
   refuses `target.shared_definition` before considering its id count. Orphan Volumes and misplaced
@@ -77,4 +78,7 @@ intact and no new Group.
 Slice A: Codex `gpt-6-astra` on #141. The first pass found two P1 (descendants with unique ids were
 renamed, breaking outside references; repeated descendants shared one remapping) and five P2 (native
 names not restored, hidden state lost on Move, no finding for a single component placement or for
-stray occurrences, no final references after isolation). Each was reproduced by a test and fixed.
+stray occurrences, no final references after isolation). The second found two P1 (an id held only
+inside the target lost every holder; a remap ignored kept holders when judging ambiguity) and one P2
+(an unsupported envelope failed instead of refusing with its copy rule). Each of the ten was reproduced
+by a test and fixed; the review cap of two cycles was reached.

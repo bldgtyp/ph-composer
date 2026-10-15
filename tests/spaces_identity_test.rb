@@ -154,6 +154,47 @@ class SpacesIdentityTest < PhComposerTestCase
     refute_includes result["value"]["ids"].map { |row| row["before"] }, "vol_UUUUUUUUUUUU"
   end
 
+  # An id held only inside the target keeps a holder: the named Space is renamed and the nested Space that
+  # shares its id keeps it, so a reference from outside still resolves.
+  def test_an_id_held_only_inside_the_target_keeps_a_holder
+    extension = register_extension
+    nested = space_group(180, space_record("S", :number => "1"), [])
+    @space.entities << nested
+    other = space_group(150, space_record("O", :number => "9").merge(
+      "extension_data" => { extension.namespace => extension.envelope("volume" => "vol_AAAAAAAAAAAA") }
+    ), [])
+    @zone.entities << other
+    result = make_independent("space_id" => "spc_SSSSSSSSSSSS", "entity_path" => [100, 110])
+    assert_equal "completed", result["status"], result.inspect
+    held = PhComposer::Spaces::Occurrences.scan(@model).spaces.map { |space| space.record["id"] }
+    assert_includes held, "spc_SSSSSSSSSSSS"
+    refute_equal "spc_SSSSSSSSSSSS", PhComposer::Spaces::SPACE_STORE.read(@space)["id"]
+    assert_equal "vol_AAAAAAAAAAAA", PhComposer::Spaces::VOLUME_STORE.read(@volume)["id"], "held only here"
+  end
+
+  # Two Volumes in the copy share an id no one outside holds: one keeps it, one is renamed, and a payload
+  # naming that id cannot say which it meant.
+  def test_a_payload_naming_an_id_several_records_in_the_copy_hold_refuses
+    extension = register_extension
+    copy = native_copy(@space, 120, @zone).make_unique
+    copy.entities << volume_group(141, volume_record("U", :number => 2), [])
+    copy.entities << volume_group(142, volume_record("U", :number => 3), [])
+    record = PhComposer::Spaces::SPACE_STORE.read(copy)
+    PhComposer::Spaces::SPACE_STORE.write(copy, record.merge(
+      "extension_data" => { extension.namespace => extension.envelope("volume" => "vol_UUUUUUUUUUUU") }
+    ))
+    result = make_independent("space_id" => "spc_SSSSSSSSSSSS", "entity_path" => [100, 120])
+    assert_equal %w[refused reference.invalid], result.values_at("status", "code")
+  end
+
+  def test_an_unsupported_payload_in_the_copy_refuses_with_its_copy_rule
+    record = volume_record("A").merge("extension_data" => { "outside.vendor" => { "schema_version" => 1 } })
+    PhComposer::Spaces::VOLUME_STORE.write(@volume, record)
+    native_copy(@space, 120, @zone)
+    result = make_independent("space_id" => "spc_SSSSSSSSSSSS", "entity_path" => [100, 120])
+    assert_equal %w[refused copy.rule_missing], result.values_at("status", "code")
+  end
+
   # Two copied Volumes sharing an id inside the copy each keep a reference to themselves.
   def test_repeated_records_in_the_copy_each_keep_their_own_self_reference
     extension = register_extension

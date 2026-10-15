@@ -3,12 +3,13 @@
 module PhComposer
   module Spaces
     # Make independent, planned: the one occurrence the caller named, a copy of a Space, Volume or Floor
-    # Segment, takes a new id, whichever of the copies it is; nothing chooses for the caller. A record
-    # inside it takes a new id when an occurrence outside it holds the id too, or when it is not the first
-    # holder of the id inside it, so no identity disappears from the Model and nothing outside the copy
-    # loses its target. A renamed Space takes `number`, a renamed Volume a new Space Floor (`floor_id`).
-    # `user_data` stays as copied; extension payloads inside the copy follow their declared copy rules,
-    # each remapped to its own record's new id and its unique siblings'. Pure but for the allocator.
+    # Segment, takes a new id, whichever of the copies it is; nothing chooses for the caller. Every other
+    # record inside it takes a new id too, except that an id no occurrence outside the target holds keeps
+    # one holder inside it, the first in path order that is not the target. So no identity disappears from
+    # the Model and nothing outside the copy loses its target. The named Space takes `number`, a renamed
+    # Volume a new Space Floor (`floor_id`). `user_data` stays as copied; extension payloads inside the copy
+    # follow their declared copy rules, each remapped to its own record's new id and to renamed records no
+    # other record in the copy shares an id with. Pure but for the allocator.
     module IdentityPlan
       # One record to rewrite, bound logically: its kind, its id and its ordinal among the target's records
       # of that kind and id in path order, because isolating storage replaces every entity inside.
@@ -30,13 +31,13 @@ module PhComposer
         taken = everywhere.map { |_row_kind, occurrence| occurrence.record.fetch("id") }
         held = everywhere.reject { |row_kind, occurrence| keys.include?([row_kind, occurrence.path]) }
                          .map { |_row_kind, occurrence| occurrence.record.fetch("id") }
+        keepers = keepers(inside, target, held)
         ordinals = Hash.new(-1)
         planned = inside.map do |row_kind, occurrence|
           before = occurrence.record
           ordinal = ordinals[[row_kind, before.fetch("id")]] += 1
-          renamed = occurrence.equal?(target) || held.include?(before.fetch("id")) || ordinal.positive?
           after = DeepCopy.call(before)
-          if renamed
+          unless keepers.any? { |keeper| keeper.equal?(occurrence) }
             after["id"] = fresh(allocate, KINDS.fetch(row_kind).id_prefix, taken)
             after["floor_id"] = fresh(allocate, FLOOR_PREFIX, taken) if row_kind == VOLUME_KIND
             after["number"] = number if occurrence.equal?(target) && number
@@ -67,6 +68,15 @@ module PhComposer
         refuse_lock!(target)
       end
 
+      # The occurrences inside the target that keep their id: one per id held nowhere outside it.
+      def keepers(inside, target, held)
+        inside.group_by { |row_kind, occurrence| [row_kind, occurrence.record.fetch("id")] }
+              .reject { |(_row_kind, id), _group| held.include?(id) }
+              .filter_map do |_key, group|
+                group.map(&:last).find { |occurrence| !occurrence.equal?(target) }
+              end
+      end
+
       def refuse_lock!(occurrence)
         return unless occurrence.locked
 
@@ -84,25 +94,28 @@ module PhComposer
         id
       end
 
-      # Each payload inside the copy is remapped to its own record's new id and to every renamed sibling
-      # whose old id only that sibling held. A payload naming an old id that several renamed records held
-      # names none of them unambiguously, and refuses.
+      # Each payload inside the copy is remapped to its own record's new id and to every renamed record
+      # whose old id no other record inside the copy holds. A payload naming another id that several
+      # records inside the copy hold, renamed or kept, names none of them unambiguously, and refuses.
       def copy_extensions(planned, catalog, engine)
-        renamed = planned.map(&:last).reject { |row| row.after.fetch("id") == row.before.fetch("id") }
-        counts = renamed.map { |row| row.before.fetch("id") }.tally
-        shared = renamed.each_with_object({}) do |row, mapping|
-          mapping[row.before.fetch("id")] = row.after.fetch("id") if counts[row.before.fetch("id")] == 1
+        rows = planned.map(&:last)
+        counts = rows.map { |row| row.before.fetch("id") }.tally
+        shared = rows.each_with_object({}) do |row, mapping|
+          old_id = row.before.fetch("id")
+          mapping[old_id] = row.after.fetch("id") if counts[old_id] == 1 && row.after.fetch("id") != old_id
         end
         plan = Records::ReferencePlan.new(:entries => planned.map do |row_kind, occurrence, row|
           Records::ReferenceEntry.new(:kind => row_kind, :key => occurrence.path, :record => row.after)
         end)
-        planned.each do |_row_kind, _occurrence, row|
+        rows.each do |row|
           data = row.before.fetch("extension_data", {})
           next if data.empty?
 
           old_id = row.before.fetch("id")
+          label = KINDS.fetch(row.kind).label
+          Records::Extension.check_copy_rules!(data, catalog, label, old_id)
           refuse_ambiguous!(data, counts, old_id)
-          row.after["extension_data"] = Records::Extension.copy_data(data, catalog, KINDS.fetch(row.kind).label, old_id,
+          row.after["extension_data"] = Records::Extension.copy_data(data, catalog, label, old_id,
                                                                      shared.merge(old_id => row.after.fetch("id")),
                                                                      :engine => engine, :reference_plan => plan)
         end
@@ -114,10 +127,10 @@ module PhComposer
         end
         return unless named.any? { |id| id != own_id && counts.fetch(id, 0) > 1 }
 
-        raise CodedError.new("reference.invalid", "A payload in the copy names an identity several copied records " \
-                                                  "share, so its target is ambiguous. Nothing was written.")
+        raise CodedError.new("reference.invalid", "A payload in the copy names an identity several records in the " \
+                                                  "copy share, so its target is ambiguous. Nothing was written.")
       end
-      private_class_method :refuse_lock!, :fresh, :copy_extensions, :refuse_ambiguous!
+      private_class_method :keepers, :refuse_lock!, :fresh, :copy_extensions, :refuse_ambiguous!
     end
   end
 end
