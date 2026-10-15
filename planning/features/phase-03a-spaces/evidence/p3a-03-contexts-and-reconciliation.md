@@ -1,13 +1,13 @@
 # P3a-03 evidence: edit contexts, protection and reconciliation
 
 DATE: 2026-10-15
-STATUS: Host gate partly run. The bridge and background-control rows pass; the rows that need native keystrokes with SketchUp in front wait for Ed's screen-takeover approval.
+STATUS: Merged through #138 and #140. Host gate partly run: the bridge and background-control rows pass; the rows that need native keystrokes with SketchUp in front wait for Ed's screen-takeover approval.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 Slice A (the edit-context writer and keyed deferred work) merged through
 [#138](https://github.com/bldgtyp/ph-composer/pull/138). Slice B (protection, the reconciler, the
-edit-context commands, Restore position) is on `feature/spaces-p3a-03b`. Register row S03.
+edit-context commands, Restore position) merged through [#140](https://github.com/bldgtyp/ph-composer/pull/140). Register row S03.
 
 ## Design answers recorded with the stage
 
