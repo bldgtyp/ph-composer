@@ -84,7 +84,7 @@ only when all three are done and its evidence file exists.
 
 | Stage | Title | State | Blocked by | Branch / PR | Offline | Host | Review | Evidence | Register |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts and groundwork | Implemented on branch | | `feature/spaces-p3a-01` | `make ci` pass (Ruby 3.2.2 local; 2.7.2 in CI) | S01 pass with two stated limits, 26.1.188 | Codex gpt-6-astra: 1 P1, 2 P2, all fixed | [p3a-01](evidence/p3a-01-groundwork.md) | S01 |
+| [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts and groundwork | Implemented on branch | | `feature/spaces-p3a-01` | `make ci` pass (Ruby 3.2.2 local; 2.7.2 in CI) | S01 pass with two stated limits, 26.1.188 | Codex gpt-6-astra, two passes: 1 P1 and 4 P2, all fixed | [p3a-01](evidence/p3a-01-groundwork.md) | S01 |
 | [P3a-02](phases/p3a-02-space-records-and-operations.md) | Space records and operations | Scoped | P3a-01 | | | | ordinary | | S02 |
 | [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | Edit contexts, protection and reconciliation | Scoped | P3a-02 | | | | strong | | S03 |
 | [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | Copies and Move Space to Zone | Scoped | P3a-03 | | | | strong | | S04 |

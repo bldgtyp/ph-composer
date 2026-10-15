@@ -129,6 +129,19 @@ class ZoneNestedContainerTest < PhComposerTestCase
     refute_includes exported, Zones::Faces::FACE_STORE.read(@floor).fetch("id")
   end
 
+  def test_an_unreadable_record_left_in_a_container_does_not_block_the_face_export
+    fixture
+    stamp!(@container)
+    @floor.set_attribute(Zones::Faces::FACE_DICTIONARY, "record", "{not json")
+    snapshot = PhComposer::Export::GeometrySnapshot.capture(@model, :revision => @session.revision)
+    engine = PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog)
+    records = PhComposer::Export::RecordReader.new(engine, PhComposer::Registry.current.catalog)
+    reader = PhComposer::Export::SnapshotReader.new(records, snapshot)
+    assert_empty Zones::Faces::ExportProjection.records(reader)
+    contexts = Zones::Faces::ExportProjection.contexts(reader)
+    assert_equal [[100, 101], [100, 110, 111]], contexts.map { |row| row["path"] }
+  end
+
   def test_live_reads_and_export_agree_on_a_stamp_that_does_not_read
     fixture
     @container.set_attribute(Zones::STAMP_DICTIONARY, Zones::STAMP_STORE.key, false)

@@ -21,7 +21,7 @@ module PhComposer
         # needing host context, including unclassified Faces. Classification validity remains the
         # consuming feature's export policy. A contributor reads it as `reader.section(SECTION)`.
         def contexts(reader)
-          reader.snapshot.entries.select { |entry| entry.kind == "face" }.map do |entry|
+          zone_faces(reader.snapshot).map do |entry|
             stored = entry.record(FACE_DICTIONARY)
             owner = Zones::ExportProjection.zone_owner(reader.snapshot, entry)
             valid = stored && Schema.problems(stored).empty?
@@ -160,10 +160,11 @@ module PhComposer
           "invalid"
         end
 
-        # A Face in a nested container is not a Zone Face, so a record left on one is not exported.
+        # A Face in a nested container is not a Zone Face, so a record left on one is not read or exported.
         def records(reader)
-          reader.snapshot.records(FACE_DICTIONARY, :kind => "face").filter_map do |entry, record|
-            next if Zones::ExportProjection.contained?(reader.snapshot, entry)
+          zone_faces(reader.snapshot).filter_map do |entry|
+            record = entry.record(FACE_DICTIONARY)
+            next unless record
 
             Schema.validate!(record)
             geometry = entry.geometry
@@ -188,6 +189,14 @@ module PhComposer
           end.sort_by { |record| record.fetch("id") }
         end
 
+        # Every snapshot Face that can be a Zone Face: those in a nested container are left out before
+        # anything stored on them is read (context/CONTRACTS.md, "Zones geometry rules").
+        def zone_faces(snapshot)
+          snapshot.entries.select do |entry|
+            entry.kind == "face" && !Zones::ExportProjection.contained?(snapshot, entry)
+          end
+        end
+
         def omission_reason(snapshot, entry, record)
           unless record["boundary_condition"]
             return ["face.boundary_unassigned", "Face has no assigned boundary condition."]
@@ -197,6 +206,7 @@ module PhComposer
           endpoint = record.dig("adjacency", "counterpart")
           path = Array(endpoint&.fetch("zone_path", nil)) + Array(endpoint&.fetch("entity_path", nil))
           counterpart = snapshot.entry_at(path, :kind => "face")
+          counterpart = nil if counterpart && Zones::ExportProjection.contained?(snapshot, counterpart)
           other = counterpart&.record(FACE_DICTIONARY)
           unless counterpart && other
             return ["adjacency.unresolved", "Face has no reciprocal Surface endpoint."]
@@ -206,7 +216,7 @@ module PhComposer
           ["adjacency.stale", "Face has no current reciprocal Surface endpoint."]
         end
         private_class_method :face_findings, :assignment_issues, :attached_zone_issues, :attached_record_state,
-                             :omission_reason, :construction_issues
+                             :omission_reason, :construction_issues, :zone_faces
       end
     end
   end

@@ -82,5 +82,15 @@ accepted and fixed in the same pull request.
   target declares no public `locate:`. Corrected, and the public Zone locator is allocated to P3a-02
   as its step 0.
 
+Second pass on the fix commit: two P2, both reproduced and fixed. A Surface Face whose counterpart
+was already in a plain Group when solved, and then stamped, still read as a current pair and
+exported against a Face no section exported; the counterpart check now applies the container rule
+and the Face exports as `adjacency.unresolved`. And the Face export decoded a container Face's
+record before skipping it, so an unreadable leftover record still blocked; the export and the
+shared Face projection now leave container Faces out before reading anything stored on them. Two
+review cycles is the loop's cap, so these fixes were not reviewed a third time. The review fixes
+change only how export treats Faces inside a container, which the host run did not exercise; they
+are covered offline.
+
 The review also restated the two host limits already recorded above (Shift-click offline; the 35
 screened cases judged unaffected). The S01 row now says "pass with two stated limits".
