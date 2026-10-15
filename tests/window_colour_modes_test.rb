@@ -96,7 +96,34 @@ class WindowColourModesTest < PhComposerTestCase
     assert_equal 8, service.lines.values.sum(&:length), "two Units, two segments each"
   end
 
+  # A Unit made unique keeps its panes when its Type later changes size; its marks would land outside
+  # them, so it draws none while the Units still on the Type's definition draw the new size.
+  def test_a_unique_unit_left_behind_by_a_type_change_draws_no_marks
+    values = type_values
+    assignment_invoke("ph_composer.windows.types.grid.set_element_operation",
+                      "id" => @type_id, "element_id" => values["elements"].first["id"], "expected_values" => values,
+                      "operation" => { "type" => "swing", "directions" => ["left"] })
+    values = type_values
+    # What Make Unique leaves: a second definition holding the Type's panes as they were.
+    U::Occurrences.all(@model).first.entity.definition =
+      U::DefinitionWriter.create(:model => @model, :type => values.merge("id" => @type_id),
+                                 :plan => U::DefinitionPlan.build(values))
+    assert_equal 2, W::ColourModes.entries(read).first.derived.segments.length
+    result = assignment_invoke("ph_composer.windows.types.update", "id" => @type_id,
+                               "values" => { "columns_m" => values["columns_m"].map { |width| width * 2 } },
+                               "expected_values" => { "columns_m" => values["columns_m"] })
+    assert_equal "completed", result.fetch("status"), result.inspect
+    entries = W::ColourModes.entries(read)
+    assert_equal [@type_id, @type_id], entries.map(&:value)
+    assert_nil entries.first.derived
+    assert_equal 2, entries.last.derived.segments.length
+  end
+
   private
+
+  def type_values
+    assignment_query("ph_composer.windows.types.list", "ids" => [@type_id])["records"].first["values"]
+  end
 
   def read
     PhComposer::HandlerRequest.for(@session, :owner => W::FEATURE_ID, :name => W::ColourModes::BY_TYPE)

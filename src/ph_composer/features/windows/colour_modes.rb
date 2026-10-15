@@ -5,7 +5,8 @@ module PhComposer
     # The shared service owns pane tessellation, ancestor visibility and drawing. A detached
     # definition remains under its authored Type; an unavailable Type joins the unclassified row. Each
     # Unit also carries its elements' operation marks as derived segments (context/EXTENSIBILITY.md,
-    # "Colour-by derived geometry"), drawn in its Type's colour.
+    # "Colour-by derived geometry"), drawn in its Type's colour, while its definition still holds the
+    # panes its Type places: a Unit made unique and left behind by a later Type change draws none.
     module ColourModes
       BY_TYPE = "#{FEATURE_ID}.by_type"
 
@@ -19,19 +20,22 @@ module PhComposer
       def entries(read)
         types = Snapshot.readable(read.engine, Types::KIND).to_h { |type| [type.fetch("id"), type] }
         marks = Hash.new { |table, id| table[id] = OperationMarks.local(types[id]) }
+        current = Hash.new do |table, (id, definition)|
+          table[[id, definition]] = Units::DefinitionGeometry.matches?(definition, :type_id => id,
+                                                                                   :plan => marks[id].plan)
+        end
         Units::Occurrences.all(read.model).map do |unit|
           type = types[unit.record.fetch("window_type_id")]
+          id = type && type.fetch("id")
+          drawn = id && marks[id].segments.any? && current[[id, unit.entity.definition]]
           ColourBy::Entry.new(:entity => unit.entity, :transform => unit.transform,
-                              :value => type && type.fetch("id"), :label => type && type.fetch("name"),
-                              :path => unit.path,
-                              :derived => placed(type ? marks[type.fetch("id")] : [], unit.transform))
+                              :value => id, :label => type && type.fetch("name"), :path => unit.path,
+                              :derived => drawn ? placed(marks[id].segments, unit.transform) : nil)
         end
       end
 
-      # The Type's marks placed in the world by one Unit's transform, or none.
+      # The Type's marks placed in the world by one Unit's transform.
       def placed(segments, transform)
-        return nil if segments.empty?
-
         world = segments.map { |segment| segment.map { |point| point.transform(transform) } }
         ColourBy::Derived.new(:polygons => [], :segments => world)
       end
@@ -45,22 +49,26 @@ module PhComposer
     module OperationMarks
       module_function
 
-      # The marks for one Type, as two-point segments in definition inches; none when its dimensions are
-      # incomplete, since no definition can be built from them either.
+      # The Type's plan and its marks.
+      Local = Struct.new(:plan, :segments)
+
+      # The marks for one Type, as two-point segments in definition inches, with the plan they were
+      # drawn from; none when its dimensions are incomplete, since no definition can be built from them
+      # either.
       def local(type)
-        return [] unless type
+        return Local.new(nil, []) unless type
 
         plan = Units::DefinitionPlan.build(type)
         elements = type.fetch("elements").to_h { |cell| [cell.fetch("id"), cell] }
-        plan.panes.flat_map do |pane|
+        Local.new(plan, plan.panes.flat_map do |pane|
           operation = elements.fetch(pane.element_id)["operation"]
           next [] unless operation
 
           corners = pane.polygon_m.map { |x, y, z| Geom::Point3d.new(x / INCH_TO_M, y / INCH_TO_M, z / INCH_TO_M) }
           operation.fetch("directions").flat_map { |direction| mark(corners, direction) }
-        end
+        end)
       rescue CodedError
-        []
+        Local.new(nil, [])
       end
 
       # `corners` are bottom-left, bottom-right, top-right, top-left.
