@@ -17,7 +17,9 @@ from typing import Any
 from urllib.parse import unquote
 from zipfile import ZipFile
 
-from acceptance_ledger import source_fingerprint, source_names
+# ty checks a PEP 723 script in its own environment, without the script's directory that Python puts on
+# sys.path at run time, so this sibling import resolves when run and not for ty.
+from acceptance_ledger import source_fingerprint, source_names  # ty: ignore[unresolved-import]
 
 HOST_KEYS = ("sketchup", "ruby", "os", "controller", "session_id", "fixture_sha256", "rbz_sha256", "composition")
 PREFLIGHT_KEYS = ("window_active", "tool_ready", "target_ready", "probe_callbacks_verified", "writer_verified")

@@ -21,7 +21,7 @@ import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-# The roots `make lint-python` lints. The type check reads its own include list, so any staged `.py`,
+# The roots `make lint-python` lints. The type check (ty) reads its own include list, so any staged `.py`,
 # added, changed or removed, runs it.
 RUFF_ROOTS = ("tools/", "tests/python/", "src/ph_composer/python/")
 # The roots `make syntax` covers, and with them rubocop's.

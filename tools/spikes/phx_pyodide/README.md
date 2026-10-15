@@ -34,5 +34,5 @@ uv run tools/spikes/phx_pyodide/pyodide_run.py "$W"
 (PHX#157), and the METr path imports none of them. Chromium 88 comes from the shared cache
 `tools/runtime/browser_check.py` uses; run that once with `--download-chromium` if it is absent.
 
-Spike tooling is checked by ruff only; it is outside the mypy file list because it imports the
+Spike tooling is checked by ruff only; it is outside the ty include list because it imports the
 honeybee stack, which the development environment does not install.

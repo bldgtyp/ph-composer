@@ -54,7 +54,7 @@ def test_the_input_must_be_json() -> None:
 
 
 def test_an_exporter_must_return_its_output_type() -> None:
-    wrong = Exporter("wrong", "Wrong", ".txt", lambda hbjson, options: b"bytes")  # type: ignore[arg-type,return-value]
+    wrong = Exporter("wrong", "Wrong", ".txt", lambda hbjson, options: b"bytes")  # ty: ignore[invalid-argument-type]
     with pytest.raises(TypeError, match="not ExporterOutput"):
         run_exporter(wrong, HBJSON, {})
 

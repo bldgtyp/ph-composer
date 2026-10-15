@@ -166,8 +166,9 @@ hostkit-test:
 	@$(RUBY) -Itests -Itools/hostkit/tests tools/hostkit/tests/all.rb
 	@uv run pytest -q tools/hostkit/tests
 
+# ty over the set `[tool.ty.src]` in pyproject.toml includes; ruff's ANN rules require the annotations it reads.
 python-check:
-	@uv run mypy --config-file pyproject.toml
+	@uv run ty check
 
 # The runtime manifest (src/ph_composer/vendor/manifest.json) pins every asset the loopback server may
 # serve. Regenerate it after editing anything under html/ or python/: panel-manifest first, since

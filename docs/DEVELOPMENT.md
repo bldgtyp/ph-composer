@@ -28,8 +28,8 @@ make ci
 `ci` runs, in order: `syntax` (every `.rb` under `src`, `tests` and `tools`), `lint`, `test`,
 `fixtures-check`, `panel-manifest-check`, `runtime-check` (the tree, the Pyodide pin, the gates
 and the installed-size budget against `src/ph_composer/vendor/manifest.json`), `runtime-pin-check`
-(shipped wheels against `pyproject.toml`), `hostkit-test`, `python-check` (mypy over the
-translation package, the tools and their tests), `rbz` and `rbz-check`, which also refuses an
+(shipped wheels against `pyproject.toml`), `hostkit-test`, `python-check` (ty, Astral's type
+checker, over the translation package, the tools and their tests), `rbz` and `rbz-check`, which also refuses an
 installed extension over the manifest's 24,000,000-byte ceiling.
 
 `test` loads the real extension code against a stub SketchUp API and runs the Ruby and Python
@@ -57,7 +57,9 @@ installs both. A local skip is not gate evidence.
   level, with post-88 runtime APIs refused. Install with `pnpm install`; the repository keeps
   pnpm's one-day minimum release age and refuses non-registry subdependencies.
 - `lint-python` runs ruff over `tools/`, `tests/python` and the translation package, lint and
-  format check.
+  format check. Its rules include the ones that require every parameter and return to be
+  annotated, which `python-check` relies on and ty does not enforce itself. ty is pinned to an
+  exact version while it is in beta.
 - `lint-citations` fails if shipped code or a test cites a planning document or a planning
   identifier (a phase stage, question, decision or acceptance number). Comments cite `context/`
   instead, because planning documents move when they are archived.
@@ -73,7 +75,7 @@ The repository keeps its git hooks in `.githooks/`. They install themselves the 
 alone, with a line saying so.
 
 - `pre-commit` runs, on the staged files only, the checks they can affect: ruff lint and format
-  for Python, mypy over its whole configured set when any Python file is staged, `ruby -c` and
+  for Python, ty over its whole configured set when any Python file is staged, `ruby -c` and
   rubocop for Ruby, eslint for JavaScript, the panel and runtime manifest checks when panel or
   translation assets change, and the planning-citation check for shipped code and tests. Each is
   the Makefile target CI runs, given the staged file list. A deleted or renamed file runs the

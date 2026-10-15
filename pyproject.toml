@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.11"]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "ty==0.0.87"]
 
 [tool.uv]
 package = false
@@ -44,15 +44,29 @@ src = [
 # families carried from the predecessor's review: `BLE` makes a broad `except` a decision,
 # `RUF100` keeps a `noqa` from outliving its rule.
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "BLE"]
+select = [
+    "E", "F", "W", "I", "UP", "B", "SIM", "RUF", "BLE",
+    # Every parameter and return is annotated, which the type checker relies on and does not require itself.
+    "ANN001", "ANN002", "ANN003", "ANN201", "ANN202", "ANN204", "ANN205", "ANN206",
+]
 # `×` and `−` are the domain's notation (context/UBIQUITOUS_LANGUAGE.md), not typos for x and -.
 ignore = ["RUF001", "RUF002", "RUF003"]
 
-[tool.mypy]
-python_version = "3.11"
-files = [
+[tool.ruff.lint.per-file-ignores]
+# Spike tooling is outside the type-checked set (tools/spikes/phx_pyodide/README.md).
+"tools/spikes/**" = ["ANN"]
+
+# ty, Astral's type checker, pinned exactly while it is in beta. It does not require annotations, so
+# ruff's ANN rules above hold every function to typed parameters and returns.
+[tool.ty.environment]
+python-version = "3.11"
+root = [
     "src/ph_composer/python", "tools/examples/foundation", "tools/rbz", "tools/hostkit", "tools/runtime", "tests/python",
     "tools/githooks",
 ]
-mypy_path = "src/ph_composer/python:tools/examples/foundation:tools/rbz:tools/hostkit:tools/runtime:tests/python:tools/githooks"
-disallow_untyped_defs = true
+
+[tool.ty.src]
+include = [
+    "src/ph_composer/python", "tools/examples/foundation", "tools/rbz", "tools/hostkit", "tools/runtime", "tests/python",
+    "tools/githooks",
+]

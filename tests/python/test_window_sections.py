@@ -31,7 +31,7 @@ LEGACY = ROOT / "tests/fixtures/phase_one/two_zones_extraction.json"
 
 
 def windows() -> dict[str, Any]:
-    return json.loads(FIXTURE.read_text())  # type: ignore[no-any-return]
+    return json.loads(FIXTURE.read_text())
 
 
 def document() -> dict[str, Any]:
@@ -58,11 +58,11 @@ def document() -> dict[str, Any]:
             "face_ids": ["face_wall"],
         }
     ]
-    return value  # type: ignore[no-any-return]
+    return value
 
 
 def result(value: dict[str, Any]) -> dict[str, Any]:
-    return json.loads(export_json(json.dumps(value)))  # type: ignore[no-any-return]
+    return json.loads(export_json(json.dumps(value)))
 
 
 def model(output: dict[str, Any]) -> Any:
@@ -140,7 +140,7 @@ def test_signature_includes_size_dependent_uw_and_ignores_presentation() -> None
     value["sections"][FaceSection.id] = {"version": 1, "records": []}
     translated = translate(value, (FaceSection(), WindowConstructionSection(), ApertureSection()))
     objects = translated.objects(WINDOW_CONSTRUCTION_SECTION_ID)
-    first, large, equal = [objects[row["id"]].construction for row in rows[:3]]  # type: ignore[attr-defined]
+    first, large, equal = [objects[row["id"]].construction for row in rows[:3]]  # ty: ignore[unresolved-attribute]
     assert first.identifier == equal.identifier
     assert first.identifier != large.identifier
     assert first.materials[0].u_factor == rows[0]["uw_w_m2k"]
