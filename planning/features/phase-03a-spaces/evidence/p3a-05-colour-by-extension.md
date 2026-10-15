@@ -1,7 +1,7 @@
 # P3a-05 evidence: Colour-by derived geometry and readouts
 
 DATE: 2026-10-15
-STATUS: Slice A (the contract) implemented on `feature/spaces-p3a-05a`; slice B (Window Type operation marks) next; host gate not run
+STATUS: Slice A (the contract) in review (#147); slice B (Window Type operation marks) implemented on `feature/spaces-p3a-05b`; host gate not run
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -54,6 +54,19 @@ readout returns SI values with their quantity ids.
   and shows its labels and selection count.
 - Every existing Colour-by test passes unchanged (test 1).
 
+## Slice B: operation marks
+
+`features/windows/colour_modes.rb` gives every Window Type entry its elements' operation marks as
+derived segments, from the pane plan the Unit's definition is built from (`Units::DefinitionPlan`),
+placed by the Unit's transform: for each direction, lines from the two corners opposite that side to its
+midpoint, the convention the Type's elevation already draws in the panel
+(`html/features/windows/canvas.js`). Swing and slide draw alike; fixed and unspecified elements draw
+none. The slice's code diff touches only `features/windows/colour_modes.rb` and
+`tests/window_colour_modes_test.rb` (test 9). `test_by_type_draws_each_elements_operation_marks_in_the_types_colour`
+checks the two segments of a left-swinging element against the pane's world corners and the drawn line
+batch for both Units. Whether the definition's XY plane reads as the exterior elevation on the host is a
+slice B host row.
+
 ## Host
 
 Not run. The gate needs captures of the overlay, which bridge screenshots omit; it is batched with the
@@ -61,4 +74,7 @@ S03 and S04 native rows.
 
 ## Reviews
 
-Design: the architecture review above. Slice A code: Codex `gpt-6-astra` on its pull request.
+Design: the architecture review above. Slice A code: Codex `gpt-6-astra` on #147; the first pass found
+two P1 (cached readout anchors ignored the occurrence mask; malformed readout output reached `draw`) and
+three P2 (shapes on an entity entry skipped its identity check; a non-finite vertex was de-duplicated
+away; the overlay stayed after the last readout failed). Each was reproduced by a test and fixed.
