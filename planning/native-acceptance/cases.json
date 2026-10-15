@@ -1276,6 +1276,21 @@
         "tests/spaces_*"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "S03",
+      "label": "Spaces edit contexts: Volume protection on exit by any callback order, direct Volume switch, save from an open Volume, Restore position, drawing at the Space root, Undo/Redo, two Models isolated",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/session/edit_context.rb",
+        "src/ph_composer/session/deferred_work.rb",
+        "src/ph_composer/features/spaces/context/*",
+        "src/ph_composer/features/spaces/declarations/context.rb",
+        "tests/spaces_context*",
+        "tests/edit_context*"
+      ],
+      "native_control_required": true
     }
   ]
 }

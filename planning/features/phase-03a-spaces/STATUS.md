@@ -87,8 +87,8 @@ only when all three are done and its evidence file exists.
 | Stage | Title | State | Blocked by | Branch / PR | Offline | Host | Review | Evidence | Register |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [P3a-01](phases/p3a-01-contracts-and-groundwork.md) | Contracts and groundwork | Merged to main | | PR [#135](https://github.com/bldgtyp/ph-composer/pull/135), `a501ac3` | `make ci` pass (Ruby 3.2.2 local; 2.7.2 in CI) | S01 pass with two stated limits, 26.1.188 | Codex gpt-6-astra, two passes: 1 P1 and 4 P2, all fixed | [p3a-01](evidence/p3a-01-groundwork.md) | S01 |
-| [P3a-02](phases/p3a-02-space-records-and-operations.md) | Space records and operations | Implemented on branch: slice A merged through PR [#136](https://github.com/bldgtyp/ph-composer/pull/136) (`0421e2e`), slice B on `feature/spaces-p3a-02b` | | #136; `feature/spaces-p3a-02b` | `make ci` pass on each slice (Ruby 3.2.2 local; 2.7.2 in CI) | S02 pass, 26.1.188 | slice A: Codex gpt-6.1-sol, two passes, 3 P1 and 4 P2, all fixed; slice B: Codex gpt-6.1-sol, two passes, 6 P1 and 3 P2, all fixed | [p3a-02](evidence/p3a-02-space-records.md) | S02 |
-| [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | Edit contexts, protection and reconciliation | Scoped | P3a-02 | | | | strong | | S03 |
+| [P3a-02](phases/p3a-02-space-records-and-operations.md) | Space records and operations | Merged to main: slice A through PR [#136](https://github.com/bldgtyp/ph-composer/pull/136) (`0421e2e`), slice B through PR [#137](https://github.com/bldgtyp/ph-composer/pull/137) (`b193dbc`) | | #136, #137 | `make ci` pass on each slice (Ruby 3.2.2 local; 2.7.2 in CI) | S02 pass, 26.1.188 | slice A: Codex gpt-6.1-sol, two passes, 3 P1 and 4 P2, all fixed; slice B: Codex gpt-6.1-sol, two passes, 6 P1 and 3 P2, all fixed | [p3a-02](evidence/p3a-02-space-records.md) | S02 |
+| [P3a-03](phases/p3a-03-edit-contexts-protection-and-reconciliation.md) | Edit contexts, protection and reconciliation | In progress: slice A merged through PR [#138](https://github.com/bldgtyp/ph-composer/pull/138) (`5db65ac`); slice B in review; host gate partly run, native-keystroke rows wait for Ed's screen-takeover approval | | #138; `feature/spaces-p3a-03b` | `make ci` pass on each slice | S03 partial (blocked rows), 26.1.188 | slice A: Codex gpt-6-astra, two passes, 1 P1 and 1 P2, fixed; slice B: on its PR | [p3a-03](evidence/p3a-03-contexts-and-reconciliation.md) | S03 |
 | [P3a-04](phases/p3a-04-copies-and-move-space-to-zone.md) | Copies and Move Space to Zone | Scoped | P3a-03 | | | | strong | | S04 |
 | [P3a-05](phases/p3a-05-colour-by-derived-geometry-and-readouts.md) | Colour-by derived geometry and readouts | Scoped | P3a-01 | | | | strong | | S05 |
 | [P3a-06](phases/p3a-06-zone-views.md) | Zone views | Scoped | Entry gates | | | | strong, UI | | S06 |
@@ -125,6 +125,7 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | D3a-16 | UI | One Zones tab with views: Faces, Spaces, later loads and equipment | P3a-06, P3a-07 | Answered 2026-10-15 |
 | D3a-17 | UI and code | Weighting factor, a number from 0 to 1 with quick picks | P3a-02, P3a-07, P3a-08 | Answered 2026-10-15 |
 | D3a-18 | UI | Select by through column filters and check-all, no cell menu | P3a-07 | Answered 2026-10-15: filter and check-all |
+| D3a-19 | Behavior | Autosave closes an open Volume under the predecessor's save rule; keep it or unlock again after a save | none (follow-up) | Open |
 
 ## Owed from elsewhere, allocated here
 
@@ -152,7 +153,7 @@ M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
 | Occupancy, Electric loads and appliances, Lighting and Hot water Zone views | The Zone loads packet, not yet drafted; P3a-06's contract admits a view with no child rows |
 | Inherited airflow values from Zone loads | The Zone loads packet, not yet drafted |
 | One shared duplicate-identity contract across Zones, Windows and Spaces | A refactor candidate recorded when P3a-04 closes (D3a-3) |
-| `Zones::Names::State` and the Zones copy watcher on the deferred-work primitive | A refactor candidate recorded when P3a-03 closes (D3a-4) |
+| `Zones::Names::State` and the Zones copy watcher on the deferred-work primitive | [#139](https://github.com/bldgtyp/ph-composer/issues/139) (D3a-4) |
 
 ## Verification
 
@@ -191,4 +192,5 @@ and not reproduced.
 | 2026-10-15 | Phase issue [#133](https://github.com/bldgtyp/ph-composer/issues/133) created; every header in the packet points at it. The only open entry gate is Ed's go. |
 | 2026-10-15 | Ed authorized the whole packet, one stage per pull request. P3a-01 implemented on `feature/spaces-p3a-01`: the nested-container rule, the empty-Room refusal, CONTRACTS section 8; S01 passed on the host. |
 | 2026-10-15 | P3a-01 merged to main through PR #135 (`a501ac3`) after two Codex gpt-6-astra passes (1 P1, 4 P2, all fixed). P3a-02 split into slices A and B, one host gate after B. |
+| 2026-10-15 | P3a-02 merged to main through #136 and #137. P3a-03 slice A merged through #138. P3a-03 slice B implemented; its host gate ran the bridge and background rows (pass) and found two transform defects, fixed; the native-keystroke rows wait for Ed's screen-takeover approval. D3a-19 (autosave closes an open Volume) raised; follow-up #139 filed. |
 | 2026-10-15 | P3a-02 host gate passed (S02): the panel-closed walkthrough, one native Undo and Redo per write, native copy, cut and Make Unique of a Space Group, airflow states and `user_data` through save and reopen, two Models isolated. Slice A reviewed twice and fixed. |

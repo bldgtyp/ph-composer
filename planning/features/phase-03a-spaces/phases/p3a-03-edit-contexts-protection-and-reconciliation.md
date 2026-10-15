@@ -1,7 +1,7 @@
 # P3a-03: edit contexts, protection and reconciliation
 
 DATE: 2026-10-15
-STATUS: Scoped. Re-baselined on `main` at `87bdc62`: deferred work builds on `HostFollowUp` and the Zones copy watcher, which landed after this stage was planned
+STATUS: In progress. Slice A merged through #138; slice B implemented on `feature/spaces-p3a-03b`; host gate partly run ([evidence](../evidence/p3a-03-contexts-and-reconciliation.md)), native-keystroke rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
