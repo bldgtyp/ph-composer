@@ -18,8 +18,7 @@ relative to `src/ph_composer/`.
 
 ## The gesture, stated once
 
-Pointer down on a grip records the source Layer id, its index, the layout, the pointer origin and
-`owner.expected()`. The first move beyond 6 px (36 px squared, as `library/drag.js`) begins the
+Pointer down on a grip records the source Layer id, its index, the layout and the pointer origin. The first move beyond 6 px (36 px squared, as `library/drag.js`) begins the
 drag: `owner.dragging = true`, `ui.Bubble.closeActive()`, body class `is-dragging`, a ghost label
 appended to `document.body`, and the insertion line appended to the drawing. Every move re-reads
 `drawing.getBoundingClientRect()` and converts the pointer's y to millimetres through
@@ -30,10 +29,10 @@ released beyond the frame rect plus 40 px on any side is an outside drop (LR-D8)
 above or below clamps to 0 or `n`.
 
 Release: end the drag first (listeners off, ghost and line removed, flags cleared), then, if the
-drop was inside and changed and `owner.allowed()` holds and `JSON.stringify(owner.expected())`
-equals the pointer-down snapshot, send `owner.action("layers.reorder", { layer_id, index })` once.
-A changed snapshot ends with `owner.notice("Changed in the Model. Drag again.")` and sends nothing.
-Escape (capture phase), `window` blur, `Editor.dispose()`, a refresh while dragging and a Material
+drop was inside and changed and `owner.allowed()` holds, send
+`owner.action("layers.reorder", { layer_id, index })` once. `action` attaches `expected_values`;
+a Model that moved refuses `target.changed` on the host and the ordinary failure notice shows
+(LR-D4). Escape (capture phase), `window` blur, `Editor.dispose()`, a refresh while dragging and a Material
 drag starting (it cannot, see guards) all end the drag with nothing sent. The trailing click the
 browser emits after a drag is suppressed as `library/drag.js` does.
 
@@ -46,7 +45,8 @@ Guards at pointer down: `owner.busy()`, `owner.hasDimensionDraft()`, `owner.hasR
 
 1. **Glyph.** Add `grip_vertical` (Lucide `grip-vertical`, six dots) to `html/icons.js` under the
    existing ISC notice. Keep the four-dot `grip`.
-2. **Module.** `html/features/assemblies/layer_drag.js`, ES2020 like its neighbours, defining
+2. **Module.** `html/features/assemblies/layer_drag.js`, written in ES5 (`var`, `function`) so it
+   reads like `stage.js`, `layer_tools.js` and `library/drag.js`, defining
    `features/assemblies/layer_drag` with dependencies `features/assemblies/editor_shared` and
    `workspace`. It exports a constructor taking the owner (the Editor) and a `bind(grip, context)`
    that wires one grip: `context` carries the Layer id, its index, the layout, the drawing element
@@ -64,13 +64,14 @@ Guards at pointer down: `owner.busy()`, `owner.hasDimensionDraft()`, `owner.hasR
 4. **Editor.** `Editor` constructs the drag module, ends it in `dispose()` and at the top of
    `refresh()`, and extends `guard()` with the active-drag reason. The `dragging` flag is shared with
    the Material drag; both set and clear it, and neither can start while it is set.
-5. **Styles.** In `assembly.css`: the grip shares the gear's reveal rules (`.is-layer-hovered`,
+5. **Styles and gutter.** Widen the gutter per LR-D11 first, with the browser check's
+   centring assertion in mind, then in `assembly.css`: the grip shares the gear's reveal rules (`.is-layer-hovered`,
    `:focus-within`, `.has-open-tools`) and hides with it while `.phc-dimension-inline.is-editing`
    owns the gutter. Cursor `grab`, `grabbing` on the body while dragging. The insertion line is
    `.assembly-drop-line`: 3 px, `--drawing-highlight`, full drawing width, `pointer-events: none`,
    `.is-noop` muted. The ghost is `.assembly-drag-ghost`, fixed, above bubbles, `pointer-events:
-   none`. Widen the reserved gutter only if the two icons do not fit in it; the thickness value and
-   the drawing must not move when controls reveal (the browser check in LR-03 asserts it).
+   none`. The thickness value and the drawing must not move when controls reveal (the browser
+   check in LR-03 asserts it).
 6. **Manifests.** `make panel-manifest` (a panel module was added), then
    `uv run tools/runtime/vendor.py --refresh-manifest`, then `make ci`.
 
@@ -80,7 +81,8 @@ Guards at pointer down: `owner.busy()`, `owner.hasDimensionDraft()`, `owner.hasR
 | --- | --- |
 | `html/icons.js` | Add `grip_vertical` |
 | `html/features/assemblies/layer_drag.js` | New |
-| `html/features/assemblies/stage.js` | Grip per Layer; corridor box fix |
+| `html/features/assemblies/stage.js` | Grip per Layer; corridor box fix; gutter constants |
+| `html/features/assemblies/canvas.js` | `ASSEMBLY_CANVAS_ORIGIN_X_PX` |
 | `html/features/assemblies/editor.js` | Construct, dispose, refresh, guard |
 | `html/features/assemblies/assembly.css` | Grip, line, ghost, cursors |
 | `html/index.html`, `tools/ui-preview/index.html`, the runtime manifest | Regenerated |
@@ -107,8 +109,9 @@ In `tests/assembly_builder_test.js`, using `setup()`'s two-Layer fixture extende
 5. Pointer down is refused with a notice while a dimension draft, a record draft or a request is
    pending, and while `editor.dragging` is already set by the Material drag; a Material drag cannot
    start while a Layer drag is active.
-6. A snapshot `refresh()` during a drag ends it; a record whose `layers` changed between pointer
-   down and release produces the "Changed in the Model" notice and no request.
+6. A snapshot `refresh()` during a drag ends it, removes the ghost and the line, and sends nothing.
+   A `target.changed` outcome on the request shows the ordinary failure notice and leaves the
+   drawing truthful (the refreshed record).
 7. The grip has `aria-label` "Drag Layer N", `tabindex` `-1`, and is hidden (the same class state as
    the gear) while the thickness inline field is editing.
 8. In `tests/icons_test.js`: `grip_vertical` renders six circles.

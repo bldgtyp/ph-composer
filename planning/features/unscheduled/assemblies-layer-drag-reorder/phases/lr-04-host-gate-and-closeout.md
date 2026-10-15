@@ -22,33 +22,35 @@ capture the full screen.
 
 ## Steps
 
-1. **Build and fixture.** `make rbz`, `make install`, relaunch. Record the RBZ hash and source
+1. **Ledger case.** Add the case to `planning/native-acceptance/cases.json` first (next free id
+   in the Phase 2 series, authority this packet's `PRD.md`, `native_control_required: true`, paths
+   `src/ph_composer/html/features/assemblies/*`, `src/ph_composer/features/assemblies/*`,
+   `tests/assembly_builder*`, `tools/ui-preview/assembly_layer_drag*`) so the snapshot and the
+   result rows can cite it.
+2. **Build and fixture.** `make rbz`, `make install`, relaunch. Record the RBZ hash and source
    fingerprint. Through the bridge create a disposable synthetic Model (never Ed's working Model)
    with one Assembly of five Layers: board 12, studs 140 with two Layer-Segments and a steel stud
    spacing, a membrane, insulation 50, sheathing 15, an interior air barrier on the sheathing.
    Save it under `_private/host/`. Snapshot the record (`acceptance_ledger.py snapshot`).
-2. **Drag.** Open the Builder on it. With the controller: hover the sheathing row, press the grip,
+3. **Drag.** Open the Builder on it. With the controller: hover the sheathing row, press the grip,
    move to the top boundary in steps, capture mid-drag pixels showing the ghost and line, release.
    Read the record through the bridge: sheathing first, every id and value as snapshotted, revision
    advanced by exactly one.
-3. **Undo.** Edit > Undo once through the native menu: the record equals the snapshot exactly,
+4. **Undo.** Edit > Undo once through the native menu: the record equals the snapshot exactly,
    the revision advanced again, the drawing shows the original order, and the Builder is enabled.
    Edit > Undo once more must undo the step before the drag, not a second part of it.
-4. **Redo.** Edit > Redo: the moved order returns, ids intact. One drag, one Undo entry, one Redo.
-5. **Refusals.** With a thickness draft open, press the grip: the notice, no write, revision
+5. **Redo.** Edit > Redo: the moved order returns, ids intact. One drag, one Undo entry, one Redo.
+6. **Refusals.** With a thickness draft open, press the grip: the notice, no write, revision
    unchanged. Start a drag and press Escape: no write. Start a drag and switch to the Model window
    (blur): no write, the panel clean on return.
-6. **Reversed orientation.** Flip orientation, drag once, confirm the stored index equals the
+7. **Reversed orientation.** Flip orientation, drag once, confirm the stored index equals the
    visible drop.
-7. **Reopen.** Save, quit, relaunch, open the fixture, read the record: the moved order persists.
-8. **Restore.** Close the fixture. Confirm the normal installed build and no open modified Model
+8. **Reopen.** Save, quit, relaunch, open the fixture, read the record: the moved order persists.
+9. **Restore.** Close the fixture. Confirm the normal installed build and no open modified Model
    other than Ed's. Record the restoration as its own observation.
-9. **Ledger.** Add a case to `planning/native-acceptance/cases.json` (next free id in the Phase 2
-   series, authority this packet's `PRD.md`, `native_control_required: true`, paths
-   `src/ph_composer/html/features/assemblies/*`, `src/ph_composer/features/assemblies/*`,
-   `tests/assembly_builder*`, `tools/ui-preview/assembly_layer_drag*`). Write the summary to
-   `planning/native-acceptance/evidence/assembly-layer-drag-<date>.md`, append the result rows,
-   `acceptance_ledger.py validate`. Raw Models and pixels stay in `_private/`.
+10. **Evidence.** Write the summary to
+    `planning/native-acceptance/evidence/assembly-layer-drag-<date>.md`, append the result rows,
+    `acceptance_ledger.py validate`. Raw Models and pixels stay in `_private/`.
 10. **Patterns.** In `.agents/skills/ph-composer-ui-polish/references/patterns.md`, replace the
     sentence that forbids an inert grip with the implemented pattern: grip beside the gear, same
     reveal, ghost and red insertion line, one action per drop, Move outward/inward as the keyboard
@@ -62,7 +64,7 @@ capture the full screen.
 
 ## Gate
 
-Steps 2 to 8 observed on the installed build from a fresh process, with evidence; step 9 validates;
+Steps 3 to 9 observed on the installed build from a fresh process, with evidence; step 10 validates;
 `make ci` and `make ui-checks` pass on the closeout branch.
 
 ## Out of scope

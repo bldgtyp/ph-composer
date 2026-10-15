@@ -42,12 +42,13 @@ stops at its entry rather than guessing differently.
 | LR-D1 | code | One new action, `ph_composer.assemblies.assemblies.layers.reorder`, with `layer_id` and `index`: the Layer's position in the resulting stored order, 0 first. Same word and meaning as `layers.add`'s `index`. `layers.move` is unchanged |
 | LR-D2 | code | Undo name "Move Assembly Layer", shared with `layers.move`, so Edit > Undo reads the same whichever route moved the Layer. Side effects: "Changes only the Layer order." |
 | LR-D3 | code | No orientation translation in the command. The drawing draws the stored order top to bottom in both orientations, so the drop boundary the user sees is the stored index. The `last_layer_outside` test proves the index is unchanged by orientation, not flipped |
-| LR-D4 | code | The gesture snapshots `expected()` at pointer-down and compares it on release; a changed Model cancels the drop with a notice and sends nothing. The host's `target.changed` refusal is the backstop, not the first line |
+| LR-D4 | code | No local stale check in the gesture. The panel's record changes only through `refresh()`, and a refresh during a drag ends it, so a release can never see a different record. `Editor.action` attaches `expected_values` as every gesture does, and the host's `target.changed` refusal is the one guard against a Model that moved between the panel's read and the write |
 | LR-D5 | UI | A new feature-owned module `html/features/assemblies/layer_drag.js`. The drop boundary is computed from the drawing's rect and `layout.layers[].yMm * zoom`, never from `elementFromPoint`, so the stub DOM can test it and a thin Layer is as reachable as a thick one: every pointer height snaps to its nearest boundary |
 | LR-D6 | UI | Lightweight ghost (a small label "Layer N" following the pointer) plus an insertion line across the drawing in `--drawing-highlight`. The drawing itself does not move. The PRD's recommendation |
 | LR-D7 | UI | No auto-scroll while dragging. The wheel still scrolls the stage mid-drag and each move re-reads the rects. Revisit only if a host check shows a drawing taller than the panel is unreachable |
 | LR-D8 | UI | Outside drop: the pointer is released beyond the drawing frame plus a 40 px margin on any side. Above or below the drawing but within the margin clamps to the first or last position |
 | LR-D9 | UI | The grip is hidden with the gear while an inline thickness field owns the gutter; it has an accessible name ("Drag Layer N") but no keyboard route. Move outward and Move inward remain the keyboard route (owner, 2026-09-15: drawing affordances get no tab stops) |
+| LR-D11 | UI | The dimension gutter widens from 104 to about 128 px. Its content is 82 px after the 22 px right padding; the gear takes 1 to 25 px, a second 24 px icon would take 25 to 49 px, and a right-aligned "Membrane" label or an IP value such as "5 1/2 in" reaches back past 30 px. The widening ripples through `ASSEMBLY_CANVAS_ORIGIN_X_PX` in `canvas.js`, the `.assembly-canvas-frame` padding and `.assembly-stage` negative margin, `.assembly-dimensions`, the thickness rule's `width`, `at` and `extension` in `stage.js`, and the corridor's `cellBox.right - 22`; the browser check asserts the drawing is still centred and nothing moves on reveal |
 | LR-D10 | UI | Stage ids `LR-01` to `LR-04`. `PLANNING_IDS` in the Makefile is not extended: the refactoring program's two-letter ids (`EC-01`) were not added either, and code cites `context/`, never a stage |
 
 ## Stages
@@ -79,7 +80,7 @@ a glyph. `html/index.html` and the runtime manifest are regenerated, not edited.
   `make ci RUBY=$(rbenv prefix 2.7.2)/bin/ruby`), with `LANG=en_US.UTF-8` exported. LR-02 adds a
   shipped panel file, so `make panel-manifest` and `uv run tools/runtime/vendor.py
   --refresh-manifest` run before `make ci`. LR-01 regenerates `docs/API_REFERENCE.md` through
-  `make fixtures`.
+  `make fixtures`. `make runtime-manifest` is the same refresh as the `vendor.py` command.
 - `make coverage` before the LR-02 gate: Ruby stays at or above 93 percent, JavaScript at or above
   94 percent.
 - `make ui-checks` with `NODE_PATH` at a scratch Playwright for LR-03, and again at LR-04.

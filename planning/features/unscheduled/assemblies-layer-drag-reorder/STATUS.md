@@ -2,6 +2,7 @@
 
 DATE: 2026-10-15
 STATUS: Scoped. Stages LR-01 to LR-04 planned on 2026-10-15; none authorized.
+AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 The visual direction is approved; real drag behavior is not implemented. Packet created on
@@ -20,9 +21,9 @@ merged.
 
 ## Decisions
 
-LR-D1 to LR-D10 are proposed in [PLAN.md](PLAN.md), "Decisions proposed", and wait for Ed. The
+LR-D1 to LR-D11 are proposed in [PLAN.md](PLAN.md), "Decisions proposed", and wait for Ed. The
 PRD's open decisions map to them: action name and schema (LR-D1), auto-scroll and thin-Layer reach
-(LR-D5, LR-D7), ghost versus reserved space (LR-D6).
+(LR-D5, LR-D7), ghost versus reserved space (LR-D6). The gutter widening (LR-D11) is new.
 
 Next: Ed reads the plan and confirms or changes the decisions, then LR-01 runs through `pr-loop`.
 Offline and native acceptance: NOT RUN. No release or API claim.
