@@ -69,8 +69,8 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 11. **Colour by weighting factor.** Register `ph_composer.spaces.by_weighting_factor` over Floor
     Segment faces, one band per value in use, toggled from the Weighting factor column header.
     No derived geometry yet; P3a-09 adds each segment's prism.
-12. **Select by (D3a-18).** As Ed answers. If as recommended: no cell context menu; the column
-    menu's Show list and the header check-all box are Select by, and this stage adds nothing.
+12. **Select by (D3a-18).** No cell context menu: the column menu's Show list and the header
+    check-all box are Select by, and this stage adds nothing for it.
 13. **Column layout.** Use what the shared table persists (D3a-11); add no Spaces layout store.
 14. **Unit-switch cost (U1-F1).** With a 300-Space synthetic snapshot in the preview harness,
     measure a unit switch, record the median and decide in the units STATUS whether to optimize.

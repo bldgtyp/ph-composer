@@ -1,7 +1,7 @@
 # Spaces: behavior contract
 
 DATE: 2026-10-15
-STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 18 decisions recorded below. Architecture review folded in 2026-09-18 (Q19 to Q24). D3a-13 qualifies Q20 on 2026-10-12. The UI and UX discussion of 2026-10-15 amends Q4, Q9, Q16, Q19 and Q20 (D3a-6 to D3a-8, D3a-14, D3a-16, D3a-17). Code decisions and implementation gates remain open.
+STATUS: Scoped. Interviewed 2026-09-18 in two rounds, 18 decisions recorded below. Architecture review folded in 2026-09-18 (Q19 to Q24). D3a-13 qualifies Q20 on 2026-10-12. The 2026-10-15 decisions amend Q4, Q9, Q12, Q16, Q19 and Q20. Ed confirmed this record, as amended, on 2026-10-15. Implementation gates remain open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -9,10 +9,9 @@ ISSUE: none (local planning draft)
 and 2. [DECISIONS](DECISIONS.md), Part 1b, re-reads it against `main` at `87bdc62`. The UI and UX
 discussion of 2026-10-15 amended it: Spaces is a view of the Zones tab (D3a-16), the factor is a
 numeric weighting factor (D3a-17), Mark floor and Create Space start as D3a-7 says, there is no
-separate balance view (D3a-8), and a copied Space is made independent automatically (D3a-14).
-Still known to differ from what exists, and amended only when Ed answers the decision named: the
-port disposition's reconciler row (D3a-4), Records identity (D3a-2), `user_data` export
-(D3a-15), Select by (D3a-18), and the PHX steps in "Acceptance shape" (F19).
+separate balance view (D3a-8), and a copied Space is made independent automatically (D3a-14). The
+code decisions answered the same day are applied too: foundation ids (D3a-2), the reconciler split
+(D3a-4), `user_data` exported (D3a-15), Select by (D3a-18) and the PHX steps (F19).
 
 ## Problem
 
@@ -37,14 +36,15 @@ fix enters only as an explicit change to it.
 
 | Part | Lines | Disposition |
 | --- | --- | --- |
-| `attrs`, `identifiers`, `index`, `names`, `entries`, `entry_transforms`, `transforms` | 457 | Port. Add the Zone stamp, the airflow fields and `user_data`; drop the colour field |
+| `attrs`, `index`, `names`, `entries`, `entry_transforms`, `transforms` | 439 | Port onto the foundation's record store. Add the Zone stamp, the airflow fields and `user_data`; drop the colour field |
+| `identifiers` | 18 | Drop: foundation ids replace the UUIDs (D3a-2) |
 | `operations/` (context, creation, editing, recovery), `actions`, `active_path` | 887 | Adapt. Creation and recovery stop reading designPH TFA faces; the explicit mark replaces that trigger. Create Space takes a Zone reference |
 | `scan`, `metrics`, `preview`, `baseline`, `contract`, `snapshot`, `panel_view`, `findings_index` | 582 | Adapt. The scan reads Floor Segment records, not TFA faces. Metrics gain projected area and the any-set airflow rule |
 | `validation` | 179 | Adapt. Keeps `duplicate_identity`; loses every designPH finding |
-| `reconciler`, `undo_ledger`, `pending_work`, `session_state` | 429 | Split. The generic deferred-reconciliation and Undo-ledger primitives land with the foundation transplant; what remains here is the Spaces-specific reconciliation |
+| `reconciler`, `undo_ledger`, `pending_work`, `session_state` | 429 | Split. The edit-context writer and the deferred-work pieces `main` lacks land in `session/` in P3a-03, reusing `HostFollowUp` (D3a-4); what remains here is the Spaces-specific reconciliation |
 | `spaces` (the feature's `install`) | 97 | Adapt |
 | `designph` | 47 | Drop |
-| Python `spaces/`: `authored.py`, `geometry.py` | not counted | Adapt. Adds the m3/h to m3/s conversion, the any-set rule, the floor projection and the prism geometry |
+| Python `spaces/`: `authored.py`, `geometry.py` | not counted | Adapt. Adds the m3/h to m3/s conversion, the any-set rule and the prism geometry; the floor projection replaces the flatten rule, whose omit branch goes (F17) |
 | Python `spaces/legacy_tfa.py` | not counted | Drop |
 | Panel: the Spaces table, tree, inspector and preview dialog | not counted | Replace with the Spaces view of the Zones tab (D3a-16): the table-first pattern, airflow columns, sums on Zone rows. The inspector and the preview dialog's layout do not carry over |
 
@@ -138,8 +138,9 @@ Floor Segment   identifier, display_name, weighting_factor (default 1.0),
                 net_area_factor (default 1.0), user_data
 ```
 
-- **Identity.** Each `identifier` is a UUID in PH-Composer's own dictionary on the entity, as
-  the predecessor's `identifiers.rb` issues it. It is the durable identity that
+- **Identity (D3a-2).** Each `identifier` is a foundation id stored through the record engine:
+  `spc_` for a Space, `vol_` for a Volume, `fsg_` for a Floor Segment and `flr_` for the Space
+  Floor, a prefix and twelve characters, as Zones and Faces carry. It is the durable identity that
   [TECH_STACK.md](../../../context/TECH_STACK.md) requires, because cut and paste can replace a
   `persistent_id`. References to a Space from the table, the overlay, the report and the export
   use the identifier plus the occurrence path. The honeybee-ph identifiers derive from it.
@@ -167,8 +168,9 @@ Floor Segment   identifier, display_name, weighting_factor (default 1.0),
 - **`user_data`.** All three records carry the `user_data` mapping and structured extension
   payloads that [EXTENSIBILITY.md](../../../context/EXTENSIBILITY.md) requires, under the
   foundation's storage contract. Move Space to Zone keeps it. Make independent keeps it, since a
-  copy is the user's own. Whether it reaches the HBJSON is D3a-15: when this was written nothing
-  did, and since 2026-10-13 Zones, Faces, Window Units and Assemblies opt in (PR #125).
+  copy is the user's own. It reaches the HBJSON on `Space`, `SpaceVolume` and
+  `SpaceFloorSegment` beside the reserved `ph_composer` key, as Zones, Faces, Window Units and
+  Assemblies do (D3a-15).
 
 Not stored: the predecessor's per-Space colour is dropped in favour of a categorical ramp keyed
 by Space id (Q13). `quantity` is always 1, because every Space is drawn (zones packet Q4), and
@@ -282,8 +284,9 @@ by Space id (Q13). `quantity` is always 1, because every Space is drawn (zones p
   default. Zone rows carry the sums; there is no Level rail (D3a-11).
 - Editing follows the table-first pattern: cells edit in place, a range edit or paste is one
   step, and checked rows are edited together in the floating selection bar.
-- **Select by** (Q12): whether a column's value filter and the check-all box replace a
-  right-click on a cell is D3a-18.
+- **Select by** (Q12, amended by D3a-18): a column's value filter narrows the table and the
+  header check-all box checks every row it shows, so every column is a Select by. There is no
+  cell context menu.
 
 ### Seeing the data in the model
 
@@ -389,7 +392,7 @@ Interviewed 2026-09-18, two rounds, Ed's answers. Each is cited where it applies
 | Q9 | Imbalance finding | Per Zone now and per ventilator later, 10 percent, shown in a dedicated view listing Zones by ventilator with click-in and clear totals. Amended 2026-10-15 by D3a-8: on the Spaces view's Zone rows; by ventilator with the equipment packet |
 | Q10 | `SpaceVolume.geometry` on export | Write the preview prism's faces |
 | Q11 | Space labels | In this packet; number and name by default, the rest toggled |
-| Q12 | Select by | A right-click on any cell value |
+| Q12 | Select by | A right-click on any cell value. Amended 2026-10-15 by D3a-18: a column's value filter plus check-all |
 | Q13 | Space colour | Field dropped; categorical ramp keyed by Space id |
 | Q14 | Non-horizontal floors | Allowed, projected area, info finding |
 | Q15 | 7 ft height finding | Dropped for the MVP; maybe a model-validate pass someday |
@@ -418,7 +421,8 @@ imbalance in one, Move Space to Zone under a rotated wrapper, a sloped floor fac
 solid on a wedge. Each proves records, metrics, findings and the export mapping. For the sloped
 face, Ruby's floor area equals the loaded `SpaceFloorSegment.floor_area` and Ruby's net volume equals
 `SpaceVolume.net_volume`. Airflow fixtures for supply only, all unset and all zero, read back
-through PHX as m3/h, with the Zone row sums for each. A native Space copy is made independent in
+from the reloaded HBJSON as stored m3/s values, with the Zone row sums for each; the same read
+through PHX as m3/h waits with [metr-export](../unscheduled/metr-export/README.md) (F19). A native Space copy is made independent in
 its own Undo step; a copied Volume and Floor Segment raise `duplicate_identity`, and Make
 independent clears it in one Undo step. `user_data`
 survives edit, Move Space to Zone, Make independent, Undo/Redo and save and reopen. A synthetic
@@ -433,8 +437,9 @@ solid on a sloped room, enter airflows by range paste, read the Zone rows' sums 
 imbalance marker, move one Space to a second Zone, copy a Space and see it made
 independent, switch between the Faces and Spaces views and between Classify and Mark floor, switch
 through the four modes and read the HUD, select two Spaces and read the totals, Undo each step, save, reopen inside an open
-Volume, export, and confirm the honeybee-ph Spaces, volumes, factors and airflow overrides arrive
-and PHX writes the METr rooms.
+Volume, export, and confirm the honeybee-ph Spaces, volumes, factors and airflow overrides arrive.
+That PHX writes the METr rooms is checked when [metr-export](../unscheduled/metr-export/README.md)
+resumes (F19).
 
 ## Prior art and evidence
 

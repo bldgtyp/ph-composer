@@ -14,7 +14,7 @@ branch beside P3a-02 to P3a-04.
 
 Designed once against both users, as the [README](../README.md), "Carried in", requires: the
 Spaces volume preview, labels and selection totals (spaces Q22), and the Window Type mode's
-operation marks (window-types, deferred by D2-6). If D3a-5 is answered as recommended, the marks
+operation marks (window-types, deferred by D2-6). Ed confirmed D3a-5 on 2026-10-15: the marks
 are built here as slice B. Phase 3b's
 [P3b-06](../../phase-03b-thermal-bridges/phases/p3b-06-thermal-bridge-colour-by.md) is a third
 user: it draws assigned Edges as `derived` segments with the Edge as `entity`, and adds a per-mode
@@ -71,7 +71,7 @@ Paths are relative to `src/ph_composer/`.
    `tools/examples/`, registered from outside `colour_by/`, as the example a contributor copies.
 8. **Context.** Replace the proposed text of step 1 with what was built.
 
-### Slice B: operation marks (only if D3a-5 includes them)
+### Slice B: operation marks (D3a-5: built here)
 
 9. In `features/windows/colour_modes.rb`, `by_type` entries gain derived segments for each
    element's operation, from the pure unit plan P2-12 already computes. No change under

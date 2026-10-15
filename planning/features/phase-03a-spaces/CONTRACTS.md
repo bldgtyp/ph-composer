@@ -158,7 +158,7 @@ Each is shared, names no feature, and lands in the stage listed with its own tes
 | H6 | The deferred-work primitive: a keyed coalescing queue over `CoalescedTimer`, and the Undo ledger for the automatic entry and its suppressions. Reuses `HostFollowUp` for restorable record writes; adds only what lock-state writes need (D3a-4) | `session/` | P3a-03 |
 | H7 | `ColourBy::Entry#derived`: world-space polygons and segments drawn in the entry's colour | `colour_by/service.rb`, `overlay.rb`, `tessellation.rb` | P3a-05 |
 | H8 | `FeatureScope#colour_readout`, with registration diagnostics | `shell/registry.rb`, `declarations.rb`, `registry_validation.rb`, `colour_by/` | P3a-05 |
-| H9 | A cell context menu in the shared table. Not needed if D3a-18 is answered as recommended | `html/table.js` or `html/inventory_grid.js` | P3a-07, only if D3a-18 keeps it |
+| H9 | Dropped (D3a-18): no cell context menu; a column's value filter and check-all are Select by | | |
 | H10 | Superseded by H18: there is no Spaces pane. `html/index.html` loses the reserved Spaces tab and renames Zones / Faces to Zones | `html/index.html` | P3a-06 |
 | H18 | The Zone view contribution: a view row (the shared subtabs nav) over the Zones table; views registered by features, each with its rows, columns, header actions and selection-bar controls; Zone rows, Name, filter, expansion, checked rows and Locate shared across views; a view may have no child rows. Faces moves onto it. Names no feature (D3a-16) | `html/` kit and `html/features/zones/` | P3a-06 |
 | H19 | A fourth tree tier in the shared table | `html/table.css`, `html/table.js` | P3a-07 |
@@ -190,7 +190,7 @@ a new `space.` code, or to "cannot occur without designPH" and records the mappi
 
 | Section id | Object | Requires | Notes |
 | --- | --- | --- | --- |
-| `ph_composer.spaces.export.spaces` (new) | One honeybee-ph `Space` per Space, with its `SpaceVolume`s, `SpaceFloor` and `SpaceFloorSegment`s | `ph_composer.zones.export.zones` | Attaches to `ROOM`, the first section to do so (F18). `required_for_export` is true (D3a-9). Declares `user_data_keys` for any `ph_composer.*` leaf it writes; passes record `user_data` through if D3a-15 says so |
+| `ph_composer.spaces.export.spaces` (new) | One honeybee-ph `Space` per Space, with its `SpaceVolume`s, `SpaceFloor` and `SpaceFloorSegment`s | `ph_composer.zones.export.zones` | Attaches to `ROOM`, the first section to do so (F18). `required_for_export` is true (D3a-9). Declares `user_data_keys` for any `ph_composer.*` leaf it writes; passes record `user_data` through on `Space`, `SpaceVolume` and `SpaceFloorSegment` (D3a-15) |
 
 ## 7. Questions P3a-01 answers from code
 
@@ -211,6 +211,7 @@ a new `space.` code, or to "cannot occur without designPH" and records the mappi
    an explicit 0 included, through `to_dict` and back?
 7. Does anything in `colour_by/` cache by entity in a way that a derived-only entry breaks?
 8. Do honeybee-ph 1.33.65's `Space`, `SpaceVolume` and `SpaceFloorSegment` carry `user_data`
-   through `to_dict` and back (D3a-15)?
+   through `to_dict` and back (D3a-15)? Read from source on 2026-10-15: all four Space classes
+   write and read it and the pinned wheel's base class has the field. P3a-01 confirms by running.
 9. Can a lock-state or `home_transform` write run as a restorable step under `HostFollowUp`, or
    does protection need its own transparent path (D3a-4)?

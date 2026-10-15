@@ -56,8 +56,9 @@ Spaces section required for export, so it is not the first optional attaching se
    `check_section_cycles`), merged through PR #122 with EC-03. Confirmed against `main` at
    `87bdc62` during the Spaces re-baseline on 2026-10-15.
 3. **Results from runs that cannot publish.** `construction_usage` and `window_face_areas` are
-   reported from runs that write no canonical pair. Decide whether a blocked run reports them and
-   say so in the report.
+   reported from runs that write no canonical pair. Decided 2026-10-15 (spaces D3a-10): a blocked
+   run shows them, and the Spaces schedule, under one line saying the run wrote no model; one
+   general rule in `export/report.rb`, delivered by P3a-10.
 4. **An optional attaching section withholds the model.** An attaching section that is not required
    for export still withholds the canonical model when it refuses. No such section exists yet; settle
    the rule before the first one does. Allocated 2026-10-03 to Phase 3

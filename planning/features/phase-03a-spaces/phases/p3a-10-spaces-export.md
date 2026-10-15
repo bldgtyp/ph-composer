@@ -46,8 +46,8 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    `translate` builds one honeybee-ph `Space` with `name`, `number`, `quantity` 1, and per Volume
    a `SpaceVolume` with `avg_ceiling_height`, a `SpaceFloor` of `SpaceFloorSegment`s whose
    geometry is the projected face, `weighting_factor` and `net_area_factor`
-   as stored, and `geometry` from the prism. Identifiers derive from the record ids. If D3a-15
-   says yes, each object carries its record's `user_data` beside the reserved `ph_composer` key,
+   as stored, and `geometry` from the prism. Identifiers derive from the record ids. Each object
+   carries its record's `user_data` beside the reserved `ph_composer` key (D3a-15),
    as `model_sections.py` does for Rooms and Faces. `attach` adds the Spaces to the Room's PH
    properties. Adapt `spaces/authored.py`; replace the flatten
    rule of `spaces/geometry.py` with the projection (F17); do not port `legacy_tfa.py`. List the

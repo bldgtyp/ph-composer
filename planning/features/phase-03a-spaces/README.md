@@ -1,7 +1,7 @@
 # Phase 3a: Spaces
 
 DATE: 2026-10-15
-STATUS: Scoped. Interviewed 2026-09-18; P3a-01 to P3a-12 planned; re-baselined on `main` at `87bdc62` and UI and UX discussion held on 2026-10-15; D3a-6, D3a-7, D3a-11, D3a-13, D3a-14, D3a-16 and D3a-17 answered, ten decisions open; no stage authorized.
+STATUS: Scoped. Interviewed 2026-09-18 and confirmed 2026-10-15; P3a-01 to P3a-12 planned; re-baselined on `main` at `87bdc62`; every decision answered 2026-10-15; no stage authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -33,8 +33,8 @@ stages were restructured around it ([DECISIONS](DECISIONS.md), "UI and UX discus
 2. [STATUS.md](STATUS.md): the tracking ledger. One row per stage, the entry gates, the open
    decisions and what each stage still owes.
 3. [DECISIONS.md](DECISIONS.md): what the merged foundation changed in the PRD (F1 to F22, re-read
-   on `87bdc62` with F23 to F27 added in Part 1b), the choices D3a-1 to D3a-18, and the record of
-   the UI and UX discussion.
+   on `87bdc62` with F23 to F27 added in Part 1b), Ed's answers to D3a-1 to D3a-18, and the record
+   of the UI and UX discussion.
 4. [PLAN.md](PLAN.md): the stages, their order, owners and gates.
 5. [CONTRACTS.md](CONTRACTS.md): feature id, records, operation names, cross-feature seams and
    foundation additions H1 to H10, H18 and H19. Proposed until P3a-01 confirms them against code.
