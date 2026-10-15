@@ -46,3 +46,8 @@ test("an unknown icon name throws instead of painting an empty control", functio
   assert.throws(function () { icons.svgIcon("not_an_icon", 16); }, /Unknown icon "not_an_icon"/);
   assert.match(icons.svgIcon("stop", 14), /^<svg width="14" height="14"/);
 });
+
+test("the drag grip has six dots, the reorder grip four", function () {
+  assert.strictEqual(icons.svgIcon("grip_vertical", 18).match(/<circle/g).length, 6);
+  assert.strictEqual(icons.svgIcon("grip", 18).match(/<circle/g).length, 4);
+});

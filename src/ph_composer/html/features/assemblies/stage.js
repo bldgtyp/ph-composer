@@ -7,6 +7,8 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
     var el = ui.element;
     // How near an edge, in screen pixels, the pointer must be before its insert control shows.
     var EDGE_PX = { layer: 14, segment: 18 };
+    // The thickness gutter left of the drawing: the Layer's gear and grip, then its value, then the rule.
+    var GUTTER_PX = 128;
     // A width dimension narrower than this puts its label beside the line rather than over it.
     var NARROW_PX = 90;
     function boundary(thermal, exterior, values) {
@@ -143,10 +145,10 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
       frame.appendChild(boundary(thermal, values.orientation !== "last_layer_outside", values));
       var dimensions = el("div", "assembly-dimensions"), drawing = el("div", "assembly-drawing"), menus = [];
       var layerCells = {};
-      var thicknessRules = ui.svg("svg", { width: 104, height: layout.heightMm * this.zoom,
+      var thicknessRules = ui.svg("svg", { width: GUTTER_PX, height: layout.heightMm * this.zoom,
         "class": "assembly-dimension-graphic", "aria-hidden": "true" });
       thicknessRules.appendChild(ui.dimensionRule({ axis: "vertical", from: 0,
-        to: layout.heightMm * this.zoom, at: 90, extension: 101,
+        to: layout.heightMm * this.zoom, at: GUTTER_PX - 14, extension: GUTTER_PX - 3,
         points: layout.layers.map(function (entry) { return entry.yMm * self.zoom; })
           .concat([layout.heightMm * this.zoom]) }));
       dimensions.appendChild(thicknessRules);
@@ -184,7 +186,16 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         } else {
           cell.appendChild(dimensionInline(self, button, dimension, true));
         }
+        // The grip has no tab stop: Move outward and Move inward in the gear's menu are the keyboard route.
+        var grip = ui.iconButton("Drag Layer " + (index + 1), "grip_vertical");
+        grip.classList.add("assembly-layer-grip");
+        grip.setAttribute("data-layer-drag-trigger", entry.layer.id);
+        grip.setAttribute("data-editor-local", "");
+        grip.setAttribute("tabindex", "-1");
+        self.layerDrag.bind(grip, { layerId: entry.layer.id, index: index, layout: layout, drawing: drawing,
+          frame: frame });
         cell.appendChild(gear);
+        cell.appendChild(grip);
         dimensions.appendChild(cell);
       });
       canvas.render(this.svg, layout, materials, { zoom: this.zoom,
@@ -217,7 +228,7 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         drawing.appendChild(hit);
       });
       drawing.appendChild(insertControl(this, drawing, layout, values));
-      // One hover row spans the Layer and its dimension gutter. Keep its gear reachable while
+      // One hover row spans the Layer and its dimension gutter. Keep its gear and grip reachable while
       // crossing whitespace, segment seams or the icon's SVG descendants. Focus/menu state stays in CSS.
       var activeLayer = null;
       function showLayer(id) {
@@ -231,10 +242,11 @@ PhComposerUI.define("features/assemblies/stage", ["features/assemblies/canvas", 
         var row = event.target && event.target.closest ? event.target.closest("[data-layer-row]") : null;
         var direct = event.target && event.target.closest ? event.target.closest("button, input") : null;
         if (row && direct && drawingStage.contains(row)) { showLayer(row.getAttribute("data-layer-row")); return; }
-        // Thin Layers have a taller icon than their rendered band. Retain the revealed row while
-        // crossing the corridor from its label to that icon, including its protruding top/bottom.
+        // Thin Layers have taller icons than their rendered band. Retain the revealed row while
+        // crossing the corridor from its label to those icons, including their protruding top/bottom.
         if (activeLayer) {
-          var activeCell = layerCells[activeLayer], gearBox = activeCell.lastChild.getBoundingClientRect();
+          var activeCell = layerCells[activeLayer];
+          var gearBox = activeCell.querySelector(".assembly-layer-gear").getBoundingClientRect();
           var cellBox = activeCell.getBoundingClientRect();
           if (event.clientX >= gearBox.left && event.clientX <= cellBox.right - 22 &&
               event.clientY >= gearBox.top && event.clientY <= gearBox.bottom) return;

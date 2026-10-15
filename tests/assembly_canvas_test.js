@@ -71,7 +71,8 @@ test("the air barrier sits on the face it names, and a membrane layer is the bar
 
 test("zoom fits the drawing to the pane and steps between fixed stops", function () {
   assert.strictEqual(canvas.fitZoom(1000, 1600), 1);
-  assert.strictEqual(canvas.fitZoom(1000, 970), 0.75);
+  assert.strictEqual(canvas.fitZoom(1000, 1020), 0.75);
+  assert.strictEqual(canvas.fitZoom(1000, 1000), 0.5, "each gutter is 128 px");
   assert.strictEqual(canvas.fitZoom(1000, 870), 0.5, "fit leaves room for balanced dimension gutters");
   assert.strictEqual(canvas.fitZoom(1000, 800), 0.5);
   assert.strictEqual(canvas.fitZoom(1000, 100), 0.5);

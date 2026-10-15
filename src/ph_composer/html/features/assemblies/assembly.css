@@ -52,11 +52,11 @@
 .assembly-stage-scroll { overflow: auto; max-height: 55vh; padding: 5px 4px; }
 /* Equal gutters center the geometry, rather than the geometry plus its left-hand dimensions. Auto margins
    become zero when the frame outgrows the viewport, leaving both ends reachable by the scroll bar. */
-.assembly-canvas-frame { margin: 0 auto; padding: 0 104px; box-sizing: content-box; }
-.assembly-stage { display: flex; align-items: flex-start; width: max-content; margin-left: -104px; }
+.assembly-canvas-frame { margin: 0 auto; padding: 0 128px; box-sizing: content-box; }
+.assembly-stage { display: flex; align-items: flex-start; width: max-content; margin-left: -128px; }
 /* Dimension lines: a light rule beside each axis with a dot and a short extension at every boundary, purely
    graphic; the value beside it is the button that opens its editor. */
-.assembly-dimensions { position: relative; width: 104px; min-width: 104px; }
+.assembly-dimensions { position: relative; width: 128px; min-width: 128px; }
 .assembly-dimension { position: relative; display: flex; align-items: center; justify-content: flex-end;
   padding-right: 22px; box-sizing: border-box; }
 .assembly-dimension-graphic { position: absolute; top: 0; left: 0; overflow: visible; pointer-events: none; }
@@ -122,14 +122,29 @@
 .assembly-material-facts { display: grid; gap: 4px; margin: 10px 0; }
 .assembly-information { align-self: center; }
 .assembly-information-notes { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
-/* Keep contextual Layer access in its reserved gutter; revealing it never moves a dimension. */
-.phc-workspace .assembly-layer-gear { position: absolute; left: 1px; top: calc(50% - 12px);
-  width: 24px; height: 24px; min-height: 24px; padding: 3px; border: 0; background: transparent;
-  opacity: 0; pointer-events: none; z-index: 2; }
+/* Keep contextual Layer access, the gear and the drag grip, in its reserved gutter; revealing it never moves a
+   dimension. */
+.phc-workspace .assembly-layer-gear, .phc-workspace .assembly-layer-grip { position: absolute; left: 1px;
+  top: calc(50% - 12px); width: 24px; height: 24px; min-height: 24px; padding: 3px; border: 0;
+  background: transparent; opacity: 0; pointer-events: none; z-index: 2; }
+.phc-workspace .assembly-layer-grip { left: 25px; cursor: grab; }
 .assembly-dimension.is-layer-hovered .assembly-layer-gear,
 .assembly-dimension:focus-within .assembly-layer-gear,
-.assembly-dimension.has-open-tools .assembly-layer-gear { opacity: 1; pointer-events: auto; }
+.assembly-dimension.has-open-tools .assembly-layer-gear,
+.assembly-dimension.is-layer-hovered .assembly-layer-grip,
+.assembly-dimension:focus-within .assembly-layer-grip,
+.assembly-dimension.has-open-tools .assembly-layer-grip { opacity: 1; pointer-events: auto; }
 .phc-workspace .assembly-layer-gear[aria-expanded="true"] { background: var(--interaction-highlight-halo);
   color: var(--interaction-highlight); }
 /* The compact inline input uses this gutter while editing; keep its text and pointer access clear. */
-.assembly-dimension .phc-dimension-inline.is-editing ~ .assembly-layer-gear { opacity: 0; pointer-events: none; }
+.assembly-dimension .phc-dimension-inline.is-editing ~ .assembly-layer-gear,
+.assembly-dimension .phc-dimension-inline.is-editing ~ .assembly-layer-grip { opacity: 0; pointer-events: none; }
+/* A held Layer: the drawing stays still, a red line marks the boundary it would land on (muted on its own
+   place) and a small ghost follows the pointer. */
+body.assembly-layer-dragging, body.assembly-layer-dragging * { cursor: grabbing !important; }
+.assembly-drop-line { position: absolute; left: 0; right: 0; height: 3px; margin-top: -1.5px; z-index: 5;
+  background: var(--drawing-highlight); pointer-events: none; }
+.assembly-drop-line.is-noop { background: #8a979c; }
+.assembly-drag-ghost { position: fixed; z-index: 100; pointer-events: none; padding: 5px 9px; font-size: 12px;
+  white-space: nowrap; background: #fff; border: 1px solid var(--drawing-highlight); border-radius: 4px;
+  box-shadow: 0 3px 14px #0003; }
