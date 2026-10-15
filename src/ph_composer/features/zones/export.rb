@@ -74,14 +74,47 @@ module PhComposer
       end
 
       # The one Zone occurrence containing a snapshot entry, as [entry, record], or nil. Two means a
-      # Zone nested in a Zone, which export refuses.
+      # Zone nested in a Zone, which export refuses. An entry inside a nested container has no owner.
       def zone_owner(snapshot, entry)
+        owner = enclosing_zone(snapshot, entry)
+        owner unless owner && in_container?(snapshot, owner.first, entry)
+      end
+
+      # Whether a snapshot entry lies in a nested container of the Zone holding it: not a Zone Face,
+      # so no Zones section exports it.
+      def contained?(snapshot, entry)
+        owner = enclosing_zone(snapshot, entry)
+        !owner.nil? && in_container?(snapshot, owner.first, entry)
+      end
+
+      def enclosing_zone(snapshot, entry)
         matches = snapshot.records(ZONE_DICTIONARY, :kind => "group").select do |zone_entry, _record|
           snapshot.contains?(zone_entry, entry)
         end
         raise Export::Blocked.new("face.wrong_zone", "A Face is contained by more than one Zone.") if matches.length > 1
 
         matches.first
+      end
+
+      def in_container?(snapshot, zone_entry, entry)
+        containers(snapshot, zone_entry).any? { |group| snapshot.contains?(group, entry) }
+      end
+
+      # The snapshot Faces a Zone occurrence owns: every Face inside it except those in a nested
+      # container, the rule `Occurrences` applies to the live Model. The snapshot keeps those Faces
+      # for the feature that stamped the container.
+      def zone_faces(snapshot, zone_entry)
+        nested = containers(snapshot, zone_entry)
+        snapshot.descendants(zone_entry, :kind => "face").reject do |face|
+          nested.any? { |group| snapshot.contains?(group, face) }
+        end
+      end
+
+      # The Groups inside a Zone occurrence that carry a Zone stamp (context/CONTRACTS.md, "Zones geometry rules").
+      def containers(snapshot, zone_entry)
+        snapshot.descendants(zone_entry, :kind => "group").select do |group|
+          !group.dictionaries.fetch(STAMP_DICTIONARY, {})[STAMP_STORE.key].nil?
+        end
       end
 
       def export_choice(reader, choices, kind, id)
@@ -98,7 +131,7 @@ module PhComposer
         zones.map do |entry, record|
           record = Names.project(record, entry.native_name)
           Schema.validate!(record)
-          owned = reader.snapshot.descendants(entry, :kind => "face")
+          owned = zone_faces(reader.snapshot, entry)
           assigned = owned.map { |face| [face, face.record(Faces::FACE_DICTIONARY)] }
           missing = assigned.select { |_face, assignment| assignment.nil? }
           unless missing.empty?

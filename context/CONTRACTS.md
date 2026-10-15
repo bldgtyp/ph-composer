@@ -476,6 +476,19 @@ Window export to account for Units inside foreign cutting components and refuse 
 instead of silently omitting them. Definition facts are detached once per definition and captured
 in resumable work units; a contributor never walks the live Model again.
 
+**Nested containers.** A Group inside a Zone that carries a Zone stamp (`ph_composer.zone_stamp`)
+is a nested authoring container: whatever stamped it owns its contents, and none of its Faces is a
+Zone Face. Zone discovery, Face inventories, Suggest, the Shift-click flood, Solve, viewport picks
+and explicit Face resolution skip it, and a Face path through one refuses as
+`target.wrong_hierarchy`. Presence of the stamp decides, whichever Zone it names and whether or not
+it reads, so a mismatched stamp is the stamping feature's finding and not Zones'. Only Groups
+qualify: a stamped Face is a classified Zone Face, a Zone nested in a Zone keeps its own refusal and
+cutting components keep theirs. The shared export snapshot still captures the container's Faces,
+for the feature that stamped it; the Zones export leaves them out of the Zone's Faces, gives them no
+owning Zone, reads nothing stored on them and does not export a Face record left on one; a Surface
+pair whose counterpart sits in a container exports as unresolved. Zones reads only the stamp it owns and never learns what the container is.
+Spaces is the first feature to stamp one.
+
 Solve reports `adjacency.glued_instances` when a proposed partial match would cut a Face with
 glued instances. A full match still pairs. A wholly covered glued side may pair while its larger
 counterpart is split, because that glued side is not cut. Detached cut permissions enter the

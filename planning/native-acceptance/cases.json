@@ -1248,6 +1248,20 @@
         "tools/ui-preview/assembly_layer_drag*"
       ],
       "native_control_required": true
+    },
+    {
+      "id": "S01",
+      "label": "Spaces groundwork: a Zone-stamped Group inside a Zone is a nested container ignored by the Face table, Suggest, Classify picks, Solve and export; removing the stamp restores the Face",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/zones/zone/occurrences.rb",
+        "src/ph_composer/features/zones/export.rb",
+        "src/ph_composer/features/zones/faces/classify_tool.rb",
+        "src/ph_composer/python/ph_composer_translation/model_sections.py",
+        "tests/zone_nested_container*"
+      ],
+      "native_control_required": true
     }
   ]
 }

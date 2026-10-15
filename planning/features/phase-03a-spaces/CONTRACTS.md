@@ -1,7 +1,7 @@
 # Phase 3a contract bindings: Spaces
 
 DATE: 2026-10-15
-STATUS: Scoped. Proposed bindings, drafted from source at `70c340f` and re-read against `main` at `87bdc62` on 2026-10-15. P3a-01 confirms or corrects every table against the code with the architecture review before any feature stage starts. Rows that depend on an open decision say so.
+STATUS: Confirmed against code by P3a-01 on 2026-10-15 (section 8). Drafted from source at `70c340f`, re-read against `main` at `87bdc62`, corrected on `1d9f593`. Rows marked **new** stay proposals until the stage that builds them; a stage may rename one only by editing this file in the same change.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -110,7 +110,7 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 | `update_metadata` | action | P3a-02 | `user_data` and extension payloads on explicit Spaces, Volumes and Floor Segments, with `expected_metadata`, one step, as the Zones, Faces and Window Units actions do (F23). `list` reports `extension_status` beside `extension_data` |
 | `follow_zone_copy` | transition contributor | P3a-04 | Joins `ph_composer.zones.occurrence_independent`: new ids for every Space, Volume, Floor Segment and Space Floor in the copied occurrence whose id another occurrence holds, stamps naming the new Zone, internal references remapped (D3a-13) |
 | Space copy watcher | internal, through `HostFollowUp` | P3a-04 (D3a-14) | A native copy of a Space Group made independent in the gesture's Undo step; no public name |
-| `context.open`, `context.enter_volume`, `context.close` | see section 7, question 3 | P3a-03 | Enter and leave a Space or Volume edit context through the edit-context writer |
+| `context.open`, `context.enter_volume`, `context.close` | view command; protection writes in a host follow-up (section 8, answer 3) | P3a-03 | Enter and leave a Space or Volume edit context through the edit-context writer |
 | `locate` | view command | P3a-03 | Select and reveal explicit Spaces, Volumes or Floor Segments, closing and protecting the open Volume first |
 | `volumes.restore_position` | action | P3a-03 | Puts a moved Volume back at `home_transform` |
 | `make_independent` | action | P3a-04 | New ids for an explicit copied Space, Volume or Floor Segment and everything inside it; the next free number for a Space |
@@ -132,7 +132,7 @@ prefix. The finding codes are in section 6.
 
 | From | To | Mechanism | Used for |
 | --- | --- | --- | --- |
-| Spaces | Zones | The Zone read through `request.query`; `Zones::Occurrences` paths through the registered read only | The Zone a Space is in, its Level and Building-Segment, the stamp values |
+| Spaces | Zones | The Zone read through `request.query`; the live Zone through `request.locate` on `ph_composer.zones.zone` (added in P3a-02, section 8 answer 2) | The Zone a Space is in, its Level and Building-Segment, the stamp values |
 | Zones Make independent | Spaces | `transition_contributor` on `ph_composer.zones.occurrence_independent` | Copied Spaces become independent in the Zone's own step (D3a-13) |
 | Zones | Any stamped Group | The nested-container rule (D3a-1). Zones reads the stamp it owns and names no feature | Floor Segment faces are not Zone Faces |
 | Zones Restore Zone | Stamped Space Groups | The same stamp read that Faces use | Limited Restore and orphaned-contents detection (zones Q14) |
@@ -150,10 +150,10 @@ Each is shared, names no feature, and lands in the stage listed with its own tes
 
 | # | Addition | Where | Stage |
 | --- | --- | --- | --- |
-| H1 | The nested-container rule: a stamped Group inside a Zone is skipped by the Face walk, the export snapshot, Suggest, the Shift-click flood and Solve | `features/zones/zone/occurrences.rb`, `export/geometry_snapshot.rb`, `features/zones/adjacency/` | P3a-01 |
+| H1 | The nested-container rule: a stamped Group inside a Zone is skipped by the Face walk (and so by Suggest, the Shift-click flood and Solve, which read through it), by picks and explicit Face paths, and by the Zones export's Face ownership. The shared snapshot still captures the Faces, for Spaces (section 8, correction 1) | `features/zones/zone/occurrences.rb`, `features/zones/export.rb` | Done in P3a-01 |
 | H2 | `volume` and `airflow` quantities in Ruby | `core/units.rb` | Exists: merged through PR #84 |
 | H3 | Section-read cycle refusal at registration (R05 item 2) | `shell/registry_validation.rb` | Exists: `registration.cycle`, merged through PR #122 (EC-03) |
-| H4 | An empty Room is refused or omitted with a declared code (R05 item 1) | `python/ph_composer_translation/model_sections.py`, `features/zones/export.rb` | P3a-01 |
+| H4 | A Zone left with no emitted Face is refused as `object.unavailable`, blocking, so the diagnostic model reloads (R05 item 1; section 8, correction 2) | `python/ph_composer_translation/model_sections.py` | Done in P3a-01 |
 | H5 | The edit-context writer: the only `model.active_path` assignment, with `enter`, `enter_root` and a close boundary, and the test that refuses any other assignment | `session/` | P3a-03 |
 | H6 | The deferred-work primitive: a keyed coalescing queue over `CoalescedTimer`, and the Undo ledger for the automatic entry and its suppressions. Reuses `HostFollowUp` for restorable record writes; adds only what lock-state writes need (D3a-4) | `session/` | P3a-03 |
 | H7 | `ColourBy::Entry#derived`: world-space polygons and segments drawn in the entry's colour | `colour_by/service.rb`, `overlay.rb`, `tessellation.rb` | P3a-05 |
@@ -215,3 +215,82 @@ a new `space.` code, or to "cannot occur without designPH" and records the mappi
    write and read it and the pinned wheel's base class has the field. P3a-01 confirms by running.
 9. Can a lock-state or `home_transform` write run as a restorable step under `HostFollowUp`, or
    does protection need its own transparent path (D3a-4)?
+
+## 8. P3a-01 contract answers
+
+Answered on 2026-10-15 on branch `feature/spaces-p3a-01` from `main` at `1d9f593`. Each answer
+names its evidence: a focused test in this change, an existing test, a code read, or measured host
+behavior already recorded in `context/SKETCHUP_HOST_BEHAVIOR.md`.
+
+1. **Group dictionaries through copy, cut and paste, Make Unique.** Yes for copy and Make Unique,
+   measured: a Group's dictionaries live on the instance, a native copy (Move-copy, Paste, Paste in
+   Place, arrays) carries them onto the new Group in the add callback, and Make Unique keeps the
+   instance's dictionaries while giving it a new definition (`SKETCHUP_HOST_BEHAVIOR.md`, rows on
+   Group copies, instance dictionaries and Make Unique; the copied-Zone P2 spike). Cut and paste
+   keeps the dictionary and can replace the `persistent_id` (predecessor B2). So a copied Space
+   Group arrives with the original's `spc_` id, which is what D3a-14's watcher relies on. P3a-02's
+   host check: copy, cut and paste, and Make Unique a Space Group with a Volume inside it, then read
+   every Space, Volume and Floor Segment record back.
+2. **A Zone, Space, Volume, Face path through `ReferenceTarget`.** Yes, through Spaces' own
+   `locate:` on its targets, once it can reach the live Zone publicly. That reach is missing today:
+   the Zone target (`ZoneRegistration::TARGET`) declares no `locate:`, so `request.locate` on
+   `ph_composer.zones.zone` refuses `operation.locate_missing`, and the Zones query returns detached
+   rows, not entities. Calling `Zones::Occurrences.resolve_zone` from Spaces would be the
+   cross-feature internal access `context/EXTENSIBILITY.md` forbids. **Allocated to P3a-02:** Zones
+   declares `locate:` and `locate_index:` on its Zone target, wrapping its strict resolver as the
+   Face target already does, with a test that a requiring feature reaches the live Zone and meets
+   the same `target.*` refusals. Spaces then walks the Space, Volume and Face part itself.
+   `Zones::Occurrences.resolve_face` now refuses that path by design (`target.wrong_hierarchy`), so
+   Spaces must not reuse it. Shared storage and the user's lock are checked the same way Zones does
+   (`shared_storage?`, `locked?`). "Locked by protection" is told apart by Spaces' own protection
+   state on the Volume, which the resolver reads before deciding; Zones never sees it. P3a-03 binds
+   it (its step 10).
+3. **Edit context verbs.** A view command writes nothing to the Model (`context/CONTRACTS.md`,
+   "Public interface"). Navigating into a Space is a pure `active_path` change and fits a view
+   command. Entering a Volume unlocks it and closing relocks it, which are Model writes, so as
+   written `context.enter_volume` and `context.close` are not view commands. Recommendation for
+   P3a-03: keep all three as view commands for navigation and run every lock-state and
+   `home_transform` write as restorable steps in one host follow-up (answer 9), so a context change
+   leaves no Undo entry of its own. P3a-03 confirms on the host that the follow-up joins the right
+   native step.
+4. **`request.query` from a Spaces handler.** Yes. `HandlerRequest#query` admits a query whose
+   owner the caller's feature requires, validates params and result against the declaration and
+   returns a detached copy, so `ph_composer.zones.list` returns each `reference` with its
+   `zone_path` intact (`shell/handler_request.rb`; `Zones::ZoneOccurrence#reference`).
+5. **`Attachment(ROOM)`.** Yes. The assembly groups a section's objects by `attachment.key`, finds
+   the Room by identifier and calls `attach` once per Room with all its objects in id order.
+   `tests/python/test_room_attachment.py` attaches two Spaces to one Room of the two-Zone fixture.
+6. **honeybee-ph 1.33.65 Space serialization.** Yes, run in the same test: `SpaceVolume.geometry`,
+   `avg_ceiling_height`, the Floor Segment's geometry and `weighting_factor`, and `_v_sup` set to an
+   explicit 0.0, `_v_eta` set and `_v_tran` left None all survive the canonical HBJSON and
+   `Model.from_dict`.
+7. **Colour-by caches and a derived-only entry.** Nothing caches by entity across rebuilds: the
+   drawing is whole and keyed on the session revision. Within one drawing, though, every entry is
+   assumed to have an entity: `Visibility#visible?` compares the resolved entity to it,
+   `Tessellation.call` tessellates it, and the legend's Select and Locate keep `[entity, transform]`
+   pairs and call `Selection#add`. A derived-only entry would fail all three. P3a-05 branches on
+   `derived` in `service.rb` before those calls and keeps derived entries out of Select (H7).
+8. **`user_data` on the Space classes.** Yes, run in the same test: `Space`, `SpaceVolume` and
+   `SpaceFloorSegment` carry `user_data` through the canonical HBJSON and back. `SpaceFloor` writes
+   and reads it too (source read).
+9. **Lock state and `home_transform` under `HostFollowUp`.** Yes, both fit. `HostFollowUp` refuses
+   engine record changes and accepts any step that answers `restore`; entity-owned records are
+   written by steps, as the Zones copy watcher writes Zone records today. A lock-state step
+   restores the previous `locked?` value and a `home_transform` step the previous Volume record, so
+   protection needs no transparent path of its own. What `HostFollowUp` does not give is the keyed
+   coalescing and the per-Model ledger that decides when protection runs; that stays H6.
+
+Corrections to the tables above:
+
+1. **The snapshot keeps container Faces (H1).** The stage document asked for the rule in
+   `export/geometry_snapshot.rb`. The snapshot names no feature, and Spaces' export (P3a-10) needs
+   the Floor Segment Faces from it, so the rule sits in the Zones export instead:
+   `Zones::ExportProjection.zone_faces` and `zone_owner` leave container Faces out of a Zone and
+   give them no owner. `features/zones/adjacency/` needed no change: Solve gathers its candidates
+   through the Face walk.
+2. **Refuse, not omit (H4).** Omitting the Room would export a model with a Zone silently missing.
+   Refusing it as `object.unavailable` blocks publication, names the Zone, and keeps the diagnostic
+   model loadable with the remaining Rooms. The fix found a second defect on the way: a Surface
+   Face in another Zone whose counterpart was in the refused Zone was already omitted in
+   `translate` but still asked for its pair in `attach`, which refused that Zone too. `attach` now
+   skips Faces `translate` did not emit.

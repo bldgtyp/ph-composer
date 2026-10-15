@@ -22,6 +22,10 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 
 ## Steps
 
+0. **The live Zone, publicly (from P3a-01's contract answer 2).** Zones' Zone target declares
+   `locate:` and `locate_index:`, wrapping `Occurrences.resolve_zone` and `Zones::Index` as the Face
+   target does. Test that a requiring feature reaches the live Zone through `request.locate` with the
+   same `target.*` refusals. Spaces never calls `Zones::Occurrences` directly.
 1. **Feature skeleton.** `features/spaces/install.rb` with one `install(registry)`, the feature
    id, contract version and `requires: ["ph_composer.zones"]`. Add `Spaces` to `FEATURES` in
    `extension.rb` after `Windows`. Add a dependency-direction test that fails if any file under

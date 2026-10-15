@@ -1,7 +1,7 @@
 # Phase 3a: Spaces
 
 DATE: 2026-10-15
-STATUS: Scoped. Interviewed 2026-09-18 and confirmed 2026-10-15; P3a-01 to P3a-12 planned; re-baselined on `main` at `87bdc62`; every decision answered 2026-10-15; no stage authorized.
+STATUS: In progress. Authorized 2026-10-15, one stage per pull request; P3a-01 implemented on branch.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
