@@ -123,6 +123,7 @@ module PhComposer
           space.name = Names.space(@space) if space.respond_to?(:name=)
         end
         write_volume(volume)
+        volume.locked = true
         space_path = space ? @context_path + [space.persistent_id] : @context_path
         slots[@slot] = { "entity_path" => space_path } if @slot
         record_affected(space_path, volume, space && { "space_id" => @space.fetch("id") })
@@ -193,6 +194,7 @@ module PhComposer
           FLOOR_SEGMENT_STORE.delete(face) if @segments.include?(FLOOR_SEGMENT_STORE.read(face)&.fetch("id", nil))
         end
         VOLUME_STORE.delete(volume)
+        volume.locked = false
         volume.explode
       end
     end

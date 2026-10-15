@@ -113,9 +113,9 @@ it. Record parts of each schema come from the record descriptors, not hand-writt
 | `update_metadata` | action | P3a-02 (built, slice B; one action for the three kinds) | `user_data` and extension payloads on explicit Spaces, Volumes and Floor Segments, with `expected_metadata`, one step, as the Zones, Faces and Window Units actions do (F23). `list` reports `extension_status` beside `extension_data` |
 | `follow_zone_copy` | transition contributor | P3a-04 | Joins `ph_composer.zones.occurrence_independent`: new ids for every Space, Volume, Floor Segment and Space Floor in the copied occurrence whose id another occurrence holds, stamps naming the new Zone, internal references remapped (D3a-13) |
 | Space copy watcher | internal, through `HostFollowUp` | P3a-04 (D3a-14) | A native copy of a Space Group made independent in the gesture's Undo step; no public name |
-| `context.open`, `context.enter_volume`, `context.close` | view command; protection writes in a host follow-up (section 8, answer 3) | P3a-03 | Enter and leave a Space or Volume edit context through the edit-context writer |
-| `locate` | view command | P3a-03 | Select and reveal explicit Spaces, Volumes or Floor Segments, closing and protecting the open Volume first |
-| `volumes.restore_position` | action | P3a-03 | Puts a moved Volume back at `home_transform` |
+| `context.open`, `context.enter_volume`, `context.close` | view commands (P3a-03, built); `enter_volume` commits one named step, Enter Volume, that unlocks the Volume; a Volume being left is protected by the EditContext boundary in a transparent operation (section 8, revised answers 3 and 9) | P3a-03 | Enter and leave a Space or Volume edit context through the edit-context writer |
+| `locate` | view command | P3a-03 (built) | Select and reveal explicit Spaces, Volumes or Floor Segments, closing and protecting the open Volume first |
+| `volumes.restore_position` | action | P3a-03 (built; refuses `space.volume_open` and `space.position_unknown`) | Puts a moved Volume back at `home_transform` |
 | `make_independent` | action | P3a-04 | New ids for an explicit copied Space, Volume or Floor Segment and everything inside it; the next free number for a Space |
 | `move_to_zone` | action | P3a-04 | An explicit Space reference and a target Zone reference |
 | `mark_tool.start`, `mark_tool.stop` | view command | P3a-08 | Start Mark floor with one weighting factor value, from the Weighting factor column menu, as Classify's column-scoped paint starts its tool; stop it (D3a-7) |
@@ -302,9 +302,10 @@ behavior already recorded in `context/SKETCHUP_HOST_BEHAVIOR.md`.
 
 **Revised in P3a-03 (2026-10-15).** Answer 3: `context/TECH_STACK.md`, "Join the user's Undo step",
 outranks the recommendation: a panel or script command that writes is a named one-step operation,
-as the predecessor's Enter Volume was. `context.enter_volume`, which unlocks the Volume it opens,
-is therefore an action ("Enter Volume"); `context.open`, `context.close` and `locate` only move the
-path and stay view commands, and the protection their boundary writes is automatic work. Answer
+as the predecessor's Enter Volume was. A path change cannot sit inside a proposal step, so
+`context.enter_volume` stays a view command that, like the predecessor, commits one named step
+(Enter Volume, the unlock) and then opens the path; `context.open`, `context.close` and `locate`
+only move the path, and the protection their boundary writes is automatic work. Answer
 9: protection writes only lock state, which `TECH_STACK.md` lets commit directly in a transparent
 operation that never aborts, as Zone name restoration does; it does not go through `HostFollowUp`,
 which is for record steps and would need protection registered as a public action. `home_transform`

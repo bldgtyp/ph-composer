@@ -5908,6 +5908,9 @@ Result:
                 "extension_status",
                 "reference",
                 "nested",
+                "open",
+                "protected",
+                "moved",
                 "metrics",
                 "findings",
                 "floor_segments"
@@ -5992,6 +5995,18 @@ Result:
                 },
                 "nested": {
                   "type": "boolean"
+                },
+                "open": {
+                  "type": "boolean",
+                  "description": "Open for editing on the path."
+                },
+                "protected": {
+                  "type": "boolean",
+                  "description": "Locked, so the Space selects it whole."
+                },
+                "moved": {
+                  "type": "boolean",
+                  "description": "Away from where it was last left."
                 },
                 "metrics": {
                   "type": "object",
@@ -6968,6 +6983,9 @@ Result:
                 "extension_status",
                 "reference",
                 "nested",
+                "open",
+                "protected",
+                "moved",
                 "metrics",
                 "findings",
                 "floor_segments"
@@ -7052,6 +7070,18 @@ Result:
                 },
                 "nested": {
                   "type": "boolean"
+                },
+                "open": {
+                  "type": "boolean",
+                  "description": "Open for editing on the path."
+                },
+                "protected": {
+                  "type": "boolean",
+                  "description": "Locked, so the Space selects it whole."
+                },
+                "moved": {
+                  "type": "boolean",
+                  "description": "Away from where it was last left."
                 },
                 "metrics": {
                   "type": "object",
@@ -24932,6 +24962,87 @@ Example params:
 }
 ```
 
+### `ph_composer.spaces.volumes.restore_position`
+
+Put a moved Volume back where it was last left, and protect it. Owner: `ph_composer.spaces`.
+
+Undo step: Restore Volume Position. Moves and locks the Volume Group.
+
+Refuses: `record.unreadable`, `space.position_unknown`, `space.volume_open`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volume"
+  ],
+  "properties": {
+    "volume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume_id",
+        "entity_path"
+      ],
+      "properties": {
+        "volume_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Volume, as list returns it."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volume_id",
+    "moved"
+  ],
+  "properties": {
+    "volume_id": {
+      "type": "string"
+    },
+    "moved": {
+      "type": "boolean",
+      "description": "Whether it had moved."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "volume": {
+    "volume_id": "vol_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300,
+      1310
+    ]
+  }
+}
+```
+
 ### `ph_composer.windows.frames.create`
 
 Create one Frame with local defaults. Owner: `ph_composer.windows`.
@@ -42164,6 +42275,287 @@ Example params:
 }
 ```
 
+### `ph_composer.spaces.context.close`
+
+Leave the innermost open Space or Volume for its parent, protecting a Volume being left. Owner: `ph_composer.spaces`.
+
+Refuses: only the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "The edit path afterwards."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+### `ph_composer.spaces.context.enter_volume`
+
+Open a Volume for editing: the open Volume is protected, this one is unlocked in its own Undo step (Enter Volume) and the path opens on it. Owner: `ph_composer.spaces`.
+
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volume"
+  ],
+  "properties": {
+    "volume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume_id",
+        "entity_path"
+      ],
+      "properties": {
+        "volume_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Volume, as list returns it."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "The edit path afterwards."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "volume": {
+    "volume_id": "vol_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300,
+      1310
+    ]
+  }
+}
+```
+
+### `ph_composer.spaces.context.open`
+
+Open a Space as the edit context; an open Volume is protected first. Owner: `ph_composer.spaces`.
+
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space"
+  ],
+  "properties": {
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "space_id",
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Space, as list returns it."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "The edit path afterwards."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "space": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300
+    ]
+  }
+}
+```
+
+### `ph_composer.spaces.locate`
+
+Select and frame one Space, Volume or Floor Segment; a Floor Segment opens its Volume. Owner: `ph_composer.spaces`.
+
+Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reference"
+  ],
+  "properties": {
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "volume_id": {
+          "type": "string"
+        },
+        "floor_segment_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "A Space, Volume or Floor Segment, as list returns it."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "The edit path afterwards."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "reference": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300
+    ]
+  }
+}
+```
+
 ### `ph_composer.windows.place_tool.choose`
 
 Choose a Type and anchor, then start Place. Owner: `ph_composer.windows`.
@@ -45461,11 +45853,15 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `space.nothing_to_create` | None of the Faces given can become a Space. |
 | `space.number_duplicate` | Two Spaces in one Zone share a number. |
 | `space.outside_zone` | A Space is in no Zone. |
+| `space.position_unknown` | The Volume has no stored position to restore. |
 | `space.segment_misplaced` | A Floor Segment record is on a Face that is not directly inside a Volume. |
 | `space.shares_edge` | A Face shares an Edge with a Face outside the set being grouped. |
 | `space.volume_empty` | A Volume has no Floor Segment. |
+| `space.volume_moved` | A Volume moved inside its Space since it was last left. |
 | `space.volume_nested` | A Volume is below another Group inside its Space rather than directly in it. |
+| `space.volume_open` | The Volume is open for editing; close it first. |
 | `space.volume_orphan` | A Volume record is on a Group outside every Space. |
+| `space.volume_unprotected` | A closed Volume is unlocked, so its Faces can be edited from the Space. |
 
 ### `ph_composer.windows`
 

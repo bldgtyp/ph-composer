@@ -45,6 +45,11 @@ module PhComposer
       SEGMENT_ROW = row(FLOOR_SEGMENT, "reference" => FLOOR_SEGMENT_REFERENCE, "metrics" => SEGMENT_METRICS,
                                        "findings" => FINDINGS)
       VOLUME_ROW = row(VOLUME, "reference" => VOLUME_REFERENCE, "nested" => { "type" => "boolean" },
+                               "open" => { "type" => "boolean", "description" => "Open for editing on the path." },
+                               "protected" => { "type" => "boolean", "description" => "Locked, so the Space " \
+                                                                                      "selects it whole." },
+                               "moved" => { "type" => "boolean", "description" => "Away from where it was " \
+                                                                                  "last left." },
                                "metrics" => VOLUME_METRICS, "findings" => FINDINGS,
                                "floor_segments" => Shapes.list(SEGMENT_ROW))
       SPACE_ROW = row(SPACE, "reference" => SPACE_REFERENCE,

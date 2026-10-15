@@ -34,8 +34,9 @@ module SpaceFixtures
       "default_height_m" => 2.5, "next_volume_sequence" => 2 }.merge(airflows)
   end
 
-  def volume_group(persistent_id, record, faces)
-    group = Sketchup::Group.new(persistent_id, Sketchup::Entities.new(faces))
+  # Locked, as Spaces leaves every Volume it creates: its protection.
+  def volume_group(persistent_id, record, faces, locked: true)
+    group = Sketchup::Group.new(persistent_id, Sketchup::Entities.new(faces), :locked => locked)
     SPACES::VOLUME_STORE.write(group, record) if record
     group
   end
@@ -47,7 +48,8 @@ module SpaceFixtures
   end
 
   def zone_group(persistent_id, letter, children, transformation: nil)
-    group = Sketchup::Group.new(persistent_id, Sketchup::Entities.new(children), :transformation => transformation)
+    group = Sketchup::Group.new(persistent_id, Sketchup::Entities.new(children), :transformation => transformation,
+                                                                                 :name => "Zone #{letter}")
     ZONES::ZONE_STORE.write(group, { "id" => "zon_#{letter * 12}", "schema_version" => 1, "name" => "Zone #{letter}",
                                      "building_segment" => "Main Building", "level" => "L1",
                                      "ground_depth_mm" => 0.0 })
