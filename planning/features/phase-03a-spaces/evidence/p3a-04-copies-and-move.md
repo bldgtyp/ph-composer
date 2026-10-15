@@ -1,7 +1,7 @@
 # P3a-04 evidence: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: Slice A in review (#141); slice B1 (Zones: container stamps on Make Zone independent and repair, Restore Zone for stamped Groups) implemented; B2 (the copy watcher) and B3 (the Zone-copy contributor, the walkthrough) next; host gate not run
+STATUS: Slice A merged (#141); slice B1 (Zones: container stamps on Make Zone independent and repair, Restore Zone for stamped Groups) implemented; B2 (the copy watcher) and B3 (the Zone-copy contributor, the walkthrough) next; host gate not run
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
