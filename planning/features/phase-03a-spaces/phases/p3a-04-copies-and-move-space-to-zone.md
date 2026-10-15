@@ -1,7 +1,7 @@
 # P3a-04: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: In progress. Slice A (steps 1, 2, 4, 5, 6) merged through #141; B1 (step 7 and Zones' container stamps) merged through #142; B2 (step 3) through #144; B3 (steps 8, 9) in review; S04 bridge rows pass, native rows pending ([evidence](../evidence/p3a-04-copies-and-move.md))
+STATUS: Merged in four slices (#141, #142, #144, #146); S04 bridge rows pass, native rows pending ([evidence](../evidence/p3a-04-copies-and-move.md))
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
