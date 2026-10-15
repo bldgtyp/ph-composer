@@ -17,8 +17,7 @@ module PhComposer
 
     # Queues `job` under `key`; with a block, `block.call(existing, job)` decides what stays queued.
     def queue(key, job, &merge)
-      existing = @jobs[key]
-      @jobs[key] = existing && merge ? merge.call(existing, job) : job
+      @jobs[key] = @jobs.key?(key) && merge ? merge.call(@jobs[key], job) : job
       @timer.schedule { settle }
     end
 
@@ -26,10 +25,13 @@ module PhComposer
       @running || !@jobs.empty?
     end
 
-    # Runs every queued job now, once. A job queued while the pass runs waits for the next pass.
+    # Runs every queued job now, once. A job queued while the pass runs, or left by a pass that raised,
+    # stays scheduled for the next pass; a `settle` from inside the pass does nothing.
     def settle
+      return if @running
+
       @timer.cancel
-      return if @jobs.empty? || @running
+      return if @jobs.empty?
 
       jobs = @jobs
       @jobs = {}
@@ -38,8 +40,8 @@ module PhComposer
         @run.call(jobs)
       ensure
         @running = false
+        @timer.schedule { settle } unless @jobs.empty?
       end
-      @timer.schedule { settle } unless @jobs.empty?
     end
 
     # Drops queued work without running it: Undo, Redo and a closing Model.

@@ -73,6 +73,33 @@ class EditContextTest < PhComposerTestCase
     refute work.pending?
   end
 
+  def test_a_held_key_merges_whatever_its_payload
+    runs = []
+    work = PhComposer::DeferredWork.new { |jobs| runs << jobs }
+    work.queue(:enabled, false)
+    work.queue(:enabled, true) { |existing, _job| existing }
+    work.queue(:empty, nil)
+    work.queue(:empty, 1) { |existing, _job| existing }
+    work.settle
+    assert_equal [{ :enabled => false, :empty => nil }], runs
+  end
+
+  def test_work_queued_by_a_failing_pass_stays_scheduled
+    work = nil
+    work = PhComposer::DeferredWork.new do |jobs|
+      if jobs.key?(:first)
+        work.queue(:second, 2)
+        work.settle
+        raise ArgumentError, "boom"
+      end
+    end
+    work.queue(:first, 1)
+    assert_raises(ArgumentError) { work.settle }
+    assert work.pending?
+    UI.run_timers
+    refute work.pending?
+  end
+
   def test_a_failing_pass_leaves_the_work_settled_and_not_pending
     work = PhComposer::DeferredWork.new { |_jobs| raise ArgumentError, "boom" }
     work.queue(:a, 1)
