@@ -114,8 +114,7 @@
         [LEGEND]: { status: "completed", code: "ok", revision: this.revision, value: this.legend() },
         [PALETTE]: { status: "completed", code: "ok", revision: this.revision,
           value: JSON.parse(JSON.stringify(this.palette)) },
-        ["ph_composer.windows.types"]: { status: "completed", value: JSON.parse(JSON.stringify(this.windows.types ||
-          { records: [] })) },
+        ["ph_composer.windows.types"]: { status: "completed", value: this.windowTypes() },
         ["ph_composer.windows.unit_areas"]: { status: "completed", value: JSON.parse(JSON.stringify(
           this.windows.unit_areas || { faces: [], unhosted_units: [] })) },
         ["ph_composer.windows.units"]: { status: "completed", value: JSON.parse(JSON.stringify(this.windows.units ||
@@ -732,7 +731,7 @@
         return { field: key, local: record.values[key], incoming: row.snapshot[key],
           local_present: Object.prototype.hasOwnProperty.call(record.values, key), incoming_present: true };
       });
-      result.candidates.push({ id: record.id, name: record.values.name, differences: differences,
+      result.candidates.push({ id: record.id, display_label: record.values.name, differences: differences,
         expected_values: JSON.parse(JSON.stringify(record.values)), comparison_available: source(record),
         source_changed: source(record) ? record.values.source.snapshot.notes !== row.snapshot.notes : null });
     });
@@ -751,7 +750,9 @@
       var offset = Number(params.cursor || 0), end = Math.min(rows.length, offset + (params.limit || 100));
       var catalog = metadata.catalogs.filter(function (row) { return row.kind === params.kind; })[0];
       var page = Object.assign({}, catalog, { rows: rows.slice(offset, end).map(function (row) {
-        return Object.assign({}, row, { resolution: this.libraryResolution(row, params.kind) });
+        // Admission's label: every preview kind's adapter projects its `name` (Admission.label_for).
+        return Object.assign({}, row, { display_label: row.snapshot.name,
+          resolution: this.libraryResolution(row, params.kind) });
       }, this), total: rows.length, next_cursor: end < rows.length ? String(end) : null,
       warnings: [], unavailable: [] });
       outcome = { status: "completed", value: page, revision: this.revision };
@@ -935,6 +936,50 @@
     this.publish("preferences.result", { request_id: payload.request_id, status: "completed",
       message: "Display preference saved.", preferences: JSON.parse(JSON.stringify(this.preferences)) });
   };
+
+  // Each Type row with display.install_topology derived on every read, as Installs.topology_facts derives it:
+  // an edge is shared or partly shared by the non-empty elements beyond it, and only a perimeter edge paints.
+  // tests/support/window_fixtures.js builds the same facts for the offline editor tests.
+  Host.prototype.windowTypes = function () {
+    var types = JSON.parse(JSON.stringify(this.windows.types || { records: [] }));
+    types.records.forEach(function (type) {
+      type.display = Object.assign({}, type.display, { install_topology: installTopology(type.values) });
+    });
+    return types;
+  };
+  function installTopology(values) {
+    var SIDES = ["top", "right", "bottom", "left"];
+    function occupied(row, column) {
+      return values.elements.some(function (cell) { return cell.kind !== "empty" && row >= cell.row_span[0] &&
+        row <= cell.row_span[1] && column >= cell.column_span[0] && column <= cell.column_span[1]; });
+    }
+    function classify(cell, side) {
+      var r = cell.row_span, c = cell.column_span, points = [], index;
+      if (side === "top" || side === "bottom") {
+        for (index = c[0]; index <= c[1]; index++) points.push([side === "top" ? r[0] - 1 : r[1] + 1, index]);
+      } else {
+        for (index = r[0]; index <= r[1]; index++) points.push([index, side === "left" ? c[0] - 1 : c[1] + 1]);
+      }
+      var count = points.filter(function (point) { return occupied(point[0], point[1]); }).length;
+      return count === 0 ? "perimeter" : count === points.length ? "shared" : "partial";
+    }
+    var edges = {}, slots = {};
+    values.elements.forEach(function (cell) {
+      slots[cell.id] = JSON.stringify([cell.kind, cell.row_span, cell.column_span]);
+      if (cell.kind === "empty") return;
+      edges[cell.id] = {};
+      SIDES.forEach(function (side) {
+        var classification = classify(cell, side);
+        edges[cell.id][side] = { classification: classification, paintable: classification === "perimeter" };
+      });
+    });
+    // The copy key is opaque; equal grids and edge topologies give equal keys.
+    var shape = values.elements.map(function (cell) {
+      return [cell.kind, cell.row_span, cell.column_span, SIDES.map(function (side) {
+        return cell.kind === "empty" ? null : classify(cell, side); })];
+    }).sort(function (a, b) { return JSON.stringify(a).localeCompare(JSON.stringify(b)); });
+    return { edges: edges, copy_key: JSON.stringify([values.rows_m, values.columns_m, shape]), copy_slots: slots };
+  }
 
   function refused(code, message, revision) {
     return { status: "refused", code: code, message: message, effect: "none", revision: revision, value: null,
