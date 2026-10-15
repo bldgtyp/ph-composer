@@ -329,6 +329,48 @@ class ZoneNestedContainerTest < PhComposerTestCase
     assert_equal "false", container.get_attribute(Zones::STAMP_DICTIONARY, Zones::STAMP_STORE.key)
   end
 
+  # A stamped Group made a live Zone after its own Zone was exploded is that Zone, not a member to
+  # restore inside the old one.
+  def test_a_stamped_group_that_is_now_a_live_zone_is_not_offered
+    fixture
+    stamp!(@container)
+    @zone_group.explode
+    result = invoke("ph_composer.zones.make", "parent_path" => [], "entity_ids" => [120])
+    assert_equal "completed", result["status"], result.inspect
+    offers = query("ph_composer.zones.all").dig("value", "restorable")
+    assert(offers.none? { |offer| offer.fetch("entity_ids").include?(120) }, offers.inspect)
+  end
+
+  def test_restore_refuses_a_locked_member_and_moves_nothing
+    fixture
+    stamp!(@container)
+    zone_id = Zones::ZONE_STORE.read(@zone_group).fetch("id")
+    @zone_group.explode
+    @container.locked = true
+    result = invoke("ph_composer.zones.restore", "parent_path" => [], "zone_id" => zone_id)
+    assert_equal %w[refused target.locked], result.values_at("status", "code")
+    assert @model.entities.include?(@container)
+  end
+
+  def test_a_stamp_stored_as_a_native_value_is_opaque_too
+    fixture
+    @zone_group.explode
+    [false, 17].each do |value|
+      @container.set_attribute(Zones::STAMP_DICTIONARY, Zones::STAMP_STORE.key, value)
+      assert_equal "completed", query("ph_composer.zones.all")["status"], value.inspect
+    end
+  end
+
+  def test_repair_refuses_a_locked_container_and_declares_it
+    fixture
+    stamp!(@container)
+    @container.locked = true
+    copy = shared_zone_copy(500)
+    copy.make_unique
+    result = invoke("ph_composer.zones.repair_identity", "zone_path" => [500])
+    assert_equal %w[refused target.locked], result.values_at("status", "code")
+  end
+
   private
 
   def shared_zone_copy(persistent_id)

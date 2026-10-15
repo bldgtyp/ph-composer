@@ -281,9 +281,21 @@ module PhComposer
       def orphan_refusal(contexts, stamps, entries)
         return "mixed_context" if contexts.length > 1
         return "stamps_conflict" if stamps.length > 1
+        return "contains_zone" if entries.any? { |entry| holds_zone?(entry.fetch(:entity)) }
         return "shared_edge" if shared_edge?(entries)
 
         nil
+      end
+
+      # A member Group holding a live Zone would nest that Zone inside the restored one.
+      def holds_zone?(entity)
+        return false unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+
+        contents = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
+        contents.any? do |child|
+          (child.is_a?(Sketchup::Group) && !child.get_attribute(ZONE_STORE.dictionary, ZONE_STORE.key).nil?) ||
+            holds_zone?(child)
+        end
       end
 
       # Regrouping takes a Face's bounding Edges with it, so an Edge also used by a Face nobody
@@ -310,6 +322,11 @@ module PhComposer
           raise CodedError.new("target.changed", "Those stamped members are not in that parent context.")
         end
 
+        locked = offer.fetch("entity_ids").any? do |id|
+          entity = entities_at(model, wanted).find { |candidate| candidate.persistent_id == id }
+          entity.respond_to?(:locked?) && entity.locked?
+        end
+        raise CodedError.new("target.locked", "A stamped member of that Zone is locked. Unlock it first.") if locked
         if offer.fetch("refusal")
           raise CodedError.new("zone.restore_unsafe",
                                "Zone #{zone_id} cannot be restored: #{offer.fetch('refusal')}.")
@@ -334,6 +351,9 @@ module PhComposer
         entities.each do |entity|
           next unless entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Group)
 
+          # A live Zone is never a member, whatever stamp it still carries from a Zone exploded around it.
+          next if entity.is_a?(Sketchup::Group) && !entity.get_attribute(ZONE_STORE.dictionary, ZONE_STORE.key).nil?
+
           stamped = !entity.get_attribute(STAMP_DICTIONARY, STAMP_STORE.key).nil?
           stamp = readable_stamp(entity) if stamped
           # A stamp this feature did not write, or that does not read, cannot name a Zone to restore; it
@@ -341,19 +361,27 @@ module PhComposer
           if Schema.stamp?(stamp) && !live.include?(stamp["zone_id"])
             found << { :zone_id => stamp["zone_id"], :stamp => stamp, :parent_path => path,
                        :persistent_id => entity.persistent_id, :entity => entity }
-          elsif entity.is_a?(Sketchup::Group) && !stamped && ZONE_STORE.read(entity).nil?
+          elsif entity.is_a?(Sketchup::Group) && !stamped
             walk_orphans(entity.entities, path + [entity.persistent_id], live, found)
           end
         end
       end
 
+      # A stamp is stored as JSON text; any other stored value reads as no stamp.
       def readable_stamp(entity)
+        return nil unless entity.get_attribute(STAMP_DICTIONARY, STAMP_STORE.key).is_a?(String)
+
         STAMP_STORE.read(entity)
       rescue CodedError
         nil
       end
-      private_class_method :orphan_group, :readable_stamp, :path_inside, :orphan_refusal, :shared_edge?, :walk_orphans,
-                           :repaired_face, :face_plans, :member_entries, :path_entities, :member_containers
+
+      def entities_at(model, path)
+        path.empty? ? model.entities.to_a : path_entities(model, path).last.entities.to_a
+      end
+      private_class_method :orphan_group, :readable_stamp, :holds_zone?, :entities_at, :path_inside, :orphan_refusal,
+                           :shared_edge?, :walk_orphans, :repaired_face, :face_plans, :member_entries, :path_entities,
+                           :member_containers
     end
   end
 end

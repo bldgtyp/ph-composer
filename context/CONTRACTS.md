@@ -507,7 +507,9 @@ Zones keeps the stamp current as it keeps its Faces' stamps: editing the Zone, M
 and repairing a copied Zone's identity rewrite every container's stamp, and refuse first when a
 container is locked or sits below a component, a locked Group or, for the repair, a Group the copy
 still shares. Restore Zone recovers a stamped container as a member, regrouping it whole with the
-Zone's stamped Faces; a Group whose stamp does not read stays opaque and is not offered.
+Zone's stamped Faces; a Group whose stamp does not read stays opaque and is not offered, a live Zone
+is never a member whatever stamp it still carries, and a locked member or one holding a live Zone
+refuses the restore.
 Spaces is the first feature to stamp one.
 
 Solve reports `adjacency.glued_instances` when a proposed partial match would cut a Face with
