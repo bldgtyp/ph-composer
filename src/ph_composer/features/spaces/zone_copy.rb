@@ -33,10 +33,12 @@ module PhComposer
                      Records::ReferenceEntry.new(:kind => row.fetch("kind"), :key => row.fetch("key"),
                                                  :record => row.fetch("record"))
                    end }
-        plan = IdentityPlan.build(Occurrences.scan(request.model), nil, :number => nil, :allocate => allocate,
-                                                                        :catalog => request.registry.catalog,
-                                                                        :engine => request.engine,
-                                                                        :scope => zone_path, :parent => parent)
+        # Records outside the copied Zone only say which ids are held there; one that does not read is
+        # not this repair's to refuse.
+        scan = Occurrences.scan(request.model, :strict => zone_path)
+        plan = IdentityPlan.build(scan, nil, :number => nil, :allocate => allocate,
+                                             :catalog => request.registry.catalog, :engine => request.engine,
+                                             :scope => zone_path, :parent => parent)
         return [] if plan.rows.empty?
 
         step = IdentityStep.new(:plan => plan, :scope_path => zone_path)

@@ -112,6 +112,17 @@ class SpacesZoneCopyTest < PhComposerTestCase
     assert_equal zone_id, ZONES::ZONE_STORE.read(copy).fetch("id")
   end
 
+  # A Space record that does not read, elsewhere in the Model, is not this repair's to refuse.
+  def test_an_unreadable_space_outside_the_copy_does_not_block_it
+    stray = Sketchup::Group.new(700, Sketchup::Entities.new([]))
+    stray.set_attribute(SPACES::SPACE_STORE.dictionary, SPACES::SPACE_STORE.key, "{not json")
+    @model.entities << stray
+    copy = copy_zone(500)
+    result = invoke(MAKE_INDEPENDENT, "zone_path" => [500])
+    assert_equal %w[completed committed], result.values_at("status", "effect"), result.inspect
+    refute_equal ZONES::ZONE_STORE.read(@zone).fetch("id"), ZONES::ZONE_STORE.read(copy).fetch("id")
+  end
+
   def test_one_undo_takes_back_the_zone_and_its_spaces_together
     copy_zone(500)
     invoke(MAKE_INDEPENDENT, "zone_path" => [500])

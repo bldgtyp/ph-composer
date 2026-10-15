@@ -19,6 +19,15 @@ class SpacesWalkthroughTest < PhComposerTestCase
     assert_equal committed, @model.operations.length - before, "one Undo step per committed write"
   end
 
+  def test_a_model_with_one_zone_is_refused_before_anything_is_written
+    @model = Sketchup.active_model
+    @model.entities << zone_group(100, "Z", [])
+    before = @model.operations.length
+    error = assert_raises(ArgumentError) { SpacesWalkthrough.run }
+    assert_match(/two Zones/, error.message)
+    assert_equal before, @model.operations.length
+  end
+
   def test_the_walkthrough_names_no_feature_module
     text = File.read(File.expand_path("../tools/examples/authoring/spaces_walkthrough.rb", __dir__))
     refute_match(/PhComposer::(Spaces|Zones)::/, text)

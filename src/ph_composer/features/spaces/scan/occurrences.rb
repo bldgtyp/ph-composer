@@ -55,9 +55,19 @@ module PhComposer
     module Occurrences
       module_function
 
-      def scan(model)
+      # `strict`, when given, is a path: a record at or below it that does not read refuses, and one
+      # elsewhere is left out, as though it were not there. A repair scoped to one occurrence then does
+      # not depend on every other record in the Model reading. Without it every record must read.
+      def scan(model, strict: nil)
         found = Scan.new(:spaces => [], :orphan_volumes => [], :misplaced_segments => [])
-        walk(model.entities, [], Geom::Transformation.new, :found => found)
+        reader = lambda do |store, kind, entity, path|
+          read(store, kind, entity)
+        rescue CodedError
+          raise if strict.nil? || path[0, strict.length] == strict
+
+          nil
+        end
+        walk(model.entities, [], Geom::Transformation.new, :found => found, :reader => reader)
         found
       end
 
@@ -66,21 +76,22 @@ module PhComposer
         record && Spaces.validate!(kind, record)
       end
 
-      def walk(entities, path, transform, found:, shared: false, locked: false, space: nil, volume: nil,
+      def walk(entities, path, transform, found:, reader:, shared: false, locked: false, space: nil, volume: nil,
                direct: false)
         entities.each do |entity|
           child_path = path + [entity.persistent_id]
           if entity.is_a?(Sketchup::Face)
-            face(entity, child_path, transform, found, volume, direct, :shared => shared, :locked => locked)
+            face(entity, child_path, transform, found, volume, direct, :shared => shared, :locked => locked,
+                                                                       :reader => reader)
           elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
             container(entity, child_path, transform, found, :shared => shared, :locked => locked, :space => space,
-                                                            :volume => volume, :direct => direct)
+                                                            :volume => volume, :direct => direct, :reader => reader)
           end
         end
       end
 
-      def face(entity, path, transform, found, volume, direct, shared:, locked:)
-        record = read(FLOOR_SEGMENT_STORE, FLOOR_SEGMENT, entity)
+      def face(entity, path, transform, found, volume, direct, shared:, locked:, reader:)
+        record = reader.call(FLOOR_SEGMENT_STORE, FLOOR_SEGMENT, entity, path)
         return unless record
 
         occurrence = SegmentOccurrence.new(:entity => entity, :path => path, :transform => transform, :record => record,
@@ -88,14 +99,14 @@ module PhComposer
         volume && direct ? volume.segments << occurrence : found.misplaced_segments << occurrence
       end
 
-      def container(entity, path, transform, found, shared:, locked:, space:, volume:, direct:)
+      def container(entity, path, transform, found, shared:, locked:, space:, volume:, direct:, reader:)
         carried = transform * entity.transformation
         child_shared = shared || shared_storage?(entity)
-        space_record = read(SPACE_STORE, SPACE, entity)
-        volume_record = read(VOLUME_STORE, VOLUME, entity)
+        space_record = reader.call(SPACE_STORE, SPACE, entity, path)
+        volume_record = reader.call(VOLUME_STORE, VOLUME, entity, path)
         # A Volume's own lock is its protection, which Spaces writes; any other lock is the user's.
         child_locked = locked || (entity.locked? && volume_record.nil?)
-        context = { :found => found, :shared => child_shared, :locked => child_locked }
+        context = { :found => found, :shared => child_shared, :locked => child_locked, :reader => reader }
         if space_record
           inner = SpaceOccurrence.new(:entity => entity, :path => path, :transform => carried, :record => space_record,
                                       :volumes => [], :shared => child_shared, :shared_above => shared,

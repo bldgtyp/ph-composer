@@ -49,7 +49,8 @@ module PhComposer
           target = target_occurrence(model)
           isolate(target.entity) if target.entity.is_a?(Sketchup::Group)
         end
-        inside = Authoring.inside(Occurrences.scan(model), @path).sort_by { |_kind, occurrence| occurrence.path }
+        scan = Occurrences.scan(model, :strict => @record ? nil : @path)
+        inside = Authoring.inside(scan, @path).sort_by { |_kind, occurrence| occurrence.path }
         groups = inside.group_by { |kind, occurrence| [kind, occurrence.record.fetch("id")] }
         unless groups.transform_values(&:length) == @counts
           raise CodedError.new("target.changed", "The copy's contents changed after it was previewed.")

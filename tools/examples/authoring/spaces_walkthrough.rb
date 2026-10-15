@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
-# Panel-closed public API example for Spaces, on any Model with one Zone:
+# Panel-closed public API example for Spaces, on any Model with two Zones:
 #   SpacesWalkthrough.run
 # Draws three 1 m floor outlines loose in the first Zone, 0.5 m above its origin, and a fourth in the new Space with the
 # SketchUp API, as a user's script would, and does everything else through PhComposer::API: Create
 # Space from the three, a second Volume, one Floor Segment marked as not counting, a height, two
 # airflows and one cleared, the read-back, and recovery from a stale edit. Then it copies a Volume the
 # way a native copy leaves it, reads the duplicate identity, makes the copy independent and moves the
-# Space into a second Zone, made from an outline drawn at the root when there is none. Each write is one
-# Undo step.
+# Space into the second Zone. Each write is one Undo step.
 module SpacesWalkthrough
   API = PhComposer::API
   PREFIX = "ph_composer.spaces"
@@ -24,8 +23,11 @@ module SpacesWalkthrough
 
     client = Client.new(:context => API.connect(:session_id => session_id), :sequence => 0, :steps => [])
     client.steps << { "step" => "discover", "passed" => discovery.fetch("features").any? { |row| row["id"] == PREFIX } }
-    zone = query(client, "ph_composer.zones.list").fetch("zones").first&.fetch("reference")
-    raise ArgumentError, "Make a Zone first." unless zone
+    zones = query(client, "ph_composer.zones.list").fetch("zones").map { |row| row.fetch("reference") }
+    # Checked before anything is written, so a Model that cannot run the script is left as it was.
+    raise ArgumentError, "Make two Zones first: the Space moves from the first to the second." if zones.length < 2
+
+    zone = zones.first
 
     zone_group = open(model, zone.fetch("zone_path"))
     faces = [0, 1.5, 3].map { |x| outline(zone_group.entities, x, 0) }
@@ -80,19 +82,12 @@ module SpacesWalkthrough
     client.steps << { "step" => "copy independent", "passed" => clear }
   end
 
-  # Move Space to Zone needs the edit context closed; the Space keeps its ids and lands in the second
-  # Zone, which is made from an outline drawn at the root when the Model has only one.
+  # Move Space to Zone needs the edit context closed; the Space keeps its ids and lands in the second Zone.
   def move_to_second_zone(client, model, space_id)
     model.active_path = nil
     space = space_row(client, space_id)
     zone = query(client, "ph_composer.zones.list").fetch("zones").map { |row| row.fetch("reference") }
                                                   .find { |reference| reference != space.fetch("zone") }
-    unless zone
-      outline = outline(model.entities, 10, 0)
-      made = invoke(client, "ph_composer.zones.make", "parent_path" => [], "entity_ids" => [outline.persistent_id])
-      zone = query(client, "ph_composer.zones.list").fetch("zones").map { |row| row.fetch("reference") }
-                                                    .find { |reference| reference["zone_id"] == made.fetch("zone_id") }
-    end
     invoke(client, "move_to_zone", "space" => space.fetch("reference"), "zone" => zone)
     moved = space_row(client, space_id)
     client.steps << { "step" => "moved", "passed" => moved.dig("zone", "zone_id") == zone.fetch("zone_id") }
@@ -164,12 +159,10 @@ module SpacesWalkthrough
     outcome.fetch("value")
   end
 
-  # `name` is a Spaces action's short name, or another feature's full one.
   def attempt(client, name, params)
     revision = API.query(:context => client.context, :name => "#{PREFIX}.settings.get").fetch("revision")
     client.sequence += 1
-    full = name.start_with?("ph_composer.") ? name : "#{PREFIX}.#{name}"
-    API.invoke(:context => client.context, :name => full, :params => params,
+    API.invoke(:context => client.context, :name => "#{PREFIX}.#{name}", :params => params,
                :request => { "sequence" => client.sequence, "expected_revision" => revision })
   end
 
