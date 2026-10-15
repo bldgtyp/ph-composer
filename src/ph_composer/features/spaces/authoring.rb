@@ -146,7 +146,11 @@ module PhComposer
         scan = Occurrences.scan(request.model)
         kind = Resolve.kind_of(reference)
         target = Resolve.occurrence(scan, reference, :mutable => false)
-        number = (next_number(scan, zone_of(request, target.path), zone_paths(request)) if kind == SPACE_KIND)
+        # A host follow-up plans every copy against one Model state: numbers earlier repairs in this
+        # proposal took are taken.
+        taken = proposal.steps.grep(IdentityStep).filter_map(&:number)
+        zone = zone_of(request, target.path) if kind == SPACE_KIND
+        number = (next_number(scan, zone, zone_paths(request), taken) if kind == SPACE_KIND)
         plan = IdentityPlan.build(scan, target, :number => number,
                                                 :allocate => Records::Identity.allocator(request, request.params),
                                                 :catalog => request.registry.catalog, :engine => request.engine)
@@ -407,10 +411,12 @@ module PhComposer
       end
 
       # The next free whole number among the Spaces already in this Zone, or outside every Zone when
-      # `zone_path` is nil; `zone_paths` are every Zone's, so a Space in a nested Zone counts only there.
-      def next_number(scan, zone_path, zone_paths = [zone_path])
+      # `zone_path` is nil, and `taken`; `zone_paths` are every Zone's, so a Space in a nested Zone counts
+      # only there.
+      def next_number(scan, zone_path, zone_paths = [zone_path], taken = [])
         numbers = scan.spaces.select { |space| Occurrences.zone_path(space.path, zone_paths.compact) == zone_path }
-                      .map { |space| Integer(space.record.fetch("number"), 10, :exception => false) }.compact
+                      .map { |space| space.record.fetch("number") }
+        numbers = (numbers + taken).filter_map { |number| Integer(number, 10, :exception => false) }
         ((numbers.max || 0) + 1).to_s
       end
 

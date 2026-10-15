@@ -40,10 +40,13 @@ class PhComposerTestCase < Minitest::Test
     UI.reset
   end
 
-  # A duplicate Zone a fixture builds stands for one already in the Model, which the copy watcher leaves
-  # for the explicit command; only a native copy made during the session is repaired automatically.
+  # A duplicate Zone or Space a fixture builds stands for one already in the Model, which the copy
+  # watchers leave for the explicit command; only a native copy made during the session is repaired
+  # automatically.
   def treat_duplicates_as_existing(model = Sketchup.active_model)
-    PhComposer::Zones::CopyWatch.state(PhComposer::Sessions.for(model)).reset
+    session = PhComposer::Sessions.for(model)
+    PhComposer::Zones::CopyWatch.state(session).reset
+    PhComposer::Spaces::CopyWatch.state(session).reset
   end
 
   # An operation that refuses with a code outside its `refuses` and its common sets publishes an

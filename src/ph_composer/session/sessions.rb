@@ -8,9 +8,10 @@ module PhComposer
   # registry is read. Reopening a file creates a new Model, and so a new session identity.
   module Sessions
     # What the host observers publish for a session.
+    # `container_added` carries the added Group or ComponentInstance (ContainerWatch).
     HOST_EVENTS = %i[
       session_created model_activated transaction_committed transaction_undone transaction_redone
-      active_path_changed selection_changed tags_changed pre_save post_save
+      active_path_changed selection_changed tags_changed pre_save post_save container_added
     ].freeze
 
     class << self

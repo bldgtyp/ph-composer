@@ -9,7 +9,7 @@ module PhComposer
     # Restorable: `restore` writes the captured records back for a follow-up that cannot abort; isolated
     # storage stays isolated, which is consistent (the copy keeps its finding and its repair).
     class IdentityStep
-      attr_reader :affected
+      attr_reader :affected, :number
 
       def initialize(target:, plan:)
         @path = target.path.dup.freeze
@@ -22,6 +22,8 @@ module PhComposer
         end.freeze
         @affected = []
         @captured = nil
+        renamed = plan.rows.find { |row| row.kind == @kind && row.before == target.record }
+        @number = @kind == SPACE_KIND && renamed ? renamed.after["number"] : nil
       end
 
       def descriptor
