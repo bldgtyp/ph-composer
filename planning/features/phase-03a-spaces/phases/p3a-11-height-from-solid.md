@@ -1,7 +1,7 @@
 # P3a-11: Height from solid
 
 DATE: 2026-10-15
-STATUS: Scoped
+STATUS: In review ([evidence](../evidence/p3a-11-height-from-solid.md))
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

@@ -1,7 +1,7 @@
 # Phase 3a: Spaces, tracking ledger
 
 DATE: 2026-10-15
-STATUS: In progress. Ed authorized the whole packet on 2026-10-15, stage by stage as one pull request each. P3a-01 to P3a-03 merged to main (PRs #135 to #140); P3a-04 merged in slices (#141, #142, #144, #146); P3a-05 merged in two slices (#147, #148); P3a-06 merged (#149); P3a-07 merged in five slices (#150 to #153, #155); P3a-08 merged in three slices (#156, #159, #160); P3a-09 merged in three slices (#162 to #164); P3a-10 slice A merged (#165), slice B in review.
+STATUS: In progress. Ed authorized the whole packet on 2026-10-15, stage by stage as one pull request each. P3a-01 to P3a-03 merged to main (PRs #135 to #140); P3a-04 merged in slices (#141, #142, #144, #146); P3a-05 merged in two slices (#147, #148); P3a-06 merged (#149); P3a-07 merged in five slices (#150 to #153, #155); P3a-08 merged in three slices (#156, #159, #160); P3a-09 merged in three slices (#162 to #164); P3a-10 merged in two slices (#165, #166); P3a-11 in review.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -95,13 +95,13 @@ only when all three are done and its evidence file exists.
 | [P3a-07](phases/p3a-07-spaces-view.md) | The Spaces view | Implemented in five pull requests: A [#150](https://github.com/bldgtyp/ph-composer/pull/150) (`7619964`), B [#151](https://github.com/bldgtyp/ph-composer/pull/151) (`a9d2f72`), C1 [#152](https://github.com/bldgtyp/ph-composer/pull/152) (`34db51a`), C2 [#153](https://github.com/bldgtyp/ph-composer/pull/153) (`803e95b`) merged; D [#155](https://github.com/bldgtyp/ph-composer/pull/155) (`3e0dd5a`) merged; host gate pending | P3a-04, P3a-06 | #150 to #153, #155 | `make ci` pass; `make ui-checks` pass | | ordinary, UI: A 7 P2; B 7 P2; C1 1 P1 and 8 P2; C2 5 P1 and 7 P2; D 3 P2 and 1 P3; all fixed (each PR's last fixes gated by `make ci` only, review cap) | [p3a-07](evidence/p3a-07-spaces-view.md) | S07 |
 | [P3a-08](phases/p3a-08-mark-floor-and-create-space.md) | Mark floor and Create Space | Merged in three slices: A [#156](https://github.com/bldgtyp/ph-composer/pull/156) (`271367d`), B [#159](https://github.com/bldgtyp/ph-composer/pull/159) (`aa88a96`), C [#160](https://github.com/bldgtyp/ph-composer/pull/160) (`f780797`); native S08 rows pending (Ed at the mouse) | P3a-03, P3a-07 | #156, #159, #160 | `make ci` pass; `make ui-checks` pass | | A strong: two passes, 3 P1, 9 P2 and 1 P3, all fixed; B ordinary: two passes, 6 P2, all fixed; C strong: two passes, 2 P1 and 5 P2, all fixed | [p3a-08](evidence/p3a-08-mark-floor.md) | S08 |
 | [P3a-09](phases/p3a-09-space-modes-preview-labels-totals.md) | Modes, preview, labels and totals | Merged in three slices: A [#162](https://github.com/bldgtyp/ph-composer/pull/162) (`7e87397`), B [#163](https://github.com/bldgtyp/ph-composer/pull/163) (`a8930e4`), C [#164](https://github.com/bldgtyp/ph-composer/pull/164) (`e30528c`); native S09 rows pending | P3a-05, P3a-07, P3a-08 | #162, #163, #164 | `make ci` pass; `make ui-checks` pass | | A strong: two passes, 3 P1 and 5 P2, all fixed; B ordinary: two passes, 4 P2, all fixed; C ordinary: two passes, 1 P2, fixed | [p3a-09](evidence/p3a-09-space-modes.md) | S09 |
-| [P3a-10](phases/p3a-10-spaces-export.md) | Spaces export | In progress: slice A (contributor, preflight, Python section, airflows, conformance) merged ([#165](https://github.com/bldgtyp/ph-composer/pull/165), `558ab56`); B (off-to-the-side finding, report schedule, blocked-run report rule) in review on `feature/spaces-p3a-10b` | P3a-04 | `feature/spaces-p3a-10b` | `make ci` pass | | strong | [p3a-10](evidence/p3a-10-spaces-export.md) | S10 |
-| [P3a-11](phases/p3a-11-height-from-solid.md) | Height from solid | Scoped | P3a-07 | | | | ordinary, UI | | S11 |
+| [P3a-10](phases/p3a-10-spaces-export.md) | Spaces export | Merged in two slices: A [#165](https://github.com/bldgtyp/ph-composer/pull/165) (`558ab56`), B [#166](https://github.com/bldgtyp/ph-composer/pull/166) (`12b7fa7`); native S10 host gate pending | P3a-04 | #165, #166 | `make ci` pass; `make ui-checks` pass; `make runtime-browser-check` pass | | A strong: two passes, 1 P1 and 5 P2, all fixed; B strong: two passes, 1 P1 and 2 P2, all fixed | [p3a-10](evidence/p3a-10-spaces-export.md) | S10 |
+| [P3a-11](phases/p3a-11-height-from-solid.md) | Height from solid | In review on `feature/spaces-p3a-11` | P3a-07 | `feature/spaces-p3a-11` | `make ci` pass | | ordinary, UI | [p3a-11](evidence/p3a-11-height-from-solid.md) | S11 |
 | [P3a-12](phases/p3a-12-spaces-acceptance-and-handoff.md) | Spaces acceptance and handoff | Scoped | all | | | | none; consolidation | | S12 |
 
 Milestones: M1 after P3a-04 (Spaces as data, host-proven; implemented and bridge-proven 2026-10-15, the
 native S03 and S04 rows pending), M2 after P3a-08 (authoring on screen; merged with #160 and preview-checked, the native S08 rows pending),
-M3 after P3a-10 (exported and read back). Register ids S01 to S12 are in
+M3 after P3a-10 (exported and read back; merged with #166, the native S10 gate pending). Register ids S01 to S12 are in
 [ACCEPTANCE.md](ACCEPTANCE.md).
 
 ## Decisions

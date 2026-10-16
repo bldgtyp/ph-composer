@@ -1,7 +1,7 @@
 # P3a-10: Spaces export
 
 DATE: 2026-10-15
-STATUS: In progress in two slices: A contributor, preflight and Python section; B off-to-the-side finding, report schedule and blocked-run report ([evidence](../evidence/p3a-10-spaces-export.md)). Re-baselined on `main` at `87bdc62`: R05 item 4 is Phase 3b's; `user_data` pass-through is D3a-15; Spaces is the first section to attach to `ROOM`
+STATUS: Merged in two slices (#165, #166); native S10 host gate pending ([evidence](../evidence/p3a-10-spaces-export.md)). Re-baselined on `main` at `87bdc62`: R05 item 4 is Phase 3b's; `user_data` pass-through is D3a-15; Spaces is the first section to attach to `ROOM`
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
