@@ -1,7 +1,7 @@
 # P3a-08 evidence: Mark floor and Create Space
 
 DATE: 2026-10-16
-STATUS: Slice A in review on `feature/spaces-p3a-08a`; slice B built on `feature/spaces-p3a-08b`
+STATUS: Slice A merged ([#156](https://github.com/bldgtyp/ph-composer/pull/156)); slice B in review on `feature/spaces-p3a-08b`
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
