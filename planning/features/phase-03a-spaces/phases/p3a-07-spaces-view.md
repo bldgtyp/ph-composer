@@ -1,7 +1,7 @@
 # P3a-07: the Spaces view
 
 DATE: 2026-10-15
-STATUS: Implemented in five slices (A, B, C1, C2, D); host gate pending ([evidence](../evidence/p3a-07-spaces-view.md))
+STATUS: Merged in five slices (A, B, C1, C2, D, #150 to #153 and #155); host gate pending ([evidence](../evidence/p3a-07-spaces-view.md))
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

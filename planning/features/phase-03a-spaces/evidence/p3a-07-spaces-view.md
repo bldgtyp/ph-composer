@@ -1,7 +1,7 @@
 # P3a-07 evidence: the Spaces view
 
 DATE: 2026-10-16
-STATUS: Slices A to C2 merged through #150 (`7619964`), #151 (`a9d2f72`), #152 (`34db51a`) and #153 (`803e95b`); slice D in review; host gate pending
+STATUS: Merged in five slices: #150 (`7619964`), #151 (`a9d2f72`), #152 (`34db51a`), #153 (`803e95b`) and #155 (`3e0dd5a`); host gate pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
