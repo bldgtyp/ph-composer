@@ -25,6 +25,19 @@ module PhComposer
         result
       end
 
+      # A legend label's or figure's parts, checked as a readout's are; answers them.
+      def parts!(parts)
+        check_parts!(parts)
+        parts
+      end
+
+      # Plain text, or `[quantity, si_value]` formatted in the display units (core/units.rb).
+      def text(parts, system)
+        Array(parts).map do |part|
+          part.is_a?(Array) ? Units.format(part.last, :quantity => part.first, :system => system) : part.to_s
+        end.join
+      end
+
       def check_parts!(parts)
         Array(parts).each do |part|
           next if part.is_a?(String)
