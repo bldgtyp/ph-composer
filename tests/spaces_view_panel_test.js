@@ -20,7 +20,7 @@ function page() {
   context.window = context;
   dom.attachEvents(context);
   var modules = panelSource.start(context, ["sections/shell", "features/zones/overview", "features/zones/faces_view",
-    "features/spaces/view", "features/spaces/cells"]);
+    "features/spaces/view"]);
   var p = { context: context, panel: modules.panel, modules: modules, sent: sent };
   p.section = function () { return context.document.querySelector("[data-section='ph_composer.overview']"); };
   return p;

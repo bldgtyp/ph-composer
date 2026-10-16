@@ -765,10 +765,11 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         else if (width === null) delete own.columnWidths[field];
         else own.columnWidths[field] = width;
       },
-      action: function (row, item) {
+      action: function (row, item, control) {
         if (item.id === "independent") confirmIndependent(state, row);
-        else call(own, "action", [row, item]);
-      }
+        else call(own, "action", [row, item, control]);
+      },
+      selected: function (row) { return call(own, "selected", [row], false); }
     });
   }
 

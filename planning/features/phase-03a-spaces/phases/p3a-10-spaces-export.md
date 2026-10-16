@@ -35,7 +35,8 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
    the live Model. Adapt `features/spaces/contract.rb`.
 2. **Preflight.** The contributor's preflight returns the rows of CONTRACTS section 6 with their
    `blocks_export` values and a `locate` for each, and the imbalance warning from P3a-07 when it
-   exists. Repairs offered where an action exists: Make independent, Restore position.
+   exists (`space.airflow_imbalance`, on each Zone row of the `spaces` read). Repairs offered where an
+   action exists, as each finding's `repair` names it: Make independent, Restore position.
 3. **Off-to-the-side line (Q17).** A Space whose Floor Segments lie outside its Zone's bounding
    extents adds `space.offset_from_zone`, non-blocking, and one line in the report.
 4. **Python contract.** `python/ph_composer_translation/contract/space_records.py`: typed

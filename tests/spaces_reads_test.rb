@@ -58,10 +58,13 @@ class SpacesReadsTest < PhComposerTestCase
     zone_a, zone_b = all.fetch("zones")
     assert_equal({ "v_sup_m3h" => 60.0, "v_eta_m3h" => 40.0, "v_tran_m3h" => 20.0 }, zone_a["airflows"])
     assert zone_a["imbalanced"]
+    assert_equal [["space.airflow_imbalance", false]],
+                 zone_a["findings"].map { |finding| finding.values_at("code", "blocks_export") }
     assert_equal 0, zone_a["inheriting_count"]
     assert_equal({ "v_sup_m3h" => nil, "v_eta_m3h" => nil, "v_tran_m3h" => nil }, zone_b["airflows"])
     assert_equal 1, zone_b["inheriting_count"]
     refute zone_b["imbalanced"]
+    assert_empty zone_b["findings"]
     living = space(all, "101")
     assert_equal "user_specified", living["airflow_mode"]
     assert_equal({ "v_sup_m3h" => 60.0, "v_eta_m3h" => 0.0, "v_tran_m3h" => 0.0 }, living["airflows"])

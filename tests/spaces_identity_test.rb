@@ -60,6 +60,7 @@ class SpacesIdentityTest < PhComposerTestCase
       finding = row.fetch("findings").find { |item| item["code"] == "space.duplicate_identity" }
       assert finding["blocks_export"]
       assert_includes finding["message"], "Make independent"
+      assert_equal "make_independent", finding["repair"], "the row offers the repair without reading its words"
       assert_includes codes(row.dig("volumes", 0)), "space.duplicate_identity"
       assert_includes codes(row.dig("volumes", 0, "floor_segments", 0)), "space.duplicate_identity"
     end
@@ -128,6 +129,7 @@ class SpacesIdentityTest < PhComposerTestCase
     native_copy(wrapper, 131, @zone)
     finding = spaces.first.fetch("findings").find { |item| item["code"] == "space.duplicate_identity" }
     assert_includes finding["message"], "Draw the Space directly"
+    refute finding.key?("repair"), "shared storage has no repair to offer"
     before = @model.operations.length
     result = make_independent("space_id" => "spc_SSSSSSSSSSSS", "entity_path" => [100, 131, 110])
     assert_equal %w[refused target.shared_definition], result.values_at("status", "code")
