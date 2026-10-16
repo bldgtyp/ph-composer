@@ -111,9 +111,9 @@ class SpacesContextTest < PhComposerTestCase
     assert_equal revision + 2, @session.revision, "only the two callbacks advanced it"
   end
 
-  # Protection still pending for one Volume while another is open: settling it commits inside the save,
-  # and that commit must not cost the open Volume its protection in the saved file.
-  def test_save_protects_pending_and_open_volumes_before_the_file_is_written
+  # Protection still pending for a Volume already left settles inside the save, so the file holds it
+  # protected; the Volume still open is left as it is (D3a-19).
+  def test_save_protects_a_pending_volume_and_leaves_the_open_one_unlocked
     enter(@first)
     @second.locked = false
     @model.instance_variable_set(:@active_path, [@zone, @space, @second])
@@ -123,7 +123,7 @@ class SpacesContextTest < PhComposerTestCase
     Sketchup.stub(:store_model, ->(_path, _model) { saved = [@first.locked?, @second.locked?] }) do
       @model.save(File.join(Dir.tmpdir, "spaces-context-pending.skp"))
     end
-    assert_equal [true, true], saved
+    assert_equal [true, false], saved
   end
 
   # Undo leaves the Volume with nothing on the path to remember it by; Redo then restores its unlocked
@@ -162,11 +162,28 @@ class SpacesContextTest < PhComposerTestCase
     refute @first.locked?
   end
 
-  def test_save_protects_the_open_volume_without_moving_the_path_then_closes_it
+  # A save, an autosave included, leaves the user in the Volume they are editing: nothing is written, and
+  # the host restores the context because the Volume on the path is still unlocked (D3a-19).
+  def test_save_leaves_the_open_volume_open_and_writes_nothing
     enter(@first)
+    before = @model.operations.length
     @model.save(File.join(Dir.tmpdir, "spaces-context-test.skp"))
-    assert @first.locked?
-    assert_equal [@zone, @space], @model.active_path
+    refute @first.locked?
+    assert_equal [@zone, @space, @first], @model.active_path
+    assert_equal before, @model.operations.length
+  end
+
+  # A file saved inside a Volume stores it unlocked; opening the Model protects every unlocked Volume
+  # off the path, as deferred work.
+  def test_opening_a_model_protects_volumes_it_holds_unlocked
+    %i[session_created model_opened].each do |event|
+      @first.locked = false
+      @session.host_event(event)
+      assert reconciler.pending?, event
+      UI.run_timers
+      assert @first.locked?, event
+      assert @second.locked?, event
+    end
   end
 
   def test_close_and_open_move_the_path_and_protect_on_the_way_out

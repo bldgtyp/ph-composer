@@ -126,7 +126,7 @@ Milestones: M1 after P3a-04 (Spaces as data; native S03 and S04 rows observed 20
 | D3a-16 | UI | One Zones tab with views: Faces, Spaces, later loads and equipment | P3a-06, P3a-07 | Answered 2026-10-15 |
 | D3a-17 | UI and code | Weighting factor, a number from 0 to 1 with quick picks | P3a-02, P3a-07, P3a-08 | Answered 2026-10-15 |
 | D3a-18 | UI | Select by through column filters and check-all, no cell menu | P3a-07 | Answered 2026-10-15: filter and check-all |
-| D3a-19 | Behavior | Autosave closes an open Volume under the predecessor's save rule; keep it or unlock again after a save. A native Cmd+S also leaves the path at the Model root, not the Space (P3a-12) | none (follow-up) | Answered 2026-10-16: restore the user after a save (B), proved by a host spike first |
+| D3a-19 | Behavior | Autosave closes an open Volume under the predecessor's save rule; keep it or unlock again after a save. A native Cmd+S also leaves the path at the Model root, not the Space (P3a-12) | none (follow-up) | Answered 2026-10-16: B3 after the spike, a save leaves the open Volume unlocked and the user in it; Volumes saved unlocked are protected on open. Implemented on `feature/spaces-save-keeps-volume-d3a-19` ([evidence](evidence/d3a-19-save-keeps-volume.md)) |
 | D3a-20 | Delivery | Installed footprint limits: raise to a 24 MB target and 26 MB ceiling, plus a 1.5 MB per-phase growth budget | Phase 3b packaging | Answered 2026-10-16: yes; enforced by `rbz-check` from the PR that applies it |
 
 ## Owed from elsewhere, allocated here

@@ -30,6 +30,27 @@ class SessionsTest < PhComposerTestCase
     refute session.valid?
   end
 
+  def test_installing_registers_the_observer_and_opening_the_active_model_creates_its_session
+    created = []
+    unsubscribe = Sessions.on_host_event(:session_created) { |session| created << session }
+    Sessions.reset
+    assert_equal [Sessions.for(Sketchup.active_model)], created
+  ensure
+    unsubscribe&.call
+  end
+
+  # The host can create a Model's session before its file has loaded, so opening it reports again.
+  def test_opening_a_model_reports_model_opened_to_its_existing_session
+    model = Sketchup.active_model
+    session = Sessions.for(model)
+    opened = []
+    unsubscribe = Sessions.on_host_event(:model_opened) { |reported| opened << reported }
+    notify_app(:onOpenModel, model)
+    assert_equal [session], opened
+  ensure
+    unsubscribe&.call
+  end
+
   def test_reopening_a_file_creates_a_new_session_identity
     model = Sketchup.active_model
     model.save("/tmp/ph-composer-sessions.skp")

@@ -38,6 +38,15 @@ class LoaderTest < PhComposerTestCase
     refute PhComposer::Registry.installed?("ph_composer.face_assignment")
   end
 
+  # The Model already open at load gets its session only after every feature has subscribed, so a
+  # `session_created` subscriber hears it (D3a-19: Spaces protects Volumes a file holds unlocked).
+  def test_the_active_models_session_is_created_after_the_features_compose
+    root = File.read(File.join(EXTENSION_ROOT, "extension.rb"))
+    composed = root.index(/^    compose$/)
+    opened = root.index("Sessions.open_active")
+    assert composed && opened && opened > composed, "extension.rb must call Sessions.open_active after compose"
+  end
+
   # One feature owns Zones, Faces and adjacency, so the published dependency graph is the whole truth
   # and no registered name survives from the retired face_assignment feature.
   def test_zones_owns_every_zone_face_and_adjacency_registration

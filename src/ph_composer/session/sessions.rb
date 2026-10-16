@@ -10,7 +10,7 @@ module PhComposer
     # What the host observers publish for a session.
     # `container_added` carries the added Group or ComponentInstance (ContainerWatch).
     HOST_EVENTS = %i[
-      session_created model_activated transaction_committed transaction_undone transaction_redone
+      session_created model_opened model_activated transaction_committed transaction_undone transaction_redone
       active_path_changed selection_changed tags_changed pre_save post_save container_added
     ].freeze
 
@@ -24,6 +24,11 @@ module PhComposer
         @app_observer = HostObservers::AppObserver.new
         Sketchup.add_observer(@app_observer)
         @installed = true
+      end
+
+      # The session of the Model already open, created once every subscriber is registered, so its
+      # `session_created` reaches them: the composition root calls this after composing the features.
+      def open_active
         self.for(Sketchup.active_model) if Sketchup.active_model
       end
 
@@ -121,6 +126,7 @@ module PhComposer
         @app_observer = nil
         @installed = false
         install
+        open_active
       end
 
       private

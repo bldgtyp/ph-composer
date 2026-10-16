@@ -52,35 +52,29 @@ module PhComposer
         end
       end
 
-      # Inside onPreSaveModel the host reports an empty path while the Volume is still open, and a path
-      # change there makes SketchUp save the reopened context in world coordinates. So pending protection
-      # runs and the Volume last seen is protected synchronously, and the path is left alone. Those writes
-      # commit, and their callbacks read the save's empty path, so they are not observed: the baseline is
-      # the Volume still open on screen.
+      # A save, an autosave included, leaves the user where they are (D3a-19): pending protection of
+      # Volumes already left runs, so the file holds them protected, and the Volume still open is left
+      # unlocked, so the host restores the context after the save. Inside onPreSaveModel the host reports
+      # an empty path, so the settled writes' callbacks are not observed: the baseline is the Volume still
+      # open on screen. A Volume saved open is protected when the Model is next opened (`opened`).
       def pre_save
-        volume = @baseline
         @saving = true
         @work.settle
-        if volume && Protection.valid?(volume)
-          Protection.protect(model, volume)
-          protected(volume)
-        end
       rescue StandardError => error
         Diagnostics.exception("space_pre_save", error)
-        @session.notice("Save could not protect the open Volume.", :tone => :error)
+        @session.notice("Save could not protect a Volume.", :tone => :error)
       ensure
         @saving = false
       end
 
-      # After the save the host restores the context; close the Volume the save protected.
-      def post_save
-        volume, index = Protection.open_volume(path)
-        return unless volume
-
-        EditContext.enter(model, path[0...index])
-      rescue StandardError => error
-        Diagnostics.exception("space_post_save", error)
-        @session.notice("The saved Volume could not be closed.", :tone => :error)
+      # A Model opened with Volumes unlocked, as a save inside a Volume leaves them: each one off the path is
+      # queued for protection.
+      def opened
+        Occurrences.scan(model, :strict => false).then { |scan| scan.volumes + scan.orphan_volumes }.each do |found|
+          volume = found.entity
+          @work.queue(volume.persistent_id, volume) if Protection.valid?(volume) && !volume.locked?
+        end
+        observed
       end
 
       # Spaces protected `volume` itself, on a pass, at a save or at the EditContext boundary.
