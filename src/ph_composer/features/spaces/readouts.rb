@@ -52,7 +52,12 @@ module PhComposer
           set_options(request.session, request.params)
         end
         OPTIONS.each do |key, label|
+          # Offered while the labels are on, the only time a line choice shows anything.
           feature.menu_item("#{FEATURE_ID}.labels_#{key}_menu", :label => label, :menu => MENU,
+                                                                :available => lambda { |read|
+                                                                  ColourBy.for(read.session).readouts_on
+                                                                          .include?(LABELS)
+                                                                },
                                                                 :state => lambda { |session|
                                                                   options(session)[key] ? MF_CHECKED : MF_UNCHECKED
                                                                 }) do |session|
