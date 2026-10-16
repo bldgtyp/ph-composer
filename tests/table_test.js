@@ -345,3 +345,25 @@ test("header actions are the caller's nodes, kept in place, with persistent ones
   assert.strictEqual(h.root.querySelector("table").classList.contains("has-header-action-row"), false,
     "a table without column actions retains its compact header");
 });
+
+test("a tree four deep opens its third tier when asked, and its fourth carries no chevron", function () {
+  var h = harness(), deep = [
+    { key: "z", parent: null, tier: "Box", depth: 0, record: { id: "z", name: "Box", size: 1 } },
+    { key: "s", parent: "z", tier: "Part", depth: 1, record: { id: "s", name: "Part", size: 1 } },
+    { key: "v", parent: "s", tier: "Piece", depth: 2, record: { id: "v", name: "Piece", size: 1 } },
+    { key: "g", parent: "v", tier: "Bit", depth: 3, record: { id: "g", name: "Bit", size: 1 } }];
+  function chevrons() {
+    return h.root.querySelectorAll("tr").filter(function (tr) { return tr.getAttribute("data-row-key"); })
+      .map(function (tr) {
+        var chevron = tr.querySelector(".row-chevron");
+        return Boolean(chevron && !chevron.hidden);
+      });
+  }
+  var expanded = { s: true, v: true };
+  h.tables.table(h.root, deep, options({ rows: deep, tree: true, expanded: expanded }));
+  assert.deepStrictEqual(chevrons(), [true, true, false, false], "by default the third tier has no chevron");
+  h.root._table = null;
+  h.tables.table(h.root, deep, options({ rows: deep, tree: true, expanded: expanded, tiers: 3 }));
+  assert.deepStrictEqual(chevrons(), [true, true, true, false]);
+  assert.strictEqual(h.root.querySelectorAll(".tier-3").length, 1, "the fourth tier has its own indent class");
+});
