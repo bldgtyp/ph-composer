@@ -252,3 +252,14 @@ The same process, each case on a fresh copy (`r11/r11.skp` for PTAB and GH47, `b
   stubbed unreadable setup shows Reset and Done with both routes absent; the real preferences are untouched. A
   fresh normal process then reads the setup readable with the original providers, an equal fingerprint, no
   helper, an unmodified Model and a new session.
+
+## E15, Window product library copy and export
+
+A copy of `envelope/p209-p211-native.skp`. The synthetic four-kind provider `tools/examples/library/materials.json`
+was added through the native picker, and the library setup was restored afterwards. Native drags of the
+provider's Frame and Glazing onto the selected element card each copied and assigned in one operation. Each time,
+one native Undo ("Undo Copy Library Record") restored the four inventories and the Window Type references exactly.
+A provider Psi-Install Type staged and painted in the Installs editor left the Model untouched. Save wrote one
+library-attributed product with one perimeter reference, and native Undo restored the baseline. The Export
+library review listed 4 Materials, 1 Frame, 1 Glazing and 1 Psi-Install Type. The written file reads back as 7
+rows that map to the local records with no warnings.
