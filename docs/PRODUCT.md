@@ -204,6 +204,15 @@ Close, Enter, Delete, Remove Volume, Move to Zone and the repair its problem nam
 factor column filters the table and colours the Model by factor. There is no Level rail and no
 separate balance view; column widths last for the session.
 
+The Weighting factor column menu starts Mark floor: a paint icon beside 0, 1 and each factor in use
+turns it on with that factor, and a pressed paint glyph in the column header stops it, as Escape does.
+In the viewport, a click or a drag over Faces inside a Volume marks them as Floor Segments in one Undo
+step; a click on a Face at a Space's root adds the next Volume. A Face in a Zone and in no Space is
+offered Create Space, and a classified Zone Face or a Face in no Zone is refused with the reason.
+Create Space is in SketchUp's context menu on a Face selection, inside an open Zone: it shows which
+Faces become the new Space and why it leaves out the others, and Create makes the Space, its Volume
+and its Floor Segments in one Undo step.
+
 ## Handoff
 
 Export produces HBJSON with an adjacent report explaining supported content and findings. A

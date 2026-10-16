@@ -6747,6 +6747,179 @@ Example params:
 }
 ```
 
+### `ph_composer.spaces.create_review.state`
+
+The open Create Space review, if any. Owner: `ph_composer.spaces`.
+
+Refuses: only the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token",
+    "revision",
+    "zone",
+    "zone_name",
+    "accepted",
+    "left_out"
+  ],
+  "properties": {
+    "token": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "One per review opened; null when none is open."
+    },
+    "revision": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The revision create must be applied at."
+    },
+    "zone": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "The Zone occurrence, as ph_composer.zones.list returns it."
+    },
+    "zone_name": {
+      "type": "string"
+    },
+    "accepted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+      }
+    },
+    "left_out": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "reason",
+          "message"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+          },
+          "reason": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.spaces.list`
 
 One page of Space occurrences with their Volumes and Floor Segments, SI metrics, states and findings, and every Zone's sums. Owner: `ph_composer.spaces`.
@@ -43018,6 +43191,450 @@ Example params:
       1300
     ]
   }
+}
+```
+
+### `ph_composer.spaces.create_review.close`
+
+Close the Create Space review. Owner: `ph_composer.spaces`.
+
+Refuses: only the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token"
+  ],
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "The token the review opened with; another leaves it open."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token",
+    "revision",
+    "zone",
+    "zone_name",
+    "accepted",
+    "left_out"
+  ],
+  "properties": {
+    "token": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "One per review opened; null when none is open."
+    },
+    "revision": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The revision create must be applied at."
+    },
+    "zone": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "The Zone occurrence, as ph_composer.zones.list returns it."
+    },
+    "zone_name": {
+      "type": "string"
+    },
+    "accepted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+      }
+    },
+    "left_out": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "reason",
+          "message"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+          },
+          "reason": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "token": "example-review-token"
+}
+```
+
+### `ph_composer.spaces.create_review.open`
+
+Review which explicit Faces Create Space would take into a new Space and why it leaves each other one out, for the panel to confirm. Owner: `ph_composer.spaces`.
+
+Refuses: `record.unreadable`, `revision.stale`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zone",
+    "faces",
+    "revision"
+  ],
+  "properties": {
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "The Zone occurrence, as ph_composer.zones.list returns it."
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+      },
+      "minItems": 1,
+      "maxItems": 500,
+      "description": "Loose Faces of the Zone, as its Face list returns them."
+    },
+    "revision": {
+      "type": "integer",
+      "description": "The revision the Faces were read at; a later one refuses."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token",
+    "revision",
+    "zone",
+    "zone_name",
+    "accepted",
+    "left_out"
+  ],
+  "properties": {
+    "token": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "One per review opened; null when none is open."
+    },
+    "revision": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The revision create must be applied at."
+    },
+    "zone": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "The Zone occurrence, as ph_composer.zones.list returns it."
+    },
+    "zone_name": {
+      "type": "string"
+    },
+    "accepted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zone_id",
+          "zone_path",
+          "entity_path",
+          "entity_id"
+        ],
+        "properties": {
+          "zone_id": {
+            "type": "string"
+          },
+          "zone_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+      }
+    },
+    "left_out": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "reason",
+          "message"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "zone_path",
+              "entity_path",
+              "entity_id"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "zone_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "entity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "description": "A Zone Face, as ph_composer.zones.faces.list returns it."
+          },
+          "reason": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "zone": {
+    "zone_id": "zon_Ab12Cd34Ef56",
+    "zone_path": [
+      1201
+    ]
+  },
+  "faces": [
+    {
+      "zone_id": "zon_Ab12Cd34Ef56",
+      "zone_path": [
+        1201
+      ],
+      "entity_path": [
+        1202
+      ],
+      "entity_id": null
+    }
+  ],
+  "revision": 1
 }
 ```
 

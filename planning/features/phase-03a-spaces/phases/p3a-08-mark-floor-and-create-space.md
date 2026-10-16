@@ -1,7 +1,7 @@
 # P3a-08: Mark floor and Create Space
 
 DATE: 2026-10-15
-STATUS: In progress in three slices: A the Mark floor tool, B the column menu's paint icons and header glyph, C Create Space, the walkthrough and the preview ([evidence](../evidence/p3a-08-mark-floor.md))
+STATUS: In progress in three slices: A the Mark floor tool and B the column menu's paint icons and header glyph merged; C Create Space, the walkthrough and the preview in review ([evidence](../evidence/p3a-08-mark-floor.md))
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

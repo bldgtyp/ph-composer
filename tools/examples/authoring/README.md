@@ -258,3 +258,26 @@ returns.
 uv run tools/hostkit/host_bridge.py eval \
   'load "/absolute/path/to/ph-composer/tools/examples/authoring/spaces_walkthrough.rb"; SpacesWalkthrough.run'
 ```
+
+## P3a-08 Spaces: the Mark floor tool and Create Space
+
+`mark_tool_walkthrough.rb` is the S08 host gate's script, after the Classify one. It builds one Zone
+holding a Space of one Volume with four floor Faces and a Face at the Space's root, four loose floor
+Faces, a classified wall and a Face outside every Zone, then arms the tool; you click, drag and
+right-click.
+
+```sh
+uv run tools/hostkit/host_bridge.py eval \
+  'load "/absolute/path/to/ph-composer/tools/examples/authoring/mark_tool_walkthrough.rb"; MarkToolWalkthrough.setup'
+uv run tools/hostkit/host_bridge.py eval 'MarkToolWalkthrough.instrument'
+uv run tools/hostkit/host_bridge.py eval 'MarkToolWalkthrough.arm(1.0)'
+```
+
+Then drag across the four Volume Faces, read `report` (one Undo step per gesture, the factor frozen
+at button-down), and read `flags`: each held move must carry `MK_LBUTTON`, or the tool's lost-release
+check cancels every drag on this host. `limit(2)` checks a drag past the limit refuses whole. Open
+the Space and click its root Face for a new Volume; click a loose Face for the Create Space offer
+and right-click with the tool running for "Create Space…". With the Zone open and three loose Faces
+selected, the wall among them, choose Create Space from SketchUp's context menu: the panel's review
+must accept two, leave the wall out with its reason, and Create must make one Space in one Undo
+step.
