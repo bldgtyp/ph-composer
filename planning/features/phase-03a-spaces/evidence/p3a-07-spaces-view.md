@@ -1,14 +1,15 @@
 # P3a-07 evidence: the Spaces view
 
 DATE: 2026-10-16
-STATUS: Slice A merged through #150 (`7619964`); slice B in review
+STATUS: Slices A and B merged through #150 (`7619964`) and #151 (`a9d2f72`); slice C1 in review
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 Register row S07. Delivered in four slices, one pull request each: A rows and read-only columns; B editing
 and airflow entry (steps 4 to 6); C the selection bar, row actions, findings, Colour by weighting factor and
 the shared checked Zones carried from P3a-06 (steps 8 to 11 and 17); D preview fixtures, the unit-switch
-measurement and docs (steps 14 to 16).
+measurement and docs (steps 14 to 16). Slice C went out in two parts: C1 (steps 7's finding, 9, 10 and
+11) and C2 (step 8 and 17).
 
 ## Slice A: rows, columns and Zone sums
 
@@ -74,4 +75,27 @@ re-entered the drafts' refresh through the notice and overflowed the stack; the 
 edit already sent; the paste test never cleared a set rate). Each was reproduced by a test and fixed (the
 kit table now calls `options.painted` after every paint and asks `options.mayToggle` before a row opens or
 shuts); the second pass's three were gated by `make ci` only, at the review cap.
+
+## Slice C1: row actions, findings and Colour by weighting factor
+
+Host: the Zone rows of the `spaces` read carry `space.airflow_imbalance` (non-blocking) when the host flags
+the imbalance (step 7's finding; P3a-10's preflight lists it), and every finding may name its `repair`
+(`make_independent` for a copy that can be made independent, `restore_position` for a moved Volume), so a
+reader offers the repair without reading words. `features/spaces/colour_modes.rb` registers
+`ph_composer.spaces.by_weighting_factor` over every Floor Segment face, one band per factor in use, keyed by
+two-decimal text so the legend and the panel's filter agree (step 11; nothing under `colour_by/` names it).
+
+Panel: `html/features/spaces/actions.js` gives each row its actions (step 9): Locate every row (the
+`locate` view command); Open or Close a Space and Enter a Volume (unprotect, then `context.open` once that
+completes); Delete a Space and Remove a Volume after a confirmation in the shared dialog naming what goes;
+Move a Space to another Zone, chosen in the shared dialog; and the repair a finding names. Every Model change
+carries `expected_revision`, so a row from a stale snapshot refuses, and a refusal shows the host's reason.
+The open row is the one on the snapshot's edit path (the host's new `selected` hook). Each Space, Volume and
+Floor Segment row shows its findings as its marker, those blocking export first (step 10). The Weighting
+factor column filters by band, reaches the viewport as the matching Floor Segment faces, and carries the
+mode's Colour-by toggle. The Spaces view widens the Hierarchy column for four indented levels with markers.
+
+Tests: `tests/spaces_actions_panel_test.js` (phase doc test 8 and the filter), `tests/spaces_colour_modes_test.rb`
+(test 11), and the finding and repair assertions in `spaces_reads_test.rb`, `spaces_identity_test.rb` and
+`spaces_context_test.rb`.
 
