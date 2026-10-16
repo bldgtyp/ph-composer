@@ -46,7 +46,10 @@ module PhComposer
       end
 
       SEGMENT_ROW = row(FLOOR_SEGMENT, "reference" => FLOOR_SEGMENT_REFERENCE, "metrics" => SEGMENT_METRICS,
-                                       "findings" => FINDINGS)
+                                       "findings" => FINDINGS,
+                                       "weighting_band" => { "type" => "string",
+                                                             "description" => "The weighting factor as By weighting " \
+                                                                              "factor's legend and a filter key it." })
       VOLUME_ROW = row(VOLUME, "reference" => VOLUME_REFERENCE, "nested" => { "type" => "boolean" },
                                "open" => { "type" => "boolean", "description" => "Open for editing on the path." },
                                "protected" => { "type" => "boolean", "description" => "Locked, so the Space " \

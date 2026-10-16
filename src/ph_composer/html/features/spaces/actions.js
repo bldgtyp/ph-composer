@@ -66,6 +66,18 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
 
   SpaceActions.prototype.busy = function () { return this.edits.busy() || this.context.busy(); };
 
+  /* What names a row's record to the user even when it has no name: "Living", or "Space 101", or
+     "Volume 1 of Living". */
+  function describe(record) {
+    var space = record.space;
+    var spaceName = space ? space.values.name || "Space " + space.values.number : "";
+    if (record.volume) {
+      return (record.volume.values.display_name || "Volume " + record.volume.values.number) + " of " + spaceName;
+    }
+    if (record.segment) return record.segment.values.display_name || "Floor Segment of " + spaceName;
+    return spaceName;
+  }
+
   function repairs(record) {
     return (record.findings || []).map(function (finding) { return finding.repair; }).filter(Boolean);
   }
@@ -74,7 +86,8 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
   SpaceActions.prototype.actions = function (row) {
     var record = row.record, target = record.segment || record.volume || record.space, items = [];
     if (!target) return items;
-    var busy = this.busy(), name = record.name || row.tier;
+    var busy = this.busy(), name = record.volume || record.segment ? record.name || describe(record) :
+      describe(record);
     items.push({ id: "spaces.locate", icon: "locate", label: "Locate " + name, disabled: busy });
     var fixes = repairs(target);
     if (record.volume && fixes.indexOf("restore_position") >= 0) {
@@ -128,14 +141,14 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
       case "spaces.restore": this.edits.run(PREFIX + ".volumes.restore_position", { volume: reference }); break;
       case "spaces.independent": this.edits.run(PREFIX + ".make_independent", { reference: reference }); break;
       case "spaces.delete":
-        this.askFirst("Delete " + record.name, "The Space, its Volumes and their Floor Segments are erased. One Undo " +
-          "brings them back.", "Delete", function (revision) {
+        this.askFirst("Delete " + describe(record), "The Space, its Volumes and their Floor Segments are erased. " +
+          "One Undo brings them back.", "Delete", function (revision) {
           self.runAt(revision, PREFIX + ".delete", { space: reference });
         });
         break;
       case "spaces.remove_volume":
-        this.askFirst("Remove " + record.name, "The Volume's records go and its Faces stay loose in the Space. One " +
-          "Undo brings them back.", "Remove", function (revision) {
+        this.askFirst("Remove " + describe(record), "The Volume's records go and its Faces stay loose in the " +
+          "Space. One Undo brings them back.", "Remove", function (revision) {
           self.runAt(revision, PREFIX + ".volumes.remove", { volume: reference });
         });
         break;
@@ -174,11 +187,11 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     var dialog = this.dialog || (this.dialog = ui.formDialog("", function () { dialog.closeModal(); }));
     if (!dialog.parentNode) document.body.appendChild(dialog);
     var select = ui.element("select");
-    select.setAttribute("aria-label", "Zone to move " + record.name + " to");
+    select.setAttribute("aria-label", "Zone to move " + describe(record) + " to");
     choices.forEach(function (zone, index) { select.appendChild(ui.option(String(index), zone.name || "Zone")); });
     var cancel = ui.button("Cancel", function () { dialog.closeModal(); }), self = this;
     var revision = this.host.revision;
-    dialog.replaceChildren(ui.element("h2", "", "Move " + record.name + " to another Zone"),
+    dialog.replaceChildren(ui.element("h2", "", "Move " + describe(record) + " to another Zone"),
       ui.element("p", "", "The Space moves where it stands, with its Volumes and Floor Segments; its number and " +
         "values are kept. Close any open Space or Volume first."), select,
       ui.actionRow(cancel, ui.button("Move", function () {

@@ -250,8 +250,8 @@ test("a matching Space outside every Zone joins the viewport mask", function () 
 test("weighting factor bands keep values apart that round alike", function () {
   var p = page();
   p.receive(snapshot(function (section) {
-    section.spaces[0].volumes[0].floor_segments[0].values.weighting_factor = 0.121;
-    section.spaces[1].volumes[0].floor_segments[0].values.weighting_factor = 0.124;
+    section.spaces[0].volumes[0].floor_segments[0].weighting_band = "0.1234561";
+    section.spaces[1].volumes[0].floor_segments[0].weighting_band = "0.1234562";
   }));
   var menu = p.section().querySelectorAll("button").filter(function (node) {
     return node.getAttribute("aria-label") === "Weighting factor column menu";
@@ -259,5 +259,20 @@ test("weighting factor bands keep values apart that round alike", function () {
   p.click(menu);
   var labels = menu.parentNode.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; })
     .map(function (box) { return box.parentNode.children[1].textContent; });
-  assert.deepStrictEqual(labels, ["0", "0.121", "0.124", "1"]);
+  assert.deepStrictEqual(labels, ["0", "0.1234561", "0.1234562", "1"], "the host's bands, never re-derived");
+});
+
+test("a confirmation names a record with no name by its number and its Space", function () {
+  var p = page();
+  p.receive(snapshot(function (section) {
+    section.spaces[1].values.name = "";
+    section.spaces[1].volumes[0].values.display_name = "";
+  }));
+  expandAll(p);
+  p.click(p.action("Delete Space 102"));
+  var dialog = p.context.document.querySelector("dialog");
+  assert.strictEqual(dialog.querySelector("h2").textContent, "Delete Space 102");
+  p.click(dialog.querySelectorAll("button").filter(function (node) { return node.textContent === "Cancel"; })[0]);
+  p.click(p.action("Remove Volume 1 of Space 102"));
+  assert.strictEqual(dialog.querySelector("h2").textContent, "Remove Volume 1 of Space 102");
 });

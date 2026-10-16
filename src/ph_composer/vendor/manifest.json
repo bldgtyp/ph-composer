@@ -96,9 +96,9 @@
       "sha256": "eda6ea45c74703b8779547bc220411664ee3fda12fa74c183777838f9c4f5355"
     },
     "html/features/spaces/actions.js": {
-      "bytes": 10890,
+      "bytes": 11525,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "00e5bb9687a7b883dd6ee9819b6f1c397142e56693a2a5d33a1b7a886be45e09"
+      "sha256": "165efb736e93c33f4fd7d0b0366c2da0d363d0973d447f915404f863c8490463"
     },
     "html/features/spaces/cells.js": {
       "bytes": 9749,
@@ -106,9 +106,9 @@
       "sha256": "5bc18ba0dd78583c25c1a8ae45606d653a695b0d55090a8be4f3672b9c09c85b"
     },
     "html/features/spaces/view.js": {
-      "bytes": 16224,
+      "bytes": 16129,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d41b66d0d33e4172f4d05eca48df3f906e30efa92e86eac20532d49d0756cded"
+      "sha256": "ce948986b874b12a376578c454b8bcf380d6894b4494f91e159c1ebbba212ee8"
     },
     "html/features/windows/audit.js": {
       "bytes": 3740,

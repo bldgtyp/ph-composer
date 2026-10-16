@@ -70,13 +70,13 @@ module PhComposer
 
       # Another occurrence carries this record's id: a copy. `repeated` says storage above its Space is
       # shared, a component or a copied Group, which no Spaces repair isolates. `ancestor` says the repair is
-      # its Space's: Make independent on the Space isolates this record with it.
-      def duplicate(label, repeated:, ancestor: false)
+      # the named container's ("Space" or "Volume"): Make independent on it isolates this record with it.
+      def duplicate(label, repeated:, ancestor: nil)
         message = if repeated
                     "This #{label} is repeated through shared storage, such as a component. Draw the Space " \
                       "directly; there is no repair."
                   elsif ancestor
-                    "This #{label} shares its identity with a copy. Use Make independent on its Space."
+                    "This #{label} shares its identity with a copy. Use Make independent on its #{ancestor}."
                   else
                     "This #{label} shares its identity with a copy. Use Make independent on the copy."
                   end

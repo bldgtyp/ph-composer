@@ -6104,7 +6104,8 @@ Result:
                       "extension_status",
                       "reference",
                       "metrics",
-                      "findings"
+                      "findings",
+                      "weighting_band"
                     ],
                     "properties": {
                       "id": {
@@ -6232,6 +6233,10 @@ Result:
                             }
                           }
                         }
+                      },
+                      "weighting_band": {
+                        "type": "string",
+                        "description": "The weighting factor as By weighting factor's legend and a filter key it."
                       }
                     }
                   }
@@ -7243,7 +7248,8 @@ Result:
                       "extension_status",
                       "reference",
                       "metrics",
-                      "findings"
+                      "findings",
+                      "weighting_band"
                     ],
                     "properties": {
                       "id": {
@@ -7371,6 +7377,10 @@ Result:
                             }
                           }
                         }
+                      },
+                      "weighting_band": {
+                        "type": "string",
+                        "description": "The weighting factor as By weighting factor's legend and a filter key it."
                       }
                     }
                   }

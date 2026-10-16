@@ -78,6 +78,11 @@ class SpacesIdentityTest < PhComposerTestCase
     assert_equal(2, volumes.count { |volume| codes(volume).include?("space.duplicate_identity") })
     segments = volumes.first.fetch("floor_segments")
     assert_equal [true, true], segments.map { |segment| codes(segment).include?("space.duplicate_identity") }
+    copied = segments.map { |segment| segment["findings"].find { |item| item["code"] == "space.duplicate_identity" } }
+    assert(copied.all? { |finding| finding["message"].include?("on its Volume") && !finding.key?("repair") },
+           "a copied Volume's Floor Segments are repaired with the Volume, which offers it")
+    assert_equal "make_independent",
+                 volumes.first["findings"].find { |item| item["code"] == "space.duplicate_identity" }["repair"]
   end
 
   def test_make_independent_rewrites_the_named_copy_in_one_step_and_leaves_the_original

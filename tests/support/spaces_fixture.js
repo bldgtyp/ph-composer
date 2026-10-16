@@ -8,7 +8,8 @@
 var ZONE_A = [100], ZONE_B = [200];
 
 function segment(path, name, area, factor) {
-  return { id: "sfs_" + path.join("_"), values: { display_name: name, weighting_factor: factor, net_area_factor: 1 },
+  return { id: "sfs_" + path.join("_"), weighting_band: String(factor),
+    values: { display_name: name, weighting_factor: factor, net_area_factor: 1 },
     reference: { floor_segment_id: "sfs_" + path.join("_"), entity_path: path }, findings: [],
     metrics: { floor_area_m2: area, weighted_area_m2: area * factor, net_area_m2: area, horizontal: true } };
 }

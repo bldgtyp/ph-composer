@@ -34,9 +34,10 @@ class SpacesColourModesTest < PhComposerTestCase
     assert_equal operations, @model.operations.length
   end
 
-  def test_a_band_is_the_factor_to_six_decimals_so_nearby_factors_stay_apart
+  def test_a_band_is_the_factors_shortest_exact_text_so_no_two_factors_share_one
     band = PhComposer::Spaces::ColourModes.method(:band)
-    assert_equal %w[1 0 0.5 0.121 0.124 0.125], [1.0, 0, 0.5, 0.121, 0.124, 0.125].map { |factor| band.call(factor) }
+    assert_equal %w[1 0 0.5 0.1234561 0.1234562 0.0078125],
+                 [1.0, 0, 0.5, 0.1234561, 0.1234562, 0.0078125].map { |factor| band.call(factor) }
   end
 
   def test_nothing_under_colour_by_names_the_spaces_mode

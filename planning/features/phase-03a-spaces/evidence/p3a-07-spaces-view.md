@@ -83,7 +83,8 @@ the imbalance (step 7's finding; P3a-10's preflight lists it), and every finding
 (`make_independent` for a copy that can be made independent, `restore_position` for a moved Volume), so a
 reader offers the repair without reading words. `features/spaces/colour_modes.rb` registers
 `ph_composer.spaces.by_weighting_factor` over every Floor Segment face, one band per factor in use, keyed by
-two-decimal text so the legend and the panel's filter agree (step 11; nothing under `colour_by/` names it).
+its shortest exact text, which the read publishes on each Floor Segment row (`weighting_band`) so the
+legend and the panel's filter use one string (step 11; nothing under `colour_by/` names it).
 
 Panel: `html/features/spaces/actions.js` gives each row its actions (step 9): Locate every row (the
 `locate` view command); Open or Close a Space and Enter a Volume (unprotect, then `context.open` once that
@@ -98,4 +99,13 @@ mode's Colour-by toggle. The Spaces view widens the Hierarchy column for four in
 Tests: `tests/spaces_actions_panel_test.js` (phase doc test 8 and the filter), `tests/spaces_colour_modes_test.rb`
 (test 11), and the finding and repair assertions in `spaces_reads_test.rb`, `spaces_identity_test.rb` and
 `spaces_context_test.rb`.
+
+Slice C1 review: Codex `gpt-6.1-sol` on #152. The first pass found one P1 (a confirmation sent the revision
+current at its commit, not at its opening) and five P2 (row changes ignored a held cell draft; rounded band
+keys merged nearby factors; outside-Zone rows missed the viewport mask; descendants of a copied Space offered
+a repair that refuses; Close on a Space left it open under an open Volume); the second three P2 (a copied
+Volume's Floor Segments pointed to the Space rather than the Volume; six-decimal keys still merged factors and
+rounded differently in Ruby and JavaScript, so the host now publishes the band; confirmations for unnamed
+records named nothing). Each was reproduced by a test and fixed; the second pass's three were gated by
+`make ci` only, at the review cap.
 

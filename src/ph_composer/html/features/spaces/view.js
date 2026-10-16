@@ -238,10 +238,10 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells, Spac
 
   /* ---------------------------------------------------------------- the weighting factor filter */
 
-  /* A factor's band: the factor as text to six decimals with trailing zeros dropped ("1", "0.5", "0.121"),
-     the key the By weighting factor mode's legend uses too (Spaces::ColourModes.band). */
-  function band(factor) {
-    return Number(factor).toFixed(6).replace(/\.?0+$/, "");
+  /* A Floor Segment's band: the host publishes it (`weighting_band`), the key By weighting factor's legend
+     uses too, so the panel never re-derives it from the number. */
+  function band(segment) {
+    return segment.weighting_band;
   }
 
   function segmentsOf(record) {
@@ -256,13 +256,13 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells, Spac
   }
 
   function passes(segment, filters) {
-    return !filters.weighting_factor || filters.weighting_factor.indexOf(band(segment.values.weighting_factor)) >= 0;
+    return !filters.weighting_factor || filters.weighting_factor.indexOf(band(segment)) >= 0;
   }
 
   function filterValues(vs) {
     var seen = Object.create(null);
     segmentsOf({ spaces: vs.spaces }).forEach(function (segment) {
-      seen[band(segment.values.weighting_factor)] = true;
+      seen[band(segment)] = true;
     });
     return Object.keys(seen);
   }
