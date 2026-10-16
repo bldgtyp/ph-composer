@@ -110,3 +110,8 @@ element, so the bytes travelled through `report_html` though `value.result` left
 rendered without the canonical model. A result marked publishable but holding no model, which the task
 refuses, rendered as "Export complete"; `Report.render` now takes whether the run published (`published:`),
 by default publishable and holding a canonical model, and the task passes false for a refusal.
+
+Cycle 2: one P2, fixed with a test and gated by `make ci` (the review cap). The schedule's Zone and
+Building-Segment total rows left the airflow columns blank; they now sum each rate over their Spaces by the
+table's rule, with a dash while any of them inherits its Zone's airflow. Each schedule row now carries its
+Building-Segment for that.

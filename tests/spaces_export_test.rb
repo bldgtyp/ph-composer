@@ -117,7 +117,8 @@ class SpacesExportTest < PhComposerTestCase
   end
 
   def test_the_report_schedules_each_zone_with_its_totals_names_off_to_the_side_spaces_and_reads_ip
-    living = { "space_id" => "spc_L", "zone_id" => "zon_A", "zone_name" => "Zone A", "number" => "101",
+    living = { "space_id" => "spc_L", "zone_id" => "zon_A", "zone_name" => "Zone A",
+               "building_segment" => "Main Building", "number" => "101",
                "name" => "Living", "floor_area_m2" => 12.0, "weighted_area_m2" => 12.0, "net_volume_m3" => 30.0,
                "height_m" => 2.5, "offset_from_zone" => false, "v_sup_m3h" => 60.0, "v_eta_m3h" => 0.0,
                "v_tran_m3h" => 0.0 }
@@ -136,8 +137,14 @@ class SpacesExportTest < PhComposerTestCase
     assert_includes html, "Main Building"
     assert_match(/Drawn outside its Zone.*201 Loft \(Zone B\)/, html)
     assert_includes html, "<td>Zone</td>", "an inheriting Space's airflow reads Zone"
+    zone_a = html[/<h3>Zone A<\/h3>.*?<\/table>/m]
+    assert_includes zone_a, "<td>Zone total</td><td></td><td>12.00</td><td>12.00</td><td></td><td>30.00</td>" \
+                            "<td>60.00</td><td>0.00</td><td>0.00</td>", "Zone A's airflows are summed"
+    zone_b = html[/<h3>Zone B<\/h3>.*?<\/table>/m]
+    assert_includes zone_b, "<td>\u2014</td>", "a Zone with an inheriting Space shows a dash"
     ip = X.report(PhComposer::Export::ResultView.new({ X::SECTION => fields }, contributor), "IP").join
     assert_includes ip, "ft²"
+    assert_includes ip, "<td>35.31</td>", "60 m3/h in cfm"
     assert_includes ip, "129.17", "12 m2 in square feet"
   end
 

@@ -16,7 +16,8 @@ module PhComposer
       PREFLIGHT = "#{FEATURE_ID}.export_preflight"
       ZONES_SECTION = "ph_composer.zones.export.zones"
       TOTALS = %w[floor_area_m2 weighted_area_m2 net_volume_m3].freeze
-      SCHEDULE = (%w[space_id zone_id zone_name number name height_m offset_from_zone] + TOTALS + AIRFLOWS).freeze
+      SCHEDULE = (%w[space_id zone_id zone_name building_segment number name height_m offset_from_zone] + TOTALS +
+                  AIRFLOWS).freeze
       # The schedule's columns: heading, field and quantity (nil for text).
       COLUMNS = [["No.", "number", nil], ["Name", "name", nil], ["Floor area", "floor_area_m2", "area"],
                  ["Weighted area (iCFA)", "weighted_area_m2", "area"], ["Height", "height_m", "length"],
@@ -62,11 +63,13 @@ module PhComposer
               cell(row, field, quantity, display_units)
             }
           }
-          body << total_row("Zone total", zone_totals.fetch(zone_id, {}), display_units)
+          body << total_row("Zone total", zone_totals.fetch(zone_id, {}), spaces, display_units)
           "<h3>#{Export::ReportHtml.h(name)}</h3>" + Export::ReportHtml.table(headings, body)
         end.join
+        by_segment = rows.group_by { |row| row["building_segment"] }
         segments = result.fetch("space_segment_totals", []).map do |row|
-          total_row(row.fetch("building_segment"), row, display_units)
+          total_row(row.fetch("building_segment"), row, by_segment.fetch(row.fetch("building_segment"), []),
+                    display_units)
         end
         html += "<h3>Building-Segments</h3>" + Export::ReportHtml.table(headings, segments) unless segments.empty?
         offset = rows.select { |row| row["offset_from_zone"] }
@@ -93,12 +96,17 @@ module PhComposer
         format("%.2f", PhComposer::Units.to_display(value, :quantity => quantity, :system => display_units))
       end
 
-      def total_row(label, totals, display_units)
+      # A total row: the reported area and volume totals, and the airflows summed over its Spaces by the table's
+      # rule, a dash while any of them inherits its Zone's airflow.
+      def total_row(label, totals, spaces, display_units)
+        inheriting = spaces.any? { |row| AIRFLOWS.all? { |key| row[key].nil? } }
         COLUMNS.map do |_heading, field, quantity|
           next label if field == "number"
-          next "" unless TOTALS.include?(field) && totals.key?(field)
+          next cell(totals, field, quantity, display_units) if TOTALS.include?(field) && totals.key?(field)
+          next "" unless AIRFLOWS.include?(field) && !spaces.empty?
+          next "\u2014" if inheriting
 
-          cell(totals, field, quantity, display_units)
+          cell({ field => spaces.sum { |row| row[field].to_f } }, field, quantity, display_units)
         end
       end
 

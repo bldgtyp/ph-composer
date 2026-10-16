@@ -171,6 +171,7 @@ def schedule_row(item: TranslatedSpace) -> dict[str, JSONValue]:
         "space_id": item.source.id,
         "zone_id": item.zone_id,
         "zone_name": item.zone_name,
+        "building_segment": item.building_segment,
         "number": item.source.number,
         "name": item.source.name,
         **{key: float(getattr(item.space, attribute)) for key, attribute in TOTALS.items()},
