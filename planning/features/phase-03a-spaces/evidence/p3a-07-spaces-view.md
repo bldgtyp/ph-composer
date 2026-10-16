@@ -1,7 +1,7 @@
 # P3a-07 evidence: the Spaces view
 
 DATE: 2026-10-16
-STATUS: Slice A in review on `feature/spaces-p3a-07a`
+STATUS: Slice A merged through #150 (`7619964`); slice B in review
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -60,4 +60,10 @@ Tests: `tests/spaces_cells_panel_test.js` (phase doc tests 2 to 5 and 9: one upd
 keeping the draft, the factor range, the zero and clear cases, the three airflow states, a range fill and a
 paste each as one `batch_update`, a unit switch). Clearing the last set rate returning a Space to inheriting
 is the host's any-set rule (`spaces_reads_test.rb`); the panel sends the clear.
+
+Seen in the panel (the preview page fed the reference model's snapshot): an editable height read "2500"
+under "Height m" (its field carried a dimension scope, whose default is mm), numbers edited in place sat
+left of the read-only numbers, and the range-edit tools stood in a row of their own. Heights now edit in
+metres, a numeric cell input right-aligns (kit class `is-numeric`), and each view has a tools slot in the
+shared controls row holding its help and what it binds there.
 
