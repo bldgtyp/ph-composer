@@ -41,9 +41,19 @@ function visibleRows(page) {
     assert.equal(await living.locator(".phc-row-marker:not([hidden])").count(), 1, "the imbalance marker");
     const loft = page.getByRole("textbox", { name: "Loft supply" });
     assert.equal(await loft.getAttribute("placeholder"), "Zone", "an inheriting Space reads Zone");
-    for (const width of [1280, 900, 420]) {
+    for (const width of [1280, 900, 420, 365]) {
       await page.setViewportSize({ width, height: 900 });
       assert(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `no page overflow at ${width}`);
+      assert(await page.evaluate(() => {
+        const panes = document.querySelector(".panel-panes");
+        return panes.scrollWidth <= panes.clientWidth;
+      }), `the tab does not scroll sideways at ${width} (#179)`);
+      if (width <= 420) {
+        assert(await page.evaluate(() => {
+          const mount = document.querySelector(".phc-zone-view:not([hidden]) .phc-table-mount");
+          return mount.scrollWidth > mount.clientWidth;
+        }), `the table scrolls inside its own mount at ${width}`);
+      }
       await page.screenshot({ path: path.join(output, `spaces-${width}.png`) });
     }
     await page.setViewportSize({ width: 1280, height: 900 });
