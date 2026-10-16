@@ -1,7 +1,7 @@
 # P3a-09 evidence: modes, preview, labels and totals
 
 DATE: 2026-10-16
-STATUS: Slice A merged ([#162](https://github.com/bldgtyp/ph-composer/pull/162)); slice B in review; native S09 rows pending
+STATUS: Slices A and B merged ([#162](https://github.com/bldgtyp/ph-composer/pull/162), [#163](https://github.com/bldgtyp/ph-composer/pull/163)); slice C in review; native S09 rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -109,3 +109,35 @@ the line now says how many inherit, as a Zone's sums do. A Space with no Volume 
 Space occurrence now counts, with no area, volume or label. The label centroid ignored a Floor Segment's holes
 and took moments about the world origin, which lost metres of precision far from it; it now subtracts the
 holes and takes moments about the outer loop's first point.
+
+## Slice C: the Spaces view's toggles, the preview and the walkthrough
+
+The Spaces view binds each mode to its columns' header toggles (step 7): Name to By Space, Supply, Extract
+and Transfer to the `ventilation` group, Weighting factor to By weighting factor and Height to By height.
+Name was bound to By Zone by the Zones screen; in the Spaces view it now offers By Space, and By Zone moves
+to Table options with every mode no shown column binds. The colour key stays beside each column's Show
+choices, as in the Faces view.
+
+Table options gains the view's own choices through a new Zone views hook, `tableOptions(toggle)`, recorded in
+`context/EXTENSIBILITY.md`: Space labels and Selection totals, and, while Space labels are on, a line per
+label option. `sections/colour_by.js` gains `readouts(state)` and `showReadout(state, name, on)`, which name
+no feature. Every choice is a view command and writes nothing.
+
+The preview host lists the Spaces modes and readouts and answers both view commands;
+`tools/ui-preview/spaces_checks.cjs` checks the three Ventilation toggles, turns By height on from its
+header, turns Space labels on from Table options and sees the label lines appear.
+
+`tools/examples/authoring/spaces_colour_by_walkthrough.rb` (step 8) turns each mode on through the public
+view command, reads its legend back, shows both readouts with every label line and turns everything off,
+writing nothing; `tests/spaces_colour_by_walkthrough_test.rb` runs it on the reference model.
+
+Tests: `tests/spaces_colour_panel_test.js` (the header toggles, the readout choices, the label lines).
+
+UI polish review: the readout and label-line choices use the shared setting-choice treatment, marked with
+`aria-pressed` like every Table options entry; label lines appear only while labels are on, so the menu shows
+only what can act; header toggles reuse `HeaderToggle`, so a group of three columns offers one mode. No kit
+part or token changed, so the design-system artifact needs no re-sync.
+
+Review of PR #164, gpt-6.1-sol cycle 1: one P2. The walkthrough failed when another feature's readout was on,
+because it compared every readout shown with the Spaces pair; it now checks the Spaces readouts alone, with a
+regression in `tests/spaces_colour_by_walkthrough_test.rb` that leaves the example feature's readout on.

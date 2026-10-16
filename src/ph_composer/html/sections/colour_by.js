@@ -6,6 +6,8 @@
  *   other, and pressing the pressed one turns Colour by Off. A group with several modes opens a menu of them.
  * - `modes(state)` and `activate(state, name)`, so a screen can offer a mode no column binds (an options
  *   menu) through the same command.
+ * - `readouts(state)` and `showReadout(state, name, on)`, so a screen can offer the readouts its feature
+ *   registers, each on or off with any mode or none.
  *
  * Nothing here names a mode, a face type or a Zone. The modes, rows, labels, colours and counts all come from
  * the shared service's legend, so a feature that registers a mode reaches the panel without a line added here.
@@ -35,6 +37,14 @@ function (panel, ui, requests, snapshot) {
     var owner = forSession(state.session);
     owner.view.consume(state);
     return owner.view.run("ph_composer.colour_by.activate", { mode: name || null });
+  }
+
+  /* Every registered readout, `{ name, label, selection, on }`, as the legend lists them. */
+  function readouts(state) { return legendOf(state).readouts || []; }
+
+  /* Shows or hides one readout. Sent without waiting on another command: each names its own readout. */
+  function showReadout(state, name, on) {
+    forSession(state.session).view.send("ph_composer.colour_by.readout", { readout: name, on: Boolean(on) });
   }
 
   function HeaderToggle(binding) {
@@ -140,5 +150,6 @@ function (panel, ui, requests, snapshot) {
     });
   }
 
-  return { HeaderToggle: HeaderToggle, modes: modes, activate: activate, colour: colour, filter: filter };
+  return { HeaderToggle: HeaderToggle, modes: modes, activate: activate, colour: colour, filter: filter,
+    readouts: readouts, showReadout: showReadout };
 });

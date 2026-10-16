@@ -1,5 +1,6 @@
 /* The Spaces view on the real panel with the synthetic Spaces fixtures: the reference model's rows, sums,
-   airflow states and selection bar at representative widths; the Weighting factor column's paint; an empty
+   airflow states and selection bar at representative widths; the Weighting factor column's paint; the
+   Spaces modes' header toggles and the readouts in Table options; an empty
    Model; and the unit-switch cost on 300 Spaces (units U1-F1), whose median it prints. SketchUp pixels and
    Chromium 88 remain host checks. */
 const { chromium } = require("playwright");
@@ -80,6 +81,25 @@ function visibleRows(page) {
     assert.equal(await glyph.getAttribute("aria-pressed"), "true", "and leaves the tool running");
     await glyph.click();
     await glyph.waitFor({ state: "hidden" });
+
+    // The Spaces modes from their column headers, and the readouts and label lines in Table options.
+    await open(page, "spaces");
+    assert.equal(await page.getByRole("button", { name: "Colour by Ventilation" }).count(), 3);
+    await page.getByRole("button", { name: "Colour by Height" }).click();
+    await page.locator(".phc-zone-view:not([hidden]) button[aria-label='Colour by Height'][aria-pressed='true']")
+      .waitFor();
+    await page.getByRole("button", { name: "Table options" }).click();
+    await page.locator(".phc-table-options .phc-action-menu-item", { hasText: "Space labels" }).click();
+    await page.getByRole("button", { name: "Table options" }).click();
+    const options = page.locator(".phc-table-options .phc-action-menu-item:visible");
+    await options.filter({ hasText: "Label net volume" }).waitFor();
+    assert.equal(await options.filter({ hasText: "Space labels" }).getAttribute("aria-pressed"), "true");
+    await page.evaluate(async () => {
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await Promise.all(document.getAnimations().map(animation => animation.finished));
+    });
+    await page.screenshot({ path: path.join(output, "spaces-table-options.png") });
+    await page.keyboard.press("Escape");
 
     // Create Space's review from SketchUp's context menu: it shows the Spaces view under the shared dialog,
     // says what is accepted and why the rest is left out, and Create closes it.

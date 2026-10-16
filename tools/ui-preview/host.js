@@ -45,6 +45,8 @@
     // The Spaces read: the fixture's, or empty (the section is always published, as the host does).
     this.spaces = settings.spaces ? JSON.parse(JSON.stringify(settings.spaces)) : null;
     this.markTool = { active: false, weighting_factor: 1, gesture_limit: 250 };
+    this.readoutsOn = [];
+    this.labelOptions = { weighted_area: false, net_volume: false, airflows: false };
     this.createReview = settings.createReview ? JSON.parse(JSON.stringify(settings.createReview)) : null;
     this.selectedFaces = JSON.parse(JSON.stringify(settings.selectedFaces || []));
     this.makeZone = settings.makeZone || null;
@@ -137,6 +139,8 @@
         ["ph_composer.spaces.spaces"]: { status: "completed", value: JSON.parse(JSON.stringify(this.spaces || {
           spaces: [], zones: [], findings: [], units: { area: "m2", height: "m", volume: "m3", airflow: "m3/h" } })) },
         ["ph_composer.spaces.mark_tool"]: { status: "completed", value: JSON.parse(JSON.stringify(this.markTool)) },
+        ["ph_composer.spaces.label_options"]: { status: "completed",
+          value: JSON.parse(JSON.stringify(this.labelOptions)) },
         ["ph_composer.spaces.create_review"]: { status: "completed", value: JSON.parse(JSON.stringify(
           this.createReview || { token: null, revision: null, zone: null, zone_name: "", accepted: [],
             left_out: [] })) },
@@ -187,7 +191,18 @@
         { name: "ph_composer.zones.by_zone", label: "Zone", entity_kind: "zone", group: null },
         { name: "ph_composer.zones.faces.by_assembly", label: "Assembly", entity_kind: "face", group: "construction" },
         { name: "ph_composer.windows.by_type", label: "Window Type", entity_kind: "window_unit",
-          group: "construction" }] };
+          group: "construction" },
+        { name: "ph_composer.spaces.by_space", label: "Space", entity_kind: "volume", group: null },
+        { name: "ph_composer.spaces.by_ventilation", label: "Ventilation", entity_kind: "volume",
+          group: "ventilation" },
+        { name: "ph_composer.spaces.by_weighting_factor", label: "Weighting factor", entity_kind: "volume",
+          group: null },
+        { name: "ph_composer.spaces.by_height", label: "Height", entity_kind: "volume", group: null }],
+      readouts: [["ph_composer.spaces.labels", "Space labels", false],
+        ["ph_composer.spaces.selection_totals", "Spaces selection totals", true]].map(function (readout) {
+        return { name: readout[0], label: readout[1], selection: readout[2],
+          on: this.readoutsOn.indexOf(readout[0]) >= 0 };
+      }, this) };
   };
 
   Host.prototype.receive = function (message) {
@@ -271,6 +286,13 @@
         this.colourBy = { mode: "ph_composer.spaces.by_weighting_factor", isolated: null };
       }
       if (payload.name === "ph_composer.spaces.mark_tool.stop") this.markTool.active = false;
+      if (payload.name === "ph_composer.colour_by.readout") {
+        this.readoutsOn = this.readoutsOn.filter(function (name) { return name !== payload.params.readout; });
+        if (payload.params.on) this.readoutsOn.push(payload.params.readout);
+      }
+      if (payload.name === "ph_composer.spaces.labels.set_options") {
+        Object.assign(this.labelOptions, payload.params);
+      }
       if (payload.name === "ph_composer.spaces.create_review.close" && this.createReview &&
         this.createReview.token === payload.params.token) this.createReview = null;
       outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
