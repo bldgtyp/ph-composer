@@ -313,8 +313,7 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     leave: function (vs) { vs.selection.hideBar(); },
     escape: function (vs) {
       if (!vs.selection.checked().length) return false;
-      vs.selection.clear();
-      panel.repaint();
+      if (vs.selection.clear()) panel.repaint();
       return true;
     },
     cell: function (vs, td, row, field) { return vs.cells.render(td, row, field); },

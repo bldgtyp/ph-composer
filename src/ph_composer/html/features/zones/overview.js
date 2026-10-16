@@ -199,7 +199,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       }
       state.viewId = next.view.id;
       restore(state, next);
-      if (zones && zones.length) call(next, "checkZones", [zones]);
+      // Handed over once the view switched to has read this snapshot (render does it after consume).
+      if (zones && zones.length) state.handover = { slot: next, zones: zones };
     }
     var surfaces = root.querySelector(".phc-zone-views"), owned = listed.map(function (view) {
       return slot(state, view).surface;
@@ -629,6 +630,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     // Every listed view reads each snapshot, shown or not: a hidden view may still have work arriving (a
     // native handoff, a tool that turned on late). Reading may switch views, so the shown one is read after.
     screenState.listed.forEach(function (view) { call(slot(screenState, view), "consume", [state, send]); });
+    var handover = screenState.handover;
+    screenState.handover = null;
+    if (handover && handover.slot === active(screenState)) call(handover.slot, "checkZones", [handover.zones]);
     var own = active(screenState);
     var rows = project(zones.zones, own);
     // A row the view adds may open by default. That is decided once, when the row first appears, so it does

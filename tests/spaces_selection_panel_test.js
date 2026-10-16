@@ -121,7 +121,9 @@ test("a blank airflow in the bar clears the rate on each checked Space that has 
   enter(supply, "");
   assert.deepStrictEqual(batches(p), [{ edits: [
     { reference: { space_id: "spc_101", entity_path: [100, 101] }, values: { v_sup_m3h: null },
-      expected_values: { v_sup_m3h: 60 } }] }], "Bath has no supply to clear");
+      expected_values: { v_sup_m3h: 60 } },
+    { reference: { space_id: "spc_102", entity_path: [100, 102] }, values: { v_sup_m3h: null },
+      expected_values: {} }] }], "Bath has no supply to clear, and goes so the host checks it is still unset");
 });
 
 test("a Zone's box checks every row in it and reads mixed while only some are; Escape clears", function () {
@@ -225,4 +227,73 @@ test("checked Zones go with an automatic switch too", function () {
   delete faceless.sections["ph_composer.spaces.spaces"];
   p.receive(faceless);
   assert.strictEqual(p.byLabel("Uncheck Zone B").checked, true, "Faces took Zone B");
+});
+
+/* ---------------------------------------------------------------- review (PR #153), cycle 2 */
+
+test("the checked set holds still while a bar draft is open", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  type(p.byLabel("Supply for checked Spaces"), "70");
+  p.click(p.byLabel("Uncheck Living"));
+  assert.ok(p.byLabel("Uncheck Living"), "Living stays checked");
+  assert.match(p.panel.state.ui.notice.message, /selection bar/);
+});
+
+test("correcting a refused entry keeps the unit it was first typed in", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  var height = p.byLabel("Height for checked Volumes");
+  enter(height, "3");
+  var sent = p.sent.filter(function (message) { return message.payload.name === "ph_composer.spaces.batch_update"; });
+  result(p, sent[0], { status: "refused", code: "target.changed", effect: "none", message: "Changed." });
+  var ip = snapshot();
+  ip.preferences.unit_system = "IP";
+  p.receive(ip);
+  enter(height, "3.1");
+  assert.strictEqual(batches(p)[1].edits[0].values.avg_ceiling_height_m, 3.1);
+});
+
+test("every checked row's value is checked by the host, unchanged ones included", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  p.click(p.byLabel("Check Bath"));
+  enter(p.byLabel("Height for checked Volumes"), "2.5");
+  assert.deepStrictEqual(batches(p)[0].edits.map(function (edit) { return edit.expected_values; }),
+    [{ avg_ceiling_height_m: 2.5 }, { avg_ceiling_height_m: 2.4 }]);
+});
+
+test("Enter on an untouched Mixed airflow clears it", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  p.click(p.byLabel("Check Bath"));
+  p.byLabel("Supply for checked Spaces").listeners.keydown({ key: "Enter", preventDefault: function () {} });
+  assert.strictEqual(batches(p).length, 1);
+});
+
+test("a held bar draft shows a visible Cancel that restores the Model's value", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  var supply = p.byLabel("Supply for checked Spaces");
+  enter(supply, "abc");
+  var cancel = p.byLabel("Cancel the change");
+  assert.ok(cancel && !cancel.hidden);
+  p.click(cancel);
+  assert.strictEqual(supply.value, "60");
+});
+
+test("an automatic switch hands checked Zones to a view that first appears in that snapshot", function () {
+  var p = page(), only = snapshot();
+  delete only.sections["ph_composer.zones.faces.faces"];
+  p.receive(only);
+  p.click(p.byLabel("Check Zone B"));
+  var faces = snapshot();
+  delete faces.sections["ph_composer.spaces.spaces"];
+  p.receive(faces);
+  assert.strictEqual(p.byLabel("Uncheck Zone B").checked, true);
 });

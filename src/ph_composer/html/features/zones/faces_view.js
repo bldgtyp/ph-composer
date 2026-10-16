@@ -762,7 +762,7 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
     },
     checkZones: function (vs, keys) {
       vs.checked.replace(keys.reduce(function (all, key) {
-        var faces = vs.byZone[occurrence(JSON.parse(key)[1])] || [];
+        var faces = (vs.byZone || {})[occurrence(JSON.parse(key)[1])] || [];
         return all.concat(faces.map(function (face) { return face.reference; }));
       }, []));
     },

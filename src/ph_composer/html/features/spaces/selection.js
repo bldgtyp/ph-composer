@@ -92,7 +92,18 @@ function (panel, ui, units, preferences, fields, selectionBars) {
     return this.rows.filter(function (row) { return this.keys[row.key] && kind(row); }, this);
   };
 
-  SpaceSelection.prototype.clear = function () { this.keys = Object.create(null); };
+  SpaceSelection.prototype.clear = function () {
+    if (this.held()) return false;
+    this.keys = Object.create(null);
+    return true;
+  };
+
+  /* While a bar draft is open the checked set holds still: the draft names those rows. Says why when it does. */
+  SpaceSelection.prototype.held = function () {
+    var reason = this.draftReason();
+    if (reason) this.cells.host.refuse(reason);
+    return Boolean(reason);
+  };
 
   /* The Zone rows every row beneath which is checked: what another view checks on a switch. */
   SpaceSelection.prototype.checkedZones = function () {
@@ -107,12 +118,17 @@ function (panel, ui, units, preferences, fields, selectionBars) {
     return {
       state: function (row) { return self.state(row); },
       toggle: function (row) {
+        if (self.held()) return;
         var rows = self.targets(row);
         self.set(rows, self.stateOf(rows) !== true);
         panel.repaint();
       },
       header: function () { return self.stateOf(shown) || false; },
-      toggleAll: function () { self.set(shown, self.stateOf(shown) !== true); panel.repaint(); },
+      toggleAll: function () {
+        if (self.held()) return;
+        self.set(shown, self.stateOf(shown) !== true);
+        panel.repaint();
+      },
       label: function (row) {
         return (self.state(row) === true ? "Uncheck " : "Check ") + (row.record.name || row.tier);
       },
@@ -162,9 +178,10 @@ function (panel, ui, units, preferences, fields, selectionBars) {
   BarField.prototype.begin = function () {
     if (this.editing) return;
     var rows = groups(this.selection.checked())[this.name] || [], key = this.control.key;
+    // Correcting a refused entry continues its draft: the unit it was first typed in stays.
+    if (!this.held || !this.startProfile) this.startProfile = JSON.parse(JSON.stringify(this.profile()));
     this.editing = true;
     this.held = false;
-    this.startProfile = JSON.parse(JSON.stringify(this.profile()));
     this.targets = rows.map(function (row) {
       var record = target(row), expected = {};
       if (Object.prototype.hasOwnProperty.call(record.values, key)) expected[key] = record.values[key];
@@ -188,45 +205,58 @@ function (panel, ui, units, preferences, fields, selectionBars) {
 
   BarField.prototype.commit = function () {
     var control = this.control, key = control.key, host = this.selection.cells.host, text = this.input.value.trim();
+    // Enter on an empty Mixed field that may be blank is a choice: clear it on every row.
+    if (!this.editing && this.mixed && control.quantity.allowBlank && text === "") this.begin();
     if (!this.editing || this.selection.cells.busy()) return;
     if (this.input.value === this.seed && !this.mixed) { this.cancel(); return; }
     var parsed = text === "" && control.quantity.allowBlank ? { ok: true, value: null } :
       units.parse(text, control.quantity, units.parseContext(control.quantity, this.startProfile));
-    if (!parsed.ok) { host.refuse(parsed.message); return; }
+    // An entry the bar refuses stays held, with the bar's Cancel beside it.
+    if (!parsed.ok) { this.editing = false; this.held = true; host.refuse(parsed.message); panel.repaint(); return; }
     if (control.factor && (parsed.value === null || parsed.value < 0 || parsed.value > 1)) {
+      this.editing = false; this.held = true;
       host.refuse("Enter a factor from 0 to 1.");
+      panel.repaint();
       return;
     }
+    // Every checked row goes, unchanged ones included, so the host checks each against what it was; it skips
+    // the writes that change nothing. When nothing would change at all, nothing is sent.
     var edits = this.targets.map(function (pinned) {
       var values = {};
       values[key] = parsed.value;
       return { reference: pinned.reference, values: values, expected_values: pinned.expected_values };
-    }).filter(function (edit) {
+    });
+    var changes = edits.some(function (edit) {
       var current = edit.expected_values[key];
       return current === undefined ? parsed.value !== null : current !== parsed.value;
     });
     var self = this;
     this.editing = false;
-    if (!edits.length) { this.cancel(); return; }
+    if (!changes) { this.cancel(); return; }
     this.held = true;
     this.selection.cells.submit(edits, function (outcome) {
       // Completed: the next snapshot shows the value. Refused: the text stays for the user to correct.
-      if (outcome.status === "completed") self.held = false;
+      if (outcome.status === "completed") { self.held = false; self.startProfile = null; }
       else host.refuse(outcome.message || "The change was not applied. Nothing was written.");
-    });
+    }, { exact: true });
     panel.repaint();
   };
 
   BarField.prototype.cancel = function () {
-    this.editing = false; this.held = false; this.input.value = this.seed || "";
+    this.editing = false; this.held = false; this.startProfile = null; this.input.value = this.seed || "";
     panel.repaint();
   };
 
   SpaceSelection.prototype.bar = function (overview) {
     var self = this;
     if (!this.root) {
-      this.root = new selectionBars.SelectionBar("Checked Spaces rows", function () { self.clear(); panel.repaint(); });
+      this.root = new selectionBars.SelectionBar("Checked Spaces rows", function () {
+        if (self.clear()) panel.repaint();
+      });
       this.fields = [];
+      // A held entry's way out, in view beside it.
+      this.cancel = ui.button("Cancel", function () { self.cancelDrafts(); });
+      this.cancel.setAttribute("aria-label", "Cancel the change");
       ORDER.forEach(function (name) {
         var group = ui.element("div", "phc-selection-controls");
         group.setAttribute("role", "group");
@@ -243,6 +273,7 @@ function (panel, ui, units, preferences, fields, selectionBars) {
       });
     }
     if (this.root.root.parentNode !== overview) overview.appendChild(this.root.root);
+    if (this.cancel.parentNode !== this.root.controls) this.root.controls.appendChild(this.cancel);
     var checked = this.checked(), byKind = groups(checked), busy = this.cells.busy();
     Array.prototype.forEach.call(this.root.controls.children, function (group) {
       group.hidden = !byKind[group._kind];
@@ -250,6 +281,7 @@ function (panel, ui, units, preferences, fields, selectionBars) {
     this.fields.forEach(function (field) {
       if (byKind[field.name]) field.paint(byKind[field.name], busy);
     });
+    this.cancel.hidden = !this.fields.some(function (field) { return field.held && !field.editing; });
     if (checked.length) {
       this.root.show(ORDER.filter(function (name) { return byKind[name]; }).map(function (name) {
         var count = byKind[name].length;

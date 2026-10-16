@@ -139,3 +139,13 @@ by a test and fixed: a bar field fixes its unit and its target rows with their v
 sends nothing for unchanged text, keeps refused text until it is corrected or Escape restores the Model's
 value, and holds a switch meanwhile; the host's automatic switch hands checked Zones over as an explicit one.
 
+Second pass: three P1 (the checked set could change under an open bar draft, so the draft wrote rows the bar
+no longer showed; correcting a refused entry re-read it in the current unit; rows whose value already
+matched were left out of the batch, so the host could not refuse a stale selection whole) and three P2 (Enter
+on an untouched Mixed airflow did nothing; an automatic switch handed Zones to a view before it had read the
+snapshot; a held bar entry had no visible Cancel). Each was reproduced by a test and fixed: the checked set
+holds while a bar draft is open; a corrected entry keeps its first unit; every checked row goes in the batch
+(the host checks each and skips the writes that change nothing); Enter on an empty Mixed optional field
+clears it; the hand-over waits for the destination to consume; the bar shows Cancel beside a held entry. These
+were gated by `make ci` only, at the review cap.
+

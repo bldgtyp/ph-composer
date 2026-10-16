@@ -61,16 +61,18 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
   }
 
   /* The edits a range or a paste makes, one per record. A blank over a value that was never set changes
-     nothing, so it is left out. */
-  function merged(changes) {
+     nothing, so it is left out, unless `exact` keeps every edit for the host to check (the selection bar). */
+  function merged(changes, exact) {
     var byPath = Object.create(null), order = [];
     changes.forEach(function (edit) {
-      Object.keys(edit.values).forEach(function (key) {
-        if (edit.values[key] === null && !Object.prototype.hasOwnProperty.call(edit.expected_values, key)) {
-          delete edit.values[key];
-        }
-      });
-      if (!Object.keys(edit.values).length) return;
+      if (!exact) {
+        Object.keys(edit.values).forEach(function (key) {
+          if (edit.values[key] === null && !Object.prototype.hasOwnProperty.call(edit.expected_values, key)) {
+            delete edit.values[key];
+          }
+        });
+        if (!Object.keys(edit.values).length) return;
+      }
       var key = JSON.stringify(edit.reference.entity_path), held = byPath[key];
       if (!held) { byPath[key] = edit; order.push(key); return; }
       Object.assign(held.values, edit.values);
@@ -129,8 +131,8 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
 
   /* Many changes as one `batch_update`, one Undo step: a range, a paste, or a selection-bar choice. `done`,
      when given, receives the outcome and says what to tell the user. */
-  SpaceCells.prototype.submit = function (changes, done) {
-    var edits = merged(changes);
+  SpaceCells.prototype.submit = function (changes, done, options) {
+    var edits = merged(changes, options && options.exact);
     if (this.busy() || !edits.length) return;
     this.batchDone = done || null;
     this.batch.run(BATCH, { edits: edits });
