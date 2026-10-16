@@ -109,3 +109,21 @@ rounded differently in Ruby and JavaScript, so the host now publishes the band; 
 records named nothing). Each was reproduced by a test and fixed; the second pass's three were gated by
 `make ci` only, at the review cap.
 
+## Slice C2: the selection bar and shared checked Zones
+
+`html/features/spaces/selection.js` holds the view's checked rows and its selection bar (step 8). A row's box
+checks it and everything beneath it, so a Zone's box checks every Space, Volume and Floor Segment in the Zone
+and reads mixed while only some are; the header box checks every row the filters show; Escape clears. The
+bar shows one group of controls for each kind it holds: the weighting and net area factors for Floor Segments,
+the height for Volumes, the three airflows for Spaces. A value the checked rows of that kind share shows in
+its field, one they do not share reads "Mixed", and each choice applies to every checked row of that kind as
+one `batch_update`; a blank airflow clears the rate on the rows that have one, and a factor outside 0 to 1
+refuses at the bar. The plan's "a mixed set shows the controls its rows share" is read as one group per kind
+present, since a Zone's box always checks several kinds.
+
+Shared checked Zones (step 17, carried from P3a-06): on a switch the host asks the old view which Zone rows
+are fully checked and hands them to the new view, which checks everything beneath them; the Faces view and
+the Spaces view both supply `checkedZones` and `checkZones`. `context/EXTENSIBILITY.md`, "Zone views", says so.
+
+Tests: `tests/spaces_selection_panel_test.js` (phase doc test 7 and step 17's test).
+

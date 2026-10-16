@@ -1,0 +1,145 @@
+"use strict";
+
+/* The Spaces view's checked rows and selection bar, and checked Zones shared with the Faces view. */
+
+var assert = require("assert");
+var test = require("node:test");
+var dom = require("./support/dom_stub");
+var panelSource = require("./support/panel_source");
+var fixture = require("./support/spaces_fixture");
+
+function page() {
+  var sent = [];
+  var context = {
+    document: dom.buildDocument(panelSource.markup("index.html")), Intl: Intl,
+    innerWidth: 1280, innerHeight: 800, setTimeout: setTimeout, clearTimeout: clearTimeout,
+    sketchup: { ph_composer_message: function (message) { sent.push(JSON.parse(message)); } }
+  };
+  context.window = context;
+  dom.attachEvents(context);
+  var modules = panelSource.start(context, ["sections/shell", "features/zones/overview", "features/zones/faces_view",
+    "features/spaces/view"]);
+  var p = { context: context, panel: modules.panel, modules: modules, sent: sent };
+  p.section = function () { return context.document.querySelector("[data-section='ph_composer.overview']"); };
+  p.pane = function () { return p.section().closest("[data-pane]"); };
+  p.receive = function (state) { p.panel.receive({ type: "panel.snapshot", payload: state }); };
+  p.byLabel = function (label) {
+    return p.pane().querySelectorAll("input, button, select").filter(function (node) {
+      return node.getAttribute("aria-label") === label;
+    })[0];
+  };
+  p.click = function (node) { node.listeners.click({ preventDefault: function () {} }); };
+  return p;
+}
+
+function snapshot(view) {
+  var section = fixture.section();
+  return {
+    product: "PH-Composer", version: "0.1.0-dev", session: "session-a", revision: 4, file_name: "house.skp",
+    edit_path: [], preferences: { unit_system: "SI", dimension_formats: {}, number_format: { decimal: ".",
+      locale: "en-US" }, table_views: { "ph_composer.zones": view || "ph_composer.spaces" } },
+    sections: {
+      "ph_composer.zones.overview": { status: "completed", value: { zones: fixture.zones(), make_zone: null,
+        units: {} } },
+      "ph_composer.spaces.spaces": { status: "completed", value: section },
+      "ph_composer.zones.faces.palette": { status: "completed", value: { active: false, palette: {},
+        face_types: ["Wall"], boundary_conditions: ["Outdoors"] } },
+      "ph_composer.zones.faces.faces": { status: "completed", value: { units: { area_m2: "m2" }, faces: [
+        { reference: { zone_id: "zon_a", zone_path: [100], entity_path: [150], entity_id: "fac_a" },
+          zone_name: "Zone A", area_m2: 10, state: "classified",
+          values: { face_type: "Wall", boundary_condition: "Outdoors" }, suggested: {} },
+        { reference: { zone_id: "zon_b", zone_path: [200], entity_path: [250], entity_id: "fac_b" },
+          zone_name: "Zone B", area_m2: 10, state: "classified",
+          values: { face_type: "Wall", boundary_condition: "Outdoors" }, suggested: {} }] } }
+    }
+  };
+}
+
+function expandAll(p) {
+  p.section().querySelectorAll("button").filter(function (node) { return node.textContent === "Expand all"; })[0]
+    .listeners.click({ preventDefault: function () {} });
+}
+
+function bar(p) {
+  return p.section().querySelectorAll(".phc-selection-bar").filter(function (node) { return !node.hidden; })[0];
+}
+
+function batches(p) {
+  return p.sent.filter(function (message) { return message.payload.name === "ph_composer.spaces.batch_update"; })
+    .map(function (message) { return JSON.parse(JSON.stringify(message.payload.params)); });
+}
+
+function enter(input, text) {
+  input.value = text;
+  input.listeners.keydown({ key: "Enter", preventDefault: function () {} });
+}
+
+test("two checked Floor Segments take one factor from the bar in one batch_update", function () {
+  var p = page();
+  p.receive(snapshot());
+  expandAll(p);
+  var boxes = p.pane().querySelectorAll("input").filter(function (node) {
+    return node.getAttribute("aria-label") === "Check Segment 1";
+  });
+  p.click(boxes[0]); p.click(boxes[1]);
+  assert.strictEqual(bar(p).querySelector(".phc-selection-bar-count").textContent, "2 Floor Segments checked");
+  var factor = p.byLabel("Weighting factor for checked Floor Segments");
+  assert.strictEqual(factor.value, "1", "the value both share");
+  enter(factor, "0.6");
+  assert.deepStrictEqual(batches(p), [{ edits: [
+    { reference: { floor_segment_id: "sfs_100_101_1_1", entity_path: [100, 101, 1, 1] },
+      values: { weighting_factor: 0.6 }, expected_values: { weighting_factor: 1 } },
+    { reference: { floor_segment_id: "sfs_100_102_1_1", entity_path: [100, 102, 1, 1] },
+      values: { weighting_factor: 0.6 }, expected_values: { weighting_factor: 1 } }] }]);
+});
+
+test("a Space's box checks it and everything beneath; values they do not share read Mixed", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Hall"));
+  assert.strictEqual(bar(p).querySelector(".phc-selection-bar-count").textContent,
+    "1 Space, 2 Volumes, 2 Floor Segments checked");
+  var factor = p.byLabel("Weighting factor for checked Floor Segments");
+  assert.deepStrictEqual([factor.value, factor.placeholder], ["", "Mixed"]);
+  var height = p.byLabel("Height for checked Volumes");
+  assert.deepStrictEqual([height.value, height.placeholder], ["", "Mixed"]);
+  assert.strictEqual(p.byLabel("Transfer for checked Spaces").value, "20");
+  enter(p.byLabel("Weighting factor for checked Floor Segments"), "1.2");
+  assert.strictEqual(batches(p).length, 0, "a factor out of range refuses at the bar");
+});
+
+test("a blank airflow in the bar clears the rate on each checked Space that has one", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  p.click(p.byLabel("Check Bath"));
+  enter(p.byLabel("Supply for checked Spaces"), "");
+  assert.deepStrictEqual(batches(p), [{ edits: [
+    { reference: { space_id: "spc_101", entity_path: [100, 101] }, values: { v_sup_m3h: null },
+      expected_values: { v_sup_m3h: 60 } }] }], "Bath has no supply to clear");
+});
+
+test("a Zone's box checks every row in it and reads mixed while only some are; Escape clears", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  var zone = p.byLabel("Check Zone A");
+  assert.strictEqual(zone.indeterminate, true);
+  p.click(zone);
+  assert.strictEqual(p.byLabel("Uncheck Zone A").checked, true);
+  dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+  assert.strictEqual(p.byLabel("Check Zone A").checked, false);
+});
+
+test("Zones checked in one view read checked in the other after a switch", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Zone B"));
+  p.click(p.pane().querySelectorAll("button").filter(function (node) { return node.textContent === "Faces"; })[0]);
+  assert.strictEqual(p.byLabel("Uncheck Zone B").checked, true, "Zone B's Faces are checked in Faces");
+  p.click(p.byLabel("Uncheck Zone B"));
+  p.click(p.byLabel("Check Zone A"));
+  p.click(p.pane().querySelectorAll("button").filter(function (node) { return node.textContent === "Spaces"; })[0]);
+  assert.strictEqual(p.byLabel("Uncheck Zone A").checked, true, "and Zone A's Spaces in Spaces");
+  assert.strictEqual(p.byLabel("Check Zone B").checked, false, "Zone B was handed over only as Faces checked it");
+});

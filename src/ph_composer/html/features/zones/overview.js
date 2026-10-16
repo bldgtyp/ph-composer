@@ -235,12 +235,17 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var previous = Object.keys(state.slots).filter(function (key) {
       return key !== id && state.slots[key].shown;
     })[0];
+    var zones = null;
     if (previous) {
       var old = state.slots[previous];
+      // The Zones checked in the view switched from are checked in the one switched to.
+      zones = call(old, "checkedZones", [], null);
       call(old, "leave");
       stash(state, old, state.slots[id]);
     }
     restore(state, state.slots[id]);
+    // Only Zones that are checked are handed over; the view switched to keeps its own checks otherwise.
+    if (zones && zones.length) call(state.slots[id], "checkZones", [zones]);
     if (id) panel.setPreference("table_view", id, { scope: HOST });
     panel.repaint();
   }

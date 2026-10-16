@@ -754,6 +754,18 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
     clearLocate: clearLocate, escape: escape, navigate: navigate, check: check, selectionBar: selectionBar,
     settings: function (vs) { return vs.settings.bubble.root; },
     leave: leave,
+    // Zones every Face of which is checked, and checking every Face of Zones another view handed over.
+    checkedZones: function (vs) {
+      return (vs.checkedZones || []).map(function (zone) {
+        return JSON.stringify(["Zone", zone.reference.zone_path]);
+      });
+    },
+    checkZones: function (vs, keys) {
+      vs.checked.replace(keys.reduce(function (all, key) {
+        var faces = vs.byZone[occurrence(JSON.parse(key)[1])] || [];
+        return all.concat(faces.map(function (face) { return face.reference; }));
+      }, []));
+    },
     leaveReason: function (vs) {
       return classify.draftReason() ||
         (vs.settings.held() ? "Correct the Faces settings, or press Escape to restore them, first." : null);

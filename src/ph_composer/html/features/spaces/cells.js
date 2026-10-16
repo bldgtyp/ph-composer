@@ -122,11 +122,14 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
       hiddenColumns: place.hiddenColumns, isBusy: function () { return self.busy(); },
       notify: function (message) { self.host.refuse(message); },
       changeFor: function (cell, value) { return change(cell.row, cell.field, value); },
-      submitBatch: function (changes) {
-        var edits = merged(changes);
-        if (self.busy() || !edits.length) return;
-        self.batch.run(BATCH, { edits: edits });
-      } });
+      submitBatch: function (changes) { self.submit(changes); } });
+  };
+
+  /* Many changes as one `batch_update`, one Undo step: a range, a paste, or a selection-bar choice. */
+  SpaceCells.prototype.submit = function (changes) {
+    var edits = merged(changes);
+    if (this.busy() || !edits.length) return;
+    this.batch.run(BATCH, { edits: edits });
   };
 
   SpaceCells.prototype.busy = function () { return this.batch.busy() || Boolean(this.edits.pending); };
