@@ -110,43 +110,65 @@ module PhComposer
         ColourBy::Readout.new(:anchors => [], :hud => rows.empty? ? [] : hud(rows))
       end
 
+      # Airflows follow the any-set rule, as a Zone's sums do: while any selected Space inherits its Zone's
+      # airflow, the sums would read as complete when they are not, so the line says how many inherit instead.
       def hud(rows)
+        inheriting = rows.count { |row| Metrics.airflow_mode(row.space.record) == "inheriting" }
         flows = rows.map { |row| Metrics.airflows(row.space.record) }
-        supply, extract = %w[v_sup_m3h v_eta_m3h].map { |key| flows.sum { |rates| rates.fetch(key) || 0.0 } }
+        airflow = if inheriting.positive?
+                    ["Supply and extract: #{inheriting} of #{rows.length} inherit the Zone's airflow"]
+                  else
+                    supply, extract = %w[v_sup_m3h v_eta_m3h].map { |key| flows.sum { |rates| rates.fetch(key) } }
+                    ["Supply ", ["airflow", supply], "  Extract ", ["airflow", extract]]
+                  end
         [["#{rows.length} #{rows.length == 1 ? 'Space' : 'Spaces'} selected"],
          ["Weighted area ", ["area", rows.sum(&:weighted_area_m2)]],
-         ["Net volume ", ["volume", rows.sum(&:net_volume_m3)]],
-         ["Supply ", ["airflow", supply], "  Extract ", ["airflow", extract]]]
+         ["Net volume ", ["volume", rows.sum(&:net_volume_m3)]], airflow]
       end
 
-      # Each Space with a Volume, summed from the same Volume views the modes draw from.
+      # Every Space occurrence, summed from the same Volume views the modes draw from; a Space with no Volume
+      # counts with no area, no volume and no label point.
       def totals(read)
-        ColourModes.views(read).group_by(&:space).map do |space, views|
-          largest = views.flat_map(&:segments).max_by { |segment| segment.metrics.fetch("floor_area_m2") }
+        views = ColourModes.views(read).group_by { |view| view.space.path }
+        Occurrences.scan(read.model).spaces.map do |space|
+          own = views.fetch(space.path, [])
+          largest = own.flat_map(&:segments).max_by { |segment| segment.metrics.fetch("floor_area_m2") }
           SpaceTotals.new(:space => space,
-                          :weighted_area_m2 => views.sum { |view| view.metrics.fetch("weighted_area_m2") },
-                          :net_volume_m3 => views.sum { |view| view.metrics.fetch("net_volume_m3") || 0.0 },
+                          :weighted_area_m2 => own.sum { |view| view.metrics.fetch("weighted_area_m2") },
+                          :net_volume_m3 => own.sum { |view| view.metrics.fetch("net_volume_m3") || 0.0 },
                           :point_m => largest && centroid(largest))
         end
       end
 
-      # The plan centroid of a segment's outer loop at its mean height, in world metres.
+      # The plan centroid of a segment, its holes taken out, at its outer loop's mean height, in world metres.
+      # Moments are taken about the outer loop's first point, so a segment far from the origin keeps its
+      # precision.
       def centroid(segment)
-        loop = FaceCapture.call(segment.occurrence.entity, segment.occurrence.transform).loops_m.first
-        z = loop.sum { |point| point[2] } / loop.length
-        twice = 0.0
-        x_sum = 0.0
-        y_sum = 0.0
-        loop.each_with_index do |(x, y, _z), index|
-          next_x, next_y, = loop[(index + 1) % loop.length]
+        outer, *holes = FaceCapture.call(segment.occurrence.entity, segment.occurrence.transform).loops_m
+        origin = outer.first
+        z = outer.sum { |point| point[2] } / outer.length
+        area, x_moment, y_moment = holes.map { |hole| moments(hole, origin) }
+                                        .reduce(moments(outer, origin)) do |(a, mx, my), (ha, hx, hy)|
+          [a - ha, mx - hx, my - hy]
+        end
+        return [origin[0], origin[1], z] unless area.positive?
+
+        [origin[0] + (x_moment / area), origin[1] + (y_moment / area), z]
+      end
+
+      # A loop's plan area and first moments about `origin`, whatever its winding.
+      def moments(loop, origin)
+        local = loop.map { |x, y, _z| [x - origin[0], y - origin[1]] }
+        twice = x_sum = y_sum = 0.0
+        local.each_with_index do |(x, y), index|
+          next_x, next_y = local[(index + 1) % local.length]
           cross = (x * next_y) - (next_x * y)
           twice += cross
           x_sum += (x + next_x) * cross
           y_sum += (y + next_y) * cross
         end
-        return [loop.sum(&:first) / loop.length, loop.sum { |point| point[1] } / loop.length, z] if twice.zero?
-
-        [x_sum / (3.0 * twice), y_sum / (3.0 * twice), z]
+        sign = twice.negative? ? -1.0 : 1.0
+        [sign * twice / 2.0, sign * x_sum / 6.0, sign * y_sum / 6.0]
       end
 
       def point(point_m)

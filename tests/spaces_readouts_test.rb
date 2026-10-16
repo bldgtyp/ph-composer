@@ -72,6 +72,44 @@ class SpacesReadoutsTest < PhComposerTestCase
     assert_equal ["1 Space selected"], @service.readout_drawings.fetch(TOTALS).last.first
   end
 
+  def test_a_label_sits_at_the_centroid_of_the_floor_less_its_opening_even_far_from_the_origin
+    points = ->(corners) { corners.map { |x, y| Geom::Point3d.new(x * INCHES, y * INCHES, 0) } }
+    holed = Sketchup::Face.new(3111, {}, :points => points.call(rectangle(0, 0, 10, 10)),
+                                         :holes => [points.call(rectangle(6, 2, 3, 6))])
+    SpaceFixtures::SPACES::FLOOR_SEGMENT_STORE.write(holed, segment_record("P"))
+    far = floor_face(3211, rectangle(1_000_000.1, 1_000_000.1, 3.1, 4.1), segment_record("Q"))
+    @model.entities << zone_group(3000, "C", [
+      space_group(3100, space_record("P", :number => "301"), [volume_group(3110, volume_record("P"), [holed])]),
+      space_group(3200, space_record("Q", :number => "302"), [volume_group(3210, volume_record("Q"), [far])])
+    ])
+    @service.readout(LABELS, :on => true)
+    anchors = @service.readout_drawings.fetch(LABELS).first.to_h { |anchor| [anchor.parts.first, anchor.point] }
+    assert_in_delta 4.4512195, anchors.fetch("301").x / INCHES, 1e-6
+    assert_in_delta 5.0, anchors.fetch("301").y / INCHES, 1e-6
+    assert_in_delta 1_000_001.65, anchors.fetch("302").x / INCHES, 1e-6
+    assert_in_delta 1_000_002.15, anchors.fetch("302").y / INCHES, 1e-6
+  end
+
+  def test_selection_totals_count_a_space_with_no_volume_and_say_when_airflow_is_inherited
+    zone = @model.entities.to_a.first
+    empty = space_group(1400, space_record("E", :number => "104", :airflows => { "v_sup_m3h" => 15.0 }), [])
+    zone.entities << empty
+    @model.active_path = [zone]
+    living = zone.entities.to_a.first
+    [living, empty].each { |space| @model.selection.add(space) }
+    @service.readout(TOTALS, :on => true)
+    hud = @service.readout_drawings.fetch(TOTALS).last
+    assert_equal ["2 Spaces selected"], hud[0]
+    assert_equal ["Supply ", ["airflow", 75.0], "  Extract ", ["airflow", 0.0]], hud[3]
+    @model.selection.clear
+    loft_zone = @model.entities.to_a.last
+    @model.active_path = [loft_zone]
+    @model.selection.add(loft_zone.entities.to_a.first)
+    @service.selection_changed
+    assert_equal ["Supply and extract: 1 of 1 inherit the Zone's airflow"],
+                 @service.readout_drawings.fetch(TOTALS).last[3]
+  end
+
   def test_turning_the_readouts_and_options_on_writes_nothing
     operations = @model.operations.length
     revision = @session.revision

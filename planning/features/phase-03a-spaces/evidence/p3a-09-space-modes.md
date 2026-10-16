@@ -100,3 +100,12 @@ rule.
 Tests: `tests/spaces_readouts_test.rb` (phase doc tests 6 and 7: default lines and their positions,
 including the sloped Loft at its mean height; every option; a Space with no Floor Segment; Spaces 101 and 102
 summing 16 m2 and 39.6 m3; a Space and its own Volume counted once; nothing written).
+
+### Review of PR #163
+
+gpt-6.1-sol, cycle 1: four P2, reproduced by two tests in `tests/spaces_readouts_test.rb` that failed before the
+fixes. Selection totals summed an inheriting Space's unset rates as zero; while any selected Space inherits,
+the line now says how many inherit, as a Zone's sums do. A Space with no Volume dropped out of the totals; every
+Space occurrence now counts, with no area, volume or label. The label centroid ignored a Floor Segment's holes
+and took moments about the world origin, which lost metres of precision far from it; it now subtracts the
+holes and takes moments about the outer loop's first point.
