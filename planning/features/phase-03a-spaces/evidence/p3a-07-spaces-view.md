@@ -34,3 +34,10 @@ multi-Volume Space and a Space outside every Zone, the airflow states, the marke
 sorting, the hidden columns, and no action sent by filtering, sorting or expansion) on a synthetic snapshot
 of the reference model (`tests/support/spaces_fixture.js`), and `tests/table_test.js` for the fourth tier.
 The threshold's boundaries are tested on the host side (`spaces_records_test.rb`).
+
+Review: Codex `gpt-6.1-sol` on #150. The first pass found four P2 (the group row counted and sorted as a Zone;
+Expand all disabled while nested rows started shut; a hidden column kept its filter; the Expand defaults),
+the second three P2 (Table options could hide a held Zone edit; a view's older copy of a Zone filter could
+replace the one set since; a leading column missed the view's header and menu hooks). Each was reproduced by
+a test and fixed; the second pass's three were gated by `make ci` only, at the review cap.
+

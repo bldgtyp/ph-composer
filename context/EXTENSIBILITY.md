@@ -662,7 +662,8 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
   controls row and moves the view's column filters and sort out of it and back on a switch; a Zone
   filter stays while the next view shows its column and otherwise leaves with the view that does, so
   no filter applies without a column to clear it from; hiding a column through Table options drops its
-  filter for the same reason. A column has a menu when it sorts (`sorted`) or
+  filter for the same reason, and showing a Zone column again drops the older copy a view kept. Table
+  options changes nothing while a Zone edit is held. A column has a menu when it sorts (`sorted`) or
   filters (`filteredFields`), and offers only those. All of it survives a switch away and back.
 - **Switching** is a host action that sends nothing to the Model and never changes the SketchUp
   selection. It is refused while `draftReason` or `leaveReason` answers; otherwise it calls the old

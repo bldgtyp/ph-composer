@@ -1595,3 +1595,20 @@ test("removing an unused Segment drops its stale filter without clearing checked
   assert.ok(byLabel(p.section, "Zone 1 Building-Segment"), "no stale empty filter hides the remaining Zone");
   assert.ok(p.section.closest("[data-pane]").querySelector(".phc-selection-bar"), "checked Faces survive management");
 });
+
+test("Table options will not hide a column while a Zone edit is held", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: managedSnapshot() });
+  var section = p.query("[data-section='ph_composer.overview']"), segment = byLabel(section, "Zone 1 Building-Segment");
+  segment.value = "bsg_tower"; segment.listeners.change({});
+  result(p, 0, { status: "completed", effect: "committed" });
+  var options = byLabel(section, "Table options");
+  click(options);
+  click(options.parentNode.querySelectorAll(".phc-action-menu-item").filter(function (node) {
+    return node.textContent === "Ground depth column";
+  })[0]);
+  assert.strictEqual(section.querySelectorAll(".col-ground_depth_mm").filter(function (node) {
+    return node.tagName === "th";
+  })[0].hidden, false, "the held edit keeps the table as it is");
+  assert.strictEqual(p.panel.state.ui.notice.message, "Finish or cancel the Zone edit first.");
+});

@@ -264,9 +264,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   }
 
   function viewField(own, field) {
-    return call(own, "columns", [units.profile(AREA, preferences.current())], []).some(function (column) {
-      return column[0] === field;
-    });
+    var profile = units.profile(AREA, preferences.current());
+    return call(own, "leadingColumns", [profile], []).concat(call(own, "columns", [profile], []))
+      .some(function (column) { return column[0] === field; });
   }
 
   function sortable(own, field) {
@@ -392,9 +392,16 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         .concat(own.view.optionalColumns || []);
       optional.forEach(function (column) {
         toggle(column[1] + " column", !own.hiddenColumns[column[0]], function () {
-          own.hiddenColumns[column[0]] = !own.hiddenColumns[column[0]];
-          // No filter applies without a column to clear it from.
-          if (own.hiddenColumns[column[0]]) delete state.controls.columnFilters[column[0]];
+          var field = column[0], reason = draftReason(state);
+          // A held edit keeps the table as it is, so its cell and Cancel stay in view.
+          if (reason) return refuse(reason);
+          own.hiddenColumns[field] = !own.hiddenColumns[field];
+          // No filter applies without a column to clear it from. A Zone column shown again takes the filter
+          // the controls hold; an older copy another view kept while the column was hidden goes.
+          if (own.hiddenColumns[field]) delete state.controls.columnFilters[field];
+          else if (ZONE_FILTERED[field]) {
+            Object.keys(state.slots).forEach(function (id) { delete state.slots[id].filters[field]; });
+          }
           panel.repaint();
         });
       });
