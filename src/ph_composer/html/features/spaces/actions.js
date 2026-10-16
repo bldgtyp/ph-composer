@@ -111,11 +111,11 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
       case "spaces.restore": this.edits.run(PREFIX + ".volumes.restore_position", { volume: reference }); break;
       case "spaces.independent": this.edits.run(PREFIX + ".make_independent", { reference: reference }); break;
       case "spaces.delete":
-        this.confirm("Delete " + record.name, "The Space, its Volumes and their Floor Segments are erased. One Undo " +
+        this.askFirst("Delete " + record.name, "The Space, its Volumes and their Floor Segments are erased. One Undo " +
           "brings them back.", "Delete", function () { self.edits.run(PREFIX + ".delete", { space: reference }); });
         break;
       case "spaces.remove_volume":
-        this.confirm("Remove " + record.name, "The Volume's records go and its Faces stay loose in the Space. One " +
+        this.askFirst("Remove " + record.name, "The Volume's records go and its Faces stay loose in the Space. One " +
           "Undo brings them back.", "Remove", function () {
           self.edits.run(PREFIX + ".volumes.remove", { volume: reference });
         });
@@ -127,7 +127,7 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
   };
 
   /* A confirmation in the shared dialog, naming exactly what goes; Cancel changes nothing. */
-  SpaceActions.prototype.confirm = function (title, consequence, commit, run) {
+  SpaceActions.prototype.askFirst = function (title, consequence, commit, run) {
     var dialog = this.dialog || (this.dialog = ui.formDialog("", function () { dialog.closeModal(); }));
     if (!dialog.parentNode) document.body.appendChild(dialog);
     var cancel = ui.button("Cancel", function () { dialog.closeModal(); });
