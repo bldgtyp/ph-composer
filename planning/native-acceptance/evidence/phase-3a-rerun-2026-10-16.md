@@ -233,3 +233,22 @@ integrated model opened beside it. The library setup was saved first and restore
   Installs changes?" with nothing written, and Discard opened Library.
 - Unreadable stored setup: the dialog showed Reset and Done with no Add routes, and menu Add opened no picker.
   Reset gave a readable empty setup.
+
+## PTAB, GH47 and GH43, library product tabs, the value bubble and the picker routes
+
+The same process, each case on a fresh copy (`r11/r11.skp` for PTAB and GH47, `blank-template.skp` for GH43).
+- PTAB: "+ New Frame" sits in the Library heading, and the tab body has no second title. Creating "Host frame"
+  took one write. Native "Undo Create Frame" removed it alone, and Redo restored the same id. The depth bubble
+  ("Default install depth") keeps "abc" with a length hint, closes on Escape with nothing written, and applies
+  "120 mm" as "Depth: 0.12 m" in one write. Choosing "R11 install" in "Default Psi-Install" applied at once.
+  Each default change was its own native "Undo Change Window Defaults". At 420 px the heading is one line and both
+  defaults share a row with the bubble inside the panel. With a 59-character name, at 420 and 1280 px, the name
+  ends in an ellipsis and both chevrons stay inside.
+- GH47 (IP units; an r11 copy stands in for the original issue fixture): the Column width bubble kept "abc",
+  accepted 4 ft = 1.2192 m on Enter, and cancelled 5 ft on Escape. The default depth bubble kept "xyz", accepted
+  0.5 ft = 0.1524 m on an outside click, and cancelled 0.8 ft on Escape. Native "Undo Change Window Defaults"
+  and "Undo Resize Window Band" restored 0 m and 1 m.
+- GH43: a readable setup shows two equal route cards and Done, and the file picker's Cancel writes nothing. A
+  stubbed unreadable setup shows Reset and Done with both routes absent; the real preferences are untouched. A
+  fresh normal process then reads the setup readable with the original providers, an equal fingerprint, no
+  helper, an unmodified Model and a new session.
