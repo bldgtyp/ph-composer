@@ -22,8 +22,13 @@ function (ui, requests, snapshot) {
     if (!this.state.active) this.stopping = false;
     var outcome = this.view.consume(state);
     if (outcome && outcome.status !== "completed") {
+      this.starting = this.cancelled = false;
       this.host.refuse(outcome.message || "The Mark floor tool did not start.");
     }
+    if (!this.state.active) return;
+    this.starting = false;
+    // A start cancelled before it landed (Escape, or leaving the view) is stopped now it has.
+    if (this.cancelled) { this.cancelled = false; this.stop(); }
   };
 
   /* The menu's paint icon for one factor, keyed by its band. */
@@ -33,19 +38,24 @@ function (ui, requests, snapshot) {
     // Compared as numbers: the host's band text and this runtime's number text differ for small factors.
     var pressed = Boolean(this.state.active && Number(this.state.weighting_factor) === factor);
     return { label: "Mark floor at weighting factor " + entry.label + ". " + RULE, icon: "paint_bucket",
-      pressed: pressed, disabled: this.view.busy(),
-      run: function () { self.start(factor); } };
+      pressed: pressed, run: function () { self.start(factor); } };
   };
 
+  /* A start chosen while another is in flight is sent too; the host applies the last. */
   MarkPaint.prototype.start = function (factor) {
-    if (this.view.busy()) return;
-    this.stopping = false;
-    this.view.run(PREFIX + ".start", { weighting_factor: factor });
+    this.stopping = this.cancelled = false;
+    this.starting = true;
+    if (this.view.busy()) this.view.send(PREFIX + ".start", { weighting_factor: factor });
+    else this.view.run(PREFIX + ".start", { weighting_factor: factor });
   };
 
-  /* Answers whether the tool was running. One stop is sent per run, however many routes ask for it. */
+  /* Answers whether the tool was running or starting. One stop is sent per run, however many routes ask for
+     it; a start still in flight is stopped once it lands. */
   MarkPaint.prototype.stop = function () {
-    if (!this.state.active) return false;
+    if (!this.state.active) {
+      if (this.starting) this.cancelled = true;
+      return Boolean(this.starting);
+    }
     if (this.stopping) return true;
     this.stopping = true;
     if (this.view.busy()) this.view.send(PREFIX + ".stop", {});

@@ -50,8 +50,9 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     (value.zones || []).forEach(function (zone) { vs.sums[occurrence(zone.zone_path)] = zone; });
     vs.actions.consume(state, value.zones || []);
     vs.paint.consume(state);
-    // Mark floor runs only while this view is shown: a start that lands after a switch away is stopped.
-    if (vs.host.activeView() !== VIEW.id) vs.paint.stop();
+    // Mark floor runs only while this view is shown on the Zones tab: a start that lands after a switch away
+    // is stopped.
+    if (state.ui && state.ui.activeTab !== "overview" || vs.host.activeView() !== VIEW.id) vs.paint.stop();
   }
 
   function zoneRecord(vs, record) {

@@ -101,3 +101,11 @@ another view left Mark floor running behind the Faces view; the Spaces view now 
 snapshot while it is not shown, as the Faces view does for Classify, and sends one stop per run. The pressed
 icon compared the host's band text with this runtime's number text, which differ for small factors such as
 `1.0e-07`; it now compares numbers.
+
+Cycle 2 at `3f6bce0`: four P2, fixed with tests and gated by `make ci` (the review cap). Escape before a
+start landed lost the cancellation; a start in flight now counts as running for Escape and leaving, and is
+stopped once it lands. Leaving the Zones tab left the tool running with no panel stop; the Spaces view now
+stops it whenever the Zones tab or the Spaces view is not shown. A menu reopened while a start was in flight
+built its icons disabled and never refreshed them; icons are no longer disabled, and a start chosen during
+another is sent too. The menu-closes assertion used a selector the DOM stub never matches; it now reads the
+trigger's `aria-expanded`. A reopened menu's pressed icon can still lag a start in flight until it is reopened.

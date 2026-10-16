@@ -85,11 +85,10 @@ test("choosing a factor starts the tool with it and closes the menu", function (
   var one = menu.parentNode.querySelectorAll("button").filter(function (node) {
     return /^Mark floor at weighting factor 1\./.test(node.getAttribute("aria-label") || "");
   })[0];
+  assert.strictEqual(menu.getAttribute("aria-expanded"), "true", "the menu is open");
   p.click(one);
   assert.deepStrictEqual(p.commands(), [["ph_composer.spaces.mark_tool.start", { weighting_factor: 1 }]]);
-  assert.strictEqual(p.context.document.querySelectorAll(".phc-column-menu").filter(function (node) {
-    return !node.hidden;
-  }).length, 0, "the menu closed");
+  assert.strictEqual(menu.getAttribute("aria-expanded"), "false", "the menu closed");
 });
 
 test("while the tool runs the header shows a pressed glyph that stops it", function () {
@@ -139,4 +138,39 @@ test("the running factor's icon is pressed whatever text the host gave its band"
       node.getAttribute("aria-pressed") === "true";
   });
   assert.strictEqual(pressed.length, 1);
+});
+
+function iconFor(menu, factor) {
+  return menu.parentNode.querySelectorAll("button").filter(function (node) {
+    return (node.getAttribute("aria-label") || "").indexOf("Mark floor at weighting factor " + factor + ".") === 0;
+  })[0];
+}
+
+test("Escape before a start lands cancels it: the tool is stopped once it starts", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(iconFor(openMenu(p), 1));
+  dom.dispatch(p.context.document.body, { type: "keydown", key: "Escape" });
+  p.receive(snapshot({ active: true, weighting_factor: 1, gesture_limit: 250 }));
+  assert.deepStrictEqual(p.commands(), [["ph_composer.spaces.mark_tool.start", { weighting_factor: 1 }],
+    ["ph_composer.spaces.mark_tool.stop", {}]]);
+});
+
+test("leaving the Zones tab stops a running tool, and a start that lands there", function () {
+  var p = page();
+  p.receive(snapshot({ active: true, weighting_factor: 1, gesture_limit: 250 }));
+  p.panel.showTab("assemblies");
+  assert.deepStrictEqual(p.commands(), [["ph_composer.spaces.mark_tool.stop", {}]], "on the switch itself");
+  p.receive(snapshot({ active: true, weighting_factor: 1, gesture_limit: 250 }));
+  assert.deepStrictEqual(p.commands(), [["ph_composer.spaces.mark_tool.stop", {}]], "and only once");
+});
+
+test("a menu reopened while a start is in flight still offers every factor", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(iconFor(openMenu(p), 1));
+  var zero = iconFor(openMenu(p), 0);
+  assert.strictEqual(zero.disabled, false);
+  p.click(zero);
+  assert.deepStrictEqual(p.commands().map(function (command) { return command[1].weighting_factor; }), [1, 0]);
 });
