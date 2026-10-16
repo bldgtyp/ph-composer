@@ -197,6 +197,21 @@ class SpacesContextTest < PhComposerTestCase
     assert_equal [@zone, @space, @first], @model.active_path
   end
 
+  # Every Volume on the path is kept open through a save, a nested one's outer Volume included.
+  def test_save_keeps_every_volume_on_the_path_open
+    inner = volume_group(115, volume_record("C", :number => 3), [floor_face(116, rectangle(0, 0, 1, 1),
+                                                                            segment_record("C"))], :locked => false)
+    @first.entities << inner
+    @first.locked = false
+    @session.host_event(:model_opened)
+    @model.instance_variable_set(:@active_path, [@zone, @space, @first, inner])
+    @session.host_event(:active_path_changed)
+    @model.save(File.join(Dir.tmpdir, "spaces-context-nested.skp"))
+    refute @first.locked?
+    refute inner.locked?
+    assert_equal [@zone, @space, @first, inner], @model.active_path
+  end
+
   # A file saved inside a Volume stores it unlocked; opening the Model protects every unlocked Volume
   # off the path, as deferred work.
   def test_opening_a_model_protects_volumes_it_holds_unlocked

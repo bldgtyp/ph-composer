@@ -18,6 +18,7 @@ module PhComposer
       def initialize(session)
         @session = session
         @baseline = nil
+        @open_path = []
         @exposed = []
         @saving = false
         @work = DeferredWork.new { |jobs| jobs.each_value { |volume| protect_unless_open(volume) } }
@@ -30,6 +31,7 @@ module PhComposer
       def observed
         return if @saving
 
+        @open_path = path
         current, = Protection.open_volume(path)
         @exposed << current if current && @exposed.none? { |volume| volume.equal?(current) }
         prior = @baseline
@@ -56,8 +58,8 @@ module PhComposer
       # Volumes already left runs, so the file holds them protected, and the Volume still open is left
       # unlocked, so the host restores the context after the save. Inside onPreSaveModel the host reports
       # an empty path, so the settled writes' callbacks are not observed, and a job still queued for the
-      # Volume open on screen (left and entered again, or queued at open) cannot tell it is open: the
-      # baseline is that Volume, and settling skips it. A Volume saved open is protected when the Model is
+      # Volume open on screen (left and entered again, or queued at open) cannot tell it is open: settling
+      # skips every Volume on the path last observed. A Volume saved open is protected when the Model is
       # next opened (`opened`).
       def pre_save
         @saving = true
@@ -97,6 +99,7 @@ module PhComposer
       def detach
         @work.detach
         @baseline = nil
+        @open_path = []
         @exposed = []
       end
 
@@ -111,9 +114,9 @@ module PhComposer
       end
 
       # The path is read again right before the write: the user may have entered the Volume again. During a
-      # save the host reports an empty path, so the Volume last seen open is skipped by identity too.
+      # save the host reports an empty path, so the path last observed is read instead.
       def protect_unless_open(volume)
-        return if path.any? { |entity| entity.equal?(volume) } || (@saving && volume.equal?(@baseline))
+        return if (@saving ? @open_path : path).any? { |entity| entity.equal?(volume) }
 
         Protection.protect(model, volume)
         protected(volume)
