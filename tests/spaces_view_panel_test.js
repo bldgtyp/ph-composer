@@ -172,3 +172,69 @@ test("filtering, sorting, expansion and switching views send nothing to the Mode
   assert.deepStrictEqual(table(p, []).filter(function (row) { return row[0] === "Zone"; }).length, 1);
   assert.deepStrictEqual(p.sent.map(function (message) { return message.payload.name || message.type; }), []);
 });
+
+/* ---------------------------------------------------------------- review (PR #150) */
+
+function button(p, text) {
+  return p.section().querySelectorAll("button").filter(function (node) { return node.textContent === text; })[0];
+}
+
+function labelled(p, label) {
+  return p.section().closest("[data-pane]").querySelectorAll("button, input").filter(function (node) {
+    return node.getAttribute("aria-label") === label;
+  })[0];
+}
+
+test("Expand all is offered while Spaces and Volumes start collapsed", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  assert.strictEqual(button(p, "Expand all").disabled, false);
+});
+
+test("the group of Spaces outside every Zone counts as no Zone and stays last in any sort", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot({ outside: true }) });
+  assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "2 Zones · 5 Spaces");
+  ["No.", "Height m", "Weighting factor"].forEach(function (label) {
+    ["Sort A to Z", "Sort Z to A"].forEach(function (order) {
+      var menu = labelled(p, label + " column menu");
+      menu.listeners.click({ preventDefault: function () {} });
+      menu.parentNode.querySelectorAll("button").filter(function (node) {
+        return node.textContent === order;
+      })[0].listeners.click({ preventDefault: function () {} });
+      var tops = table(p, []).filter(function (row) { return row[0] === "Zone" || row[0] === "NoZone"; });
+      assert.strictEqual(tops[tops.length - 1][0], "NoZone", label + " " + order);
+    });
+  });
+});
+
+test("a Model whose only Space is outside every Zone counts no Zone", function () {
+  var p = page(), state = snapshot({ outside: true });
+  state.sections["ph_composer.zones.overview"].value.zones = [];
+  state.sections["ph_composer.spaces.spaces"].value.spaces =
+    state.sections["ph_composer.spaces.spaces"].value.spaces.filter(function (space) { return !space.zone; });
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "0 Zones · 1 Space");
+  assert.deepStrictEqual(table(p, []).map(function (row) { return row[0]; }), ["NoZone", "Space"]);
+});
+
+test("hiding a column through Table options drops its filter", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  function option(text) {
+    var options = labelled(p, "Table options");
+    options.listeners.click({ preventDefault: function () {} });
+    options.parentNode.querySelectorAll(".phc-action-menu-item").filter(function (node) {
+      return node.textContent === text;
+    })[0].listeners.click({ preventDefault: function () {} });
+  }
+  option("Building-Segment column");
+  var menu = labelled(p, "Building-Segment column menu");
+  menu.listeners.click({ preventDefault: function () {} });
+  var box = menu.parentNode.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; })[0];
+  box.checked = false; box.listeners.change({});
+  assert.match(p.section().querySelector(".phc-view-count").textContent, /1 filter$/);
+  p.context.document.activeElement && p.context.document.activeElement.blur();
+  option("Building-Segment column");
+  assert.doesNotMatch(p.section().querySelector(".phc-view-count").textContent, /filter/);
+});

@@ -641,7 +641,7 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
 | Hooks | What the host asks |
 | --- | --- |
 | `create`, `dispose`, `consume(state, send)` | The view's state for one Model, and what it reads from each snapshot before rows are built. Every listed view consumes, shown or not, so work that arrives for a hidden view (a native handoff, a tool that turned on late) still reaches it |
-| `zoneRecord(record)`, `children(row)`, `initiallyOpen(row)`, `extraRows()`, `tiers` | What a Zone row carries for the view, the rows beneath it (none by default), whether a row the view adds opens by default (`null`: the host's rule), top-level group rows after the Zones (records outside every Zone; `record.zone` is null, they sort last and pass only the view's filters), and how many tree levels open (2 by default; Spaces, four deep, gives 3) |
+| `zoneRecord(record)`, `children(row)`, `initiallyOpen(row)`, `extraRows()`, `tiers` | What a Zone row carries for the view, the rows beneath it (none by default), whether a row the view adds opens by default (`null`: the host's rule), top-level group rows after the Zones (records outside every Zone; `record.zone` is null; they follow the Zones in any sort, count as no Zone, and show while the text filter and the view's filters pass them), and how many tree levels open (2 by default; Spaces, four deep, gives 3) |
 | `columns`, `leadingColumns`, `value`, `cell(td, row, field)`, `decorate`, `zoneMarker(row)`, `widths`, `hiddenColumns`, `optionalColumns` | The view's columns (`leadingColumns` sit before Name), their text or in-place control, a cell's flag, the Zone row's marker after the host's own, default widths, the columns hidden at first, and the `[field, label]` pairs Table options shows or hides |
 | `colourBy`, `sorted`, `filteredFields`, `filterValues`, `filterLabel`, `headerAction`, `menuValueAction`, `menuExtra` | The view's columns' Colour-by bindings, sort and value filters, and anything its column header and menu add (Faces adds the Classify paint) |
 | `zoneMatch`, `rowMatch`, `search`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask (by default each Zone that passes `zoneMatch`, whole) |
@@ -661,7 +661,8 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
   table mount, so its column widths, hidden columns and column menus are its own. The host keeps one
   controls row and moves the view's column filters and sort out of it and back on a switch; a Zone
   filter stays while the next view shows its column and otherwise leaves with the view that does, so
-  no filter applies without a column to clear it from. A column has a menu when it sorts (`sorted`) or
+  no filter applies without a column to clear it from; hiding a column through Table options drops its
+  filter for the same reason. A column has a menu when it sorts (`sorted`) or
   filters (`filteredFields`), and offers only those. All of it survives a switch away and back.
 - **Switching** is a host action that sends nothing to the Model and never changes the SketchUp
   selection. It is refused while `draftReason` or `leaveReason` answers; otherwise it calls the old

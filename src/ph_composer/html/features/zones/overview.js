@@ -240,7 +240,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
      view shows its column; otherwise it leaves with this view, so no filter applies without its column. */
   function stash(state, own, next) {
     var filters = state.controls.columnFilters, fieldsOwned = own.view.filteredFields || {};
-    var nextShows = zoneFields(next);
+    var nextShows = zoneFields(next).filter(function (field) { return !next.hiddenColumns[field]; });
     own.filters = Object.create(null);
     Object.keys(filters).forEach(function (field) {
       if (fieldsOwned[field] || (ZONE_FILTERED[field] && nextShows.indexOf(field) < 0)) {
@@ -393,6 +393,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       optional.forEach(function (column) {
         toggle(column[1] + " column", !own.hiddenColumns[column[0]], function () {
           own.hiddenColumns[column[0]] = !own.hiddenColumns[column[0]];
+          // No filter applies without a column to clear it from.
+          if (own.hiddenColumns[column[0]]) delete state.controls.columnFilters[column[0]];
           panel.repaint();
         });
       });
@@ -418,8 +420,10 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     };
   }
 
+  /* As the table opens a row: a Zone open and every row beneath it shut, until the user says otherwise. */
   function open(state, key) {
-    return Object.prototype.hasOwnProperty.call(state.expanded, key) ? state.expanded[key] : true;
+    if (Object.prototype.hasOwnProperty.call(state.expanded, key)) return state.expanded[key];
+    return state.topKeys[key] === true;
   }
 
   function columns(own, profile) {
@@ -616,6 +620,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
     screenState.zoneKeys = rows.filter(function (row) { return parents[row.key]; })
       .map(function (row) { return row.key; });
+    screenState.topKeys = Object.create(null);
+    rows.forEach(function (row) { if (row.depth === 0) screenState.topKeys[row.key] = true; });
     // The pane's tools (whatever sections registered there) end this screen's control row. Found before the
     // row changes hands, so a new session's row inherits them instead of leaving them in the old one.
     var tools = panel.region(root.closest("[data-pane]").getAttribute("data-pane"), "tools");
@@ -649,10 +655,6 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (bar) bar.reserve(own.mount);
   }
 
-  function depth(wanted) {
-    return function (row) { return row.depth === wanted; };
-  }
-
   /* A top-level row for one Zone occurrence; a view's group row has no Zone. */
   function zoneRow(row) {
     return row.depth === 0 && Boolean(row.record.zone);
@@ -663,14 +665,15 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
      them how a view's row traces back to the Zone that decides whether it shows. Filtering reads the view's
      rows too, so a search for "Ground" keeps the Zone that has a Ground Face. */
   function paintTable(own, rows, state, profile) {
-    var zoneRows = rows.filter(depth(0)), viewFields = own.view.filteredFields || {};
+    var zoneRows = rows.filter(zoneRow), viewFields = own.view.filteredFields || {};
+    // A view's group rows (records outside every Zone) are not Zones: the controls neither count nor order them,
+    // and they follow the Zones in any sort.
+    var groupRows = rows.filter(function (row) { return row.depth === 0 && !row.record.zone; });
     var byId = Object.create(null);
-    zoneRows.forEach(function (row) { byId[row.record.id] = row; });
+    zoneRows.concat(groupRows).forEach(function (row) { byId[row.record.id] = row; });
     var projection = state.controls.project(zoneRows.map(function (row) { return row.record; }), {
       id: function (record) { return record.id; },
       value: function (record, field) {
-        // A view's group row (records outside every Zone) has no value, so it sorts after the Zones.
-        if (!record.zone) return null;
         if (field === "name") return record.name;
         var viewValue = call(own, "sortValue", [record, field], undefined);
         if (viewValue !== undefined) return viewValue;
@@ -689,9 +692,10 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     });
     var labels = Object.create(null), shownColumns = columns(own, profile);
     shownColumns.forEach(function (column) { labels[column[0]] = column[1]; });
-    var shown = ordered(own, projection.records, byId, rows, state.controls);
-    var visible = shown.filter(function (row) { return !projection.hidden(row); });
-    var filters = state.controls.columnFilters;
+    var filters = state.controls.columnFilters, hidden = groupedHidden(own, rows, groupRows, projection, state);
+    var shown = ordered(own, projection.records.concat(groupRows.map(function (row) { return row.record; })), byId,
+      rows, state.controls);
+    var visible = shown.filter(function (row) { return !hidden(row); });
     // Only column Show filters affect the viewport. Text search and collapsed rows remain table navigation.
     var matchingPaths = state.controls.filterCount() ? zoneRows.reduce(function (all, row) {
       if (!zoneMatches(own, row.record, filters) || !call(own, "zoneMatch", [row.record, filters], true)) return all;
@@ -699,7 +703,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         row.record.zone ? [row.record.zone.reference.zone_path] : []));
     }, []).sort(function (a, b) { return ui.compareText(JSON.stringify(a), JSON.stringify(b)); }) : null;
     colourBy.filter(state.snapshot, matchingPaths);
-    var check = call(own, "check", [{ visible: visible, zoneRows: visible.filter(depth(0)), allZoneRows: zoneRows,
+    var check = call(own, "check", [{ visible: visible, zoneRows: visible.filter(zoneRow), allZoneRows: zoneRows,
       filters: filters }], null);
     var parents = Object.create(null);
     rows.forEach(function (row) { if (row.parent) parents[row.parent] = true; });
@@ -711,8 +715,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
       decorate: function (td, row, field) { call(own, "decorate", [td, row, field]); },
-      columnWidths: own.columnWidths, visibleCount: projection.visibleCount, disabled: state.edits.busy(),
-      empty: zoneRows.length ? "No Zones match this filter." :
+      columnWidths: own.columnWidths, visibleCount: projection.visibleCount + hidden.groupsShown,
+      disabled: state.edits.busy(),
+      empty: zoneRows.length || groupRows.length ? "No Zones match this filter." :
         "No Zones yet. Select geometry in SketchUp, then right-click and choose Make Zone.",
       value: function (row, field) { return value(own, row, field, profile); },
       cell: function (td, row, field) {
@@ -720,7 +725,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
           call(own, "cell", [td, row, field], false);
       },
       marker: function (row) { return marker(own, row); }, actions: function (row) { return actions(own, row); },
-      rowHidden: projection.hidden, hiddenColumns: own.hiddenColumns, revealRowActions: true,
+      rowHidden: hidden, hiddenColumns: own.hiddenColumns, revealRowActions: true,
       check: check || undefined,
       headerActions: function (field) { return headerActions(state, own, field, labels[field]); },
       inspect: function (row) { call(own, "inspect", [row]); },
@@ -734,6 +739,30 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         else call(own, "action", [row, item]);
       }
     });
+  }
+
+  /* Which rows the filters hide: the controls' answer for a Zone and its rows, and the same rules (the text
+     filter and the view's column filters) for a view's group row and its rows, which the controls do not hold.
+     `groupsShown` counts the group rows that show. */
+  function groupedHidden(own, rows, groupRows, projection, state) {
+    var root = Object.create(null), shown = Object.create(null), groupsShown = 0;
+    var query = (state.controls.filter.value || "").trim().toLocaleLowerCase();
+    var filters = state.controls.columnFilters, filterCount = state.controls.filterCount();
+    rows.forEach(function (row) { root[row.key] = row.parent ? root[row.parent] : row.key; });
+    groupRows.forEach(function (row) {
+      var record = row.record;
+      shown[row.key] = (!query || searchText(own, record, state).toLocaleLowerCase().indexOf(query) >= 0) &&
+        (!filterCount || zoneMatches(own, record, filters) && call(own, "zoneMatch", [record, filters], true));
+      if (shown[row.key]) groupsShown += 1;
+    });
+    function hidden(row) {
+      var top = root[row.key];
+      if (!Object.prototype.hasOwnProperty.call(shown, top)) return projection.hidden(row);
+      if (!shown[top]) return true;
+      return Boolean(filterCount && row.parent && !call(own, "rowMatch", [row, filters], true));
+    }
+    hidden.groupsShown = groupsShown;
+    return hidden;
   }
 
   /* Whether a Zone's own values pass the Zone filters; the view's fields are the view's to judge. */
