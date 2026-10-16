@@ -145,3 +145,66 @@ Seen during the run, filed separately: after the Close, with no document window 
 the closed Model until another document was clicked. Separately, `container_added` and
 `zone_container_listener` logged a `TypeError` once during the integrated setup and once on an Undo. Three traced
 attempts did not reproduce it.
+
+## E17, Phase 2 integrated authoring, lifecycle and export
+
+A copy of the E14 integrated model, opened in a fresh process. Each assertion names the host clause of the
+E17 register row it covers. The offline clauses (gates, coverage, footprint) are `make ci`. The "E01 to E11
+reconciliation" the earlier run left `unknown` is a documentation step, not a host one.
+- Authoring to export: a public `start_export` through the shipped Pyodide runtime. The reload in the
+  pinned wheels matches E14: 2 Rooms, 12 Faces, 6 Apertures, net areas 14.01, 9.76 and 19.01 m2.
+- Nested edit paths, Undo and Redo: the west Zone was opened by a native double-click. One public Assembly
+  assignment, made from inside it, changed a Face in that Zone and a Face in the other one, and the path
+  stayed. Native Undo ("Undo Assign Assembly") restored all ten public projections exactly, with the path
+  still in the Zone. Native Redo restored the assigned rows.
+- Two Models: a second Model came from native File > New, with its own session. A Material created there
+  committed in that session only; the integrated session read the same Materials.
+- Reopen: native Save, then native Quit and a fresh process. All ten projections were equal, with no field
+  stripped, the Model unmodified and the edit path at the root.
+- Staged restart: the shipped `ArtifactPair` fault hook stopped a commit after the HBJSON step. After a native
+  Quit and a fresh process, a public `start_export` to that destination restored both prior files byte for
+  byte and left no journal, stage or backup. The start itself refused `export.replace_required`, because an
+  approved location without `replace` gives no consent to replace. The earlier handle refused `task.expired`.
+  A consented start (`replace` with the preflight's `expected_destination`) was cancelled while queued and
+  wrote nothing.
+
+## GH41, export result names authored Materials and Layers
+
+A fresh copy of `envelope/reference-assigned.skp`. The Materials and Assemblies of
+`tests/fixtures/assemblies/authoring.json` were written by development eval, with the first Layer-Segment
+Material of "Two wool thicknesses" removed. Export ran natively from the panel (Choose destination, Save
+panel, Save). The HBJSON has 2 Rooms, 12 Faces and 1 Surface pair. "From the last export" says: Assembly
+"Two wool thicknesses", Layer 1: choose a Material for each Layer-Segment. It also names Material "Synthetic
+defaults" in Assembly "Default mass". `latest_export` returns the same eight messages. Neither the panel nor
+the runtime result shows an internal sentence or a `mat_` id. Only the report's Object column carries object
+ids, which is by design.
+
+## A09, Zones tab keyboard, context and held gestures: fail on the narrow layout
+
+Fresh copies of `envelope/reference-assigned.skp`: one for the panel clauses, one in its own fresh process for the
+held gestures with the tools-only `HeldClassifyProbe` tracer. Panel DOM was measured through a temporary panel
+callback (tools-only).
+- **Fail, narrow layout ([#179](https://github.com/bldgtyp/ph-composer/issues/179)).** At 365 px the tabs
+  wrap, but the Zones tab scrolls sideways as a whole: heading, toolbar and Actions column move together, and
+  the sticky Actions column is lost. `section.phc-overview` is a grid whose implicit column grows to the table's
+  1206 px, because the view wrapper P3a-06 added keeps `min-width: auto`. The table mount never scrolls. A
+  one-rule fix, injected into the live panel, restores the Phase 1 behavior: `grid-template-columns:
+  minmax(0, 1fr)`.
+- Cell drafts: on a Zone's ground depth, Escape restored the Model value and wrote nothing. Enter wrote one
+  operation, and native Undo ("Undo Edit Zone") restored the value exactly.
+- Classify and the edit path: native menu Classify, then panel Escape, returned to Select. Inside an open Zone,
+  the first viewport Escape stopped the tool and kept the path, and the second left the Zone. A concrete menu
+  choice stays as the Colour-by mode by design; only an empty-palette start forces a mode that the tool then
+  releases.
+- Filter and tree: "1 of 2 Zones", then "0 of 2 Zones" with "No Zones match this filter." The filter survived a
+  tab round trip. Native Left collapsed a Zone row, Right expanded it, and Down moved through its Faces.
+- Cmd-N from the focused panel opened a new Model with zero Zones, the Select tool and Colour-by off. The panel
+  followed it.
+- Held, Model switch: a genuine button-down collected one Face. With the button held, Cmd-N opened a new
+  Model, and the release arrived there. Revision, collection and the full dictionary/entity/material
+  fingerprint were unchanged; the new Model ran Select.
+- Held, edit context: the tracer timer entered the west Zone while the button was down. The release cleared the
+  collection, wrote nothing and showed "The Classify gesture was cancelled. Nothing was written." Close
+  Group/Component and native Save left the root, unmodified, with the exact fingerprint.
+
+A09 is rechecked on the narrow clause once #179 ships.
