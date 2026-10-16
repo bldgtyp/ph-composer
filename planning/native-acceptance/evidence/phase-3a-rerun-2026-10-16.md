@@ -208,3 +208,28 @@ callback (tools-only).
   Group/Component and native Save left the root, unmodified, with the exact fingerprint.
 
 A09 is rechecked on the narrow clause once #179 ships.
+
+## R11H and HGUI, library setup, library and HBJSON export, Window Type grid, navigation
+
+One fresh process: a copy of `r11/r11.skp` for both cases, and for HGUI's HBJSON items a copy of the E17
+integrated model opened beside it. The library setup was saved first and restored byte for byte afterwards.
+- Adding a library: the file route opened the native picker and added `long-library.json` under its own
+  library name. Menu Add Library Folder added the folder as "Library folder 4" ("Added library Library folder
+  4."). A folder holding more than one library is labelled "Library folder N" by design, so a public result
+  never carries a folder name. That replaces the folder-name label of the 2026-10-02 run.
+- Paging: the 250-Material library opens with its group collapsed. Expanded, it shows 100, then 200 and 250 with
+  Load more, after which Load more is gone.
+- Library export over an existing file: one prompt, the macOS Replace sheet. The form lists Frame 1, Glazing 1,
+  Material 0 and Psi-Install Type 1, with plain-word notes and no codes. The written file is a new "Model library"
+  export, and the Model is unmodified.
+- HBJSON export: over an existing pair, one Replace sheet and both files replaced. Onto a lone report: "Only one
+  destination artifact exists. Move or rename it before replacing the coordinated pair.", with no question. Without
+  `.hbjson`: "The export destination must end in .hbjson." In both refusals the files were unchanged.
+- Window Type grid: Insert column right gave `[1.0, 0.5]` with two elements. Merge gave one; native Undo ("Undo
+  Merge Window Elements") gave two back.
+- Navigation: "Manage frames in Library" from the Top Frame picker opened Library on Frames. The Frame uses
+  bubble reads "Used by 1 element" with "R11 type / Element" on "Top, right, bottom, left" (the side order of
+  #42 is fixed), and Open type opened R11 type. Leaving an Installs session with one painted edge asked "Discard
+  Installs changes?" with nothing written, and Discard opened Library.
+- Unreadable stored setup: the dialog showed Reset and Done with no Add routes, and menu Add opened no picker.
+  Reset gave a readable empty setup.
