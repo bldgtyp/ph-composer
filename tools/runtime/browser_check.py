@@ -222,6 +222,41 @@ def check_translation(client: CDP) -> dict[str, Any]:
     # their empty sections even when a Model has no Units; retain the historical authored records.
     for name in ("window_constructions", "apertures"):
         document["sections"][f"ph_composer.windows.export.{name}"] = {"version": 1, "records": []}
+    # One synthetic Space on Zone A, with a supply rate, so honeybee-ph's Space objects and the airflow rule
+    # take the same path through both runtimes.
+    floor = [[1.0, 1.0, 0.0], [3.0, 1.0, 0.0], [3.0, 3.0, 0.0], [1.0, 3.0, 0.0]]
+    top = [[x, y, 2.5] for x, y, _z in floor]
+    prism = [floor, top] + [[floor[i], floor[(i + 1) % 4], top[(i + 1) % 4], top[i]] for i in range(4)]
+    document["sections"]["ph_composer.spaces.export.spaces"] = {
+        "version": 1,
+        "records": [
+            {
+                "id": "spc_BrowserCheck",
+                "zone_id": "zon_AAAAAAAAAAAA",
+                "name": "Kitchen",
+                "number": "101",
+                "v_sup_m3h": 60.0,
+                "volumes": [
+                    {
+                        "id": "vol_BrowserCheck",
+                        "display_name": "",
+                        "avg_ceiling_height_m": 2.5,
+                        "floor_id": "flr_BrowserCheck",
+                        "geometry": prism,
+                        "floor_segments": [
+                            {
+                                "id": "fsg_BrowserCheck",
+                                "display_name": "",
+                                "weighting_factor": 1.0,
+                                "net_area_factor": 1.0,
+                                "loops_m": [floor],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
     request = {"request_id": "browser-export", "deadline_ms": 15000, "document": document}
     response = client.evaluate(
         """

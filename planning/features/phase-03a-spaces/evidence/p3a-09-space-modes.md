@@ -1,7 +1,7 @@
 # P3a-09 evidence: modes, preview, labels and totals
 
 DATE: 2026-10-16
-STATUS: Slices A and B merged ([#162](https://github.com/bldgtyp/ph-composer/pull/162), [#163](https://github.com/bldgtyp/ph-composer/pull/163)); slice C in review; native S09 rows pending
+STATUS: Merged in three slices ([#162](https://github.com/bldgtyp/ph-composer/pull/162), [#163](https://github.com/bldgtyp/ph-composer/pull/163), [#164](https://github.com/bldgtyp/ph-composer/pull/164)); native S09 rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
