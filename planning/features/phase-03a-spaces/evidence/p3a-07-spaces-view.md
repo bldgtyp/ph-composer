@@ -1,7 +1,7 @@
 # P3a-07 evidence: the Spaces view
 
 DATE: 2026-10-16
-STATUS: Slices A, B and C1 merged through #150 (`7619964`), #151 (`a9d2f72`) and #152 (`34db51a`); slice C2 in review
+STATUS: Slices A to C2 merged through #150 (`7619964`), #151 (`a9d2f72`), #152 (`34db51a`) and #153 (`803e95b`); slice D in review; host gate pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -148,4 +148,30 @@ holds while a bar draft is open; a corrected entry keeps its first unit; every c
 (the host checks each and skips the writes that change nothing); Enter on an empty Mixed optional field
 clears it; the hand-over waits for the destination to consume; the bar shows Cancel beside a held entry. These
 were gated by `make ci` only, at the review cap.
+
+## Slice D: preview fixtures, the unit-switch measurement and docs
+
+The preview host now publishes the fixture's `spaces` section (step 15): `?fixture=spaces` is the reference
+model on the authoring Zones, `spacesnone` the Zones with no Spaces, `spacesempty` an empty Model, `spaceslarge` 300 Spaces.
+`tools/ui-preview/spaces_checks.cjs` checks the reference model's rows, Zone marker, inheriting airflow, layout
+at 1280, 900 and 420 px and the selection bar; the empty Model's Zones alone; and measures the unit switch on
+300 Spaces (step 14): median 408 ms with the Zones open and 786 ms with every row open, each to the first
+painted frame, desktop Chrome on an Apple M1 Max. The units STATUS records the measurement and the decision not to optimize in this stage, with
+issue [#154](https://github.com/bldgtyp/ph-composer/issues/154) carrying the investigation. The browser checks
+run in current Chrome, not Chromium 88; the host gate covers that.
+
+Docs (step 16): `docs/PRODUCT.md`'s Spaces section describes the Spaces view as built (no Level rail, no
+separate balance view, column widths for the session), and `context/UBIQUITOUS_LANGUAGE.md` replaces the
+Airflow balance view with the Zone rows' airflow balance and the iCFA factor with the weighting factor
+(D3a-17).
+
+## Host
+
+Not run. The S07 gate is batched with the S03 to S06 native rows.
+
+Slice D review: Codex `gpt-6.1-sol` on #155. The first pass found two P2 (the unit-switch timer stopped before
+the browser painted; its wait had no deadline, so a regression would hang `make ui-checks`), fixed and
+re-measured; the second one P2 (the empty fixture kept its Zones, so a truly empty Model went untested; it is
+now `spacesnone`, and `spacesempty` has nothing) and one P3 (a planning word in the client-facing glossary),
+fixed and gated by `make ci` only, at the review cap.
 

@@ -42,6 +42,8 @@
       building_segments: [], levels: [], default_segment_id: null, adoption: { required: false, sources: [] }
     }));
     this.faces = JSON.parse(JSON.stringify(settings.faces || []));
+    // The Spaces read: the fixture's, or empty (the section is always published, as the host does).
+    this.spaces = settings.spaces ? JSON.parse(JSON.stringify(settings.spaces)) : null;
     this.selectedFaces = JSON.parse(JSON.stringify(settings.selectedFaces || []));
     this.makeZone = settings.makeZone || null;
     this.zoneSettings = { suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130 };
