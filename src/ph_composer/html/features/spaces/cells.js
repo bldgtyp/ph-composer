@@ -83,7 +83,10 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
     var self = this;
     this.host = host;
     this.batch = requests.channel(host.session, host.send, "spaces-range");
-    this.edits = new RecordEdits(host.session, host.send, host.refuse, {
+    // A notice the drafts raise while they refresh (a Space removed under a draft) waits until the paint ends:
+    // showing it repaints, which would refresh the drafts again before they had finished.
+    this.notices = [];
+    this.edits = new RecordEdits(host.session, host.send, function (message) { self.notices.push(message); }, {
       action: UPDATE, fields: FIELDS, recordLabel: "Space", fieldAttribute: "data-space-field",
       // Only a Space's number must be filled; a Volume or Floor Segment may have an empty name.
       navigateOnCommit: false, requiredFields: ["number"], cancelControl: true,
@@ -147,15 +150,28 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
 
   SpaceCells.prototype.painted = function () {
     if (this.grid) this.grid.refresh();
+    var held = this.notices;
+    this.notices = [];
+    if (held.length) this.host.refuse(held[held.length - 1]);
   };
 
-  /* Work a filter, a switch or another Model change must not hide. */
+  /* Work a filter, a switch or another Model change must not hide: an edit in flight is waited for, a draft
+     is finished or cancelled. */
   SpaceCells.prototype.draftReason = function () {
-    if (this.batch.busy()) return "Wait for the range edit to finish.";
+    if (this.inFlight()) return "Wait for the Spaces edit to finish.";
     var dirty = Object.keys(this.edits.cells).some(function (key) {
       return this.edits.cells[key].status !== "clean";
     }, this);
     return dirty ? "Finish or cancel the Spaces cell edit first." : null;
+  };
+
+  SpaceCells.prototype.inFlight = function () {
+    return this.batch.busy() || Boolean(this.edits.pending) || this.edits.queue.length > 0;
+  };
+
+  /* Whether the guard's notice may offer Cancel: only drafts, never an edit already sent. */
+  SpaceCells.prototype.cancellable = function () {
+    return !this.inFlight() && Boolean(this.draftReason());
   };
 
   SpaceCells.prototype.cancelAll = function () { this.edits.cancelAll(); };

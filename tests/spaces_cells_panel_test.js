@@ -156,13 +156,15 @@ test("a paste of values and blanks sends sets and clears in one batch_update", f
   var mount = p.section().querySelectorAll(".phc-zone-view").filter(function (node) { return !node.hidden; })[0]
     .querySelector(".phc-table-mount");
   mount.listeners.paste({ preventDefault: function () {},
-    clipboardData: { getData: function () { return "50\t\t5\n\t30\t"; } } });
+    clipboardData: { getData: function () { return "50\t\t5\n\t30\t\n\t\t"; } } });
   assert.deepStrictEqual(payloads(p, "ph_composer.spaces.batch_update"), [{ edits: [
     { reference: { space_id: "spc_101", entity_path: [100, 101] }, values: { v_sup_m3h: 50, v_tran_m3h: 5 },
       expected_values: { v_sup_m3h: 60 } },
     { reference: { space_id: "spc_102", entity_path: [100, 102] }, values: { v_eta_m3h: 30 },
-      expected_values: { v_eta_m3h: 40 } }
-  ] }], "a blank over an unset rate changes nothing; the set values are written");
+      expected_values: { v_eta_m3h: 40 } },
+    { reference: { space_id: "spc_103", entity_path: [100, 103] }, values: { v_tran_m3h: null },
+      expected_values: { v_tran_m3h: 20 } }
+  ] }], "a blank over a set rate clears it; a blank over an unset rate changes nothing");
 });
 
 test("a unit switch reformats the cells and keeps a draft as typed", function () {
@@ -240,3 +242,27 @@ test("a row holding a draft beneath it does not collapse", function () {
   assert.ok(p.input("Living name"), "the draft stays in view");
   assert.match(p.panel.state.ui.notice.message, /Finish or cancel/);
 });
+
+/* ---------------------------------------------------------------- review (PR #151), cycle 2 */
+
+test("a snapshot that removes a Space under a draft says so once and keeps painting", function () {
+  var p = page(), errors = [];
+  p.context.console = { error: function (text) { errors.push(text); } };
+  p.receive(snapshot());
+  var name = p.input("Living name");
+  name.value = "Lounge"; name.listeners.input({});
+  p.receive(snapshot(function (section) { section.spaces.splice(0, 1); }));
+  assert.deepStrictEqual(errors, []);
+  assert.ok(p.input("Bath name"), "the table still paints");
+});
+
+test("an edit already sent is waited for, not offered for cancellation", function () {
+  var p = page();
+  p.receive(snapshot());
+  enter(p.input("Living name"), "Lounge");
+  p.panel.showTab("export");
+  var notice = p.panel.state.ui.notice;
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview");
+  assert.ok(!notice.action, "nothing to cancel while the edit is in flight: " + notice.message);
+});
+

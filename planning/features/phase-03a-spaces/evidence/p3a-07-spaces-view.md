@@ -67,3 +67,11 @@ left of the read-only numbers, and the range-edit tools stood in a row of their 
 metres, a numeric cell input right-aligns (kit class `is-numeric`), and each view has a tools slot in the
 shared controls row holding its help and what it binds there.
 
+Slice B review: Codex `gpt-6.1-sol` on #151. The first pass found four P2 (cells a row chevron revealed
+missed the range grid; Volume and Floor Segment names could not be cleared; a refused draft had no visible
+Cancel; shutting a row could hide a held draft), the second three P2 (a Space removed under a draft
+re-entered the drafts' refresh through the notice and overflowed the stack; the guard offered Cancel for an
+edit already sent; the paste test never cleared a set rate). Each was reproduced by a test and fixed (the
+kit table now calls `options.painted` after every paint and asks `options.mayToggle` before a row opens or
+shuts); the second pass's three were gated by `make ci` only, at the review cap.
+

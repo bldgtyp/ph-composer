@@ -242,6 +242,7 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
     painted: function (vs) { vs.cells.painted(); },
     draftReason: function (vs) { return vs.cells.draftReason(); },
     cancelDrafts: function (vs) { vs.cells.cancelAll(); },
+    canCancelDrafts: function (vs) { return vs.cells.cancellable(); },
     dispose: function (vs) { vs.cells.dispose(); }, zoneRecord: zoneRecord, extraRows: extraRows, children: children,
     leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: zoneMarker,
     sortValue: sortValue, sort: sort, search: search, count: count

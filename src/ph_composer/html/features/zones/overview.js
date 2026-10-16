@@ -138,7 +138,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var cells = screen && screen.zoneCells, own = screen && active(screen), action = null;
     if (reason === ZONE_DRAFT && cells) {
       action = { label: "Cancel the Zone edit", run: function () { cells.cancelAll(); panel.repaint(); } };
-    } else if (own && own.view.cancelDrafts && reason === call(own, "draftReason", [], null)) {
+    } else if (own && own.view.cancelDrafts && call(own, "canCancelDrafts", [], true) &&
+        reason === call(own, "draftReason", [], null)) {
       action = { label: "Cancel the edit", run: function () { call(own, "cancelDrafts"); panel.repaint(); } };
     }
     panel.notify(reason, "warning", action);

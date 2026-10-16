@@ -648,7 +648,7 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
 | `zoneMatch`, `rowMatch`, `search`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask (by default each Zone that passes `zoneMatch`, whole) |
 | `actions(row)`, `zoneActions(row)`, `action`, `inspect`, `locate(row)`, `clearLocate` | Row actions, the Zone row's actions after Make independent, and Locate; `clearLocate` answers whether it cleared anything |
 | `check(context)`, `selectionBar(overview)`, `settings`, `navigate(intent)`, `count`, `placeholder` | Checkboxes for the rows it checks, a selection bar, a settings control for the page header, a navigation intent's `check`, what the control row's count adds after the Zones ("4 Spaces"), and the text filter's placeholder |
-| `draftReason`, `cancelDrafts`, `leaveReason`, `leave`, `escape` | Work a filter, a switch or shutting a row must not hide, and how the guard's notice cancels it; what holds a switch; what stops on a switch away; Escape, true when the view used it |
+| `draftReason`, `cancelDrafts`, `canCancelDrafts`, `leaveReason`, `leave`, `escape` | Work a filter, a switch or shutting a row must not hide, and how the guard's notice cancels it (offered only while `canCancelDrafts` answers, never for an edit already sent); what holds a switch; what stops on a switch away; Escape, true when the view used it |
 
 - **Listing.** A view is listed while the snapshot publishes every section it names, so a build
   without a feature shows none of its views, with no line in the composition root. With one view

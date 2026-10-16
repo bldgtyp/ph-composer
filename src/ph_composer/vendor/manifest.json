@@ -96,14 +96,14 @@
       "sha256": "eda6ea45c74703b8779547bc220411664ee3fda12fa74c183777838f9c4f5355"
     },
     "html/features/spaces/cells.js": {
-      "bytes": 8942,
+      "bytes": 9749,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "5b5f0c86863241e757b1c08769068523cb50a69b8e600caffca68f4c1ad84054"
+      "sha256": "5bc18ba0dd78583c25c1a8ae45606d653a695b0d55090a8be4f3672b9c09c85b"
     },
     "html/features/spaces/view.js": {
-      "bytes": 12570,
+      "bytes": 12641,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "90e3911d571378f8f60e556a47a3f521d3d61e3567bc399bfa88a2fa51a60a65"
+      "sha256": "d08e0ad6fd86a842f1f5eea2a082eb7864cd5ea0faf751b83595817f4ea8ef9d"
     },
     "html/features/windows/audit.js": {
       "bytes": 3740,
@@ -221,9 +221,9 @@
       "sha256": "d29df66f89aa13ccfabf7e501c2746015af715aeb0cb29612c12c986a38ee2ba"
     },
     "html/features/zones/overview.js": {
-      "bytes": 47876,
+      "bytes": 47926,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "a74324106492e5f7a66fdd5b6259f74a68375a5473d99d8ba630eeae79a7b8e5"
+      "sha256": "cd3771acb0015874731956e49eff4ee514c79e72fc66448b14c166ef57ea8ccc"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 3325,
