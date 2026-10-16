@@ -1,7 +1,7 @@
 # P3a-10 evidence: Spaces export
 
 DATE: 2026-10-16
-STATUS: Slice A built on `feature/spaces-p3a-10a`; host gate pending
+STATUS: Slice A in review on `feature/spaces-p3a-10a`; host gate pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
