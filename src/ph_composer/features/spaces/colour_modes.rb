@@ -35,7 +35,6 @@ module PhComposer
         "none" => ["No airflow", [190, 190, 190], []]
       }.freeze
       VENTILATION_COLOURS = VENTILATION.transform_values { |row| row[1] }.freeze
-      HEIGHT_STEP_M = 0.1
       INCHES_PER_M = 1.0 / 0.0254
 
       VolumeView = Struct.new(:space, :volume, :segments, :metrics, :height, :incomplete, keyword_init: true)
@@ -86,17 +85,28 @@ module PhComposer
         end
       end
 
-      # The Volumes the Spaces read gives a finding that blocks export, on the Volume, one of its Floor Segments
-      # or its Space.
+      # The Volumes the Spaces read gives a finding that blocks export: on the Volume, one of its Floor
+      # Segments or its Space, or a stray record inside it, such as a Floor Segment below a Group within it,
+      # which the read reports among its top-level findings.
       def blocked_paths(read)
+        value = read.query("#{FEATURE_ID}.all")
         blocks = ->(row) { Array(row["findings"]).any? { |finding| finding["blocks_export"] } }
-        read.query("#{FEATURE_ID}.all").fetch("spaces").each_with_object({}) do |space, found|
-          space.fetch("volumes").each do |volume|
-            next unless blocks.call(space) || blocks.call(volume) || volume.fetch("floor_segments").any?(&blocks)
-
-            found[volume.dig("reference", "entity_path")] = true
+        found = {}
+        volumes = value.fetch("spaces").flat_map do |space|
+          space.fetch("volumes").map do |volume|
+            path = volume.dig("reference", "entity_path")
+            found[path] = true if blocks.call(space) || blocks.call(volume) ||
+                                  volume.fetch("floor_segments").any?(&blocks)
+            path
           end
         end
+        value.fetch("findings").select { |finding| finding["blocks_export"] }.each do |finding|
+          inside = finding.dig("reference", "entity_path")
+          owner = volumes.select { |path| path.length < inside.length && inside[0, path.length] == path }
+                         .max_by(&:length)
+          found[owner] = true if owner
+        end
+        found
       end
 
       def by_space(views)
@@ -112,9 +122,10 @@ module PhComposer
         views.map do |view|
           category = ventilation(view.space.record)
           label, _colour, rates = VENTILATION.fetch(category)
-          # A Space's rates count once, on its first Volume; the other Volumes add zero.
-          first = !counted.key?(view.space.record.fetch("id"))
-          counted[view.space.record.fetch("id")] = true
+          # A Space occurrence's rates count once, on its first Volume; the other Volumes add zero. Occurrences are
+          # told apart by path, so a copy still awaiting repair adds its own rates, as the read sums them.
+          first = !counted.key?(view.space.path)
+          counted[view.space.path] = true
           flows = Metrics.airflows(view.space.record)
           figure = rates.map { |rate| ["airflow", first ? flows.fetch(rate).to_f : 0.0] }
           entry(view, category, label, figure.empty? ? nil : figure)
@@ -153,7 +164,8 @@ module PhComposer
         views.map do |view|
           next entry(view, nil, "No height", nil) unless view.height
 
-          step = (view.height / HEIGHT_STEP_M).round * HEIGHT_STEP_M
+          # Decimal rounding, half up: 2.55 m is the 2.6 band, as it reads.
+          step = view.height.round(1)
           entry(view, format("%.1f", step), [["length", step]], ["volume", view.metrics.fetch("net_volume_m3")])
         end
       end

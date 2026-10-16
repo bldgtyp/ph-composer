@@ -83,6 +83,37 @@ class SpacesColourModesTest < PhComposerTestCase
     assert_includes rows, ["No Floor Segment", :incomplete, 1]
   end
 
+  def test_a_misplaced_floor_segment_inside_a_volume_makes_it_incomplete
+    stray = Sketchup::Group.new(1115, Sketchup::Entities.new([floor_face(1116, rectangle(0, 0, 1, 1),
+                                                                         segment_record("S"))]))
+    volume = volume_group(1110, volume_record("L"), [floor_face(1111, rectangle(1, 0, 2, 2), segment_record("L")),
+                                                     stray])
+    @model.entities << zone_group(1000, "A", [space_group(1100, space_record("L", :number => "101"), [volume])])
+    assert_equal :incomplete, MODES.by_space(MODES.views(read)).first.state
+  end
+
+  def test_copied_space_occurrences_each_add_their_own_rates
+    spaces = [1100, 1200].map do |id|
+      space_group(id, space_record("L", :number => "101", :airflows => { "v_sup_m3h" => 60.0 }),
+                  [volume_group(id + 10, volume_record("L"), [floor_face(id + 11, rectangle(0, 0, 1, 1),
+                                                                         segment_record("L"))])])
+    end
+    @model.entities << zone_group(1000, "A", spaces)
+    treat_duplicates_as_existing(@model)
+    row = activate("by_ventilation").rows.first
+    assert_equal [2, [["airflow", 120.0]]], [row.count, row.figure]
+  end
+
+  def test_height_bands_round_half_up_at_decimal_midpoints
+    rooms = [[1100, 2.55], [1200, 2.65], [1300, 2.45]].map do |id, height|
+      space_group(id, space_record(id.to_s[1], :number => id.to_s),
+                  [volume_group(id + 10, volume_record(id.to_s[1], :height => height),
+                                [floor_face(id + 11, rectangle(0, 0, 1, 1), segment_record(id.to_s[1]))])])
+    end
+    @model.entities << zone_group(1000, "A", rooms)
+    assert_equal %w[2.5 2.6 2.7], activate("by_height").rows.map(&:value)
+  end
+
   def test_a_space_keeps_its_colour_across_sessions_and_as_other_spaces_come_and_go
     reference_model
     before = colour_of("spc_LLLLLLLLLLLL")

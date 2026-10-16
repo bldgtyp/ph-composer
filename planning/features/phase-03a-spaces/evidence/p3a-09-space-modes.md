@@ -66,3 +66,10 @@ gpt-6-astra, cycle 1: two P1 and three P2, each reproduced by a test that failed
 - P2: an empty Volume had no entry in By weighting factor; it is now one incomplete entry.
 - P2: a figure that was plain text passed validation and failed later outside the mode's failure
   boundary. Figures must now be quantity pairs, checked at rebuild.
+
+Cycle 2: one P1 and two P2, fixed with tests and gated by `make ci` (the review cap). A Floor Segment
+below a Group inside a Volume blocks export through the read's top-level findings, which the modes did not
+read; such a finding now marks the Volume that holds it. By ventilation counted a Space's rates once per id,
+so a copied Space awaiting repair lost its rates; it now counts once per occurrence, as the read sums them.
+Height bands divided by 0.1 before rounding, so 2.55 m fell in the 2.5 band; they now round to one decimal,
+half up.
