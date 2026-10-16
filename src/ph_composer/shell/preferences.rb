@@ -10,6 +10,8 @@ module PhComposer
   #
   # A dimension scope is one editor's remembered length format, such as a graphical builder's. The panel
   # names the scope; a scope is a dotted name under the owning feature's id, like every declared name.
+  # A table view is the view a host table last showed (html/table_views.js), keyed the same way by the
+  # host's id.
   module Preferences
     SECTION = EXTENSION_ID
     UNIT_SYSTEMS = %w[SI IP].freeze
@@ -35,6 +37,13 @@ module PhComposer
         stored.is_a?(String) && Registry::ID_PATTERN.match?(stored) ? stored : nil
       end
 
+      # The view each host table last showed, by host id; a host never switched is absent and shows its first.
+      def table_views
+        read_map("table_views") do |host, view|
+          Registry::ID_PATTERN.match?(host.to_s) && view.is_a?(String) && Registry::ID_PATTERN.match?(view)
+        end
+      end
+
       # Every remembered scope's format per system; a scope never chosen is absent and takes the default.
       def dimension_formats
         raw = Sketchup.read_default(SECTION, "dimension_formats", nil)
@@ -54,6 +63,8 @@ module PhComposer
           Sketchup.write_default(SECTION, "unit_system", value)
         when "dimension_format"
           write_dimension_format(value, scope, system)
+        when "table_view"
+          write_table_view(value, scope)
         when "colour_by_mode"
           raise UserError, "That Colour-by mode name is not valid." unless value.is_a?(String) &&
                                                                            Registry::ID_PATTERN.match?(value)
@@ -66,7 +77,8 @@ module PhComposer
       end
 
       def snapshot
-        { "unit_system" => unit_system, "dimension_formats" => dimension_formats, "number_format" => number_format }
+        { "unit_system" => unit_system, "dimension_formats" => dimension_formats, "number_format" => number_format,
+          "table_views" => table_views }
       end
 
       def reset_for_test
@@ -92,6 +104,30 @@ module PhComposer
         # SketchUp 26.1 stores a string containing a double quote but reads it back as nil, so the JSON
         # is kept as strict base64 (context/SKETCHUP_HOST_BEHAVIOR.md).
         Sketchup.write_default(SECTION, "dimension_formats", [JSON.generate(formats)].pack("m0"))
+      end
+
+      def write_table_view(value, scope)
+        raise UserError, "The table name is not valid." unless scope.is_a?(String) && Registry::ID_PATTERN.match?(scope)
+        raise UserError, "The view name is not valid." unless value.is_a?(String) && Registry::ID_PATTERN.match?(value)
+
+        views = table_views
+        raise UserError, "Too many table views are remembered." if !views.key?(scope) && views.length >= MAX_SCOPES
+
+        views[scope] = value
+        Sketchup.write_default(SECTION, "table_views", [JSON.generate(views)].pack("m0"))
+      end
+
+      # A map stored as strict base64 JSON, keeping only the pairs `keep` accepts, at most MAX_SCOPES.
+      def read_map(key, &keep)
+        raw = Sketchup.read_default(SECTION, key, nil)
+        return {} unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
+
+        parsed = JSON.parse(raw.unpack1("m0"))
+        return {} unless parsed.is_a?(Hash)
+
+        parsed.select(&keep).first(MAX_SCOPES).to_h
+      rescue StandardError
+        {}
       end
 
       def sanitize(parsed)

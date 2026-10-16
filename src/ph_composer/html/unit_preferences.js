@@ -4,7 +4,10 @@
    A dimension scope is one editor's remembered length format (a graphical builder remembers mm in SI and
    feet and inches in IP separately). A screen names its scope, a dotted name under its feature's id; the
    snapshot carries every scope a format has been chosen for, and any other scope takes the system
-   default. This store holds no scope vocabulary of its own. */
+   default. This store holds no scope vocabulary of its own.
+
+   It also holds the view each host table last showed (table_views.js), by host id. That is not part of the
+   unit profile: choosing a view repaints no number. */
 PhComposerUI.define("unit_preferences", ["units"], function (units) {
   "use strict";
 
@@ -12,6 +15,7 @@ PhComposerUI.define("unit_preferences", ["units"], function (units) {
   var listeners = [];
   var numberFormats = {};
   var profile = fromSnapshot({});
+  var tableViews = {};
 
   /* Intl derivation is the costly part of a profile; locale and decimal rarely change, so cache per pair. */
   function numberFormat(locale, decimal) {
@@ -82,14 +86,17 @@ PhComposerUI.define("unit_preferences", ["units"], function (units) {
      `pending` holds choices the host has not confirmed yet; they stay applied over the snapshot. */
   function replace(snapshot, pending) {
     var next = snapshot ? fromSnapshot(snapshot) : clone(profile);
+    if (snapshot) tableViews = Object.assign({}, snapshot.table_views || {});
     Object.keys(pending || {}).forEach(function (name) {
       var item = pending[name];
-      apply(next, item.key, item.value, item.extra);
+      if (item.key === "table_view") tableViews[item.extra.scope] = item.value;
+      else apply(next, item.key, item.value, item.extra);
     });
     commit(next);
   }
 
   function set(key, value, extra) {
+    if (key === "table_view") { tableViews[extra.scope] = value; return; }
     var next = clone(profile);
     apply(next, key, value, extra);
     commit(next);
@@ -107,6 +114,10 @@ PhComposerUI.define("unit_preferences", ["units"], function (units) {
     /* The live profile for formatting in render loops; callers must not mutate it. */
     peek: function () { return profile; },
     dimensionFormat: dimensionFormat,
+    /* The view a host table last showed, or null for one never switched. */
+    tableView: function (host) {
+      return Object.prototype.hasOwnProperty.call(tableViews, host) ? tableViews[host] : null;
+    },
     subscribe: function (listener) {
       listeners.push(listener);
       return function () { listeners = listeners.filter(function (candidate) { return candidate !== listener; }); };

@@ -9,8 +9,8 @@ PhComposerUI.define("features/zones/zone_settings", ["workspace", "request"], fu
     this.channel = requests.channel(session, function (type, payload) {
       send(type, Object.assign({}, payload, { expected_revision: self.revision }));
     }, "zone_settings");
-    this.trigger = ui.iconButton("Zones / Faces settings", "settings");
-    this.bubble = new ui.Bubble(this.trigger, "Zones / Faces settings", { ownTrigger: true,
+    this.trigger = ui.iconButton("Faces settings", "settings");
+    this.bubble = new ui.Bubble(this.trigger, "Faces settings", { ownTrigger: true,
       guard: function () { return self.channel.busy() ? "Changing settings…" : null; },
       refused: function (reason) { self.error.textContent = reason; } });
     this.fields = {};
@@ -43,7 +43,7 @@ PhComposerUI.define("features/zones/zone_settings", ["workspace", "request"], fu
     input.addEventListener("change", function () { self.submit(); });
     input.addEventListener("keydown", function (event) {
       if (event.key === "Enter") { event.preventDefault(); self.submit(); }
-      if (event.key === "Escape") self.paint();
+      if (event.key === "Escape") { self.error.textContent = ""; self.paint(); }
     });
   };
 
@@ -97,6 +97,8 @@ PhComposerUI.define("features/zones/zone_settings", ["workspace", "request"], fu
   };
 
   Settings.prototype.busy = function () { return this.channel.busy(); };
+  /* An open bubble holding an entry it refused: the user corrects it or restores the Model's values. */
+  Settings.prototype.held = function () { return !this.bubble.panel.hidden && Boolean(this.error.textContent); };
   Settings.prototype.dispose = function () { this.channel.reset(); this.bubble.close(false); };
 
   return Settings;

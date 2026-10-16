@@ -99,7 +99,7 @@ fs.mkdirSync(output, { recursive: true });
   await page.setViewportSize({ width: 360, height: 520 });
   assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), "authoring has no page scroll");
   await shot("authoring-narrow");
-  await page.getByRole("button", { name: "Zones / Faces settings", exact: true }).click();
+  await page.getByRole("button", { name: "Faces settings", exact: true }).click();
   const roof = page.getByRole("spinbutton", { name: "Roof maximum tilt [deg]" });
   await roof.fill("45");
   await roof.press("Enter");
@@ -114,7 +114,7 @@ fs.mkdirSync(output, { recursive: true });
   await page.getByRole("heading", { name: "Zones" }).waitFor();
   for (const width of [1280, 900, 420]) {
     await page.setViewportSize({ width, height: 800 });
-    const table = page.locator("[data-pane=overview] .phc-table-mount");
+    const table = page.locator("[data-pane=overview] .phc-zone-view:not([hidden]) .phc-table-mount");
     assert.equal(await page.locator("[data-pane=overview] [data-phc-region=inspector]").count(), 0, `no inspector at ${width}`);
     const before = await table.boundingBox(), pane = await page.locator("[data-pane=overview]").boundingBox();
     assert(before.width >= pane.width - 2 * 24, `the table spans the pane at ${width}`);

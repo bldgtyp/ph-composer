@@ -12,8 +12,8 @@ function setup() {
     sketchup: { ph_composer_message: function (message) { sent.push(JSON.parse(message)); } } };
   context.window = context;
   dom.attachEvents(context);
-  var modules = source.start(context, ["features/zones/overview", "features/zones/classify",
-    "features/assemblies/section"]);
+  var modules = source.start(context, ["features/zones/overview", "features/zones/faces_view",
+    "features/zones/classify", "features/assemblies/section"]);
   var state = fixtures.state("session-a");
   state.product = "PH-Composer";
   state.preferences = { unit_system: "SI", dimension_formats: {},
@@ -111,7 +111,7 @@ test("Zones contributes gross usage and view actions through the generic Assembl
   o.state.sections[PREFIX + ".selected"].value.targets = [];
   o.paint();
   inventory.tableOptions.action({ record: inventory.records[0] }, action);
-  assert.strictEqual(o.panel.state.ui.activeTab, "overview", "Select faces opens Zones / Faces");
+  assert.strictEqual(o.panel.state.ui.activeTab, "overview", "Select faces opens the Zones tab");
   assert.strictEqual(o.query("[data-section='ph_composer.overview']").querySelectorAll(".row-check").filter(
     function (box) { return box.getAttribute("aria-checked") === "true"; }).length > 0, true,
   "with the Assembly's Faces checked");
@@ -121,7 +121,7 @@ test("Zones contributes gross usage and view actions through the generic Assembl
     outcome: { status: "completed", value: { found: 1, missing: 0 } } } });
   dom.dispatch(o.document.body, { type: "keydown", key: "Escape" });
   dom.dispatch(o.document.body, { type: "keydown", key: "Escape" });
-  assert.strictEqual(o.sent[1].payload.name, PREFIX + ".clear_locate", "the outline is Zones / Faces' to clear");
+  assert.strictEqual(o.sent[1].payload.name, PREFIX + ".clear_locate", "the outline is the Faces view's to clear");
   delete o.state.sections[PREFIX + ".usage"];
   o.paint();
   assert.ok(!inventory.tableOptions.columns.some(function (column) { return column[0] === "face_usage"; }));

@@ -51,7 +51,7 @@ fs.mkdirSync(output, { recursive: true });
     await page.locator("[data-tab='assemblies']").click();
     const row = page.locator("[data-row-key='asm_b']");
     await row.locator(".col-face_usage").getByText(/1/).waitFor();
-    // Select faces checks the Assembly's Faces in Zones / Faces and frames them; SketchUp's selection stays.
+    // Select faces checks the Assembly's Faces in the Zones tab's Faces view and frames them; SketchUp's selection stays.
     const selectedBefore = await page.evaluate(() => JSON.stringify(window.previewHost.selectedFaces));
     await row.getByRole("button", { name: "Select faces using Incomplete roof", exact: true }).click();
     await count.getByText("1 Face selected", { exact: true }).waitFor();

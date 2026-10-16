@@ -27,7 +27,8 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
 ## Steps
 
 1. **Register the view.** `html/features/spaces/view.js` registers the Spaces view with the Zones
-   tab through P3a-06's contract. Nothing under `html/features/zones/` changes.
+   tab through P3a-06's contract. Nothing under `html/features/zones/` changes except step 17's host
+   change.
 2. **Rows.** A pure projection from the `spaces` snapshot section to rows under each Zone at three
    further depths: Space, Volume, Floor Segment (labelled "Segment" in the hierarchy column). The
    Space Floor has no row. A Space outside any Zone is listed under a "No Zone" group row with its
@@ -78,6 +79,11 @@ Paths are relative to `src/ph_composer/`. Predecessor paths are relative to
     reference model and the 300-Space case; browser checks; regenerate both manifests.
 16. **Docs.** Correct `docs/PRODUCT.md`'s Spaces section and `context/UBIQUITOUS_LANGUAGE.md`'s
     Airflow balance view entry to what exists: a Spaces view, no Level rail, no balance view.
+17. **Shared checked Zones (carried from P3a-06).** H18 has the host keep checked rows whose keys
+    exist in both views. P3a-06 left checks view-owned because no second view checked rows; with
+    Spaces checking Zones, the host (`features/zones/overview.js`) keeps the checked Zone keys and
+    hands them to each view's `check`, and `context/EXTENSIBILITY.md`, "Zone views", says so. Test:
+    Zones checked in one view read checked in the other after a switch.
 
 ## Source
 

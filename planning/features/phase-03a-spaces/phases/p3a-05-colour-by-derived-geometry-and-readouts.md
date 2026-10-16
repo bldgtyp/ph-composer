@@ -1,7 +1,7 @@
 # P3a-05: Colour-by derived geometry and readouts
 
 DATE: 2026-10-15
-STATUS: In progress. Slice A merged through #147; slice B (operation marks) in review ([evidence](../evidence/p3a-05-colour-by-extension.md))
+STATUS: Merged: slice A through #147, slice B (operation marks) through #148; host gate pending ([evidence](../evidence/p3a-05-colour-by-extension.md))
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

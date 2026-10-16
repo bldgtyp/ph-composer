@@ -941,6 +941,10 @@
       formats[payload.system] = payload.value;
       this.preferences.dimension_formats[payload.scope] = formats;
     }
+    if (payload.key === "table_view") {
+      this.preferences.table_views = this.preferences.table_views || {};
+      this.preferences.table_views[payload.scope] = payload.value;
+    }
     this.publish("preferences.result", { request_id: payload.request_id, status: "completed",
       message: "Display preference saved.", preferences: JSON.parse(JSON.stringify(this.preferences)) });
   };

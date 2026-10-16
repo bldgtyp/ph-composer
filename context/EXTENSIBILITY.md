@@ -612,6 +612,85 @@ elements' operations, from the pane plan the Unit's definition is built from, pl
 transform. A thermal-bridge mode (Phase 3b) carries each Edge as `entity` and its segment in
 `derived`. None of the three adds a line under `colour_by/`.
 
+### Zone views
+
+Implemented in P3a-06. The Zones tab is one table of Zones read through views (D3a-16). A view is a
+panel contribution registered with the kit part `table_views` under a host id, as
+`table_contributions` keys tables by name. `table_views.js` is a kit module and names no feature. A
+screen declares itself a host (`table_views.host(id)`); Zones' screen (`features/zones/overview.js`)
+is the host for `"ph_composer.zones"`, may name Zones, and reads the views registered there without
+naming any. Faces (`features/zones/faces_view.js`) registers through the same contract as any other.
+
+```js
+PhComposerUI.get("table_views").register("ph_composer.zones", {
+  id: "example.zones.areas", label: "Areas", order: 90,
+  sections: ["ph_composer.zones.overview"],     // listed only while the snapshot publishes these
+  zoneFields: [],                                // the Zone cells it shows; all three when omitted
+  columns: function (vs, profile) { return [["gross_m2", "Gross area"]]; }, // after the Zone cells
+  value: function (vs, row, field, profile) {}   // a cell's text, for Zone rows and the view's own rows
+});
+```
+
+Every hook receives the view's own state first: what `create(host)` returned, or `{}` without one.
+`host` is the view's only reach into the screen: `session`, `send`, `snapshot`, `revision`, `edits`
+and `look` (the screen's request channels), `gated` (the read-only Zone occurrences by path),
+`draftReason()`, `refuse(reason)`, `disposed`, `activeView()` (the id shown now) and `show(id)` (shows
+a view through the tab's and the view row's guards, and answers whether it did). A hook a view leaves out takes the host's default,
+so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a complete view.
+
+| Hooks | What the host asks |
+| --- | --- |
+| `create`, `dispose`, `consume(state, send)` | The view's state for one Model, and what it reads from each snapshot before rows are built. Every listed view consumes, shown or not, so work that arrives for a hidden view (a native handoff, a tool that turned on late) still reaches it |
+| `zoneRecord(record)`, `children(row)`, `initiallyOpen(row)` | What a Zone row carries for the view, the rows beneath it (none by default), and whether a row the view adds opens by default (`null`: the host's rule) |
+| `columns`, `value`, `cell(td, row, field)`, `decorate`, `zoneMarker(row)`, `widths` | The view's columns, their text or in-place control, a cell's flag, the Zone row's marker after the host's own, default widths |
+| `colourBy`, `sorted`, `filteredFields`, `filterValues`, `filterLabel`, `headerAction`, `menuValueAction`, `menuExtra` | The view's columns' Colour-by bindings, sort and value filters, and anything its column header and menu add (Faces adds the Classify paint) |
+| `zoneMatch`, `rowMatch`, `search`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask (by default each Zone that passes `zoneMatch`, whole) |
+| `actions(row)`, `zoneActions(row)`, `action`, `inspect`, `locate(row)`, `clearLocate` | Row actions, the Zone row's actions after Make independent, and Locate; `clearLocate` answers whether it cleared anything |
+| `check(context)`, `selectionBar(overview)`, `settings`, `navigate(intent)` | Checkboxes for the rows it checks, a selection bar, a settings control for the page header, and a navigation intent's `check` |
+| `draftReason`, `leaveReason`, `leave`, `escape` | Work a filter or a switch must not hide; what holds a switch; what stops on a switch away; Escape, true when the view used it |
+
+- **Listing.** A view is listed while the snapshot publishes every section it names, so a build
+  without a feature shows none of its views, with no line in the composition root. With one view
+  listed the view row is hidden; with none the host shows the Zone rows alone.
+- **The host keeps** the Zone rows and their Name column, the Zone row's in-place cells
+  (`zone_cells.js`: Building-Segment, Level, Ground depth), Make independent, the text filter, the
+  Zone filters (Building-Segment, Level), which rows are expanded, and the panel hooks
+  (`navigationGuard`, `outcomeText`, `workedOn`).
+- **A view owns** its rows, its columns, their header Colour-by toggles and value filters, its sort,
+  its checked rows, its selection bar, its settings and its tools. Each view has its own surface and
+  table mount, so its column widths, hidden columns and column menus are its own. The host keeps one
+  controls row and moves the view's column filters and sort out of it and back on a switch; a Zone
+  filter stays while the next view shows its column and otherwise leaves with the view that does, so
+  no filter applies without a column to clear it from. A column has a menu when it sorts (`sorted`) or
+  filters (`filteredFields`), and offers only those. All of it survives a switch away and back.
+- **Switching** is a host action that sends nothing to the Model and never changes the SketchUp
+  selection. It is refused while `draftReason` or `leaveReason` answers; otherwise it calls the old
+  view's `leave` (Faces stops its paint tool and hides its bar), restores
+  the new view's filters and sort, repaints the page header's settings slot from the new view, and
+  remembers the choice on this computer (the `table_view` display preference, keyed by host id), as
+  the last Colour-by mode is remembered. A view state is never written to the Model, which would
+  dirty it and add an Undo entry. A session opens on the remembered view while it is listed, else the
+  first. A shown view that stops being listed leaves the same way, unless `draftReason` or
+  `leaveReason` answers: it stays listed until that work is done. Table options offers Colour by for
+  every mode no column of the shown view displays.
+- **Gestures.** The host owns the gestures that clear Locate (a pointer press elsewhere, Escape). A
+  Locate outline outlasts a switch, so they reach every view's `clearLocate`. Escape unwinds one layer
+  at a time: an open bubble or column menu, then the shown view's `escape` (Faces: the Classify
+  palette, then the checked set, then its Locate outline), then an outline another view left. A
+  press on the view row does not clear it. A navigation intent names its view
+  (`panel.navigate("overview", { view, check, locate })`); the host switches to it, guards included,
+  sets `intent.viewShown`, and applies `check` only when the view is shown.
+- **The view row** is the shared subtabs nav (`subtabs.js`, `aria-label` "Zone views") above the
+  "Zones" heading, as Window Types places its row, with one surface per view.
+- **Registration** refuses a view without an id or label and a duplicate id under one host when it
+  registers. A view registered before its host declares itself is held and listed once it does; the
+  panel reports one whose host never declares when it is ready.
+
+**Contributor tasks traced.** "Add the Spaces view" (P3a-07) adds one module under
+`html/features/spaces/` registering under `"ph_composer.zones"`: Space, Volume and Floor Segment rows
+three deep through `children`, sums on the Zone row through `value`; no Zones file changes. "Add an
+Occupancy view" registers `columns` and `value` with no `children`, as the example does.
+
 ### Native menu items
 
 Implemented in P1-D. Some things a user asks for change no record and open no operation: starting a

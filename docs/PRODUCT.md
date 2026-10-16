@@ -72,7 +72,7 @@ Copy datasheet links unchecked by default. Ordinary reuse never creates another 
 The Assemblies inventory shows one row per assembly with its attributes, thermal performance,
 usage and validation state. The Builder edits the drawing through an always-visible toolbar and
 anchored property bubbles. Total thickness and U-value stay visible in the header. Both
-inventories share filter, Group by, Order by and sort direction controls (Zones / Faces sorts and
+inventories share filter, Group by, Order by and sort direction controls (the Zones tab sorts and
 filters from its column headers instead); filtering retains local drafts and never changes the model
 or the export scope.
 
@@ -90,8 +90,8 @@ read only until it is made independent with Make Zone independent, on its row or
 menu. Ambiguity is refused rather than guessed.
 
 Make Zone and the Zone attributes are available from the selected geometry's native context menu.
-The Zones / Faces header has no Make Zone button; use the native context menu to create a Zone.
-The Zones / Faces selection bar offers Solve when at least two Zones are fully checked. A partially
+The Zones header has no Make Zone button; use the native context menu to create a Zone.
+The Faces view's selection bar offers Solve when at least two Zones are fully checked. A partially
 checked Zone is excluded; fully checked Zones remain included when hidden by a filter. Checking
 all Zones provides the whole-Model workflow. The native command solves selected Zones. A pairing
 that would change an unchecked neighbour is refused with a message naming that Zone.
@@ -103,7 +103,7 @@ the last valid name.
 The user selects Faces, then sets one face type or boundary condition from the native context menu.
 Existing Attached zones appear there; New attached zone opens a form for the captured selection.
 The Classify tool also paints by click, drag or Shift-click across a connected plane, one Undo
-step per gesture. In the Zones / Faces table, Type, Boundary and Assembly column menus show visibility checkboxes
+step per gesture. In the Faces view, Type, Boundary and Assembly column menus show visibility checkboxes
 and separate paint icons beside their values. A paint icon starts that field only, including values
 not yet used in the Model. An active header paint icon names the value and stops painting when
 clicked. Starting paint switches Colour by to the matching field; that view stays active after
@@ -116,9 +116,11 @@ and roof/floor tilt thresholds in the Model, initially 60 and 130 degrees. Setti
 undone independently.
 An Attached zone, such as a garage or attic, is a named boundary condition with its temperature
 reduction factor. Colour by shows face type, boundary condition, Zone, Building-Segment, Level, Assembly
-or Window Type on the model without changing its materials. The Zones / Faces screen is one table: each
-Zone with its own fields as columns and its faces beneath, with Colour by, sorting and filters in the
-column headers. Each column's Show choices filter the table and fade excluded geometry to grey while
+or Window Type on the model without changing its materials. The Zones tab is one table of Zones read
+through views. Faces is the first: each Zone with its own fields as columns and its faces beneath, with
+Colour by, sorting and filters in the column headers. While more than one view is available, a row of
+view tabs above the heading switches between them; each keeps its own column filters and sort, and this
+computer remembers the view last shown. Each column's Show choices filter the table and fade excluded geometry to grey while
 Colour by is active. Filters combine across columns, and Clear filter restores that column's values.
 The active Colour-by column's choices include colour swatches. Text search remains table-only.
 Zone fields include all geometry in matching Zones. Face fields colour only matching Faces;
@@ -167,7 +169,7 @@ service and respects hidden geometry and tags.
 
 The Schedule shows net opaque host area: the gross host polygon minus the openings of glazed
 elements. Empty panels leave opaque area intact. Uncertain native Window geometry withholds
-the net value until repaired. Zones / Faces and assembly usage retain gross area.
+the net value until repaired. The Faces view and assembly usage retain gross area.
 
 Export maps each glazed element to an Aperture on its gross parent Face. Construction identity
 includes product references and translated thermal values, including the element's size-dependent
