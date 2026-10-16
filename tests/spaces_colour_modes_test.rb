@@ -21,24 +21,24 @@ class SpacesColourModesTest < PhComposerTestCase
   def test_by_space_colours_each_volume_by_its_space_and_sums_weighted_area
     reference_model
     rows = legend("by_space")
-    assert_equal({ "101 Living" => [1, 12.0], "102 Bath" => [1, 4.0], "103 Hall" => [2, 4.0],
-                   "201 Loft" => [1, 12.0] }, rows)
-    living = MODES.by_space(MODES.views(@model)).find { |entry| entry.label == "101 Living" }
+    assert_equal({ "101 Living" => [1, [12.0]], "102 Bath" => [1, [4.0]], "103 Hall" => [2, [4.0]],
+                   "201 Loft" => [1, [12.0]] }, rows)
+    living = MODES.by_space(MODES.views(read)).find { |entry| entry.label == "101 Living" }
     assert_kind_of Sketchup::Group, living.entity
     assert_equal 6, living.derived.polygons.length, "one prism: a base, a top and four sides"
   end
 
   def test_by_ventilation_names_what_each_space_supplies_and_counts_a_spaces_rate_once
     reference_model
-    assert_equal({ "Supply only" => [1, 60.0], "Extract only" => [1, 40.0], "Transfer only" => [2, 20.0],
+    assert_equal({ "Supply only" => [1, [60.0]], "Extract only" => [1, [40.0]], "Transfer only" => [2, [20.0]],
                    "No airflow" => [1, nil] }, legend("by_ventilation"))
     assert_equal "ventilation", registered("by_ventilation").group
   end
 
   def test_by_weighting_factor_colours_each_segment_with_its_own_prism_and_sums_floor_area
     reference_model
-    assert_equal({ "1" => [4, 32.0], "0" => [1, 2.0] }, legend("by_weighting_factor"))
-    entries = MODES.by_weighting_factor(MODES.views(@model))
+    assert_equal({ "1" => [4, [32.0]], "0" => [1, [2.0]] }, legend("by_weighting_factor"))
+    entries = MODES.by_weighting_factor(MODES.views(read))
     assert(entries.all? { |entry| entry.entity.is_a?(Sketchup::Face) && entry.derived.polygons.length == 6 })
   end
 
@@ -46,7 +46,7 @@ class SpacesColourModesTest < PhComposerTestCase
     reference_model
     service = activate("by_height")
     assert_equal [["2.4", 1, 9.6], ["2.5", 2, 40.0], ["3.0", 1, 36.0], ["5.0", 1, 10.0]],
-                 service.rows.map { |row| [row.value, row.count, row.figure.last.round(6)] }
+                 service.rows.map { |row| [row.value, row.count, row.figure.first.last.round(6)] }
     assert_equal "2.5 m", service.legend.fetch("rows")[1].fetch("label")
   end
 
@@ -55,10 +55,32 @@ class SpacesColourModesTest < PhComposerTestCase
                        [volume_group(1310, volume_record("H", :height => nil),
                                      [floor_face(1311, rectangle(0, 0, 2, 2), segment_record("H"))])])
     @model.entities << zone_group(1000, "A", [hall])
-    entry = MODES.by_space(MODES.views(@model)).first
+    entry = MODES.by_space(MODES.views(read)).first
     assert_empty entry.derived.polygons
     assert_equal :incomplete, entry.state
     assert_equal [[nil, :incomplete, 1]], activate("by_height").rows.map { |row| [row.value, row.state, row.count] }
+  end
+
+  def test_a_space_with_supply_and_extract_shows_both_sums
+    both = space_group(1100, space_record("L", :number => "101", :name => "Living",
+                                               :airflows => { "v_sup_m3h" => 60.0, "v_eta_m3h" => 40.0 }),
+                       [volume_group(1110, volume_record("L"), [floor_face(1111, rectangle(0, 0, 3, 4),
+                                                                           segment_record("L"))])])
+    @model.entities << zone_group(1000, "A", [both])
+    assert_equal({ "Supply and extract" => [1, [60.0, 40.0]] }, legend("by_ventilation"))
+  end
+
+  def test_a_volume_with_a_blocking_finding_is_incomplete_and_an_empty_one_still_counts
+    nested = volume_group(1110, volume_record("L"), [floor_face(1111, rectangle(0, 0, 3, 4), segment_record("L"))])
+    wrapper = Sketchup::Group.new(1105, Sketchup::Entities.new([nested]))
+    empty = volume_group(1120, volume_record("M", :number => 2, :height => 2.5), [])
+    @model.entities << zone_group(1000, "A", [space_group(1100, space_record("L", :number => "101"),
+                                                          [wrapper, empty])])
+    states = MODES.by_space(MODES.views(read)).to_h { |entry| [entry.path.last, entry.state] }
+    assert_equal :incomplete, states.fetch(1110), "a nested Volume blocks export"
+    assert_nil states.fetch(1120), "an empty Volume does not block export"
+    rows = activate("by_weighting_factor").rows.map { |row| [row.label, row.state, row.count] }
+    assert_includes rows, ["No Floor Segment", :incomplete, 1]
   end
 
   def test_a_space_keeps_its_colour_across_sessions_and_as_other_spaces_come_and_go
@@ -109,11 +131,17 @@ class SpacesColourModesTest < PhComposerTestCase
 
   # Label to [count, summed figure] for each legend row of the mode.
   def legend(mode)
-    activate(mode).rows.to_h { |row| [row.label.to_s, [row.count, row.figure && row.figure.last.round(6)]] }
+    activate(mode).rows.to_h do |row|
+      [row.label.to_s, [row.count, row.figure && row.figure.map { |_quantity, value| value.round(6) }]]
+    end
   end
 
   def registered(mode)
     PhComposer::Registry.current.colour_modes.fetch("#{PREFIX}.#{mode}")
+  end
+
+  def read
+    PhComposer::HandlerRequest.for(@session, :owner => "ph_composer.spaces", :name => "test")
   end
 
   def colour_of(value)

@@ -9,7 +9,7 @@ module PhComposer
     # - By Space: each Volume by its Space's id, on the categorical ramp, so a Space keeps its colour as
     #   others come and go; the legend sums weighted area (iCFA).
     # - By ventilation: each Volume by what its Space supplies or extracts under the any-set rule; the legend
-    #   sums the rate the category is named for, once per Space.
+    #   sums the rates the category is named for, supply and extract both for a Space with both, once per Space.
     # - By weighting factor: each Floor Segment by its factor, with its own prism, since one Volume may hold
     #   several factors. A band's key is the factor's shortest exact text ("1", "0.5", "0.1234561"); the
     #   Spaces read publishes it on each Floor Segment row (`weighting_band`), so the panel's filter uses the
@@ -17,7 +17,9 @@ module PhComposer
     # - By height: each Volume by its average clear ceiling height to the nearest 0.1 m; the legend sums net
     #   volume.
     #
-    # A Volume with no height or no Floor Segment is incomplete in every mode, and still counted.
+    # A Volume with a finding that blocks export (no height, nested, a copied identity, its Space outside a Zone)
+    # is incomplete in every mode, and still counted; the Spaces read decides, so the table and the modes agree.
+    # A Volume with no Floor Segment is one incomplete entry in By weighting factor too.
     module ColourModes
       BY_WEIGHTING_FACTOR = "#{FEATURE_ID}.by_weighting_factor"
       BY_SPACE = "#{FEATURE_ID}.by_space"
@@ -26,11 +28,11 @@ module PhComposer
       # The Supply, Extract and Transfer columns offer By ventilation together.
       VENTILATION_GROUP = "ventilation"
       VENTILATION = {
-        "both" => ["Supply and extract", [44, 160, 44], "v_sup_m3h"],
-        "supply" => ["Supply only", [31, 119, 180], "v_sup_m3h"],
-        "extract" => ["Extract only", [214, 39, 40], "v_eta_m3h"],
-        "transfer" => ["Transfer only", [148, 103, 189], "v_tran_m3h"],
-        "none" => ["No airflow", [190, 190, 190], nil]
+        "both" => ["Supply and extract", [44, 160, 44], %w[v_sup_m3h v_eta_m3h]],
+        "supply" => ["Supply only", [31, 119, 180], %w[v_sup_m3h]],
+        "extract" => ["Extract only", [214, 39, 40], %w[v_eta_m3h]],
+        "transfer" => ["Transfer only", [148, 103, 189], %w[v_tran_m3h]],
+        "none" => ["No airflow", [190, 190, 190], []]
       }.freeze
       VENTILATION_COLOURS = VENTILATION.transform_values { |row| row[1] }.freeze
       HEIGHT_STEP_M = 0.1
@@ -43,19 +45,19 @@ module PhComposer
 
       def install(feature)
         feature.colour_mode(BY_SPACE, :label => "Space", :entity_kind => "volume",
-                                      :colours => ColourBy::Palette.ramp) { |read| by_space(views(read.model)) }
+                                      :colours => ColourBy::Palette.ramp) { |read| by_space(views(read)) }
         feature.colour_mode(BY_VENTILATION, :label => "Ventilation", :entity_kind => "volume",
                                             :group => VENTILATION_GROUP,
                                             :colours => ColourBy::Palette.fixed(VENTILATION_COLOURS)) do |read|
-          by_ventilation(views(read.model))
+          by_ventilation(views(read))
         end
         feature.colour_mode(BY_WEIGHTING_FACTOR, :label => "Weighting factor", :entity_kind => "volume",
                                                  :colours => ColourBy::Palette.ramp) do |read|
-          by_weighting_factor(views(read.model))
+          by_weighting_factor(views(read))
         end
         feature.colour_mode(BY_HEIGHT, :label => "Height", :entity_kind => "volume",
                                        :colours => ColourBy::Palette.ramp, :sort => method(:height_order)) do |read|
-          by_height(views(read.model))
+          by_height(views(read))
         end
       end
 
@@ -65,19 +67,34 @@ module PhComposer
       end
 
       # Every Volume in a Space, with its Floor Segments' captured metrics and prisms, read once per rebuild.
-      def views(model)
-        Occurrences.scan(model).spaces.flat_map do |space|
+      # `read` is the projection's read request; the Spaces read says which Volumes are blocked.
+      def views(read)
+        blocked = blocked_paths(read)
+        Occurrences.scan(read.model).spaces.flat_map do |space|
           space.volumes.map do |volume|
             height = volume.record["avg_ceiling_height_m"]
             segments = volume.segments.map do |segment|
               geometry = FaceCapture.call(segment.entity, segment.transform)
               SegmentView.new(:occurrence => segment,
                               :metrics => Metrics.segment(geometry.loops_m, geometry.normal, segment.record),
-                              :prism => Prism.call([geometry.loops_m.first], height))
+                              :prism => Prism.call([geometry.loops_m], height))
             end
             VolumeView.new(:space => space, :volume => volume, :segments => segments, :height => height,
                            :metrics => Metrics.volume(volume.record, segments.map(&:metrics)),
-                           :incomplete => height.nil? || segments.empty?)
+                           :incomplete => blocked.include?(volume.path))
+          end
+        end
+      end
+
+      # The Volumes the Spaces read gives a finding that blocks export, on the Volume, one of its Floor Segments
+      # or its Space.
+      def blocked_paths(read)
+        blocks = ->(row) { Array(row["findings"]).any? { |finding| finding["blocks_export"] } }
+        read.query("#{FEATURE_ID}.all").fetch("spaces").each_with_object({}) do |space, found|
+          space.fetch("volumes").each do |volume|
+            next unless blocks.call(space) || blocks.call(volume) || volume.fetch("floor_segments").any?(&blocks)
+
+            found[volume.dig("reference", "entity_path")] = true
           end
         end
       end
@@ -94,12 +111,13 @@ module PhComposer
         counted = {}
         views.map do |view|
           category = ventilation(view.space.record)
-          label, _colour, rate = VENTILATION.fetch(category)
-          # A Space's rate counts once, on its first Volume.
+          label, _colour, rates = VENTILATION.fetch(category)
+          # A Space's rates count once, on its first Volume; the other Volumes add zero.
           first = !counted.key?(view.space.record.fetch("id"))
           counted[view.space.record.fetch("id")] = true
-          figure = rate && first ? ["airflow", Metrics.airflows(view.space.record).fetch(rate)] : nil
-          entry(view, category, label, figure)
+          flows = Metrics.airflows(view.space.record)
+          figure = rates.map { |rate| ["airflow", first ? flows.fetch(rate).to_f : 0.0] }
+          entry(view, category, label, figure.empty? ? nil : figure)
         end
       end
 
@@ -117,6 +135,8 @@ module PhComposer
 
       def by_weighting_factor(views)
         views.flat_map do |view|
+          next [entry(view, nil, "No Floor Segment", nil, :incomplete => true)] if view.segments.empty?
+
           view.segments.map do |segment|
             occurrence = segment.occurrence
             key = band(occurrence.record.fetch("weighting_factor"))
@@ -143,18 +163,18 @@ module PhComposer
         [row.value.nil? ? 1 : 0, row.value.to_f]
       end
 
-      def entry(view, value, label, figure)
+      def entry(view, value, label, figure, incomplete: view.incomplete)
         volume = view.volume
         ColourBy::Entry.new(:entity => volume.entity, :transform => volume.transform, :path => volume.path,
                             :value => value, :label => label, :figure => figure,
-                            :state => view.incomplete ? :incomplete : nil,
+                            :state => incomplete ? :incomplete : nil,
                             :derived => derived(view.segments.flat_map(&:prism)))
       end
 
       # The prisms' polygons in world inches, as the service draws them.
       def derived(prisms)
-        polygons = prisms.flat_map do |polygons_m|
-          polygons_m.map do |polygon|
+        polygons = prisms.flat_map do |shape|
+          shape.polygons.map do |polygon|
             polygon.map { |x, y, z| Geom::Point3d.new(x * INCHES_PER_M, y * INCHES_PER_M, z * INCHES_PER_M) }
           end
         end

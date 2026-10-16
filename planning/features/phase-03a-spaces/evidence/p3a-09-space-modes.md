@@ -1,7 +1,7 @@
 # P3a-09 evidence: modes, preview, labels and totals
 
 DATE: 2026-10-16
-STATUS: Slice A in review on `feature/spaces-p3a-09a`; native S09 rows pending
+STATUS: Slice A in review ([#162](https://github.com/bldgtyp/ph-composer/pull/162)); native S09 rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -14,8 +14,9 @@ Spaces view's toggles, the preview and the walkthrough (steps 7 and 8).
 `features/spaces/prism.rb` is the Volume preview prism (step 1), pure and in world metres: per Floor
 Segment, the outer loop projected onto the horizontal plane at the loop's mean height, the projection the
 metrics use, and extruded by the Volume's average clear ceiling height into a base, a top and one side per
-edge. A Volume with no height has none. A hole is subtracted from a segment's area by the metrics but not
-cut from its prism, since a drawn polygon has one loop. The phase doc names `volume/prism.rb`; the feature
+edge, a hole's edges included. A Volume with no height has none. A drawn polygon has one loop, so a base
+with holes is cut into convex trapezoids between its vertex heights, and the prism encloses the projected
+area less its holes times the height, as the metrics do. The phase doc names `volume/prism.rb`; the feature
 has no `volume/` folder, so it sits beside the metrics.
 
 `features/spaces/colour_modes.rb` registers the four modes (step 2), each carrying the prism as `derived`,
@@ -33,7 +34,9 @@ so the prisms show while one is on and never otherwise (step 3):
 - By height: each Volume by its height to the nearest 0.1 m, lowest first; labels are unit parts, so they
   read "2.5 m" or "8.2 ft"; the legend sums net volume.
 
-A Volume with no height or no Floor Segment is incomplete in every mode and still counted.
+A Volume with a finding that blocks export is incomplete in every mode and still counted; the Spaces read
+decides, so the table and the modes cannot disagree. A Volume with no Floor Segment is one incomplete entry in
+By weighting factor too.
 
 The legend extension (step 4) is the one change under `colour_by/`, general and naming no feature: an
 entry's `label` may be parts and an entry may give a `figure`, summed per row and shown beside the count in
@@ -47,3 +50,19 @@ rotated wrapper, no height) and `tests/spaces_colour_modes_test.rb` (tests 3, 4,
 the reference model with its labels, counts and figures, a Volume with no height, a Space's colour after
 another is deleted and the session renewed, nothing written while switching through every mode, nothing
 under `colour_by/` naming a Spaces mode).
+
+### Review of PR #162
+
+gpt-6-astra, cycle 1: two P1 and three P2, each reproduced by a test that failed before its fix.
+
+- P1: the prism filled a floor's holes, so a 4 by 4 m floor with a 2 by 2 m hole enclosed 40 m3 against a
+  net volume of 30 m3. Holed bases are now cut into trapezoids and the holes walled
+  (`tests/spaces_prism_test.rb`).
+- P1: incomplete covered only a missing height and an empty Volume; a nested Volume, a copied identity or a
+  Space outside a Zone showed as classified. The modes now take incomplete from the Spaces read's findings
+  that block export.
+- P2: "Supply and extract" showed supply alone. A figure may now be a list of quantities, summed in place
+  and shown joined, and the row reads both rates (`tests/colour_by_legend_test.rb`).
+- P2: an empty Volume had no entry in By weighting factor; it is now one incomplete entry.
+- P2: a figure that was plain text passed validation and failed later outside the mode's failure
+  boundary. Figures must now be quantity pairs, checked at rebuild.

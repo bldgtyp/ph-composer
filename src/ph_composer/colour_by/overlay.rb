@@ -143,7 +143,7 @@ module PhComposer
       def legend_text(row)
         system = Preferences.unit_system
         text = "#{readout_text(row.label, system)} (#{row.count})"
-        row.figure ? "#{text} #{readout_text([row.figure], system)}" : text
+        row.figure ? "#{text} #{Legend.figure_text(row.figure, system)}" : text
       end
 
       def draw_swatch(view, left, top, colour)

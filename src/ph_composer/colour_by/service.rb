@@ -20,7 +20,8 @@ module PhComposer
     # or without an entity (context/EXTENSIBILITY.md, "Colour-by derived geometry").
     # `label` may also be a list of parts, as a readout line is (plain text or `[quantity, si_value]`), so a
     # unit-bearing label is formatted in the display units wherever it is shown. `figure`, when supplied, is
-    # one `[quantity, si_value]` part the legend sums per row and shows beside the count (an area, a volume).
+    # one `[quantity, si_value]` the legend sums per row and shows beside the count (an area, a volume), or a
+    # list of them summed position by position (supply and extract).
     Entry = Struct.new(:entity, :transform, :value, :label, :state, :path, :colour, :hatch_outline, :derived,
                        :figure, keyword_init: true)
 
@@ -38,7 +39,8 @@ module PhComposer
     Anchor = Struct.new(:point, :parts, :path, keyword_init: true)
 
     # One legend row: a colour, what it means (text or parts), how many entities carry it, which of the
-    # three states it is in (`classified`, `incomplete` or `unclassified`), and its entries' summed `figure`.
+    # three states it is in (`classified`, `incomplete` or `unclassified`), and its entries' summed `figure`, a
+    # list of `[quantity, si_value]` pairs.
     Row = Struct.new(:value, :label, :colour, :count, :state, :figure, keyword_init: true)
 
     # One Model's Colour-by state: which mode is active, the cached drawing for it, and the overlay
@@ -167,7 +169,7 @@ module PhComposer
                      "colour" => row.colour.dup, "count" => row.count, "state" => row.state.to_s,
                      "isolated" => @isolated == [row.value, row.state] }
             # Only a row whose entries give a figure has one, formatted in the display units.
-            row.figure ? text.merge("figure" => ReadoutOutput.text([row.figure], system)) : text
+            row.figure ? text.merge("figure" => Legend.figure_text(row.figure, system)) : text
           end
         }
       end

@@ -16,17 +16,30 @@ module PhComposer
         text.nil? ? "Unclassified" : text.to_s
       end
 
-      # Adds one entry's `[quantity, si_value]` to its row's sum. A row sums one quantity, so entries giving
-      # different quantities fail the mode.
+      # Adds one entry's figure to its row's sum: one `[quantity, si_value]`, or a list of them summed position
+      # by position (supply and extract). A row sums the same quantities in the same order throughout, so an
+      # entry giving others, or anything that is not quantity pairs, fails the mode.
       def add_figure(row, figure)
         return unless figure
 
-        quantity, value = ReadoutOutput.parts!([figure]).first
-        if row.figure && row.figure.first != quantity
-          raise ArgumentError, "A legend row sums one quantity; #{row.figure.first} and #{quantity} differ."
+        pairs = figure.first.is_a?(Array) ? figure : [figure]
+        unless pairs.all? { |pair| pair.is_a?(Array) && pair.length == 2 && !pair.first.is_a?(Array) }
+          raise ArgumentError, "A legend figure is a [quantity, value] pair or a list of them."
         end
 
-        row.figure = [quantity, (row.figure ? row.figure.last : 0.0) + value.to_f]
+        ReadoutOutput.parts!(pairs)
+        if row.figure && row.figure.map(&:first) != pairs.map(&:first)
+          raise ArgumentError, "A legend row sums the same quantities throughout."
+        end
+
+        row.figure = pairs.each_with_index.map do |(quantity, value), index|
+          [quantity, (row.figure ? row.figure[index].last : 0.0) + value.to_f]
+        end
+      end
+
+      # A row's figures as display text: "60 m³/h / 40 m³/h".
+      def figure_text(figure, system)
+        figure.map { |pair| ReadoutOutput.text([pair], system) }.join(" / ")
       end
     end
   end
