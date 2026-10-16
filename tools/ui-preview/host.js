@@ -45,6 +45,7 @@
     // The Spaces read: the fixture's, or empty (the section is always published, as the host does).
     this.spaces = settings.spaces ? JSON.parse(JSON.stringify(settings.spaces)) : null;
     this.markTool = { active: false, weighting_factor: 1, gesture_limit: 250 };
+    this.createReview = settings.createReview ? JSON.parse(JSON.stringify(settings.createReview)) : null;
     this.selectedFaces = JSON.parse(JSON.stringify(settings.selectedFaces || []));
     this.makeZone = settings.makeZone || null;
     this.zoneSettings = { suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130 };
@@ -136,6 +137,9 @@
         ["ph_composer.spaces.spaces"]: { status: "completed", value: JSON.parse(JSON.stringify(this.spaces || {
           spaces: [], zones: [], findings: [], units: { area: "m2", height: "m", volume: "m3", airflow: "m3/h" } })) },
         ["ph_composer.spaces.mark_tool"]: { status: "completed", value: JSON.parse(JSON.stringify(this.markTool)) },
+        ["ph_composer.spaces.create_review"]: { status: "completed", value: JSON.parse(JSON.stringify(
+          this.createReview || { token: null, revision: null, zone: null, zone_name: "", accepted: [],
+            left_out: [] })) },
         [MATERIALS]: { status: "completed", value: JSON.parse(JSON.stringify(this.materials)) },
         [ASSEMBLIES]: { status: "completed", value: JSON.parse(JSON.stringify(this.assemblies)) },
         [ATTACHED]: { status: "completed", code: "ok", revision: this.revision,
@@ -267,6 +271,8 @@
         this.colourBy = { mode: "ph_composer.spaces.by_weighting_factor", isolated: null };
       }
       if (payload.name === "ph_composer.spaces.mark_tool.stop") this.markTool.active = false;
+      if (payload.name === "ph_composer.spaces.create_review.close" && this.createReview &&
+        this.createReview.token === payload.params.token) this.createReview = null;
       outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
         value: {}, affected: [], findings: [], detail: null };
       this.snapshot();
@@ -464,6 +470,12 @@
     if (payload.name.indexOf("ph_composer.assemblies.") === 0 ||
         payload.name.indexOf("ph_composer.zones.faces.attached_zone.") === 0) return this.inventoryAction(payload);
     if (payload.name === "ph_composer.zones.options.manage") return this.manageZoneOptions(payload.params);
+    // Create Space answers that it ran; the synthetic Spaces section is not regrouped.
+    if (payload.name === "ph_composer.spaces.create") {
+      this.revision++;
+      return { status: "completed", code: "ok", message: "Created a Space.", effect: "committed",
+        revision: this.revision, value: {}, affected: [], findings: [], detail: null };
+    }
     var resultValue = {};
     if (payload.name === "ph_composer.zones.faces.assign_assembly") {
       var targets = payload.params.targets, affected = targets.map(function (target) {

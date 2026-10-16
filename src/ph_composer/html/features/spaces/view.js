@@ -10,9 +10,9 @@
  */
 PhComposerUI.define("features/spaces/view", ["panel", "workspace", "snapshot", "units", "unit_preferences", "fields",
   "table_views", "features/spaces/cells", "features/spaces/actions", "features/spaces/selection",
-  "features/spaces/mark_paint"],
+  "features/spaces/mark_paint", "features/spaces/create_review"],
 function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCells, SpaceActions, SpaceSelection,
-          MarkPaint) {
+          MarkPaint, CreateReview) {
   "use strict";
   var SECTION = "ph_composer.spaces.spaces";
   var AIRFLOWS = [["v_sup_m3h", "Supply"], ["v_eta_m3h", "Extract"], ["v_tran_m3h", "Transfer"]];
@@ -27,8 +27,17 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
 
   function create(host) {
     var cells = new SpaceCells(host);
-    return { host: host, spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
+    var vs = { host: host, spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
       cells: cells, actions: new SpaceActions(host), selection: new SpaceSelection(cells), paint: new MarkPaint(host) };
+    // Create Space's review waits for a held edit, the Zones screen's or this view's, and is shown over this
+    // view.
+    vs.review = new CreateReview(host, function () { return host.draftReason() || draftReason(vs); }, {
+      shown: function (state) {
+        return (!state.ui || state.ui.activeTab === "overview") && host.activeView() === VIEW.id;
+      },
+      show: function () { panel.showTab("overview"); host.show(VIEW.id); }
+    });
+    return vs;
   }
 
   function occurrence(path) {
@@ -50,6 +59,7 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     (value.zones || []).forEach(function (zone) { vs.sums[occurrence(zone.zone_path)] = zone; });
     vs.actions.consume(state, value.zones || []);
     vs.paint.consume(state);
+    vs.review.consume(state);
     // Mark floor runs only while this view is shown on the Zones tab: a start that lands after a switch away
     // is stopped.
     if (state.ui && state.ui.activeTab !== "overview" || vs.host.activeView() !== VIEW.id) vs.paint.stop();
@@ -292,6 +302,12 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
       .map(function (segment) { return segment.reference.entity_path; });
   }
 
+  // An open Create Space review holds the view as a draft does, so no tab, view or hand-off covers it.
+  function draftReason(vs) {
+    if (vs.review.active()) return "Finish the Create Space review first.";
+    return vs.cells.draftReason() || vs.selection.draftReason();
+  }
+
   function count(vs) {
     var total = vs.spaces.length;
     return total + (total === 1 ? " Space" : " Spaces");
@@ -328,12 +344,14 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     },
     cell: function (vs, td, row, field) { return vs.cells.render(td, row, field); },
     painted: function (vs) { vs.cells.painted(); },
-    draftReason: function (vs) { return vs.cells.draftReason() || vs.selection.draftReason(); },
+    draftReason: draftReason,
     cancelDrafts: function (vs) { vs.cells.cancelAll(); vs.selection.cancelDrafts(); },
     canCancelDrafts: function (vs) {
       return vs.cells.cancellable() || !vs.cells.inFlight() && Boolean(vs.selection.draftReason());
     },
-    dispose: function (vs) { vs.cells.dispose(); vs.actions.dispose(); vs.selection.dispose(); vs.paint.dispose(); },
+    dispose: function (vs) {
+      vs.cells.dispose(); vs.actions.dispose(); vs.selection.dispose(); vs.paint.dispose(); vs.review.dispose();
+    },
     // The Weighting factor column's paint: an icon per factor in its menu, a pressed glyph in its header.
     menuValueAction: function (vs, field, entry) {
       return field === "weighting_factor" ? vs.paint.action(entry) : null;

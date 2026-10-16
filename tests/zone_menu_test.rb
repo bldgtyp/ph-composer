@@ -64,7 +64,9 @@ class ZoneMenuTest < PhComposerTestCase
 
       refute @declaration.available.call(read)
       menus = PhComposer::Commands.install_feature_menus(UI::Menu.new("Context"), :contextual => true)
-      refute menus.key?(PhComposer::EXTENSION_NAME)
+      # Another feature (Create Space) may offer a selected Face an item in the same submenu.
+      items = menus.key?(PhComposer::EXTENSION_NAME) ? menus.fetch(PhComposer::EXTENSION_NAME).entries : []
+      refute_includes items.map { |entry| entry.is_a?(Array) ? entry.first : entry }, "Make Zone"
     end
     assert_empty @model.operations
   end

@@ -81,6 +81,7 @@ module PhComposer
 
       def deactivate(view)
         @active = false
+        @offered = []
         cancel_gesture
         @hover = nil
         view.invalidate if view.respond_to?(:invalidate)
@@ -118,6 +119,7 @@ module PhComposer
       end
 
       def onLButtonDown(_flags, x, y, view)
+        @offered = []
         @pressed = true
         @gesture_edit_path = edit_path
         @factor = @weighting_factor
@@ -164,6 +166,7 @@ module PhComposer
 
       def detach
         reset_gesture
+        @offered = []
         @hover = nil
         return unless @active
 
@@ -233,8 +236,8 @@ module PhComposer
                         "#{paths.length == 1 ? 'Floor Segment' : 'Floor Segments'}.")
       end
 
-      # Nothing is written: the Faces are remembered for the Create Space route, which shows what it would
-      # make before it makes it.
+      # Nothing is written: the Faces are remembered, until the next gesture or the tool ends, for the Create
+      # Space menu item, which shows what it would make before it makes it.
       def offer(paths)
         @offered = paths
         announce(OFFER)

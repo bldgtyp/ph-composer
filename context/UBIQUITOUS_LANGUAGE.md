@@ -134,7 +134,7 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Selection totals | The HUD readout of summed iCFA, net volume and airflows for the selected Spaces |
 | Airflow balance | Each Zone row of the Spaces view: its Spaces' supply, extract and transfer sums, with a marker where supply and extract differ by more than 10 percent of the larger. A Zone holding a Space that inherits its airflow shows a dash. There is no separate balance view and no balance by ventilator |
 | Move Space to Zone | The action that relocates one whole Space group into another Zone group, keeping world position and records |
-| Mark floor | The Spaces tool that marks a face inside a Volume as a Floor Segment and sets whether it counts toward iCFA. A separate tool beside Classify, not a mode of it |
+| Mark floor | The Spaces tool that marks a face inside a Volume as a Floor Segment with a weighting factor, started from the Weighting factor column menu. A separate tool beside Classify, not a mode of it |
 | Make independent | The repair for a copied Space, Volume or Floor Segment: the copy and everything inside it receive new identities, as one Undo step. Until it runs, the shared identity blocks export |
 | iCFA | Interior conditioned floor area, Phius's reference floor area: drywall-to-drywall of the thermal boundary, including interior walls and stairs, at least 7 ft clear height, open-to-below excluded (guidebook 4.4.1.4). It replaces the predecessor's TFA and carries no PHI reduction factors |
 | Net volume | Net floor area times average clear ceiling height, summed over Volumes. Shown as Vn50 where a consumer calls it that. Phius does not require it for certification (guidebook 6.4.3); METr and WUFI still take it |

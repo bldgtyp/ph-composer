@@ -1,7 +1,7 @@
 # P3a-08 evidence: Mark floor and Create Space
 
 DATE: 2026-10-16
-STATUS: Slice A merged ([#156](https://github.com/bldgtyp/ph-composer/pull/156)); slice B in review on `feature/spaces-p3a-08b`
+STATUS: Slices A and B merged ([#156](https://github.com/bldgtyp/ph-composer/pull/156), [#159](https://github.com/bldgtyp/ph-composer/pull/159)); slice C in review on `feature/spaces-p3a-08c`; native S08 rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -109,3 +109,65 @@ stops it whenever the Zones tab or the Spaces view is not shown. A menu reopened
 built its icons disabled and never refreshed them; icons are no longer disabled, and a start chosen during
 another is sent too. The menu-closes assertion used a selector the DOM stub never matches; it now reads the
 trigger's `aria-expanded`. A reopened menu's pressed icon can still lag a start in flight until it is reopened.
+
+## Slice C: Create Space, the walkthrough and the preview
+
+`features/spaces/create_route.rb` and `declarations/create_route.rb` own step 6. "Create Space…" is a
+native menu item offered when a Face is selected, or while Mark floor is running with an offer; the tool
+drops its offer at the next gesture and when it ends. Its availability test is structural and reads
+nothing. The handler finds the open Zone by matching the active path to a `zones.all` row; with none it says
+to open the Zone's edit context, at the status bar and the session notice, and writes nothing (Q18). It reads
+the selected Faces' references from Zones' `host_context` rather than the Faces selection read, which
+refuses a selection holding any ineligible Face whole, so the review can list every left-out Face with
+its reason. It then runs the view command `ph_composer.spaces.create_review.open` (which calls
+`create_preview` and keeps `{token, revision, zone, zone_name, accepted, left_out}` as session feature
+state) and opens the panel. A new review replaces one still open, so a review the panel never closed
+cannot hold Create Space shut; `create_review.close` closes only its own token.
+
+`html/features/spaces/create_review.js`, owned by the Spaces view, shows the review in the shared form
+dialog: what becomes the new Space, each left-out reason with its count, an optional Number ("Next
+free") and Name, Cancel and Create. It waits for a held Spaces edit, and shows the Zones tab and the
+Spaces view first. Create, or Enter in either field, sends `create` with the accepted Faces at the
+review's revision, so a Model changed since refuses inside the dialog; a completed create closes the
+dialog and the review. Cancel, Escape and the close control write nothing.
+
+`tools/examples/authoring/mark_tool_walkthrough.rb` (step 8) sets up the S08 gate's Model and records the
+flags each press and move delivers, for the `MK_LBUTTON` question. The stub cannot build its geometry, so
+like the Classify walkthrough it is a host script with no offline test. The preview gains a
+`spacescreate` fixture; `spaces_checks.cjs` opens the review at 1280 and 420 px, checks its wording and
+that the page does not overflow, and creates through Enter.
+
+Tests: `tests/spaces_create_route_test.rb` (phase doc test 9 on the host side: availability, the refusal
+outside a Zone, the review of a mixed selection and `create` in one Undo step, the stale and token rules,
+and the replacing review) and `tests/spaces_create_review_panel_test.js` (the dialog's wording, Create and
+Enter, a refusal kept in the dialog, Cancel).
+
+UI polish review: the review is a blocking modal because the user must read what is left out before
+choosing; the footer runs Cancel then Create, labelled with its consequence; the close control and Escape
+do what Cancel does; the left-out reasons are glossary sentences from the operation, never codes; the two
+optional fields sit side by side in the shared form layout. No kit part or token changed, so the
+design-system artifact needs no re-sync.
+
+M2 (authoring on screen) is implemented and preview-checked with this slice; the native S08 rows, which
+need Ed at the mouse, are what remain of it.
+
+Review of PR #160, gpt-6-astra cycle 1: one P1 and three P2, each reproduced by a test in
+`tests/spaces_create_review_panel_test.js` that failed before its fix.
+
+- P1: a newer review arriving while Create was in flight replaced the dialog, and the first review's result
+  then closed the newer one. A submitted review now settles before any other is shown, so its result closes
+  only its own token.
+- P2: a review closed elsewhere left its dialog open, and Create still sent a mutation. A snapshot whose
+  review is gone or replaced now closes the dialog without a close command.
+- P2: a review whose switch to the Spaces view a tab guard refused was never retried. The attempt is now
+  kept only through the switch's own repaint, as the Attached zone hand-off does.
+- P2: the review's guard checked only the Spaces view's drafts, so it opened over a held Zone edit. It now
+  asks the Zones screen's guard first, and refuses through the screen's notice, which offers to cancel the
+  edit.
+
+Cycle 2 at `7f49499`: one P1 and two P2, fixed with tests and gated by `make ci` (the review cap). The
+refusal for a review arriving over a held Zone edit repainted, and the repaint consumed the same snapshot
+and refused again until the stack overflowed; the waiting token is now marked before the refusal. An open
+review did not hold the view, so a Faces hand-off switched views and opened a second modal over it; an open
+review now holds the Spaces view as a draft does. The walkthrough created its Volume's Faces at factor 1, so
+the first drag at 1 changed nothing; they now start at 0.

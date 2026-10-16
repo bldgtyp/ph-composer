@@ -892,6 +892,17 @@
   FIXTURES.spacesnone = Object.assign(JSON.parse(JSON.stringify(FIXTURES.authoring)), { spaces: spacesSection([]) });
   FIXTURES.spacesempty = { parts: [], zones: [], faces: [], spaces: { spaces: [], zones: [], findings: [],
     units: { area: "m2", height: "m", volume: "m3", airflow: "m3/h" } } };
+  // Create Space's review as SketchUp's context menu hands it over: two Faces accepted, three left out.
+  function looseFace(path) { return { zone_id: "zon_Aa11Bb22Cc33", zone_path: [100], entity_path: [path],
+    entity_id: null }; }
+  FIXTURES.spacescreate = Object.assign(JSON.parse(JSON.stringify(FIXTURES.spaces)), { createReview: {
+    token: "preview-review", revision: 1, zone: { zone_id: "zon_Aa11Bb22Cc33", zone_path: [100] },
+    zone_name: "Living Zone", accepted: [looseFace(901), looseFace(902)],
+    left_out: [
+      { reference: looseFace(101), reason: "target.changed", message: "The Face is one of the Zone's own Faces." },
+      { reference: looseFace(102), reason: "target.changed", message: "The Face is one of the Zone's own Faces." },
+      { reference: looseFace(903), reason: "shares_edge",
+        message: "The Face shares an Edge with an unselected Face; grouping it would split that Face." }] } });
   FIXTURES.spaceslarge = Object.assign(JSON.parse(JSON.stringify(FIXTURES.authoring)), { spaces: LARGE_SPACES });
 
   global.PhComposerPreviewFixtures = {

@@ -81,6 +81,24 @@ function visibleRows(page) {
     await glyph.click();
     await glyph.waitFor({ state: "hidden" });
 
+    // Create Space's review from SketchUp's context menu: it shows the Spaces view under the shared dialog,
+    // says what is accepted and why the rest is left out, and Create closes it.
+    for (const width of [1280, 420]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=spacescreate`);
+      const review = page.locator("dialog.phc-create-space");
+      await review.waitFor();
+      assert.match(await review.textContent(), /2 Faces in Living Zone become one Space with one Volume/);
+      assert.match(await review.textContent(), /2 Faces: The Face is one of the Zone's own Faces\./);
+      assert(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `no page overflow at ${width}`);
+      await page.screenshot({ path: path.join(output, `spaces-create-${width}.png`) });
+    }
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const name = page.locator("dialog.phc-create-space").getByRole("textbox", { name: "Name", exact: true });
+    await name.fill("Kitchen");
+    await name.press("Enter");
+    await page.locator("dialog.phc-create-space").waitFor({ state: "hidden" });
+
     // Zones with no Spaces yet: the Zones and nothing beneath them.
     await open(page, "spacesnone");
     assert.equal(await page.locator(".phc-overview .phc-view-count").textContent(), "2 Zones · 0 Spaces");
