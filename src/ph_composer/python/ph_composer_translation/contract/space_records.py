@@ -49,8 +49,13 @@ def factor(row: Mapping[str, object], key: str, label: str) -> float:
     return value
 
 
-def text(value: object) -> str:
-    return value.strip() if isinstance(value, str) else ""
+def text(value: object, label: str) -> str:
+    """Optional text: absent or null is empty, a string is kept, anything else is a malformed record."""
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise RecordError(f"{label} must be text")
+    return value.strip()
 
 
 @dataclass(frozen=True)
@@ -73,7 +78,7 @@ class FloorSegmentRecord:
             raise RecordError(f"{label} loops_m must not be empty")
         return cls(
             identifier,
-            text(row.get("display_name")),
+            text(row.get("display_name"), f"{label} display_name"),
             factor(row, "weighting_factor", label),
             factor(row, "net_area_factor", label),
             loops,
@@ -102,7 +107,7 @@ class VolumeRecord:
             raise RecordError(f"{label} avg_ceiling_height_m must be positive")
         return cls(
             identifier,
-            text(row.get("display_name")),
+            text(row.get("display_name"), f"{label} display_name"),
             height,
             as_text(row.get("floor_id"), f"{label} floor_id"),
             tuple(polygon(item, f"{label} geometry") for item in rows(row.get("geometry"), f"{label} geometry")),
@@ -137,8 +142,8 @@ class SpaceRecord:
         return cls(
             identifier,
             as_text(row.get("zone_id"), f"{label} zone_id"),
-            text(row.get("name")),
-            text(row.get("number")),
+            text(row.get("name"), f"{label} name"),
+            text(row.get("number"), f"{label} number"),
             airflows,
             tuple(VolumeRecord.read(item) for item in rows(row.get("volumes"), f"{label} volumes")),
             user_data(row.get("user_data"), label),

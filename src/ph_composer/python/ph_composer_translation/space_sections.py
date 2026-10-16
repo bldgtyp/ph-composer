@@ -114,38 +114,42 @@ class SpaceSection(Section[SpaceRecord, TranslatedSpace]):
         return {"space_zone_totals": zone_rows, "space_segment_totals": segment_rows}
 
     def conformance(self, model: Any, fields: Mapping[str, JSONValue]) -> None:
-        """The reloaded model's Spaces sum, per Room, to the totals the run reported, and no identifier
-        repeats."""
+        """The reloaded model's Spaces sum, per Room and per Building-Segment, to the totals the run reported,
+        and no identifier repeats."""
         spaces = [space for room in model.rooms for space in room.properties.ph.spaces]
         identifiers = [space.identifier for space in spaces] + [
             item.identifier for space in spaces for volume in space.volumes for item in (volume, *volume.floor_segments)
         ]
         if len(set(identifiers)) != len(identifiers):
             raise ValueError("canonical Space, Volume or Floor Segment identifiers repeat")
-        reported_rows = fields.get("space_zone_totals", [])
-        expected = {
-            str(row["zone_id"]): row
-            for row in (reported_rows if isinstance(reported_rows, list) else [])
-            if isinstance(row, dict)
-        }
-        rooms = {room.identifier for room in model.rooms}
-        if missing := sorted(set(expected) - rooms):
-            raise ValueError(f"the run reported Space totals for Zones with no Room: {', '.join(missing)}")
+        rooms = {room.identifier: list(room.properties.ph.spaces) for room in model.rooms}
+        segments: dict[str, list[Any]] = {}
         for room in model.rooms:
-            row = expected.get(room.identifier)
-            room_spaces = list(room.properties.ph.spaces)
-            if row is None:
-                if room_spaces:
-                    raise ValueError(f"Room {room.identifier} carries Spaces the run did not report")
-                continue
-            for key, attribute in TOTALS.items():
-                actual = sum(float(getattr(space, attribute)) for space in room_spaces)
-                value = row.get(key)
-                if isinstance(value, bool) or not isinstance(value, (int, float)):
-                    raise ValueError(f"Room {room.identifier} {key} was not reported as a number")
-                reported = float(value)
-                if not math.isclose(actual, reported, rel_tol=1e-9, abs_tol=1e-9):
-                    raise ValueError(f"Room {room.identifier} {key} is {actual}, the run reported {reported}")
+            own = room.user_data.get("ph_composer", {}) if isinstance(room.user_data, dict) else {}
+            segments.setdefault(str(own.get("building_segment", "")), []).extend(rooms[room.identifier])
+        reconcile(rooms, fields.get("space_zone_totals"), "zone_id", "Zone")
+        reconcile(segments, fields.get("space_segment_totals"), "building_segment", "Building-Segment")
+
+
+def reconcile(groups: Mapping[str, list[Any]], reported: object, key: str, label: str) -> None:
+    """Each group's Spaces sum to its reported row; a row naming no group, or a group with Spaces and no row,
+    fails the check."""
+    rows = {str(row[key]): row for row in (reported if isinstance(reported, list) else []) if isinstance(row, dict)}
+    if missing := sorted(set(rows) - set(groups)):
+        raise ValueError(f"the run reported Space totals for a {label} with no Room: {', '.join(missing)}")
+    for name, spaces in groups.items():
+        row = rows.get(name)
+        if row is None:
+            if spaces:
+                raise ValueError(f"{label} {name} carries Spaces the run did not report")
+            continue
+        for total, attribute in TOTALS.items():
+            value = row.get(total)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise ValueError(f"{label} {name} {total} was not reported as a number")
+            actual = sum(float(getattr(space, attribute)) for space in spaces)
+            if not math.isclose(actual, float(value), rel_tol=1e-9, abs_tol=1e-9):
+                raise ValueError(f"{label} {name} {total} is {actual}, the run reported {value}")
 
 
 def face(boundary: Polygon, holes: Sequence[Polygon]) -> Any:

@@ -536,9 +536,9 @@
       "sha256": "ef4a5dc648dbd55da8020e7dd21e32604ecd476ee553953cfd5411a3f9e445e3"
     },
     "python/ph_composer_translation/contract/space_records.py": {
-      "bytes": 5157,
+      "bytes": 5452,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "c5dc38fdacf3eefb5ded8d8ecb6e6db861eab87da88ee1f232d3025105c479f0"
+      "sha256": "37820809e00e9ec6f1cc8cd929f290eaf9f155ef23edb1c0b6ebf171364653aa"
     },
     "python/ph_composer_translation/contract/window_records.py": {
       "bytes": 6103,
@@ -581,9 +581,9 @@
       "sha256": "60b88a69d756abf37bf74c2968f6dde0d348cd25da1d03baed6ae4afd0e0444c"
     },
     "python/ph_composer_translation/space_sections.py": {
-      "bytes": 8080,
+      "bytes": 8522,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "50e08e8097f2747372b36b93f232e52ce42af23574e82fde2a76002f11fd8d24"
+      "sha256": "1c9b105b6e947d70e7ee460672440997a97d9a4db8eff8b3a5b2a75788202410"
     },
     "python/ph_composer_translation/stack.py": {
       "bytes": 1361,

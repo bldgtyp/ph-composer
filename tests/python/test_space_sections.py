@@ -179,3 +179,21 @@ def test_conformance_fails_when_totals_name_a_zone_with_no_room() -> None:
     altered[SPACE_SECTION_ID]["space_zone_totals"].append(extra)
     with pytest.raises(ValueError, match="no Room"):
         check(altered["canonical_model"], altered, SECTIONS)
+
+
+def test_conformance_fails_when_a_building_segment_total_is_altered() -> None:
+    result = run(space("spc_one", ZONE_A, [volume("vol_a", [segment("fsg_a", [square(0, 0, 3)])], 2.5)]))
+    altered = copy.deepcopy(result)
+    altered[SPACE_SECTION_ID]["space_segment_totals"][0]["net_volume_m3"] += 100
+    with pytest.raises(ValueError, match="Building-Segment"):
+        check(altered["canonical_model"], altered, SECTIONS)
+
+
+@pytest.mark.parametrize("field", ["name", "number"])
+def test_malformed_text_costs_the_space_a_finding(field: str) -> None:
+    record = space("spc_bad", ZONE_A, [volume("vol_a", [segment("fsg_a", [square(0, 0, 3)])], 2.5)])
+    record[field] = 123
+    assert [finding["object_id"] for finding in run(record)["findings"]] == ["spc_bad"]
+    child = space("spc_child", ZONE_A, [volume("vol_a", [segment("fsg_a", [square(0, 0, 3)])], 2.5)])
+    child["volumes"][0]["floor_segments"][0]["display_name"] = ["Kitchen"]
+    assert [finding["object_id"] for finding in run(child)["findings"]] == ["spc_child"]

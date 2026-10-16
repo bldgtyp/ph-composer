@@ -63,3 +63,8 @@ gpt-6-astra, cycle 1: one P1 and three P2, each reproduced by a test that failed
 - P2: a duplicate identity on a stray record (an orphan Volume, a misplaced Floor Segment) offered no repair.
   Stray findings now take the same route as row findings: locate, repair and object id.
 - P2: conformance passed a reported total naming a Zone with no Room. It now refuses one.
+
+Cycle 2: two P2, fixed with tests and gated by `make ci` (the review cap). A Space's name or number, or a
+child's display name, that was not text was read as empty and published; it is now a malformed record that
+costs its Space a finding. Conformance checked the per-Zone totals only; it now reconciles the per-Building-Segment
+totals too, from each reloaded Room's segment.
