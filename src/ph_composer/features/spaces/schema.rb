@@ -87,6 +87,21 @@ module PhComposer
     ])
     KINDS = { SPACE_KIND => SPACE, VOLUME_KIND => VOLUME, FLOOR_SEGMENT_KIND => FLOOR_SEGMENT }.freeze
 
+    # The most Faces one Mark floor gesture may mark, as the Face schema bounds a Classify gesture: a drag
+    # across a large plan refuses rather than writing hundreds of records in one step.
+    FLOOR_GESTURE_LIMIT = 250
+
+    class << self
+      # The shipped bound is always FLOOR_GESTURE_LIMIT; the writer lets a test reach the ceiling without a
+      # large model, and the reset puts it back. Nothing in the extension sets it.
+      attr_writer :floor_gesture_limit
+
+      def floor_gesture_limit
+        @floor_gesture_limit ||= FLOOR_GESTURE_LIMIT
+      end
+    end
+    PhComposer.on_reset("spaces.floor_gesture_limit") { Spaces.floor_gesture_limit = nil }
+
     SPACE_REFERENCE = Schema.reference("space_id")
     VOLUME_REFERENCE = Schema.reference("volume_id")
     FLOOR_SEGMENT_REFERENCE = Schema.reference("floor_segment_id")

@@ -803,9 +803,10 @@ the answer in its own result slot. A setup command takes the same optional `appr
 
 ### Viewport tools
 
-Classify and Window Place use this contract. A feature that authors by pointing writes a
-`Sketchup::Tool` and starts it from a menu item or a registered view command. Spaces' Mark floor
-and the thermal-bridge edge tool share this shape. The rules below come from Classify's host gate
+Classify, Window Place and Spaces' Mark floor (`features/spaces/mark_tool.rb`, started by the
+`ph_composer.spaces.mark_tool.start` view command with a weighting factor) use this contract. A feature
+that authors by pointing writes a `Sketchup::Tool` and starts it from a menu item or a registered view
+command. The thermal-bridge edge tool will share this shape. The rules below come from Classify's host gate
 ([evidence](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-classify-tool.md)).
 
 - **Pick, never walk.** `Pick.face_path(view, x, y)` answers what is under the pointer as a
@@ -823,7 +824,8 @@ and the thermal-bridge edge tool share this shape. The rules below come from Cla
   someone else committed underneath it.
 - **Bound the collection one past the limit** so the operation that owns the limit refuses, rather
   than the tool silently applying the first N of what the pointer crossed. The Classify limit is
-  `GESTURE_FACE_LIMIT`, owned by the Face schema; see [TECH_STACK.md](TECH_STACK.md#envelope-what-ph-composer-owns-that-the-predecessor-did-not).
+  `GESTURE_FACE_LIMIT`, owned by the Face schema, and Mark floor's `FLOOR_GESTURE_LIMIT`, owned by the
+  Floor Segment schema; see [TECH_STACK.md](TECH_STACK.md#envelope-what-ph-composer-owns-that-the-predecessor-did-not).
 - **Talk to the status bar, not only the session.** The panel is the only subscriber to a session
   notice, and a viewport tool is used with the panel closed, so a refusal delivered only that way
   is silent exactly where it matters. Results and refusals reach both `Sketchup.status_text=`

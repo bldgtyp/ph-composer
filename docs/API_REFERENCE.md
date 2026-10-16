@@ -7699,6 +7699,60 @@ Example params:
 }
 ```
 
+### `ph_composer.spaces.mark_tool.state`
+
+The Mark floor tool: whether it is active and the factor it marks with. Owner: `ph_composer.spaces`.
+
+Refuses: only the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "active",
+    "weighting_factor",
+    "gesture_limit"
+  ],
+  "properties": {
+    "active": {
+      "type": "boolean",
+      "description": "Whether the Mark floor tool has the viewport."
+    },
+    "weighting_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The factor the tool marks Floor Segments with."
+    },
+    "gesture_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The most Faces one Mark floor gesture may mark."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.spaces.settings.get`
 
 The Model's last-entered height, which new Spaces take. Owner: `ph_composer.spaces`.
@@ -24390,7 +24444,7 @@ Mark explicit Faces directly inside Volumes as Floor Segments with one weighting
 
 Undo step: Mark Floor. Writes Floor Segment records on the Faces.
 
-Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+Refuses: `gesture.too_large`, `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 
 Params:
 
@@ -43047,6 +43101,125 @@ Example params:
     ]
   }
 }
+```
+
+### `ph_composer.spaces.mark_tool.start`
+
+Give the viewport to the Mark floor tool with one weighting factor, and colour the Model by weighting factor. Owner: `ph_composer.spaces`.
+
+Refuses: `validation.failed`, and the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "weighting_factor"
+  ],
+  "properties": {
+    "weighting_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The factor to mark Floor Segments with, 0 to 1."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "active",
+    "weighting_factor",
+    "gesture_limit"
+  ],
+  "properties": {
+    "active": {
+      "type": "boolean",
+      "description": "Whether the Mark floor tool has the viewport."
+    },
+    "weighting_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The factor the tool marks Floor Segments with."
+    },
+    "gesture_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The most Faces one Mark floor gesture may mark."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "weighting_factor": 1.0
+}
+```
+
+### `ph_composer.spaces.mark_tool.stop`
+
+Give the viewport back to whatever tool the user had. Owner: `ph_composer.spaces`.
+
+Refuses: only the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "active",
+    "weighting_factor",
+    "gesture_limit"
+  ],
+  "properties": {
+    "active": {
+      "type": "boolean",
+      "description": "Whether the Mark floor tool has the viewport."
+    },
+    "weighting_factor": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The factor the tool marks Floor Segments with."
+    },
+    "gesture_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The most Faces one Mark floor gesture may mark."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
 ```
 
 ### `ph_composer.windows.place_tool.choose`

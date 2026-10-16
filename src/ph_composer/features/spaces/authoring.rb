@@ -185,6 +185,13 @@ module PhComposer
       # Marks explicit Faces directly inside Volumes as Floor Segments with one weighting factor; a Face
       # already marked keeps its record and takes the factor.
       def mark_floors(request, proposal, faces:, weighting_factor:)
+        limit = Spaces.floor_gesture_limit
+        count = faces.uniq.length
+        if count > limit
+          raise CodedError.new("gesture.too_large",
+                               "One Mark floor gesture marks at most #{limit} Faces; this one names #{count}.")
+        end
+
         scan = Occurrences.scan(request.model)
         allocate = Records::Identity.allocator(request, request.params)
         volumes = scan.volumes + scan.orphan_volumes
