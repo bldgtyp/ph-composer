@@ -1,7 +1,7 @@
 # P3a-07: the Spaces view
 
 DATE: 2026-10-15
-STATUS: Scoped
+STATUS: In progress in four slices: A rows and read-only columns, B editing and airflow entry, C selection bar, row actions, findings and Colour by weighting factor, D preview fixtures, the unit-switch measurement and docs ([evidence](../evidence/p3a-07-spaces-view.md))
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

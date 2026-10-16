@@ -641,12 +641,12 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
 | Hooks | What the host asks |
 | --- | --- |
 | `create`, `dispose`, `consume(state, send)` | The view's state for one Model, and what it reads from each snapshot before rows are built. Every listed view consumes, shown or not, so work that arrives for a hidden view (a native handoff, a tool that turned on late) still reaches it |
-| `zoneRecord(record)`, `children(row)`, `initiallyOpen(row)` | What a Zone row carries for the view, the rows beneath it (none by default), and whether a row the view adds opens by default (`null`: the host's rule) |
-| `columns`, `value`, `cell(td, row, field)`, `decorate`, `zoneMarker(row)`, `widths` | The view's columns, their text or in-place control, a cell's flag, the Zone row's marker after the host's own, default widths |
+| `zoneRecord(record)`, `children(row)`, `initiallyOpen(row)`, `extraRows()`, `tiers` | What a Zone row carries for the view, the rows beneath it (none by default), whether a row the view adds opens by default (`null`: the host's rule), top-level group rows after the Zones (records outside every Zone; `record.zone` is null, they sort last and pass only the view's filters), and how many tree levels open (2 by default; Spaces, four deep, gives 3) |
+| `columns`, `leadingColumns`, `value`, `cell(td, row, field)`, `decorate`, `zoneMarker(row)`, `widths`, `hiddenColumns`, `optionalColumns` | The view's columns (`leadingColumns` sit before Name), their text or in-place control, a cell's flag, the Zone row's marker after the host's own, default widths, the columns hidden at first, and the `[field, label]` pairs Table options shows or hides |
 | `colourBy`, `sorted`, `filteredFields`, `filterValues`, `filterLabel`, `headerAction`, `menuValueAction`, `menuExtra` | The view's columns' Colour-by bindings, sort and value filters, and anything its column header and menu add (Faces adds the Classify paint) |
 | `zoneMatch`, `rowMatch`, `search`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask (by default each Zone that passes `zoneMatch`, whole) |
 | `actions(row)`, `zoneActions(row)`, `action`, `inspect`, `locate(row)`, `clearLocate` | Row actions, the Zone row's actions after Make independent, and Locate; `clearLocate` answers whether it cleared anything |
-| `check(context)`, `selectionBar(overview)`, `settings`, `navigate(intent)` | Checkboxes for the rows it checks, a selection bar, a settings control for the page header, and a navigation intent's `check` |
+| `check(context)`, `selectionBar(overview)`, `settings`, `navigate(intent)`, `count`, `placeholder` | Checkboxes for the rows it checks, a selection bar, a settings control for the page header, a navigation intent's `check`, what the control row's count adds after the Zones ("4 Spaces"), and the text filter's placeholder |
 | `draftReason`, `leaveReason`, `leave`, `escape` | Work a filter or a switch must not hide; what holds a switch; what stops on a switch away; Escape, true when the view used it |
 
 - **Listing.** A view is listed while the snapshot publishes every section it names, so a build
@@ -654,8 +654,8 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
   listed the view row is hidden; with none the host shows the Zone rows alone.
 - **The host keeps** the Zone rows and their Name column, the Zone row's in-place cells
   (`zone_cells.js`: Building-Segment, Level, Ground depth), Make independent, the text filter, the
-  Zone filters (Building-Segment, Level), which rows are expanded, and the panel hooks
-  (`navigationGuard`, `outcomeText`, `workedOn`).
+  Zone filters (Building-Segment, Level), which rows are expanded (Expand all and Collapse all reach
+  every row with rows beneath it), and the panel hooks (`navigationGuard`, `outcomeText`, `workedOn`).
 - **A view owns** its rows, its columns, their header Colour-by toggles and value filters, its sort,
   its checked rows, its selection bar, its settings and its tools. Each view has its own surface and
   table mount, so its column widths, hidden columns and column menus are its own. The host keeps one
