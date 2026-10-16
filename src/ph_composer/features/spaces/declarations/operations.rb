@@ -173,7 +173,7 @@ module PhComposer
         ["floors.mark", {
           :description => "Mark explicit Faces directly inside Volumes as Floor Segments with one weighting factor; " \
                           "a marked Face takes the factor.",
-          :refuses => (TARGET + %w[target.wrong_hierarchy target.wrong_kind]).uniq,
+          :refuses => (TARGET + %w[gesture.too_large target.wrong_hierarchy target.wrong_kind]).uniq,
           :params => Shapes.object({ "faces" => PATHS, "weighting_factor" => FACTOR }),
           :result => Shapes.object({ "floor_segment_ids" => Shapes.list(Shapes::TEXT) }),
           :undo_name => "Mark Floor", :side_effects => "Writes Floor Segment records on the Faces.",

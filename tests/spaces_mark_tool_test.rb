@@ -1,0 +1,202 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+require_relative "support/space_fixtures"
+
+# The Mark floor tool, the gesture rather than the operation: what a click and a drag collect, the factor
+# frozen at button-down, every cancel route writing nothing, the gesture limit, what each pick means, and
+# the Colour-by mode it turns on and leaves on.
+class SpacesMarkToolTest < PhComposerTestCase
+  include SpaceFixtures
+
+  API = PhComposer::API
+  MODE = "ph_composer.spaces.by_weighting_factor"
+
+  def setup
+    super
+    @model = Sketchup.active_model
+    @session = PhComposer::Sessions.for(@model)
+    @context = API.connect(:session_id => @session.id)
+    @notices = []
+    PhComposer::Sessions.on_notice { |_session, message, tone| @notices << [message, tone] }
+    @view = @model.active_view
+    build
+  end
+
+  # Zone A holds one Space: a Volume with three unmarked Faces and one marked, a loose Face at the Space's
+  # root, a loose Face in the Zone outside the Space, and a Zone Face classified in the Faces view.
+  def build
+    @inside = [floor_face(1111, rectangle(0, 0, 1, 1)), floor_face(1112, rectangle(1, 0, 1, 1)),
+               floor_face(1113, rectangle(2, 0, 1, 1))]
+    @marked = floor_face(1114, rectangle(3, 0, 1, 1), segment_record("M"))
+    @volume = volume_group(1110, volume_record("V"), @inside + [@marked])
+    @root_face = floor_face(1120, rectangle(0, 2, 2, 2))
+    @space = space_group(1100, space_record("S", :number => "101", :name => "Living"), [@volume, @root_face])
+    @loose = floor_face(1200, rectangle(5, 0, 2, 2))
+    @wall = floor_face(1300, rectangle(9, 0, 1, 1))
+    @zone = zone_group(1000, "A", [@space, @loose, @wall])
+    @stray = floor_face(9000, rectangle(20, 0, 1, 1))
+    @model.entities << @zone << @stray
+    # The wall is classified through the Faces feature's own operation, as a user would in the Faces view.
+    result = API.invoke(:context => @context, :name => "ph_composer.zones.faces.classify",
+                        :params => { "faces" => [{ "zone_id" => "zon_AAAAAAAAAAAA", "zone_path" => [1000],
+                                                   "entity_path" => [1300], "entity_id" => nil }],
+                                     "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" } },
+                                     "expected_values" => {} },
+                        :request => { "sequence" => 1, "expected_revision" => @session.revision })
+    assert_equal "completed", result.fetch("status"), result.inspect
+  end
+
+  def test_one_drag_marks_every_face_it_crossed_in_one_step_with_the_factor_frozen_at_button_down
+    tool.start(0.5)
+    point(:a, [@zone, @space, @volume, @inside[0]])
+    point(:b, [@zone, @space, @volume, @inside[1]])
+    operations = @model.operations.length
+    press(:a)
+    tool.start(1.0) # a new factor mid-drag
+    move(:b)
+    release
+
+    assert_equal [0.5, 0.5], segments_on(@inside[0, 2]).map { |record| record.fetch("weighting_factor") }
+    assert_equal operations + 1, @model.operations.length, "one gesture, one Undo step"
+    assert_match(/Marked 2 Floor Segments at 0.5/, Sketchup.status_texts.last)
+  end
+
+  def test_escape_deactivation_suspension_and_a_raised_callback_each_write_nothing
+    tool.start(1.0)
+    point(:a, [@zone, @space, @volume, @inside[0]])
+    operations = @model.operations.length
+    [-> { tool.onCancel(0, @view) }, -> { tool.deactivate(@view) }, -> { tool.suspend(@view) }].each do |cancel|
+      tool.start(1.0)
+      press(:a)
+      cancel.call
+      release
+    end
+    tool.start(1.0)
+    press(:a)
+    @view.picks[[99, 99]] = :raise
+    tool.onMouseMove(0, 99, 99, @view)
+    release
+    assert_equal operations, @model.operations.length
+    assert_nil segments_on([@inside[0]]).first
+  end
+
+  def test_a_drag_across_one_more_face_than_the_limit_refuses_whole
+    PhComposer::Spaces.floor_gesture_limit = 2
+    tool.start(1.0)
+    @inside.each_with_index { |face, index| point(index, [@zone, @space, @volume, face]) }
+    operations = @model.operations.length
+    press(0)
+    move(1)
+    move(2)
+    release
+    assert_equal operations, @model.operations.length
+    assert_empty segments_on(@inside).compact
+    assert_match(/at most 2/, Sketchup.status_texts.last)
+  end
+
+  def test_a_face_at_a_space_root_becomes_its_next_volume
+    # Working at a Space's root means its edit context is open; a pick is then relative to it.
+    @model.active_path = [@zone, @space]
+    tool.start(1.0)
+    point(:root, [@root_face])
+    click(:root)
+    assert_match(/Added a Volume/, Sketchup.status_texts.last)
+    volumes = space_row.fetch("volumes")
+    assert_equal 2, volumes.length
+  end
+
+  def test_a_face_in_a_zone_outside_any_space_is_offered_create_space_and_nothing_is_written
+    tool.start(1.0)
+    point(:loose, [@zone, @loose])
+    operations = @model.operations.length
+    click(:loose)
+    assert_equal operations, @model.operations.length
+    assert_match(/Create Space/, Sketchup.status_texts.last)
+    assert_equal [[1000, 1200]], tool.offered
+  end
+
+  def test_a_classified_zone_face_and_a_face_in_no_zone_refuse_at_the_status_bar_and_the_notice
+    tool.start(1.0)
+    point(:wall, [@zone, @wall])
+    point(:stray, [@stray])
+    operations = @model.operations.length
+    click(:wall)
+    assert_match(/Faces view/, Sketchup.status_texts.last)
+    click(:stray)
+    assert_match(/in no Zone/, Sketchup.status_texts.last)
+    assert_equal operations, @model.operations.length
+    assert_equal :warning, @notices.last.last
+  end
+
+  def test_a_drag_mixing_places_refuses_whole
+    tool.start(1.0)
+    point(:in, [@zone, @space, @volume, @inside[0]])
+    point(:root, [@zone, @space, @root_face])
+    operations = @model.operations.length
+    press(:in)
+    move(:root)
+    release
+    assert_equal operations, @model.operations.length
+    assert_match(/one place/, Sketchup.status_texts.last)
+  end
+
+  def test_starting_turns_colour_by_weighting_factor_on_and_stopping_leaves_it_on
+    service = PhComposer::ColourBy.for(@session)
+    result = API.view(:context => @context, :name => "ph_composer.spaces.mark_tool.start",
+                      :params => { "weighting_factor" => 0.6 })
+    assert_equal "completed", result.fetch("status"), result.inspect
+    assert_equal({ "active" => true, "weighting_factor" => 0.6, "gesture_limit" => 250 }, result.fetch("value"))
+    assert_equal MODE, service.mode_name
+    API.view(:context => @context, :name => "ph_composer.spaces.mark_tool.stop", :params => {})
+    refute tool.active?
+    assert_equal MODE, service.mode_name, "the mode stays on, as a concrete paint choice leaves its own"
+  end
+
+  def test_detach_with_the_tool_active_leaves_no_tool
+    tool.start(1.0)
+    assert tool.active?
+    tool.detach
+    refute tool.active?
+    assert_nil @model.tools.active_tool if @model.respond_to?(:tools) && @model.tools.respond_to?(:active_tool)
+  end
+
+  private
+
+  def tool
+    PhComposer::Spaces.mark_tool(@session)
+  end
+
+  def point(name, entities)
+    @coordinates ||= {}
+    @coordinates[name] ||= [100 + @coordinates.length, 100]
+    @view.picks[@coordinates[name]] = entities
+  end
+
+  def press(name)
+    xy = @coordinates.fetch(name)
+    tool.onLButtonDown(0, xy[0], xy[1], @view)
+  end
+
+  def move(name)
+    xy = @coordinates.fetch(name)
+    tool.onMouseMove(0, xy[0], xy[1], @view)
+  end
+
+  def release
+    tool.onLButtonUp(0, 0, 0, @view)
+  end
+
+  def click(name)
+    press(name)
+    release
+  end
+
+  def segments_on(faces)
+    faces.map { |face| PhComposer::Spaces::FLOOR_SEGMENT_STORE.read(face) }
+  end
+
+  def space_row
+    API.query(:context => @context, :name => "ph_composer.spaces.all").dig("value", "spaces").first
+  end
+end

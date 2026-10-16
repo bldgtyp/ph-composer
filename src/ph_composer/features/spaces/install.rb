@@ -14,6 +14,7 @@
 #   zone_copy.rb    Spaces' part of a copied Zone becoming independent
 #   settings.rb     the Model's last-entered height
 #   colour_modes.rb the Spaces view's Colour-by modes
+#   mark_tool.rb    the Mark floor viewport tool; declarations/mark_tool.rb its state and commands
 #   declarations/   what Spaces registers
 require_relative "schema"
 require_relative "scan/occurrences"
@@ -39,6 +40,8 @@ require_relative "declarations/operations"
 require_relative "declarations/context"
 require_relative "codes"
 require_relative "colour_modes"
+require_relative "mark_tool"
+require_relative "declarations/mark_tool"
 
 module PhComposer
   module Spaces
@@ -54,6 +57,7 @@ module PhComposer
       Settings.install(feature)
       Codes.install(feature)
       ColourModes.install(feature)
+      MarkToolRegistration.install(feature)
     end
   end
 end
