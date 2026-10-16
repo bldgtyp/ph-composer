@@ -131,3 +131,11 @@ Seen in the panel with Hall checked: Supply and Extract read "Mixed" for one Spa
 because "the rows differ" and "unset" shared one marker; a value the rows share, unset included, now reads as
 itself.
 
+Slice C2 review, first pass: Codex `gpt-6.1-sol` on #153 found two P1 (a bar draft read in the unit current at
+Enter rather than the one typed in; a bar draft guarded by the values at Enter rather than at its start) and
+four P2 (Enter on an unedited field wrote the rounded display back; a bar draft did not hold a view switch; a
+refused bar entry lost its text; an automatic switch skipped the checked-Zone hand-over). Each was reproduced
+by a test and fixed: a bar field fixes its unit and its target rows with their values at the first keystroke,
+sends nothing for unchanged text, keeps refused text until it is corrected or Escape restores the Model's
+value, and holds a switch meanwhile; the host's automatic switch hands checked Zones over as an explicit one.
+

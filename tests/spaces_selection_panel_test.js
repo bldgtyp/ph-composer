@@ -69,8 +69,9 @@ function batches(p) {
     .map(function (message) { return JSON.parse(JSON.stringify(message.payload.params)); });
 }
 
+/* Typing then Enter: typing begins the draft. */
 function enter(input, text) {
-  input.value = text;
+  if (input.value !== text) { input.value = text; input.listeners.input({}); }
   input.listeners.keydown({ key: "Enter", preventDefault: function () {} });
 }
 
@@ -115,7 +116,9 @@ test("a blank airflow in the bar clears the rate on each checked Space that has 
   p.receive(snapshot());
   p.click(p.byLabel("Check Living"));
   p.click(p.byLabel("Check Bath"));
-  enter(p.byLabel("Supply for checked Spaces"), "");
+  var supply = p.byLabel("Supply for checked Spaces");
+  supply.value = "5"; supply.listeners.input({});
+  enter(supply, "");
   assert.deepStrictEqual(batches(p), [{ edits: [
     { reference: { space_id: "spc_101", entity_path: [100, 101] }, values: { v_sup_m3h: null },
       expected_values: { v_sup_m3h: 60 } }] }], "Bath has no supply to clear");
@@ -144,4 +147,82 @@ test("Zones checked in one view read checked in the other after a switch", funct
   p.click(p.pane().querySelectorAll("button").filter(function (node) { return node.textContent === "Spaces"; })[0]);
   assert.strictEqual(p.byLabel("Uncheck Zone A").checked, true, "and Zone A's Spaces in Spaces");
   assert.strictEqual(p.byLabel("Check Zone B").checked, false, "Zone B was handed over only as Faces checked it");
+});
+
+/* ---------------------------------------------------------------- review (PR #153) */
+
+function type(input, text) {
+  input.value = text;
+  input.listeners.input({});
+}
+
+function result(p, message, outcome) {
+  p.panel.receive({ type: "action.result", payload: { request_id: message.payload.request_id, session: "session-a",
+    outcome: outcome } });
+}
+
+test("a bar draft keeps the unit it was typed in through a unit switch", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  var height = p.byLabel("Height for checked Volumes");
+  type(height, "3");
+  var ip = snapshot();
+  ip.preferences.unit_system = "IP";
+  p.receive(ip);
+  enter(height, height.value);
+  assert.strictEqual(batches(p)[0].edits[0].values.avg_ceiling_height_m, 3, "metres, as typed");
+});
+
+test("a bar draft is guarded by the values it began against, not later ones", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  var supply = p.byLabel("Supply for checked Spaces");
+  type(supply, "70");
+  var changed = snapshot();
+  changed.sections["ph_composer.spaces.spaces"].value.spaces[0].values.v_sup_m3h = 80;
+  p.receive(changed);
+  enter(supply, "70");
+  assert.deepStrictEqual(batches(p)[0].edits[0].expected_values, { v_sup_m3h: 60 });
+});
+
+test("Enter on a field the user has not edited sends nothing", function () {
+  var p = page(), ip = snapshot();
+  ip.preferences.unit_system = "IP";
+  p.receive(ip);
+  p.click(p.byLabel("Check Living"));
+  var supply = p.byLabel("Supply for checked Spaces");
+  supply.listeners.keydown({ key: "Enter", preventDefault: function () {} });
+  assert.strictEqual(batches(p).length, 0);
+});
+
+test("a refused bar entry keeps its text and holds a view switch until it is cancelled", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Living"));
+  var supply = p.byLabel("Supply for checked Spaces");
+  type(supply, "70");
+  enter(supply, "70");
+  var sent = p.sent.filter(function (message) { return message.payload.name === "ph_composer.spaces.batch_update"; });
+  result(p, sent[0], { status: "refused", code: "target.changed", effect: "none",
+    message: "Changed. Nothing was written." });
+  p.receive(snapshot());
+  assert.strictEqual(supply.value, "70", "the refused text stays");
+  p.click(p.pane().querySelectorAll("button").filter(function (node) { return node.textContent === "Faces"; })[0]);
+  assert.strictEqual(p.pane().querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Spaces";
+  })[0].getAttribute("aria-selected"), "true", "the switch is held");
+  supply.listeners.keydown({ key: "Escape", preventDefault: function () {} });
+  assert.strictEqual(supply.value, "60", "Escape restores the Model's value");
+});
+
+test("checked Zones go with an automatic switch too", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.byLabel("Check Zone B"));
+  var faceless = snapshot();
+  delete faceless.sections["ph_composer.spaces.spaces"];
+  p.receive(faceless);
+  assert.strictEqual(p.byLabel("Uncheck Zone B").checked, true, "Faces took Zone B");
 });

@@ -190,11 +190,16 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     state.listed = listed;
     if (ids.indexOf(state.viewId) < 0) {
       // A shown view that stops being listed leaves as a switch away does.
-      var remembered = preferences.tableView(HOST);
+      var remembered = preferences.tableView(HOST), zones = null;
       var next = slot(state, listed[ids.indexOf(ids.indexOf(remembered) >= 0 ? remembered : ids[0])]);
-      if (current && current.shown) { call(current, "leave"); stash(state, current, next); }
+      if (current && current.shown) {
+        zones = call(current, "checkedZones", [], null);
+        call(current, "leave");
+        stash(state, current, next);
+      }
       state.viewId = next.view.id;
       restore(state, next);
+      if (zones && zones.length) call(next, "checkZones", [zones]);
     }
     var surfaces = root.querySelector(".phc-zone-views"), owned = listed.map(function (view) {
       return slot(state, view).surface;

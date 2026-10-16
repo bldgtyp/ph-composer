@@ -138,26 +138,105 @@ function (panel, ui, units, preferences, fields, selectionBars) {
     return rows.every(function (row) { return target(row).values[key] === first; }) ? first : MIXED;
   }
 
+  /* One field in the bar. A draft begins at the first keystroke and fixes then what it is read against: the
+     unit the user typed in, and the checked rows with the values they had. Enter on text the user has not
+     changed sends nothing (except over Mixed, where even a blank is a choice). A refused entry keeps its text
+     until the user corrects it or Escape restores the Model's value; until then it holds a view switch. */
+  function BarField(selection, name, control) {
+    var self = this;
+    this.selection = selection; this.name = name; this.control = control;
+    this.input = ui.element("input");
+    this.input.setAttribute("aria-label", control.label + " for checked " + KINDS[name].noun[1]);
+    this.input.addEventListener("input", function () { self.begin(); });
+    this.input.addEventListener("paste", function () { self.begin(); });
+    this.input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") { event.preventDefault(); self.commit(); }
+      if (event.key === "Escape" && self.draft()) { event.preventDefault(); self.cancel(); }
+    });
+  }
+
+  BarField.prototype.profile = function () {
+    return units.profile(this.control.quantity, preferences.current());
+  };
+
+  BarField.prototype.begin = function () {
+    if (this.editing) return;
+    var rows = groups(this.selection.checked())[this.name] || [], key = this.control.key;
+    this.editing = true;
+    this.held = false;
+    this.startProfile = JSON.parse(JSON.stringify(this.profile()));
+    this.targets = rows.map(function (row) {
+      var record = target(row), expected = {};
+      if (Object.prototype.hasOwnProperty.call(record.values, key)) expected[key] = record.values[key];
+      return { reference: JSON.parse(JSON.stringify(record.reference)), expected_values: expected };
+    });
+  };
+
+  /* Shows what the rows share, unless a draft or a refused entry holds the field. */
+  BarField.prototype.paint = function (rows, busy) {
+    var value = common(rows, this.control.key);
+    this.mixed = value === MIXED;
+    this.input.placeholder = this.mixed ? "Mixed" : "";
+    this.input.disabled = busy;
+    if (this.editing || this.held) return;
+    this.seed = this.mixed || value === undefined || value === null ? "" :
+      units.formatEdit(value, this.control.quantity, this.profile());
+    this.input.value = this.seed;
+  };
+
+  BarField.prototype.draft = function () { return Boolean(this.editing || this.held); };
+
+  BarField.prototype.commit = function () {
+    var control = this.control, key = control.key, host = this.selection.cells.host, text = this.input.value.trim();
+    if (!this.editing || this.selection.cells.busy()) return;
+    if (this.input.value === this.seed && !this.mixed) { this.cancel(); return; }
+    var parsed = text === "" && control.quantity.allowBlank ? { ok: true, value: null } :
+      units.parse(text, control.quantity, units.parseContext(control.quantity, this.startProfile));
+    if (!parsed.ok) { host.refuse(parsed.message); return; }
+    if (control.factor && (parsed.value === null || parsed.value < 0 || parsed.value > 1)) {
+      host.refuse("Enter a factor from 0 to 1.");
+      return;
+    }
+    var edits = this.targets.map(function (pinned) {
+      var values = {};
+      values[key] = parsed.value;
+      return { reference: pinned.reference, values: values, expected_values: pinned.expected_values };
+    }).filter(function (edit) {
+      var current = edit.expected_values[key];
+      return current === undefined ? parsed.value !== null : current !== parsed.value;
+    });
+    var self = this;
+    this.editing = false;
+    if (!edits.length) { this.cancel(); return; }
+    this.held = true;
+    this.selection.cells.submit(edits, function (outcome) {
+      // Completed: the next snapshot shows the value. Refused: the text stays for the user to correct.
+      if (outcome.status === "completed") self.held = false;
+      else host.refuse(outcome.message || "The change was not applied. Nothing was written.");
+    });
+    panel.repaint();
+  };
+
+  BarField.prototype.cancel = function () {
+    this.editing = false; this.held = false; this.input.value = this.seed || "";
+    panel.repaint();
+  };
+
   SpaceSelection.prototype.bar = function (overview) {
     var self = this;
     if (!this.root) {
       this.root = new selectionBars.SelectionBar("Checked Spaces rows", function () { self.clear(); panel.repaint(); });
-      this.fields = Object.create(null);
+      this.fields = [];
       ORDER.forEach(function (name) {
         var group = ui.element("div", "phc-selection-controls");
         group.setAttribute("role", "group");
         group.setAttribute("aria-label", KINDS[name].noun[1]);
         KINDS[name].controls.forEach(function (control) {
-          var wrap = ui.element("label", "phc-selection-field"), input = ui.element("input");
-          input.setAttribute("aria-label", control.label + " for checked " + KINDS[name].noun[1]);
-          input.addEventListener("change", function () { self.apply(name, control, input); });
-          input.addEventListener("keydown", function (event) {
-            if (event.key === "Enter") { event.preventDefault(); self.apply(name, control, input); }
-          });
+          var wrap = ui.element("label", "phc-selection-field"), field = new BarField(self, name, control);
           wrap.appendChild(ui.element("span", "", control.label));
-          wrap.appendChild(input);
+          wrap.appendChild(field.input);
           group.appendChild(wrap);
-          self.fields[name + ":" + control.key] = input;
+          self.fields.push(field);
         });
         group._kind = name;
         self.root.controls.appendChild(group);
@@ -166,18 +245,10 @@ function (panel, ui, units, preferences, fields, selectionBars) {
     if (this.root.root.parentNode !== overview) overview.appendChild(this.root.root);
     var checked = this.checked(), byKind = groups(checked), busy = this.cells.busy();
     Array.prototype.forEach.call(this.root.controls.children, function (group) {
-      var rows = byKind[group._kind];
-      group.hidden = !rows;
-      if (!rows) return;
-      KINDS[group._kind].controls.forEach(function (control) {
-        var input = self.fields[group._kind + ":" + control.key], value = common(rows, control.key);
-        if (document.activeElement !== input) {
-          input.value = value === MIXED || value === undefined || value === null ? "" :
-            units.formatEdit(value, control.quantity, units.profile(control.quantity, preferences.current()));
-        }
-        input.placeholder = value === MIXED ? "Mixed" : "";
-        input.disabled = busy;
-      });
+      group.hidden = !byKind[group._kind];
+    });
+    this.fields.forEach(function (field) {
+      if (byKind[field.name]) field.paint(byKind[field.name], busy);
     });
     if (checked.length) {
       this.root.show(ORDER.filter(function (name) { return byKind[name]; }).map(function (name) {
@@ -188,31 +259,14 @@ function (panel, ui, units, preferences, fields, selectionBars) {
     return this.root;
   };
 
-  /* One choice in the bar: every checked row of that kind takes it, as one batch. */
-  SpaceSelection.prototype.apply = function (name, control, input) {
-    var rows = groups(this.checked())[name] || [], text = input.value.trim();
-    if (!rows.length || this.cells.busy()) return;
-    var parsed = text === "" && control.quantity.allowBlank ? { ok: true, value: null } :
-      units.parse(text, control.quantity, units.parseContext(control.quantity,
-        units.profile(control.quantity, preferences.current())));
-    if (!parsed.ok) { this.cells.host.refuse(parsed.message); return; }
-    if (control.factor && (parsed.value === null || parsed.value < 0 || parsed.value > 1)) {
-      this.cells.host.refuse("Enter a factor from 0 to 1.");
-      return;
-    }
-    var edits = rows.map(function (row) {
-      var record = target(row), expected = {}, values = {};
-      if (Object.prototype.hasOwnProperty.call(record.values, control.key)) {
-        expected[control.key] = record.values[control.key];
-      }
-      values[control.key] = parsed.value;
-      return { reference: JSON.parse(JSON.stringify(record.reference)), values: values, expected_values: expected };
-    }).filter(function (edit) {
-      var current = edit.expected_values[control.key];
-      return current === undefined ? edit.values[control.key] !== null : current !== edit.values[control.key];
-    });
-    if (edits.length) this.cells.submit(edits);
-    panel.repaint();
+  /* A bar entry typed and not sent, or refused and not yet corrected: what a switch must not hide. */
+  SpaceSelection.prototype.draftReason = function () {
+    return (this.fields || []).some(function (field) { return field.draft(); }) ?
+      "Finish or cancel the change in the selection bar first." : null;
+  };
+
+  SpaceSelection.prototype.cancelDrafts = function () {
+    (this.fields || []).forEach(function (field) { if (field.draft()) field.cancel(); });
   };
 
   SpaceSelection.prototype.hideBar = function () { if (this.root) this.root.hide(); };

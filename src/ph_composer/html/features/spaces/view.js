@@ -319,9 +319,11 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     },
     cell: function (vs, td, row, field) { return vs.cells.render(td, row, field); },
     painted: function (vs) { vs.cells.painted(); },
-    draftReason: function (vs) { return vs.cells.draftReason(); },
-    cancelDrafts: function (vs) { vs.cells.cancelAll(); },
-    canCancelDrafts: function (vs) { return vs.cells.cancellable(); },
+    draftReason: function (vs) { return vs.cells.draftReason() || vs.selection.draftReason(); },
+    cancelDrafts: function (vs) { vs.cells.cancelAll(); vs.selection.cancelDrafts(); },
+    canCancelDrafts: function (vs) {
+      return vs.cells.cancellable() || !vs.cells.inFlight() && Boolean(vs.selection.draftReason());
+    },
     dispose: function (vs) { vs.cells.dispose(); vs.actions.dispose(); vs.selection.dispose(); },
     zoneRecord: zoneRecord, extraRows: extraRows, children: children,
     leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: marker,

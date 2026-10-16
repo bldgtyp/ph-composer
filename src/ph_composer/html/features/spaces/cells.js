@@ -107,8 +107,10 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
 
   /* After the host has listed the view's rows for this snapshot: refresh the drafts and the range edit. */
   SpaceCells.prototype.prepare = function (rows, state) {
-    var outcome = this.batch.consume(state);
-    if (outcome && outcome.status !== "completed") {
+    var outcome = this.batch.consume(state), done = outcome && this.batchDone;
+    if (outcome) this.batchDone = null;
+    if (done) done(outcome);
+    else if (outcome && outcome.status !== "completed") {
       this.host.refuse(snapshot.message(outcome, "The range edit was not applied. Nothing was written."));
     }
     this.edits.batchPending = this.batch.busy();
@@ -125,10 +127,12 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
       submitBatch: function (changes) { self.submit(changes); } });
   };
 
-  /* Many changes as one `batch_update`, one Undo step: a range, a paste, or a selection-bar choice. */
-  SpaceCells.prototype.submit = function (changes) {
+  /* Many changes as one `batch_update`, one Undo step: a range, a paste, or a selection-bar choice. `done`,
+     when given, receives the outcome and says what to tell the user. */
+  SpaceCells.prototype.submit = function (changes, done) {
     var edits = merged(changes);
     if (this.busy() || !edits.length) return;
+    this.batchDone = done || null;
     this.batch.run(BATCH, { edits: edits });
   };
 
