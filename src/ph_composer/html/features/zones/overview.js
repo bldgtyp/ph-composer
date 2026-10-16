@@ -431,6 +431,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
           panel.repaint();
         });
       });
+      // The shown view's own choices (Spaces: its readouts and their lines).
+      call(own, "tableOptions", [toggle], null);
       var shown = columns(own, units.profile(AREA, preferences.current())).map(function (column) { return column[0]; });
       colourBy.modes(panel.state).filter(function (mode) { return !boundToColumn(own, mode, shown); })
         .forEach(function (mode) {

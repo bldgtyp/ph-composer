@@ -281,3 +281,16 @@ and right-click with the tool running for "Create Space…". With the Zone open 
 selected, the wall among them, choose Create Space from SketchUp's context menu: the panel's review
 must accept two, leave the wall out with its reason, and Create must make one Space in one Undo
 step.
+
+## P3a-09 Spaces: Colour-by modes and readouts with the panel closed
+
+`spaces_colour_by_walkthrough.rb` turns each Spaces mode on through `ph_composer.colour_by.activate`,
+reads its legend (labels, counts and summed figures) back from `ph_composer.colour_by.state`, shows the
+Space labels with every optional line and the selection totals, and turns everything off. It writes
+nothing; `revision_moved` says so. `tests/spaces_colour_by_walkthrough_test.rb` runs it on the reference
+model.
+
+```sh
+uv run tools/hostkit/host_bridge.py eval \
+  'load "/absolute/path/to/ph-composer/tools/examples/authoring/spaces_colour_by_walkthrough.rb"; SpacesColourByWalkthrough.run'
+```

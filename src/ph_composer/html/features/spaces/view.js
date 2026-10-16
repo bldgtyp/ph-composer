@@ -10,9 +10,9 @@
  */
 PhComposerUI.define("features/spaces/view", ["panel", "workspace", "snapshot", "units", "unit_preferences", "fields",
   "table_views", "features/spaces/cells", "features/spaces/actions", "features/spaces/selection",
-  "features/spaces/mark_paint", "features/spaces/create_review"],
+  "features/spaces/mark_paint", "features/spaces/create_review", "sections/colour_by", "request"],
 function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCells, SpaceActions, SpaceSelection,
-          MarkPaint, CreateReview) {
+          MarkPaint, CreateReview, colourBy, requests) {
   "use strict";
   var SECTION = "ph_composer.spaces.spaces";
   var AIRFLOWS = [["v_sup_m3h", "Supply"], ["v_eta_m3h", "Extract"], ["v_tran_m3h", "Transfer"]];
@@ -24,11 +24,21 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
   var SORTED = ["number", "floor_area_m2", "weighting_factor", "weighted_area_m2", "height_m", "net_volume_m3",
     "v_sup_m3h", "v_eta_m3h", "v_tran_m3h", "net_area_factor"];
   var NO_ZONE = JSON.stringify(["NoZone"]);
+  // The modes each column offers from its header (context/EXTENSIBILITY.md, "Colour-by modes").
+  var COLOUR_BY = { name: { mode: "ph_composer.spaces.by_space" },
+    weighting_factor: { mode: "ph_composer.spaces.by_weighting_factor" },
+    height_m: { mode: "ph_composer.spaces.by_height" },
+    v_sup_m3h: { group: "ventilation" }, v_eta_m3h: { group: "ventilation" }, v_tran_m3h: { group: "ventilation" } };
+  var READOUT_LABELS = { "ph_composer.spaces.labels": "Space labels",
+    "ph_composer.spaces.selection_totals": "Selection totals" };
+  var LABEL_LINES = [["weighted_area", "Weighted area (iCFA)"], ["net_volume", "Net volume"],
+    ["airflows", "Supply and extract"]];
 
   function create(host) {
     var cells = new SpaceCells(host);
     var vs = { host: host, spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
       cells: cells, actions: new SpaceActions(host), selection: new SpaceSelection(cells), paint: new MarkPaint(host) };
+    vs.labelOptions = requests.channel(host.session, host.send, "spaces-label-options", "view.invoke");
     // Create Space's review waits for a held edit, the Zones screen's or this view's, and is shown over this
     // view.
     vs.review = new CreateReview(host, function () { return host.draftReason() || draftReason(vs); }, {
@@ -308,6 +318,27 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     return vs.cells.draftReason() || vs.selection.draftReason();
   }
 
+  /* Table options: the Spaces readouts, and the label lines while Space labels are on. Each is a view command;
+     none writes to the Model. */
+  function tableOptions(vs, toggle) {
+    var shown = colourBy.readouts(panel.state).filter(function (readout) { return READOUT_LABELS[readout.name]; });
+    shown.forEach(function (readout) {
+      toggle(READOUT_LABELS[readout.name], readout.on, function () {
+        colourBy.showReadout(panel.state, readout.name, !readout.on);
+      });
+    });
+    var labels = shown.filter(function (readout) { return readout.name === "ph_composer.spaces.labels"; })[0];
+    if (!labels || !labels.on) return;
+    var options = snapshot.value(panel.state, "ph_composer.spaces.label_options") || {};
+    LABEL_LINES.forEach(function (line) {
+      toggle("Label " + line[1].charAt(0).toLowerCase() + line[1].slice(1), Boolean(options[line[0]]), function () {
+        var change = {};
+        change[line[0]] = !options[line[0]];
+        vs.labelOptions.send("ph_composer.spaces.labels.set_options", change);
+      });
+    });
+  }
+
   function count(vs) {
     var total = vs.spaces.length;
     return total + (total === 1 ? " Space" : " Spaces");
@@ -351,6 +382,7 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     },
     dispose: function (vs) {
       vs.cells.dispose(); vs.actions.dispose(); vs.selection.dispose(); vs.paint.dispose(); vs.review.dispose();
+      vs.labelOptions.reset();
     },
     // The Weighting factor column's paint: an icon per factor in its menu, a pressed glyph in its header.
     menuValueAction: function (vs, field, entry) {
@@ -360,7 +392,8 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     zoneRecord: zoneRecord, extraRows: extraRows, children: children,
     leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: marker,
     sortValue: sortValue, sort: sort, search: search, count: count,
-    colourBy: { weighting_factor: { mode: "ph_composer.spaces.by_weighting_factor" } },
+    colourBy: COLOUR_BY,
+    tableOptions: tableOptions,
     filteredFields: { weighting_factor: true },
     filterValues: filterValues, filterLabel: function (vs, field, value) { return value; },
     zoneMatch: zoneMatch, rowMatch: rowMatch, viewportPaths: viewportPaths,
