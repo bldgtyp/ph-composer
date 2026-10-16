@@ -141,3 +141,58 @@ test("Cancel writes nothing and closes the review; with nothing accepted Create 
   p.receive(snapshot(review([])));
   assert.ok(p.dialog().hidden, "the same review does not reopen");
 });
+
+function closes(p) {
+  return p.messages("view.invoke").filter(function (message) {
+    return message.payload.name === "ph_composer.spaces.create_review.close";
+  }).map(function (message) { return message.payload.params.token; });
+}
+
+test("a newer review waits for a submitted one, whose result closes only its own review", function () {
+  var p = page();
+  p.receive(snapshot(review()));
+  p.click(p.button("Create"));
+  var newer = Object.assign(review(), { token: "review-2", zone_name: "Attic Zone" });
+  p.receive(snapshot(newer));
+  assert.ok(!p.dialog().hidden, "the submitted review stays");
+  assert.match(p.text(), /Living Zone/);
+  p.result(p.messages("action.invoke")[0], { status: "completed", message: "Created Space 104." });
+  assert.deepStrictEqual(closes(p), ["review-1"]);
+  p.receive(snapshot(newer));
+  assert.ok(!p.dialog().hidden);
+  assert.match(p.text(), /Attic Zone/, "then the newer review opens");
+});
+
+test("a review closed elsewhere closes its dialog, and Create then sends nothing", function () {
+  var p = page();
+  p.receive(snapshot(review()));
+  p.receive(snapshot());
+  assert.ok(p.dialog().hidden);
+  p.click(p.button("Create"));
+  assert.strictEqual(p.messages("action.invoke").length, 0);
+});
+
+test("a review refused by a held tab is shown once the tab lets go", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.panel.showTab("assemblies");
+  var holding = true;
+  p.panel.navigationGuard("probe", function () { return holding ? "Finish the probe first." : null; });
+  p.receive(snapshot(review()));
+  assert.ok(!p.dialog() || p.dialog().hidden, "the tab is held");
+  holding = false;
+  p.receive(snapshot(review()));
+  assert.ok(p.dialog() && !p.dialog().hidden, "shown on a later snapshot");
+});
+
+test("a review waits for a held Zone edit in the Spaces view", function () {
+  var p = page();
+  p.receive(snapshot());
+  var zoneName = p.context.document.querySelectorAll("input").filter(function (node) {
+    return node.getAttribute("aria-label") === "Zone A name";
+  })[0];
+  if (zoneName.listeners.focus) zoneName.listeners.focus({ target: zoneName });
+  p.type(zoneName, "Zone A2");
+  p.receive(snapshot(review()));
+  assert.ok(!p.dialog() || p.dialog().hidden, "no dialog opens over the Zone edit");
+});

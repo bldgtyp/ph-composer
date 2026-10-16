@@ -13,8 +13,8 @@ function (panel, requests, snapshot, ui) {
 
   function faces(count) { return count + (count === 1 ? " Face" : " Faces"); }
 
-  /* `guard()` names held work the review must not interrupt; `reveal` shows the Spaces view
-     (`shown(state)`, `show()`). */
+  /* `guard()` names held work the review must not interrupt, the Zones screen's and the Spaces view's;
+     `reveal` shows the Spaces view (`shown(state)`, `show()`). */
   function CreateReview(host, guard, reveal) {
     var self = this;
     this.host = host;
@@ -33,18 +33,24 @@ function (panel, requests, snapshot, ui) {
     this.closing.consume(state);
     var outcome = this.creating.consume(state);
     if (outcome) this.settle(outcome);
-    var pending = snapshot.value(state, SECTION);
-    if (!pending || !pending.token || pending.token === this.token) return;
+    // A submitted review settles before any other is shown, so its result closes only its own token.
+    if (this.creating.busy()) return;
+    var pending = snapshot.value(state, SECTION), token = pending && pending.token;
+    // Closed elsewhere, or replaced by a newer review: this dialog no longer stands for anything.
+    if (this.review && token !== this.token) this.dismiss();
+    if (!token || token === this.token) return;
     var reason = this.guard();
     if (reason) {
-      if (this.waiting !== pending.token) panel.notify(reason, "warning");
-      this.waiting = pending.token;
+      if (this.waiting !== token) this.host.refuse(reason);
+      this.waiting = token;
       return;
     }
     if (!this.reveal.shown(state)) {
-      if (this.revealing === pending.token) return;
-      this.revealing = pending.token;
+      if (this.revealing === token) return;
+      this.revealing = token;
       this.reveal.show();
+      // Kept through the repaint the switch itself runs; a refused switch is retried on a later snapshot.
+      if (!this.reveal.shown(panel.state)) this.revealing = null;
       return;
     }
     this.waiting = null;
@@ -149,6 +155,12 @@ function (panel, requests, snapshot, ui) {
     this.review = null;
     if (token && !this.host.disposed) this.closing.send(PREFIX + ".create_review.close", { token: token });
     panel.repaint();
+  };
+
+  /* The dialog closes without a close command: the review it showed is already gone. */
+  CreateReview.prototype.dismiss = function () {
+    if (this.dialog) this.dialog.closeModal();
+    this.review = null;
   };
 
   CreateReview.prototype.active = function () { return Boolean(this.review); };

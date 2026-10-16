@@ -29,8 +29,9 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     var cells = new SpaceCells(host);
     var vs = { host: host, spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
       cells: cells, actions: new SpaceActions(host), selection: new SpaceSelection(cells), paint: new MarkPaint(host) };
-    // Create Space's review waits for a held edit, and is shown over this view.
-    vs.review = new CreateReview(host, function () { return draftReason(vs); }, {
+    // Create Space's review waits for a held edit, the Zones screen's or this view's, and is shown over this
+    // view.
+    vs.review = new CreateReview(host, function () { return host.draftReason() || draftReason(vs); }, {
       shown: function (state) {
         return (!state.ui || state.ui.activeTab === "overview") && host.activeView() === VIEW.id;
       },

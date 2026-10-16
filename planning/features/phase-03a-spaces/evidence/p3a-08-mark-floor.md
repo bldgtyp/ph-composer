@@ -150,3 +150,17 @@ design-system artifact needs no re-sync.
 
 M2 (authoring on screen) is implemented and preview-checked with this slice; the native S08 rows, which
 need Ed at the mouse, are what remain of it.
+
+Review of PR #160, gpt-6-astra cycle 1: one P1 and three P2, each reproduced by a test in
+`tests/spaces_create_review_panel_test.js` that failed before its fix.
+
+- P1: a newer review arriving while Create was in flight replaced the dialog, and the first review's result
+  then closed the newer one. A submitted review now settles before any other is shown, so its result closes
+  only its own token.
+- P2: a review closed elsewhere left its dialog open, and Create still sent a mutation. A snapshot whose
+  review is gone or replaced now closes the dialog without a close command.
+- P2: a review whose switch to the Spaces view a tab guard refused was never retried. The attempt is now
+  kept only through the switch's own repaint, as the Attached zone hand-off does.
+- P2: the review's guard checked only the Spaces view's drafts, so it opened over a held Zone edit. It now
+  asks the Zones screen's guard first, and refuses through the screen's notice, which offers to cancel the
+  edit.
