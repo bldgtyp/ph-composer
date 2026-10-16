@@ -111,9 +111,10 @@ module PhComposer
         result["state"] = "complete_with_findings" if result["state"] == "complete" && !result["findings"].empty?
         Privacy.validate!(result)
         unless result.dig("summary", "publishable") && result.dig("canonical_model", "hbjson")
+          value = { "result" => compact_result(result) }.merge(blocked_report(result))
           return finish(Outcome.build("refused", "export.blocked", "Export not created. Resolve the blocking findings.",
                                       "none", @session.revision, :findings => result.fetch("findings"),
-                                                                 :value => { "result" => compact_result(result) }))
+                                                                 :value => value))
         end
         @result = result
         # Writing is a separate tick, so cancellation and queued host mutations are admitted after Python.
@@ -145,6 +146,18 @@ module PhComposer
 
       # Status carries counts and diagnostics. Canonical bytes are retrieved explicitly from files,
       # never serialized into every status response or retained once the pair has committed.
+      # A blocked run writes no pair, so its report, labelled as from a run that wrote no model, travels in the
+      # refused outcome for the panel to show, rendered without the canonical model so no HBJSON travels
+      # with it (context/CONTRACTS.md, "Translation sections and artifacts"). A report that cannot render
+      # leaves the refusal as it was rather than turning it into a failure.
+      def blocked_report(result)
+        shown = compact_result(result).tap { |document| document.delete("canonical_model") }
+        { "report_html" => Report.render(shown, :display_units => @units, :published => false) }
+      rescue StandardError => error
+        Diagnostics.exception("export_blocked_report", error)
+        {}
+      end
+
       def compact_result(document)
         result = DeepCopy.call(document)
         result["canonical_model"]&.delete("hbjson")

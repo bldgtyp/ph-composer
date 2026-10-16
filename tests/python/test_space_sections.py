@@ -197,3 +197,21 @@ def test_malformed_text_costs_the_space_a_finding(field: str) -> None:
     child = space("spc_child", ZONE_A, [volume("vol_a", [segment("fsg_a", [square(0, 0, 3)])], 2.5)])
     child["volumes"][0]["floor_segments"][0]["display_name"] = ["Kitchen"]
     assert [finding["object_id"] for finding in run(child)["findings"]] == ["spc_child"]
+
+
+def test_the_schedule_lists_each_space_with_stored_airflows_and_its_offset_flag() -> None:
+    supplied = space(
+        "spc_one",
+        ZONE_A,
+        [volume("vol_a", [segment("fsg_a", [square(0, 0, 3)])], 2.5)],
+        v_sup_m3h=60.0,
+        offset_from_zone=True,
+    )
+    inheriting = space("spc_two", ZONE_B, [volume("vol_b", [segment("fsg_b", [square(0, 0, 2)])], 3.0)])
+    rows = {row["space_id"]: row for row in run(supplied, inheriting)[SPACE_SECTION_ID]["space_schedule"]}
+    assert (rows["spc_one"]["v_sup_m3h"], rows["spc_one"]["v_eta_m3h"]) == (60.0, 0.0)
+    assert rows["spc_one"]["offset_from_zone"] is True
+    assert rows["spc_one"]["height_m"] == pytest.approx(2.5)
+    assert rows["spc_one"]["floor_area_m2"] == pytest.approx(9.0)
+    assert rows["spc_two"]["v_sup_m3h"] is None and rows["spc_two"]["offset_from_zone"] is False
+    assert rows["spc_two"]["zone_name"]

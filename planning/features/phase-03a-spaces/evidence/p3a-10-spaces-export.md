@@ -1,7 +1,7 @@
 # P3a-10 evidence: Spaces export
 
 DATE: 2026-10-16
-STATUS: Slice A in review on `feature/spaces-p3a-10a`; host gate pending
+STATUS: Slice A merged ([#165](https://github.com/bldgtyp/ph-composer/pull/165)); slice B in review; host gate pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -68,3 +68,50 @@ Cycle 2: two P2, fixed with tests and gated by `make ci` (the review cap). A Spa
 child's display name, that was not text was read as empty and published; it is now a malformed record that
 costs its Space a finding. Conformance checked the per-Zone totals only; it now reconciles the per-Building-Segment
 totals too, from each reloaded Room's segment.
+
+## Slice B: off to the side, the schedule and the blocked-run report
+
+`scan/extents.rb` holds the one predicate for a Space drawn off to the side of its Zone (PRD Q17): any point of
+its Floor Segments' outer loops outside the plan rectangle around the Zone's own Faces by more than 1 cm. A
+Face inside a Space never counts as the Zone's, whether or not the Space carries the Zone's stamp. The
+preflight applies it to the live Model as `space.offset_from_zone`, non-blocking (added to `codes.rb` and
+the blocking table); the contributor applies it to the snapshot as the record's `offset_from_zone`, so the
+report can say it. The finding is export's only: the table does not show it.
+
+The Python section adds a `space_schedule` result field, one row per Space in Zone, number and id order: the
+table's columns in SI, the height as the floor-area-weighted mean of its Volumes', airflows as stored in
+m3/h with an inheriting Space's as null, and the offset flag. The contributor's `report:` hook renders the
+Spaces schedule per Zone with a Zone total row, the totals per Building-Segment, and one line naming any
+Space drawn beside its Zone, in the run's display units; an inheriting Space's airflows read "Zone".
+
+D3a-10 (R05 item 3): `Export::Report.render` keys on `summary.publishable`. A run that cannot publish is
+titled "Export not created" and opens with one line saying its figures come from a run that wrote no model,
+with every section rendered as usual; the rule names no section, so `construction_usage`,
+`window_face_areas` and the Spaces schedule all appear. The pair is never written for such a run, so where
+the report appears was this slice's choice, as the decision named no surface: the refused export outcome
+carries it as `value.report_html`, rendered inside its own rescue so a report that cannot render leaves
+the refusal as it was, and the Export tab shows it in place, collapsed, in a sandboxed frame built once per
+report so a repaint keeps it open or shut. `context/CONTRACTS.md` states the rule; validation-and-export's
+STATUS records item 3 as built.
+
+UI polish review: contextual detail beside the task status, in an inline collapsed panel rather than a
+dialog or a new file, under a heading that says what it is; nothing reflows when it opens.
+
+Tests: `tests/spaces_export_test.rb` (the schedule in SI and IP with Zone and Building-Segment totals and the
+off-to-the-side line; the preflight finding and the record flag), `tests/python/test_space_sections.py`
+(the schedule rows), `tests/export_tasks_test.rb` (a blocked run carries its labelled report and writes
+nothing) and `tests/panel_app_test.js` (the collapsed report, kept across a repaint).
+
+### Review of PR #166
+
+gpt-6-astra, cycle 1: one P1 and one P2, each reproduced by a test in `tests/export_tasks_test.rb` that failed
+before its fix. A blocked run with partial canonical output embedded the HBJSON in its report's result
+element, so the bytes travelled through `report_html` though `value.result` left them out; the report is now
+rendered without the canonical model. A result marked publishable but holding no model, which the task
+refuses, rendered as "Export complete"; `Report.render` now takes whether the run published (`published:`),
+by default publishable and holding a canonical model, and the task passes false for a refusal.
+
+Cycle 2: one P2, fixed with a test and gated by `make ci` (the review cap). The schedule's Zone and
+Building-Segment total rows left the airflow columns blank; they now sum each rate over their Spaces by the
+table's rule, with a dash while any of them inherits its Zone's airflow. Each schedule row now carries its
+Building-Segment for that.

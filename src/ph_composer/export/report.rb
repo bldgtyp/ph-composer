@@ -14,15 +14,24 @@ module PhComposer
         "complete" => "Export complete", "complete_with_findings" => "Export complete with findings",
         "failed" => "Export not created"
       }.freeze
+      # A run that wrote no model still reports every section's figures, under this line (the figures a user
+      # needs to clear a block are the ones a blocked run computed).
+      BLOCKED_LINE = "These figures come from a run that wrote no model. Resolve the blocking findings, then " \
+                     "export again."
 
       module_function
 
       # `result` is the parsed result document; `notes` are the collection's findings about what was
       # left out of the extraction. Raises CodedError `export.privacy_undeclared` before rendering
-      # anything if the result carries a field no declaration names.
-      def render(result, notes: [], display_units: "SI", registry: Registry.current)
+      # anything if the result carries a field no declaration names. `published` says whether the run wrote
+      # its pair; by default, whether the result is publishable and carries a canonical model. A run that did
+      # not publish renders the same sections, titled as not created and opening with BLOCKED_LINE; the rule
+      # names no section.
+      def render(result, notes: [], display_units: "SI", registry: Registry.current, published: nil)
         Privacy.validate!(result, registry)
-        title = STATE_LABELS.fetch(result.fetch("state"))
+        published = result.dig("summary", "publishable") && !result["canonical_model"].nil? if published.nil?
+        blocked = !published
+        title = STATE_LABELS.fetch(blocked ? "failed" : result.fetch("state"))
         sections = [
           summary(result.fetch("summary")),
           *registry.export_contributors.values.flat_map do |contributor|
@@ -44,6 +53,7 @@ module PhComposer
           <main>
           <p class="eyebrow">PH-Composer</p>
           <h1>#{ReportHtml.h(title)}</h1>
+          #{blocked ? ReportHtml.paragraph(BLOCKED_LINE) : ''}
           <p>Values in this report are shown in #{ReportHtml.h(display_units)} units. HBJSON values remain SI.</p>
           #{sections.join("\n")}
           <footer>Run #{ReportHtml.h(result.fetch('run_id'))}</footer>

@@ -57,7 +57,10 @@ section and report schedule, and item 4 to Phase 3b's P3b-08.
 3. **Results from runs that cannot publish.** `construction_usage` and `window_face_areas` are
    reported from runs that write no canonical pair. Decided 2026-10-15 (spaces D3a-10): a blocked
    run shows them, and the Spaces schedule, under one line saying the run wrote no model; one
-   general rule in `export/report.rb`, delivered by P3a-10.
+   general rule in `export/report.rb`, delivered by P3a-10. Built by P3a-10 slice B on 2026-10-16
+   (`feature/spaces-p3a-10b`): `Report.render` keys on `summary.publishable`, the refused outcome
+   carries the report as `value.report_html`, and the Export tab shows it collapsed;
+   `tests/export_tasks_test.rb` and `tests/panel_app_test.js`.
 4. **An optional attaching section withholds the model.** An attaching section that is not required
    for export still withholds the canonical model when it refuses. No such section exists yet; settle
    the rule before the first one does. Allocated 2026-10-03 to Phase 3

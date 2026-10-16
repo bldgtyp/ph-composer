@@ -259,6 +259,28 @@ test("Export asks for one destination and retains a cancellation message", funct
   assert.strictEqual(pane().querySelector(".phc-export-status").textContent, "Export cancelled. Nothing was written.");
 });
 
+test("a blocked run's report shows collapsed in the Export tab and stays as the user left it", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 4));
+  enterExport(p);
+  var pane = function () { return p.query("[data-section='export']"); };
+  pane().querySelector("button").listeners.click({});
+  var html = "<!doctype html><title>Export not created</title>";
+  p.receive("export.result", { request_id: p.sent[0].payload.request_id, session: "session-a", outcome: {
+    status: "completed", value: { task_id: "task-1", outcome: { status: "refused", code: "export.blocked",
+      message: "Export not created. Resolve the blocking findings.", findings: [],
+      value: { result: { findings: [] }, report_html: html } } } } });
+  var details = pane().querySelector("details");
+  assert.ok(details, "the report is offered");
+  assert.strictEqual(details.querySelector("summary").textContent, "Report from the run that was not created");
+  var frame = details.querySelector("iframe");
+  assert.strictEqual(frame.srcdoc, html);
+  assert.strictEqual(frame.getAttribute("sandbox"), "");
+  details.open = true;
+  p.receive("panel.snapshot", snapshot("session-a", 4));
+  assert.strictEqual(pane().querySelector("details"), details, "a repaint keeps the same panel, open");
+});
+
 test("blocking preflight disables destination selection and preserves its complete findings", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 1));
