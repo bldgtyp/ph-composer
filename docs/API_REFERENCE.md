@@ -5898,6 +5898,14 @@ Result:
                 },
                 "blocks_export": {
                   "type": "boolean"
+                },
+                "repair": {
+                  "type": "string",
+                  "enum": [
+                    "make_independent",
+                    "restore_position"
+                  ],
+                  "description": "The operation that repairs it, when one does."
                 }
               }
             }
@@ -6070,6 +6078,14 @@ Result:
                       },
                       "blocks_export": {
                         "type": "boolean"
+                      },
+                      "repair": {
+                        "type": "string",
+                        "enum": [
+                          "make_independent",
+                          "restore_position"
+                        ],
+                        "description": "The operation that repairs it, when one does."
                       }
                     }
                   }
@@ -6088,7 +6104,8 @@ Result:
                       "extension_status",
                       "reference",
                       "metrics",
-                      "findings"
+                      "findings",
+                      "weighting_band"
                     ],
                     "properties": {
                       "id": {
@@ -6205,9 +6222,21 @@ Result:
                             },
                             "blocks_export": {
                               "type": "boolean"
+                            },
+                            "repair": {
+                              "type": "string",
+                              "enum": [
+                                "make_independent",
+                                "restore_position"
+                              ],
+                              "description": "The operation that repairs it, when one does."
                             }
                           }
                         }
+                      },
+                      "weighting_band": {
+                        "type": "string",
+                        "description": "The weighting factor as By weighting factor's legend and a filter key it."
                       }
                     }
                   }
@@ -6234,7 +6263,8 @@ Result:
           "net_volume_m3",
           "airflows",
           "inheriting_count",
-          "imbalanced"
+          "imbalanced",
+          "findings"
         ],
         "properties": {
           "zone_id": {
@@ -6313,6 +6343,37 @@ Result:
           "imbalanced": {
             "type": "boolean",
             "description": "Supply and extract differ by more than 10 percent of the larger."
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "blocks_export"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "blocks_export": {
+                  "type": "boolean"
+                },
+                "repair": {
+                  "type": "string",
+                  "enum": [
+                    "make_independent",
+                    "restore_position"
+                  ],
+                  "description": "The operation that repairs it, when one does."
+                }
+              }
+            }
           }
         }
       },
@@ -6411,6 +6472,14 @@ Result:
           },
           "blocks_export": {
             "type": "boolean"
+          },
+          "repair": {
+            "type": "string",
+            "enum": [
+              "make_independent",
+              "restore_position"
+            ],
+            "description": "The operation that repairs it, when one does."
           },
           "reference": {
             "type": "object",
@@ -6973,6 +7042,14 @@ Result:
                 },
                 "blocks_export": {
                   "type": "boolean"
+                },
+                "repair": {
+                  "type": "string",
+                  "enum": [
+                    "make_independent",
+                    "restore_position"
+                  ],
+                  "description": "The operation that repairs it, when one does."
                 }
               }
             }
@@ -7145,6 +7222,14 @@ Result:
                       },
                       "blocks_export": {
                         "type": "boolean"
+                      },
+                      "repair": {
+                        "type": "string",
+                        "enum": [
+                          "make_independent",
+                          "restore_position"
+                        ],
+                        "description": "The operation that repairs it, when one does."
                       }
                     }
                   }
@@ -7163,7 +7248,8 @@ Result:
                       "extension_status",
                       "reference",
                       "metrics",
-                      "findings"
+                      "findings",
+                      "weighting_band"
                     ],
                     "properties": {
                       "id": {
@@ -7280,9 +7366,21 @@ Result:
                             },
                             "blocks_export": {
                               "type": "boolean"
+                            },
+                            "repair": {
+                              "type": "string",
+                              "enum": [
+                                "make_independent",
+                                "restore_position"
+                              ],
+                              "description": "The operation that repairs it, when one does."
                             }
                           }
                         }
+                      },
+                      "weighting_band": {
+                        "type": "string",
+                        "description": "The weighting factor as By weighting factor's legend and a filter key it."
                       }
                     }
                   }
@@ -7309,7 +7407,8 @@ Result:
           "net_volume_m3",
           "airflows",
           "inheriting_count",
-          "imbalanced"
+          "imbalanced",
+          "findings"
         ],
         "properties": {
           "zone_id": {
@@ -7388,6 +7487,37 @@ Result:
           "imbalanced": {
             "type": "boolean",
             "description": "Supply and extract differ by more than 10 percent of the larger."
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "blocks_export"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "blocks_export": {
+                  "type": "boolean"
+                },
+                "repair": {
+                  "type": "string",
+                  "enum": [
+                    "make_independent",
+                    "restore_position"
+                  ],
+                  "description": "The operation that repairs it, when one does."
+                }
+              }
+            }
           }
         }
       },
@@ -7486,6 +7616,14 @@ Result:
           },
           "blocks_export": {
             "type": "boolean"
+          },
+          "repair": {
+            "type": "string",
+            "enum": [
+              "make_independent",
+              "restore_position"
+            ],
+            "description": "The operation that repairs it, when one does."
           },
           "reference": {
             "type": "object",
@@ -46200,6 +46338,7 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 
 | Code | Meaning |
 | --- | --- |
+| `space.airflow_imbalance` | A Zone's supply and extract sums differ by more than 10 percent of the larger. |
 | `space.context_open` | An edit context is open; close it to the root first. |
 | `space.context_required` | The edit context holding the Faces must be open to group them. |
 | `space.duplicate_identity` | Another occurrence carries this Space, Volume or Floor Segment's id: a copy. |

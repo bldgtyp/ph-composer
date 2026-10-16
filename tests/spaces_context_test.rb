@@ -183,7 +183,8 @@ class SpacesContextTest < PhComposerTestCase
     @first.transformation = Geom::Transformation.translation([10, 0, 0])
     volume = API.query(:context => @context, :name => "ph_composer.spaces.all").dig("value", "spaces", 0, "volumes", 0)
     assert volume["moved"]
-    assert_includes volume.fetch("findings").map { |finding| finding["code"] }, "space.volume_moved"
+    moved = volume.fetch("findings").find { |finding| finding["code"] == "space.volume_moved" }
+    assert_equal "restore_position", moved["repair"]
     before = @model.operations.length
     result = invoke("ph_composer.spaces.volumes.restore_position", "volume" => reference(@first))
     assert_equal "completed", result["status"], result.inspect

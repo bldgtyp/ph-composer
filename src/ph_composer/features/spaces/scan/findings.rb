@@ -10,13 +10,16 @@ module PhComposer
         "space.height_missing" => true, "space.number_duplicate" => false, "space.floor_projected" => false,
         "space.nested" => true, "space.volume_nested" => true, "space.volume_orphan" => true,
         "space.segment_misplaced" => true, "space.volume_moved" => false,
-        "space.volume_unprotected" => false, "space.duplicate_identity" => true
+        "space.volume_unprotected" => false, "space.duplicate_identity" => true,
+        "space.airflow_imbalance" => false
       }.freeze
 
       module_function
 
-      def finding(code, message)
-        { "code" => code, "message" => message, "blocks_export" => BLOCKS_EXPORT.fetch(code) }
+      # `repair` names the operation that clears it, when one does, so a reader offers it without parsing words.
+      def finding(code, message, repair: nil)
+        found = { "code" => code, "message" => message, "blocks_export" => BLOCKS_EXPORT.fetch(code) }
+        repair ? found.merge("repair" => repair) : found
       end
 
       # `duplicate` says another Space in the same Zone carries this Space's number.
@@ -40,11 +43,23 @@ module PhComposer
           found << finding("space.volume_unprotected", "#{name} is not protected; its Faces can be edited from the " \
                                                        "Space.")
         end
-        found << finding("space.volume_moved", "#{name} moved inside its Space. Restore its position.") if row["moved"]
+        if row["moved"]
+          found << finding("space.volume_moved", "#{name} moved inside its Space. Restore its position.",
+                           :repair => "restore_position")
+        end
         unless row.dig("values", "avg_ceiling_height_m")
           found << finding("space.height_missing", "#{name} needs an average clear ceiling height.")
         end
         found
+      end
+
+      # A Zone's supply and extract sums differ by more than the threshold (Metrics.imbalanced?). The panel
+      # states the sums in the user's units; the message names the condition.
+      def zone(imbalanced)
+        return [] unless imbalanced
+
+        [finding("space.airflow_imbalance",
+                 "Supply and extract differ by more than 10 percent of the larger sum. Review the airflows.")]
       end
 
       def segment(row)
@@ -54,15 +69,18 @@ module PhComposer
       end
 
       # Another occurrence carries this record's id: a copy. `repeated` says storage above its Space is
-      # shared, a component or a copied Group, which no Spaces repair isolates.
-      def duplicate(label, repeated:)
+      # shared, a component or a copied Group, which no Spaces repair isolates. `ancestor` says the repair is
+      # the named container's ("Space" or "Volume"): Make independent on it isolates this record with it.
+      def duplicate(label, repeated:, ancestor: nil)
         message = if repeated
                     "This #{label} is repeated through shared storage, such as a component. Draw the Space " \
                       "directly; there is no repair."
+                  elsif ancestor
+                    "This #{label} shares its identity with a copy. Use Make independent on its #{ancestor}."
                   else
                     "This #{label} shares its identity with a copy. Use Make independent on the copy."
                   end
-        finding("space.duplicate_identity", message)
+        finding("space.duplicate_identity", message, :repair => repeated || ancestor ? nil : "make_independent")
       end
 
       def orphan_volume

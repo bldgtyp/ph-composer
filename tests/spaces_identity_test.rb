@@ -60,8 +60,14 @@ class SpacesIdentityTest < PhComposerTestCase
       finding = row.fetch("findings").find { |item| item["code"] == "space.duplicate_identity" }
       assert finding["blocks_export"]
       assert_includes finding["message"], "Make independent"
+      assert_equal "make_independent", finding["repair"], "the row offers the repair without reading its words"
       assert_includes codes(row.dig("volumes", 0)), "space.duplicate_identity"
       assert_includes codes(row.dig("volumes", 0, "floor_segments", 0)), "space.duplicate_identity"
+      [row.dig("volumes", 0), row.dig("volumes", 0, "floor_segments", 0)].each do |child|
+        inner = child.fetch("findings").find { |item| item["code"] == "space.duplicate_identity" }
+        refute inner.key?("repair"), "the copy's contents are repaired with their Space, not on their own"
+        assert_includes inner["message"], "on its Space"
+      end
     end
   end
 
@@ -72,6 +78,11 @@ class SpacesIdentityTest < PhComposerTestCase
     assert_equal(2, volumes.count { |volume| codes(volume).include?("space.duplicate_identity") })
     segments = volumes.first.fetch("floor_segments")
     assert_equal [true, true], segments.map { |segment| codes(segment).include?("space.duplicate_identity") }
+    copied = segments.map { |segment| segment["findings"].find { |item| item["code"] == "space.duplicate_identity" } }
+    assert(copied.all? { |finding| finding["message"].include?("on its Volume") && !finding.key?("repair") },
+           "a copied Volume's Floor Segments are repaired with the Volume, which offers it")
+    assert_equal "make_independent",
+                 volumes.first["findings"].find { |item| item["code"] == "space.duplicate_identity" }["repair"]
   end
 
   def test_make_independent_rewrites_the_named_copy_in_one_step_and_leaves_the_original
@@ -128,6 +139,7 @@ class SpacesIdentityTest < PhComposerTestCase
     native_copy(wrapper, 131, @zone)
     finding = spaces.first.fetch("findings").find { |item| item["code"] == "space.duplicate_identity" }
     assert_includes finding["message"], "Draw the Space directly"
+    refute finding.key?("repair"), "shared storage has no repair to offer"
     before = @model.operations.length
     result = make_independent("space_id" => "spc_SSSSSSSSSSSS", "entity_path" => [100, 131, 110])
     assert_equal %w[refused target.shared_definition], result.values_at("status", "code")

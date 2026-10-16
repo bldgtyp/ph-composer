@@ -13,6 +13,7 @@
 #   copy_watch.rb   makes a native Space copy independent in the copy's own Undo step
 #   zone_copy.rb    Spaces' part of a copied Zone becoming independent
 #   settings.rb     the Model's last-entered height
+#   colour_modes.rb the Spaces view's Colour-by modes
 #   declarations/   what Spaces registers
 require_relative "schema"
 require_relative "scan/occurrences"
@@ -37,6 +38,7 @@ require_relative "declarations/spaces"
 require_relative "declarations/operations"
 require_relative "declarations/context"
 require_relative "codes"
+require_relative "colour_modes"
 
 module PhComposer
   module Spaces
@@ -51,6 +53,7 @@ module PhComposer
       ZoneCopy.install(feature)
       Settings.install(feature)
       Codes.install(feature)
+      ColourModes.install(feature)
     end
   end
 end

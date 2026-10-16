@@ -6,7 +6,10 @@ module PhComposer
     module Registration
       AREA = Shapes.quantity("m2", "Plan area, projected onto the horizontal plane.")
       FINDING = Shapes.object({ "code" => Shapes::TEXT, "message" => Shapes::TEXT,
-                                "blocks_export" => { "type" => "boolean" } })
+                                "blocks_export" => { "type" => "boolean" },
+                                "repair" => { "type" => "string", "enum" => %w[make_independent restore_position],
+                                              "description" => "The operation that repairs it, when one does." } },
+                              :optional => %w[repair])
       FINDINGS = Shapes.list(FINDING)
       EXTENSION_STATUS = { "type" => "object",
                            "description" => "Each extension envelope's status against what is installed." }.freeze
@@ -43,7 +46,10 @@ module PhComposer
       end
 
       SEGMENT_ROW = row(FLOOR_SEGMENT, "reference" => FLOOR_SEGMENT_REFERENCE, "metrics" => SEGMENT_METRICS,
-                                       "findings" => FINDINGS)
+                                       "findings" => FINDINGS,
+                                       "weighting_band" => { "type" => "string",
+                                                             "description" => "The weighting factor as By weighting " \
+                                                                              "factor's legend and a filter key it." })
       VOLUME_ROW = row(VOLUME, "reference" => VOLUME_REFERENCE, "nested" => { "type" => "boolean" },
                                "open" => { "type" => "boolean", "description" => "Open for editing on the path." },
                                "protected" => { "type" => "boolean", "description" => "Locked, so the Space " \
@@ -73,7 +79,8 @@ module PhComposer
         "inheriting_count" => Shapes::COUNT,
         "imbalanced" => { "type" => "boolean",
                           "description" => "Supply and extract differ by more than 10 " \
-                                           "percent of the larger." }
+                                           "percent of the larger." },
+        "findings" => FINDINGS
       })
       TOTAL_PROPERTIES = {
         "floor_area_m2" => AREA, "weighted_area_m2" => Shapes.quantity("m2", "Summed weighted area (iCFA)."),

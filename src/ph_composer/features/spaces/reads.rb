@@ -70,7 +70,10 @@ module PhComposer
       end
 
       def volume_row(volume, catalog, model, counts, repeated)
-        segments = volume.segments.sort_by(&:path).map { |segment| segment_row(segment, catalog, counts, repeated) }
+        segments = volume.segments.sort_by(&:path).map do |segment|
+          segment_row(segment, catalog, counts, repeated, :copied_volume => !repeated && !volume.shared_above &&
+                                                                          segment.shared_above)
+        end
         row = Spaces.view(volume.record).merge(
           "extension_status" => Records::Metadata.status_map(volume.record, catalog),
           "reference" => volume.reference, "nested" => volume.nested,
@@ -80,25 +83,40 @@ module PhComposer
           "metrics" => Metrics.volume(volume.record, segments.map { |segment| segment.fetch("metrics") }),
           "floor_segments" => segments
         )
-        row.merge("findings" => Findings.volume(row) + duplicate(counts, VOLUME_KIND, volume.record, repeated))
+        row.merge("findings" => Findings.volume(row) + duplicate(counts, VOLUME_KIND, volume.record, repeated,
+                                                                 :ancestor => volume.shared_above && "Space"))
       end
 
-      def segment_row(segment, catalog, counts, repeated)
+      # `copied_volume` says the Face is shared because its Volume was copied: the Volume is the repair.
+      def segment_row(segment, catalog, counts, repeated, copied_volume: false)
         geometry = FaceCapture.call(segment.entity, segment.transform)
         row = Spaces.view(segment.record).merge(
           "extension_status" => Records::Metadata.status_map(segment.record, catalog),
           "reference" => segment.reference,
-          "metrics" => Metrics.segment(geometry.loops_m, geometry.normal, segment.record)
+          "metrics" => Metrics.segment(geometry.loops_m, geometry.normal, segment.record),
+          "weighting_band" => ColourModes.band(segment.record.fetch("weighting_factor"))
         )
-        row.merge("findings" => Findings.segment(row) + duplicate(counts, FLOOR_SEGMENT_KIND, segment.record, repeated))
+        row.merge("findings" => Findings.segment(row) +
+                                 duplicate(counts, FLOOR_SEGMENT_KIND, segment.record, repeated,
+                                           :ancestor => segment_owner(segment, copied_volume)))
+      end
+
+      # Where a copied Floor Segment is repaired: its Volume when that was copied, else its Space when the Face
+      # is shared above it, else the Face itself.
+      def segment_owner(segment, copied_volume)
+        return "Volume" if copied_volume
+        return "Space" if segment.shared_above
+
+        nil
       end
 
       # A copy, or storage shared above the Space such as a single component placement: either way the
-      # record has no identity of its own to export.
-      def duplicate(counts, kind, record, repeated)
+      # record has no identity of its own to export. `ancestor` names the container whose Make independent
+      # repairs it ("Space" or "Volume"), when this record's storage is shared above it.
+      def duplicate(counts, kind, record, repeated, ancestor: nil)
         return [] unless repeated || counts.fetch(kind).fetch(record.fetch("id")) > 1
 
-        [Findings.duplicate(Resolve::TARGETS.fetch(kind)[1], :repeated => repeated)]
+        [Findings.duplicate(Resolve::TARGETS.fetch(kind)[1], :repeated => repeated, :ancestor => ancestor)]
       end
 
       def state(space, ids)
@@ -123,7 +141,9 @@ module PhComposer
       def zone_rows(zones, rows)
         zones.map do |zone|
           spaces = rows.select { |row| row["zone"] && row.dig("zone", "zone_path") == zone.fetch("zone_path") }
-          zone.merge("space_count" => spaces.length).merge(Metrics.zone(spaces))
+          sums = Metrics.zone(spaces)
+          zone.merge("space_count" => spaces.length).merge(sums)
+              .merge("findings" => Findings.zone(sums["imbalanced"]))
         end
       end
 

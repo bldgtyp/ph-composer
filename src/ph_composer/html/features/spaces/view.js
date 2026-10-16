@@ -9,8 +9,8 @@
  * Names, numbers, heights, factors and airflows edit in place (cells.js).
  */
 PhComposerUI.define("features/spaces/view", ["workspace", "snapshot", "units", "unit_preferences", "fields",
-  "table_views", "features/spaces/cells"],
-function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
+  "table_views", "features/spaces/cells", "features/spaces/actions"],
+function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells, SpaceActions) {
   "use strict";
   var SECTION = "ph_composer.spaces.spaces";
   var AIRFLOWS = [["v_sup_m3h", "Supply"], ["v_eta_m3h", "Extract"], ["v_tran_m3h", "Transfer"]];
@@ -25,7 +25,7 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
 
   function create(host) {
     return { spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
-      cells: new SpaceCells(host) };
+      cells: new SpaceCells(host), actions: new SpaceActions(host) };
   }
 
   function occurrence(path) {
@@ -45,6 +45,7 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
     });
     vs.sums = Object.create(null);
     (value.zones || []).forEach(function (zone) { vs.sums[occurrence(zone.zone_path)] = zone; });
+    vs.actions.consume(state, value.zones || []);
   }
 
   function zoneRecord(vs, record) {
@@ -174,6 +175,22 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
     if (cell && cell.tooltip) ui.tooltip(td, cell.tooltip);
   }
 
+  /* A row's marker: on a Zone row, the airflow imbalance; on a Space, Volume or Floor Segment row, its
+     findings, those that block export named first. */
+  function marker(vs, row) {
+    var record = row.record, target = record.segment || record.volume || record.space;
+    if (target) {
+      var findings = target.findings || [];
+      if (!findings.length) return null;
+      var blocking = findings.filter(function (finding) { return finding.blocks_export; });
+      var words = (blocking.length ? ["Blocks export."] : []).concat(blocking, findings.filter(function (finding) {
+        return !finding.blocks_export;
+      })).map(function (item) { return typeof item === "string" ? item : item.message; });
+      return { text: "", icon: "alert", tooltip: words.join(" ") };
+    }
+    return zoneMarker(vs, row);
+  }
+
   /* The Zone row's marker when its supply and extract sums differ by more than the host's threshold. */
   function zoneMarker(vs, row) {
     var sums = row.record.sums;
@@ -219,6 +236,54 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
     return record.spaces.map(function (space) { return space.values.number + " " + space.values.name; }).join(" ");
   }
 
+  /* ---------------------------------------------------------------- the weighting factor filter */
+
+  /* A Floor Segment's band: the host publishes it (`weighting_band`), the key By weighting factor's legend
+     uses too, so the panel never re-derives it from the number. */
+  function band(segment) {
+    return segment.weighting_band;
+  }
+
+  function segmentsOf(record) {
+    var spaces = record.space ? [record.space] : record.spaces || [];
+    if (record.segment) return [record.segment];
+    if (record.volume) return record.volume.floor_segments || [];
+    return spaces.reduce(function (all, space) {
+      return (space.volumes || []).reduce(function (inner, volume) {
+        return inner.concat(volume.floor_segments || []);
+      }, all);
+    }, []);
+  }
+
+  function passes(segment, filters) {
+    return !filters.weighting_factor || filters.weighting_factor.indexOf(band(segment)) >= 0;
+  }
+
+  function filterValues(vs) {
+    var seen = Object.create(null);
+    segmentsOf({ spaces: vs.spaces }).forEach(function (segment) {
+      seen[band(segment)] = true;
+    });
+    return Object.keys(seen);
+  }
+
+  /* A Zone, Space or Volume passes while a Floor Segment beneath it does; a Floor Segment by its own band. */
+  function zoneMatch(vs, record, filters) {
+    return !filters.weighting_factor ||
+      segmentsOf(record).some(function (segment) { return passes(segment, filters); });
+  }
+
+  function rowMatch(vs, row, filters) {
+    return zoneMatch(vs, row.record, filters);
+  }
+
+  /* The viewport shows the Floor Segment faces that pass. */
+  function viewportPaths(vs, record, filters) {
+    if (!filters.weighting_factor) return record.zone ? [record.zone.reference.zone_path] : [];
+    return segmentsOf(record).filter(function (segment) { return passes(segment, filters); })
+      .map(function (segment) { return segment.reference.entity_path; });
+  }
+
   function count(vs) {
     var total = vs.spaces.length;
     return total + (total === 1 ? " Space" : " Spaces");
@@ -233,7 +298,9 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
     optionalColumns: [["building_segment", "Building-Segment"], ["level", "Level"],
       ["net_area_factor", "Net area factor"]],
     sorted: SORTED,
-    widths: { number: 64, floor_area_m2: 104, weighting_factor: 112, weighted_area_m2: 116, height_m: 84,
+    // Four tree levels, each indented, with a chevron and a finding marker, need a wider Hierarchy column.
+    widths: { hierarchy: 168, number: 64, floor_area_m2: 104, weighting_factor: 112, weighted_area_m2: 116,
+      height_m: 84,
       net_volume_m3: 112, v_sup_m3h: 104, v_eta_m3h: 104, v_tran_m3h: 112, net_area_factor: 112 },
     create: create, consume: consume,
     attach: function (vs, place) { vs.cells.attach(place); },
@@ -243,9 +310,17 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
     draftReason: function (vs) { return vs.cells.draftReason(); },
     cancelDrafts: function (vs) { vs.cells.cancelAll(); },
     canCancelDrafts: function (vs) { return vs.cells.cancellable(); },
-    dispose: function (vs) { vs.cells.dispose(); }, zoneRecord: zoneRecord, extraRows: extraRows, children: children,
-    leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: zoneMarker,
-    sortValue: sortValue, sort: sort, search: search, count: count
+    dispose: function (vs) { vs.cells.dispose(); vs.actions.dispose(); },
+    zoneRecord: zoneRecord, extraRows: extraRows, children: children,
+    leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: marker,
+    sortValue: sortValue, sort: sort, search: search, count: count,
+    colourBy: { weighting_factor: { mode: "ph_composer.spaces.by_weighting_factor" } },
+    filteredFields: { weighting_factor: true },
+    filterValues: filterValues, filterLabel: function (vs, field, value) { return value; },
+    zoneMatch: zoneMatch, rowMatch: rowMatch, viewportPaths: viewportPaths,
+    actions: function (vs, row) { return vs.actions.actions(row); },
+    action: function (vs, row, item) { vs.actions.run(row, item); },
+    selected: function (vs, row) { return vs.actions.open(row); }
   };
   tableViews.register("ph_composer.zones", VIEW);
   return VIEW;
