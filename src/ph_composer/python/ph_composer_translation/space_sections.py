@@ -68,16 +68,15 @@ class SpaceSection(Section[SpaceRecord, TranslatedSpace]):
             for source in record.volumes:
                 volume = space_module.SpaceVolume()
                 volume.identifier, volume.avg_ceiling_height = source.id, source.avg_ceiling_height_m
-                if source.display_name:
-                    volume.display_name = source.display_name
+                # honeybee-ph names each child from a random id; a stored name, or the id, keeps output stable.
+                volume.display_name = source.display_name or source.id
                 if source.user_data:
                     volume.user_data = dict(source.user_data)
-                volume.floor.identifier = source.floor_id
+                volume.floor.identifier = volume.floor.display_name = source.floor_id
                 for item in source.floor_segments:
                     segment = space_module.SpaceFloorSegment()
                     segment.identifier = item.id
-                    if item.display_name:
-                        segment.display_name = item.display_name
+                    segment.display_name = item.display_name or item.id
                     segment.geometry = face(item.loops_m[0], item.loops_m[1:])
                     segment.reference_point = segment.geometry.center
                     segment.weighting_factor, segment.net_area_factor = item.weighting_factor, item.net_area_factor
@@ -129,6 +128,9 @@ class SpaceSection(Section[SpaceRecord, TranslatedSpace]):
             for row in (reported_rows if isinstance(reported_rows, list) else [])
             if isinstance(row, dict)
         }
+        rooms = {room.identifier for room in model.rooms}
+        if missing := sorted(set(expected) - rooms):
+            raise ValueError(f"the run reported Space totals for Zones with no Room: {', '.join(missing)}")
         for room in model.rooms:
             row = expected.get(room.identifier)
             room_spaces = list(room.properties.ph.spaces)

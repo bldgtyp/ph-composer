@@ -159,3 +159,23 @@ def test_conformance_fails_when_a_reported_total_is_altered() -> None:
     altered[SPACE_SECTION_ID]["space_zone_totals"][0]["net_volume_m3"] += 1
     with pytest.raises(ValueError, match="net_volume_m3"):
         check(altered["canonical_model"], altered, SECTIONS)
+
+
+def test_the_same_records_write_the_same_spaces_twice() -> None:
+    # Only the Spaces' own serialization: honeybee-ph seeds unrelated model defaults with random ids.
+    record = space("spc_one", ZONE_A, [volume("vol_a", [segment("fsg_a", [square(0, 0, 3)])], 2.5)])
+
+    def spaces(result: dict[str, Any]) -> list[Any]:
+        model = json.loads(result["canonical_model"]["hbjson"])
+        return [room["properties"]["ph"]["spaces"] for room in model["rooms"]]
+
+    assert spaces(run(record)) == spaces(run(record))
+
+
+def test_conformance_fails_when_totals_name_a_zone_with_no_room() -> None:
+    result = run(space("spc_one", ZONE_A, [volume("vol_a", [segment("fsg_a", [square(0, 0, 3)])], 2.5)]))
+    altered = copy.deepcopy(result)
+    extra = {**altered[SPACE_SECTION_ID]["space_zone_totals"][0], "zone_id": "zon_ZZZZZZZZZZZZ"}
+    altered[SPACE_SECTION_ID]["space_zone_totals"].append(extra)
+    with pytest.raises(ValueError, match="no Room"):
+        check(altered["canonical_model"], altered, SECTIONS)

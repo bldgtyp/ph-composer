@@ -45,15 +45,21 @@ module PhComposer
         rows = read.fetch("spaces").flat_map do |space|
           [space] + space.fetch("volumes").flat_map { |volume| [volume] + volume.fetch("floor_segments") }
         end
-        (rows + read.fetch("zones")).each do |row|
-          Array(row["findings"]).each do |finding|
-            findings << finding_row(finding, row["reference"], row["id"] || row.dig("reference", "zone_id"))
-            repair = repair_row(finding, row["reference"])
-            repairs << repair if repair
-          end
+        # A Space, Volume or Floor Segment row, or a stray record, carries its reference: it is located, and
+        # offers the repair its finding names.
+        located = rows.flat_map { |row| Array(row["findings"]).map { |finding| [finding, row.fetch("reference")] } } +
+                  read.fetch("findings").map { |finding| [finding, finding.fetch("reference")] }
+        located.each do |finding, reference|
+          findings << finding_row(finding, reference, reference_id(reference))
+          repair = repair_row(finding, reference)
+          repairs << repair if repair
         end
-        read.fetch("findings").each do |finding|
-          findings << finding_row(finding, finding["reference"], nil)
+        # A Zone row's finding (the airflow imbalance) names its Zone; Spaces registers no Zone locate.
+        read.fetch("zones").each do |zone|
+          Array(zone["findings"]).each do |finding|
+            named = finding.merge("message" => "#{zone['name'] || zone.fetch('zone_id')}: #{finding.fetch('message')}")
+            findings << finding_row(named, nil, zone.fetch("zone_id"))
+          end
         end
         { "findings" => findings, "repairs" => repairs.uniq { |row| row.fetch("id") } }
       rescue CodedError => error
@@ -64,9 +70,12 @@ module PhComposer
       def finding_row(finding, reference, object_id)
         row = { "code" => finding.fetch("code"), "section" => SECTION, "object_id" => object_id,
                 "message" => finding.fetch("message"), "blocks_export" => finding.fetch("blocks_export") }
-        locatable = reference && !reference.key?("zone_path")
-        locatable ? row.merge("locate" => { "name" => "#{FEATURE_ID}.locate",
+        reference ? row.merge("locate" => { "name" => "#{FEATURE_ID}.locate",
                                             "params" => { "reference" => reference } }) : row
+      end
+
+      def reference_id(reference)
+        reference.values_at("space_id", "volume_id", "floor_segment_id").compact.first
       end
 
       def repair_row(finding, reference)

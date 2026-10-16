@@ -95,6 +95,27 @@ class SpacesExportTest < PhComposerTestCase
     assert(value.fetch("findings").all? { |row| row["blocks_export"] == blocking.fetch(row["code"]) })
   end
 
+  def test_a_zone_warning_names_its_zone_and_a_stray_copy_offers_its_repair
+    reference_model
+    living = @model.entities.to_a.first.entities.to_a.first
+    record = PhComposer::Spaces::SPACE_STORE.read(living)
+    PhComposer::Spaces::SPACE_STORE.write(living, record.merge("v_sup_m3h" => 200.0, "v_eta_m3h" => 10.0))
+    orphan = volume_group(5000, volume_record("O"), [])
+    @model.entities << orphan
+    copy = Sketchup::Group.new(5001, orphan.entities)
+    copy.set_attribute(PhComposer::Spaces::VOLUME_STORE.dictionary, "record",
+                       orphan.get_attribute(PhComposer::Spaces::VOLUME_STORE.dictionary, "record"))
+    @model.entities << copy
+    treat_duplicates_as_existing(@model)
+    value = API.query(:context => @context, :name => X::PREFLIGHT).fetch("value")
+    imbalance = value.fetch("findings").find { |row| row["code"] == "space.airflow_imbalance" }
+    assert_equal "zon_AAAAAAAAAAAA", imbalance["object_id"]
+    assert_match(/\AZone A: /, imbalance["message"])
+    duplicate = value.fetch("findings").find { |row| row["code"] == "space.duplicate_identity" }
+    assert_equal "vol_OOOOOOOOOOOO", duplicate["object_id"]
+    assert(value.fetch("repairs").any? { |row| row["action"] == "ph_composer.spaces.make_independent" })
+  end
+
   # Spaces writes no PH-Composer entry of its own on a Space, so a user's keys pass and a ph_composer leaf on a
   # Space refuses.
   def test_the_metadata_guard_passes_user_keys_and_refuses_an_undeclared_reserved_leaf

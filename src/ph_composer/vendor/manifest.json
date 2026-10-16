@@ -581,9 +581,9 @@
       "sha256": "60b88a69d756abf37bf74c2968f6dde0d348cd25da1d03baed6ae4afd0e0444c"
     },
     "python/ph_composer_translation/space_sections.py": {
-      "bytes": 7787,
+      "bytes": 8080,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "fbe118ef6ce75d0e770243e1cae25ca4602fbb77d5fab05f4878db948eee20db"
+      "sha256": "50e08e8097f2747372b36b93f232e52ce42af23574e82fde2a76002f11fd8d24"
     },
     "python/ph_composer_translation/stack.py": {
       "bytes": 1361,

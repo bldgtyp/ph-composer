@@ -50,3 +50,16 @@ record, attachment to one Room and none, user_data, conformance). Test 11, nativ
 `make runtime-browser-check`, outside `make ci`. `tools/runtime/browser_check.py` now adds one synthetic Space with
 a supply rate to the phase-one golden; the check passed on 2026-10-16 in Chromium 88, publishable, with the native
 and Pyodide models equal.
+
+### Review of PR #165
+
+gpt-6-astra, cycle 1: one P1 and three P2, each reproduced by a test that failed before its fix.
+
+- P1: honeybee-ph names a Volume, a Floor and a Floor Segment from a random id, so the same records wrote
+  different Spaces each run. Each now takes its stored name or, failing that, its id
+  (`test_the_same_records_write_the_same_spaces_twice`).
+- P2: a Zone's airflow imbalance left the preflight with no object and no Zone named. It now carries the Zone id
+  and opens with the Zone's name; Spaces registers no Zone locate, so it has none.
+- P2: a duplicate identity on a stray record (an orphan Volume, a misplaced Floor Segment) offered no repair.
+  Stray findings now take the same route as row findings: locate, repair and object id.
+- P2: conformance passed a reported total naming a Zone with no Room. It now refuses one.
