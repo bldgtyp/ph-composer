@@ -126,7 +126,8 @@ Milestones: M1 after P3a-04 (Spaces as data; native S03 and S04 rows observed 20
 | D3a-16 | UI | One Zones tab with views: Faces, Spaces, later loads and equipment | P3a-06, P3a-07 | Answered 2026-10-15 |
 | D3a-17 | UI and code | Weighting factor, a number from 0 to 1 with quick picks | P3a-02, P3a-07, P3a-08 | Answered 2026-10-15 |
 | D3a-18 | UI | Select by through column filters and check-all, no cell menu | P3a-07 | Answered 2026-10-15: filter and check-all |
-| D3a-19 | Behavior | Autosave closes an open Volume under the predecessor's save rule; keep it or unlock again after a save. A native Cmd+S also leaves the path at the Model root, not the Space (P3a-12) | none (follow-up) | Open |
+| D3a-19 | Behavior | Autosave closes an open Volume under the predecessor's save rule; keep it or unlock again after a save. A native Cmd+S also leaves the path at the Model root, not the Space (P3a-12) | none (follow-up) | Answered 2026-10-16: restore the user after a save (B), proved by a host spike first |
+| D3a-20 | Delivery | Installed footprint limits: raise to a 24 MB target and 26 MB ceiling, plus a 1.5 MB per-phase growth budget | Phase 3b packaging | Answered 2026-10-16: yes |
 
 ## Owed from elsewhere, allocated here
 
@@ -207,3 +208,4 @@ and not reproduced.
 | 2026-10-15 | P3a-05 slice A merged through #147 (derived geometry, readouts, the example) after two strong passes, eight findings fixed. Slice B (Window Type operation marks) implemented; D2-6's marks recorded as delivered in the window-types packet. P3a-06's design note written and reviewed. |
 | 2026-10-15 | P3a-02 host gate passed (S02): the panel-closed walkthrough, one native Undo and Redo per write, native copy, cut and Make Unique of a Space Group, airflow states and `user_data` through save and reopen, two Models isolated. Slice A reviewed twice and fixed. |
 | 2026-10-16 | P3a-11 merged through #167. P3a-12's integrated host run on 26.1.188: S03, S04 (with D3a-13) and S07 to S10 observed on the host and S11 partly, none with a ledger result; S05 and S06 partly run; host measurements recorded (solid volume, held-drag flags, context changes as Undo entries). Offline gates pass on both Rubies. Follow-ups #168 to #170 filed. Waiting on Ed: record or rerun the host rows under the acceptance procedure, rerun or accept the 31 earlier cases the ledger screens stale, the 24 MB ceiling (5,937 bytes left), D3a-19. |
+| 2026-10-16 | Ed answered P3a-12's four items: (1) rerun S03, S04 and S07 to S11 under the native-acceptance procedure, with capture baselines, observe receipts and ledger results, including S11's native Undo; (2) rerun all 31 earlier cases the ledger screens, in the same host session; (3) D3a-20, raise the footprint limits to 24 MB target and 26 MB ceiling with a 1.5 MB per-phase growth budget; (4) D3a-19, restore the user after a save, spike first. Follow-up: narrow the broad dependency patterns in `cases.json`. |

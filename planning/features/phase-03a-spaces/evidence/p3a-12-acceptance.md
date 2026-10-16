@@ -1,7 +1,7 @@
 # P3a-12 evidence: Spaces acceptance and handoff
 
 DATE: 2026-10-16
-STATUS: Integrated host run done, no ledger results recorded; offline gates pass. Open for Ed: recording the host rows, the reuse matrix's stale earlier cases, the footprint headroom, D3a-19
+STATUS: Integrated host run done, no ledger results recorded; offline gates pass. Ed's four answers recorded 2026-10-16; the reruns, the D3a-19 spike and the footprint change are next
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -9,6 +9,11 @@ Register row S12, and the host rows S03 to S11 and the D3a-13 addition, all run 
 on 2026-10-16. Every "pass" below is a host observation; none has a ledger result (decision 1). Branch `feature/spaces-p3a-12` from `main` at `f9104523` (P3a-01 to P3a-11 merged).
 
 ## Decisions for Ed
+
+Answered by Ed on 2026-10-16: 1, rerun under the procedure; 2, rerun all 31 cases in the same
+session; 3, raise the limits to a 24 MB target and 26 MB ceiling with a 1.5 MB growth budget per phase
+(D3a-20); 4, restore the user after a save, proved by a host spike first (D3a-19). The questions as
+raised:
 
 1. **Recording the host rows.** The run did not follow the native-acceptance procedure's recording
    steps: no `acceptance_run.py capture` baseline, no `observe` receipts, no ledger result. So
