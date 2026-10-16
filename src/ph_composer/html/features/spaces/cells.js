@@ -12,13 +12,14 @@ PhComposerUI.define("features/spaces/cells", ["record_edits", "inventory_grid", 
 function (RecordEdits, Grid, requests, snapshot, fields, ui) {
   "use strict";
   var UPDATE = "ph_composer.spaces.update", BATCH = "ph_composer.spaces.batch_update";
-  var SCOPE = "ph_composer.spaces";
-  var HEIGHT = fields.with(fields.LENGTH_M, { label: "Height", scope: SCOPE + ".height", allowBlank: true,
-    allowZero: false });
+  // Metres, as the column header and the Space row's average read; no per-editor dimension format.
+  var HEIGHT = fields.with(fields.LENGTH_M, { label: "Height", allowBlank: true, allowZero: false });
   var AIRFLOW = fields.with(fields.AIRFLOW_M3H, { label: "Airflow", allowBlank: true });
   var FACTOR = fields.with(fields.FRACTION, { label: "Factor" });
   var AIRFLOWS = { v_sup_m3h: true, v_eta_m3h: true, v_tran_m3h: true };
   var FACTORS = { weighting_factor: true, net_area_factor: true };
+  var NUMERIC = { weighting_factor: true, net_area_factor: true, height_m: true, v_sup_m3h: true, v_eta_m3h: true,
+    v_tran_m3h: true };
   // The editable columns in the order the table shows them, so a range or a paste reads left to right.
   var FIELDS = ["number", "name", "weighting_factor", "height_m", "v_sup_m3h", "v_eta_m3h", "v_tran_m3h",
     "net_area_factor"];
@@ -113,7 +114,7 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
   /* The view's surface is known once: the range-edit grid binds to its table mount. */
   SpaceCells.prototype.attach = function (place) {
     var self = this;
-    this.grid = new Grid({ edits: this.edits, scroll: place.mount, root: place.surface,
+    this.grid = new Grid({ edits: this.edits, scroll: place.mount, toolbarParent: place.toolbar,
       hiddenColumns: place.hiddenColumns, isBusy: function () { return self.busy(); },
       notify: function (message) { self.host.refuse(message); },
       changeFor: function (cell, value) { return change(cell.row, cell.field, value); },
@@ -130,6 +131,7 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
   SpaceCells.prototype.render = function (td, row, field) {
     if (!storedKey(row, field) || !this.edits.render(td, row, field)) return false;
     var cell = this.edits.cells[row.key + ":" + field], space = row.record.space;
+    td.classList.toggle("is-numeric", NUMERIC[field] === true);
     if (AIRFLOWS[field] && kind(row) === "space") {
       var inheriting = space.airflow_mode === "inheriting";
       cell.input.placeholder = inheriting ? "Zone" : "0";

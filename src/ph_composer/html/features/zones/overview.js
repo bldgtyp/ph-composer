@@ -50,8 +50,6 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
 
   var screen = null;
   var ZONE_DRAFT = "Finish or cancel the Zone edit first.";
-  var HELP = "Select Faces in SketchUp, or check their rows, to edit them together in the bar under the table. " +
-    "A column's palette icon colours the Model by that column; its menu sorts and filters.";
 
   /* One view's hook, called with its own state first; `fallback` when the view does not supply it. */
   function call(slot, name, args, fallback) {
@@ -91,7 +89,6 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         reconcileOptionFilters(screen, collection, result);
       });
     screen.options = tableOptions(screen);
-    screen.help = ui.helpButton("Zones", HELP);
     screen.controls = new viewControls.ViewControls({
       label: "Zones", placeholder: "Zone", fields: ORDER_FIELDS, initialOrder: "name",
       columnSort: true,
@@ -107,13 +104,16 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var id = view.id, existing = state.slots[id];
     if (existing) return existing;
     var surface = ui.element("div", "phc-zone-view"), mount = ui.element("div", "phc-table-mount");
+    // The view's own place in the shared controls row, shown with it: its help, then what it binds there.
+    var toolbar = ui.element("div", "phc-view-tools");
+    if (view.help) toolbar.appendChild(ui.helpButton("Zones", view.help));
     surface.appendChild(mount);
     var made = state.slots[id] = { view: view, vs: view.create ? view.create(state.host) : {}, surface: surface,
-      mount: mount, columnWidths: {}, hiddenColumns: Object.assign({}, view.hiddenColumns || {}),
+      mount: mount, toolbar: toolbar, columnWidths: {}, hiddenColumns: Object.assign({}, view.hiddenColumns || {}),
       menus: Object.create(null), toggles: Object.create(null),
       filters: Object.create(null), sort: null };
     // The view's own surface and table mount, once, for what it binds there (a range-edit grid).
-    call(made, "attach", [{ surface: surface, mount: mount,
+    call(made, "attach", [{ surface: surface, mount: mount, toolbar: toolbar,
       hiddenColumns: function () { return made.hiddenColumns; } }]);
     return made;
   }
@@ -642,7 +642,14 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     }
     if (screenState.options.root.parentNode !== screenState.controls.root) {
       screenState.controls.root.insertBefore(screenState.options.root, screenState.controls.count.nextSibling);
-      screenState.controls.root.insertBefore(screenState.help, screenState.options.root.nextSibling);
+    }
+    // Only the shown view's tools stand in the row, after Table options.
+    Object.keys(screenState.slots).forEach(function (id) {
+      var tools = screenState.slots[id].toolbar;
+      if (screenState.slots[id] !== own && tools.parentNode) tools.parentNode.removeChild(tools);
+    });
+    if (own.toolbar.parentNode !== screenState.controls.root) {
+      screenState.controls.root.insertBefore(own.toolbar, screenState.options.root.nextSibling);
     }
     if (tools.parentNode !== screenState.controls.root) screenState.controls.root.appendChild(tools);
     var heading = header(screenState, root.closest("[data-pane]").getAttribute("data-pane")).page.root;
