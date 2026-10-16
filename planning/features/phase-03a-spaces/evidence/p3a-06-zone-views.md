@@ -1,7 +1,7 @@
 # P3a-06 evidence: Zone views
 
 DATE: 2026-10-15
-STATUS: Merged through #149 (`42b6316`); host gate pending
+STATUS: Merged through #149 (`42b6316`); host rows partly run in [P3a-12](p3a-12-acceptance.md)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

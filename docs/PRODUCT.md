@@ -1,6 +1,6 @@
 # Product shape
 
-**DATE:** 2026-10-01
+**DATE:** 2026-10-16
 
 PH-Composer is a free, open-source authoring tool for Phius passive building models. The SKP
 file holds the working building data. A consultant can enter every supported definition by hand,
@@ -13,8 +13,8 @@ classification and the HBJSON/report export described under Zones, Envelope and 
 assignment, local libraries, Window Type records, the Builder and Unit operations are implemented
 and accepted on the Phase 2 feature branch for SketchUp 26.1.188 on macOS. Normal export
 includes authored opaque constructions and Apertures. File libraries, Place, Schedule and
-Window Type Colour-by pass their named current-host requirements. Connection libraries are Phase 5. Spaces and
-thermal bridges remain proposed.
+Window Type Colour-by pass their named current-host requirements. Connection libraries are Phase 5. Spaces is
+implemented and passed its integrated run on SketchUp 26.1.188 on macOS. Thermal bridges remain proposed.
 
 ## The working environment
 
@@ -212,6 +212,16 @@ offered Create Space, and a classified Zone Face or a Face in no Zone is refused
 Create Space is in SketchUp's context menu on a Face selection, inside an open Zone: it shows which
 Faces become the new Space and why it leaves out the others, and Create makes the Space, its Volume
 and its Floor Segments in one Undo step.
+
+Colour by Space, Ventilation, Weighting factor and Height colour each Space's Floor Segments and the
+preview prism that its height draws over them, with a legend. Space labels and the totals of the
+selected Spaces show in the viewport whether or not a mode is on, in the panel's units. None of this is
+saved in the model.
+
+Copying a Space in SketchUp makes the copy independent at once, with the next free number in its Zone,
+and one Undo removes both; a copied Zone brings independent copies of its Spaces. A copied Volume or
+Floor Segment is marked as a duplicate until Make independent is run on its row. Move to Zone puts a
+Space in another Zone where it stands, keeping its number and values.
 
 ## Handoff
 

@@ -129,8 +129,8 @@ class SketchupStubDeviationsTest < PhComposerTestCase
     assert_equal 0, view.pick_helper.do_pick(9, 9)
   end
 
-  # The API reference's `volume`, not yet measured (context/SKETCHUP_HOST_BEHAVIOR.md, Height from solid): a
-  # container that is not a solid answers a negative volume, and a solid's volume is scaled by its own transform.
+  # The host's `volume` (context/SKETCHUP_HOST_BEHAVIOR.md, "Solid volume"): a container that is not a solid
+  # answers a negative volume, and a solid's volume is scaled by its own transform and no parent's.
   def test_volume_is_negative_for_a_non_solid_and_scaled_by_the_placements_own_transform
     open = Sketchup::Group.new(1)
     assert_operator open.volume, :<, 0

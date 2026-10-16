@@ -773,9 +773,9 @@ module Sketchup
     end
   end
 
-  # The host's `volume` (cubic inches), as its API reference states it: a solid's volume scaled by the
-  # placement's own transform, and negative when the container is not a solid. Not yet measured on the
-  # host (context/SKETCHUP_HOST_BEHAVIOR.md); a fixture states the unscaled solid volume with `solid_volume=`.
+  # The host's `volume` (cubic inches), as measured (context/SKETCHUP_HOST_BEHAVIOR.md, "Solid volume"): a
+  # solid's volume scaled by the placement's own transform and no parent's, and negative when the container is
+  # not a solid. A fixture states the unscaled solid volume with `solid_volume=`.
   module SolidVolume
     attr_writer :solid_volume
 

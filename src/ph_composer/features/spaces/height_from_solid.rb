@@ -7,9 +7,9 @@ module PhComposer
     # not marked, stamped or read again.
     #
     # SketchUp reports a container's `volume` in cubic inches, negative when it is not a solid, and scaled by the
-    # container's own transform (its API reference; the host check is owed in
-    # context/SKETCHUP_HOST_BEHAVIOR.md). The containers above it scale it again, by the absolute determinant of
-    # their transforms' linear part, so a scaled or nested solid measures in world units.
+    # container's own transform and no parent's (context/SKETCHUP_HOST_BEHAVIOR.md, "Solid volume"). The
+    # containers above it scale it again, by the absolute determinant of their transforms' linear part as they
+    # read in the open context, so a scaled or nested solid measures in world units.
     module HeightFromSolid
       INCH3_TO_M3 = 0.0254**3
 

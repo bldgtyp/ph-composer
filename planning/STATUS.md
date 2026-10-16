@@ -1,6 +1,6 @@
 # Planning Status
 
-DATE: 2026-10-15
+DATE: 2026-10-16
 STATUS: Active index of tracked planning work.
 AUTHOR: Ed May, BLDGTYP
 
@@ -19,7 +19,7 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
-| 3a | Spaces | feature | In progress; authorized 2026-10-15, one stage per pull request; P3a-01 to P3a-03 merged (#135 to #140), P3a-03 native host rows pending; P3a-01 to P3a-04 merged (#135 to #146), P3a-05 and P3a-06 merged (#147 to #149), P3a-07 merged (#150 to #153, #155), P3a-08 merged (#156, #159, #160; M2 implemented), P3a-09 merged (#162 to #164), P3a-10 merged (#165, #166; M3 implemented), P3a-11 in review; S03 to S10 host rows pending | [#133](https://github.com/bldgtyp/ph-composer/issues/133) | [features/phase-03a-spaces/](features/phase-03a-spaces/README.md); stage ledger in its [STATUS](features/phase-03a-spaces/STATUS.md) |
+| 3a | Spaces | feature | In progress; authorized 2026-10-15, one stage per pull request; P3a-01 to P3a-11 merged (#135 to #167); P3a-12's integrated host run passed 2026-10-16 (S03, S04 with D3a-13, S07 to S11), with S01, S05 and S06 waiting on Ed's call on the earlier cases the ledger screens, the 24 MB ceiling (under 6 KB left) and D3a-19; follow-ups #168 to #170 | [#133](https://github.com/bldgtyp/ph-composer/issues/133) | [features/phase-03a-spaces/](features/phase-03a-spaces/README.md); stage ledger in its [STATUS](features/phase-03a-spaces/STATUS.md) |
 | 3b | Thermal bridges | feature | Scoped, interviewed 2026-10-03; planned as P3b-01 to P3b-09, none authorized | none (local planning draft) | [features/phase-03b-thermal-bridges/](features/phase-03b-thermal-bridges/README.md); tracked in its [ledger](features/phase-03b-thermal-bridges/STATUS.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
 | 4 | ERV ducting | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/erv-ducting/](features/phase-04-mechanical/erv-ducting/README.md) |

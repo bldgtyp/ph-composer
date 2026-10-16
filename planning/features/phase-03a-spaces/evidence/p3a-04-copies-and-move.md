@@ -1,7 +1,7 @@
 # P3a-04 evidence: copies and Move Space to Zone
 
 DATE: 2026-10-15
-STATUS: Merged in four slices: A #141, B1 #142, B2 #144, B3 #146. S04 bridge rows pass; native rows pending
+STATUS: Merged in four slices: A #141, B1 #142, B2 #144, B3 #146. S04 bridge rows pass; native rows passed in [P3a-12](p3a-12-acceptance.md)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
