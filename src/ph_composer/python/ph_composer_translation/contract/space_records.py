@@ -126,6 +126,8 @@ class SpaceRecord:
     airflows: Mapping[str, float]
     volumes: tuple[VolumeRecord, ...]
     user_data: JSONObject = field(default_factory=dict)
+    #: Drawn outside its Zone's extents: exported as drawn, named in the report.
+    offset_from_zone: bool = False
 
     @classmethod
     def read(cls, value: object) -> SpaceRecord:
@@ -139,6 +141,9 @@ class SpaceRecord:
                 if rate < 0:
                     raise RecordError(f"{label} {key} must not be negative")
                 airflows[key] = rate
+        offset = row.get("offset_from_zone", False)
+        if not isinstance(offset, bool):
+            raise RecordError(f"{label} offset_from_zone must be true or false")
         return cls(
             identifier,
             as_text(row.get("zone_id"), f"{label} zone_id"),
@@ -147,4 +152,5 @@ class SpaceRecord:
             airflows,
             tuple(VolumeRecord.read(item) for item in rows(row.get("volumes"), f"{label} volumes")),
             user_data(row.get("user_data"), label),
+            offset,
         )

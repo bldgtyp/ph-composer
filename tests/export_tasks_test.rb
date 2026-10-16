@@ -120,6 +120,16 @@ class ExportTasksTest < PhComposerTestCase
     assert_empty @session.model.operations
   end
 
+  def test_a_blocked_run_carries_its_report_labelled_as_writing_no_model
+    task = start
+    drain
+    @runtime.blocked
+    html = @tasks.status(task.fetch("task_id")).dig("outcome", "value", "report_html")
+    assert_includes html, "<h1>Export not created</h1>"
+    assert_includes html, PhComposer::Export::Report::BLOCKED_LINE
+    assert_empty Dir.children(@directory), "nothing is written beside the destination"
+  end
+
   def test_a_blocked_run_with_partial_canonical_output_never_returns_bytes_in_status
     task = start
     drain

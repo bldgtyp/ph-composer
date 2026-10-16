@@ -14,6 +14,7 @@ module PhComposer
         "space.height_missing" => "A Volume has no average clear ceiling height.",
         "space.identity_unique" => "The occurrence already has an identity of its own; there is nothing to repair.",
         "space.nested" => "A Space is inside another Space.",
+        "space.offset_from_zone" => "A Space's Floor Segments lie outside its Zone's extents; it exports as drawn.",
         "space.nothing_to_create" => "None of the Faces given can become a Space.",
         "space.number_duplicate" => "Two Spaces in one Zone share a number.",
         "space.outside_zone" => "A Space is in no Zone.",

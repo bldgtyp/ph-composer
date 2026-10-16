@@ -16,6 +16,12 @@ module PhComposer
       PREFLIGHT = "#{FEATURE_ID}.export_preflight"
       ZONES_SECTION = "ph_composer.zones.export.zones"
       TOTALS = %w[floor_area_m2 weighted_area_m2 net_volume_m3].freeze
+      SCHEDULE = (%w[space_id zone_id zone_name number name height_m offset_from_zone] + TOTALS + AIRFLOWS).freeze
+      # The schedule's columns: heading, field and quantity (nil for text).
+      COLUMNS = [["No.", "number", nil], ["Name", "name", nil], ["Floor area", "floor_area_m2", "area"],
+                 ["Weighted area (iCFA)", "weighted_area_m2", "area"], ["Height", "height_m", "length"],
+                 ["Net volume", "net_volume_m3", "volume"], ["Supply", "v_sup_m3h", "airflow"],
+                 ["Extract", "v_eta_m3h", "airflow"], ["Transfer", "v_tran_m3h", "airflow"]].freeze
       REPAIRS = {
         "make_independent" => ["#{FEATURE_ID}.make_independent", "reference", false, "Make the copy independent"],
         "restore_position" => ["#{FEATURE_ID}.volumes.restore_position", "volume", true,
@@ -31,11 +37,69 @@ module PhComposer
                                               "space_zone_totals" => [Export::Privacy.fields(%w[zone_id] + TOTALS)],
                                               "space_segment_totals" => [
                                                 Export::Privacy.fields(%w[building_segment] + TOTALS)
-                                              ]
-                                            }) { |reader| records(reader) }
+                                              ],
+                                              "space_schedule" => [Export::Privacy.fields(SCHEDULE)]
+                                            }, :report => method(:report)) { |reader| records(reader) }
         feature.query(PREFLIGHT, :description => "Spaces export checks: every finding with where it is and its repair.",
                                  :refuses => [], :params => Shapes::NONE, :result => Export::PREFLIGHT_RESULT,
                                  :examples => [{}]) { |request| preflight(request) }
+      end
+
+      # The Spaces schedule: per Zone, the table's columns and the Zone's totals, then the totals per
+      # Building-Segment, and one line naming any Space drawn off to the side of its Zone. A Space
+      # that inherits its Zone's airflow shows "Zone" in its airflow columns.
+      def report(result, display_units)
+        rows = result.fetch("space_schedule", [])
+        return [] if rows.empty?
+
+        headings = COLUMNS.map { |heading, _field, quantity|
+          quantity ? unit_heading(heading, quantity, display_units) : heading
+        }
+        zone_totals = result.fetch("space_zone_totals", []).to_h { |row| [row.fetch("zone_id"), row] }
+        html = rows.group_by { |row| [row.fetch("zone_name"), row.fetch("zone_id")] }.map do |(name, zone_id), spaces|
+          body = spaces.map { |row|
+            COLUMNS.map { |_heading, field, quantity|
+              cell(row, field, quantity, display_units)
+            }
+          }
+          body << total_row("Zone total", zone_totals.fetch(zone_id, {}), display_units)
+          "<h3>#{Export::ReportHtml.h(name)}</h3>" + Export::ReportHtml.table(headings, body)
+        end.join
+        segments = result.fetch("space_segment_totals", []).map do |row|
+          total_row(row.fetch("building_segment"), row, display_units)
+        end
+        html += "<h3>Building-Segments</h3>" + Export::ReportHtml.table(headings, segments) unless segments.empty?
+        offset = rows.select { |row| row["offset_from_zone"] }
+        unless offset.empty?
+          names = offset.map { |row|
+            "#{[row['number'], row['name']].reject(&:empty?).join(' ')} (#{row['zone_name']})"
+          }
+          html += Export::ReportHtml.paragraph("Drawn outside its Zone's extents and exported as drawn, so a viewer " \
+                                               "shows it beside the building: #{names.join(', ')}.")
+        end
+        [Export::ReportHtml.section("Spaces", html)]
+      end
+
+      def unit_heading(heading, quantity, display_units)
+        "#{heading} (#{PhComposer::Units.label(:quantity => quantity, :system => display_units)})"
+      end
+
+      def cell(row, field, quantity, display_units)
+        value = row[field]
+        return value.to_s unless quantity
+        return "Zone" if value.nil? && quantity == "airflow"
+        return "" if value.nil?
+
+        format("%.2f", PhComposer::Units.to_display(value, :quantity => quantity, :system => display_units))
+      end
+
+      def total_row(label, totals, display_units)
+        COLUMNS.map do |_heading, field, quantity|
+          next label if field == "number"
+          next "" unless TOTALS.include?(field) && totals.key?(field)
+
+          cell(totals, field, quantity, display_units)
+        end
       end
 
       def preflight(request)
@@ -61,6 +125,7 @@ module PhComposer
             findings << finding_row(named, nil, zone.fetch("zone_id"))
           end
         end
+        findings.concat(offset_findings(request.model))
         { "findings" => findings, "repairs" => repairs.uniq { |row| row.fetch("id") } }
       rescue CodedError => error
         { "findings" => [{ "code" => error.code, "section" => SECTION, "object_id" => nil,
@@ -72,6 +137,39 @@ module PhComposer
                 "message" => finding.fetch("message"), "blocks_export" => finding.fetch("blocks_export") }
         reference ? row.merge("locate" => { "name" => "#{FEATURE_ID}.locate",
                                             "params" => { "reference" => reference } }) : row
+      end
+
+      # A Space drawn off to the side of its Zone exports as drawn; the preflight says so, without blocking.
+      def offset_findings(model)
+        zones = Zones::Occurrences.zones(model)
+        spaces = Occurrences.scan(model, :strict => false).spaces
+        space_paths = spaces.map(&:path)
+        spaces.filter_map do |space|
+          zone = zones.select { |candidate| space.path[0, candidate.path.length] == candidate.path }
+                      .max_by { |candidate| candidate.path.length }
+          next unless zone
+
+          # The Zone's own Faces: none inside a Space, whether or not the Space carries the Zone's stamp.
+          own = Zones::Occurrences.faces(zone).reject do |face|
+            full = zone.path + face.path
+            space_paths.any? { |path| full[0, path.length] == path }
+          end
+          zone_points = own.flat_map { |face| FaceCapture.call(face.entity, face.transform).loops_m.first }
+          space_points = space.volumes.flat_map(&:segments).flat_map do |segment|
+            FaceCapture.call(segment.entity, segment.transform).loops_m.first
+          end
+          next unless Extents.outside?(space_points, zone_points)
+
+          finding_row({ "code" => "space.offset_from_zone", "blocks_export" => false,
+                        "message" => "#{label(space.record)} is drawn outside its Zone's extents. It exports as " \
+                                     "drawn; a viewer shows it beside the building." }, space.reference,
+                      space.record.fetch("id"))
+        end
+      end
+
+      def label(record)
+        text = [record["number"], record["name"]].map(&:to_s).reject(&:empty?).join(" ")
+        text.empty? ? "A Space" : "Space #{text}"
       end
 
       def reference_id(reference)
@@ -101,9 +199,24 @@ module PhComposer
           reader.entity_record(record, :fields => %w[name number] + AIRFLOWS, :target_kind => SPACE_KIND,
                                        :path => entry.path, :user_data => true)
                 .merge("zone_id" => zone.last.fetch("id"),
+                       "offset_from_zone" => offset?(snapshot, zone.first, own, segments),
                        "volumes" => own.map { |volume| volume_record(reader, volume, segments) }
                                        .sort_by { |row| row.fetch("id") })
         end.sort_by { |row| row.fetch("id") }
+      end
+
+      # The same rule as the preflight's, from the snapshot: the Space's Floor Segments against the Zone's own Faces.
+      def offset?(snapshot, zone_entry, volumes, segments)
+        spaces = snapshot.records(SPACE_STORE.dictionary, :kind => "group").map(&:first)
+        own = Zones::ExportProjection.zone_faces(snapshot, zone_entry).reject do |face|
+          spaces.any? { |space| snapshot.contains?(space, face) }
+        end
+        zone_points = own.flat_map { |face| face.geometry.loops_m.first }
+        space_points = volumes.flat_map do |volume, _|
+          segments.select { |segment, _| segment.path[0...-1] == volume.path }
+                  .flat_map { |segment, _| segment.geometry.loops_m.first }
+        end
+        Extents.outside?(space_points, zone_points)
       end
 
       def volume_record(reader, (entry, record), segments)

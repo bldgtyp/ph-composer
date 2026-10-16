@@ -218,7 +218,12 @@ and its Floor Segments in one Undo step.
 Export produces HBJSON with an adjacent report explaining supported content and findings. A
 preflight lists blocking findings and offers repairs such as Solve adjacencies before anything is
 written. The run can be cancelled, a failed replacement leaves the previous pair intact, and Export
-never saves the SKP. The METr model is a later exporter, deferred until more of the building can be
+never saves the SKP. A run blocked by a finding writes nothing, and the Export tab still shows its
+report, marked as coming from a run that wrote no model, so its figures are there to fix the block.
+Each Space travels on its Zone's Room with its Volumes, heights, Floor Segments, both factors, its
+preview prism and its airflows. The report gives a Spaces schedule for each Zone with the table's
+columns and the totals for each Zone and Building-Segment, and names any Space drawn beside its Zone,
+which exports where it was drawn. The METr model is a later exporter, deferred until more of the building can be
 authored. Independent consumers decide how to view, review and calculate
 it. Optional linked PDFs and photos remain in external project folders. Ordinary model use never
 depends on those files.

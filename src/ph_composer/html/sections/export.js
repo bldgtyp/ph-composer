@@ -5,6 +5,7 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
   var element = ui.element;
   var sequence = 0, session = null, revision = null, last = null, seen = null, timer = null;
   var pending = {}, checks = null, selected = {}, task = null, message = "", findings = [], retrieved = false;
+  var blockedReport = null;
   var stages = { queued: "Preparing export…", reading: "Reading Model…", translating: "Translating Model…",
     checking: "Checking export…", writing: "Writing HBJSON and report…" };
   var CHANNELS = { start: "export.start", preflight: "export.preflight", status: "export.status",
@@ -182,6 +183,21 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
         root.appendChild(element("p", "", "Written to " + task.outcome.value.location.label + "."));
       }
     }
+    // A blocked run wrote nothing, but its report still holds the figures needed to clear the block. It is
+    // built once per report, so a repaint keeps it open or shut as the user left it.
+    var html = task && task.outcome && task.outcome.value && task.outcome.value.report_html;
+    if (html) {
+      if (!blockedReport || blockedReport.html !== html) {
+        var details = element("details", "phc-export-blocked-report"), frame = element("iframe");
+        details.appendChild(element("summary", "", "Report from the run that was not created"));
+        frame.setAttribute("sandbox", "");
+        frame.setAttribute("title", "Export report from the run that was not created");
+        frame.srcdoc = html;
+        details.appendChild(frame);
+        blockedReport = { html: html, node: details };
+      }
+      root.appendChild(blockedReport.node);
+    }
     // What the last export reported and the checks above do not already say.
     var listed = Object.create(null);
     if (checks && !active()) checks.findings.forEach(function (finding) { listed[cause(finding)] = true; });
@@ -193,6 +209,7 @@ PhComposerUI.define("sections/export", ["panel", "workspace"], function (panel, 
     if (state.session !== session) {
       window.clearTimeout(timer); timer = null; session = state.session; revision = null; seen = null;
       pending = {}; checks = null; selected = {}; task = null; message = ""; findings = []; retrieved = false;
+      blockedReport = null;
     }
     accept(state.ui.exportResult);
     if (state.ui.activeTab === "export") {

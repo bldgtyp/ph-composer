@@ -894,4 +894,8 @@ result fields with `result.section(id)` in its report, which receives an `Export
 undeclared read is an internal error. Export contributors extend a composed privacy allowlist, one
 optional entry per section; the report embeds their results unchanged. Exporters consume only the HBJSON artifact plus explicit
 options. The HBJSON and report pair is replaced together: an injected failure leaves the previous
-pair intact.
+pair intact. A run that cannot publish writes neither file, but its figures are the ones a user needs
+to clear the block, so `Export::Report.render` renders the same sections for it, titled as not created
+and opening with one line saying the run wrote no model; the rule keys on `summary.publishable` and names
+no section. That report travels in the refused export outcome as `value.report_html`, and the panel's
+Export tab shows it in place, collapsed.

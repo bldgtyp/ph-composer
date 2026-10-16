@@ -31,6 +31,7 @@ TOTALS = {"floor_area_m2": "floor_area", "weighted_area_m2": "weighted_floor_are
 class TranslatedSpace:
     source: SpaceRecord
     building_segment: str
+    zone_name: str
     space: Any
 
     @property
@@ -90,7 +91,7 @@ class SpaceSection(Section[SpaceRecord, TranslatedSpace]):
                 setattr(space.properties.ph, name, rate)
         except (AssertionError, ValueError) as error:
             raise RecordError(f"space {record.id} could not be built: {error}") from error
-        return TranslatedSpace(record, zone.source.building_segment, space)
+        return TranslatedSpace(record, zone.source.building_segment, zone.source.name, space)
 
     def attach(self, host: Any, objects: Sequence[TranslatedSpace]) -> None:
         for item in objects:
@@ -111,7 +112,8 @@ class SpaceSection(Section[SpaceRecord, TranslatedSpace]):
         segment_rows: list[JSONValue] = [
             {"building_segment": name, **totals} for name, totals in sorted(segments.items())
         ]
-        return {"space_zone_totals": zone_rows, "space_segment_totals": segment_rows}
+        schedule: list[JSONValue] = [schedule_row(item) for item in sorted(objects.values(), key=schedule_key)]
+        return {"space_zone_totals": zone_rows, "space_segment_totals": segment_rows, "space_schedule": schedule}
 
     def conformance(self, model: Any, fields: Mapping[str, JSONValue]) -> None:
         """The reloaded model's Spaces sum, per Room and per Building-Segment, to the totals the run reported,
@@ -150,6 +152,34 @@ def reconcile(groups: Mapping[str, list[Any]], reported: object, key: str, label
             actual = sum(float(getattr(space, attribute)) for space in spaces)
             if not math.isclose(actual, float(value), rel_tol=1e-9, abs_tol=1e-9):
                 raise ValueError(f"{label} {name} {total} is {actual}, the run reported {value}")
+
+
+def schedule_key(item: TranslatedSpace) -> tuple[str, str, str]:
+    return (item.zone_name, item.source.number, item.source.id)
+
+
+def schedule_row(item: TranslatedSpace) -> dict[str, JSONValue]:
+    """One Space as the report's schedule lists it: the table's columns in SI, airflows as stored (m3/h), an
+    inheriting Space's as null, and its height the floor-area-weighted mean of its Volumes'."""
+    volumes = list(item.space.volumes)
+    area = sum(float(volume.floor_area) for volume in volumes)
+    height = (
+        sum(float(volume.floor_area) * float(volume.avg_ceiling_height) for volume in volumes) / area if area else None
+    )
+    inherits = not item.source.airflows
+    row: dict[str, JSONValue] = {
+        "space_id": item.source.id,
+        "zone_id": item.zone_id,
+        "zone_name": item.zone_name,
+        "number": item.source.number,
+        "name": item.source.name,
+        **{key: float(getattr(item.space, attribute)) for key, attribute in TOTALS.items()},
+        "height_m": height,
+        "offset_from_zone": item.source.offset_from_zone,
+    }
+    for key in AIRFLOWS:
+        row[key] = None if inherits else item.source.airflows.get(key, 0.0)
+    return row
 
 
 def face(boundary: Polygon, holes: Sequence[Polygon]) -> Any:

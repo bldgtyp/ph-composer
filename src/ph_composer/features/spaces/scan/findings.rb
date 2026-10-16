@@ -11,7 +11,7 @@ module PhComposer
         "space.nested" => true, "space.volume_nested" => true, "space.volume_orphan" => true,
         "space.segment_misplaced" => true, "space.volume_moved" => false,
         "space.volume_unprotected" => false, "space.duplicate_identity" => true,
-        "space.airflow_imbalance" => false
+        "space.airflow_imbalance" => false, "space.offset_from_zone" => false
       }.freeze
 
       module_function

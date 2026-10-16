@@ -47378,6 +47378,7 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `space.nested` | A Space is inside another Space. |
 | `space.nothing_to_create` | None of the Faces given can become a Space. |
 | `space.number_duplicate` | Two Spaces in one Zone share a number. |
+| `space.offset_from_zone` | A Space's Floor Segments lie outside its Zone's extents; it exports as drawn. |
 | `space.outside_zone` | A Space is in no Zone. |
 | `space.position_unknown` | The Volume has no stored position to restore. |
 | `space.same_zone` | The Space is already in that Zone. |

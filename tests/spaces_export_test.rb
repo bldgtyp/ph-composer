@@ -116,6 +116,48 @@ class SpacesExportTest < PhComposerTestCase
     assert(value.fetch("repairs").any? { |row| row["action"] == "ph_composer.spaces.make_independent" })
   end
 
+  def test_the_report_schedules_each_zone_with_its_totals_names_off_to_the_side_spaces_and_reads_ip
+    living = { "space_id" => "spc_L", "zone_id" => "zon_A", "zone_name" => "Zone A", "number" => "101",
+               "name" => "Living", "floor_area_m2" => 12.0, "weighted_area_m2" => 12.0, "net_volume_m3" => 30.0,
+               "height_m" => 2.5, "offset_from_zone" => false, "v_sup_m3h" => 60.0, "v_eta_m3h" => 0.0,
+               "v_tran_m3h" => 0.0 }
+    loft = living.merge("space_id" => "spc_F", "zone_id" => "zon_B", "zone_name" => "Zone B", "number" => "201",
+                        "name" => "Loft", "offset_from_zone" => true, "v_sup_m3h" => nil, "v_eta_m3h" => nil,
+                        "v_tran_m3h" => nil)
+    fields = { "space_schedule" => [living, loft],
+               "space_zone_totals" => [{ "zone_id" => "zon_A", "floor_area_m2" => 12.0, "weighted_area_m2" => 12.0,
+                                         "net_volume_m3" => 30.0 }],
+               "space_segment_totals" => [{ "building_segment" => "Main Building", "floor_area_m2" => 24.0,
+                                            "weighted_area_m2" => 24.0, "net_volume_m3" => 60.0 }] }
+    contributor = PhComposer::Registry.current.export_contributors.fetch(X::SECTION)
+    html = X.report(PhComposer::Export::ResultView.new({ X::SECTION => fields }, contributor), "SI").join
+    assert_includes html, "<h3>Zone A</h3>"
+    assert_includes html, "Zone total"
+    assert_includes html, "Main Building"
+    assert_match(/Drawn outside its Zone.*201 Loft \(Zone B\)/, html)
+    assert_includes html, "<td>Zone</td>", "an inheriting Space's airflow reads Zone"
+    ip = X.report(PhComposer::Export::ResultView.new({ X::SECTION => fields }, contributor), "IP").join
+    assert_includes ip, "ft²"
+    assert_includes ip, "129.17", "12 m2 in square feet"
+  end
+
+  def test_a_space_drawn_beside_its_zone_is_named_by_the_preflight_and_flagged_in_its_record
+    # The Zone's own floor, 5 by 5 m, sets its extents.
+    wall = floor_face(1900, rectangle(0, 0, 5, 5))
+    inside = space_group(1100, space_record("L", :number => "101"),
+                         [volume_group(1110, volume_record("L"), [floor_face(1111, rectangle(1, 0, 1, 1),
+                                                                             segment_record("L"))])])
+    beside = space_group(1200, space_record("F", :number => "201"),
+                         [volume_group(1210, volume_record("F"), [floor_face(1211, rectangle(20, 0, 1, 1),
+                                                                             segment_record("F"))])])
+    @model.entities << zone_group(1000, "A", [wall, inside, beside])
+    value = API.query(:context => @context, :name => X::PREFLIGHT).fetch("value")
+    offset = value.fetch("findings").select { |row| row["code"] == "space.offset_from_zone" }
+    assert_equal [["spc_FFFFFFFFFFFF", false]], offset.map { |row| row.values_at("object_id", "blocks_export") }
+    assert_equal({ "spc_FFFFFFFFFFFF" => true, "spc_LLLLLLLLLLLL" => false },
+                 records.to_h { |row| [row["id"], row["offset_from_zone"]] })
+  end
+
   # Spaces writes no PH-Composer entry of its own on a Space, so a user's keys pass and a ph_composer leaf on a
   # Space refuses.
   def test_the_metadata_guard_passes_user_keys_and_refuses_an_undeclared_reserved_leaf
