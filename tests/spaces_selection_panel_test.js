@@ -104,6 +104,8 @@ test("a Space's box checks it and everything beneath; values they do not share r
   var height = p.byLabel("Height for checked Volumes");
   assert.deepStrictEqual([height.value, height.placeholder], ["", "Mixed"]);
   assert.strictEqual(p.byLabel("Transfer for checked Spaces").value, "20");
+  var supply = p.byLabel("Supply for checked Spaces");
+  assert.deepStrictEqual([supply.value, supply.placeholder], ["", ""], "one Space with no supply is not Mixed");
   enter(p.byLabel("Weighting factor for checked Floor Segments"), "1.2");
   assert.strictEqual(batches(p).length, 0, "a factor out of range refuses at the bar");
 });

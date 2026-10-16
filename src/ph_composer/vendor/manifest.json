@@ -106,9 +106,9 @@
       "sha256": "e6442eb5c433b046228387240c2cb1fbcb7bd303c7ab29dbc2756d67c319abd8"
     },
     "html/features/spaces/selection.js": {
-      "bytes": 10565,
+      "bytes": 10698,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "9d1acb786f9342ba9a721954fd63c7fb7e5bb27e19d82d8e37c59168646e92f5"
+      "sha256": "d0a379b7f53547c34a8f38cb353baf838c71ef57bee84d35647b8e87d560592f"
     },
     "html/features/spaces/view.js": {
       "bytes": 16823,

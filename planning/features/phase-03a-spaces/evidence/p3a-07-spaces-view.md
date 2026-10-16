@@ -1,7 +1,7 @@
 # P3a-07 evidence: the Spaces view
 
 DATE: 2026-10-16
-STATUS: Slices A and B merged through #150 (`7619964`) and #151 (`a9d2f72`); slice C1 in review
+STATUS: Slices A, B and C1 merged through #150 (`7619964`), #151 (`a9d2f72`) and #152 (`34db51a`); slice C2 in review
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -126,4 +126,8 @@ are fully checked and hands them to the new view, which checks everything beneat
 the Spaces view both supply `checkedZones` and `checkZones`. `context/EXTENSIBILITY.md`, "Zone views", says so.
 
 Tests: `tests/spaces_selection_panel_test.js` (phase doc test 7 and step 17's test).
+
+Seen in the panel with Hall checked: Supply and Extract read "Mixed" for one Space with neither rate set,
+because "the rows differ" and "unset" shared one marker; a value the rows share, unset included, now reads as
+itself.
 

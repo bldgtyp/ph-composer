@@ -129,10 +129,13 @@ function (panel, ui, units, preferences, fields, selectionBars) {
     return byKind;
   }
 
-  /* The value every row of a kind has for one key, or undefined when they differ. */
+  // What `common` answers when the rows differ; unset (undefined) is a value they can share.
+  var MIXED = {};
+
+  /* The value every row of a kind has for one key (undefined when none sets it), or MIXED. */
   function common(rows, key) {
     var first = target(rows[0]).values[key];
-    return rows.every(function (row) { return target(row).values[key] === first; }) ? first : undefined;
+    return rows.every(function (row) { return target(row).values[key] === first; }) ? first : MIXED;
   }
 
   SpaceSelection.prototype.bar = function (overview) {
@@ -169,10 +172,10 @@ function (panel, ui, units, preferences, fields, selectionBars) {
       KINDS[group._kind].controls.forEach(function (control) {
         var input = self.fields[group._kind + ":" + control.key], value = common(rows, control.key);
         if (document.activeElement !== input) {
-          input.value = value === undefined || value === null ? "" :
+          input.value = value === MIXED || value === undefined || value === null ? "" :
             units.formatEdit(value, control.quantity, units.profile(control.quantity, preferences.current()));
         }
-        input.placeholder = value === undefined ? "Mixed" : "";
+        input.placeholder = value === MIXED ? "Mixed" : "";
         input.disabled = busy;
       });
     });
