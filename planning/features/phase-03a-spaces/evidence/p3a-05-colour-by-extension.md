@@ -1,7 +1,7 @@
 # P3a-05 evidence: Colour-by derived geometry and readouts
 
 DATE: 2026-10-15
-STATUS: Merged in two slices (#147, #148); overlays seen on the host in [P3a-12](p3a-12-acceptance.md); draw cost not re-measured
+STATUS: Merged in two slices (#147, #148); overlays seen on the host in [P3a-12](p3a-12-acceptance.md); draw cost re-measured and S05 passed in the 2026-10-16 acceptance rerun
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

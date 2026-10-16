@@ -4,7 +4,7 @@ Ed's answer to P3a-12's first two items: rerun the Spaces host rows and every ea
 screened stale, under the full procedure (an `acceptance_run.py` baseline before each case, an observation
 receipt after it, and a ledger result). R05 is superseded and not rerun.
 
-Build: `main` at `e6059fa9` (branch `acceptance/phase-3a-rerun` adds catalog entries only). Normal RBZ
+Build: `main` at `e6059fa9` (branch `acceptance/phase-3a-rerun` adds and adjusts catalog entries: S05 to S11, S03 widened for D3a-19, and the A02, A04, A05 and A09 dependency paths; each ledger row's `commit` is the branch commit it was recorded on). Normal RBZ
 SHA-256 `28bac2c81a3f7dd3f3a35ccc860b285d05614227f31e5ec4dfce3be0685d6d63`, 454 files, installed package
 matching (`acceptance_run.py package`). SketchUp 2026.1 build 26.1.188, Ruby 3.2.2, macOS 26.6.2. Each case
 starts from a fresh copy of a base fixture whose SHA-256 is recorded in its result. Raw baselines,
@@ -34,7 +34,7 @@ Fresh copy of `blank-template.skp`, Suggest-on-Make off, `AuthoringWalkthrough.s
 - Make Zone made both Zones, 12 Faces, and the walkthrough classified one Face in each.
 - The walkthrough's Zone edit refused: it sends raw `building_segment` and `level` strings, which schema v2
   replaced with option ids, and the walkthrough still reports `passed: true`. That is a defect in the
-  example, filed separately. The same edit made through the public API (`zones.options.create` for
+  example ([#176](https://github.com/bldgtyp/ph-composer/issues/176)). The same edit made through the public API (`zones.options.create` for
   "Walkthrough" and "L1", then `zones.update` with their ids and a 150 mm ground depth) committed.
 - Each classified Face's stamp, read directly from its dictionary, carries its Zone's id, Building Segment id and
   Level id.
@@ -70,7 +70,7 @@ Group selected inside the open Zone 1, Cmd+C, Edit > Paste In Place ("Undo Paste
 one definition and Face 48922. Classify and Reverse, previewed and invoked on a placement, all refused
 `target.shared_definition`, effect `none`, naming Make Unique; nothing changed and no Face record was written.
 `r01_check`'s own `shared_storage` flag reads false with three placements because it compares two; the shared
-definition was confirmed directly.
+definition was confirmed directly ([#177](https://github.com/bldgtyp/ph-composer/issues/177)).
 
 **A04.** Paint started from the Faces view's Type column menu (the Wall paint icon; the old palette chip is
 gone). The header showed the pressed glyph and the status bar "Classify: face type Wall. Click or drag over
@@ -141,10 +141,10 @@ names are recorded below. No shipped code was patched.
 - Native File > Close, then File > Open Recent: the first `API.discover` succeeds with a new session id, and
   every Unit, Face and area readback is identical. Nothing was logged in that window.
 
-Seen during the run, filed separately: after the Close, with no document window active, the panel kept showing
+Seen during the run: after the Close, with no document window active, the panel kept showing
 the closed Model until another document was clicked. Separately, `container_added` and
 `zone_container_listener` logged a `TypeError` once during the integrated setup and once on an Undo. Three traced
-attempts did not reproduce it.
+attempts did not reproduce it ([#174](https://github.com/bldgtyp/ph-composer/issues/174), [#175](https://github.com/bldgtyp/ph-composer/issues/175)). The case dependency patterns were also too broad to screen precisely ([#178](https://github.com/bldgtyp/ph-composer/issues/178)).
 
 ## E17, Phase 2 integrated authoring, lifecycle and export
 
@@ -374,24 +374,26 @@ scripts loaded), closed by the normal restoration below. Raw files are in `_priv
 - S08: Mark floor from the column menu, with a click and a held drag (native mouse down and up; probe 258 held,
   256 on release), each one Undo step. The Create Space offer, refusals, Escape mid-drag, the glyph stop and one
   tool at a time all hold. Create Space from the context menu makes 104 Spare in one step, with exact Undo and
-  Redo. The review of a three-Face selection leaves out the classified wall. A Model switch keeps the tool per
+  Redo. The review of a three-Face selection leaves out the classified wall. Mark floor was painted at 0 and 1 only;
+  a typed 0.6 was entered in S07 and joined the paint choices, but not painted with the tool. A Model switch keeps the tool per
   Model.
 - S09: the four modes and legends; prisms (103's 5 m Volume, 201's projected base); labels, toggles and selection
   totals in SI and IP with no mode active; a hidden tag. Digests are unchanged through the modes and a save, and
   By Space colours are stable across a reopen. Three of four Spaces share one By Space colour
   ([#183](https://github.com/bldgtyp/ph-composer/issues/183)).
 - S11: the native Height from solid confirmation, Set height to 3.0 m, and the owed native Undo and Redo (one
-  step). Refusals through the public preview. The native Extensions entry does nothing, silently, with a wrong
-  selection ([#184](https://github.com/bldgtyp/ph-composer/issues/184)).
+  step). Refusals through the public preview and the panel's selection query. The native Extensions entry does
+  nothing, silently, with a wrong selection ([#184](https://github.com/bldgtyp/ph-composer/issues/184)), so that
+  clause holds on the preview route only. The two-solid Group was accepted without its summed volume being read.
 - S10: a fresh normal process exports natively and through an approved location with the same ids. The reload
   gives iCFA 32.0 m2 and net volume 95.6 m3, airflows in m3/s, 201 with none, and `user_data` on the three
   objects. The preflight and report carry the expected lines. Both blocking rows block with no pair written. An
   export from inside an open Volume leaves it as it was, and the reopen export has identical ids.
 - S05, synthetic composition: By height and Footprints through the public contract, with a hidden ancestor still
-  counted. Draw cost on the 1,012-triangle scene: fill p95 adds 12.87 ms, inside 16 ms. Operation marks read as
+  counted. D3a-5: slice B (`74365c7`) changes only `features/windows/colour_modes.rb` and its test in code. Draw cost on the 1,012-triangle scene: fill p95 adds 12.87 ms, inside 16 ms. Operation marks read as
   the exterior elevation. Digests are unchanged.
 - S06, synthetic composition: the Areas view; switching keeps the filter, expanded and checked Zones and the
-  Locate outline, and sends nothing. Classify stops on a switch. The view returns after reopening the panel and in
+  Locate outline, and sends nothing. The Faces-alone view row (hidden with one view) stays offline. Classify stops on a switch. The view returns after reopening the panel and in
   a fresh process. A focused filter field blocks a view switch
   ([#185](https://github.com/bldgtyp/ph-composer/issues/185)).
 
