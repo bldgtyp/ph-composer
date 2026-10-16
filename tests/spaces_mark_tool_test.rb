@@ -23,7 +23,7 @@ class SpacesMarkToolTest < PhComposerTestCase
     build
   end
 
-  # Zone A holds one Space: a Volume with three unmarked Faces and one marked, a loose Face at the Space's
+  # Zone A holds one Space: a Volume with three unmarked Faces and one marked, two loose Faces at the Space's
   # root, a loose Face in the Zone outside the Space, and a Zone Face classified in the Faces view.
   def build
     @inside = [floor_face(1111, rectangle(0, 0, 1, 1)), floor_face(1112, rectangle(1, 0, 1, 1)),
@@ -31,7 +31,9 @@ class SpacesMarkToolTest < PhComposerTestCase
     @marked = floor_face(1114, rectangle(3, 0, 1, 1), segment_record("M"))
     @volume = volume_group(1110, volume_record("V"), @inside + [@marked])
     @root_face = floor_face(1120, rectangle(0, 2, 2, 2))
-    @space = space_group(1100, space_record("S", :number => "101", :name => "Living"), [@volume, @root_face])
+    @root_face2 = floor_face(1121, rectangle(2, 2, 2, 2))
+    @space = space_group(1100, space_record("S", :number => "101", :name => "Living"),
+                         [@volume, @root_face, @root_face2])
     @loose = floor_face(1200, rectangle(5, 0, 2, 2))
     @wall = floor_face(1300, rectangle(9, 0, 1, 1))
     @zone = zone_group(1000, "A", [@space, @loose, @wall])
@@ -141,6 +143,114 @@ class SpacesMarkToolTest < PhComposerTestCase
     assert_match(/one place/, Sketchup.status_texts.last)
   end
 
+  def test_a_drag_across_more_space_root_faces_than_the_limit_refuses_whole
+    PhComposer::Spaces.floor_gesture_limit = 1
+    @model.active_path = [@zone, @space]
+    tool.start(1.0)
+    point(:a, [@root_face])
+    point(:b, [@root_face2])
+    operations = @model.operations.length
+    press(:a)
+    move(:b)
+    release
+    assert_equal operations, @model.operations.length
+    assert_equal 1, space_row.fetch("volumes").length
+    assert_match(/at most 1 Faces/, Sketchup.status_texts.last)
+  end
+
+  def test_a_move_without_the_button_after_a_lost_release_cancels_the_gesture
+    tool.start(1.0)
+    point(:a, [@zone, @space, @volume, @inside[0]])
+    point(:b, [@zone, @space, @volume, @inside[1]])
+    operations = @model.operations.length
+    press(:a)
+    xy = @coordinates.fetch(:b)
+    tool.onMouseMove(0, xy[0], xy[1], @view) # the button is up: its release never arrived
+    release
+    assert_equal operations, @model.operations.length
+    assert_empty segments_on(@inside[0, 2]).compact
+  end
+
+  def test_a_face_in_a_space_outside_every_zone_refuses
+    @zone.entities.delete(@space)
+    @model.entities << @space
+    tool.start(1.0)
+    point(:in, [@space, @volume, @inside[0]])
+    operations = @model.operations.length
+    click(:in)
+    assert_equal operations, @model.operations.length
+    assert_match(/in no Zone/, Sketchup.status_texts.last)
+  end
+
+  def test_hovering_places_each_pick_from_its_path_without_walking_the_model
+    scans = 0
+    original = PhComposer::Spaces::Occurrences.method(:scan)
+    PhComposer::Spaces::Occurrences.define_singleton_method(:scan) do |*args, **options|
+      scans += 1
+      original.call(*args, **options)
+    end
+    tool.start(1.0) # its Colour-by mode reads the Model once
+    scans = 0
+    point(:in, [@zone, @space, @volume, @inside[0]])
+    3.times { tool.onMouseMove(0, *@coordinates.fetch(:in), @view) }
+    assert_equal 0, scans
+  ensure
+    PhComposer::Spaces::Occurrences.define_singleton_method(:scan, original)
+  end
+
+  def test_a_loose_face_in_shared_zone_storage_refuses_instead_of_being_offered
+    @model.entities.delete(@zone)
+    holder = Sketchup::ComponentInstance.new(5000, Sketchup::ComponentDefinition.new(Sketchup::Entities.new([@zone])))
+    @model.entities << holder
+    tool.start(1.0)
+    point(:loose, [holder, @zone, @loose])
+    click(:loose)
+    assert_empty tool.offered
+    refute_match(/Create Space/, Sketchup.status_texts.last)
+    assert_equal :warning, @notices.last.last
+  end
+
+  def test_an_unreadable_face_record_refuses_rather_than_offering
+    @wall.set_attribute("ph_composer.face_assignment", "record", "{not json")
+    tool.start(1.0)
+    point(:wall, [@zone, @wall])
+    click(:wall)
+    assert_empty tool.offered
+    assert_match(/not valid JSON/, Sketchup.status_texts.last)
+  end
+
+  def test_a_draw_that_raises_cancels_the_pending_gesture
+    tool.start(1.0)
+    point(:a, [@zone, @space, @volume, @inside[0]])
+    operations = @model.operations.length
+    press(:a)
+    @view.define_singleton_method(:draw) { |*_args| raise "drawing failed" }
+    tool.draw(@view)
+    release
+    assert_equal operations, @model.operations.length
+    assert_nil segments_on([@inside[0]]).first
+  ensure
+    @view.singleton_class.send(:remove_method, :draw) if @view.singleton_methods.include?(:draw)
+  end
+
+  def test_stop_leaves_another_tool_running
+    tool.start(1.0)
+    classify = PhComposer::Zones::Faces.classify_tool(@session).start
+    API.view(:context => @context, :name => "ph_composer.spaces.mark_tool.stop", :params => {})
+    assert classify.active?
+  end
+
+  def test_starting_after_a_tool_that_forced_the_same_mode_keeps_that_mode_on
+    service = PhComposer::ColourBy.for(@session)
+    tool.start(1.0)
+    tool.stop
+    service.deactivate
+    PhComposer::Zones::Faces.classify_tool(@session).start # forces the remembered weighting-factor mode
+    tool.start(1.0)
+    assert tool.active?
+    assert_equal MODE, service.mode_name
+  end
+
   def test_starting_turns_colour_by_weighting_factor_on_and_stopping_leaves_it_on
     service = PhComposer::ColourBy.for(@session)
     result = API.view(:context => @context, :name => "ph_composer.spaces.mark_tool.start",
@@ -180,7 +290,7 @@ class SpacesMarkToolTest < PhComposerTestCase
 
   def move(name)
     xy = @coordinates.fetch(name)
-    tool.onMouseMove(0, xy[0], xy[1], @view)
+    tool.onMouseMove(MK_LBUTTON, xy[0], xy[1], @view)
   end
 
   def release

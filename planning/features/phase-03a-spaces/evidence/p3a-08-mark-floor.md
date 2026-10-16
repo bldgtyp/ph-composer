@@ -21,8 +21,8 @@ deactivation, a suspended context and a raised callback each abandon the gesture
 What a pick means (step 2): a Face directly inside a Volume is marked with the factor (`floors.mark`); a
 Face at a Space's root becomes its next Volume (`volumes.create`, which needs the Space's edit context open);
 a Face directly in a Zone and in no Space is offered Create Space and nothing is written; a Face the Faces
-feature has a record for (asked through its public `ph_composer.zones.faces.list`, never its store) or a Face
-in no Zone refuses with the reason. A drag mixing those places refuses whole.
+feature has a record for, or one a write would refuse from its path (both read from Zones' public
+`host_context` row, never its store), or a Face in no Zone refuses with the reason. A drag mixing those places refuses whole.
 
 The Floor Segment schema owns `FLOOR_GESTURE_LIMIT` (250), and `floors.mark` refuses above it as
 `gesture.too_large` (step 3). The view commands `ph_composer.spaces.mark_tool.start` (with the factor) and
@@ -31,3 +31,27 @@ turns Colour by weighting factor on, and stopping leaves it on (step 5). No file
 `core/` changed.
 
 Tests: `tests/spaces_mark_tool_test.rb` (phase doc tests 1 to 5, 7 and 8 on the host side).
+
+### Review of PR #156
+
+gpt-6-astra, cycle 1, at `33713911`: three P1 and six P2, each reproduced by a test in
+`tests/spaces_mark_tool_test.rb` that failed before its fix.
+
+- P1: a drag over more Space-root Faces than the limit created a Volume from the truncated set, because
+  `volumes.create` takes no gesture. The tool now refuses a full set itself on every route but marking,
+  whose operation owns the limit.
+- P1: a press whose release was lost kept collecting on later hovers. A move without `MK_LBUTTON` now
+  cancels the gesture, as the Window Place tool does. The native drag row must confirm macOS sets the flag
+  on a held move.
+- P1: the Volume and Space-root routes did not ask for a Zone, so a Space moved out of every Zone could be
+  marked. Every route now needs a Zone above the Face.
+- P2: every hover walked the Model (`Occurrences.scan`). A pick is now placed from its own path: the Spaces
+  records on its containers, the Zone paths from `zones.all` read once per revision and edit context, and
+  Zones' `host_context` row for a Face directly in a Zone, cached per path.
+- P2: a loose Face in shared Zone storage was offered Create Space. The `host_context` row's
+  `write_refusal` now refuses it.
+- P2: a failed Faces read counted as "not classified". Any failed read now refuses with its reason.
+- P2: `draw` had no exception boundary, so a pending gesture survived a drawing failure. It now abandons it.
+- P2: `mark_tool.stop` stopped whatever tool was active. It now acts only while Mark floor is.
+- P2: starting after Classify had forced the weighting-factor mode lost the mode when Classify gave it up.
+  The mode now turns on after the tool change.
