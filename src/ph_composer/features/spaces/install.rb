@@ -48,6 +48,9 @@ require_relative "mark_placement"
 require_relative "mark_tool"
 require_relative "declarations/mark_tool"
 require_relative "create_route"
+require_relative "height_from_solid"
+require_relative "declarations/height_from_solid"
+require_relative "height_from_solid_menu"
 require_relative "declarations/create_route"
 
 module PhComposer
@@ -68,6 +71,8 @@ module PhComposer
       ExportProjection.install(feature)
       MarkToolRegistration.install(feature)
       CreateRouteRegistration.install(feature)
+      HeightFromSolidRegistration.install(feature)
+      HeightFromSolidMenu.install(feature)
     end
   end
 end

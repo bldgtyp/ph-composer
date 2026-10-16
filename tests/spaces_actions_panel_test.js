@@ -29,7 +29,8 @@ function page() {
   };
   p.click = function (node) { node.listeners.click({ preventDefault: function () {} }); };
   p.result = function (message, outcome) {
-    p.panel.receive({ type: message.type === "view.invoke" ? "view.result" : "action.result",
+    var types = { "view.invoke": "view.result", "query.invoke": "query.result" };
+    p.panel.receive({ type: types[message.type] || "action.result",
       payload: { request_id: message.payload.request_id, session: "session-a", outcome: outcome } });
   };
   return p;
@@ -275,4 +276,85 @@ test("a confirmation names a record with no name by its number and its Space", f
   p.click(dialog.querySelectorAll("button").filter(function (node) { return node.textContent === "Cancel"; })[0]);
   p.click(p.action("Remove Volume 1 of Space 102"));
   assert.strictEqual(dialog.querySelector("h2").textContent, "Remove Volume 1 of Space 102");
+});
+
+test("Height from solid reads the selected solid, previews, and writes only once confirmed", function () {
+  var p = page();
+  p.receive(snapshot());
+  expandAll(p);
+  p.click(p.section().querySelectorAll("[data-row-action]").filter(function (node) {
+    return node.getAttribute("aria-label") === "Height of Volume 1 from a solid";
+  })[0]);
+  var selected = last(p);
+  assert.deepStrictEqual([selected.type, selected.payload.name],
+    ["query.invoke", "ph_composer.spaces.selected_solid"]);
+  p.result(selected, { status: "completed", revision: 4, value: { solid: [100, 101, 900] } });
+  var preview = last(p);
+  assert.strictEqual(preview.payload.name, "ph_composer.spaces.volumes.height_from_solid_preview");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(preview.payload.params.solid)), [100, 101, 900]);
+  var sent = p.sent.length;
+  p.result(preview, { status: "completed", revision: 4, value: { height_m: 3, solid_volume_m3: 36,
+    net_floor_area_m2: 12, current_height_m: 2.5 } });
+  var dialog = p.context.document.querySelector("dialog");
+  assert.match(dialog.querySelector("p").textContent, /becomes 3 m\./);
+  assert.strictEqual(p.sent.length, sent, "nothing is written before the confirmation");
+  p.click(dialog.querySelectorAll("button").filter(function (node) { return node.textContent === "Set height"; })[0]);
+  var write = last(p);
+  assert.strictEqual(write.payload.name, "ph_composer.spaces.volumes.height_from_solid");
+  assert.strictEqual(write.payload.expected_revision, 4);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(write.payload.params.expected_values)),
+    { avg_ceiling_height_m: 2.5 });
+});
+
+test("Height from solid with no solid selected says so and writes nothing", function () {
+  var p = page();
+  p.receive(snapshot());
+  expandAll(p);
+  p.click(p.section().querySelectorAll("[data-row-action]").filter(function (node) {
+    return node.getAttribute("aria-label") === "Height of Volume 1 from a solid";
+  })[0]);
+  p.result(last(p), { status: "refused", code: "selection.invalid", message: "Select one closed Group." });
+  assert.strictEqual(p.context.document.querySelector(".phc-floating-notice-message").textContent,
+    "Select one closed Group.");
+  assert.strictEqual(p.sent.filter(function (message) { return message.type === "action.invoke"; }).length, 0);
+});
+
+test("a draft begun while Height from solid reads holds the confirmation", function () {
+  var p = page();
+  p.receive(snapshot());
+  expandAll(p);
+  p.click(p.section().querySelectorAll("[data-row-action]").filter(function (node) {
+    return node.getAttribute("aria-label") === "Height of Volume 1 from a solid";
+  })[0]);
+  p.result(last(p), { status: "completed", revision: 4, value: { solid: [100, 101, 900] } });
+  var preview = last(p);
+  var height = p.section().querySelectorAll("input").filter(function (node) {
+    return node.getAttribute("aria-label") === "Volume 1 height";
+  })[0];
+  if (height.listeners.focus) height.listeners.focus({ target: height });
+  height.value = "abc";
+  height.listeners.input({ target: height });
+  p.result(preview, { status: "completed", revision: 4, value: { height_m: 3, solid_volume_m3: 36,
+    net_floor_area_m2: 12, current_height_m: 2.5 } });
+  var dialog = p.context.document.querySelector("dialog");
+  assert.ok(!dialog || dialog.hidden, "no confirmation over the held draft");
+  assert.strictEqual(p.sent.filter(function (message) {
+    return message.payload && message.payload.name === "ph_composer.spaces.volumes.height_from_solid";
+  }).length, 0);
+});
+
+test("a Height from solid preview that lands after leaving the Spaces view opens nothing", function () {
+  var p = page();
+  p.receive(snapshot());
+  expandAll(p);
+  p.click(p.section().querySelectorAll("[data-row-action]").filter(function (node) {
+    return node.getAttribute("aria-label") === "Height of Volume 1 from a solid";
+  })[0]);
+  p.result(last(p), { status: "completed", revision: 4, value: { solid: [100, 101, 900] } });
+  var preview = last(p);
+  p.panel.showTab("library");
+  p.result(preview, { status: "completed", revision: 4, value: { height_m: 3, solid_volume_m3: 36,
+    net_floor_area_m2: 12, current_height_m: 2.5 } });
+  var dialog = p.context.document.querySelector("dialog");
+  assert.ok(!dialog || dialog.hidden, "no confirmation over another tab");
 });

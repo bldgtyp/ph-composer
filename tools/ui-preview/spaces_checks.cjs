@@ -101,6 +101,16 @@ function visibleRows(page) {
     await page.screenshot({ path: path.join(output, "spaces-table-options.png") });
     await page.keyboard.press("Escape");
 
+    // Height from solid from a Volume row: the confirmation shows the solid's volume, the floor area and the height.
+    await open(page, "spaces");
+    await page.getByRole("button", { name: "Expand all" }).click();
+    await page.getByRole("button", { name: "Height of Volume 1 from a solid" }).first().click();
+    const height = page.locator("dialog:visible");
+    await height.waitFor();
+    assert.match(await height.textContent(), /becomes 3 m\./);
+    await page.screenshot({ path: path.join(output, "spaces-height-from-solid.png") });
+    await height.getByRole("button", { name: "Cancel" }).click();
+
     // Create Space's review from SketchUp's context menu: it shows the Spaces view under the shared dialog,
     // says what is accepted and why the rest is left out, and Create closes it.
     for (const width of [1280, 420]) {

@@ -128,4 +128,14 @@ class SketchupStubDeviationsTest < PhComposerTestCase
     assert_equal [face], PhComposer::Pick.face_path(view, 4, 5), "the first path ending in a Face wins"
     assert_equal 0, view.pick_helper.do_pick(9, 9)
   end
+
+  # The API reference's `volume`, not yet measured (context/SKETCHUP_HOST_BEHAVIOR.md, Height from solid): a
+  # container that is not a solid answers a negative volume, and a solid's volume is scaled by its own transform.
+  def test_volume_is_negative_for_a_non_solid_and_scaled_by_the_placements_own_transform
+    open = Sketchup::Group.new(1)
+    assert_operator open.volume, :<, 0
+    scaled = Sketchup::Group.new(2, Sketchup::Entities.new, {}, :transformation => Geom::Transformation.scaling(2))
+    scaled.solid_volume = 10.0
+    assert_in_delta 80.0, scaled.volume, 1e-9
+  end
 end

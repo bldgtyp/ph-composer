@@ -773,7 +773,25 @@ module Sketchup
     end
   end
 
+  # The host's `volume` (cubic inches), as its API reference states it: a solid's volume scaled by the
+  # placement's own transform, and negative when the container is not a solid. Not yet measured on the
+  # host (context/SKETCHUP_HOST_BEHAVIOR.md); a fixture states the unscaled solid volume with `solid_volume=`.
+  module SolidVolume
+    attr_writer :solid_volume
+
+    def volume
+      return -1.0 unless @solid_volume
+
+      m = transformation.to_a
+      determinant = (m[0] * ((m[5] * m[10]) - (m[9] * m[6]))) - (m[4] * ((m[1] * m[10]) - (m[9] * m[2]))) +
+                    (m[8] * ((m[1] * m[6]) - (m[5] * m[2])))
+      @solid_volume * determinant.abs
+    end
+  end
+
   class ComponentInstance < Entity
+    include SolidVolume
+
     attr_accessor :definition
     attr_accessor :transformation, :name, :glued_to
 
@@ -820,6 +838,8 @@ module Sketchup
   end
 
   class Group < Entity
+    include SolidVolume
+
     attr_reader :entities
     attr_accessor :transformation
     attr_reader :name

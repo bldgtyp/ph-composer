@@ -302,6 +302,14 @@
     this.publish("view.result", { request_id: payload.request_id, session: payload.session, outcome: outcome });
   };
 
+  /* Height from solid's two reads, as SketchUp would answer them with a 36 m3 solid selected over a 12 m2 floor. */
+  Host.prototype.spacesQuery = function (payload) {
+    var value = payload.name === "ph_composer.spaces.selected_solid" ? { solid: [100, 101, 900] } :
+      { height_m: 3, solid_volume_m3: 36, net_floor_area_m2: 12, current_height_m: 2.5 };
+    this.publish("query.result", { request_id: payload.request_id, session: payload.session,
+      outcome: { status: "completed", code: "ok", revision: this.revision, value: value } });
+  };
+
   /* Synthetic Window outcomes exercise panel transport only; thermal values are fixture projections. */
   Host.prototype.windowAction = function (payload) {
     var host = this, params = payload.params, name = payload.name.replace("ph_composer.windows.", "");
@@ -790,6 +798,7 @@
   };
   Host.prototype.libraryQuery = function (payload) {
     if (payload.name === "ph_composer.library.export_preview") { this.libraryExportPreview(payload); return; }
+    if (payload.name.indexOf("ph_composer.spaces.") === 0) { this.spacesQuery(payload); return; }
     var params = payload.params, rows = this.libraryCatalogs[params.provider_id] || [];
     rows = rows.filter(function (row) { return (row.kind || "materials") === params.kind; });
     var generation = this.libraryGenerations[params.provider_id], outcome;

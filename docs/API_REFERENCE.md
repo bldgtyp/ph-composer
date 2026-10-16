@@ -8099,6 +8099,51 @@ Example params:
 {}
 ```
 
+### `ph_composer.spaces.selected_solid`
+
+The one selected Group or component that is not a Space or a Volume, as the solid Height from solid would measure. Owner: `ph_composer.spaces`.
+
+Refuses: `record.unreadable`, `selection.invalid`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "solid"
+  ],
+  "properties": {
+    "solid": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1,
+      "description": "The root-to-entity persistent-id path."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.spaces.settings.get`
 
 The Model's last-entered height, which new Spaces take. Owner: `ph_composer.spaces`.
@@ -8143,6 +8188,117 @@ Example params:
 
 ```json
 {}
+```
+
+### `ph_composer.spaces.volumes.height_from_solid_preview`
+
+The height a solid would give a Volume: the solid's volume over the Volume's net floor area. Writes nothing. Owner: `ph_composer.spaces`.
+
+Refuses: `record.unreadable`, `space.net_area_zero`, `space.solid_invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volume",
+    "solid"
+  ],
+  "properties": {
+    "volume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume_id",
+        "entity_path"
+      ],
+      "properties": {
+        "volume_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Volume, as list returns it."
+    },
+    "solid": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1,
+      "description": "The closed Group or component's root-to-entity path."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "height_m",
+    "solid_volume_m3",
+    "net_floor_area_m2",
+    "current_height_m"
+  ],
+  "properties": {
+    "height_m": {
+      "type": "number",
+      "x-unit": "m",
+      "description": "The height it gives."
+    },
+    "solid_volume_m3": {
+      "type": "number",
+      "x-unit": "m3",
+      "description": "The solid's world volume."
+    },
+    "net_floor_area_m2": {
+      "type": "number",
+      "x-unit": "m2",
+      "description": "The Volume's net floor area."
+    },
+    "current_height_m": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-unit": "m",
+      "description": "The height now; null when unset."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "volume": {
+    "volume_id": "vol_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300,
+      1310
+    ]
+  },
+  "solid": [
+    1201,
+    1300,
+    1400
+  ]
+}
 ```
 
 ### `ph_composer.windows.export_preflight`
@@ -25637,6 +25793,135 @@ Example params:
       1320
     ]
   ]
+}
+```
+
+### `ph_composer.spaces.volumes.height_from_solid`
+
+Set a Volume's average clear ceiling height from a closed solid: its volume over the Volume's net floor area. The solid is left as it was. Owner: `ph_composer.spaces`.
+
+Undo step: Height from Solid. Writes the Volume's height and the Model's last height, which new Spaces take.
+
+Refuses: `record.unreadable`, `space.net_area_zero`, `space.solid_invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volume",
+    "solid",
+    "expected_values"
+  ],
+  "properties": {
+    "volume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume_id",
+        "entity_path"
+      ],
+      "properties": {
+        "volume_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Volume, as list returns it."
+    },
+    "solid": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1,
+      "description": "The closed Group or component's root-to-entity path."
+    },
+    "expected_values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "avg_ceiling_height_m"
+      ],
+      "properties": {
+        "avg_ceiling_height_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "The height as last read; null when unset."
+        }
+      },
+      "description": "The Volume's height as last read; a changed one refuses."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "height_m",
+    "solid_volume_m3",
+    "net_floor_area_m2",
+    "volume_id"
+  ],
+  "properties": {
+    "height_m": {
+      "type": "number",
+      "x-unit": "m",
+      "description": "The height it gives."
+    },
+    "solid_volume_m3": {
+      "type": "number",
+      "x-unit": "m3",
+      "description": "The solid's world volume."
+    },
+    "net_floor_area_m2": {
+      "type": "number",
+      "x-unit": "m2",
+      "description": "The Volume's net floor area."
+    },
+    "volume_id": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "volume": {
+    "volume_id": "vol_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1300,
+      1310
+    ]
+  },
+  "solid": [
+    1201,
+    1300,
+    1400
+  ],
+  "expected_values": {
+    "avg_ceiling_height_m": 2.5
+  }
 }
 ```
 
@@ -47376,6 +47661,7 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `space.height_missing` | A Volume has no average clear ceiling height. |
 | `space.identity_unique` | The occurrence already has an identity of its own; there is nothing to repair. |
 | `space.nested` | A Space is inside another Space. |
+| `space.net_area_zero` | A Volume has no net floor area, so no height can be derived from a solid. |
 | `space.nothing_to_create` | None of the Faces given can become a Space. |
 | `space.number_duplicate` | Two Spaces in one Zone share a number. |
 | `space.offset_from_zone` | A Space's Floor Segments lie outside its Zone's extents; it exports as drawn. |
@@ -47384,6 +47670,7 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `space.same_zone` | The Space is already in that Zone. |
 | `space.segment_misplaced` | A Floor Segment record is on a Face that is not directly inside a Volume. |
 | `space.shares_edge` | A Face shares an Edge with a Face outside the set being grouped. |
+| `space.solid_invalid` | The chosen Group or component is not a closed solid, or encloses no volume. |
 | `space.volume_empty` | A Volume has no Floor Segment. |
 | `space.volume_moved` | A Volume moved inside its Space since it was last left. |
 | `space.volume_nested` | A Volume is below another Group inside its Space rather than directly in it. |
