@@ -41,3 +41,23 @@ the second three P2 (Table options could hide a held Zone edit; a view's older c
 replace the one set since; a leading column missed the view's header and menu hooks). Each was reproduced by
 a test and fixed; the second pass's three were gated by `make ci` only, at the review cap.
 
+## Slice B: editing and airflow entry
+
+`html/features/spaces/cells.js` makes the view's editable cells through the shared record drafts and the
+range-edit grid: a Space's number, name and three airflows, a Volume's name and height, a Floor Segment's
+name, weighting factor and net area factor (steps 4 to 6). A cell commit is one `ph_composer.spaces.update`
+with `expected_values` as read (a key absent where the value was unset); a refusal keeps the draft with the
+host's reason. A range fill or a paste is one `batch_update`, every change to one record merged into one
+edit; a pasted blank over a rate that was never set is left out. Factors outside 0 to 1 refuse at the cell.
+An airflow cell keeps unset distinct from zero: a blank commit sends `null`, a typed 0 is a value, and an
+unset rate shows its muted placeholder ("0" beside a set rate, "Zone" on an inheriting Space). Display
+follows the unit preference; a draft keeps its typed text through a switch. The phase doc names
+`volumes.update` and `floors.update`; the host has one `update` for all three kinds, which this uses.
+
+The host gained `attach`, `prepare` and `painted` for it (`context/EXTENSIBILITY.md`, "Zone views").
+
+Tests: `tests/spaces_cells_panel_test.js` (phase doc tests 2 to 5 and 9: one update per commit, a refusal
+keeping the draft, the factor range, the zero and clear cases, the three airflow states, a range fill and a
+paste each as one `batch_update`, a unit switch). Clearing the last set rate returning a Space to inheriting
+is the host's any-set rule (`spaces_reads_test.rb`); the panel sends the clear.
+

@@ -112,6 +112,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       mount: mount, columnWidths: {}, hiddenColumns: Object.assign({}, view.hiddenColumns || {}),
       menus: Object.create(null), toggles: Object.create(null),
       filters: Object.create(null), sort: null };
+    // The view's own surface and table mount, once, for what it binds there (a range-edit grid).
+    call(made, "attach", [{ surface: surface, mount: mount,
+      hiddenColumns: function () { return made.hiddenColumns; } }]);
     return made;
   }
 
@@ -648,6 +651,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     // Set before the tree paints, so the selection bar never works from an earlier pass if painting fails.
     screenState.rows = rows;
     screenState.zoneCells.refresh(rows.filter(zoneRow), state);
+    call(own, "prepare", [rows, state]);
     screenState.controls.filter.placeholder = own.view.placeholder || "Zone";
     paintTable(own, rows, screenState, profile);
   }
@@ -746,6 +750,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         else call(own, "action", [row, item]);
       }
     });
+    call(own, "painted");
   }
 
   /* Which rows the filters hide: the controls' answer for a Zone and its rows, and the same rules (the text
