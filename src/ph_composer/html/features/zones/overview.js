@@ -132,11 +132,16 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     return current ? call(current, "draftReason", [], null) : null;
   }
 
-  /* A refusal because a Zone edit is held offers to cancel it from the notice, so the way out is in view. */
+  /* A refusal because an edit is held offers to cancel it from the notice, so the way out is in view: a Zone
+     edit, or the shown view's draft when it can cancel its drafts (`cancelDrafts`). */
   function refuse(reason) {
-    var cells = screen && screen.zoneCells;
-    panel.notify(reason, "warning", reason === ZONE_DRAFT && cells ? { label: "Cancel the Zone edit",
-      run: function () { cells.cancelAll(); panel.repaint(); } } : null);
+    var cells = screen && screen.zoneCells, own = screen && active(screen), action = null;
+    if (reason === ZONE_DRAFT && cells) {
+      action = { label: "Cancel the Zone edit", run: function () { cells.cancelAll(); panel.repaint(); } };
+    } else if (own && own.view.cancelDrafts && reason === call(own, "draftReason", [], null)) {
+      action = { label: "Cancel the edit", run: function () { call(own, "cancelDrafts"); panel.repaint(); } };
+    }
+    panel.notify(reason, "warning", action);
   }
 
   /* Held category filters follow explicit merge/removal results; rename keeps the same ID. They are Zone
@@ -730,6 +735,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       // and the user can still drag any column wider.
       defaultWidths: Object.assign({}, ZONE_WIDTHS, own.view.widths || {}),
       tree: true, tiers: own.view.tiers, rows: shown, columns: shownColumns,
+      painted: function () { call(own, "painted"); },
+      // Shutting a row while the view holds a draft could hide it; opening never does.
+      mayToggle: function (row, opening) {
+        var reason = opening ? null : call(own, "draftReason", [], null);
+        if (reason) refuse(reason);
+        return !reason;
+      },
       expanded: state.expanded,
       expandable: function (row) { return Boolean(parents[row.key]); },
       decorate: function (td, row, field) { call(own, "decorate", [td, row, field]); },
@@ -757,7 +769,6 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         else call(own, "action", [row, item]);
       }
     });
-    call(own, "painted");
   }
 
   /* Which rows the filters hide: the controls' answer for a Zone and its rows, and the same rules (the text

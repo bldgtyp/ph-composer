@@ -177,3 +177,66 @@ test("a unit switch reformats the cells and keeps a draft as typed", function ()
   assert.strictEqual(p.input("Bath extract").value, "45", "the draft keeps what was typed");
   assert.deepStrictEqual(p.sent.filter(function (message) { return message.type !== "preferences.set"; }), []);
 });
+
+/* ---------------------------------------------------------------- review (PR #151) */
+
+function chevron(p, label) {
+  return p.section().querySelectorAll("button").filter(function (node) {
+    return node.getAttribute("aria-label") === label;
+  })[0];
+}
+
+test("cells a row chevron reveals join the range at once", function () {
+  var p = page();
+  p.receive(snapshot());
+  chevron(p, "Expand Space Living").listeners.click({ preventDefault: function () {} });
+  var height = p.input("Volume 1 height");
+  assert.ok(height, "the Volume's height is shown");
+  height.listeners.mousedown({ shiftKey: false });
+  var tools = p.section().querySelectorAll(".phc-grid-tool-group")[0];
+  height.listeners.focus({});
+  assert.ok(height.parentNode.classList.contains("inventory-selected"), "the grid knows the revealed cell");
+  assert.ok(tools);
+});
+
+test("a Volume's or a Floor Segment's name may be cleared", function () {
+  var p = page();
+  p.receive(snapshot());
+  expandAll(p);
+  enter(p.section().querySelectorAll("input").filter(function (node) {
+    return node.getAttribute("aria-label") === "Volume 1 name";
+  })[0], "");
+  var sent = payloads(p, "ph_composer.spaces.update");
+  assert.strictEqual(sent.length, 1);
+  assert.deepStrictEqual(sent[0].values, { display_name: "" });
+});
+
+test("a refused draft has a visible Cancel, and the guard notice offers it too", function () {
+  var p = page();
+  p.receive(snapshot());
+  var name = p.input("Living name");
+  enter(name, "Lounge");
+  p.result(0, { status: "refused", code: "target.changed", effect: "none", message: "Changed. Nothing was written." });
+  var cancel = p.section().querySelectorAll("button").filter(function (node) {
+    return node.getAttribute("aria-label") === "Cancel Living name edit";
+  })[0];
+  assert.ok(cancel && !cancel.hidden, "a visible Cancel");
+  p.panel.showTab("export");
+  var notice = p.panel.state.ui.notice;
+  assert.ok(notice.action, "the notice offers a way out");
+  notice.action.run();
+  assert.strictEqual(name.value, "Living");
+  p.panel.showTab("export");
+  assert.strictEqual(p.panel.state.ui.activeTab, "export");
+});
+
+test("a row holding a draft beneath it does not collapse", function () {
+  var p = page();
+  p.receive(snapshot());
+  var name = p.input("Living name");
+  enter(name, "Lounge");
+  p.result(0, { status: "refused", code: "target.changed", effect: "none", message: "Changed. Nothing was written." });
+  chevron(p, "Collapse Zone A").listeners.click({ preventDefault: function () {} });
+  assert.ok(p.input("Living name"), "the draft stays in view");
+  assert.match(p.panel.state.ui.notice.message, /Finish or cancel/);
+});

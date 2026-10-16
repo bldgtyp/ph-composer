@@ -241,6 +241,7 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
     cell: function (vs, td, row, field) { return vs.cells.render(td, row, field); },
     painted: function (vs) { vs.cells.painted(); },
     draftReason: function (vs) { return vs.cells.draftReason(); },
+    cancelDrafts: function (vs) { vs.cells.cancelAll(); },
     dispose: function (vs) { vs.cells.dispose(); }, zoneRecord: zoneRecord, extraRows: extraRows, children: children,
     leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: zoneMarker,
     sortValue: sortValue, sort: sort, search: search, count: count

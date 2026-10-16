@@ -85,7 +85,8 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
     this.batch = requests.channel(host.session, host.send, "spaces-range");
     this.edits = new RecordEdits(host.session, host.send, host.refuse, {
       action: UPDATE, fields: FIELDS, recordLabel: "Space", fieldAttribute: "data-space-field",
-      navigateOnCommit: false, requiredFields: ["number", "name"],
+      // Only a Space's number must be filled; a Volume or Floor Segment may have an empty name.
+      navigateOnCommit: false, requiredFields: ["number"], cancelControl: true,
       quantities: { height_m: HEIGHT, v_sup_m3h: AIRFLOW, v_eta_m3h: AIRFLOW, v_tran_m3h: AIRFLOW,
         weighting_factor: FACTOR, net_area_factor: FACTOR },
       enabled: function () { return !self.batch.busy(); },
@@ -156,6 +157,8 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
     }, this);
     return dirty ? "Finish or cancel the Spaces cell edit first." : null;
   };
+
+  SpaceCells.prototype.cancelAll = function () { this.edits.cancelAll(); };
 
   SpaceCells.prototype.dispose = function () {
     this.edits.dispose();
