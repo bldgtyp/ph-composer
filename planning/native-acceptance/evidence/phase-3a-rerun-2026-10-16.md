@@ -263,3 +263,26 @@ A provider Psi-Install Type staged and painted in the Installs editor left the M
 library-attributed product with one perimeter reference, and native Undo restored the baseline. The Export
 library review listed 4 Materials, 1 Frame, 1 Glazing and 1 Psi-Install Type. The written file reads back as 7
 rows that map to the local records with no warnings.
+
+## UXR-SOLVE to UXR-FILTER-OCC, Faces view refinements: PAINT fails on the narrow layout
+
+One fresh process on a copy of `ui-ux-acceptance-20261007/run-baseline.skp` (two six-Face Zones), cases in the
+recorded order. Counts were derived on this baseline.
+- SOLVE: check-all qualifies two Zones; with one Face unchecked, one Zone qualifies and Solve is disabled.
+  Solve wrote one reciprocal Surface pair. Native Undo and Redo ("Solve Zone Adjacency") are exact.
+- FILTER: Type Show without Floor and Roof masks the eight Wall paths, and the mask holds through Zone, Off and
+  Boundary. Adding a Boundary filter gives an explicit empty mask, with everything muted. Clearing one filter
+  restores the other; clearing both, with the menu still open, restores the full scope. Nothing is written, and
+  Edit still reads "Undo Solve Zone Adjacency".
+- HATCH: Assembly None hatch with West's native blue selection edges visible; 1,144 hatch entries, no solid
+  unclassified outlines, no write.
+- PAINT, **fail on the narrow clause ([#179](https://github.com/bldgtyp/ph-composer/issues/179))**. Type paint
+  by one drag changed exactly the two front walls, a Ground click changed one boundary and kept its type, and the
+  local Assembly paint changed only `assembly_id`. Each has exact native Undo and Redo, and Surface and None have
+  no paint icon. At 420 and 360 px the Type column is reachable only by scrolling the whole tab sideways, which
+  takes the selection bar out of view. Narrow-menu painting starts, and Escape stops it.
+- COLOUR: each paint choice selects its Colour-by mode. Escape keeps Boundary or Assembly, and a Face type
+  override chosen during Assembly painting survives stopping, with no write.
+- FILTER-OCC: a nested Group Face and two placements of one shared Component Face have three distinct paths.
+  Masking colours exactly the chosen panels (4 triangles coloured and 26 washed, then 2 and 28), and clearing
+  gives 30 and 0. The post-setup Model fingerprint is unchanged.
