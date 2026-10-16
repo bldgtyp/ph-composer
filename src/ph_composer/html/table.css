@@ -41,6 +41,8 @@ body.phc-column-resizing, body.phc-column-resizing * { cursor: col-resize !impor
 .phc-table .phc-editable-cell:focus-within { background: #fff; box-shadow: inset 0 0 0 2px var(--interaction-highlight); }
 .phc-workspace .phc-table .phc-cell-input:focus-visible { outline: 0; }
 .phc-table .phc-cell-input[aria-invalid="true"] { box-shadow: inset 0 -2px var(--red); }
+/* A number edited in place lines up with the read-only numbers beside it. */
+.phc-table td.is-numeric .phc-cell-input { text-align: right; }
 .phc-table tr:focus-within td { background: #edf6f7; }
 @media (max-width: 900px) {
   .phc-table td.col-name { position: static; }

@@ -1,7 +1,7 @@
 # P3a-07 evidence: the Spaces view
 
 DATE: 2026-10-16
-STATUS: Slice A in review on `feature/spaces-p3a-07a`
+STATUS: Slice A merged through #150 (`7619964`); slice B in review
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -40,4 +40,38 @@ Expand all disabled while nested rows started shut; a hidden column kept its fil
 the second three P2 (Table options could hide a held Zone edit; a view's older copy of a Zone filter could
 replace the one set since; a leading column missed the view's header and menu hooks). Each was reproduced by
 a test and fixed; the second pass's three were gated by `make ci` only, at the review cap.
+
+## Slice B: editing and airflow entry
+
+`html/features/spaces/cells.js` makes the view's editable cells through the shared record drafts and the
+range-edit grid: a Space's number, name and three airflows, a Volume's name and height, a Floor Segment's
+name, weighting factor and net area factor (steps 4 to 6). A cell commit is one `ph_composer.spaces.update`
+with `expected_values` as read (a key absent where the value was unset); a refusal keeps the draft with the
+host's reason. A range fill or a paste is one `batch_update`, every change to one record merged into one
+edit; a pasted blank over a rate that was never set is left out. Factors outside 0 to 1 refuse at the cell.
+An airflow cell keeps unset distinct from zero: a blank commit sends `null`, a typed 0 is a value, and an
+unset rate shows its muted placeholder ("0" beside a set rate, "Zone" on an inheriting Space). Display
+follows the unit preference; a draft keeps its typed text through a switch. The phase doc names
+`volumes.update` and `floors.update`; the host has one `update` for all three kinds, which this uses.
+
+The host gained `attach`, `prepare` and `painted` for it (`context/EXTENSIBILITY.md`, "Zone views").
+
+Tests: `tests/spaces_cells_panel_test.js` (phase doc tests 2 to 5 and 9: one update per commit, a refusal
+keeping the draft, the factor range, the zero and clear cases, the three airflow states, a range fill and a
+paste each as one `batch_update`, a unit switch). Clearing the last set rate returning a Space to inheriting
+is the host's any-set rule (`spaces_reads_test.rb`); the panel sends the clear.
+
+Seen in the panel (the preview page fed the reference model's snapshot): an editable height read "2500"
+under "Height m" (its field carried a dimension scope, whose default is mm), numbers edited in place sat
+left of the read-only numbers, and the range-edit tools stood in a row of their own. Heights now edit in
+metres, a numeric cell input right-aligns (kit class `is-numeric`), and each view has a tools slot in the
+shared controls row holding its help and what it binds there.
+
+Slice B review: Codex `gpt-6.1-sol` on #151. The first pass found four P2 (cells a row chevron revealed
+missed the range grid; Volume and Floor Segment names could not be cleared; a refused draft had no visible
+Cancel; shutting a row could hide a held draft), the second three P2 (a Space removed under a draft
+re-entered the drafts' refresh through the notice and overflowed the stack; the guard offered Cancel for an
+edit already sent; the paste test never cleared a set rate). Each was reproduced by a test and fixed (the
+kit table now calls `options.painted` after every paint and asks `options.mayToggle` before a row opens or
+shuts); the second pass's three were gated by `make ci` only, at the review cap.
 

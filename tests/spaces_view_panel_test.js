@@ -20,7 +20,7 @@ function page() {
   context.window = context;
   dom.attachEvents(context);
   var modules = panelSource.start(context, ["sections/shell", "features/zones/overview", "features/zones/faces_view",
-    "features/spaces/view"]);
+    "features/spaces/view", "features/spaces/cells"]);
   var p = { context: context, panel: modules.panel, modules: modules, sent: sent };
   p.section = function () { return context.document.querySelector("[data-section='ph_composer.overview']"); };
   return p;
@@ -39,6 +39,12 @@ function snapshot(options) {
   };
 }
 
+/* What a cell shows: an editable cell is an input, and an empty one reads as its placeholder. */
+function text(td) {
+  var input = td.querySelector("input");
+  return input ? input.value || input.placeholder || "" : td.textContent;
+}
+
 function shown(p) {
   return p.section().querySelectorAll(".phc-zone-view").filter(function (node) { return !node.hidden; })[0];
 }
@@ -52,9 +58,8 @@ function table(p, fields) {
       function cell(field) {
         return cells.filter(function (td) { return td.className.split(" ").indexOf("col-" + field) >= 0; })[0];
       }
-      var name = cell("name"), input = name.querySelector("input");
-      return [JSON.parse(tr.getAttribute("data-row-key"))[0], input ? input.value : name.textContent]
-        .concat(fields.map(function (field) { return cell(field).textContent; }));
+      return [JSON.parse(tr.getAttribute("data-row-key"))[0], text(cell("name"))]
+        .concat(fields.map(function (field) { return text(cell(field)); }));
     });
 }
 
@@ -108,11 +113,11 @@ test("height and airflow cells read what the row sets, muted where it does not",
     ["Zone", "Zone B", "", "36", "—", "—", "—"],
     ["Space", "Loft", "3", "36", "Zone", "Zone", "Zone"]]);
   var muted = shown(p).querySelectorAll("td").filter(function (td) { return td.classList.contains("is-muted"); });
-  assert.ok(muted.some(function (td) { return td.textContent === "Zone"; }), "an inheriting Space reads a muted Zone");
-  assert.ok(muted.some(function (td) { return td.textContent === "—"; }), "and its Zone a muted dash");
-  assert.ok(muted.some(function (td) { return td.textContent === "0"; }),
+  assert.ok(muted.some(function (td) { return text(td) === "Zone"; }), "an inheriting Space reads a muted Zone");
+  assert.ok(muted.some(function (td) { return text(td) === "—"; }), "and its Zone a muted dash");
+  assert.ok(muted.some(function (td) { return text(td) === "0"; }),
     "an unset rate beside a set one is a muted 0");
-  assert.ok(muted.some(function (td) { return td.textContent === "3.33"; }), "a Space's height is a muted average");
+  assert.ok(muted.some(function (td) { return text(td) === "3.33"; }), "a Space's height is a muted average");
 });
 
 test("a Zone whose supply and extract differ by more than the threshold carries the marker; one inheriting none",
@@ -124,7 +129,7 @@ test("a Zone whose supply and extract differ by more than the threshold carries 
     assert.match(markers[0].getAttribute("data-tooltip") || markers[0].getAttribute("aria-label") || "",
       /supply 60 m³\/h, extract 40 m³\/h, difference 20 m³\/h/);
     var zoneB = shown(p).querySelectorAll("td").filter(function (td) {
-      return td.classList.contains("col-v_sup_m3h") && td.textContent === "—";
+      return td.classList.contains("col-v_sup_m3h") && text(td) === "—";
     })[0];
     assert.match(zoneB.getAttribute("data-tooltip"), /^1 Space in this Zone inherits/);
   });

@@ -740,6 +740,8 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
   var VIEW = {
     id: "ph_composer.zones.faces", label: "Faces", order: 10, sections: ["ph_composer.zones.faces.faces"],
     placeholder: "Zone, type or boundary",
+    help: "Select Faces in SketchUp, or check their rows, to edit them together in the bar under the table. " +
+      "A column's palette icon colours the Model by that column; its menu sorts and filters.",
     colourBy: COLOUR_BY, sorted: SORTED, filteredFields: FACE_FIELDS,
     // Sized so the whole table shows at the panel's usual width with the Zone columns beside them.
     widths: { face_type: 126, boundary_condition: 110, area_m2: 104, assembly_id: 156 },

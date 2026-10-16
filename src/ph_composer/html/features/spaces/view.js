@@ -6,10 +6,11 @@
  * Airflows follow the any-set rule: a set rate reads as typed, an unset rate on a user-specified Space reads
  * as a muted 0, and a Space with all three unset reads "Zone" (it inherits the Zone's ventilation load).
  * A Zone holding any inheriting Space shows a muted dash for its airflow sums and evaluates no imbalance.
+ * Names, numbers, heights, factors and airflows edit in place (cells.js).
  */
 PhComposerUI.define("features/spaces/view", ["workspace", "snapshot", "units", "unit_preferences", "fields",
-  "table_views"],
-function (ui, snapshot, units, preferences, fields, tableViews) {
+  "table_views", "features/spaces/cells"],
+function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells) {
   "use strict";
   var SECTION = "ph_composer.spaces.spaces";
   var AIRFLOWS = [["v_sup_m3h", "Supply"], ["v_eta_m3h", "Extract"], ["v_tran_m3h", "Transfer"]];
@@ -22,8 +23,9 @@ function (ui, snapshot, units, preferences, fields, tableViews) {
     "v_sup_m3h", "v_eta_m3h", "v_tran_m3h", "net_area_factor"];
   var NO_ZONE = JSON.stringify(["NoZone"]);
 
-  function create() {
-    return { spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [] };
+  function create(host) {
+    return { spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
+      cells: new SpaceCells(host) };
   }
 
   function occurrence(path) {
@@ -233,7 +235,15 @@ function (ui, snapshot, units, preferences, fields, tableViews) {
     sorted: SORTED,
     widths: { number: 64, floor_area_m2: 104, weighting_factor: 112, weighted_area_m2: 116, height_m: 84,
       net_volume_m3: 112, v_sup_m3h: 104, v_eta_m3h: 104, v_tran_m3h: 112, net_area_factor: 112 },
-    create: create, consume: consume, zoneRecord: zoneRecord, extraRows: extraRows, children: children,
+    create: create, consume: consume,
+    attach: function (vs, place) { vs.cells.attach(place); },
+    prepare: function (vs, rows, state) { vs.cells.prepare(rows, state); },
+    cell: function (vs, td, row, field) { return vs.cells.render(td, row, field); },
+    painted: function (vs) { vs.cells.painted(); },
+    draftReason: function (vs) { return vs.cells.draftReason(); },
+    cancelDrafts: function (vs) { vs.cells.cancelAll(); },
+    canCancelDrafts: function (vs) { return vs.cells.cancellable(); },
+    dispose: function (vs) { vs.cells.dispose(); }, zoneRecord: zoneRecord, extraRows: extraRows, children: children,
     leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: zoneMarker,
     sortValue: sortValue, sort: sort, search: search, count: count
   };

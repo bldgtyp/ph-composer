@@ -3,6 +3,9 @@
 .phc-overview { display: grid; gap: 12px; padding-bottom: 24px; }
 /* The control row spans the work surface, so the pane's tools sit at its far end. */
 .phc-overview > .phc-inventory-controls { margin-right: 0; }
+/* The shown view's tools in the controls row: its help, then what it binds there (Spaces' range-edit tools). */
+.phc-overview .phc-view-tools { display: flex; align-items: center; gap: 8px; }
+.phc-overview .phc-view-tools:empty { display: none; }
 .phc-zone-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0; }
 .phc-zone-setting input[type="number"] { width: 72px; }
 /* The table spans the pane and scrolls sideways at narrow widths with its identity columns (Actions,

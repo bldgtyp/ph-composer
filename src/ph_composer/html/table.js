@@ -292,14 +292,18 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     if (event.key === "ArrowDown") next = targets[index + 1];
     else if (event.key === "ArrowUp") next = targets[index - 1];
     else if (event.key === "ArrowRight") {
-      if (opens && !entry.open) {
+      if (opens && !entry.open && mayToggle(cache, entry)) {
         expanded[entry.row.key] = true; table(root, cache.records, cache.options);
       } else if (opens && targets[index + 1]) next = targets[index + 1];
-    } else if (opens && entry.open) {
+    } else if (opens && entry.open && mayToggle(cache, entry)) {
       expanded[entry.row.key] = false; table(root, cache.records, cache.options);
     } else if (entry.row.parent) next = cache.rows[entry.row.parent].target;
     event.preventDefault();
     if (next) next.focus();
+  }
+  /* Whether a row may open or shut: `options.mayToggle(row, opening)`, when given, answers (and says why not). */
+  function mayToggle(cache, entry) {
+    return !cache.options.mayToggle || cache.options.mayToggle(entry.row, !entry.open) !== false;
   }
   /* How many tree levels open: rows at a shallower depth carry a chevron. `options.tiers`, 2 by default
      (a Zone and the summary rows beneath it); a tree four deep (Zone, Space, Volume, Floor Segment) passes 3. */
@@ -320,6 +324,7 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     entry.needChevron = function () {
       if (entry.chevron || !hierarchy) return;
       entry.chevron = button("", function () {
+        if (!mayToggle(cache, entry)) return;
         expanded[entry.row.key] = !entry.open;
         table(root, cache.records, cache.options);
         entry.chevron.focus();
@@ -448,6 +453,8 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     Object.keys(cache.groups).forEach(function (key) { if (!retainedGroups[key]) delete cache.groups[key]; });
     restoreFocus(root, focused, hadFocus);
     root._checkTooltip();
+    // After every paint, the caller's own included, a row opened or shut from its chevron among them.
+    if (options.painted) options.painted();
   }
 
 
