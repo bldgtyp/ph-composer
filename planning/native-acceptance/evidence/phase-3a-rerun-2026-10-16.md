@@ -286,3 +286,53 @@ recorded order. Counts were derived on this baseline.
 - FILTER-OCC: a nested Group Face and two placements of one shared Component Face have three distinct paths.
   Masking colours exactly the chosen panels (4 triangles coloured and 26 washed, then 2 and 28), and clearing
   gives 30 and 0. The post-setup Model fingerprint is unchanged.
+
+## UXK1, classified fills, selection edges and occlusion
+
+A fresh copy of `ux-followups-integrated.skp`. With Boundary condition Colour-by, the left Zone's native blue
+selection edges show over its Outdoors fill, and the two internal Surface Faces stay hidden behind the exterior
+walls. A front Face record was removed by labelled development eval. That Face shows the neutral grey hatch and
+outline, and its neighbours' fills stay legible. The HUD counts read Outdoors 10 and Surface 2 with 12 classified,
+then Outdoors 9, Surface 2 and Unclassified 1, then Outdoors 10 and Surface 2 once the exact record was written
+back. No PH-Composer material entered the Model.
+
+## ZO-H1 to ZO-O7, managed Zone options: O7 fails on the component path
+
+One process for H1 to H3 on a blank destination and a copy of `zone-field-options-20261005/legacy-baseline.skp`.
+O7 then continued on the same two files. The 2026-10-05 destination had changed after its baseline, so H1 used a
+fresh copy of the blank template.
+- H1: Manage Building Segments opens on an empty Model, and Escape writes nothing. At full width, 420 px and the
+  360 by 520 minimum, Save and Cancel stay visible and the row list scrolls. Add focuses the new row. The name is
+  prefilled but not selected, so typing appends; recorded as a note. Escape discards the whole draft, and Enter
+  saves one Segment. The dialog is modal and shows the saved default. A Model switch dismisses an unsaved draft.
+  Native Make Zone on a fresh Model gives one Zone with one valid default Segment and no Level in one operation.
+- H2: Legacy adoption, chip assignment, a Unicode rename and recolour batch, the used merge, the used removal and
+  the default replacement each have exact native Undo and Redo. The merge dialog counts one live and one
+  recoverable use and writes nothing as a draft. Save rewrites live and orphan stamps. This fixture has two
+  Zones and three stamps, where the 2026-10-05 fixture had three and four. A fresh process reads the saved
+  state exactly, with no write. The Segment merge note mentions a Level
+  ([#180](https://github.com/bldgtyp/ph-composer/issues/180)).
+- H3: A custom Level hue, native selection edges and the missing-Level hatch show together. The Level filter
+  composes with Colour-by, and the held mask survives a Unicode rename. A new Model starts clear, and the
+  normal panel shows no development styling.
+- O7, **fail on the component path ([#181](https://github.com/bldgtyp/ph-composer/issues/181))**:
+  - Same-Model copy: a native same-Model Copy and Paste makes the copy independent in the paste's own Undo
+    step, keeping choice ids and user_data. One Undo Paste is exact.
+  - Shared copies: copies SketchUp keeps shared (two component placements, a copied parent Group) read
+    `shared_definition`, and Make Zone independent refuses them. After native Edit Group, the native Repair
+    menu makes the Group copy independent with a new Zone id and unchanged choices. A unique component
+    placement still refuses after native Make Unique, while the message says to make it unique. The Group
+    refusal says to choose Make Unique, which the SketchUp 2026 Group menu does not offer. Explode does make a
+    placement's Zone independent.
+  - Explode, merge and Restore: Explode, a used Segment merge and Restore recover the survivor Segment, and
+    Restore has exact native Undo and Redo.
+  - Line split: a native Line split duplicates a Face id, keeping the Zone record and stamps on both pieces.
+    Repair split Face identities keeps the selected piece's id and gives the other a new one without changing
+    choices.
+  - Cross-Model paste: the paste keeps the raw record and asks for adoption. Cancel writes nothing. Adopt keeps
+    the Segment export id `bseg_6f72f96c5d046220`, the Unicode Level name and user_data, with exact native
+    Undo and Redo.
+  - Reopen: both Models reopen in fresh processes with new sessions and no helper. They read exactly as saved,
+    with no write, and the reopened normal panel renders.
+  - Separately: native Make Component on a Zone Group empties the Zones tab and makes `zones.all` refuse
+    ([#182](https://github.com/bldgtyp/ph-composer/issues/182)). One native Undo restores it.
