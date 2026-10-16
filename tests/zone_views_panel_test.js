@@ -432,3 +432,55 @@ test("a view's filter column has a menu without sorting, and its Zone predicate 
   var filter = p.sent.filter(function (message) { return message.payload.name === "ph_composer.colour_by.filter"; });
   assert.deepStrictEqual(JSON.parse(JSON.stringify(filter[filter.length - 1].payload.params)), { paths: [] });
 });
+
+/* ---------------------------------------------------------------- review (PR #150) */
+
+test("a Zone filter set while its column was shown elsewhere replaces an older one held by a view", function () {
+  var p = page({ example: false });
+  var probe = { id: "example.segments", label: "Segments", order: 97, sections: ["ph_composer.zones.overview"],
+    zoneFields: ["building_segment"], hiddenColumns: { building_segment: true },
+    optionalColumns: [["building_segment", "Building-Segment"]] };
+  p.modules.table_views.register("ph_composer.zones", probe);
+  var state = snapshot(), zones = state.sections["ph_composer.zones.overview"].value.zones;
+  var second = JSON.parse(JSON.stringify(zones[0]));
+  second.reference = { zone_id: "zon_b", zone_path: [300] }; second.id = "zon_b";
+  second.values.name = "Zone 2"; second.values.building_segment = "annex";
+  zones.push(second);
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  function keep(label) {
+    var menu = byLabel(p, "Building-Segment column menu");
+    click(menu);
+    menu.parentNode.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; })
+      .forEach(function (box) {
+        var wanted = box.parentNode.children[1].textContent === label;
+        if (box.checked !== wanted) { box.checked = wanted; box.listeners.change({}); }
+      });
+    p.context.document.activeElement && p.context.document.activeElement.blur();
+  }
+  function count() { return p.section().querySelector(".phc-view-count").textContent; }
+  keep("house");
+  click(tab(p, "Segments"));
+  var options = byLabel(p, "Table options");
+  click(options);
+  click(options.parentNode.querySelectorAll(".phc-action-menu-item").filter(function (node) {
+    return node.textContent === "Building-Segment column";
+  })[0]);
+  keep("annex");
+  assert.strictEqual(count(), "1 of 2 Zones · 1 filter");
+  click(tab(p, "Faces"));
+  var names = p.section().querySelectorAll(".phc-zone-view").filter(function (node) { return !node.hidden; })[0]
+    .querySelectorAll("[data-row-key]").filter(function (node) { return !node.hidden; })
+    .map(function (node) { return JSON.parse(node.getAttribute("data-row-key")); })
+    .filter(function (key) { return key[0] === "Zone"; }).map(function (key) { return key[1][0]; });
+  assert.deepStrictEqual(names, [300], "the filter last set, to annex, is the one in force");
+});
+
+test("a leading column is the view's own for header and menu hooks", function () {
+  var p = page({ example: false }), seen = [];
+  p.modules.table_views.register("ph_composer.zones", { id: "example.leading", label: "Leading", order: 98,
+    sections: ["ph_composer.zones.overview"], zoneFields: [], sorted: ["code"],
+    leadingColumns: function () { return [["code", "Code"]]; },
+    headerAction: function (vs, field) { seen.push(field); return null; } });
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot("example.leading") });
+  assert.ok(seen.indexOf("code") >= 0);
+});

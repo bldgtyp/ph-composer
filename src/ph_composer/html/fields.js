@@ -12,6 +12,7 @@ PhComposerUI.define("fields", [], function () {
   var WIDTH_M_AS_MM = descriptor("length_mm", "m");
   var AREA_M2 = descriptor("area", "m2");
   var VOLUME_M3 = descriptor("volume", "m3");
+  var AIRFLOW_M3H = descriptor("airflow", "m3_h");
   var U_VALUE = descriptor("u_value", "w_m2k");
   var R_VALUE = descriptor("thermal_resistance", "m2k_w");
   var CONDUCTIVITY = descriptor("conductivity", "w_mk");
@@ -26,6 +27,6 @@ PhComposerUI.define("fields", [], function () {
   }
 
   return { FRACTION: FRACTION, LENGTH_M: LENGTH_M, LENGTH_MM: LENGTH_MM, WIDTH_M_AS_MM: WIDTH_M_AS_MM, AREA_M2: AREA_M2,
-    VOLUME_M3: VOLUME_M3, U_VALUE: U_VALUE, R_VALUE: R_VALUE, CONDUCTIVITY: CONDUCTIVITY, LINEAR_PSI: LINEAR_PSI,
-    HEAT_LOSS: HEAT_LOSS, DENSITY: DENSITY, SPECIFIC_HEAT: SPECIFIC_HEAT, with: withSettings };
+    VOLUME_M3: VOLUME_M3, AIRFLOW_M3H: AIRFLOW_M3H, U_VALUE: U_VALUE, R_VALUE: R_VALUE, CONDUCTIVITY: CONDUCTIVITY,
+    LINEAR_PSI: LINEAR_PSI, HEAT_LOSS: HEAT_LOSS, DENSITY: DENSITY, SPECIFIC_HEAT: SPECIFIC_HEAT, with: withSettings };
 });

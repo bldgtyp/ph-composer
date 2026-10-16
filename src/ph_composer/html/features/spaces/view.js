@@ -1,0 +1,242 @@
+/* The Spaces view of the Zones table (context/EXTENSIBILITY.md, "Zone views"): beneath each Zone its Spaces,
+ * each Space's Volumes and each Volume's Floor Segments, with their areas, heights, volumes and airflows, and
+ * the Zone's sums on its row. A Space outside every Zone is listed under one "No Zone" row after the Zones.
+ * Every figure comes from the `spaces` snapshot section; the panel sums and computes nothing.
+ *
+ * Airflows follow the any-set rule: a set rate reads as typed, an unset rate on a user-specified Space reads
+ * as a muted 0, and a Space with all three unset reads "Zone" (it inherits the Zone's ventilation load).
+ * A Zone holding any inheriting Space shows a muted dash for its airflow sums and evaluates no imbalance.
+ */
+PhComposerUI.define("features/spaces/view", ["workspace", "snapshot", "units", "unit_preferences", "fields",
+  "table_views"],
+function (ui, snapshot, units, preferences, fields, tableViews) {
+  "use strict";
+  var SECTION = "ph_composer.spaces.spaces";
+  var AIRFLOWS = [["v_sup_m3h", "Supply"], ["v_eta_m3h", "Extract"], ["v_tran_m3h", "Transfer"]];
+  var AIRFLOW_FIELDS = { v_sup_m3h: true, v_eta_m3h: true, v_tran_m3h: true };
+  // Each column, the quantity it shows, and the metric or value a row reads it from.
+  var QUANTITY = { floor_area_m2: fields.AREA_M2, weighted_area_m2: fields.AREA_M2, net_volume_m3: fields.VOLUME_M3,
+    height_m: fields.LENGTH_M, v_sup_m3h: fields.AIRFLOW_M3H, v_eta_m3h: fields.AIRFLOW_M3H,
+    v_tran_m3h: fields.AIRFLOW_M3H };
+  var SORTED = ["number", "floor_area_m2", "weighting_factor", "weighted_area_m2", "height_m", "net_volume_m3",
+    "v_sup_m3h", "v_eta_m3h", "v_tran_m3h", "net_area_factor"];
+  var NO_ZONE = JSON.stringify(["NoZone"]);
+
+  function create() {
+    return { spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [] };
+  }
+
+  function occurrence(path) {
+    return JSON.stringify(path || []);
+  }
+
+  /* The Spaces under each Zone occurrence and each Zone's sums, by the path that names the occurrence. */
+  function consume(vs, state) {
+    var value = snapshot.value(state, SECTION) || { spaces: [], zones: [] };
+    vs.spaces = value.spaces || [];
+    vs.byZone = Object.create(null);
+    vs.outside = [];
+    vs.spaces.forEach(function (space) {
+      if (!space.zone) { vs.outside.push(space); return; }
+      var key = occurrence(space.zone.zone_path);
+      (vs.byZone[key] = vs.byZone[key] || []).push(space);
+    });
+    vs.sums = Object.create(null);
+    (value.zones || []).forEach(function (zone) { vs.sums[occurrence(zone.zone_path)] = zone; });
+  }
+
+  function zoneRecord(vs, record) {
+    var key = occurrence(record.zone.reference.zone_path);
+    return Object.assign(record, { spaces: vs.byZone[key] || [], sums: vs.sums[key] || null });
+  }
+
+  /* One group row after the Zones for the Spaces no Zone holds, while there are any. */
+  function extraRows(vs) {
+    if (!vs.outside.length) return [];
+    return [{ key: NO_ZONE, parent: null, tier: "No Zone", depth: 0,
+      record: { id: NO_ZONE, name: "Outside every Zone", zone: null, spaces: vs.outside, sums: null } }];
+  }
+
+  /* A Zone's (or the group's) rows: each Space, then its Volumes, then each Volume's Floor Segments. The
+     Space Floor has no row. */
+  function children(vs, row) {
+    var rows = [];
+    row.record.spaces.forEach(function (space) {
+      var spaceKey = JSON.stringify(["Space", space.reference.entity_path]);
+      rows.push({ key: spaceKey, parent: row.key, tier: "Space", depth: 1,
+        record: { id: space.id, name: space.values.name, space: space } });
+      (space.volumes || []).forEach(function (volume) {
+        var volumeKey = JSON.stringify(["Volume", volume.reference.entity_path]);
+        rows.push({ key: volumeKey, parent: spaceKey, tier: "Volume", depth: 2,
+          record: { id: volume.id, name: volume.values.display_name, volume: volume, space: space } });
+        (volume.floor_segments || []).forEach(function (segment) {
+          rows.push({ key: JSON.stringify(["Segment", segment.reference.entity_path]), parent: volumeKey,
+            tier: "Segment", depth: 3,
+            record: { id: segment.id, name: segment.values.display_name, segment: segment, space: space } });
+        });
+      });
+    });
+    return rows;
+  }
+
+  function leadingColumns() {
+    return [["number", "No."]];
+  }
+
+  function columns(vs, profile) {
+    function header(label, field) { return units.header(label, field, units.profile(field, preferences.current())); }
+    return [["floor_area_m2", header("Floor area", fields.AREA_M2)], ["weighting_factor", "Weighting factor"],
+      ["weighted_area_m2", header("Weighted area", fields.AREA_M2)], ["height_m", header("Height", fields.LENGTH_M)],
+      ["net_volume_m3", header("Net volume", fields.VOLUME_M3)]].concat(AIRFLOWS.map(function (airflow) {
+      return [airflow[0], header(airflow[1], fields.AIRFLOW_M3H)];
+    }), [["net_area_factor", "Net area factor"]]);
+  }
+
+  /* What a row shows in one column, as `{ value, quantity }` for a quantity, `{ text }` for a word, or null
+     for a blank; `muted` marks a value the row does not set itself, `tooltip` says why. */
+  function cellOf(row, field) {
+    var record = row.record;
+    if (record.segment) return segmentCell(record.segment, field);
+    if (record.volume) return volumeCell(record.volume, field);
+    if (record.space) return spaceCell(record.space, field);
+    return zoneCell(record, field);
+  }
+
+  function metric(source, field) {
+    return field === "floor_area_m2" || field === "weighted_area_m2" || field === "net_volume_m3" ?
+      { value: source.metrics[field] } : null;
+  }
+
+  function segmentCell(segment, field) {
+    if (field === "weighting_factor" || field === "net_area_factor") {
+      return { value: segment.values[field], quantity: fields.FRACTION, precision: 2 };
+    }
+    return field === "net_volume_m3" ? null : metric(segment, field);
+  }
+
+  function volumeCell(volume, field) {
+    if (field === "height_m") return { value: volume.values.avg_ceiling_height_m };
+    return metric(volume, field);
+  }
+
+  function spaceCell(space, field) {
+    if (field === "number") return { text: space.values.number };
+    if (field === "height_m") {
+      return { value: space.metrics.average_height_m, muted: true,
+        tooltip: "The floor-area-weighted average of this Space's Volume heights. Edit a Volume's height." };
+    }
+    if (AIRFLOW_FIELDS[field]) {
+      if (space.airflow_mode === "inheriting") {
+        return { text: "Zone", muted: true,
+          tooltip: "No airflow is set, so this Space uses its Zone's ventilation load." };
+      }
+      var set = Object.prototype.hasOwnProperty.call(space.values, field);
+      return { value: space.airflows[field], muted: !set,
+        tooltip: set ? "" : "Not set. Another airflow on this Space is, so this one counts as 0." };
+    }
+    return metric(space, field);
+  }
+
+  /* A Zone row carries its Spaces' sums from the snapshot; the group row of Spaces outside every Zone none. */
+  function zoneCell(record, field) {
+    var sums = record.sums;
+    if (!sums) return null;
+    if (AIRFLOW_FIELDS[field]) {
+      if (sums.inheriting_count) {
+        var noun = sums.inheriting_count === 1 ? " Space in this Zone inherits" : " Spaces in this Zone inherit";
+        return { text: "—", muted: true,
+          tooltip: sums.inheriting_count + noun + " its airflow, so the sums are not shown." };
+      }
+      return { value: sums.airflows[field] };
+    }
+    return field === "floor_area_m2" || field === "weighted_area_m2" || field === "net_volume_m3" ?
+      { value: sums[field] } : null;
+  }
+
+  function format(cell, field) {
+    if (!cell) return "";
+    if (cell.text !== undefined) return cell.text || "";
+    var quantity = cell.quantity || QUANTITY[field];
+    return units.format(cell.value, quantity, units.profile(quantity, preferences.current()),
+      { showUnit: false, precision: cell.precision });
+  }
+
+  function value(vs, row, field) {
+    return format(cellOf(row, field), field);
+  }
+
+  /* A muted value says why in its tooltip; every other cell's tooltip is its text, which the table sets. */
+  function decorate(vs, td, row, field) {
+    var cell = cellOf(row, field);
+    td.classList.toggle("is-muted", Boolean(cell && cell.muted));
+    if (cell && cell.tooltip) ui.tooltip(td, cell.tooltip);
+  }
+
+  /* The Zone row's marker when its supply and extract sums differ by more than the host's threshold. */
+  function zoneMarker(vs, row) {
+    var sums = row.record.sums;
+    if (!sums || !sums.imbalanced) return null;
+    var profile = units.profile(fields.AIRFLOW_M3H, preferences.current());
+    function flow(value) { return units.format(value, fields.AIRFLOW_M3H, profile); }
+    var supply = sums.airflows.v_sup_m3h, extract = sums.airflows.v_eta_m3h;
+    return { text: "", icon: "alert", tooltip: "Supply and extract differ by more than 10 percent of the larger: " +
+      "supply " + flow(supply) + ", extract " + flow(extract) + ", difference " + flow(Math.abs(supply - extract)) +
+      ". Review the airflows." };
+  }
+
+  /* What a Zone row sorts by in this view's columns. */
+  function sortValue(vs, record, field) {
+    if (SORTED.indexOf(field) < 0) return undefined;
+    var cell = zoneCell(record, field);
+    return cell && cell.value !== undefined ? cell.value : null;
+  }
+
+  /* Rows under one parent in the sorted column's order, by the value they show; a row with none keeps its
+     place after the others. Name and the Zone fields leave the rows in path order. */
+  function sort(vs, list, field, direction) {
+    if (SORTED.indexOf(field) < 0) return list;
+    var sign = direction === "desc" ? -1 : 1;
+    function key(row) {
+      var cell = cellOf(row, field);
+      if (!cell) return null;
+      return cell.text !== undefined ? cell.text : cell.value;
+    }
+    return list.map(function (row, index) { return { row: row, index: index, key: key(row) }; })
+      .sort(function (a, b) {
+        if (a.key === null || a.key === undefined || b.key === null || b.key === undefined) {
+          return (a.key === null || a.key === undefined) - (b.key === null || b.key === undefined) || a.index - b.index;
+        }
+        var difference = typeof a.key === "number" && typeof b.key === "number" ? a.key - b.key :
+          String(a.key).localeCompare(String(b.key), undefined, { numeric: true });
+        return difference * sign || a.index - b.index;
+      }).map(function (entry) { return entry.row; });
+  }
+
+  /* A Zone's Spaces as search text, so a search for a Space's number or name keeps its Zone. */
+  function search(vs, record) {
+    return record.spaces.map(function (space) { return space.values.number + " " + space.values.name; }).join(" ");
+  }
+
+  function count(vs) {
+    var total = vs.spaces.length;
+    return total + (total === 1 ? " Space" : " Spaces");
+  }
+
+  var VIEW = {
+    id: "ph_composer.spaces", label: "Spaces", order: 20, sections: [SECTION], tiers: 3,
+    placeholder: "Zone, number or name",
+    // Building-Segment and Level stay available from Table options; Ground depth is the Faces view's.
+    zoneFields: ["building_segment", "level"],
+    hiddenColumns: { building_segment: true, level: true, net_area_factor: true },
+    optionalColumns: [["building_segment", "Building-Segment"], ["level", "Level"],
+      ["net_area_factor", "Net area factor"]],
+    sorted: SORTED,
+    widths: { number: 64, floor_area_m2: 104, weighting_factor: 112, weighted_area_m2: 116, height_m: 84,
+      net_volume_m3: 112, v_sup_m3h: 104, v_eta_m3h: 104, v_tran_m3h: 112, net_area_factor: 112 },
+    create: create, consume: consume, zoneRecord: zoneRecord, extraRows: extraRows, children: children,
+    leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: zoneMarker,
+    sortValue: sortValue, sort: sort, search: search, count: count
+  };
+  tableViews.register("ph_composer.zones", VIEW);
+  return VIEW;
+});

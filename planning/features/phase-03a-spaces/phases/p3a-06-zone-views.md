@@ -1,7 +1,7 @@
 # P3a-06: Zone views
 
 DATE: 2026-10-15
-STATUS: Implemented on `feature/spaces-p3a-06`, in review; host gate pending ([evidence](../evidence/p3a-06-zone-views.md))
+STATUS: Merged through #149 (`42b6316`); host gate pending ([evidence](../evidence/p3a-06-zone-views.md))
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

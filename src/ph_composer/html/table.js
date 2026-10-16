@@ -287,7 +287,7 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     var targets = Array.prototype.slice.call(cache.body.querySelectorAll(".row-target"));
     var index = targets.indexOf(entry.target);
     // A row with nothing under it has nothing to open, so Left goes straight to its parent.
-    var opens = entry.row.depth < 2 && !(cache.options.expandable && !cache.options.expandable(entry.row));
+    var opens = entry.row.depth < tiers(cache) && !(cache.options.expandable && !cache.options.expandable(entry.row));
     var next;
     if (event.key === "ArrowDown") next = targets[index + 1];
     else if (event.key === "ArrowUp") next = targets[index - 1];
@@ -300,6 +300,11 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     } else if (entry.row.parent) next = cache.rows[entry.row.parent].target;
     event.preventDefault();
     if (next) next.focus();
+  }
+  /* How many tree levels open: rows at a shallower depth carry a chevron. `options.tiers`, 2 by default
+     (a Zone and the summary rows beneath it); a tree four deep (Zone, Space, Volume, Floor Segment) passes 3. */
+  function tiers(cache) {
+    return cache.options && cache.options.tiers ? cache.options.tiers : 2;
   }
   function buildRow(root, cache, expanded, row) {
     var entry = { node: element("tr", "tier-" + row.depth), cells: {} };
@@ -323,7 +328,7 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
       entry.chevron.innerHTML = icons.ROW_CHEVRON;
       hierarchy.insertBefore(entry.chevron, hierarchy.firstChild);
     };
-    if (row.depth < 2) entry.needChevron();
+    if (row.depth < tiers(cache)) entry.needChevron();
     if (hierarchy) {
       entry.target = button(row.tier, function () { if (cache.options.inspect) cache.options.inspect(entry.row); });
       entry.target.className = "row-target";
@@ -364,10 +369,10 @@ PhComposerUI.define("table", ["dom", "icons", "overlay", "view_controls"],
     var checked = paintRowCheck(cache, entry, row);
     entry.node.className = "tier-" + row.depth + (selected ? " host-selected" : "") +
       (checked ? " is-checked" : "");
-    if (row.depth < 2) entry.needChevron();
+    if (row.depth < tiers(cache)) entry.needChevron();
     if (entry.target) entry.target.disabled = Boolean(options.disabled);
     if (entry.chevron) {
-      entry.chevron.hidden = row.depth >= 2;
+      entry.chevron.hidden = row.depth >= tiers(cache);
       // A row with nothing under it keeps the chevron's place, so its label lines up, but offers nothing to open.
       var leaf = Boolean(options.expandable && !options.expandable(row));
       entry.chevron.classList.toggle("is-leaf", leaf);
