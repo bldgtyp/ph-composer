@@ -6920,6 +6920,57 @@ Example params:
 {}
 ```
 
+### `ph_composer.spaces.labels.options`
+
+Which optional lines the Space labels show, for this Model session. Owner: `ph_composer.spaces`.
+
+Refuses: only the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "weighted_area",
+    "net_volume",
+    "airflows"
+  ],
+  "properties": {
+    "weighted_area": {
+      "type": "boolean",
+      "description": "Whether the labels show weighted area (icfa)."
+    },
+    "net_volume": {
+      "type": "boolean",
+      "description": "Whether the labels show net volume."
+    },
+    "airflows": {
+      "type": "boolean",
+      "description": "Whether the labels show supply and extract."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.spaces.list`
 
 One page of Space occurrences with their Volumes and Floor Segments, SI metrics, states and findings, and every Zone's sums. Owner: `ph_composer.spaces`.
@@ -43635,6 +43686,72 @@ Example params:
     }
   ],
   "revision": 1
+}
+```
+
+### `ph_composer.spaces.labels.set_options`
+
+Show or hide the Space labels' optional lines for this Model session. Owner: `ph_composer.spaces`.
+
+Refuses: only the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "weighted_area": {
+      "type": "boolean",
+      "description": "Whether the labels show weighted area (icfa)."
+    },
+    "net_volume": {
+      "type": "boolean",
+      "description": "Whether the labels show net volume."
+    },
+    "airflows": {
+      "type": "boolean",
+      "description": "Whether the labels show supply and extract."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "weighted_area",
+    "net_volume",
+    "airflows"
+  ],
+  "properties": {
+    "weighted_area": {
+      "type": "boolean",
+      "description": "Whether the labels show weighted area (icfa)."
+    },
+    "net_volume": {
+      "type": "boolean",
+      "description": "Whether the labels show net volume."
+    },
+    "airflows": {
+      "type": "boolean",
+      "description": "Whether the labels show supply and extract."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "weighted_area": true
 }
 ```
 

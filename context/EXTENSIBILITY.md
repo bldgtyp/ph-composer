@@ -576,7 +576,12 @@ ColourBy::Entry.new(path: volume.path, value: "2.50", label: "2.50 m",
 - **Worked example.** Spaces' four modes (`features/spaces/colour_modes.rb`: By Space, By ventilation,
   By weighting factor, By height) each carry the Volume preview prism (`features/spaces/prism.rb`, pure,
   in world metres, the same value the export writes) as their entries' `derived`, so the prisms show
-  while one of those modes is on and never otherwise, with no preview switch of their own.
+  while one of those modes is on and never otherwise, with no preview switch of their own. Its two
+  readouts (`features/spaces/readouts.rb`) are the readout example: Space labels anchor each Space at its
+  reference point, the plan centroid of its largest Floor Segment at that segment's mean height, with
+  optional lines set per Model session by a view command and a native menu, which force a readout
+  rebuild because the revision does not change; selection totals sum the Spaces a selection touches, each
+  once.
 
 ### Colour-by readouts
 

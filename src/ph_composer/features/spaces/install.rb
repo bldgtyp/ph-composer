@@ -41,6 +41,7 @@ require_relative "declarations/operations"
 require_relative "declarations/context"
 require_relative "codes"
 require_relative "colour_modes"
+require_relative "readouts"
 require_relative "mark_placement"
 require_relative "mark_tool"
 require_relative "declarations/mark_tool"
@@ -61,6 +62,7 @@ module PhComposer
       Settings.install(feature)
       Codes.install(feature)
       ColourModes.install(feature)
+      Readouts.install(feature)
       MarkToolRegistration.install(feature)
       CreateRouteRegistration.install(feature)
     end
