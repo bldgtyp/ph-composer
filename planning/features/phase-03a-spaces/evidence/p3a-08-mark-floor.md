@@ -1,7 +1,7 @@
 # P3a-08 evidence: Mark floor and Create Space
 
 DATE: 2026-10-16
-STATUS: Slice A in review on `feature/spaces-p3a-08a`
+STATUS: Slice A in review on `feature/spaces-p3a-08a`; slice B built on `feature/spaces-p3a-08b`
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -66,3 +66,19 @@ gpt-6-astra, cycle 2, at `b8f828d`: three P2 and one P3, fixed and gated by `mak
 - P3: the tool's own refusals now end with "Nothing was written.", as an operation's do.
 - Placement moved to `features/spaces/mark_placement.rb` (`MarkPlacement`), which keeps the tool class within
   the class-length limit, as the Window Place tool's `ToolTarget` does.
+
+## Slice B: the Weighting factor column's paint
+
+`html/features/spaces/mark_paint.js` owns the panel half of step 4. The Weighting factor column menu gives
+each value a paint icon (the Zone views host's `menuValueAction` hook), always including 0 and 1 beside every
+factor in use. Each icon's label states what counts toward iCFA (Phius guidebook 4.4.1.4) and that the tool
+checks none of it. Choosing one runs `mark_tool.start` with that factor, and the host now closes a column
+menu after any value action runs. While the tool runs, the column header shows a pressed paint glyph
+(`headerAction`) that runs `mark_tool.stop`. The state comes from the `ph_composer.spaces.mark_tool` snapshot
+section, so a tool ended in SketchUp releases the glyph. Escape and a switch to another view stop a running
+tool first.
+
+Tests: `tests/spaces_mark_paint_panel_test.js` (phase doc test 6). The preview host carries the tool's state
+and both view commands; `tools/ui-preview/spaces_checks.cjs` opens the menu, starts the tool from the icon
+for 1, sees the menu close and the pressed glyph appear, and stops it from the glyph, with screenshots of the
+menu and the marking header.

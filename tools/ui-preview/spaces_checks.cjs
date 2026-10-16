@@ -1,6 +1,7 @@
 /* The Spaces view on the real panel with the synthetic Spaces fixtures: the reference model's rows, sums,
-   airflow states and selection bar at representative widths; an empty Model; and the unit-switch cost on 300
-   Spaces (units U1-F1), whose median it prints. SketchUp pixels and Chromium 88 remain host checks. */
+   airflow states and selection bar at representative widths; the Weighting factor column's paint; an empty
+   Model; and the unit-switch cost on 300 Spaces (units U1-F1), whose median it prints. SketchUp pixels and
+   Chromium 88 remain host checks. */
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -53,6 +54,26 @@ function visibleRows(page) {
     assert.equal(await page.getByRole("textbox", { name: "Weighting factor for checked Floor Segments" })
       .getAttribute("placeholder"), "Mixed");
     await page.screenshot({ path: path.join(output, "spaces-checked.png") });
+
+    // The Weighting factor column's paint: an icon beside 0, 1 and each factor in use starts Mark floor, and
+    // while it runs the header shows a pressed glyph that stops it.
+    await page.getByRole("checkbox", { name: "Check Hall" }).uncheck();
+    await page.getByRole("button", { name: "Weighting factor column menu" }).click();
+    const icons = page.locator(".phc-column-menu:visible button[aria-label^='Mark floor at weighting factor']");
+    assert(await icons.count() >= 2, "0 and 1 are always offered");
+    // The menu fades in once it is placed, a frame after it opens.
+    await page.evaluate(async () => {
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await Promise.all(document.getAnimations().map(animation => animation.finished));
+    });
+    await page.screenshot({ path: path.join(output, "spaces-paint-menu.png") });
+    await page.locator(".phc-column-menu:visible button[aria-label^='Mark floor at weighting factor 1.']").click();
+    assert.equal(await page.locator(".phc-column-menu:visible").count(), 0, "choosing a factor closes the menu");
+    const glyph = page.getByRole("button", { name: "Mark floor at Weighting factor 1. Click to stop marking" });
+    assert.equal(await glyph.getAttribute("aria-pressed"), "true");
+    await page.screenshot({ path: path.join(output, "spaces-marking.png") });
+    await glyph.click();
+    await glyph.waitFor({ state: "hidden" });
 
     // Zones with no Spaces yet: the Zones and nothing beneath them.
     await open(page, "spacesnone");
