@@ -131,4 +131,14 @@ class SpacesHeightFromSolidTest < PhComposerTestCase
     @model.selection.add(loft.entities.to_a.last)
     assert_equal path, read.call.dig("value", "solid")
   end
+
+  def test_a_selected_container_with_an_unreadable_record_refuses_as_unreadable
+    @model.active_path = [@model.entities.to_a.last, loft]
+    corrupt = Sketchup::Group.new(2500)
+    corrupt.set_attribute(PhComposer::Spaces::SPACE_STORE.dictionary, "record", "{not json")
+    loft.entities << corrupt
+    @model.selection.add(corrupt)
+    result = API.query(:context => @context, :name => "ph_composer.spaces.selected_solid")
+    assert_equal "record.unreadable", result.fetch("code")
+  end
 end

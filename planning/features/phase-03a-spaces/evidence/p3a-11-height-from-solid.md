@@ -55,3 +55,11 @@ uses the `ruler` glyph beside Enter and Remove. No kit part or token changed.
 
 Tests: `tests/spaces_actions_panel_test.js` (the read, preview, confirmation and write; a refusal with nothing
 written), `tests/spaces_height_from_solid_test.rb` (the selected-solid read) and the walkthrough test.
+
+## Review of PR #167
+
+gpt-6.1-sol, cycle 1: two P2 and one P3. A draft begun while the two reads ran was not checked again, so the
+confirmation opened over it and Set height wrote past it; the held draft is now checked before the
+confirmation opens and before it writes (`tests/spaces_actions_panel_test.js`). `selected_solid` could refuse
+as `record.unreadable` without declaring it; it now does (`tests/spaces_height_from_solid_test.rb`). The
+action's side effects now name the Model's last height, which a height edit also writes.

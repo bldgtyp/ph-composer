@@ -8103,7 +8103,7 @@ Example params:
 
 The one selected Group or component that is not a Space or a Volume, as the solid Height from solid would measure. Owner: `ph_composer.spaces`.
 
-Refuses: `selection.invalid`, and the `query` common set.
+Refuses: `record.unreadable`, `selection.invalid`, and the `query` common set.
 
 Params:
 
@@ -25800,7 +25800,7 @@ Example params:
 
 Set a Volume's average clear ceiling height from a closed solid: its volume over the Volume's net floor area. The solid is left as it was. Owner: `ph_composer.spaces`.
 
-Undo step: Height from Solid. Writes the Volume's height.
+Undo step: Height from Solid. Writes the Volume's height and the Model's last height, which new Spaces take.
 
 Refuses: `record.unreadable`, `space.net_area_zero`, `space.solid_invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, `validation.failed`, and the `action` common set.
 

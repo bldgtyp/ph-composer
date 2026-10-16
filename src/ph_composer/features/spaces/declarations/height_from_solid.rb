@@ -24,7 +24,7 @@ module PhComposer
         feature.query("#{FEATURE_ID}.selected_solid",
                       :description => "The one selected Group or component that is not a Space or a Volume, as the " \
                                       "solid Height from solid would measure.",
-                      :refuses => %w[selection.invalid], :params => Shapes::NONE,
+                      :refuses => %w[record.unreadable selection.invalid], :params => Shapes::NONE,
                       :result => Shapes.object({ "solid" => PATH }), :examples => [{}]) do |request|
           HeightFromSolid.selected_solid(request)
         end
@@ -51,7 +51,9 @@ module PhComposer
                          }).merge("description" => "The Volume's height as last read; a changed one refuses.")
                        )),
                        :result => Shapes.object(NUMBERS.merge("volume_id" => Shapes::TEXT)),
-                       :undo_name => "Height from Solid", :side_effects => "Writes the Volume's height.",
+                       :undo_name => "Height from Solid",
+                       :side_effects => "Writes the Volume's height and the Model's last height, which new " \
+                                        "Spaces take.",
                        :examples => [ACTION_EXAMPLE]) do |request, proposal|
           HeightFromSolid.apply(request, proposal, :volume => request.params.fetch("volume"),
                                                    :solid => request.params.fetch("solid"),

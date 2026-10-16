@@ -226,8 +226,16 @@ function (panel, requests, ui, units, preferences, fields) {
     } });
   };
 
+  /* The reads are asynchronous, so a draft begun while they ran is checked again before the confirmation opens
+     and before it writes. */
   SpaceActions.prototype.confirmHeight = function (name, params, seen) {
     var value = seen.value, self = this;
+    function held() {
+      var reason = self.host.draftReason && self.host.draftReason();
+      if (reason) self.host.refuse(reason);
+      return Boolean(reason);
+    }
+    if (held()) return;
     function text(number, field) { return units.format(number, field, units.profile(field, preferences.current())); }
     var dialog = this.dialog || (this.dialog = ui.formDialog("", function () { dialog.closeModal(); }));
     if (!dialog.parentNode) document.body.appendChild(dialog);
@@ -238,7 +246,7 @@ function (panel, requests, ui, units, preferences, fields) {
         text(value.height_m, fields.LENGTH_M) + ". The solid is left as it is."),
       ui.actionRow(cancel, ui.button("Set height", function () {
         dialog.closeModal();
-        if (self.host.disposed || self.busy()) return;
+        if (self.host.disposed || self.busy() || held()) return;
         self.runAt(seen.revision, PREFIX + ".volumes.height_from_solid", Object.assign({}, params,
           { expected_values: { avg_ceiling_height_m: value.current_height_m } }));
         panel.repaint();

@@ -318,3 +318,27 @@ test("Height from solid with no solid selected says so and writes nothing", func
     "Select one closed Group.");
   assert.strictEqual(p.sent.filter(function (message) { return message.type === "action.invoke"; }).length, 0);
 });
+
+test("a draft begun while Height from solid reads holds the confirmation", function () {
+  var p = page();
+  p.receive(snapshot());
+  expandAll(p);
+  p.click(p.section().querySelectorAll("[data-row-action]").filter(function (node) {
+    return node.getAttribute("aria-label") === "Height of Volume 1 from a solid";
+  })[0]);
+  p.result(last(p), { status: "completed", revision: 4, value: { solid: [100, 101, 900] } });
+  var preview = last(p);
+  var height = p.section().querySelectorAll("input").filter(function (node) {
+    return node.getAttribute("aria-label") === "Volume 1 height";
+  })[0];
+  if (height.listeners.focus) height.listeners.focus({ target: height });
+  height.value = "abc";
+  height.listeners.input({ target: height });
+  p.result(preview, { status: "completed", revision: 4, value: { height_m: 3, solid_volume_m3: 36,
+    net_floor_area_m2: 12, current_height_m: 2.5 } });
+  var dialog = p.context.document.querySelector("dialog");
+  assert.ok(!dialog || dialog.hidden, "no confirmation over the held draft");
+  assert.strictEqual(p.sent.filter(function (message) {
+    return message.payload && message.payload.name === "ph_composer.spaces.volumes.height_from_solid";
+  }).length, 0);
+});
