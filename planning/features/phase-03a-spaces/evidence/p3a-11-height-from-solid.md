@@ -1,7 +1,7 @@
 # P3a-11 evidence: Height from solid
 
 DATE: 2026-10-16
-STATUS: Merged to main through PR #167 (`f910452`); S11 partly observed on the host in [P3a-12](p3a-12-acceptance.md); native Undo owed
+STATUS: Merged to main through PR #167 (`f910452`); S11 partly observed on the host in [P3a-12](p3a-12-acceptance.md); native Undo and S11 passed in the 2026-10-16 acceptance rerun
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

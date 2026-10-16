@@ -1,7 +1,7 @@
 # P3a-11: Height from solid
 
 DATE: 2026-10-15
-STATUS: Merged to main through PR #167 ([evidence](../evidence/p3a-11-height-from-solid.md)); S11 host gate partly observed in P3a-12; native Undo owed
+STATUS: Merged to main through PR #167 ([evidence](../evidence/p3a-11-height-from-solid.md)); S11 host gate partly observed in P3a-12; native Undo and S11 passed in the 2026-10-16 acceptance rerun
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

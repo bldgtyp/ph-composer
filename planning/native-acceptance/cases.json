@@ -43,7 +43,9 @@
         "src/ph_composer/extension.rb",
         "src/ph_composer/features/zones/*",
         "src/ph_composer/session/*",
-        "tests/adjacency*",
+        "tests/zone_solve*",
+        "tests/zone_overlap*",
+        "tests/zone_face*",
         "tests/support/*",
         "tests/zone*",
         "tools/examples/authoring/adjacency*",
@@ -104,8 +106,11 @@
         "src/ph_composer/session/*",
         "src/ph_composer/shell/*",
         "tests/*overview*",
-        "tests/*tree*",
-        "tests/adjacency*",
+        "tests/overview_panel*",
+        "tests/table_test.js",
+        "tests/zone_solve*",
+        "tests/zone_overlap*",
+        "tests/zone_face*",
         "tests/classify*",
         "tests/face*",
         "tests/panel*",
@@ -134,7 +139,9 @@
         "src/ph_composer/features/zones/faces/*",
         "src/ph_composer/features/zones/*",
         "src/ph_composer/session/*",
-        "tests/adjacency*",
+        "tests/zone_solve*",
+        "tests/zone_overlap*",
+        "tests/zone_face*",
         "tests/classify*",
         "tests/face*",
         "tests/support/*",
@@ -252,8 +259,11 @@
         "src/ph_composer/session/*",
         "src/ph_composer/shell/*",
         "tests/*overview*",
-        "tests/*tree*",
-        "tests/adjacency*",
+        "tests/overview_panel*",
+        "tests/table_test.js",
+        "tests/zone_solve*",
+        "tests/zone_overlap*",
+        "tests/zone_face*",
         "tests/classify*",
         "tests/face*",
         "tests/panel*",
@@ -1279,7 +1289,7 @@
     },
     {
       "id": "S03",
-      "label": "Spaces edit contexts: Volume protection on exit by any callback order, direct Volume switch, save from an open Volume, Restore position, drawing at the Space root, Undo/Redo, two Models isolated",
+      "label": "Spaces edit contexts: Volume protection on exit by any callback order, direct Volume switch, a save or autosave from an open Volume leaves the user in it and a Volume saved unlocked is protected on open (D3a-19), Restore position, drawing at the Space root, Undo/Redo, two Models isolated",
       "mode": "mixed",
       "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
@@ -1288,7 +1298,9 @@
         "src/ph_composer/features/spaces/context/*",
         "src/ph_composer/features/spaces/declarations/context.rb",
         "tests/spaces_context*",
-        "tests/edit_context*"
+        "tests/edit_context*",
+        "src/ph_composer/session/sessions.rb",
+        "src/ph_composer/session/host_observers.rb"
       ],
       "native_control_required": true
     },
@@ -1311,6 +1323,111 @@
         "tests/spaces_zone_copy*",
         "tests/spaces_restore_zone*",
         "tests/container_watch*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "S05",
+      "label": "Colour-by derived geometry and readouts: a synthetic mode with derived geometry and a readout draw with no change to callers, depth, tag and hidden-ancestor behavior, legend counts, draw cost at the overlay spike's size, Window Type operation marks",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/colour_by/*",
+        "src/ph_composer/features/windows/colour_modes.rb",
+        "tests/colour_by*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "S06",
+      "label": "Zone views: the Zones tab with the Faces and Spaces views and a synthetic Zone-only view; switching keeps the filter, expanded and checked Zones and Locate and sends no action; Classify paint stops on a switch; the active view returns after reopening the panel and the Model",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/html/table_views.js",
+        "src/ph_composer/html/features/zones/overview.js",
+        "src/ph_composer/html/features/zones/faces_view.js",
+        "src/ph_composer/html/features/zones/classify.js",
+        "tools/examples/zones/example_zone_view.js",
+        "tests/*zone_view*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "S07",
+      "label": "The Spaces view: Zone, Space, Volume and Segment rows; in-place edit with stale refusal; range fill and paste as one Undo step; airflow cell states; Zone sums, imbalance marker and inheriting dash; selection bar and Select by; Locate and context entry; findings with repairs",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/html/features/spaces/*",
+        "src/ph_composer/features/spaces/reads.rb",
+        "src/ph_composer/features/spaces/scan/*",
+        "src/ph_composer/features/spaces/declarations/spaces.rb",
+        "tests/spaces_*panel*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "S08",
+      "label": "Mark floor and Create Space: Mark floor from the Weighting factor column menu at 1, 0 and a typed factor by click and held drag, the Create Space offer, refusals on the status bar, Escape, deactivation and the pressed glyph, one Undo step per gesture; Create Space from the context menu with its preview; Classify and Mark floor leave one tool",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/spaces/mark_tool.rb",
+        "src/ph_composer/features/spaces/mark_placement.rb",
+        "src/ph_composer/features/spaces/create_route.rb",
+        "src/ph_composer/features/spaces/declarations/create_route.rb",
+        "src/ph_composer/features/spaces/declarations/mark_tool.rb",
+        "src/ph_composer/html/features/spaces/*",
+        "src/ph_composer/core/drag_set*",
+        "src/ph_composer/core/pick*",
+        "tests/spaces_mark*",
+        "tests/spaces_create*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "S09",
+      "label": "Spaces Colour-by modes: Space, Ventilation, Weighting factor and Height colour Floor Segments and prisms, stable Space colours across reopen, the projected prism base, labels and selection totals in SI and IP with no mode active, nothing added to the SKP",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/spaces/prism.rb",
+        "src/ph_composer/features/spaces/colour_modes.rb",
+        "src/ph_composer/features/spaces/readouts.rb",
+        "src/ph_composer/colour_by/*",
+        "tests/spaces_colour*",
+        "tests/spaces_readout*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "S10",
+      "label": "Spaces export: the packaged RBZ exports the reference model; the HBJSON reloads with each Space on its Zone's Room, metrics equal to the panel, airflows as m3/s, user_data on the three honeybee-ph objects; the off-to-the-side line and per-Zone schedule in the report; a copied Zone's Spaces reload on the copied Room",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/spaces/export.rb",
+        "src/ph_composer/features/spaces/scan/extents.rb",
+        "src/ph_composer/python/ph_composer_translation/space_*.py",
+        "src/ph_composer/python/ph_composer_translation/contract/space_*.py",
+        "src/ph_composer/export/*",
+        "src/ph_composer/html/sections/export.js",
+        "tests/spaces_export*",
+        "tests/python/test_space*"
+      ],
+      "native_control_required": true
+    },
+    {
+      "id": "S11",
+      "label": "Height from solid: the wedge's volume over net floor area, both numbers reported, one native Undo step, refusals for an open solid, a Group of Groups, a Volume or Space as the solid and a wrong selection",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "paths": [
+        "src/ph_composer/features/spaces/height_from_solid*",
+        "src/ph_composer/features/spaces/declarations/height_from_solid.rb",
+        "src/ph_composer/html/features/spaces/*",
+        "tests/spaces_height_from_solid*"
       ],
       "native_control_required": true
     }
