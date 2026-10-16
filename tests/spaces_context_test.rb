@@ -173,6 +173,30 @@ class SpacesContextTest < PhComposerTestCase
     assert_equal before, @model.operations.length
   end
 
+  # Leaving and re-entering before the exit protection runs leaves its job queued; a save then must not
+  # settle it onto the Volume open again, which the host reports as an empty path during the save.
+  def test_save_before_a_queued_exit_runs_keeps_the_reentered_volume_open
+    enter(@first)
+    @model.instance_variable_set(:@active_path, [@zone, @space])
+    @session.host_event(:active_path_changed)
+    assert reconciler.pending?
+    @model.instance_variable_set(:@active_path, [@zone, @space, @first])
+    @session.host_event(:active_path_changed)
+    @model.save(File.join(Dir.tmpdir, "spaces-context-reentered.skp"))
+    refute @first.locked?
+    assert_equal [@zone, @space, @first], @model.active_path
+  end
+
+  # The open-time pass leaves a Volume on the path alone, so a save before its timer keeps the user in it.
+  def test_the_open_time_pass_skips_the_volume_on_the_path
+    @first.locked = false
+    @model.instance_variable_set(:@active_path, [@zone, @space, @first])
+    @session.host_event(:model_opened)
+    @model.save(File.join(Dir.tmpdir, "spaces-context-opened.skp"))
+    refute @first.locked?
+    assert_equal [@zone, @space, @first], @model.active_path
+  end
+
   # A file saved inside a Volume stores it unlocked; opening the Model protects every unlocked Volume
   # off the path, as deferred work.
   def test_opening_a_model_protects_volumes_it_holds_unlocked

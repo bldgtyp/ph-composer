@@ -55,8 +55,10 @@ module PhComposer
       # A save, an autosave included, leaves the user where they are (D3a-19): pending protection of
       # Volumes already left runs, so the file holds them protected, and the Volume still open is left
       # unlocked, so the host restores the context after the save. Inside onPreSaveModel the host reports
-      # an empty path, so the settled writes' callbacks are not observed: the baseline is the Volume still
-      # open on screen. A Volume saved open is protected when the Model is next opened (`opened`).
+      # an empty path, so the settled writes' callbacks are not observed, and a job still queued for the
+      # Volume open on screen (left and entered again, or queued at open) cannot tell it is open: the
+      # baseline is that Volume, and settling skips it. A Volume saved open is protected when the Model is
+      # next opened (`opened`).
       def pre_save
         @saving = true
         @work.settle
@@ -72,7 +74,9 @@ module PhComposer
       def opened
         Occurrences.scan(model, :strict => false).then { |scan| scan.volumes + scan.orphan_volumes }.each do |found|
           volume = found.entity
-          @work.queue(volume.persistent_id, volume) if Protection.valid?(volume) && !volume.locked?
+          next unless Protection.valid?(volume) && !volume.locked? && path.none? { |entity| entity.equal?(volume) }
+
+          @work.queue(volume.persistent_id, volume)
         end
         observed
       end
@@ -106,9 +110,10 @@ module PhComposer
         Array(model.active_path)
       end
 
-      # The path is read again right before the write: the user may have entered the Volume again.
+      # The path is read again right before the write: the user may have entered the Volume again. During a
+      # save the host reports an empty path, so the Volume last seen open is skipped by identity too.
       def protect_unless_open(volume)
-        return if path.any? { |entity| entity.equal?(volume) }
+        return if path.any? { |entity| entity.equal?(volume) } || (@saving && volume.equal?(@baseline))
 
         Protection.protect(model, volume)
         protected(volume)
