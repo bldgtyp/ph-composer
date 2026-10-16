@@ -6950,13 +6950,16 @@ Result:
   ],
   "properties": {
     "weighted_area": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether the labels show weighted area (icfa)."
     },
     "net_volume": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether the labels show net volume."
     },
     "airflows": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether the labels show supply and extract."
     }
   }
 }
@@ -43701,13 +43704,16 @@ Params:
   "required": [],
   "properties": {
     "weighted_area": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether the labels show weighted area (icfa)."
     },
     "net_volume": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether the labels show net volume."
     },
     "airflows": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether the labels show supply and extract."
     }
   }
 }
@@ -43726,13 +43732,16 @@ Result:
   ],
   "properties": {
     "weighted_area": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether the labels show weighted area (icfa)."
     },
     "net_volume": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether the labels show net volume."
     },
     "airflows": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether the labels show supply and extract."
     }
   }
 }

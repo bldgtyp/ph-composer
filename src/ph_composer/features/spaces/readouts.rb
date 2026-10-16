@@ -35,7 +35,9 @@ module PhComposer
       end
 
       def install_options(feature)
-        result = Shapes.object(OPTIONS.keys.to_h { |key| [key, { "type" => "boolean" }] })
+        result = Shapes.object(OPTIONS.to_h do |key, label|
+          [key, { "type" => "boolean", "description" => "Whether the labels show #{label.downcase}." }]
+        end)
         feature.query("#{FEATURE_ID}.labels.options",
                       :description => "Which optional lines the Space labels show, for this Model session.",
                       :refuses => [], :params => Shapes::NONE, :result => result, :examples => [{}]) do |request|
@@ -73,7 +75,7 @@ module PhComposer
 
       def labels(read)
         chosen = options(read.session)
-        anchors = totals(read.model).filter_map do |row|
+        anchors = totals(read).filter_map do |row|
           next unless row.point_m
 
           ColourBy::Anchor.new(:point => point(row.point_m), :path => row.space.path,
@@ -95,7 +97,7 @@ module PhComposer
 
       def selection_totals(read)
         selected = Array(read.selection)
-        rows = totals(read.model).select do |row|
+        rows = totals(read).select do |row|
           path = row.space.path
           # The Space itself, or anything inside it: a Volume, a Floor Segment, a Face.
           selected.any? { |chosen| chosen[0, path.length] == path }
@@ -113,8 +115,8 @@ module PhComposer
       end
 
       # Each Space with a Volume, summed from the same Volume views the modes draw from.
-      def totals(model)
-        ColourModes.views(model).group_by(&:space).map do |space, views|
+      def totals(read)
+        ColourModes.views(read).group_by(&:space).map do |space, views|
           largest = views.flat_map(&:segments).max_by { |segment| segment.metrics.fetch("floor_area_m2") }
           SpaceTotals.new(:space => space,
                           :weighted_area_m2 => views.sum { |view| view.metrics.fetch("weighted_area_m2") },

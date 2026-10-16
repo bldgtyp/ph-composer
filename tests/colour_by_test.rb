@@ -954,8 +954,10 @@ class ColourByTest < PhComposerTestCase
     menu = PhComposer::Commands.colour_by_menu
 
     labels = menu.entries.map { |entry| entry.is_a?(Array) ? entry.first : entry }
+    # The registered readouts follow the modes, after a separator.
+    modes = labels.take_while { |label| label != :separator }
 
-    assert_equal ColourBy.modes.map { |mode| mode.fetch("label") } + ["Off"], labels
+    assert_equal ColourBy.modes.map { |mode| mode.fetch("label") } + ["Off"], modes
   end
 
   private
