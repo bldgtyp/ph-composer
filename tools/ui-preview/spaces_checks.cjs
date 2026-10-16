@@ -65,14 +65,21 @@ function visibleRows(page) {
     const measure = async label => {
       const times = [];
       for (let run = 0; run < 5; run += 1) {
-        // Each run switches to the other system from the one shown.
+        // Each run switches to the other system from the one shown, and stops once the changed table has had a
+        // frame to paint in; a header that never changes fails within ten seconds rather than hanging the run.
         times.push(await page.evaluate(async () => {
           const header = () => document.querySelector(".phc-zone-view:not([hidden]) th.col-v_sup_m3h");
           const system = header().textContent.includes("cfm") ? "SI" : "IP";
           const unit = system === "IP" ? "cfm" : "m³/h";
+          const frame = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
           const start = performance.now();
           document.querySelector(`[data-unit-system="${system}"]`).click();
-          while (!header().textContent.includes(unit)) await new Promise(resolve => setTimeout(resolve, 0));
+          while (!header().textContent.includes(unit)) {
+            if (performance.now() - start > 10000) throw new Error("The unit header did not change.");
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+          await frame();
+          await frame();
           return performance.now() - start;
         }));
       }

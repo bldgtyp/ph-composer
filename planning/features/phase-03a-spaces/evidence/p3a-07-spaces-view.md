@@ -155,8 +155,8 @@ The preview host now publishes the fixture's `spaces` section (step 15): `?fixtu
 model on the authoring Zones, `spacesempty` an empty Model, `spaceslarge` 300 Spaces.
 `tools/ui-preview/spaces_checks.cjs` checks the reference model's rows, Zone marker, inheriting airflow, layout
 at 1280, 900 and 420 px and the selection bar; the empty Model's Zones alone; and measures the unit switch on
-300 Spaces (step 14): median 393 ms with the Zones open and 748 ms with every row open, desktop Chrome on an
-Apple M1 Max. The units STATUS records the measurement and the decision not to optimize in this stage, with
+300 Spaces (step 14): median 408 ms with the Zones open and 786 ms with every row open, each to the first
+painted frame, desktop Chrome on an Apple M1 Max. The units STATUS records the measurement and the decision not to optimize in this stage, with
 issue [#154](https://github.com/bldgtyp/ph-composer/issues/154) carrying the investigation. The browser checks
 run in current Chrome, not Chromium 88; the host gate covers that.
 
