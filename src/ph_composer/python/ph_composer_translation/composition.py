@@ -13,6 +13,7 @@ from .exporters import Exporter
 from .material_sources import MaterialSourcesSection
 from .model_sections import FaceSection, ZoneSection
 from .sections import Section
+from .space_sections import SpaceSection
 from .window_sections import ApertureSection, WindowConstructionSection
 
 SECTIONS: tuple[Section[Any, Any], ...] = (
@@ -22,5 +23,6 @@ SECTIONS: tuple[Section[Any, Any], ...] = (
     WindowConstructionSection(),
     ApertureSection(),
     ZoneSection(),
+    SpaceSection(),
 )
 EXPORTERS: tuple[Exporter, ...] = ()

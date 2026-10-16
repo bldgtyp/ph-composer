@@ -871,6 +871,16 @@ written when the Model holds a Room and no attachment was refused. Each section'
 section with none has no key. After the export reloads the canonical HBJSON, each section's
 `conformance(model, fields)` checks it against that section's own fields.
 
+Spaces is the first section to attach to `ROOM`: `ph_composer.spaces.export.spaces` (Ruby
+`features/spaces/export.rb`, Python `space_sections.py`) keys each honeybee-ph `Space` on its Zone
+record's id, which is the Room's identifier, and is required for export. A Floor Segment leaves with
+its loops projected onto its horizontal plane, so honeybee-ph's area is the plan area the metrics use,
+and a Volume with its preview prism as `geometry`. Airflows follow the any-set rule in the section
+alone: a Space with no rate stored writes none of `_v_sup`, `_v_eta`, `_v_tran`; one with any writes
+all three, 0 for an unset rate, converted from m3/h to m3/s there and nowhere else. Its result fields
+total floor area, weighted area and net volume per Zone and per Building-Segment, and its
+conformance checks the reloaded Rooms' Spaces against the per-Zone totals.
+
 Export reads one revision-bound `GeometrySnapshot`: one traversal recording each occurrence path
 and accumulated transform, with no live SketchUp objects. Its entries are Faces, Edges (world SI
 endpoints, vertex and Face ids within their container), Groups and ComponentInstances; Faces and
