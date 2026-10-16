@@ -17,8 +17,9 @@ Register: [thermal-bridges ACCEPTANCE](../ACCEPTANCE.md).
 ## Steps
 
 1. **Offline gates.** Both Ruby full gates, coverage, browser checks, the pinned runtime and
-   Chromium 88 checks, the packaged inventory and the footprint against the 22 MB target and the
-   24 MB ceiling.
+   Chromium 88 checks, the packaged inventory and the footprint against the 24 MB target, the
+   26 MB ceiling and the 1.5 MB growth budget over the Phase 3a baseline (D3a-20); at the phase close,
+   reset the baseline by a recorded decision.
 2. **Integrated host run.** Fresh process, normal installed RBZ, the reference model: author the
    five types and runs from scratch through the panel, the menu and (if kept) the tool, inside a
    Zone under a rotated wrapper; two Models open; Undo and Redo across the session; save, close,

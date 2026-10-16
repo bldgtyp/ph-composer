@@ -130,14 +130,23 @@ def shipping_problems(entries: Mapping[str, bytes], allowed: list[AllowedLine]) 
 
 
 def footprint_problems(entries: Mapping[str, bytes]) -> list[str]:
-    """The installed extension against the runtime manifest's installed-size ceiling. The budget covers
-    everything the archive unpacks, not only the runtime payload the manifest lists."""
+    """The installed extension against the runtime manifest's installed-size ceiling and growth budget. The
+    budget covers everything the archive unpacks, not only the runtime payload the manifest lists."""
     manifest = entries.get(RUNTIME_MANIFEST)
     if manifest is None:
         return [f"{RUNTIME_MANIFEST}: missing, so the installed-size budget cannot be checked"]
-    ceiling = json.loads(manifest)["gates"]["installed_ceiling_bytes"]
+    gates = json.loads(manifest)["gates"]
     installed = sum(len(content) for content in entries.values())
-    return [f"installed size {installed} bytes exceeds the {ceiling}-byte ceiling"] if installed > ceiling else []
+    found = []
+    if installed > (ceiling := gates["installed_ceiling_bytes"]):
+        found.append(f"installed size {installed} bytes exceeds the {ceiling}-byte ceiling")
+    baseline, growth = gates["installed_baseline_bytes"], gates["installed_growth_bytes"]
+    if installed > baseline + growth:
+        found.append(
+            f"installed size {installed} bytes grew more than {growth} bytes past the {baseline}-byte "
+            "phase baseline; record a decision and raise the baseline"
+        )
+    return found
 
 
 def _stripped_lines(content: bytes) -> set[str]:
