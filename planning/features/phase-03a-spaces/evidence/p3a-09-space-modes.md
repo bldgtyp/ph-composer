@@ -73,3 +73,30 @@ read; such a finding now marks the Volume that holds it. By ventilation counted 
 so a copied Space awaiting repair lost its rates; it now counts once per occurrence, as the read sums them.
 Height bands divided by 0.1 before rounding, so 2.55 m fell in the 2.5 band; they now round to one decimal,
 half up.
+
+## Slice B: Space labels and selection totals
+
+`features/spaces/readouts.rb` registers two readouts through `colour_readout`, so nothing under
+`colour_by/` changed. Both read the Volume views the modes build, so a label and a legend figure never
+disagree.
+
+- Space labels (step 5): one anchor per Space at its reference point, the plan centroid of its largest Floor
+  Segment at that segment's mean height, carrying the Space's path. Number and name by default; weighted
+  area, net volume, and supply and extract are options. Supply and extract show only for a Space with its
+  own rates, since an inheriting Space has none. A Space with no Floor Segment has no label. The options are
+  this Model session's, read by the query `ph_composer.spaces.labels.options` (also the snapshot section
+  `ph_composer.spaces.label_options` for the panel), set by the view command `labels.set_options` and by
+  three checked items in a native "Space labels" menu. Setting one forces a readout rebuild, because the
+  revision does not change. The phase doc's "fixed pixel lift" is not made: a screen offset belongs to the
+  overlay, and the one change this phase allows under `colour_by/` is the legend's. Text is not depth-tested,
+  so a label at floor level still reads through the Zone's walls.
+- Selection totals (step 6): HUD lines for the Spaces a selection touches, a Space counted once whether its
+  Group, a Volume, a Floor Segment or several of them are selected: the count, weighted area, net volume,
+  supply and extract. Nothing selected draws no lines.
+
+`context/EXTENSIBILITY.md` names the two readouts as the readout example and states the reference-point
+rule.
+
+Tests: `tests/spaces_readouts_test.rb` (phase doc tests 6 and 7: default lines and their positions,
+including the sloped Loft at its mean height; every option; a Space with no Floor Segment; Spaces 101 and 102
+summing 16 m2 and 39.6 m3; a Space and its own Volume counted once; nothing written).
