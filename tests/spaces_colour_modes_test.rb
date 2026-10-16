@@ -20,7 +20,7 @@ class SpacesColourModesTest < PhComposerTestCase
     reference_model
     entries = PhComposer::Spaces::ColourModes.entries(@model)
     assert_equal 5, entries.length, "one per Floor Segment of the reference model"
-    assert_equal %w[0.00 1.00], entries.map(&:value).uniq.sort
+    assert_equal %w[0 1], entries.map(&:value).uniq.sort
     assert(entries.all? { |entry| entry.entity.is_a?(Sketchup::Face) && entry.label == entry.value })
   end
 
@@ -29,9 +29,14 @@ class SpacesColourModesTest < PhComposerTestCase
     operations = @model.operations.length
     service = PhComposer::ColourBy.for(@session)
     service.activate(MODE)
-    assert_equal %w[0.00 1.00], service.rows.map { |row| row.value }.sort
+    assert_equal %w[0 1], service.rows.map { |row| row.value }.sort
     service.deactivate
     assert_equal operations, @model.operations.length
+  end
+
+  def test_a_band_is_the_factor_to_six_decimals_so_nearby_factors_stay_apart
+    band = PhComposer::Spaces::ColourModes.method(:band)
+    assert_equal %w[1 0 0.5 0.121 0.124 0.125], [1.0, 0, 0.5, 0.121, 0.124, 0.125].map { |factor| band.call(factor) }
   end
 
   def test_nothing_under_colour_by_names_the_spaces_mode

@@ -22,8 +22,10 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     this.host = host;
     this.editPath = [];
     this.zones = [];
+    // A change carries the revision its row was read at: the current one, or the one a confirmation opened at.
     this.edits = requests.channel(host.session, function (type, payload) {
-      send(type, Object.assign({}, payload, { expected_revision: self.host.revision }));
+      var revision = self.pinned !== undefined ? self.pinned : self.host.revision;
+      send(type, Object.assign({}, payload, { expected_revision: revision }));
     }, "spaces-actions");
     this.context = requests.channel(host.session, function (type, payload) { send(type, payload); },
       "spaces-context", "view.invoke");
@@ -40,7 +42,13 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
       if (!outcome) return;
       if (outcome.status !== "completed") {
         self.entering = null;
+        self.closing = null;
         self.host.refuse(outcome.message || "The Spaces command was not applied. Nothing was written.");
+      } else if (channel === self.context && self.closing) {
+        // Close leaves the innermost context; a Space closes through any Volume of it that is open.
+        var path = outcome.value && outcome.value.path || [];
+        if (startsWith(path, self.closing)) self.context.run(PREFIX + ".context.close", {});
+        else self.closing = null;
       } else if (channel === self.edits && self.entering) {
         // Unprotected: now the Volume may be opened.
         var volume = self.entering;
@@ -91,16 +99,25 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     return items;
   };
 
+  // The actions that change records or the edit context's protection; a held cell draft must not be lost to one.
+  var CHANGES = { "spaces.enter": true, "spaces.restore": true, "spaces.independent": true, "spaces.delete": true,
+    "spaces.remove_volume": true, "spaces.move": true };
+
   /* Runs one of this view's actions; false for an action it does not own. */
   SpaceActions.prototype.run = function (row, item) {
     var record = row.record, target = record.segment || record.volume || record.space;
     if (item.id.indexOf("spaces.") !== 0 || !target) return false;
     if (this.busy()) return true;
+    var held = CHANGES[item.id] && this.host.draftReason();
+    if (held) { this.host.refuse(held); return true; }
     var reference = copy(target.reference), self = this;
     switch (item.id) {
       case "spaces.locate": this.context.run(PREFIX + ".locate", { reference: reference }); break;
       case "spaces.open": this.context.run(PREFIX + ".context.open", { reference: reference }); break;
-      case "spaces.close": this.context.run(PREFIX + ".context.close", {}); break;
+      case "spaces.close":
+        this.closing = copy(reference.entity_path);
+        this.context.run(PREFIX + ".context.close", {});
+        break;
       case "spaces.enter":
         // A protected Volume is unlocked first; consume opens it once that completes.
         if (record.volume.protected) {
@@ -112,12 +129,14 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
       case "spaces.independent": this.edits.run(PREFIX + ".make_independent", { reference: reference }); break;
       case "spaces.delete":
         this.askFirst("Delete " + record.name, "The Space, its Volumes and their Floor Segments are erased. One Undo " +
-          "brings them back.", "Delete", function () { self.edits.run(PREFIX + ".delete", { space: reference }); });
+          "brings them back.", "Delete", function (revision) {
+          self.runAt(revision, PREFIX + ".delete", { space: reference });
+        });
         break;
       case "spaces.remove_volume":
         this.askFirst("Remove " + record.name, "The Volume's records go and its Faces stay loose in the Space. One " +
-          "Undo brings them back.", "Remove", function () {
-          self.edits.run(PREFIX + ".volumes.remove", { volume: reference });
+          "Undo brings them back.", "Remove", function (revision) {
+          self.runAt(revision, PREFIX + ".volumes.remove", { volume: reference });
         });
         break;
       case "spaces.move": this.pickZone(record, reference); break;
@@ -126,16 +145,23 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     return true;
   };
 
-  /* A confirmation in the shared dialog, naming exactly what goes; Cancel changes nothing. */
+  /* Sends a change as of the revision a confirmation opened at, so one reviewed against older rows refuses. */
+  SpaceActions.prototype.runAt = function (revision, name, params) {
+    this.pinned = revision;
+    try { this.edits.run(name, params); } finally { this.pinned = undefined; }
+  };
+
+  /* A confirmation in the shared dialog, naming exactly what goes; Cancel changes nothing. What it confirms
+     is as of the revision it opened at. */
   SpaceActions.prototype.askFirst = function (title, consequence, commit, run) {
     var dialog = this.dialog || (this.dialog = ui.formDialog("", function () { dialog.closeModal(); }));
     if (!dialog.parentNode) document.body.appendChild(dialog);
     var cancel = ui.button("Cancel", function () { dialog.closeModal(); });
-    var self = this;
+    var self = this, revision = this.host.revision;
     dialog.replaceChildren(ui.element("h2", "", title), ui.element("p", "", consequence),
       ui.actionRow(cancel, ui.button(commit, function () {
         dialog.closeModal();
-        if (!self.host.disposed && !self.busy()) { run(); panel.repaint(); }
+        if (!self.host.disposed && !self.busy()) { run(revision); panel.repaint(); }
       })));
     dialog.openModal();
     cancel.focus();
@@ -151,6 +177,7 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     select.setAttribute("aria-label", "Zone to move " + record.name + " to");
     choices.forEach(function (zone, index) { select.appendChild(ui.option(String(index), zone.name || "Zone")); });
     var cancel = ui.button("Cancel", function () { dialog.closeModal(); }), self = this;
+    var revision = this.host.revision;
     dialog.replaceChildren(ui.element("h2", "", "Move " + record.name + " to another Zone"),
       ui.element("p", "", "The Space moves where it stands, with its Volumes and Floor Segments; its number and " +
         "values are kept. Close any open Space or Volume first."), select,
@@ -158,7 +185,7 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
         var zone = choices[Number(select.value)];
         dialog.closeModal();
         if (!zone || self.host.disposed || self.busy()) return;
-        self.edits.run(PREFIX + ".move_to_zone", { space: reference,
+        self.runAt(revision, PREFIX + ".move_to_zone", { space: reference,
           zone: { zone_id: zone.zone_id, zone_path: copy(zone.zone_path) } });
         panel.repaint();
       })));

@@ -4,8 +4,9 @@ module PhComposer
   module Spaces
     # The Spaces view's Colour-by modes, through the shared service (context/EXTENSIBILITY.md,
     # "Colour-by modes"). By weighting factor colours every Floor Segment face by its factor, one band per
-    # value in use. A band's key is the factor as two-decimal text, the form the panel's column filter and
-    # legend use too, so 1 and 1.0 are one band on both sides.
+    # value in use. A band's key is the factor as text to six decimals with trailing zeros dropped ("1",
+    # "0.5", "0.121"), the form the panel's column filter uses too, so 1 and 1.0 are one band on both sides
+    # and nearby factors stay apart.
     module ColourModes
       BY_WEIGHTING_FACTOR = "#{FEATURE_ID}.by_weighting_factor"
 
@@ -17,7 +18,7 @@ module PhComposer
       end
 
       def band(factor)
-        format("%.2f", factor)
+        format("%.6f", factor).sub(/\.?0+\z/, "")
       end
 
       def entries(model)

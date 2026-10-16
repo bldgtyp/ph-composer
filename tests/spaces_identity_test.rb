@@ -63,6 +63,11 @@ class SpacesIdentityTest < PhComposerTestCase
       assert_equal "make_independent", finding["repair"], "the row offers the repair without reading its words"
       assert_includes codes(row.dig("volumes", 0)), "space.duplicate_identity"
       assert_includes codes(row.dig("volumes", 0, "floor_segments", 0)), "space.duplicate_identity"
+      [row.dig("volumes", 0), row.dig("volumes", 0, "floor_segments", 0)].each do |child|
+        inner = child.fetch("findings").find { |item| item["code"] == "space.duplicate_identity" }
+        refute inner.key?("repair"), "the copy's contents are repaired with their Space, not on their own"
+        assert_includes inner["message"], "on its Space"
+      end
     end
   end
 

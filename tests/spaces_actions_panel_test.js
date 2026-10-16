@@ -174,7 +174,7 @@ test("the weighting factor column filters by band and its toggle colours the Mod
   p.click(menu);
   var boxes = menu.parentNode.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; });
   assert.deepStrictEqual(boxes.map(function (box) { return box.parentNode.children[1].textContent; }),
-    ["0.00", "1.00"]);
+    ["0", "1"]);
   boxes[1].checked = false; boxes[1].listeners.change({});
   var shown = p.section().querySelectorAll("[data-row-key]").filter(function (node) { return !node.hidden; })
     .map(function (node) { return JSON.parse(node.getAttribute("data-row-key"))[0]; });
@@ -182,4 +182,82 @@ test("the weighting factor column filters by band and its toggle colours the Mod
   var filter = p.sent.filter(function (message) { return message.payload.name === "ph_composer.colour_by.filter"; });
   assert.deepStrictEqual(JSON.parse(JSON.stringify(filter[filter.length - 1].payload.params)),
     { paths: [[100, 103, 2, 1]] });
+});
+
+/* ---------------------------------------------------------------- review (PR #152) */
+
+test("a confirmation sends the revision it was opened at, not a later one", function () {
+  var p = page();
+  p.receive(snapshot());
+  p.click(p.action("Delete Bath"));
+  var later = snapshot();
+  later.revision = 5;
+  p.receive(later);
+  var dialog = p.context.document.querySelector("dialog");
+  p.click(dialog.querySelectorAll("button").filter(function (node) { return node.textContent === "Delete"; })[0]);
+  assert.strictEqual(last(p).payload.expected_revision, 4);
+});
+
+test("a row change waits while a cell draft is held", function () {
+  var p = page();
+  p.receive(snapshot());
+  var name = p.section().querySelectorAll("input").filter(function (node) {
+    return node.getAttribute("aria-label") === "Living name";
+  })[0];
+  name.value = "Lounge"; name.listeners.input({});
+  var before = p.sent.length;
+  p.click(p.action("Move Living to another Zone"));
+  assert.strictEqual(p.sent.length, before);
+  assert.strictEqual(p.context.document.querySelector("dialog"), null, "no dialog opens over the draft");
+  assert.match(p.panel.state.ui.notice.message, /Finish or cancel/);
+});
+
+test("Close on a Space closes through it even while one of its Volumes is open", function () {
+  var p = page();
+  p.receive(snapshot(null, [100, 101, 1]));
+  p.click(p.action("Close Living"));
+  var first = last(p);
+  assert.strictEqual(first.payload.name, "ph_composer.spaces.context.close");
+  p.result(first, { status: "completed", value: { path: [100, 101] } });
+  var second = last(p);
+  assert.notStrictEqual(second, first, "a second close leaves the Space itself");
+  assert.strictEqual(second.payload.name, "ph_composer.spaces.context.close");
+  p.result(second, { status: "completed", value: { path: [100] } });
+  assert.strictEqual(last(p), second, "and stops there");
+});
+
+test("a matching Space outside every Zone joins the viewport mask", function () {
+  var p = page();
+  p.receive(snapshot(function (section) {
+    var shed = JSON.parse(JSON.stringify(section.spaces[3]));
+    shed.id = "spc_301"; shed.zone = null; shed.reference = { space_id: "spc_301", entity_path: [300] };
+    shed.values.number = "301"; shed.values.name = "Shed";
+    shed.volumes[0].reference = { volume_id: "svl_300_1", entity_path: [300, 1] };
+    shed.volumes[0].floor_segments[0].reference = { floor_segment_id: "sfs_300_1_1", entity_path: [300, 1, 1] };
+    section.spaces.push(shed);
+  }));
+  var menu = p.section().querySelectorAll("button").filter(function (node) {
+    return node.getAttribute("aria-label") === "Weighting factor column menu";
+  })[0];
+  p.click(menu);
+  var boxes = menu.parentNode.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; });
+  boxes[0].checked = false; boxes[0].listeners.change({});
+  var filter = p.sent.filter(function (message) { return message.payload.name === "ph_composer.colour_by.filter"; });
+  var paths = JSON.parse(JSON.stringify(filter[filter.length - 1].payload.params)).paths;
+  assert.ok(paths.some(function (path) { return JSON.stringify(path) === "[300,1,1]"; }), JSON.stringify(paths));
+});
+
+test("weighting factor bands keep values apart that round alike", function () {
+  var p = page();
+  p.receive(snapshot(function (section) {
+    section.spaces[0].volumes[0].floor_segments[0].values.weighting_factor = 0.121;
+    section.spaces[1].volumes[0].floor_segments[0].values.weighting_factor = 0.124;
+  }));
+  var menu = p.section().querySelectorAll("button").filter(function (node) {
+    return node.getAttribute("aria-label") === "Weighting factor column menu";
+  })[0];
+  p.click(menu);
+  var labels = menu.parentNode.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; })
+    .map(function (box) { return box.parentNode.children[1].textContent; });
+  assert.deepStrictEqual(labels, ["0", "0.121", "0.124", "1"]);
 });

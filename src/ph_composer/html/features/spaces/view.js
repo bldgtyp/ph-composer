@@ -238,9 +238,10 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells, Spac
 
   /* ---------------------------------------------------------------- the weighting factor filter */
 
-  /* A factor's band: two-decimal text, the key the By weighting factor mode's legend uses too. */
+  /* A factor's band: the factor as text to six decimals with trailing zeros dropped ("1", "0.5", "0.121"),
+     the key the By weighting factor mode's legend uses too (Spaces::ColourModes.band). */
   function band(factor) {
-    return Number(factor).toFixed(2);
+    return Number(factor).toFixed(6).replace(/\.?0+$/, "");
   }
 
   function segmentsOf(record) {

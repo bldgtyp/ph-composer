@@ -80,7 +80,8 @@ module PhComposer
           "metrics" => Metrics.volume(volume.record, segments.map { |segment| segment.fetch("metrics") }),
           "floor_segments" => segments
         )
-        row.merge("findings" => Findings.volume(row) + duplicate(counts, VOLUME_KIND, volume.record, repeated))
+        row.merge("findings" => Findings.volume(row) + duplicate(counts, VOLUME_KIND, volume.record, repeated,
+                                                                 :ancestor => !repeated && volume.shared_above))
       end
 
       def segment_row(segment, catalog, counts, repeated)
@@ -90,15 +91,18 @@ module PhComposer
           "reference" => segment.reference,
           "metrics" => Metrics.segment(geometry.loops_m, geometry.normal, segment.record)
         )
-        row.merge("findings" => Findings.segment(row) + duplicate(counts, FLOOR_SEGMENT_KIND, segment.record, repeated))
+        row.merge("findings" => Findings.segment(row) +
+                                 duplicate(counts, FLOOR_SEGMENT_KIND, segment.record, repeated,
+                                           :ancestor => !repeated && segment.shared_above))
       end
 
       # A copy, or storage shared above the Space such as a single component placement: either way the
-      # record has no identity of its own to export.
-      def duplicate(counts, kind, record, repeated)
+      # record has no identity of its own to export. `ancestor` says the copy is repaired at its Space: this
+      # record's storage is shared above it, inside a Space that can be made independent.
+      def duplicate(counts, kind, record, repeated, ancestor: false)
         return [] unless repeated || counts.fetch(kind).fetch(record.fetch("id")) > 1
 
-        [Findings.duplicate(Resolve::TARGETS.fetch(kind)[1], :repeated => repeated)]
+        [Findings.duplicate(Resolve::TARGETS.fetch(kind)[1], :repeated => repeated, :ancestor => ancestor)]
       end
 
       def state(space, ids)

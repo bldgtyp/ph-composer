@@ -721,7 +721,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       rows, state.controls);
     var visible = shown.filter(function (row) { return !hidden(row); });
     // Only column Show filters affect the viewport. Text search and collapsed rows remain table navigation.
-    var matchingPaths = state.controls.filterCount() ? zoneRows.reduce(function (all, row) {
+    // A view's group rows join the mask as their rows join the table: by the view's filters.
+    var matchingPaths = state.controls.filterCount() ? zoneRows.concat(groupRows).reduce(function (all, row) {
       if (!zoneMatches(own, row.record, filters) || !call(own, "zoneMatch", [row.record, filters], true)) return all;
       return all.concat(call(own, "viewportPaths", [row.record, filters],
         row.record.zone ? [row.record.zone.reference.zone_path] : []));
