@@ -9,8 +9,10 @@
  * Names, numbers, heights, factors and airflows edit in place (cells.js).
  */
 PhComposerUI.define("features/spaces/view", ["panel", "workspace", "snapshot", "units", "unit_preferences", "fields",
-  "table_views", "features/spaces/cells", "features/spaces/actions", "features/spaces/selection"],
-function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCells, SpaceActions, SpaceSelection) {
+  "table_views", "features/spaces/cells", "features/spaces/actions", "features/spaces/selection",
+  "features/spaces/mark_paint"],
+function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCells, SpaceActions, SpaceSelection,
+          MarkPaint) {
   "use strict";
   var SECTION = "ph_composer.spaces.spaces";
   var AIRFLOWS = [["v_sup_m3h", "Supply"], ["v_eta_m3h", "Extract"], ["v_tran_m3h", "Transfer"]];
@@ -26,7 +28,7 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
   function create(host) {
     var cells = new SpaceCells(host);
     return { spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
-      cells: cells, actions: new SpaceActions(host), selection: new SpaceSelection(cells) };
+      cells: cells, actions: new SpaceActions(host), selection: new SpaceSelection(cells), paint: new MarkPaint(host) };
   }
 
   function occurrence(path) {
@@ -47,6 +49,7 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     vs.sums = Object.create(null);
     (value.zones || []).forEach(function (zone) { vs.sums[occurrence(zone.zone_path)] = zone; });
     vs.actions.consume(state, value.zones || []);
+    vs.paint.consume(state);
   }
 
   function zoneRecord(vs, record) {
@@ -260,8 +263,9 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     return !filters.weighting_factor || filters.weighting_factor.indexOf(band(segment)) >= 0;
   }
 
+  /* The factors in use, with 1 and 0 always offered, so the menu's paint icons can start either. */
   function filterValues(vs) {
-    var seen = Object.create(null);
+    var seen = { "1": true, "0": true };
     segmentsOf({ spaces: vs.spaces }).forEach(function (segment) {
       seen[band(segment)] = true;
     });
@@ -310,8 +314,11 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     selectionBar: function (vs, overview) { return vs.selection.bar(overview); },
     checkedZones: function (vs) { return vs.selection.checkedZones(); },
     checkZones: function (vs, keys) { vs.selection.pendingZones = keys; },
-    leave: function (vs) { vs.selection.hideBar(); },
+    // Leaving the view stops the Mark floor tool; the checked rows and their bar stay with the view.
+    leave: function (vs) { vs.selection.hideBar(); vs.paint.stop(); },
+    // Escape stops a running Mark floor tool first, then clears the checked rows.
     escape: function (vs) {
+      if (vs.paint.stop()) return true;
       if (!vs.selection.checked().length) return false;
       if (vs.selection.clear()) panel.repaint();
       return true;
@@ -323,7 +330,12 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     canCancelDrafts: function (vs) {
       return vs.cells.cancellable() || !vs.cells.inFlight() && Boolean(vs.selection.draftReason());
     },
-    dispose: function (vs) { vs.cells.dispose(); vs.actions.dispose(); vs.selection.dispose(); },
+    dispose: function (vs) { vs.cells.dispose(); vs.actions.dispose(); vs.selection.dispose(); vs.paint.dispose(); },
+    // The Weighting factor column's paint: an icon per factor in its menu, a pressed glyph in its header.
+    menuValueAction: function (vs, field, entry) {
+      return field === "weighting_factor" ? vs.paint.action(entry) : null;
+    },
+    headerAction: function (vs, field, label) { return field === "weighting_factor" ? vs.paint.header(label) : null; },
     zoneRecord: zoneRecord, extraRows: extraRows, children: children,
     leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: marker,
     sortValue: sortValue, sort: sort, search: search, count: count,

@@ -105,15 +105,20 @@
       "mime": "text/javascript; charset=utf-8",
       "sha256": "d6a727b7cc74fbb98398ef381f0b51874d36ce5405bb3e816b885913e7e53ef8"
     },
+    "html/features/spaces/mark_paint.js": {
+      "bytes": 3166,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "be4930e3f511a8e8dbd2262e47427830942695426b3aa6ba981bf6d2a839be3f"
+    },
     "html/features/spaces/selection.js": {
       "bytes": 14709,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "37338de89bdcb00aba561af1cb489032e5a18d294f9c5dbd0ffc2e4ca899a676"
     },
     "html/features/spaces/view.js": {
-      "bytes": 16953,
+      "bytes": 17791,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d50079a0bea4eaa5bebcc6fb8a0af9b67a7e4855569d20f633c7d7549c8b78b1"
+      "sha256": "9e5da4bf1f37bcd541c569b338cbcf0ea62b9d04183b7300f1c6e4ffd54d82ef"
     },
     "html/features/windows/audit.js": {
       "bytes": 3740,
@@ -231,9 +236,9 @@
       "sha256": "d29df66f89aa13ccfabf7e501c2746015af715aeb0cb29612c12c986a38ee2ba"
     },
     "html/features/zones/overview.js": {
-      "bytes": 48941,
+      "bytes": 49238,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "3ce844d2d8a5050c27d3be659ae8a04bb6a1939acd11031644d386e266488e51"
+      "sha256": "c6136e05157a33e695f40bec76019c71b70cdc4a7c35e05529a52d1e0b026c44"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 3325,
@@ -271,9 +276,9 @@
       "sha256": "32cc7b6c39918da562237aba1209b358ec087c9238146cdcc16cf4c415b7754d"
     },
     "html/index.html": {
-      "bytes": 6704,
+      "bytes": 6762,
       "mime": "text/html; charset=utf-8",
-      "sha256": "d76a439645fc2d97c95c30908e3e104deaf2d977c01b3eae4d3a1acfacabb26c"
+      "sha256": "df8f4006220a9d511cd7b0b32ba2061ced7785e2fc937c0ff3d2ffa9be8b043e"
     },
     "html/inventory.js": {
       "bytes": 9047,
