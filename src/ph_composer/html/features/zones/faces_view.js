@@ -51,6 +51,11 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
       return host.draftReason();
     }, host.refuse, function () { return vs.barTargets || []; }, function (faces) {
       return gatedReason(vs, faces, true);
+    }, { // A native handoff is presented in this view, shown through the tab's and the view row's guards.
+      shown: function (state) {
+        return (!state.ui || state.ui.activeTab === "overview") && host.activeView() === VIEW.id;
+      },
+      show: function () { host.show(VIEW.id); }
     });
     return vs;
   }
@@ -74,6 +79,8 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
      the checked set, and the host has already cleared Locate's outline. */
   function consume(vs, state, send) {
     classify.refresh(state, send);
+    // The paint tool runs only while this view is shown: a choose that lands after a switch away is stopped.
+    if (vs.host.activeView() !== VIEW.id) classify.stop();
     var tool = snapshot.value(state, "ph_composer.zones.faces.palette") || {};
     vs.faces = (snapshot.value(state, "ph_composer.zones.faces.faces") || { faces: [] }).faces;
     vs.assemblyEnabled = Boolean(snapshot.value(state, "ph_composer.zones.faces.assemblies") &&
@@ -405,6 +412,13 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
     return Object.keys(FACE_FIELDS).some(function (field) { return Boolean(filters[field]); });
   }
 
+  /* What a Zone row sorts by in this view's columns: its gross area; a Face field leaves the Zones in order
+     and orders the Faces within each. */
+  function sortValue(vs, record, field) {
+    if (field === "area_m2") return record.area;
+    return FACE_FIELDS[field] ? null : undefined;
+  }
+
   /* A Zone passes this view's filters while one of its Faces does; a Face row shows while it passes, and a
      summary row while one of its Faces does. */
   function zoneMatch(vs, record, filters) {
@@ -730,7 +744,8 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
     create: create, dispose: dispose, draftReason: draftReason, consume: consume, zoneRecord: zoneRecord,
     children: children, initiallyOpen: initiallyOpen, columns: columns, zoneMarker: zoneMarker, value: value,
     cell: cell, decorate: decorate, filterLabel: filterLabel, filterValues: filterValues,
-    zoneMatch: zoneMatch, rowMatch: rowMatch, search: search, sort: sort, viewportPaths: viewportPaths,
+    zoneMatch: zoneMatch, rowMatch: rowMatch, search: search, sort: sort, sortValue: sortValue,
+    viewportPaths: viewportPaths,
     actions: actions, zoneActions: zoneActions, action: action, inspect: inspect, locate: locate,
     clearLocate: clearLocate, escape: escape, navigate: navigate, check: check, selectionBar: selectionBar,
     settings: function (vs) { return vs.settings.bubble.root; },

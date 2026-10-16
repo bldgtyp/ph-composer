@@ -8,9 +8,13 @@ function (panel, snapshot, requests, assignment, assemblies) {
 
   /* `targets`, when given, answers the Faces the Assembly control assigns to (the checked set) instead of
      SketchUp's selection. `blocked(faces)`, when given, names why a handoff's Faces cannot be assigned
-     at all (one is read only); the handoff is then refused whole, like a held draft. */
-  function SelectionAssignment(session, send, guard, refused, targets, blocked) {
+     at all (one is read only); the handoff is then refused whole, like a held draft. `reveal`, when given,
+     answers whether the screen that presents a handoff is shown (`shown(state)`) and shows it (`show()`);
+     without it, that screen is the Zones tab. */
+  function SelectionAssignment(session, send, guard, refused, targets, blocked, reveal) {
     this.session = session;
+    this.shown = reveal ? reveal.shown : function (state) { return !state.ui || state.ui.activeTab === "overview"; };
+    this.show = reveal ? reveal.show : function () { panel.showTab("overview"); };
     this.send = send;
     this.guard = guard;
     this.blocked = blocked || function () { return null; };
@@ -37,12 +41,12 @@ function (panel, snapshot, requests, assignment, assemblies) {
       if (fresh) this.refused(reason);
       return;
     }
-    if (state.ui && state.ui.activeTab !== "overview") {
+    if (!this.shown(state)) {
       if (this.tabAttempt === pending.token) return;
       this.tabAttempt = pending.token;
-      panel.showTab("overview");
+      this.show();
       // Retain the token during refusal's recursive repaint, then allow a later host update to retry.
-      if (panel.state.ui.activeTab !== "overview") this.tabAttempt = null;
+      if (!this.shown(panel.state)) this.tabAttempt = null;
       return;
     }
     this.token = pending.token;

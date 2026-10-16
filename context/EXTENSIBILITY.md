@@ -634,16 +634,17 @@ PhComposerUI.get("table_views").register("ph_composer.zones", {
 Every hook receives the view's own state first: what `create(host)` returned, or `{}` without one.
 `host` is the view's only reach into the screen: `session`, `send`, `snapshot`, `revision`, `edits`
 and `look` (the screen's request channels), `gated` (the read-only Zone occurrences by path),
-`draftReason()`, `refuse(reason)` and `disposed`. A hook a view leaves out takes the host's default,
+`draftReason()`, `refuse(reason)`, `disposed`, `activeView()` (the id shown now) and `show(id)` (shows
+a view through the tab's and the view row's guards, and answers whether it did). A hook a view leaves out takes the host's default,
 so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a complete view.
 
 | Hooks | What the host asks |
 | --- | --- |
-| `create`, `dispose`, `consume(state, send)` | The view's state for one Model, and what it reads from each snapshot before rows are built |
+| `create`, `dispose`, `consume(state, send)` | The view's state for one Model, and what it reads from each snapshot before rows are built. Every listed view consumes, shown or not, so work that arrives for a hidden view (a native handoff, a tool that turned on late) still reaches it |
 | `zoneRecord(record)`, `children(row)`, `initiallyOpen(row)` | What a Zone row carries for the view, the rows beneath it (none by default), and whether a row the view adds opens by default (`null`: the host's rule) |
 | `columns`, `value`, `cell(td, row, field)`, `decorate`, `zoneMarker(row)`, `widths` | The view's columns, their text or in-place control, a cell's flag, the Zone row's marker after the host's own, default widths |
 | `colourBy`, `sorted`, `filteredFields`, `filterValues`, `filterLabel`, `headerAction`, `menuValueAction`, `menuExtra` | The view's columns' Colour-by bindings, sort and value filters, and anything its column header and menu add (Faces adds the Classify paint) |
-| `zoneMatch`, `rowMatch`, `search`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows, its own rows and the viewport mask |
+| `zoneMatch`, `rowMatch`, `search`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask |
 | `actions(row)`, `zoneActions(row)`, `action`, `inspect`, `locate(row)`, `clearLocate` | Row actions, the Zone row's actions after Make independent, and Locate; `clearLocate` answers whether it cleared anything |
 | `check(context)`, `selectionBar(overview)`, `settings`, `navigate(intent)` | Checkboxes for the rows it checks, a selection bar, a settings control for the page header, and a navigation intent's `check` |
 | `draftReason`, `leaveReason`, `leave`, `escape` | Work a filter or a switch must not hide; what holds a switch; what stops on a switch away; Escape, true when the view used it |
@@ -667,12 +668,15 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
   remembers the choice on this computer (the `table_view` display preference, keyed by host id), as
   the last Colour-by mode is remembered. A view state is never written to the Model, which would
   dirty it and add an Undo entry. A session opens on the remembered view while it is listed, else the
-  first.
+  first. A shown view that stops being listed leaves the same way. Table options offers Colour by for
+  every mode no column of the shown view displays.
 - **Gestures.** The host owns the gestures that clear Locate (a pointer press elsewhere, Escape). A
   Locate outline outlasts a switch, so they reach every view's `clearLocate`. Escape unwinds one layer
   at a time: an open bubble or column menu, then the shown view's `escape` (Faces: the Classify
-  palette, then the checked set, then its Locate outline), then an outline another view left. A navigation intent names its view (`panel.navigate("overview", { view, check, locate })`)
-  and the host switches to it, guards included, before applying `check`.
+  palette, then the checked set, then its Locate outline), then an outline another view left. A
+  press on the view row does not clear it. A navigation intent names its view
+  (`panel.navigate("overview", { view, check, locate })`); the host switches to it, guards included,
+  sets `intent.viewShown`, and applies `check` only when the view is shown.
 - **The view row** is the shared subtabs nav (`subtabs.js`, `aria-label` "Zone views") above the
   "Zones" heading, as Window Types places its row, with one surface per view.
 - **Registration** refuses a view without an id or label and a duplicate id under one host when it

@@ -22,6 +22,13 @@
     // Listed whenever the Zones read is, so it needs no section of its own.
     sections: ["ph_composer.zones.overview"],
     zoneFields: [],
+    // Its columns sort the Zone rows by the area they show.
+    sorted: ["gross_m2", "unclassified_m2"],
+    sortValue: function (vs, record, field) {
+      if (field === "gross_m2") return record.zone.face_area_m2;
+      if (field === "unclassified_m2") return record.zone.unclassified_face_area_m2;
+      return undefined;
+    },
     columns: function (vs, profile) {
       return [["gross_m2", units.header("Gross area", AREA, profile)],
         ["unclassified_m2", units.header("Unclassified area", AREA, profile)]];

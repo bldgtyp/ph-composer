@@ -236,8 +236,9 @@ PhComposerUI.define("features/zones/assembly_assignment", ["panel", "snapshot", 
           panel.navigate("overview", { view: "ph_composer.zones.faces", check: clone(references), locate: true });
         }
       } else if (action.id === "paint_assembly") {
-        panel.showTab("overview");
-        if (panel.state.ui.activeTab !== "overview") return;
+        // The tool's state shows in the Faces view's Assembly header, so that view is shown first.
+        var intent = { view: "ph_composer.zones.faces" };
+        if (!panel.navigate("overview", intent) || intent.viewShown !== true) return;
         usageView.run(PREFIX + ".choose", { field: "assembly_id", value: id, reset: true });
       }
     }

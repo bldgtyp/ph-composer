@@ -171,9 +171,9 @@
       "sha256": "27cd3d44ff3f7d924014b1dc68e48d506a054754aba2dce80bf94b9b6a8dd4bf"
     },
     "html/features/zones/assembly_assignment.js": {
-      "bytes": 14035,
+      "bytes": 14183,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d97f43b7118f2cc658ee9cd7403ffc4b1898d84262dd667672759445539f939c"
+      "sha256": "5d7087c1c85eee502a472c89af2292cc5c0f2f5c214a2b85487c79908fe451f9"
     },
     "html/features/zones/attached_zone_assignment.js": {
       "bytes": 4211,
@@ -196,14 +196,14 @@
       "sha256": "b9385f46b2f2202cbbf30b707930ee224adee60b8cbdc7011698bb2df8c3b5cf"
     },
     "html/features/zones/classify.js": {
-      "bytes": 12446,
+      "bytes": 12589,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "74acd9e63c6823300fd1befcef06954ddc9b541b28c1a18170b468adbba88b78"
+      "sha256": "5cdfedd2c1f977aae1a40d6c6e7979cfb9e866b5c13550954b29d520fa981900"
     },
     "html/features/zones/faces_view.js": {
-      "bytes": 39326,
+      "bytes": 40112,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "2a8da37d3c9a13c2ba39c03391e6d3425da0971380c12aa1e25ae11193e39d5e"
+      "sha256": "643eff5204c05b8aff50abd36d91277979387010dc7c4ff9c56a4812c4430d28"
     },
     "html/features/zones/option_dialog.js": {
       "bytes": 17777,
@@ -211,14 +211,14 @@
       "sha256": "d29df66f89aa13ccfabf7e501c2746015af715aeb0cb29612c12c986a38ee2ba"
     },
     "html/features/zones/overview.js": {
-      "bytes": 40098,
+      "bytes": 41751,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "52577804594402f64ad7962b128e074fc1eaf8450f6c406bed9d6fe6b5fbfa2c"
+      "sha256": "a07ef6ee81c317348af4741485a695565fb4ce380e409d59383fba4e08b32bf6"
     },
     "html/features/zones/selection_assignment.js": {
-      "bytes": 2996,
+      "bytes": 3325,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d6c754be9324028ea1e4c7ff8a6b2ab9278cf5d8b55fe182521108ef6432c1d3"
+      "sha256": "a9f33843f372696ccb00b00b12265eb743e1b634abc21d16acdce5fb4f74ca81"
     },
     "html/features/zones/zone_cells.js": {
       "bytes": 12874,

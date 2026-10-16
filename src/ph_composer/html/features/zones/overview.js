@@ -75,8 +75,15 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       edits: requests.channel(session, send, "overview"),
       look: requests.channel(session, send, "locate", "view.invoke") };
     // What a view may reach of this screen; `render` keeps its snapshot fields current.
-    screen.host = { session: session, send: send, edits: screen.edits, look: screen.look, disposed: false,
-      gated: Object.create(null), draftReason: function () { return draftReason(screen); }, refuse: refuse };
+    var made = screen;
+    made.host = { session: session, send: send, edits: made.edits, look: made.look, disposed: false,
+      gated: Object.create(null), draftReason: function () { return draftReason(made); }, refuse: refuse,
+      // The view shown now, and a way to show one through the tab's and the view row's guards.
+      activeView: function () { return made.viewId; },
+      show: function (id) {
+        var intent = { view: id };
+        return panel.navigate("overview", intent) && intent.viewShown === true;
+      } };
     screen.zoneCells = new ZoneCells(session, send, refuse, function (field) { screen.optionDialog.open(field); },
       function () { return draftReason(screen, true); });
     screen.optionDialog = new OptionDialog(session, send, function () { return draftReason(screen); },
@@ -159,10 +166,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var listed = registry.views(snapshotState);
     if (!listed.length) listed = [NO_VIEW];
     var ids = listed.map(function (view) { return view.id; });
+    state.listed = listed;
     if (ids.indexOf(state.viewId) < 0) {
+      // A shown view that stops being listed leaves as a switch away does.
+      var departing = active(state);
+      if (departing && departing.shown) { call(departing, "leave"); stash(state, departing); }
       var remembered = preferences.tableView(HOST);
       state.viewId = ids.indexOf(remembered) >= 0 ? remembered : ids[0];
-      // A view first shown, or shown again after it was not listed, has no filters of its own held over.
       restore(state, slot(state, listed[ids.indexOf(state.viewId)]));
     }
     var surfaces = root.querySelector(".phc-zone-views"), owned = listed.map(function (view) {
@@ -174,7 +184,14 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     });
     owned.forEach(function (surface) { if (surface.parentNode !== surfaces) surfaces.appendChild(surface); });
     var signature = ids.join("\n");
-    if (state.tabsSignature !== signature) {
+    if (state.tabsSignature !== signature && listed.length < 2) {
+      // One view, or none: no row to choose from, and its surface simply shows.
+      state.tabsSignature = signature;
+      if (state.tabs) state.tabs.disposed = true;
+      state.tabs = null;
+      root.querySelector(".phc-view-tabs").replaceChildren();
+      slot(state, listed[0]).surface.hidden = false;
+    } else if (state.tabsSignature !== signature) {
       state.tabsSignature = signature;
       if (state.tabs) state.tabs.disposed = true;
       state.tabs = new Subtabs({ label: "Zone views", state: state, stateKey: "viewId",
@@ -330,12 +347,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     return actions.concat([{ node: menu.root, persistent: menu.filtered() }]);
   }
 
-  /* A mode a visible column offers; every other registered mode is offered in Table options. */
-  function boundToColumn(own, mode) {
+  /* A mode a column the shown view displays offers; every other registered mode is offered in Table options. */
+  function boundToColumn(own, mode, shown) {
     var bindings = colourBindings(own);
     return Object.keys(bindings).some(function (field) {
       var binding = bindings[field];
-      return !own.hiddenColumns[field] && (binding.mode ? binding.mode === mode.name : binding.group === mode.group);
+      return shown.indexOf(field) >= 0 && !own.hiddenColumns[field] &&
+        (binding.mode ? binding.mode === mode.name : binding.group === mode.group);
     });
   }
 
@@ -356,7 +374,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
           panel.repaint();
         });
       }
-      colourBy.modes(panel.state).filter(function (mode) { return !boundToColumn(own, mode); })
+      var shown = columns(own, units.profile(AREA, preferences.current())).map(function (column) { return column[0]; });
+      colourBy.modes(panel.state).filter(function (mode) { return !boundToColumn(own, mode, shown); })
         .forEach(function (mode) {
           var on = legend.mode === mode.name;
           toggle("Colour by " + mode.label, on, function () { colourBy.activate(panel.state, on ? null : mode.name); });
@@ -459,6 +478,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (!screen) return;
     for (var node = event.target; node; node = node.parentNode) {
       if (node.getAttribute && node.getAttribute("data-row-action") === "locate") return;
+      // Switching views keeps the outline.
+      if (node.classList && node.classList.contains("phc-view-tabs")) return;
     }
     clearLocates(screen);
   }, true);
@@ -547,8 +568,11 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         screenState.controls.root, ui.element("div", "phc-zone-views"));
       screenState.tabsSignature = null;
     }
-    var own = settle(screenState, root, state);
-    call(own, "consume", [state, send]);
+    settle(screenState, root, state);
+    // Every listed view reads each snapshot, shown or not: a hidden view may still have work arriving (a
+    // native handoff, a tool that turned on late). Reading may switch views, so the shown one is read after.
+    screenState.listed.forEach(function (view) { call(slot(screenState, view), "consume", [state, send]); });
+    var own = active(screenState);
     var rows = project(zones.zones, own);
     // A row the view adds may open by default. That is decided once, when the row first appears, so it does
     // not snap shut or open under the user as what it holds changes.
@@ -614,8 +638,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var projection = state.controls.project(zoneRows.map(function (row) { return row.record; }), {
       id: function (record) { return record.id; },
       value: function (record, field) {
-        if (field === "area_m2") return record.area;
         if (field === "name") return record.name;
+        var viewValue = call(own, "sortValue", [record, field], undefined);
+        if (viewValue !== undefined) return viewValue;
         return viewFields[field] ? null : field === "building_segment" || field === "level" ?
           zoneOptions.label(zoneOptions.read(state.snapshot), record.zone, field) : record.zone.values[field];
       },
@@ -715,15 +740,18 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (!screen || result.session !== screen.session || !screen.zoneCells.owns(result.request_id)) return null;
     return ZoneCells.refusalText(result.outcome);
   }, { owner: "ph_composer.zones" });
-  /* Another tab can open this one on a view with rows checked and, with `locate: true`, framed
-     (`panel.navigate("overview", { view, check: references, locate: true })`), as the Assemblies tab's
-     "Select faces using" does. The named view is shown first; a refused switch applies nothing. */
+  /* Another tab can open this one on a view (`panel.navigate("overview", { view })`) and, with `check`, with
+     rows checked and, with `locate: true`, framed, as the Assemblies tab's "Select faces using" does. The
+     named view is shown first, through the view row's guards; `intent.viewShown` says whether it was, and a
+     refused switch applies nothing. */
   panel.section("ph_composer.overview", render, { order: 10, onNavigate: function (root, intent) {
-    if (!screen || !intent.check) return;
-    if (intent.view && intent.view !== screen.viewId) {
-      if (!screen.tabs || !screen.slots[intent.view] || !screen.tabs.select(intent.view)) return;
+    if (!screen) return;
+    if (intent.view) {
+      intent.viewShown = intent.view === screen.viewId ||
+        Boolean(screen.tabs && screen.slots[intent.view] && screen.tabs.select(intent.view));
+      if (!intent.viewShown) return;
     }
-    call(active(screen), "navigate", [intent]);
+    if (intent.check) call(active(screen), "navigate", [intent]);
     panel.repaint();
   } });
   panel.workedOn("ph_composer.zones", "overview");

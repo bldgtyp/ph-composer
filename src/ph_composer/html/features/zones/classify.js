@@ -163,6 +163,7 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
       { active: false, palette: {}, face_types: [], boundary_conditions: [] };
     current.records = (snapshot.value(state, "ph_composer.zones.faces.attached_zone.list") || { records: [] }).records;
     current.active = Boolean(current.tool.active);
+    if (!current.active) current.stopping = false;
     current.available = Boolean(snapshot.value(state, "ph_composer.zones.faces.palette"));
     current.view.consume(state); current.edits.consume(state); sendPending(current);
     if (state.ui.activeTab !== "overview") closeMenus(current);
@@ -265,9 +266,11 @@ function (panel, ui, requests, snapshot, words, attachedFields, assemblies) {
     return screen && screen.draft ? "Save or cancel the Attached zone first." : null;
   }
 
-  /* Turns the paint tool off, as its header button does; nothing when it is not on. */
+  /* Turns the paint tool off, as its header button does; nothing when it is not on, and once until a
+     snapshot shows it off. */
   function stop() {
-    if (!screen || screen.disposed || !screen.active) return;
+    if (!screen || screen.disposed || !screen.active || screen.stopping) return;
+    screen.stopping = true;
     if (screen.view.busy()) screen.view.send("ph_composer.zones.faces.stop_classifying", {});
     else screen.view.run("ph_composer.zones.faces.stop_classifying", {});
   }

@@ -251,3 +251,116 @@ test("the host names no view and no feature beyond Zones", function () {
   var kit = fs.readFileSync(path.join(root, "src/ph_composer/html/table_views.js"), "utf8");
   assert.strictEqual(/ph_composer\./.test(kit), false, "table_views.js names no feature");
 });
+
+/* ---------------------------------------------------------------- review cycle 1 (PR #149) */
+
+function sentNames(p) {
+  return p.sent.map(function (message) { return message.payload.name || message.type; });
+}
+
+test("a paint tool that turns on after Faces was left is stopped by the next snapshot", function () {
+  var p = page(), state = snapshot();
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  click(tab(p, "Areas"));
+  var late = snapshot();
+  late.sections["ph_composer.zones.faces.palette"].value.active = true;
+  late.sections["ph_composer.zones.faces.palette"].value.palette = { face_type: "Wall" };
+  p.panel.receive({ type: "panel.snapshot", payload: late });
+  assert.ok(sentNames(p).indexOf("ph_composer.zones.faces.stop_classifying") >= 0,
+    "a choose that lands after the switch does not leave the tool painting a hidden view");
+});
+
+test("a native assignment handoff reaches Faces while another view is shown and shows Faces", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(AREAS) });
+  p.panel.showTab("export");
+  var handoff = snapshot(AREAS);
+  handoff.sections["ph_composer.zones.faces.selection_assignment"] = { status: "completed", value: {
+    token: "review-1", revision: 4,
+    faces: handoff.sections["ph_composer.zones.faces.faces"].value.faces.map(function (face) { return face.reference; })
+  } };
+  p.panel.receive({ type: "panel.snapshot", payload: handoff });
+  assert.strictEqual(p.panel.state.ui.activeTab, "overview");
+  assert.strictEqual(tab(p, "Faces").getAttribute("aria-selected"), "true");
+  assert.ok(p.context.document.querySelector("dialog"), "the assignment dialog opens");
+});
+
+test("an intent that names a view without checking rows shows it and says whether it did", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot(AREAS) });
+  var intent = { view: "ph_composer.zones.faces" };
+  assert.strictEqual(p.panel.navigate("overview", intent), true);
+  assert.strictEqual(intent.viewShown, true);
+  assert.strictEqual(tab(p, "Faces").getAttribute("aria-selected"), "true");
+});
+
+test("with no view listed the Zone rows show alone", function () {
+  var p = page({ example: false }), state = snapshot();
+  delete state.sections["ph_composer.zones.faces.faces"];
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  assert.deepStrictEqual(rowKinds(p), ["Zone"]);
+  assert.strictEqual(viewRow(p).hidden, true);
+});
+
+test("pressing a view tab with the pointer keeps Locate's outline", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  click(p.section().querySelectorAll("[data-row-action='locate']")[1]);
+  var locate = p.sent.filter(function (message) { return message.payload.name === "ph_composer.zones.faces.locate"; });
+  p.panel.receive({ type: "view.result", payload: { request_id: locate[0].payload.request_id, session: "session-a",
+    outcome: { status: "completed", value: { found: 1, missing: 0 } } } });
+  dom.dispatch(tab(p, "Areas"), { type: "pointerdown" });
+  click(tab(p, "Areas"));
+  assert.strictEqual(sentNames(p).indexOf("ph_composer.zones.faces.clear_locate"), -1);
+});
+
+test("a view's own column sorts the Zone rows by the value it gives", function () {
+  var p = page(), state = snapshot(AREAS), zones = state.sections["ph_composer.zones.overview"].value.zones;
+  var second = JSON.parse(JSON.stringify(zones[0]));
+  second.reference = { zone_id: "zon_b", zone_path: [300] }; second.id = "zon_b";
+  second.values.name = "Zone 2"; second.face_area_m2 = 5;
+  zones.push(second);
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  function names() {
+    return p.section().querySelectorAll(".phc-zone-view").filter(function (node) { return !node.hidden; })[0]
+      .querySelectorAll("td").filter(function (td) { return /col-gross_m2/.test(td.className); })
+      .map(function (td) { return td.textContent; });
+  }
+  assert.deepStrictEqual(names(), ["20", "5"]);
+  var menu = byLabel(p, "Gross area m² column menu");
+  click(menu);
+  click(menu.parentNode.querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Sort A to Z";
+  })[0]);
+  assert.deepStrictEqual(names(), ["5", "20"]);
+});
+
+test("Table options offers Colour by for a Zone mode the shown view has no column for", function () {
+  var p = page(), state = snapshot(AREAS);
+  state.sections["ph_composer.colour_by.legend"] = { status: "completed", value: {
+    mode: "ph_composer.zones.by_level", label: "Level", rows: [], modes: [
+      { name: "ph_composer.zones.by_zone", label: "Zone", group: null },
+      { name: "ph_composer.zones.by_building_segment", label: "Building-Segment", group: null },
+      { name: "ph_composer.zones.by_level", label: "Level", group: null }] } };
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  var options = byLabel(p, "Table options");
+  click(options);
+  assert.deepStrictEqual(options.parentNode.querySelectorAll(".phc-action-menu-item").map(function (node) {
+    return node.textContent;
+  }), ["Colour by Building-Segment", "Colour by Level"]);
+});
+
+test("a shown view that stops being listed leaves as a switch does: its filters go with it", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  click(byLabel(p, "Type column menu"));
+  var wall = byLabel(p, "Type column menu").parentNode.querySelectorAll("input").filter(function (box) {
+    return box.parentNode.children[1].textContent === "Wall";
+  })[0];
+  wall.checked = false; wall.listeners.change({});
+  var faceless = snapshot();
+  delete faceless.sections["ph_composer.zones.faces.faces"];
+  p.panel.receive({ type: "panel.snapshot", payload: faceless });
+  assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "1 Zone");
+  assert.deepStrictEqual(rowKinds(p), ["Zone"]);
+});
