@@ -137,3 +137,7 @@ UI polish review: the readout and label-line choices use the shared setting-choi
 `aria-pressed` like every Table options entry; label lines appear only while labels are on, so the menu shows
 only what can act; header toggles reuse `HeaderToggle`, so a group of three columns offers one mode. No kit
 part or token changed, so the design-system artifact needs no re-sync.
+
+Review of PR #164, gpt-6.1-sol cycle 1: one P2. The walkthrough failed when another feature's readout was on,
+because it compared every readout shown with the Spaces pair; it now checks the Spaces readouts alone, with a
+regression in `tests/spaces_colour_by_walkthrough_test.rb` that leaves the example feature's readout on.

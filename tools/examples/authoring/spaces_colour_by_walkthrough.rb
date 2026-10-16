@@ -26,7 +26,9 @@ module SpacesColourByWalkthrough
     READOUTS.each { |name| view(context, "ph_composer.colour_by.readout", "readout" => name, "on" => true) }
     options = view(context, "ph_composer.spaces.labels.set_options",
                    "weighted_area" => true, "net_volume" => true, "airflows" => true)
-    shown = state(context).dig("value", "readouts").select { |row| row.fetch("on") }.map { |row| row.fetch("name") }
+    # Another feature's readout may be on too; only the Spaces readouts are this walkthrough's to check.
+    shown = state(context).dig("value", "readouts").select { |row| row.fetch("on") && READOUTS.include?(row["name"]) }
+                          .map { |row| row.fetch("name") }
     READOUTS.each { |name| view(context, "ph_composer.colour_by.readout", "readout" => name, "on" => false) }
     view(context, "ph_composer.colour_by.activate", "mode" => nil)
     after = state(context).fetch("revision")
