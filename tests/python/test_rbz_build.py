@@ -6,6 +6,7 @@ These exercise the pure half, `shipping_problems`, over in-memory entries. `make
 
 from __future__ import annotations
 
+import json
 import zipfile
 from pathlib import Path
 
@@ -139,10 +140,26 @@ def test_the_plugins_directory_needs_a_four_digit_sketchup_year() -> None:
             build.plugins_directory(version)
 
 
+def _budget(ceiling: int, baseline: int, growth: int) -> dict[str, bytes]:
+    gates = {"installed_ceiling_bytes": ceiling, "installed_baseline_bytes": baseline, "installed_growth_bytes": growth}
+    return {**LOADER, build.RUNTIME_MANIFEST: json.dumps({"gates": gates}).encode()}
+
+
 def test_the_installed_extension_must_fit_the_runtime_budget() -> None:
-    manifest = b'{"gates": {"installed_ceiling_bytes": 100}}'
-    fits = {**LOADER, build.RUNTIME_MANIFEST: manifest}
+    fits = _budget(1_000, 0, 10_000)
+    size = sum(len(content) for content in fits.values())
     assert build.footprint_problems(fits) == []
-    over = {**fits, "ph_composer/vendor/pyodide/pyodide.asm.wasm": b"x" * 50}
-    assert build.footprint_problems(over) == ["installed size 102 bytes exceeds the 100-byte ceiling"]
+    over = {**fits, "ph_composer/vendor/pyodide/pyodide.asm.wasm": b"x" * (1_001 - size)}
+    assert build.footprint_problems(over) == ["installed size 1001 bytes exceeds the 1000-byte ceiling"]
     assert build.footprint_problems(LOADER)[0].endswith("the installed-size budget cannot be checked")
+
+
+def test_growth_past_the_phase_baseline_needs_a_decision() -> None:
+    within = _budget(10_000, 100, 200)
+    size = sum(len(content) for content in within.values())
+    assert size <= 300 and build.footprint_problems(within) == []
+    grown = {**within, "ph_composer/vendor/pyodide/pyodide.asm.wasm": b"x" * (301 - size)}
+    assert build.footprint_problems(grown) == [
+        "installed size 301 bytes grew more than 200 bytes past the 100-byte phase baseline; record a decision "
+        "and raise the baseline"
+    ]

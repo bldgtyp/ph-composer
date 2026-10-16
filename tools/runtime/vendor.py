@@ -143,7 +143,10 @@ MIME_TYPES = {
     ".py": "text/plain; charset=utf-8",
     ".svg": "image/svg+xml",
 }
-# Carried unchanged from the predecessor's frozen manifest. Raising one is a recorded decision.
+# Carried from the predecessor's frozen manifest. Raising one is a recorded decision; the installed limits
+# were raised by D3a-20 (2026-10-16). The installed size may grow at most `installed_growth_bytes` past
+# `installed_baseline_bytes`, the size at the last phase close: more needs a recorded decision, and each
+# phase close resets the baseline.
 GATES: dict[str, Any] = {
     "panel_ready_target_ms": 1_000,
     "panel_ready_ceiling_ms": 2_000,
@@ -151,8 +154,10 @@ GATES: dict[str, Any] = {
     "cold_boot_ceiling_ms": 6_000,
     "warm_round_trip_target_ms": 20,
     "warm_round_trip_ceiling_ms": 100,
-    "installed_target_bytes": 22_000_000,
-    "installed_ceiling_bytes": 24_000_000,
+    "installed_target_bytes": 24_000_000,
+    "installed_ceiling_bytes": 26_000_000,
+    "installed_baseline_bytes": 23_994_083,
+    "installed_growth_bytes": 1_500_000,
     "boot_deadline_ms": 15_000,
     "pump_target_ms": 20,
     "pump_ceiling_ms": 50,

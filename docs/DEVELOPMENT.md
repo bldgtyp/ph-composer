@@ -30,7 +30,9 @@ make ci
 and the installed-size budget against `src/ph_composer/vendor/manifest.json`), `runtime-pin-check`
 (shipped wheels against `pyproject.toml`), `hostkit-test`, `python-check` (ty, Astral's type
 checker, over the translation package, the tools and their tests), `rbz` and `rbz-check`, which also refuses an
-installed extension over the manifest's 24,000,000-byte ceiling.
+installed extension over the manifest's 26,000,000-byte ceiling, or more than 1,500,000 bytes past its
+baseline, the installed size at the last phase close. Raising either, or resetting the baseline at a
+phase close, is a recorded decision.
 
 `test` loads the real extension code against a stub SketchUp API and runs the Ruby and Python
 suites in one pass. JavaScript tests are discovered by the glob `tests/*_test.js` and run under
