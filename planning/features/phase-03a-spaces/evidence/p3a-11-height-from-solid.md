@@ -63,3 +63,7 @@ confirmation opened over it and Set height wrote past it; the held draft is now 
 confirmation opens and before it writes (`tests/spaces_actions_panel_test.js`). `selected_solid` could refuse
 as `record.unreadable` without declaring it; it now does (`tests/spaces_height_from_solid_test.rb`). The
 action's side effects now name the Model's last height, which a height edit also writes.
+
+Cycle 2: one P2, fixed with a test and gated by `make ci` (the review cap). A preview that landed after the
+user left the Spaces view opened its confirmation over another tab; it is now dropped unless the Spaces view
+is still shown on the Zones tab.

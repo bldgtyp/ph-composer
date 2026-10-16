@@ -342,3 +342,19 @@ test("a draft begun while Height from solid reads holds the confirmation", funct
     return message.payload && message.payload.name === "ph_composer.spaces.volumes.height_from_solid";
   }).length, 0);
 });
+
+test("a Height from solid preview that lands after leaving the Spaces view opens nothing", function () {
+  var p = page();
+  p.receive(snapshot());
+  expandAll(p);
+  p.click(p.section().querySelectorAll("[data-row-action]").filter(function (node) {
+    return node.getAttribute("aria-label") === "Height of Volume 1 from a solid";
+  })[0]);
+  p.result(last(p), { status: "completed", revision: 4, value: { solid: [100, 101, 900] } });
+  var preview = last(p);
+  p.panel.showTab("library");
+  p.result(preview, { status: "completed", revision: 4, value: { height_m: 3, solid_volume_m3: 36,
+    net_floor_area_m2: 12, current_height_m: 2.5 } });
+  var dialog = p.context.document.querySelector("dialog");
+  assert.ok(!dialog || dialog.hidden, "no confirmation over another tab");
+});

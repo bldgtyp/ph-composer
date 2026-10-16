@@ -235,7 +235,10 @@ function (panel, requests, ui, units, preferences, fields) {
       if (reason) self.host.refuse(reason);
       return Boolean(reason);
     }
-    if (held()) return;
+    // A preview that lands after the user left the Spaces view is dropped: its confirmation would open elsewhere.
+    var shown = (!panel.state.ui || panel.state.ui.activeTab === "overview") &&
+      (!this.host.activeView || this.host.activeView() === "ph_composer.spaces");
+    if (!shown || held()) return;
     function text(number, field) { return units.format(number, field, units.profile(field, preferences.current())); }
     var dialog = this.dialog || (this.dialog = ui.formDialog("", function () { dialog.closeModal(); }));
     if (!dialog.parentNode) document.body.appendChild(dialog);
