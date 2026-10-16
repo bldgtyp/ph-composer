@@ -28,8 +28,9 @@ module MarkToolWalkthrough
 
   module_function
 
-  # One Zone holding a Space of one Volume with four unmarked floor Faces and a Face at the Space's root, four
-  # loose floor Faces, one wall Face classified as Wall, and one Face outside every Zone.
+  # One Zone holding a Space of one Volume with four floor Faces at factor 0, so the first drag at 1 changes
+  # them, and a Face at the Space's root; four loose floor Faces, one wall Face classified as Wall, and one
+  # Face outside every Zone.
   def setup
     model = Sketchup.active_model
     model.start_operation("Mark floor walkthrough geometry", true)
@@ -50,7 +51,8 @@ module MarkToolWalkthrough
                   { "faces" => [face.call(wall)], "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" } },
                     "expected_values" => {} })
     client.invoke("ph_composer.spaces.create",
-                  { "zone" => zone_reference, "faces" => squares[0, 4].map(&face), "name" => "Living" })
+                  { "zone" => zone_reference, "faces" => squares[0, 4].map(&face), "name" => "Living",
+                    "weighting_factor" => 0.0 })
     space_path = client.query("ph_composer.spaces.all").dig("value", "spaces").first.dig("reference", "entity_path")
     space = zone.entities.to_a.find { |entity| entity.persistent_id == space_path.last }
     model.start_operation("Mark floor walkthrough Space root Face", true)

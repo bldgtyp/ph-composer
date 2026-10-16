@@ -302,7 +302,11 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
       .map(function (segment) { return segment.reference.entity_path; });
   }
 
-  function draftReason(vs) { return vs.cells.draftReason() || vs.selection.draftReason(); }
+  // An open Create Space review holds the view as a draft does, so no tab, view or hand-off covers it.
+  function draftReason(vs) {
+    if (vs.review.active()) return "Finish the Create Space review first.";
+    return vs.cells.draftReason() || vs.selection.draftReason();
+  }
 
   function count(vs) {
     var total = vs.spaces.length;

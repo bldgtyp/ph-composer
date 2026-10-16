@@ -41,8 +41,10 @@ function (panel, requests, snapshot, ui) {
     if (!token || token === this.token) return;
     var reason = this.guard();
     if (reason) {
-      if (this.waiting !== token) this.host.refuse(reason);
+      // Marked first: the refusal repaints, and that repaint consumes this same snapshot again.
+      var fresh = this.waiting !== token;
       this.waiting = token;
+      if (fresh) this.host.refuse(reason);
       return;
     }
     if (!this.reveal.shown(state)) {

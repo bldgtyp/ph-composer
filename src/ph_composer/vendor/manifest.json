@@ -106,9 +106,9 @@
       "sha256": "d6a727b7cc74fbb98398ef381f0b51874d36ce5405bb3e816b885913e7e53ef8"
     },
     "html/features/spaces/create_review.js": {
-      "bytes": 7783,
+      "bytes": 7905,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d2398eaade0e99bdbc697ab9a84b492d58048782fde34b5b30145c6ceaaf2049"
+      "sha256": "a7fdf816c6ea0b046493b72bfa09d866d73751f818eae4bfbfef9c9047ea4a49"
     },
     "html/features/spaces/mark_paint.js": {
       "bytes": 4087,
@@ -121,9 +121,9 @@
       "sha256": "37338de89bdcb00aba561af1cb489032e5a18d294f9c5dbd0ffc2e4ca899a676"
     },
     "html/features/spaces/view.js": {
-      "bytes": 18640,
+      "bytes": 18826,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "90de300ecb23fa3b6dc9461a2e4c3d34b13b808d7c0e019c6c0c903ec191ea88"
+      "sha256": "e9e9b7fc0e0bcd2afa7ce03b4280e0d05712ca07e2d8b5a7b5af4613ac4e616b"
     },
     "html/features/windows/audit.js": {
       "bytes": 3740,

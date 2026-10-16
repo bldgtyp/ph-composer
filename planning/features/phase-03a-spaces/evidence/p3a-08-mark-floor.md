@@ -164,3 +164,10 @@ Review of PR #160, gpt-6-astra cycle 1: one P1 and three P2, each reproduced by 
 - P2: the review's guard checked only the Spaces view's drafts, so it opened over a held Zone edit. It now
   asks the Zones screen's guard first, and refuses through the screen's notice, which offers to cancel the
   edit.
+
+Cycle 2 at `7f49499`: one P1 and two P2, fixed with tests and gated by `make ci` (the review cap). The
+refusal for a review arriving over a held Zone edit repainted, and the repaint consumed the same snapshot
+and refused again until the stack overflowed; the waiting token is now marked before the refusal. An open
+review did not hold the view, so a Faces hand-off switched views and opened a second modal over it; an open
+review now holds the Spaces view as a draft does. The walkthrough created its Volume's Faces at factor 1, so
+the first drag at 1 changed nothing; they now start at 0.

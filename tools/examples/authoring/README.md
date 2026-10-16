@@ -262,9 +262,9 @@ uv run tools/hostkit/host_bridge.py eval \
 ## P3a-08 Spaces: the Mark floor tool and Create Space
 
 `mark_tool_walkthrough.rb` is the S08 host gate's script, after the Classify one. It builds one Zone
-holding a Space of one Volume with four floor Faces and a Face at the Space's root, four loose floor
-Faces, a classified wall and a Face outside every Zone, then arms the tool; you click, drag and
-right-click.
+holding a Space of one Volume with four floor Faces at factor 0 and a Face at the Space's root, four
+loose floor Faces, a classified wall and a Face outside every Zone, then arms the tool; you click,
+drag and right-click.
 
 ```sh
 uv run tools/hostkit/host_bridge.py eval \

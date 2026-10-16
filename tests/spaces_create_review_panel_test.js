@@ -21,11 +21,14 @@ function page() {
     innerWidth: 1280, innerHeight: 800, setTimeout: setTimeout, clearTimeout: clearTimeout,
     sketchup: { ph_composer_message: function (message) { sent.push(JSON.parse(message)); } }
   };
+  var errors = [];
+  context.console = { error: function () { errors.push(Array.prototype.slice.call(arguments).join(" ")); },
+    warn: function () {}, log: function () {} };
   context.window = context;
   dom.attachEvents(context);
   var modules = panelSource.start(context, ["sections/shell", "features/zones/overview", "features/zones/faces_view",
     "features/spaces/view"]);
-  var p = { context: context, panel: modules.panel, sent: sent };
+  var p = { context: context, panel: modules.panel, sent: sent, errors: errors };
   p.receive = function (state) { p.panel.receive({ type: "panel.snapshot", payload: state }); };
   p.dialog = function () {
     return context.document.querySelectorAll("dialog").filter(function (node) {
@@ -193,6 +196,31 @@ test("a review waits for a held Zone edit in the Spaces view", function () {
   })[0];
   if (zoneName.listeners.focus) zoneName.listeners.focus({ target: zoneName });
   p.type(zoneName, "Zone A2");
-  p.receive(snapshot(review()));
+  var notices = 0, notify = p.panel.notify;
+  p.panel.notify = function () { notices += 1; return notify.apply(this, arguments); };
+  var thrown = null;
+  try { p.receive(snapshot(review())); } catch (error) { thrown = error; }
+  assert.strictEqual(thrown, null);
   assert.ok(!p.dialog() || p.dialog().hidden, "no dialog opens over the Zone edit");
+  assert.strictEqual(notices, 1, "one refusal");
+  assert.deepStrictEqual(p.errors, []);
+});
+
+test("an open review holds the view, so a Faces hand-off waits behind it", function () {
+  var p = page();
+  var state = snapshot(review());
+  p.receive(state);
+  p.type(p.input("Name"), "Kitchen");
+  var handoff = snapshot(review());
+  handoff.sections["ph_composer.zones.faces.selection_assignment"] = { status: "completed",
+    value: { token: "assign-1", revision: 6, faces: [face(1200)] } };
+  handoff.sections["ph_composer.zones.faces.palette"] = { status: "completed", value: { active: false, palette: {},
+    face_types: ["Wall"], boundary_conditions: ["Outdoors"] } };
+  handoff.sections["ph_composer.zones.faces.faces"] = { status: "completed", value: { units: { area_m2: "m2" },
+    faces: [] } };
+  p.receive(handoff);
+  p.receive(handoff);
+  var open = p.context.document.querySelectorAll("dialog").filter(function (node) { return !node.hidden; });
+  assert.strictEqual(open.length, 1, "only the Create Space review is open");
+  assert.ok(!p.dialog().hidden);
 });
