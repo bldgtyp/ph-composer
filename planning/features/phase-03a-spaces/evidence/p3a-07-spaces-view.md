@@ -152,7 +152,7 @@ were gated by `make ci` only, at the review cap.
 ## Slice D: preview fixtures, the unit-switch measurement and docs
 
 The preview host now publishes the fixture's `spaces` section (step 15): `?fixture=spaces` is the reference
-model on the authoring Zones, `spacesempty` an empty Model, `spaceslarge` 300 Spaces.
+model on the authoring Zones, `spacesnone` the Zones with no Spaces, `spacesempty` an empty Model, `spaceslarge` 300 Spaces.
 `tools/ui-preview/spaces_checks.cjs` checks the reference model's rows, Zone marker, inheriting airflow, layout
 at 1280, 900 and 420 px and the selection bar; the empty Model's Zones alone; and measures the unit switch on
 300 Spaces (step 14): median 408 ms with the Zones open and 786 ms with every row open, each to the first
@@ -168,4 +168,10 @@ Airflow balance view with the Zone rows' airflow balance and the iCFA factor wit
 ## Host
 
 Not run. The S07 gate is batched with the S03 to S06 native rows.
+
+Slice D review: Codex `gpt-6.1-sol` on #155. The first pass found two P2 (the unit-switch timer stopped before
+the browser painted; its wait had no deadline, so a regression would hang `make ui-checks`), fixed and
+re-measured; the second one P2 (the empty fixture kept its Zones, so a truly empty Model went untested; it is
+now `spacesnone`, and `spacesempty` has nothing) and one P3 (a planning word in the client-facing glossary),
+fixed and gated by `make ci` only, at the review cap.
 

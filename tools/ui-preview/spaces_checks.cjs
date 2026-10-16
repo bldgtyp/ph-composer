@@ -54,10 +54,14 @@ function visibleRows(page) {
       .getAttribute("placeholder"), "Mixed");
     await page.screenshot({ path: path.join(output, "spaces-checked.png") });
 
-    // An empty Model: the Zones and nothing beneath them.
-    await open(page, "spacesempty");
+    // Zones with no Spaces yet: the Zones and nothing beneath them.
+    await open(page, "spacesnone");
     assert.equal(await page.locator(".phc-overview .phc-view-count").textContent(), "2 Zones · 0 Spaces");
     assert.equal(await visibleRows(page).count(), 2);
+    // An empty Model: no rows, and the empty table says what to do first.
+    await open(page, "spacesempty");
+    assert.equal(await visibleRows(page).count(), 0);
+    assert.match(await page.locator(".phc-zone-view:not([hidden]) .phc-empty").textContent(), /^No Zones yet\./);
 
     // 300 Spaces: the median of five unit switches, each from the press to the repainted header, with the
     // Zones open (the default) and with every row open.

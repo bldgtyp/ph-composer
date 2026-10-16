@@ -888,7 +888,10 @@
         index % 5 ? 1 : 0.5)])]);
   }));
   FIXTURES.spaces = Object.assign(JSON.parse(JSON.stringify(FIXTURES.authoring)), { spaces: REFERENCE_SPACES });
-  FIXTURES.spacesempty = Object.assign(JSON.parse(JSON.stringify(FIXTURES.authoring)), { spaces: spacesSection([]) });
+  // Zones with no Spaces yet, and a Model with nothing at all.
+  FIXTURES.spacesnone = Object.assign(JSON.parse(JSON.stringify(FIXTURES.authoring)), { spaces: spacesSection([]) });
+  FIXTURES.spacesempty = { parts: [], zones: [], faces: [], spaces: { spaces: [], zones: [], findings: [],
+    units: { area: "m2", height: "m", volume: "m3", airflow: "m3/h" } } };
   FIXTURES.spaceslarge = Object.assign(JSON.parse(JSON.stringify(FIXTURES.authoring)), { spaces: LARGE_SPACES });
 
   global.PhComposerPreviewFixtures = {
