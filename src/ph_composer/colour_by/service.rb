@@ -18,8 +18,12 @@ module PhComposer
     # Omission preserves the solid unclassified boundary used by other modes.
     # `derived`, when supplied, is a Derived: world-space shapes drawn in the entry's colour and state, with
     # or without an entity (context/EXTENSIBILITY.md, "Colour-by derived geometry").
+    # `label` may also be a list of parts, as a readout line is (plain text or `[quantity, si_value]`), so a
+    # unit-bearing label is formatted in the display units wherever it is shown. `figure`, when supplied, is
+    # one `[quantity, si_value]` the legend sums per row and shows beside the count (an area, a volume), or a
+    # list of them summed position by position (supply and extract).
     Entry = Struct.new(:entity, :transform, :value, :label, :state, :path, :colour, :hatch_outline, :derived,
-                       keyword_init: true)
+                       :figure, keyword_init: true)
 
     # World-space shapes in SketchUp's inches: `polygons`, planar loops of points, filled and outlined;
     # `segments`, pairs of points drawn as lines. The projection owns every conversion to world.
@@ -34,9 +38,10 @@ module PhComposer
     # occurrence and mutes it under the occurrence mask, as an entry's shapes are.
     Anchor = Struct.new(:point, :parts, :path, keyword_init: true)
 
-    # One legend row: a colour, what it means, how many entities carry it, and which of the three
-    # states it is in (`classified`, `incomplete` or `unclassified`).
-    Row = Struct.new(:value, :label, :colour, :count, :state, keyword_init: true)
+    # One legend row: a colour, what it means (text or parts), how many entities carry it, which of the
+    # three states it is in (`classified`, `incomplete` or `unclassified`), and its entries' summed `figure`, a
+    # list of `[quantity, si_value]` pairs.
+    Row = Struct.new(:value, :label, :colour, :count, :state, :figure, keyword_init: true)
 
     # One Model's Colour-by state: which mode is active, the cached drawing for it, and the overlay
     # that draws it. Reached through `ColourBy.for(session)`; the session holds it as generic feature
@@ -154,14 +159,17 @@ module PhComposer
       end
 
       def legend
+        system = Preferences.unit_system
         {
           "mode" => @mode_name, "label" => mode&.label, "entity_kind" => mode&.entity_kind,
           "isolated" => @isolated && { "value" => @isolated.first, "state" => @isolated.last.to_s },
           "filter_paths" => @filter_paths && @filter_paths.map(&:dup),
           "rows" => rows.map do |row|
-            { "value" => row.value, "label" => row.label, "colour" => row.colour.dup,
-              "count" => row.count, "state" => row.state.to_s,
-              "isolated" => @isolated == [row.value, row.state] }
+            text = { "value" => row.value, "label" => ReadoutOutput.text(row.label, system),
+                     "colour" => row.colour.dup, "count" => row.count, "state" => row.state.to_s,
+                     "isolated" => @isolated == [row.value, row.state] }
+            # Only a row whose entries give a figure has one, formatted in the display units.
+            row.figure ? text.merge("figure" => Legend.figure_text(row.figure, system)) : text
           end
         }
       end
@@ -297,9 +305,10 @@ module PhComposer
       end
 
       def add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified, unclassified_triangles, wash)
-        row = rows[[entry.value, state]] ||= Row.new(:value => entry.value, :label => label_for(entry),
+        row = rows[[entry.value, state]] ||= Row.new(:value => entry.value, :label => Legend.label(entry),
                                                      :colour => colour, :count => 0, :state => state)
         row.count += 1
+        Legend.add_figure(row, entry.figure)
         entities[[entry.value, state]] << [entry.entity, entry.transform] if entry.entity
         add_derived(entry, state, colour, fills, unclassified, unclassified_triangles, wash) if entry.derived
         return unless entry.entity && @visibility.visible?(entry.path, entry.entity)
@@ -416,15 +425,10 @@ module PhComposer
         colour ? [:classified, colour] : [:incomplete, Palette::INCOMPLETE]
       end
 
-      def label_for(entry)
-        text = entry.label || entry.value
-        text.nil? ? "Unclassified" : text.to_s
-      end
-
       def order(declaration, rows)
         return rows.sort_by(&declaration.sort) if declaration.sort
 
-        rows.sort_by { |row| [row.state == :unclassified ? 1 : 0, -row.count, row.label] }
+        rows.sort_by { |row| [row.state == :unclassified ? 1 : 0, -row.count, ReadoutOutput.text(row.label, "SI")] }
       end
 
       # An overlay SketchUp accepts is not an overlay SketchUp draws. `OverlaysManager#add` leaves

@@ -52,7 +52,9 @@ module PhComposer
         "modes" => { "type" => "array", "items" => { "type" => "object" },
                      "description" => "Every registered mode: name, label, entity kind and group (null when none)." },
         "rows" => { "type" => "array", "items" => { "type" => "object" },
-                    "description" => "The active mode's legend: value, label, colour, count and state." },
+                    "description" => "The active mode's legend: value, label, colour, count and state, " \
+                                     "and figure, the row's summed area or volume in display units, where the " \
+                                     "mode gives one." },
         "readouts" => { "type" => "array", "items" => { "type" => "object" },
                         "description" => "Every registered readout: name, label, whether it reads the selection " \
                                          "and whether it is on." }

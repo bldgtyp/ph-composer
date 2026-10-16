@@ -19,6 +19,7 @@
 require_relative "schema"
 require_relative "scan/occurrences"
 require_relative "scan/metrics"
+require_relative "prism"
 require_relative "scan/findings"
 require_relative "scan/resolve"
 require_relative "reads"

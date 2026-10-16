@@ -482,6 +482,13 @@ it back unchanged. When the colour is a property of the record a value names rat
 of the value (an Assembly's own colour), the entry supplies `colour: [r, g, b]` and the service uses
 it ahead of the mode's colour function; Zones' Assembly mode does this, with a colour function that
 answers nil.
+An entry's `label` may be a list of parts, as a readout line is (plain text or `[quantity, si_value]`), so
+a unit-bearing label ("2.5 m") follows the display units; and an entry may supply `figure`, one
+`[quantity, si_value]` the legend sums per row and shows beside the count, or a list of them summed
+position by position and shown joined ("60 m³/h / 40 m³/h"); Spaces' modes sum weighted area, airflows,
+floor area or net volume. Labels and figures are formatted where they are shown, in the HUD and in
+`colour_by.state`, never at rebuild, so a unit switch needs no rebuild. A row sums the same quantities
+throughout; an entry giving others, or a figure that is not quantity pairs, fails the mode.
 An entry may also supply `hatch_outline: false` to retain its unclassified hatch while leaving
 boundary edges to SketchUp. Omission preserves the solid unclassified boundary. This flag affects
 only the unclassified rendering; classified fills keep their existing colour and geometry.
@@ -566,6 +573,10 @@ ColourBy::Entry.new(path: volume.path, value: "2.50", label: "2.50 m",
   bridges, Phase 3b); nothing per entry.
 - `group:` and the column-header toggles are unaffected: a shape belongs to its entry, an entry to its
   mode.
+- **Worked example.** Spaces' four modes (`features/spaces/colour_modes.rb`: By Space, By ventilation,
+  By weighting factor, By height) each carry the Volume preview prism (`features/spaces/prism.rb`, pure,
+  in world metres, the same value the export writes) as their entries' `derived`, so the prisms show
+  while one of those modes is on and never otherwise, with no preview switch of their own.
 
 ### Colour-by readouts
 

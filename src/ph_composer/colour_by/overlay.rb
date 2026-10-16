@@ -79,11 +79,8 @@ module PhComposer
         end
       end
 
-      # Plain text, or `[quantity, si_value]` formatted in the display units (core/units.rb).
       def readout_text(parts, system)
-        Array(parts).map do |part|
-          part.is_a?(Array) ? Units.format(part.last, :quantity => part.first, :system => system) : part.to_s
-        end.join
+        ReadoutOutput.text(parts, system)
       end
 
       def behind_camera?(view, point)
@@ -132,14 +129,21 @@ module PhComposer
         if @service.isolated
           row = @service.rows.find { |item| [item.value, item.state] == @service.isolated }
           top += HUD_ROW_HEIGHT
-          draw_hud_text(view, left, top, "Showing only: #{row.label}") if row
+          draw_hud_text(view, left, top, "Showing only: #{readout_text(row.label, Preferences.unit_system)}") if row
         end
         @service.rows.each_with_index do |row, index|
           row_top = top + ((index + 1) * HUD_ROW_HEIGHT)
           draw_swatch(view, left, row_top, row.colour)
-          draw_hud_text(view, left + HUD_SWATCH + 6, row_top, "#{row.label} (#{row.count})")
+          draw_hud_text(view, left + HUD_SWATCH + 6, row_top, legend_text(row))
         end
         top + (@service.rows.length * HUD_ROW_HEIGHT)
+      end
+
+      # "101 Living (2) 24 m²": the label, the count and the row's summed figure, in the display units.
+      def legend_text(row)
+        system = Preferences.unit_system
+        text = "#{readout_text(row.label, system)} (#{row.count})"
+        row.figure ? "#{text} #{Legend.figure_text(row.figure, system)}" : text
       end
 
       def draw_swatch(view, left, top, colour)
