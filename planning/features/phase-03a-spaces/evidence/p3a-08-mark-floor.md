@@ -94,3 +94,10 @@ Test 10 does not hold cleanly for this slice: `html/features/zones/overview.js`,
 closes a column menu after any value action runs. That is a change to the host behind the Zone views
 contract (`context/EXTENSIBILITY.md`, "Zone views", `menuValueAction`), not a part lifted into the kit, and
 it is the only file under `features/zones/`, `html/features/zones/` or `core/` that P3a-08 changes.
+
+Review of PR #159, gpt-6.1-sol cycle 1: two P2, each reproduced by a test in
+`tests/spaces_mark_paint_panel_test.js` that failed before its fix. A start that landed after a switch to
+another view left Mark floor running behind the Faces view; the Spaces view now stops the tool on any
+snapshot while it is not shown, as the Faces view does for Classify, and sends one stop per run. The pressed
+icon compared the host's band text with this runtime's number text, which differ for small factors such as
+`1.0e-07`; it now compares numbers.

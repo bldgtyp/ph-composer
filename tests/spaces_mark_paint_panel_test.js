@@ -114,3 +114,29 @@ test("Escape and a switch to another view each stop a running tool", function ()
   q.click(q.pane().querySelectorAll("button").filter(function (node) { return node.textContent === "Faces"; })[0]);
   assert.deepStrictEqual(q.commands(), [["ph_composer.spaces.mark_tool.stop", {}]]);
 });
+
+test("a start that lands after a switch to another view is stopped", function () {
+  var p = page();
+  p.receive(snapshot());
+  var menu = openMenu(p);
+  p.click(menu.parentNode.querySelectorAll("button").filter(function (node) {
+    return /^Mark floor at weighting factor 1\./.test(node.getAttribute("aria-label") || "");
+  })[0]);
+  p.click(p.pane().querySelectorAll("button").filter(function (node) { return node.textContent === "Faces"; })[0]);
+  p.receive(snapshot({ active: true, weighting_factor: 1, gesture_limit: 250 }));
+  assert.deepStrictEqual(p.commands(), [["ph_composer.spaces.mark_tool.start", { weighting_factor: 1 }],
+    ["ph_composer.spaces.mark_tool.stop", {}]]);
+});
+
+test("the running factor's icon is pressed whatever text the host gave its band", function () {
+  var state = snapshot({ active: true, weighting_factor: 0.0000001, gesture_limit: 250 });
+  state.sections["ph_composer.spaces.spaces"].value.spaces[0].volumes[0].floor_segments[0].weighting_band = "1.0e-07";
+  var p = page();
+  p.receive(state);
+  var menu = openMenu(p);
+  var pressed = menu.parentNode.querySelectorAll("button").filter(function (node) {
+    return /^Mark floor at weighting factor/.test(node.getAttribute("aria-label") || "") &&
+      node.getAttribute("aria-pressed") === "true";
+  });
+  assert.strictEqual(pressed.length, 1);
+});

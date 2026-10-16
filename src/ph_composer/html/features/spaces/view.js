@@ -27,7 +27,7 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
 
   function create(host) {
     var cells = new SpaceCells(host);
-    return { spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
+    return { host: host, spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
       cells: cells, actions: new SpaceActions(host), selection: new SpaceSelection(cells), paint: new MarkPaint(host) };
   }
 
@@ -50,6 +50,8 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     (value.zones || []).forEach(function (zone) { vs.sums[occurrence(zone.zone_path)] = zone; });
     vs.actions.consume(state, value.zones || []);
     vs.paint.consume(state);
+    // Mark floor runs only while this view is shown: a start that lands after a switch away is stopped.
+    if (vs.host.activeView() !== VIEW.id) vs.paint.stop();
   }
 
   function zoneRecord(vs, record) {

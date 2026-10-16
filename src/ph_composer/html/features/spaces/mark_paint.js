@@ -19,6 +19,7 @@ function (ui, requests, snapshot) {
 
   MarkPaint.prototype.consume = function (state) {
     this.state = snapshot.value(state, SECTION) || { active: false, weighting_factor: 1 };
+    if (!this.state.active) this.stopping = false;
     var outcome = this.view.consume(state);
     if (outcome && outcome.status !== "completed") {
       this.host.refuse(outcome.message || "The Mark floor tool did not start.");
@@ -29,7 +30,8 @@ function (ui, requests, snapshot) {
   MarkPaint.prototype.action = function (entry) {
     var self = this, factor = Number(entry.value);
     if (entry.value === "" || !isFinite(factor)) return null;
-    var pressed = Boolean(this.state.active && String(this.state.weighting_factor) === entry.value);
+    // Compared as numbers: the host's band text and this runtime's number text differ for small factors.
+    var pressed = Boolean(this.state.active && Number(this.state.weighting_factor) === factor);
     return { label: "Mark floor at weighting factor " + entry.label + ". " + RULE, icon: "paint_bucket",
       pressed: pressed, disabled: this.view.busy(),
       run: function () { self.start(factor); } };
@@ -37,11 +39,15 @@ function (ui, requests, snapshot) {
 
   MarkPaint.prototype.start = function (factor) {
     if (this.view.busy()) return;
+    this.stopping = false;
     this.view.run(PREFIX + ".start", { weighting_factor: factor });
   };
 
+  /* Answers whether the tool was running. One stop is sent per run, however many routes ask for it. */
   MarkPaint.prototype.stop = function () {
     if (!this.state.active) return false;
+    if (this.stopping) return true;
+    this.stopping = true;
     if (this.view.busy()) this.view.send(PREFIX + ".stop", {});
     else this.view.run(PREFIX + ".stop", {});
     return true;
