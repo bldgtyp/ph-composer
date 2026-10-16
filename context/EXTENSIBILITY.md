@@ -647,6 +647,7 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
 | `colourBy`, `sorted`, `filteredFields`, `filterValues`, `filterLabel`, `headerAction`, `menuValueAction`, `menuExtra` | The view's columns' Colour-by bindings, sort and value filters, and anything its column header and menu add (Faces adds the Classify paint) |
 | `zoneMatch`, `rowMatch`, `search`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask (by default each Zone that passes `zoneMatch`, whole) |
 | `actions(row)`, `zoneActions(row)`, `action(row, item, control)`, `inspect`, `locate(row)`, `clearLocate`, `selected(row)` | Row actions (`control` is the pressed button, to anchor what it opens), the Zone row's actions after Make independent, Locate (`clearLocate` answers whether it cleared anything), and which rows paint as selected (Spaces: the row open in the edit context) |
+| `checkedZones()`, `checkZones(keys)` | The Zone rows every row beneath which this view has checked, and checking everything beneath Zones another view handed over |
 | `check(context)`, `selectionBar(overview)`, `settings`, `navigate(intent)`, `count`, `placeholder` | Checkboxes for the rows it checks, a selection bar, a settings control for the page header, a navigation intent's `check`, what the control row's count adds after the Zones ("4 Spaces"), and the text filter's placeholder |
 | `draftReason`, `cancelDrafts`, `canCancelDrafts`, `leaveReason`, `leave`, `escape` | Work a filter, a switch or shutting a row must not hide, and how the guard's notice cancels it (offered only while `canCancelDrafts` answers, never for an edit already sent); what holds a switch; what stops on a switch away; Escape, true when the view used it |
 
@@ -658,7 +659,10 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
   Zone filters (Building-Segment, Level), which rows are expanded (Expand all and Collapse all reach
   every row with rows beneath it), and the panel hooks (`navigationGuard`, `outcomeText`, `workedOn`).
 - **A view owns** its rows, its columns, their header Colour-by toggles and value filters, its sort,
-  its checked rows, its selection bar, its settings and its tools. Each view has its own surface and
+  its checked rows, its selection bar, its settings and its tools. Checked Zones are shared: on a
+  switch the host asks the old view which Zone rows are fully checked (`checkedZones`) and, when there
+  are any, hands those Zones to the new view (`checkZones`), which checks everything beneath them in
+  place of what it had checked. A view otherwise keeps its own checks through a switch away and back. Each view has its own surface and
   table mount, so its column widths, hidden columns and column menus are its own. The host keeps one
   controls row and moves the view's column filters and sort out of it and back on a switch; a Zone
   filter stays while the next view shows its column and otherwise leaves with the view that does, so

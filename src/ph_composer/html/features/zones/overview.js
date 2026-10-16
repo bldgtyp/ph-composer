@@ -190,11 +190,17 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     state.listed = listed;
     if (ids.indexOf(state.viewId) < 0) {
       // A shown view that stops being listed leaves as a switch away does.
-      var remembered = preferences.tableView(HOST);
+      var remembered = preferences.tableView(HOST), zones = null;
       var next = slot(state, listed[ids.indexOf(ids.indexOf(remembered) >= 0 ? remembered : ids[0])]);
-      if (current && current.shown) { call(current, "leave"); stash(state, current, next); }
+      if (current && current.shown) {
+        zones = call(current, "checkedZones", [], null);
+        call(current, "leave");
+        stash(state, current, next);
+      }
       state.viewId = next.view.id;
       restore(state, next);
+      // Handed over once the view switched to has read this snapshot (render does it after consume).
+      if (zones && zones.length) state.handover = { slot: next, zones: zones };
     }
     var surfaces = root.querySelector(".phc-zone-views"), owned = listed.map(function (view) {
       return slot(state, view).surface;
@@ -235,12 +241,17 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var previous = Object.keys(state.slots).filter(function (key) {
       return key !== id && state.slots[key].shown;
     })[0];
+    var zones = null;
     if (previous) {
       var old = state.slots[previous];
+      // The Zones checked in the view switched from are checked in the one switched to.
+      zones = call(old, "checkedZones", [], null);
       call(old, "leave");
       stash(state, old, state.slots[id]);
     }
     restore(state, state.slots[id]);
+    // Only Zones that are checked are handed over; the view switched to keeps its own checks otherwise.
+    if (zones && zones.length) call(state.slots[id], "checkZones", [zones]);
     if (id) panel.setPreference("table_view", id, { scope: HOST });
     panel.repaint();
   }
@@ -619,6 +630,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     // Every listed view reads each snapshot, shown or not: a hidden view may still have work arriving (a
     // native handoff, a tool that turned on late). Reading may switch views, so the shown one is read after.
     screenState.listed.forEach(function (view) { call(slot(screenState, view), "consume", [state, send]); });
+    var handover = screenState.handover;
+    screenState.handover = null;
+    if (handover && handover.slot === active(screenState)) call(handover.slot, "checkZones", [handover.zones]);
     var own = active(screenState);
     var rows = project(zones.zones, own);
     // A row the view adds may open by default. That is decided once, when the row first appears, so it does

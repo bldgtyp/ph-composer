@@ -1,7 +1,7 @@
 # P3a-07 evidence: the Spaces view
 
 DATE: 2026-10-16
-STATUS: Slices A and B merged through #150 (`7619964`) and #151 (`a9d2f72`); slice C1 in review
+STATUS: Slices A, B and C1 merged through #150 (`7619964`), #151 (`a9d2f72`) and #152 (`34db51a`); slice C2 in review
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -108,4 +108,44 @@ Volume's Floor Segments pointed to the Space rather than the Volume; six-decimal
 rounded differently in Ruby and JavaScript, so the host now publishes the band; confirmations for unnamed
 records named nothing). Each was reproduced by a test and fixed; the second pass's three were gated by
 `make ci` only, at the review cap.
+
+## Slice C2: the selection bar and shared checked Zones
+
+`html/features/spaces/selection.js` holds the view's checked rows and its selection bar (step 8). A row's box
+checks it and everything beneath it, so a Zone's box checks every Space, Volume and Floor Segment in the Zone
+and reads mixed while only some are; the header box checks every row the filters show; Escape clears. The
+bar shows one group of controls for each kind it holds: the weighting and net area factors for Floor Segments,
+the height for Volumes, the three airflows for Spaces. A value the checked rows of that kind share shows in
+its field, one they do not share reads "Mixed", and each choice applies to every checked row of that kind as
+one `batch_update`; a blank airflow clears the rate on the rows that have one, and a factor outside 0 to 1
+refuses at the bar. The plan's "a mixed set shows the controls its rows share" is read as one group per kind
+present, since a Zone's box always checks several kinds.
+
+Shared checked Zones (step 17, carried from P3a-06): on a switch the host asks the old view which Zone rows
+are fully checked and hands them to the new view, which checks everything beneath them; the Faces view and
+the Spaces view both supply `checkedZones` and `checkZones`. `context/EXTENSIBILITY.md`, "Zone views", says so.
+
+Tests: `tests/spaces_selection_panel_test.js` (phase doc test 7 and step 17's test).
+
+Seen in the panel with Hall checked: Supply and Extract read "Mixed" for one Space with neither rate set,
+because "the rows differ" and "unset" shared one marker; a value the rows share, unset included, now reads as
+itself.
+
+Slice C2 review, first pass: Codex `gpt-6.1-sol` on #153 found two P1 (a bar draft read in the unit current at
+Enter rather than the one typed in; a bar draft guarded by the values at Enter rather than at its start) and
+four P2 (Enter on an unedited field wrote the rounded display back; a bar draft did not hold a view switch; a
+refused bar entry lost its text; an automatic switch skipped the checked-Zone hand-over). Each was reproduced
+by a test and fixed: a bar field fixes its unit and its target rows with their values at the first keystroke,
+sends nothing for unchanged text, keeps refused text until it is corrected or Escape restores the Model's
+value, and holds a switch meanwhile; the host's automatic switch hands checked Zones over as an explicit one.
+
+Second pass: three P1 (the checked set could change under an open bar draft, so the draft wrote rows the bar
+no longer showed; correcting a refused entry re-read it in the current unit; rows whose value already
+matched were left out of the batch, so the host could not refuse a stale selection whole) and three P2 (Enter
+on an untouched Mixed airflow did nothing; an automatic switch handed Zones to a view before it had read the
+snapshot; a held bar entry had no visible Cancel). Each was reproduced by a test and fixed: the checked set
+holds while a bar draft is open; a corrected entry keeps its first unit; every checked row goes in the batch
+(the host checks each and skips the writes that change nothing); Enter on an empty Mixed optional field
+clears it; the hand-over waits for the destination to consume; the bar shows Cancel beside a held entry. These
+were gated by `make ci` only, at the review cap.
 

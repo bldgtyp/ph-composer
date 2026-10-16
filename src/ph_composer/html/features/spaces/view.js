@@ -8,9 +8,9 @@
  * A Zone holding any inheriting Space shows a muted dash for its airflow sums and evaluates no imbalance.
  * Names, numbers, heights, factors and airflows edit in place (cells.js).
  */
-PhComposerUI.define("features/spaces/view", ["workspace", "snapshot", "units", "unit_preferences", "fields",
-  "table_views", "features/spaces/cells", "features/spaces/actions"],
-function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells, SpaceActions) {
+PhComposerUI.define("features/spaces/view", ["panel", "workspace", "snapshot", "units", "unit_preferences", "fields",
+  "table_views", "features/spaces/cells", "features/spaces/actions", "features/spaces/selection"],
+function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCells, SpaceActions, SpaceSelection) {
   "use strict";
   var SECTION = "ph_composer.spaces.spaces";
   var AIRFLOWS = [["v_sup_m3h", "Supply"], ["v_eta_m3h", "Extract"], ["v_tran_m3h", "Transfer"]];
@@ -24,8 +24,9 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells, Spac
   var NO_ZONE = JSON.stringify(["NoZone"]);
 
   function create(host) {
+    var cells = new SpaceCells(host);
     return { spaces: [], byZone: Object.create(null), sums: Object.create(null), outside: [],
-      cells: new SpaceCells(host), actions: new SpaceActions(host) };
+      cells: cells, actions: new SpaceActions(host), selection: new SpaceSelection(cells) };
   }
 
   function occurrence(path) {
@@ -304,13 +305,25 @@ function (ui, snapshot, units, preferences, fields, tableViews, SpaceCells, Spac
       net_volume_m3: 112, v_sup_m3h: 104, v_eta_m3h: 104, v_tran_m3h: 112, net_area_factor: 112 },
     create: create, consume: consume,
     attach: function (vs, place) { vs.cells.attach(place); },
-    prepare: function (vs, rows, state) { vs.cells.prepare(rows, state); },
+    prepare: function (vs, rows, state) { vs.cells.prepare(rows, state); vs.selection.prepare(rows); },
+    check: function (vs, context) { return vs.selection.check(context); },
+    selectionBar: function (vs, overview) { return vs.selection.bar(overview); },
+    checkedZones: function (vs) { return vs.selection.checkedZones(); },
+    checkZones: function (vs, keys) { vs.selection.pendingZones = keys; },
+    leave: function (vs) { vs.selection.hideBar(); },
+    escape: function (vs) {
+      if (!vs.selection.checked().length) return false;
+      if (vs.selection.clear()) panel.repaint();
+      return true;
+    },
     cell: function (vs, td, row, field) { return vs.cells.render(td, row, field); },
     painted: function (vs) { vs.cells.painted(); },
-    draftReason: function (vs) { return vs.cells.draftReason(); },
-    cancelDrafts: function (vs) { vs.cells.cancelAll(); },
-    canCancelDrafts: function (vs) { return vs.cells.cancellable(); },
-    dispose: function (vs) { vs.cells.dispose(); vs.actions.dispose(); },
+    draftReason: function (vs) { return vs.cells.draftReason() || vs.selection.draftReason(); },
+    cancelDrafts: function (vs) { vs.cells.cancelAll(); vs.selection.cancelDrafts(); },
+    canCancelDrafts: function (vs) {
+      return vs.cells.cancellable() || !vs.cells.inFlight() && Boolean(vs.selection.draftReason());
+    },
+    dispose: function (vs) { vs.cells.dispose(); vs.actions.dispose(); vs.selection.dispose(); },
     zoneRecord: zoneRecord, extraRows: extraRows, children: children,
     leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: marker,
     sortValue: sortValue, sort: sort, search: search, count: count,

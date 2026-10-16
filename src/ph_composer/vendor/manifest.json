@@ -101,14 +101,19 @@
       "sha256": "165efb736e93c33f4fd7d0b0366c2da0d363d0973d447f915404f863c8490463"
     },
     "html/features/spaces/cells.js": {
-      "bytes": 9749,
+      "bytes": 10300,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "5bc18ba0dd78583c25c1a8ae45606d653a695b0d55090a8be4f3672b9c09c85b"
+      "sha256": "d6a727b7cc74fbb98398ef381f0b51874d36ce5405bb3e816b885913e7e53ef8"
+    },
+    "html/features/spaces/selection.js": {
+      "bytes": 14709,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "37338de89bdcb00aba561af1cb489032e5a18d294f9c5dbd0ffc2e4ca899a676"
     },
     "html/features/spaces/view.js": {
-      "bytes": 16129,
+      "bytes": 16953,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "ce948986b874b12a376578c454b8bcf380d6894b4494f91e159c1ebbba212ee8"
+      "sha256": "d50079a0bea4eaa5bebcc6fb8a0af9b67a7e4855569d20f633c7d7549c8b78b1"
     },
     "html/features/windows/audit.js": {
       "bytes": 3740,
@@ -216,9 +221,9 @@
       "sha256": "5cdfedd2c1f977aae1a40d6c6e7979cfb9e866b5c13550954b29d520fa981900"
     },
     "html/features/zones/faces_view.js": {
-      "bytes": 40526,
+      "bytes": 41085,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "ea3cdda775c8c5f1b8ebe097d60f0cc35b23ffeef5f0d1f4596fb2f95a442b5a"
+      "sha256": "3ab413669f978b8ecb3c4b5329d1f668e3af27ad87afa64d8ab1e8aa5b75085e"
     },
     "html/features/zones/option_dialog.js": {
       "bytes": 17777,
@@ -226,9 +231,9 @@
       "sha256": "d29df66f89aa13ccfabf7e501c2746015af715aeb0cb29612c12c986a38ee2ba"
     },
     "html/features/zones/overview.js": {
-      "bytes": 48136,
+      "bytes": 48941,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "c7d8e6e5874b1e7a4affea560274e08b72801187635c30cd13964e7be032c21b"
+      "sha256": "3ce844d2d8a5050c27d3be659ae8a04bb6a1939acd11031644d386e266488e51"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 3325,
@@ -266,9 +271,9 @@
       "sha256": "32cc7b6c39918da562237aba1209b358ec087c9238146cdcc16cf4c415b7754d"
     },
     "html/index.html": {
-      "bytes": 6647,
+      "bytes": 6704,
       "mime": "text/html; charset=utf-8",
-      "sha256": "a9c400bcf745c64b6a907c3882363886e8700b563e4adf6b07afabbdb05d90fb"
+      "sha256": "d76a439645fc2d97c95c30908e3e104deaf2d977c01b3eae4d3a1acfacabb26c"
     },
     "html/inventory.js": {
       "bytes": 9047,

@@ -61,16 +61,18 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
   }
 
   /* The edits a range or a paste makes, one per record. A blank over a value that was never set changes
-     nothing, so it is left out. */
-  function merged(changes) {
+     nothing, so it is left out, unless `exact` keeps every edit for the host to check (the selection bar). */
+  function merged(changes, exact) {
     var byPath = Object.create(null), order = [];
     changes.forEach(function (edit) {
-      Object.keys(edit.values).forEach(function (key) {
-        if (edit.values[key] === null && !Object.prototype.hasOwnProperty.call(edit.expected_values, key)) {
-          delete edit.values[key];
-        }
-      });
-      if (!Object.keys(edit.values).length) return;
+      if (!exact) {
+        Object.keys(edit.values).forEach(function (key) {
+          if (edit.values[key] === null && !Object.prototype.hasOwnProperty.call(edit.expected_values, key)) {
+            delete edit.values[key];
+          }
+        });
+        if (!Object.keys(edit.values).length) return;
+      }
       var key = JSON.stringify(edit.reference.entity_path), held = byPath[key];
       if (!held) { byPath[key] = edit; order.push(key); return; }
       Object.assign(held.values, edit.values);
@@ -107,8 +109,10 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
 
   /* After the host has listed the view's rows for this snapshot: refresh the drafts and the range edit. */
   SpaceCells.prototype.prepare = function (rows, state) {
-    var outcome = this.batch.consume(state);
-    if (outcome && outcome.status !== "completed") {
+    var outcome = this.batch.consume(state), done = outcome && this.batchDone;
+    if (outcome) this.batchDone = null;
+    if (done) done(outcome);
+    else if (outcome && outcome.status !== "completed") {
       this.host.refuse(snapshot.message(outcome, "The range edit was not applied. Nothing was written."));
     }
     this.edits.batchPending = this.batch.busy();
@@ -122,11 +126,16 @@ function (RecordEdits, Grid, requests, snapshot, fields, ui) {
       hiddenColumns: place.hiddenColumns, isBusy: function () { return self.busy(); },
       notify: function (message) { self.host.refuse(message); },
       changeFor: function (cell, value) { return change(cell.row, cell.field, value); },
-      submitBatch: function (changes) {
-        var edits = merged(changes);
-        if (self.busy() || !edits.length) return;
-        self.batch.run(BATCH, { edits: edits });
-      } });
+      submitBatch: function (changes) { self.submit(changes); } });
+  };
+
+  /* Many changes as one `batch_update`, one Undo step: a range, a paste, or a selection-bar choice. `done`,
+     when given, receives the outcome and says what to tell the user. */
+  SpaceCells.prototype.submit = function (changes, done, options) {
+    var edits = merged(changes, options && options.exact);
+    if (this.busy() || !edits.length) return;
+    this.batchDone = done || null;
+    this.batch.run(BATCH, { edits: edits });
   };
 
   SpaceCells.prototype.busy = function () { return this.batch.busy() || Boolean(this.edits.pending); };
