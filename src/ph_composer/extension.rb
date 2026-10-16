@@ -54,6 +54,7 @@ module PhComposer
     Sessions.install
     compose
     on_reset("composition") { compose }
+    Sessions.open_active
     Panel.install
     Commands.install
     file_loaded(__FILE__)

@@ -95,7 +95,8 @@ queued pass makes reads and writes wait (`ModelSession#busy_reason`) and a closi
 Queue a job only for work that may write: a pass that would find nothing to do should not make the
 session busy. The predecessor's `UndoLedger` is not carried over: it tracked a Volume the TFA
 transition created and entered automatically, and the explicit mark removed that transition.
-`session/host_observers.rb` only translates SketchUp callbacks into session host events, and
+`session/host_observers.rb` only translates SketchUp callbacks into session host events (an opened
+file is `model_opened`, reported even to a session created before the file loaded), and
 `session/container_watch.rb` adds one: `container_added`, with the Group or ComponentInstance added to
 any container, observed through one EntitiesObserver per container and found again after each commit,
 Undo, Redo and activation. Zones' name state still keeps its own container observers (issue #143).
@@ -150,13 +151,15 @@ contract; structured failures must work with the panel closed. Any later excepti
 operation requires an explicit accepted contract in its owning plan.
 
 `onPreSaveModel` is the bounded synchronous exception. SketchUp provides no cancellable save
-boundary, so Space protection must be restored before save returns or the file can persist an
-unprotected structural state. Inside that callback the host reports an empty `active_path` while
-the edit context is still open, and restores the context after the save. The reconciler therefore
-protects the Volume it last saw on the path and never changes the path inside the callback: a path
-set there makes SketchUp serialize the reopened context in world coordinates. The boundary closes
-in `onSaveModel`, on the restored path. The offline stub refuses a path change inside
-`onPreSaveModel`. On exit, the host can deliver `onTransactionCommit` before `onActivePathChanged`
+boundary, and an autosave fires the same callbacks, so a save must leave the user where they are.
+Inside that callback the host reports an empty `active_path` while the edit context is still open,
+and restores the context after the save unless a Group on the path is locked. The reconciler settles
+pending protection of Volumes already left, so the file holds them protected, and leaves the open
+Volume unlocked and the path alone: a path set there makes SketchUp serialize the reopened context in
+world coordinates. A file saved inside a Volume therefore stores it unlocked, and the reconciler
+protects every unlocked Volume off the path when the Model's session is created or its file opened
+(`model_opened`: the host can create the session before the file has loaded). The offline stub
+refuses a path change inside `onPreSaveModel`. On exit, the host can deliver `onTransactionCommit` before `onActivePathChanged`
 with the path already outside the Volume; either callback must queue the exit protection.
 
 ### Treat the active editing path as data
@@ -683,7 +686,7 @@ the exception.
 | Nested output is translated or offset twice | Parent and child transforms were both applied at more than one layer | Trace one root-to-leaf path and prove each transform is accumulated once |
 | The runtime refuses to start (`RuntimeManifest::Invalid` naming a file) or `make ci` fails `runtime-check` after an `html/` or `python/` edit | Manifest hashes no longer match the shipped assets | `make panel-manifest`, then `make runtime-manifest`, then `make ci` |
 | Offline tests pass but the feature fails in SketchUp | Stub behavior, host lifecycle, CEF or Pyodide differs from the offline environment | Run the numbered real-host gate in a fresh process through the bridge |
-| Every Volume reads `volume_moved` after reopening a saved file | The active path was changed inside `onPreSaveModel` | Protect in pre-save only; close the boundary in `onSaveModel` |
+| Every Volume reads `volume_moved` after reopening a saved file | The active path was changed inside `onPreSaveModel` | Never change the path or lock the open Volume during a save |
 | A Volume stays unlocked after Escape | The commit callback arrived before the path-change callback and the baseline was rebaselined to nil | Queue the exit protection from the baseline in both callbacks |
 | A panel row click does nothing from inside a Volume | SketchUp cannot select outside the open context | Close and protect the current Volume before selecting |
 | The bridge `eval` returns but the deferred work has not run | UI timers cannot fire while the eval blocks the main thread | Read state in a later call |

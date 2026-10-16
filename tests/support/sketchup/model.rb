@@ -190,7 +190,8 @@ module Sketchup
       @path = path unless path.nil? || path.empty?
       fire_pre_save
       Sketchup.store_model(@path, self)
-      @modified = false
+      # A save inside an edit context leaves the Model modified (host evidence 2026-10-16).
+      @modified = !Array(@active_path).empty?
       @observers.each do |observer|
         observer.onSaveModel(self) if observer.respond_to?(:onSaveModel)
       end
@@ -198,9 +199,10 @@ module Sketchup
     end
 
     # SketchUp 2026.1 reports an empty active path inside onPreSaveModel and restores the edit
-    # context afterwards; neither change fires onActivePathChanged. An observer that sets a path
-    # inside the callback makes SketchUp save the reopened context in world coordinates, so the
-    # stub refuses it (host evidence 2026-09-06).
+    # context afterwards; neither change fires onActivePathChanged. It does not restore a context with
+    # a locked Group on its path: the Model is left at the root (host evidence 2026-10-16). An observer
+    # that sets a path inside the callback makes SketchUp save the reopened context in world
+    # coordinates, so the stub refuses it (host evidence 2026-09-06).
     def fire_pre_save
       restored = @active_path
       @active_path = nil
@@ -211,7 +213,7 @@ module Sketchup
         raise "active_path changed inside onPreSaveModel; SketchUp saves the reopened context in world coordinates"
       end
 
-      @active_path = restored
+      @active_path = Array(restored).any?(&:locked?) ? nil : restored
     end
 
     def modified?

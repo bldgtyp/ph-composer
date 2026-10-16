@@ -212,8 +212,10 @@ by Space id (Q13). `quantity` is always 1, because every Space is drawn (zones p
 - A non-horizontal face may be marked. Its area is the projected horizontal area, with an info
   finding (Q14). The projection plane is horizontal at the face's mean z, the predecessor's
   flatten rule. Metrics, the preview prism's base and the export all use that one projection.
-- Volume protection, exit protection, the pre-save rule and the recovery states are the
-  predecessor's, unchanged. Their evidence is its B1 and B2 acceptance records.
+- Volume protection, exit protection and the recovery states are the predecessor's, unchanged. Their
+  evidence is its B1 and B2 acceptance records. The save rule is not (D3a-19, 2026-10-16): a save or
+  autosave leaves the user in the Volume they are editing, unlocked, and a Volume saved that way is
+  protected when the Model is next opened.
 
 ### Weighted area (iCFA)
 

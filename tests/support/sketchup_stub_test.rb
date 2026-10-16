@@ -250,8 +250,22 @@ class SketchupStubTest < PhComposerTestCase
 
     Dir.mktmpdir("ph-composer-stub-save") { |directory| model.save(File.join(directory, "m.skp")) }
 
-    assert_equal [[:pre, nil], [:post, false]], observer.log
+    assert_equal [[:pre, nil], [:post, true]], observer.log, "a save inside a context leaves the Model modified"
     assert_equal [group], model.active_path
+  end
+
+  def test_save_leaves_the_root_when_a_group_on_the_path_is_locked
+    observer = SaveRecorder.new
+    group = Sketchup::Group.new(5)
+    model = Sketchup::Model.new({}, :entities => Sketchup::Entities.new([group]))
+    model.add_observer(observer)
+    model.active_path = [group]
+    group.locked = true
+
+    Dir.mktmpdir("ph-composer-stub-save") { |directory| model.save(File.join(directory, "m.skp")) }
+
+    assert_equal [[:pre, nil], [:post, false]], observer.log
+    assert_nil model.active_path
   end
 
   def test_save_refuses_a_pre_save_observer_that_changes_the_active_path

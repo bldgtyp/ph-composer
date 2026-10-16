@@ -10,8 +10,10 @@ module PhComposer
         Sessions.for(model)
       end
 
+      # The host can create a Model's session before its file has loaded, so an opened file is reported
+      # to the session whether it is new or not.
       def onOpenModel(model)
-        Sessions.for(model)
+        Sessions.for(model).host_event(:model_opened)
       end
 
       def onActivateModel(model)

@@ -18,6 +18,7 @@ module PhComposer
       def initialize(session)
         @session = session
         @baseline = nil
+        @open_path = []
         @exposed = []
         @saving = false
         @work = DeferredWork.new { |jobs| jobs.each_value { |volume| protect_unless_open(volume) } }
@@ -30,6 +31,7 @@ module PhComposer
       def observed
         return if @saving
 
+        @open_path = path
         current, = Protection.open_volume(path)
         @exposed << current if current && @exposed.none? { |volume| volume.equal?(current) }
         prior = @baseline
@@ -52,35 +54,33 @@ module PhComposer
         end
       end
 
-      # Inside onPreSaveModel the host reports an empty path while the Volume is still open, and a path
-      # change there makes SketchUp save the reopened context in world coordinates. So pending protection
-      # runs and the Volume last seen is protected synchronously, and the path is left alone. Those writes
-      # commit, and their callbacks read the save's empty path, so they are not observed: the baseline is
-      # the Volume still open on screen.
+      # A save, an autosave included, leaves the user where they are (D3a-19): pending protection of
+      # Volumes already left runs, so the file holds them protected, and the Volume still open is left
+      # unlocked, so the host restores the context after the save. Inside onPreSaveModel the host reports
+      # an empty path, so the settled writes' callbacks are not observed, and a job still queued for the
+      # Volume open on screen (left and entered again, or queued at open) cannot tell it is open: settling
+      # skips every Volume on the path last observed. A Volume saved open is protected when the Model is
+      # next opened (`opened`).
       def pre_save
-        volume = @baseline
         @saving = true
         @work.settle
-        if volume && Protection.valid?(volume)
-          Protection.protect(model, volume)
-          protected(volume)
-        end
       rescue StandardError => error
         Diagnostics.exception("space_pre_save", error)
-        @session.notice("Save could not protect the open Volume.", :tone => :error)
+        @session.notice("Save could not protect a Volume.", :tone => :error)
       ensure
         @saving = false
       end
 
-      # After the save the host restores the context; close the Volume the save protected.
-      def post_save
-        volume, index = Protection.open_volume(path)
-        return unless volume
+      # A Model opened with Volumes unlocked, as a save inside a Volume leaves them: each one off the path is
+      # queued for protection.
+      def opened
+        Occurrences.scan(model, :strict => false).then { |scan| scan.volumes + scan.orphan_volumes }.each do |found|
+          volume = found.entity
+          next unless Protection.valid?(volume) && !volume.locked? && path.none? { |entity| entity.equal?(volume) }
 
-        EditContext.enter(model, path[0...index])
-      rescue StandardError => error
-        Diagnostics.exception("space_post_save", error)
-        @session.notice("The saved Volume could not be closed.", :tone => :error)
+          @work.queue(volume.persistent_id, volume)
+        end
+        observed
       end
 
       # Spaces protected `volume` itself, on a pass, at a save or at the EditContext boundary.
@@ -99,6 +99,7 @@ module PhComposer
       def detach
         @work.detach
         @baseline = nil
+        @open_path = []
         @exposed = []
       end
 
@@ -112,9 +113,10 @@ module PhComposer
         Array(model.active_path)
       end
 
-      # The path is read again right before the write: the user may have entered the Volume again.
+      # The path is read again right before the write: the user may have entered the Volume again. During a
+      # save the host reports an empty path, so the path last observed is read instead.
       def protect_unless_open(volume)
-        return if path.any? { |entity| entity.equal?(volume) }
+        return if (@saving ? @open_path : path).any? { |entity| entity.equal?(volume) }
 
         Protection.protect(model, volume)
         protected(volume)

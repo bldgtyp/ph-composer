@@ -73,14 +73,16 @@ module PhComposer
 
       # The reconciler hears every event that can move the path or the Volume on it.
       def subscribe(feature)
-        %i[session_created transaction_committed active_path_changed].each do |kind|
+        %i[session_created model_opened].each do |kind|
+          feature.on_host_event(kind) { |session| Reconciler.for(session).opened }
+        end
+        %i[transaction_committed active_path_changed].each do |kind|
           feature.on_host_event(kind) { |session| Reconciler.for(session).observed }
         end
         %i[transaction_undone transaction_redone].each do |kind|
           feature.on_host_event(kind) { |session| Reconciler.for(session).reverted }
         end
         feature.on_host_event(:pre_save) { |session| Reconciler.for(session).pre_save }
-        feature.on_host_event(:post_save) { |session| Reconciler.for(session).post_save }
         EditContext.boundary(:spaces) do |model, from, to|
           volume = Protection.leaving(model, from, to)
           Reconciler.for(Sessions.for(model)).protected(volume) if volume
