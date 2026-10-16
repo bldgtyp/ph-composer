@@ -147,10 +147,12 @@ module PhComposer
       # Status carries counts and diagnostics. Canonical bytes are retrieved explicitly from files,
       # never serialized into every status response or retained once the pair has committed.
       # A blocked run writes no pair, so its report, labelled as from a run that wrote no model, travels in the
-      # refused outcome for the panel to show (context/CONTRACTS.md, "Translation sections and artifacts"). A
-      # report that cannot render leaves the refusal as it was rather than turning it into a failure.
+      # refused outcome for the panel to show, rendered without the canonical model so no HBJSON travels
+      # with it (context/CONTRACTS.md, "Translation sections and artifacts"). A report that cannot render
+      # leaves the refusal as it was rather than turning it into a failure.
       def blocked_report(result)
-        { "report_html" => Report.render(result, :display_units => @units) }
+        shown = compact_result(result).tap { |document| document.delete("canonical_model") }
+        { "report_html" => Report.render(shown, :display_units => @units, :published => false) }
       rescue StandardError => error
         Diagnostics.exception("export_blocked_report", error)
         {}

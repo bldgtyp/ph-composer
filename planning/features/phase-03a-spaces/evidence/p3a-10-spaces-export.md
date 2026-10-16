@@ -101,3 +101,12 @@ Tests: `tests/spaces_export_test.rb` (the schedule in SI and IP with Zone and Bu
 off-to-the-side line; the preflight finding and the record flag), `tests/python/test_space_sections.py`
 (the schedule rows), `tests/export_tasks_test.rb` (a blocked run carries its labelled report and writes
 nothing) and `tests/panel_app_test.js` (the collapsed report, kept across a repaint).
+
+### Review of PR #166
+
+gpt-6-astra, cycle 1: one P1 and one P2, each reproduced by a test in `tests/export_tasks_test.rb` that failed
+before its fix. A blocked run with partial canonical output embedded the HBJSON in its report's result
+element, so the bytes travelled through `report_html` though `value.result` left them out; the report is now
+rendered without the canonical model. A result marked publishable but holding no model, which the task
+refuses, rendered as "Export complete"; `Report.render` now takes whether the run published (`published:`),
+by default publishable and holding a canonical model, and the task passes false for a refusal.

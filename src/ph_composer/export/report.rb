@@ -23,12 +23,14 @@ module PhComposer
 
       # `result` is the parsed result document; `notes` are the collection's findings about what was
       # left out of the extraction. Raises CodedError `export.privacy_undeclared` before rendering
-      # anything if the result carries a field no declaration names. A result that is not publishable
-      # renders the same sections, titled as not created and opening with BLOCKED_LINE; the rule names no
-      # section.
-      def render(result, notes: [], display_units: "SI", registry: Registry.current)
+      # anything if the result carries a field no declaration names. `published` says whether the run wrote
+      # its pair; by default, whether the result is publishable and carries a canonical model. A run that did
+      # not publish renders the same sections, titled as not created and opening with BLOCKED_LINE; the rule
+      # names no section.
+      def render(result, notes: [], display_units: "SI", registry: Registry.current, published: nil)
         Privacy.validate!(result, registry)
-        blocked = !result.dig("summary", "publishable")
+        published = result.dig("summary", "publishable") && !result["canonical_model"].nil? if published.nil?
+        blocked = !published
         title = STATE_LABELS.fetch(blocked ? "failed" : result.fetch("state"))
         sections = [
           summary(result.fetch("summary")),
