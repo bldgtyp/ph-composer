@@ -1,7 +1,7 @@
 # P3a-12 evidence: Spaces acceptance and handoff
 
 DATE: 2026-10-16
-STATUS: Integrated host run done, no ledger results recorded; offline gates pass. Ed's four answers recorded 2026-10-16; the reruns, the D3a-19 spike and the footprint change are next
+STATUS: Integrated host run done; superseded for the ledger by the 2026-10-16 acceptance rerun ([rerun evidence](../../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)), which records S01 to S11 and the 31 screened earlier cases. D3a-19 merged (#173) and the footprint change merged (#172)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

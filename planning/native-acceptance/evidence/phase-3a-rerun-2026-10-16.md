@@ -336,3 +336,72 @@ fresh copy of the blank template.
     with no write, and the reopened normal panel renders.
   - Separately: native Make Component on a Zone Group empties the Zones tab and makes `zones.all` refuse
     ([#182](https://github.com/bldgtyp/ph-composer/issues/182)). One native Undo restores it.
+
+## S01 to S11, Spaces
+
+S01 and S02 each ran on a fresh copy of `envelope/reference-assigned.skp` (`147a5638`). S03, S04 and S07 to S11
+ran as one chain on that fixture, rebuilt with the P3a-12 scripts (`build2.rb`; `build3.rb` adapted to the fresh
+ids). The chain fixture `built.skp` is `84b50512`. S05 and S06 ran in a separate synthetic launch (development
+scripts loaded), closed by the normal restoration below. Raw files are in `_private/host/acceptance-3a/S01` to
+`S12`, `B8b` and `RESTORE`.
+
+- S01: a Zone-stamped Group inside west is absent from the Face list, Suggest, Solve and the export preflight; the
+  reads equal the baseline in every field but the revision. A native Classify click on its Face refuses, and so
+  does a native Shift-click (offline last time). Removing the stamp returns the Face.
+- S02: `SpacesWalkthrough.run` passes with the panel never opened. A native Undo walk of all 19 steps shows each
+  of the nine product writes as one step, and 19 Redos restore the final state exactly. A native copy is now made
+  independent in its Paste step (D3a-14); the earlier run read two ambiguous occurrences. Edit Group keeps every
+  id. Cut and paste keeps ids. Airflow states and Volume `user_data` survive a fresh reopen, and two Models stay
+  isolated.
+- S03, post-D3a-19:
+  - Leaving a Volume by a click commits outside it, then changes the path, then protects it in one pass. Escape
+    gives Undo Close, whose Undo reopens the Volume unprotected and whose Redo protects it.
+  - A direct switch between Volumes protects the first. A Rectangle at the Space root is one Undo step. A Move
+    of an unprotected Volume raises both findings, and Restore position clears them.
+  - Native Cmd+S inside a Volume leaves the user there, unlocked and modified, with nothing written by the
+    extension. A 1-minute autosave behaves the same and writes to `working/`. A fresh open protects the Volume
+    that was saved open.
+  - Two Models stay isolated. The autosave interval is back at 5.
+- S04: the copy, `5x` array, cut and paste, Volume and Floor Segment copies, the nested paste, Move Space to Zone
+  with its refusal, and the D3a-13 Zone copy with a Window Unit all ran natively. Undo and Redo are exact and a
+  reopen and export reload match. On a scratch copy: the rotated wrapper, a Space inside a component placed twice
+  (draw-directly finding, `target.shared_definition`), `user_data` through Make independent, and Restore Zone
+  around the moved Space, then two save and reopen cycles.
+- S07: rows, in-place edits with refusals and the stale draft, a range paste as one Undo Edit Spaces, airflow
+  states through reopen, Zone sums with the imbalance marker and the inheriting dash, the selection bar, Select by
+  (D3a-18), Locate, Colour by weighting factor from its header, IP and back. Cmd+Z in the panel does nothing
+  (#168). The 300-Space timing is still #154.
+- S08: Mark floor from the column menu, with a click and a held drag (native mouse down and up; probe 258 held,
+  256 on release), each one Undo step. The Create Space offer, refusals, Escape mid-drag, the glyph stop and one
+  tool at a time all hold. Create Space from the context menu makes 104 Spare in one step, with exact Undo and
+  Redo. The review of a three-Face selection leaves out the classified wall. A Model switch keeps the tool per
+  Model.
+- S09: the four modes and legends; prisms (103's 5 m Volume, 201's projected base); labels, toggles and selection
+  totals in SI and IP with no mode active; a hidden tag. Digests are unchanged through the modes and a save, and
+  By Space colours are stable across a reopen. Three of four Spaces share one By Space colour
+  ([#183](https://github.com/bldgtyp/ph-composer/issues/183)).
+- S11: the native Height from solid confirmation, Set height to 3.0 m, and the owed native Undo and Redo (one
+  step). Refusals through the public preview. The native Extensions entry does nothing, silently, with a wrong
+  selection ([#184](https://github.com/bldgtyp/ph-composer/issues/184)).
+- S10: a fresh normal process exports natively and through an approved location with the same ids. The reload
+  gives iCFA 32.0 m2 and net volume 95.6 m3, airflows in m3/s, 201 with none, and `user_data` on the three
+  objects. The preflight and report carry the expected lines. Both blocking rows block with no pair written. An
+  export from inside an open Volume leaves it as it was, and the reopen export has identical ids.
+- S05, synthetic composition: By height and Footprints through the public contract, with a hidden ancestor still
+  counted. Draw cost on the 1,012-triangle scene: fill p95 adds 12.87 ms, inside 16 ms. Operation marks read as
+  the exterior elevation. Digests are unchanged.
+- S06, synthetic composition: the Areas view; switching keeps the filter, expanded and checked Zones and the
+  Locate outline, and sends nothing. Classify stops on a switch. The view returns after reopening the panel and in
+  a fresh process. A focused filter field blocks a view switch
+  ([#185](https://github.com/bldgtyp/ph-composer/issues/185)).
+
+## Normal restoration
+
+Fresh process (pid 72234) on a clean copy of `built.skp`, with no development constant, script or extra feature
+loaded:
+- The installed package matches `dist/ph_composer.rbz` (`28bac2c8`, 454 entries).
+- The library setup equals the pre-run setup.
+- The 15 bridge-approved locations added during the run are revoked, leaving the two from 2026-10-13.
+- Units are SI, the autosave interval is 5 and the Zones view preference is Faces.
+- The Model opens unmodified at revision 1. Reads complete, and a stale edit refuses `target.changed` with
+  nothing written.

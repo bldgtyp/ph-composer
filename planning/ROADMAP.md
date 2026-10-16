@@ -111,7 +111,7 @@ library file. METr conversion stays deferred.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | In progress; P3a-01 to P3a-11 merged; P3a-12's integrated host run ran 2026-10-16; closure waits on four calls for Ed | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
+| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | In progress; P3a-01 to P3a-11 merged; the 2026-10-16 acceptance rerun passes S01 to S11 with ledger results; closure waits on the #179 fix and the recheck of A09 and UXR-PAINT | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
 | 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09, none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
 
 Ed split Phase 3 on 2026-10-03 into two sub-phases, each one packet planned and worked on its own:
