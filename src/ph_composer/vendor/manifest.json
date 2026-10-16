@@ -266,9 +266,9 @@
       "sha256": "260284f4f31732e0639dda8579367b93bd13eaf7caa32dc984215663542b9f83"
     },
     "html/features/zones/zones.css": {
-      "bytes": 6148,
+      "bytes": 6187,
       "mime": "text/css; charset=utf-8",
-      "sha256": "dbdaa87d8bd12441add41cfb99c6e90fb8738b65dd449fd7ea23e2ca70a1a0bc"
+      "sha256": "a7c49c44eb3f342803d4f68f381ccf403272f83f75442fe7b1e01fdca5e1b156"
     },
     "html/fields.js": {
       "bytes": 1833,

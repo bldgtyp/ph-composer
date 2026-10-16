@@ -116,6 +116,14 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await page.locator(".phc-column-filter-value:visible input:checked").count(), 4,
       "Clear filter restores all values after an empty checklist");
     await close();
+    // The Faces view keeps its table in its own scroll area at a narrow panel; the tab never scrolls sideways (#179).
+    await page.setViewportSize({ width: 365, height: 900 });
+    assert(await page.evaluate(() => {
+      const panes = document.querySelector(".panel-panes");
+      const mount = document.querySelector(".phc-zone-view:not([hidden]) .phc-table-mount");
+      return panes.scrollWidth <= panes.clientWidth && mount.scrollWidth > mount.clientWidth;
+    }), "the Faces table scrolls in its mount, not the tab, at 365");
+    await page.screenshot({ path: path.join(output, "faces-365.png") });
     for (const width of [1280, 420, 280]) {
       await page.setViewportSize({ width, height: 900 });
       await open("face_type");

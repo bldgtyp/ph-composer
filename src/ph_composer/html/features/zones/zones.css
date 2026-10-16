@@ -1,6 +1,6 @@
 /* The Overview screen: its heading row and the tree table's mounts. The table
    itself is styled by table.css, which names no screen. */
-.phc-overview { display: grid; gap: 12px; padding-bottom: 24px; }
+.phc-overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-bottom: 24px; }
 /* The control row spans the work surface, so the pane's tools sit at its far end. */
 .phc-overview > .phc-inventory-controls { margin-right: 0; }
 /* The shown view's tools in the controls row: its help, then what it binds there (Spaces' range-edit tools). */
