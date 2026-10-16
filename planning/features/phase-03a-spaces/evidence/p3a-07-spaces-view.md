@@ -149,3 +149,23 @@ holds while a bar draft is open; a corrected entry keeps its first unit; every c
 clears it; the hand-over waits for the destination to consume; the bar shows Cancel beside a held entry. These
 were gated by `make ci` only, at the review cap.
 
+## Slice D: preview fixtures, the unit-switch measurement and docs
+
+The preview host now publishes the fixture's `spaces` section (step 15): `?fixture=spaces` is the reference
+model on the authoring Zones, `spacesempty` an empty Model, `spaceslarge` 300 Spaces.
+`tools/ui-preview/spaces_checks.cjs` checks the reference model's rows, Zone marker, inheriting airflow, layout
+at 1280, 900 and 420 px and the selection bar; the empty Model's Zones alone; and measures the unit switch on
+300 Spaces (step 14): median 393 ms with the Zones open and 748 ms with every row open, desktop Chrome on an
+Apple M1 Max. The units STATUS records the measurement and the decision not to optimize in this stage, with
+issue [#154](https://github.com/bldgtyp/ph-composer/issues/154) carrying the investigation. The browser checks
+run in current Chrome, not Chromium 88; the host gate covers that.
+
+Docs (step 16): `docs/PRODUCT.md`'s Spaces section describes the Spaces view as built (no Level rail, no
+separate balance view, column widths for the session), and `context/UBIQUITOUS_LANGUAGE.md` replaces the
+Airflow balance view with the Zone rows' airflow balance and the iCFA factor with the weighting factor
+(D3a-17).
+
+## Host
+
+Not run. The S07 gate is batched with the S03 to S06 native rows.
+

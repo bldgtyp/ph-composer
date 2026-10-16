@@ -811,6 +811,86 @@
     entry.values = { name: entry.values.name, ground_depth_mm: entry.values.ground_depth_mm,
       building_segment_id: "bsg_house", level_id: entry.values.level === "Ground" ? "lvl_ground" : "lvl_upper" };
   });
+  /* ------------------------------------------------------------ Spaces: the `spaces` section the host reads */
+
+  // One Floor Segment, Volume or Space row as the Spaces read publishes it, with its metrics already summed.
+  function spaceSegment(path, area, factor) {
+    return { id: "sfs_" + path.join("_"), weighting_band: String(factor), findings: [],
+      values: { display_name: "Segment 1", weighting_factor: factor, net_area_factor: 1 },
+      reference: { floor_segment_id: "sfs_" + path.join("_"), entity_path: path },
+      metrics: { floor_area_m2: area, weighted_area_m2: area * factor, net_area_m2: area, horizontal: true } };
+  }
+  function spaceVolume(path, number, height, segments) {
+    var area = segments.reduce(function (sum, item) { return sum + item.metrics.floor_area_m2; }, 0);
+    var weighted = segments.reduce(function (sum, item) { return sum + item.metrics.weighted_area_m2; }, 0);
+    return { id: "svl_" + path.join("_"), findings: [], floor_segments: segments, nested: false, open: false,
+      protected: true, moved: false, reference: { volume_id: "svl_" + path.join("_"), entity_path: path },
+      values: { number: number, display_name: "Volume " + number, avg_ceiling_height_m: height },
+      metrics: { floor_area_m2: area, weighted_area_m2: weighted, net_area_m2: area, net_volume_m3: area * height } };
+  }
+  function spaceRow(path, zoneId, number, name, airflows, volumes) {
+    var metrics = { floor_area_m2: 0, weighted_area_m2: 0, net_area_m2: 0, net_volume_m3: 0 }, heighted = 0;
+    volumes.forEach(function (item) {
+      ["floor_area_m2", "weighted_area_m2", "net_area_m2", "net_volume_m3"].forEach(function (key) {
+        metrics[key] += item.metrics[key];
+      });
+      heighted += item.metrics.floor_area_m2 * item.values.avg_ceiling_height_m;
+    });
+    metrics.average_height_m = metrics.floor_area_m2 ? heighted / metrics.floor_area_m2 : null;
+    var mode = Object.keys(airflows).length ? "user_specified" : "inheriting", flows = {};
+    ["v_sup_m3h", "v_eta_m3h", "v_tran_m3h"].forEach(function (key) {
+      flows[key] = mode === "inheriting" ? null : airflows[key] || 0;
+    });
+    return { id: "spc_" + number, state: "found", nested: false, findings: [], airflow_mode: mode, airflows: flows,
+      values: Object.assign({ name: name, number: number }, airflows), volumes: volumes, metrics: metrics,
+      reference: { space_id: "spc_" + number, entity_path: path },
+      zone: zoneId && { zone_id: zoneId, zone_path: zonePath(zoneId) } };
+  }
+  // The section: each Zone's sums over its Spaces, as the host computes them.
+  function spacesSection(spaces) {
+    var zones = AUTHORING.zones.map(function (zone) {
+      var own = spaces.filter(function (space) { return space.zone && space.zone.zone_id === zone.id; });
+      var inheriting = own.filter(function (space) { return space.airflow_mode === "inheriting"; }).length;
+      var flows = {};
+      ["v_sup_m3h", "v_eta_m3h", "v_tran_m3h"].forEach(function (key) {
+        flows[key] = inheriting ? null : own.reduce(function (sum, space) { return sum + space.airflows[key]; }, 0);
+      });
+      var larger = Math.max(flows.v_sup_m3h || 0, flows.v_eta_m3h || 0);
+      var imbalanced = !inheriting && larger > 0 && Math.abs(flows.v_sup_m3h - flows.v_eta_m3h) > 0.1 * larger;
+      function sum(key) { return own.reduce(function (total, space) { return total + space.metrics[key]; }, 0); }
+      return { zone_id: zone.id, zone_path: zone.reference.zone_path, name: zone.values.name, space_count: own.length,
+        floor_area_m2: sum("floor_area_m2"), weighted_area_m2: sum("weighted_area_m2"),
+        net_volume_m3: sum("net_volume_m3"), airflows: flows, inheriting_count: inheriting, imbalanced: imbalanced,
+        findings: imbalanced ? [{ code: "space.airflow_imbalance", blocks_export: false, message: "Supply and " +
+          "extract differ by more than 10 percent of the larger sum. Review the airflows." }] : [] };
+    });
+    return { spaces: spaces, zones: zones, findings: [], units: { area: "m2", height: "m", volume: "m3",
+      airflow: "m3/h" } };
+  }
+  var LIVING = "zon_Aa11Bb22Cc33", ATTIC = "zon_Dd44Ee55Ff66";
+  // The synthetic reference model's four Spaces (planning ACCEPTANCE): an imbalanced Zone and one inheriting.
+  var REFERENCE_SPACES = spacesSection([
+    spaceRow([100, 501], LIVING, "101", "Living", { v_sup_m3h: 60 },
+      [spaceVolume([100, 501, 1], 1, 2.5, [spaceSegment([100, 501, 1, 1], 12, 1)])]),
+    spaceRow([100, 502], LIVING, "102", "Bath", { v_eta_m3h: 40 },
+      [spaceVolume([100, 502, 1], 1, 2.4, [spaceSegment([100, 502, 1, 1], 4, 1)])]),
+    spaceRow([100, 503], LIVING, "103", "Hall", { v_tran_m3h: 20 },
+      [spaceVolume([100, 503, 1], 1, 2.5, [spaceSegment([100, 503, 1, 1], 4, 1)]),
+        spaceVolume([100, 503, 2], 2, 5, [spaceSegment([100, 503, 2, 1], 2, 0)])]),
+    spaceRow([200, 601], ATTIC, "201", "Loft", {},
+      [spaceVolume([200, 601, 1], 1, 3, [spaceSegment([200, 601, 1, 1], 12, 1)])])]);
+  // 300 Spaces, 150 per Zone, for the unit-switch measurement (units U1-F1).
+  var LARGE_SPACES = spacesSection(Array.apply(null, { length: 300 }).map(function (unused, index) {
+    var zoneId = index < 150 ? LIVING : ATTIC, root = index < 150 ? 100 : 200, id = 1000 + index;
+    return spaceRow([root, id], zoneId, String(index + 1), "Room " + (index + 1),
+      index % 3 ? { v_sup_m3h: 20 + index % 7, v_eta_m3h: 18 + index % 5 } : {},
+      [spaceVolume([root, id, 1], 1, 2.4 + (index % 4) / 10, [spaceSegment([root, id, 1, 1], 8 + index % 9,
+        index % 5 ? 1 : 0.5)])]);
+  }));
+  FIXTURES.spaces = Object.assign(JSON.parse(JSON.stringify(FIXTURES.authoring)), { spaces: REFERENCE_SPACES });
+  FIXTURES.spacesempty = Object.assign(JSON.parse(JSON.stringify(FIXTURES.authoring)), { spaces: spacesSection([]) });
+  FIXTURES.spaceslarge = Object.assign(JSON.parse(JSON.stringify(FIXTURES.authoring)), { spaces: LARGE_SPACES });
+
   global.PhComposerPreviewFixtures = {
     names: Object.keys(FIXTURES),
     fromQuery: function (search) {

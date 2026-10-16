@@ -124,15 +124,15 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 | Space | One unique SketchUp Group inside a Zone, containing one or more Volumes and Space-level data: iCFA, ventilation airflows, occupancy. Maps to a honeybee-ph `Space` on its Zone's Room. Do not call it Room in product copy, and do not confuse it with honeybee's Room, which is a Zone |
 | Volume | A protected structural Group directly inside a Space, holding one logical Space Floor |
 | Space Floor | Logical grouping of Floor Segments in a Volume; not another SketchUp Group |
-| Floor Segment | A face inside a Volume that the user has marked as floor area, carrying PH-Composer identity, an iCFA factor and a net area factor. In the predecessor this identity sat on a designPH TFA face; here PH-Composer owns the classification. Maps to honeybee-ph `SpaceFloorSegment` |
-| iCFA factor | Whether a Floor Segment counts toward iCFA: Counts or Does not count on screen, stored as 1.0 or 0 in a float field. honeybee-ph calls it `weighting_factor`. What counts is the user's to decide from the Phius rule; nothing enforces it |
+| Floor Segment | A face inside a Volume that the user has marked as floor area, carrying PH-Composer identity, a weighting factor and a net area factor. In the predecessor this identity sat on a designPH TFA face; here PH-Composer owns the classification. Maps to honeybee-ph `SpaceFloorSegment` |
+| Weighting factor | The share of a Floor Segment's area that counts toward iCFA, a number from 0 to 1 (honeybee-ph's `weighting_factor`): 1 counts it whole, 0 not at all. What counts is the user's to decide from the Phius rule; nothing enforces it |
 | Net area factor | The share of a Floor Segment's area that counts toward net volume, default 1 |
 | Average clear ceiling height | The one height a Volume carries. Net volume is net floor area times this height, as honeybee-ph's `SpaceVolume` computes it |
 | Volume preview | The overlay extrusion of a Volume's Floor Segments by its height. Drawn, never modeled |
 | Height from solid | The helper that sets a Volume's height from a closed group the user drew: the group's volume divided by the Volume's net floor area |
 | Space label | Viewport text at a Space's reference point: number, name, iCFA, net volume, airflows |
 | Selection totals | The HUD readout of summed iCFA, net volume and airflows for the selected Spaces |
-| Airflow balance view | The grouped totals table of supply, extract and transfer airflows with an imbalance warning label, grouped by Zone until ventilators exist and by ventilator with Zones underneath afterwards |
+| Airflow balance | Each Zone row of the Spaces view: its Spaces' supply, extract and transfer sums, with a marker where supply and extract differ by more than 10 percent of the larger. A Zone holding a Space that inherits its airflow shows a dash. There is no separate balance view; balance by ventilator belongs with the equipment packet |
 | Move Space to Zone | The action that relocates one whole Space group into another Zone group, keeping world position and records |
 | Mark floor | The Spaces tool that marks a face inside a Volume as a Floor Segment and sets whether it counts toward iCFA. A separate tool beside Classify, not a mode of it |
 | Make independent | The repair for a copied Space, Volume or Floor Segment: the copy and everything inside it receive new identities, as one Undo step. Until it runs, the shared identity blocks export |

@@ -190,8 +190,19 @@ and glazing records, installation photos and calculation reports on Psi-Install 
 Spaces contain protected Volumes, and Volumes contain Floor Segments the user has classified as
 iCFA. Creating a floor inside a Volume registers it; creating one at a Space root creates the next
 Volume. Context changes reconcile and protect the structure. Native Save and Undo retain the
-measured host contracts. The Spaces table has a filterable Level rail, saved column layout, range
-edits and Locate.
+measured host contracts.
+
+Spaces are read in the Spaces view of the Zones tab. Beneath each Zone are its Spaces, beneath each
+Space its Volumes, and beneath each Volume its Floor Segments, with their floor area, weighting
+factor, weighted area (iCFA), height, net volume and airflows. A Space outside every Zone is listed
+after the Zones. Each Zone row shows its Spaces' sums and marks a Zone whose supply and extract
+differ by more than 10 percent of the larger; while any Space in a Zone inherits its airflow from the
+Zone, the Zone shows a dash instead. Cells edit in place, and a range fill or a paste from a
+spreadsheet is one Undo step. Checked rows edit together in the selection bar, and checked Zones
+stay checked when switching to the Faces view. Each row offers Locate and, where they apply, Open,
+Close, Enter, Delete, Remove Volume, Move to Zone and the repair its problem names. The Weighting
+factor column filters the table and colours the Model by factor. There is no Level rail and no
+separate balance view; column widths last for the session.
 
 ## Handoff
 
