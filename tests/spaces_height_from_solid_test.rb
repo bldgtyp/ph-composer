@@ -121,4 +121,14 @@ class SpacesHeightFromSolidTest < PhComposerTestCase
     assert_equal "completed", menu::Client.new(@session).run.fetch("status")
     assert_in_delta 4.0, loft_height, 1e-9
   end
+
+  def test_the_selected_solid_is_the_one_container_that_is_not_a_space_or_volume
+    path = solid(36.0)
+    @model.active_path = [@model.entities.to_a.last, loft]
+    @model.selection.add(loft.entities.to_a.first)
+    read = -> { API.query(:context => @context, :name => "ph_composer.spaces.selected_solid") }
+    assert_equal "selection.invalid", read.call.fetch("code"), "a Volume alone is no solid"
+    @model.selection.add(loft.entities.to_a.last)
+    assert_equal path, read.call.dig("value", "solid")
+  end
 end

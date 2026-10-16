@@ -21,6 +21,13 @@ module PhComposer
       module_function
 
       def install(feature)
+        feature.query("#{FEATURE_ID}.selected_solid",
+                      :description => "The one selected Group or component that is not a Space or a Volume, as the " \
+                                      "solid Height from solid would measure.",
+                      :refuses => %w[selection.invalid], :params => Shapes::NONE,
+                      :result => Shapes.object({ "solid" => PATH }), :examples => [{}]) do |request|
+          HeightFromSolid.selected_solid(request)
+        end
         feature.query("#{FEATURE_ID}.volumes.height_from_solid_preview",
                       :description => "The height a solid would give a Volume: the solid's volume over the " \
                                       "Volume's net floor area. Writes nothing.",

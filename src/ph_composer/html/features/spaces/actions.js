@@ -7,7 +7,8 @@
  * the selection, never a record); entering a protected Volume unprotects it first and opens it only once that
  * has completed. The open row is the one on the snapshot's edit path, never the selection or the expansion.
  */
-PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"], function (panel, requests, ui) {
+PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace", "units", "unit_preferences", "fields"],
+function (panel, requests, ui, units, preferences, fields) {
   "use strict";
   var PREFIX = "ph_composer.spaces";
 
@@ -29,6 +30,8 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     }, "spaces-actions");
     this.context = requests.channel(host.session, function (type, payload) { send(type, payload); },
       "spaces-context", "view.invoke");
+    this.reads = requests.channel(host.session, function (type, payload) { send(type, payload); },
+      "spaces-reads", "query.invoke");
     function send(type, payload) { self.host.send(type, payload); }
   }
 
@@ -37,6 +40,7 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     this.editPath = state.edit_path || [];
     this.zones = zones || [];
     var self = this;
+    this.reads.consume(state);
     [this.edits, this.context].forEach(function (channel) {
       var outcome = channel.consume(state);
       if (!outcome) return;
@@ -64,7 +68,7 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     return Boolean(target) && startsWith(this.editPath, target.reference.entity_path);
   };
 
-  SpaceActions.prototype.busy = function () { return this.edits.busy() || this.context.busy(); };
+  SpaceActions.prototype.busy = function () { return this.edits.busy() || this.context.busy() || this.reads.busy(); };
 
   /* What names a row's record to the user even when it has no name: "Living", or "Space 101", or
      "Volume 1 of Living". */
@@ -107,6 +111,8 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     }
     if (record.volume && !record.segment) {
       if (!this.open(row)) items.push({ id: "spaces.enter", icon: "enter", label: "Enter " + name, disabled: busy });
+      items.push({ id: "spaces.height_from_solid", icon: "ruler", label: "Height of " + name + " from a solid",
+        disabled: busy });
       items.push({ id: "spaces.remove_volume", icon: "delete", label: "Remove " + name, disabled: busy });
     }
     return items;
@@ -114,7 +120,7 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
 
   // The actions that change records or the edit context's protection; a held cell draft must not be lost to one.
   var CHANGES = { "spaces.enter": true, "spaces.restore": true, "spaces.independent": true, "spaces.delete": true,
-    "spaces.remove_volume": true, "spaces.move": true };
+    "spaces.remove_volume": true, "spaces.move": true, "spaces.height_from_solid": true };
 
   /* Runs one of this view's actions; false for an action it does not own. */
   SpaceActions.prototype.run = function (row, item) {
@@ -153,6 +159,7 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
         });
         break;
       case "spaces.move": this.pickZone(record, reference); break;
+      case "spaces.height_from_solid": this.heightFromSolid(record, reference); break;
       default: return false;
     }
     return true;
@@ -206,8 +213,43 @@ PhComposerUI.define("features/spaces/actions", ["panel", "request", "workspace"]
     select.focus();
   };
 
+  /* Height from solid: the solid selected in SketchUp, then what it would give, then a confirmation showing the
+     solid's volume, the net floor area and the height before anything is written. */
+  SpaceActions.prototype.heightFromSolid = function (record, reference) {
+    var self = this, name = record.name || describe(record);
+    function refused(outcome) { panel.notify(outcome.message || "Height from solid could not run.", "warning"); }
+    this.reads.run(PREFIX + ".selected_solid", {}, { onFail: refused, onDone: function (selected) {
+      var params = { volume: copy(reference), solid: copy(selected.value.solid) };
+      self.reads.run(PREFIX + ".volumes.height_from_solid_preview", params, { onFail: refused, onDone: function (seen) {
+        self.confirmHeight(name, params, seen);
+      } });
+    } });
+  };
+
+  SpaceActions.prototype.confirmHeight = function (name, params, seen) {
+    var value = seen.value, self = this;
+    function text(number, field) { return units.format(number, field, units.profile(field, preferences.current())); }
+    var dialog = this.dialog || (this.dialog = ui.formDialog("", function () { dialog.closeModal(); }));
+    if (!dialog.parentNode) document.body.appendChild(dialog);
+    var cancel = ui.button("Cancel", function () { dialog.closeModal(); });
+    dialog.replaceChildren(ui.element("h2", "", "Height of " + name + " from a solid"),
+      ui.element("p", "", "The solid encloses " + text(value.solid_volume_m3, fields.VOLUME_M3) + " over a net floor " +
+        "area of " + text(value.net_floor_area_m2, fields.AREA_M2) + ", so the average clear ceiling height becomes " +
+        text(value.height_m, fields.LENGTH_M) + ". The solid is left as it is."),
+      ui.actionRow(cancel, ui.button("Set height", function () {
+        dialog.closeModal();
+        if (self.host.disposed || self.busy()) return;
+        self.runAt(seen.revision, PREFIX + ".volumes.height_from_solid", Object.assign({}, params,
+          { expected_values: { avg_ceiling_height_m: value.current_height_m } }));
+        panel.repaint();
+      })));
+    dialog.openModal();
+    cancel.focus();
+  };
+
   SpaceActions.prototype.dispose = function () {
     this.edits.reset();
+    this.reads.reset();
     this.context.reset();
     if (this.dialog) {
       this.dialog.closeModal();

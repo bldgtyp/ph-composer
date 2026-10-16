@@ -7,7 +7,8 @@
 # Space from the three, a second Volume, one Floor Segment marked as not counting, a height, two
 # airflows and one cleared, the read-back, and recovery from a stale edit. Then it copies a Volume the
 # way a native copy leaves it, reads the duplicate identity, makes the copy independent and moves the
-# Space into the second Zone. Each write is one Undo step.
+# Space into the second Zone. Each write is one Undo step. `height_from_solid` then sets a Volume's height from
+# a solid the operator draws.
 module SpacesWalkthrough
   API = PhComposer::API
   PREFIX = "ph_composer.spaces"
@@ -63,6 +64,29 @@ module SpacesWalkthrough
 
   # A Volume copied as SketchUp copies a Group (a new placement of its definition carrying its
   # dictionaries) shares its identity: both read the duplicate, and Make independent on the copy clears it.
+  # Height from solid, after `run`: draw a closed Group in a Space with a Volume, such as the walkthrough's
+  # (on the host, a box pushed up from a rectangle), then pass its root-to-entity path. Previews, then sets
+  # that Space's first Volume's height from it; one Undo step. Answers the preview and the written height.
+  #   SpacesWalkthrough.height_from_solid([zone_id, space_id, solid_id])
+  def height_from_solid(solid_path, session_id: nil)
+    session_id ||= API.discover.fetch("sessions").find { |row| row.fetch("active") }&.fetch("id")
+    client = Client.new(:context => API.connect(:session_id => session_id), :sequence => 0, :steps => [])
+    space = query(client, "#{PREFIX}.all").fetch("spaces").find do |row|
+      path = row.dig("reference", "entity_path")
+      solid_path[0, path.length] == path
+    end
+    raise ArgumentError, "Draw the solid inside a Space with a Volume." unless space && !space.fetch("volumes").empty?
+
+    volume = space.fetch("volumes").first
+    params = { "volume" => volume.fetch("reference"), "solid" => solid_path }
+    preview = query(client, "#{PREFIX}.volumes.height_from_solid_preview", params)
+    invoke(client, "volumes.height_from_solid",
+           params.merge("expected_values" => { "avg_ceiling_height_m" => preview.fetch("current_height_m") }))
+    { "preview" => preview, "height_m" => space_row(client, space.fetch("id")).dig("volumes", 0, "values",
+                                                                                   "avg_ceiling_height_m"),
+      "steps" => client.steps }
+  end
+
   def copy_and_repair(client, model, space_id)
     space = space_row(client, space_id)
     space_group = entity_at(model, space.dig("reference", "entity_path"))

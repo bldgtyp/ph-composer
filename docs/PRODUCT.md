@@ -201,7 +201,7 @@ Zone, the Zone shows a dash instead. Cells edit in place, and a range fill or a 
 spreadsheet is one Undo step. Checked rows edit together in the selection bar, and checked Zones
 stay checked when switching to the Faces view. Each row offers Locate and, where they apply, Open,
 Close, Enter, Delete, Remove Volume, Move to Zone and the repair its problem names. The Weighting
-factor column filters the table and colours the Model by factor. There is no Level rail and no
+factor column filters the table and colours the Model by factor. A Volume's height can be set from a closed solid the user draws, its volume over the Volume's net floor area, after a confirmation that shows both numbers. There is no Level rail and no
 separate balance view; column widths last for the session.
 
 The Weighting factor column menu starts Mark floor: a paint icon beside 0, 1 and each factor in use

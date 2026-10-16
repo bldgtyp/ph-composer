@@ -32,4 +32,24 @@ class SpacesWalkthroughTest < PhComposerTestCase
     text = File.read(File.expand_path("../tools/examples/authoring/spaces_walkthrough.rb", __dir__))
     refute_match(/PhComposer::(Spaces|Zones)::/, text)
   end
+
+  def test_height_from_solid_sets_the_first_volumes_height_from_a_drawn_solid
+    @model = Sketchup.active_model
+    @model.entities << zone_group(100, "Z", []) << zone_group(200, "Y", [])
+    SpacesWalkthrough.run
+    api = PhComposer::API
+    space = api.query(:context => api.connect(:session_id => PhComposer::Sessions.for(@model).id),
+                      :name => "ph_composer.spaces.all").dig("value", "spaces")
+               .find { |row| row.dig("values", "name") == "Kitchen" }
+    path = space.dig("reference", "entity_path")
+    container = path.reduce(nil) do |found, id|
+      (found ? found.entities : @model.entities).to_a.find { |entity| entity.persistent_id == id }
+    end
+    solid = Sketchup::Group.new(9900)
+    solid.solid_volume = 5.4 * (1 / 0.0254)**3
+    container.entities << solid
+    result = SpacesWalkthrough.height_from_solid(path + [9900])
+    area = result.dig("preview", "net_floor_area_m2")
+    assert_in_delta 5.4 / area, result.fetch("height_m"), 1e-9
+  end
 end

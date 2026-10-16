@@ -54,6 +54,22 @@ module PhComposer
           (m[8] * ((m[1] * m[6]) - (m[5] * m[2])))
       end
 
+      # The one selected Group or component that is not a Space or a Volume, as a root-to-entity path: the solid
+      # a panel route reads before it previews. Refuses any other selection.
+      def selected_solid(request)
+        model = request.model
+        candidates = model.selection.to_a.select do |entity|
+          (entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)) &&
+            SPACE_STORE.read(entity).nil? && VOLUME_STORE.read(entity).nil?
+        end
+        unless candidates.length == 1
+          raise CodedError.new("selection.invalid", "Select one closed Group or component in SketchUp, beside the " \
+                                                    "Volume, then choose Height from solid.")
+        end
+
+        { "solid" => Array(model.active_path).map(&:persistent_id) + [candidates.first.persistent_id] }
+      end
+
       # What the action would write, as the confirmation shows it. Writes nothing.
       def preview(request, volume:, solid:)
         scan = Occurrences.scan(request.model)

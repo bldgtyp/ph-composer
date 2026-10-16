@@ -8099,6 +8099,51 @@ Example params:
 {}
 ```
 
+### `ph_composer.spaces.selected_solid`
+
+The one selected Group or component that is not a Space or a Volume, as the solid Height from solid would measure. Owner: `ph_composer.spaces`.
+
+Refuses: `selection.invalid`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "solid"
+  ],
+  "properties": {
+    "solid": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1,
+      "description": "The root-to-entity persistent-id path."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
 ### `ph_composer.spaces.settings.get`
 
 The Model's last-entered height, which new Spaces take. Owner: `ph_composer.spaces`.
