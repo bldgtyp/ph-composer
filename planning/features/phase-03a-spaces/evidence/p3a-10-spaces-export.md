@@ -47,4 +47,5 @@ and the reserved key, the refusals, the preflight's blocks and locates, the meta
 `tests/python/test_space_sections.py` (tests 3 to 7: areas and volumes read back from the HBJSON, a
 two-Volume Space and a projected sloped segment, the three airflow cases, a missing Zone and a malformed
 record, attachment to one Room and none, user_data, conformance). Test 11, native and Pyodide parity, runs in
-`make runtime-browser-check`, outside `make ci`.
+`make runtime-browser-check`, outside `make ci`; it passed on 2026-10-16 in Chromium 88, but on the phase-one golden,
+whose Spaces section is empty, so a populated Spaces section's parity is not yet shown.
