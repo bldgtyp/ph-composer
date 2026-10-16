@@ -1,7 +1,7 @@
 # P3a-03 evidence: edit contexts, protection and reconciliation
 
 DATE: 2026-10-15
-STATUS: Merged through #138 and #140. Host gate partly run: the bridge and background-control rows pass; the rows that need native keystrokes with SketchUp in front wait for Ed's screen-takeover approval.
+STATUS: Merged through #138 and #140. Host gate: the bridge and background-control rows pass here; the native-keystroke rows were observed in [P3a-12](p3a-12-acceptance.md) on 2026-10-16.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

@@ -1,7 +1,7 @@
 # Phase 3a: Spaces
 
-DATE: 2026-10-15
-STATUS: In progress. Authorized 2026-10-15, one stage per pull request; P3a-01 implemented on branch.
+DATE: 2026-10-16
+STATUS: In progress. P3a-01 to P3a-11 merged to main (#135 to #167); P3a-12's integrated host run ran 2026-10-16 ([evidence](evidence/p3a-12-acceptance.md)). Closure waits on four calls for Ed, listed there.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
