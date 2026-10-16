@@ -55,3 +55,14 @@ gpt-6-astra, cycle 1, at `33713911`: three P1 and six P2, each reproduced by a t
 - P2: `mark_tool.stop` stopped whatever tool was active. It now acts only while Mark floor is.
 - P2: starting after Classify had forced the weighting-factor mode lost the mode when Classify gave it up.
   The mode now turns on after the tool change.
+
+gpt-6-astra, cycle 2, at `b8f828d`: three P2 and one P3, fixed and gated by `make ci` (the review cap).
+
+- P2: `getMenu` had no exception boundary. A failure building the menu now abandons the pending gesture.
+- P2: a Face inside a plain Group within a Zone was offered Create Space, which `create_preview` then
+  refuses. The tool now refuses it and says to move the Face out of the Group.
+- P2: no test committed another change mid-gesture. The new test commits a classify between press and release
+  and sees the gesture refuse as stale with nothing written; the code already did this.
+- P3: the tool's own refusals now end with "Nothing was written.", as an operation's do.
+- Placement moved to `features/spaces/mark_placement.rb` (`MarkPlacement`), which keeps the tool class within
+  the class-length limit, as the Window Place tool's `ToolTarget` does.

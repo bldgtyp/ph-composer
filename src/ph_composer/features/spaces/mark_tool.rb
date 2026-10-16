@@ -15,22 +15,14 @@ module PhComposer
     # The weighting factor is this Model's choice, set when the tool starts; a gesture freezes it, and the
     # revision, at button-down, so a factor chosen mid-drag cannot change what the drag writes.
     #
-    # A pick is placed from its own path, never a Model walk: the Spaces records on the path's containers,
-    # the Zone paths read once per revision, and Zones' narrow `host_context` row for a Face directly in a
-    # Zone. A read that fails refuses the gesture with its reason rather than reading as an answer.
+    # What a pick means is MarkPlacement's, read from the pick's own path, never a Model walk.
     class MarkTool
       MARK = "#{FEATURE_ID}.floors.mark"
       ADD_VOLUME = "#{FEATURE_ID}.volumes.create"
-      ZONES = "ph_composer.zones.all"
-      HOST_CONTEXT = "ph_composer.zones.faces.host_context"
       HOVER_COLOUR = [184, 59, 59].freeze
       COLLECTED_COLOUR = [47, 143, 131].freeze
       FILL_ALPHA = 90
       OUTLINE_ALPHA = 230
-      OUTSIDE_ZONE = "That Face is in no Zone. Make it a Zone first, then mark floors in its Spaces."
-      OUTSIDE_SPACE = "That Face's Volume is in no Space. Move it into a Space, then mark its floors."
-      ZONE_FACE = "That Face is one of its Zone's own Faces, classified in the Faces view. Mark floor takes " \
-                  "Faces inside a Space."
       MIXED = "One gesture marks Faces in one place: inside Volumes, or at one Space's root. Nothing was written."
       CANCELLED = "The Mark floor gesture was cancelled. Nothing was written."
       OFFER = "That Face is in a Zone and in no Space. Right-click it and choose Create Space to make one from it."
@@ -130,13 +122,13 @@ module PhComposer
         @gesture_edit_path = edit_path
         @factor = @weighting_factor
         @revision = @session.revision
-        refresh_reads
+        placement.refresh
         @collected = DragSet.new(:limit => Spaces.floor_gesture_limit)
         collect(Pick.face_path(view, x, y))
         view.invalidate if view.respond_to?(:invalidate)
       rescue CodedError => error
         reset_gesture
-        announce(error.message, :warning)
+        refuse(error.message)
       rescue StandardError => error
         report_exception(error, view)
       end
@@ -160,8 +152,10 @@ module PhComposer
         report_exception(error, view)
       end
 
-      def getMenu(menu, _flags = 0, _x_value = nil, _y_value = nil, _view = nil)
+      def getMenu(menu, _flags = 0, _x_value = nil, _y_value = nil, view = nil)
         Commands.install_feature_menus(menu, :contextual => true)
+      rescue StandardError => error
+        report_exception(error, view || @session.model.active_view)
       end
 
       def getInstructorContentDirectory
@@ -188,77 +182,18 @@ module PhComposer
         @pressed && !@collected.nil?
       end
 
-      # What one picked Face means, as `[place, target]`: `:mark`; `:volume` with its Space's reference;
-      # `:offer`; or `:refuse` with the reason. Every route needs a Zone above the Face.
-      def place(entities)
-        ids = entities.map(&:persistent_id)
-        parent = entities[-2]
-        if parent && Occurrences.read(VOLUME_STORE, VOLUME, parent)
-          space_index = entities[0...-2].rindex { |entity| Occurrences.read(SPACE_STORE, SPACE, entity) }
-          return [:refuse, OUTSIDE_SPACE] unless space_index
-          return [:refuse, OUTSIDE_ZONE] unless in_zone?(ids[0..space_index])
-
-          return [:mark, nil]
-        end
-        if parent && (space = Occurrences.read(SPACE_STORE, SPACE, parent))
-          return [:refuse, OUTSIDE_ZONE] unless in_zone?(ids[0...-1])
-
-          return [:volume, { "space_id" => space.fetch("id"), "entity_path" => ids[0...-1] }]
-        end
-        zone_face(ids)
-      end
-
-      # A Face directly in a Zone is offered Create Space unless the Faces feature records it, which makes
-      # it one of the Zone's own Faces, or a write to it would refuse from its path, as shared storage does.
-      def zone_face(ids)
-        row = host_row(ids)
-        return [:refuse, OUTSIDE_ZONE] unless row
-        return [:refuse, ZONE_FACE] unless row.dig("reference", "entity_id").nil?
-        return [:refuse, row.dig("write_refusal", "message")] if row["write_refusal"]
-
-        [:offer, nil]
-      end
-
-      def in_zone?(space_path)
-        !Occurrences.zone_path(space_path, @zone_paths).nil?
-      end
-
-      def host_row(ids)
-        return @rows[ids] if @rows.key?(ids)
-
-        @rows[ids] = query(HOST_CONTEXT, "paths" => [ids]).fetch("faces").first
-      end
-
-      # The Zone paths, and the host rows read since, hold until the revision or the edit context changes.
-      def refresh_reads
-        @zone_paths = query(ZONES).fetch("zones").map { |zone| zone.dig("reference", "zone_path") }
-        @rows = {}
-        @read_at = [@session.revision, edit_path]
-      end
-
-      def current_reads
-        refresh_reads unless @read_at == [@session.revision, edit_path]
-      end
-
-      def query(name, params = {})
-        result = API.query(:context => context, :name => name, :params => params)
-        raise CodedError.new(result.fetch("code"), result.fetch("message")) unless result.fetch("status") == "completed"
-
-        result.fetch("value")
-      end
-
       # A refusal ends the whole pending gesture; pointing at nothing does not.
       def collect(entities)
         return if @collected.nil? || entities.nil?
 
         kind, target = begin
-          place(entities)
+          placement.place(entities)
         rescue CodedError => error
           [:refuse, error.message]
         end
         if kind == :refuse
           reset_gesture
-          announce(target, :warning)
+          refuse(target)
           return
         end
         @collected.add(entities.map(&:persistent_id), { :kind => kind, :target => target, :entities => entities })
@@ -273,10 +208,10 @@ module PhComposer
 
         items = collected.values
         kinds = items.map { |item| [item[:kind], item[:target]] }.uniq
-        return announce(MIXED, :warning) unless kinds.length == 1
+        return refuse(MIXED) unless kinds.length == 1
         # Marking's operation owns the limit and refuses; adding a Volume and offering Create Space take
         # no gesture, so the gesture refuses here rather than writing the first part of what it crossed.
-        return announce(too_large, :warning) if collected.full? && kinds.first.first != :mark
+        return refuse(too_large) if collected.full? && kinds.first.first != :mark
 
         paths = items.map { |item| item[:entities].map(&:persistent_id) }
         case kinds.first.first
@@ -326,6 +261,10 @@ module PhComposer
         @context ||= API.connect(:session_id => @session.id)
       end
 
+      def placement
+        @placement ||= MarkPlacement.new(@session, context)
+      end
+
       def next_sequence
         @sequence += 1
       end
@@ -339,6 +278,12 @@ module PhComposer
         pending = !@collected.nil?
         reset_gesture
         announce(CANCELLED, :warning) if pending
+      end
+
+      # A refusal the tool makes itself says, as an operation's does, that nothing was written.
+      def refuse(message)
+        announce(message.end_with?(Outcome::NOTHING_WRITTEN) ? message : "#{message} #{Outcome::NOTHING_WRITTEN}",
+                 :warning)
       end
 
       # Results and refusals reach the status bar, which a viewport tool always has, and the panel's notice.
@@ -358,8 +303,8 @@ module PhComposer
         return "" if entities.nil?
 
         kind, target = begin
-          current_reads
-          place(entities)
+          placement.current
+          placement.place(entities)
         rescue CodedError => error
           [:refuse, error.message]
         end

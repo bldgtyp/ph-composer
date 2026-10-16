@@ -124,9 +124,10 @@ class SpacesMarkToolTest < PhComposerTestCase
     point(:stray, [@stray])
     operations = @model.operations.length
     click(:wall)
-    assert_match(/Faces view/, Sketchup.status_texts.last)
+    assert_match(/Faces view.*Nothing was written\.\z/, Sketchup.status_texts.last)
     click(:stray)
-    assert_match(/in no Zone/, Sketchup.status_texts.last)
+    assert_match(/in no Zone.*Nothing was written\.\z/, Sketchup.status_texts.last)
+    assert_match(/Nothing was written\.\z/, @notices.last.first)
     assert_equal operations, @model.operations.length
     assert_equal :warning, @notices.last.last
   end
@@ -141,6 +142,50 @@ class SpacesMarkToolTest < PhComposerTestCase
     release
     assert_equal operations, @model.operations.length
     assert_match(/one place/, Sketchup.status_texts.last)
+  end
+
+  def test_a_commit_between_press_and_release_refuses_the_gesture_as_stale
+    tool.start(1.0)
+    point(:a, [@zone, @space, @volume, @inside[0]])
+    press(:a)
+    result = API.invoke(:context => @context, :name => "ph_composer.zones.faces.classify",
+                        :params => { "faces" => [{ "zone_id" => "zon_AAAAAAAAAAAA", "zone_path" => [1000],
+                                                   "entity_path" => [1200], "entity_id" => nil }],
+                                     "intent" => { "face_type" => { "mode" => "set", "value" => "Wall" } },
+                                     "expected_values" => {} },
+                        :request => { "sequence" => 2, "expected_revision" => @session.revision })
+    assert_equal "completed", result.fetch("status"), result.inspect
+    operations = @model.operations.length
+    release
+    assert_equal operations, @model.operations.length
+    assert_nil segments_on([@inside[0]]).first
+    assert_match(/changed|stale/i, Sketchup.status_texts.last)
+  end
+
+  def test_a_face_inside_a_plain_group_in_a_zone_is_not_offered_create_space
+    face = floor_face(1401, rectangle(12, 0, 1, 1))
+    group = Sketchup::Group.new(1400, Sketchup::Entities.new([face]))
+    @zone.entities << group
+    tool.start(1.0)
+    point(:nested, [@zone, group, face])
+    click(:nested)
+    assert_empty tool.offered
+    assert_match(/inside a Group/, Sketchup.status_texts.last)
+  end
+
+  def test_a_context_menu_that_raises_cancels_the_pending_gesture
+    tool.start(1.0)
+    point(:a, [@zone, @space, @volume, @inside[0]])
+    operations = @model.operations.length
+    press(:a)
+    original = PhComposer::Commands.method(:install_feature_menus)
+    PhComposer::Commands.define_singleton_method(:install_feature_menus) { |*_args, **_options| raise "menu failed" }
+    tool.getMenu(Object.new, 0, 0, 0, @view)
+    release
+    assert_equal operations, @model.operations.length
+    assert_nil segments_on([@inside[0]]).first
+  ensure
+    PhComposer::Commands.define_singleton_method(:install_feature_menus, original) if original
   end
 
   def test_a_drag_across_more_space_root_faces_than_the_limit_refuses_whole
