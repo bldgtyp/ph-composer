@@ -1,7 +1,7 @@
 # P3a-08 evidence: Mark floor and Create Space
 
 DATE: 2026-10-16
-STATUS: Slices A and B merged ([#156](https://github.com/bldgtyp/ph-composer/pull/156), [#159](https://github.com/bldgtyp/ph-composer/pull/159)); slice C in review on `feature/spaces-p3a-08c`; native S08 rows pending
+STATUS: Merged in three slices ([#156](https://github.com/bldgtyp/ph-composer/pull/156), [#159](https://github.com/bldgtyp/ph-composer/pull/159), [#160](https://github.com/bldgtyp/ph-composer/pull/160)); native S08 rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

@@ -1,7 +1,7 @@
 # P3a-09: modes, preview, labels and totals
 
 DATE: 2026-10-15
-STATUS: Scoped. Revised 2026-10-15 after the UI and UX discussion
+STATUS: In progress in three slices: A the prism, the four modes and the legend's labels and figures; B labels and selection totals; C toggles, preview and walkthrough ([evidence](../evidence/p3a-09-space-modes.md)). Revised 2026-10-15 after the UI and UX discussion
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

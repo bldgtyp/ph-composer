@@ -1,7 +1,7 @@
 # P3a-09 evidence: modes, preview, labels and totals
 
 DATE: 2026-10-16
-STATUS: Slice A built on `feature/spaces-p3a-09a`; native S09 rows pending
+STATUS: Slice A in review on `feature/spaces-p3a-09a`; native S09 rows pending
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
