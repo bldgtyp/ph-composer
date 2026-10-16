@@ -4435,7 +4435,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "The active mode's legend: value, label, colour, count and state."
+      "description": "The active mode's legend: value, label, colour, count and state, and figure, the row's summed area or volume in display units, where the mode gives one."
     },
     "readouts": {
       "type": "array",
@@ -42609,7 +42609,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "The active mode's legend: value, label, colour, count and state."
+      "description": "The active mode's legend: value, label, colour, count and state, and figure, the row's summed area or volume in display units, where the mode gives one."
     },
     "readouts": {
       "type": "array",
@@ -42724,7 +42724,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "The active mode's legend: value, label, colour, count and state."
+      "description": "The active mode's legend: value, label, colour, count and state, and figure, the row's summed area or volume in display units, where the mode gives one."
     },
     "readouts": {
       "type": "array",
@@ -42868,7 +42868,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "The active mode's legend: value, label, colour, count and state."
+      "description": "The active mode's legend: value, label, colour, count and state, and figure, the row's summed area or volume in display units, where the mode gives one."
     },
     "readouts": {
       "type": "array",
@@ -42975,7 +42975,7 @@ Result:
       "items": {
         "type": "object"
       },
-      "description": "The active mode's legend: value, label, colour, count and state."
+      "description": "The active mode's legend: value, label, colour, count and state, and figure, the row's summed area or volume in display units, where the mode gives one."
     },
     "readouts": {
       "type": "array",
