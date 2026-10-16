@@ -1,7 +1,7 @@
 # P3a-12: Spaces acceptance and handoff
 
 DATE: 2026-10-03
-STATUS: In review. Integrated run done 2026-10-16 ([evidence](../evidence/p3a-12-acceptance.md)); three items wait for Ed
+STATUS: In review. Integrated run done 2026-10-16 ([evidence](../evidence/p3a-12-acceptance.md)); four items wait for Ed
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

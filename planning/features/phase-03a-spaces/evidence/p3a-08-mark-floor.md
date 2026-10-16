@@ -1,7 +1,7 @@
 # P3a-08 evidence: Mark floor and Create Space
 
 DATE: 2026-10-16
-STATUS: Merged in three slices ([#156](https://github.com/bldgtyp/ph-composer/pull/156), [#159](https://github.com/bldgtyp/ph-composer/pull/159), [#160](https://github.com/bldgtyp/ph-composer/pull/160)); native S08 rows passed in [P3a-12](p3a-12-acceptance.md)
+STATUS: Merged in three slices ([#156](https://github.com/bldgtyp/ph-composer/pull/156), [#159](https://github.com/bldgtyp/ph-composer/pull/159), [#160](https://github.com/bldgtyp/ph-composer/pull/160)); native S08 rows observed in [P3a-12](p3a-12-acceptance.md)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

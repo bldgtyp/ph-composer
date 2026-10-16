@@ -1,7 +1,7 @@
 # P3a-10 evidence: Spaces export
 
 DATE: 2026-10-16
-STATUS: Merged in two slices ([#165](https://github.com/bldgtyp/ph-composer/pull/165), [#166](https://github.com/bldgtyp/ph-composer/pull/166)); host gate passed in [P3a-12](p3a-12-acceptance.md)
+STATUS: Merged in two slices ([#165](https://github.com/bldgtyp/ph-composer/pull/165), [#166](https://github.com/bldgtyp/ph-composer/pull/166)); host gate observed in [P3a-12](p3a-12-acceptance.md)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

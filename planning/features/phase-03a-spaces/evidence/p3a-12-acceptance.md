@@ -1,16 +1,23 @@
 # P3a-12 evidence: Spaces acceptance and handoff
 
 DATE: 2026-10-16
-STATUS: Integrated host run done; offline gates pass. Open for Ed: the reuse matrix's stale earlier cases, the footprint headroom, D3a-19
+STATUS: Integrated host run done, no ledger results recorded; offline gates pass. Open for Ed: recording the host rows, the reuse matrix's stale earlier cases, the footprint headroom, D3a-19
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 Register row S12, and the host rows S03 to S11 and the D3a-13 addition, all run in one integrated pass
-on 2026-10-16. Branch `feature/spaces-p3a-12` from `main` at `f9104523` (P3a-01 to P3a-11 merged).
+on 2026-10-16. Every "pass" below is a host observation; none has a ledger result (decision 1). Branch `feature/spaces-p3a-12` from `main` at `f9104523` (P3a-01 to P3a-11 merged).
 
 ## Decisions for Ed
 
-1. **Reuse matrix.** `acceptance_ledger.py status`, screened against the 96 source files Phase 3a
+1. **Recording the host rows.** The run did not follow the native-acceptance procedure's recording
+   steps: no `acceptance_run.py capture` baseline, no `observe` receipts, no ledger result. So
+   `acceptance_ledger.py status` still reads S03 as blocked and S04 as not run, and the rows below are
+   host observations, not accepted results. A result cannot honestly be recorded after the fact without
+   the baseline. Choose: rerun the rows under the procedure in a short host session (the scripts in
+   `_private/host/spaces/p3a12/` rebuild the model), or accept this file as their evidence and record
+   that decision in the register.
+2. **Reuse matrix.** `acceptance_ledger.py status`, screened against the 96 source files Phase 3a
    changed (`1d9f593..f9104523`), marks 31 earlier native cases `needs_recheck` (A02, A04, A05, A09,
    A11, R01 to R06, UXK1, E14, E15, E17, R11H, HGUI, PTAB, ZO-H1 to ZO-H3, ZO-O7, six UXR cases, GH41,
    GH43, GH47) and ten `historical_affected`. Their path patterns cover all of `features/zones/` and the
@@ -19,10 +26,10 @@ on 2026-10-16. Branch `feature/spaces-p3a-12` from `main` at `f9104523` (P3a-01 
    preflight and the Surface pair, all unchanged. Choose: a separate host session that reruns the 31,
    or accept them by construction as P3a-01 did for 35 of them. S01, S05 and S06 each require "the
    cases the ledger screens are repeated", so they stay open until this is settled.
-2. **Footprint.** The host-tested RBZ installs 23,994,063 bytes, and the branch head 23,994,083 after the
+3. **Footprint.** The host-tested RBZ installs 23,994,063 bytes, and the branch head 23,994,083 after the
    comment edits: above the 22 MB target and under 6 KB short of the 24 MB ceiling (Phase 2 closed at 22,900,236). Phase 3b will cross the ceiling unless the
    budget is raised or the payload shrinks.
-3. **D3a-19, still open.** Observed again: a native Cmd+S from inside an open Volume protects it and
+4. **D3a-19, still open.** Observed again: a native Cmd+S from inside an open Volume protects it and
    leaves the path at the Model root, not at the Space. The predecessor's native save restored the
    context. Both the Ruby save and the native save behave the same way here.
 
@@ -186,7 +193,8 @@ rows and the metadata guard are covered offline in P3a-10 and were not forced on
 - Refusals: an open box and a Group holding only a Group both refuse as "not a closed solid"; a Volume
   or Space chosen as the solid refuses `target.wrong_kind`.
 - A Group holding two separate solids is accepted with their summed volume.
-- The zero-area refusal is offline only. The native Undo of the height was not separately repeated.
+- The zero-area refusal is offline only. The native Undo of the height was not observed, so S11 is partly
+  observed; that Undo is owed.
 
 **S12, integration.** The PRD's host gate ran in order, with the exceptions stated above, from fresh
 processes on the reference model. The offline gates and the package are below.
@@ -205,7 +213,7 @@ Recorded in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../../../../context/SKETCHUP_H
 
 | Row | Stage evidence | At `f9104523` |
 | --- | --- | --- |
-| S01 | P3a-01 | Rule re-observed: floor outlines in Space Groups are absent from the Faces view and the export snapshot. Its 35 screened earlier cases are in decision 1 |
+| S01 | P3a-01 | Open. Rule re-observed: floor outlines in Space Groups are absent from the Faces view and the export snapshot. Its 35 screened earlier cases are in decision 1 |
 | S02 | P3a-02 | Retained offline; on the host, airflows absent, zero and set, `user_data` on all three records, edit, Undo and reopen all re-observed |
 | S03 | P3a-03 bridge rows | Native rows run here; bridge rows retained |
 | S04 | P3a-04 bridge rows | Native rows run here; rotated wrapper, repeated component and Restore Zone retained from P3a-04 |
@@ -215,7 +223,7 @@ Recorded in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../../../../context/SKETCHUP_H
 | S08 | P3a-08 offline | Run here |
 | S09 | P3a-09 offline | Run here |
 | S10 | P3a-10 offline | Run here |
-| S11 | P3a-11 offline | Run here |
+| S11 | P3a-11 offline | Run here except the native Undo, which is owed |
 
 ## Offline gates
 

@@ -1,7 +1,7 @@
 # P3a-07 evidence: the Spaces view
 
 DATE: 2026-10-16
-STATUS: Merged in five slices: #150 (`7619964`), #151 (`a9d2f72`), #152 (`34db51a`), #153 (`803e95b`) and #155 (`3e0dd5a`); host gate passed in [P3a-12](p3a-12-acceptance.md), except the 300-Space timing (#154)
+STATUS: Merged in five slices: #150 (`7619964`), #151 (`a9d2f72`), #152 (`34db51a`), #153 (`803e95b`) and #155 (`3e0dd5a`); host gate observed in [P3a-12](p3a-12-acceptance.md), except the 300-Space timing (#154)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

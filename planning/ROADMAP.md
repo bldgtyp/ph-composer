@@ -111,7 +111,7 @@ library file. METr conversion stays deferred.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | In progress; P3a-01 to P3a-11 merged; P3a-12's integrated host run passed 2026-10-16, closure waits on three calls for Ed | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
+| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | In progress; P3a-01 to P3a-11 merged; P3a-12's integrated host run ran 2026-10-16; closure waits on four calls for Ed | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
 | 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09, none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
 
 Ed split Phase 3 on 2026-10-03 into two sub-phases, each one packet planned and worked on its own:
@@ -201,4 +201,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-15 | Spaces decisions D3a-1 to D3a-18 all answered and the interview record confirmed; the packet waits for its phase issue and Ed's go on P3a-01. |
 | 2026-10-15 | Spaces phase issue [#133](https://github.com/bldgtyp/ph-composer/issues/133) created; the packet waits for Ed's go on P3a-01. |
 | 2026-10-15 | Ed authorized the Spaces packet, one stage per pull request; P3a-01 merged through PR #135. |
-| 2026-10-16 | Spaces P3a-01 to P3a-11 merged through PR #167; P3a-12's integrated host run passed on 26.1.188. Closure waits on Ed: the earlier cases the ledger screens, the 24 MB ceiling and D3a-19. |
+| 2026-10-16 | Spaces P3a-01 to P3a-11 merged through PR #167; P3a-12's integrated host run ran on 26.1.188. Closure waits on Ed: recording the host rows, the earlier cases the ledger screens, the 24 MB ceiling and D3a-19. |
