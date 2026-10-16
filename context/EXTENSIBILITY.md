@@ -644,7 +644,7 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
 | `zoneRecord(record)`, `children(row)`, `initiallyOpen(row)` | What a Zone row carries for the view, the rows beneath it (none by default), and whether a row the view adds opens by default (`null`: the host's rule) |
 | `columns`, `value`, `cell(td, row, field)`, `decorate`, `zoneMarker(row)`, `widths` | The view's columns, their text or in-place control, a cell's flag, the Zone row's marker after the host's own, default widths |
 | `colourBy`, `sorted`, `filteredFields`, `filterValues`, `filterLabel`, `headerAction`, `menuValueAction`, `menuExtra` | The view's columns' Colour-by bindings, sort and value filters, and anything its column header and menu add (Faces adds the Classify paint) |
-| `zoneMatch`, `rowMatch`, `search`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask |
+| `zoneMatch`, `rowMatch`, `search`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask (by default each Zone that passes `zoneMatch`, whole) |
 | `actions(row)`, `zoneActions(row)`, `action`, `inspect`, `locate(row)`, `clearLocate` | Row actions, the Zone row's actions after Make independent, and Locate; `clearLocate` answers whether it cleared anything |
 | `check(context)`, `selectionBar(overview)`, `settings`, `navigate(intent)` | Checkboxes for the rows it checks, a selection bar, a settings control for the page header, and a navigation intent's `check` |
 | `draftReason`, `leaveReason`, `leave`, `escape` | Work a filter or a switch must not hide; what holds a switch; what stops on a switch away; Escape, true when the view used it |
@@ -659,8 +659,10 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
 - **A view owns** its rows, its columns, their header Colour-by toggles and value filters, its sort,
   its checked rows, its selection bar, its settings and its tools. Each view has its own surface and
   table mount, so its column widths, hidden columns and column menus are its own. The host keeps one
-  controls row and moves the view's column filters and sort out of it and back on a switch; the Zone
-  filters stay. All of it survives a switch away and back.
+  controls row and moves the view's column filters and sort out of it and back on a switch; a Zone
+  filter stays while the next view shows its column and otherwise leaves with the view that does, so
+  no filter applies without a column to clear it from. A column has a menu when it sorts (`sorted`) or
+  filters (`filteredFields`), and offers only those. All of it survives a switch away and back.
 - **Switching** is a host action that sends nothing to the Model and never changes the SketchUp
   selection. It is refused while `draftReason` or `leaveReason` answers; otherwise it calls the old
   view's `leave` (Faces stops its paint tool and hides its bar), restores
@@ -668,7 +670,8 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
   remembers the choice on this computer (the `table_view` display preference, keyed by host id), as
   the last Colour-by mode is remembered. A view state is never written to the Model, which would
   dirty it and add an Undo entry. A session opens on the remembered view while it is listed, else the
-  first. A shown view that stops being listed leaves the same way. Table options offers Colour by for
+  first. A shown view that stops being listed leaves the same way, unless `draftReason` or
+  `leaveReason` answers: it stays listed until that work is done. Table options offers Colour by for
   every mode no column of the shown view displays.
 - **Gestures.** The host owns the gestures that clear Locate (a pointer press elsewhere, Escape). A
   Locate outline outlasts a switch, so they reach every view's `clearLocate`. Escape unwinds one layer

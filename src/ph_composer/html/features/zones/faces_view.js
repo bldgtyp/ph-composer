@@ -544,6 +544,7 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
   function leave(vs) {
     classify.stop();
     if (vs.bar) vs.bar.hide();
+    vs.settings.bubble.close(false);
   }
 
   /* Another tab can open this view with Faces checked and, with `locate`, framed (the Assemblies tab's
@@ -749,7 +750,11 @@ function (panel, ui, snapshot, units, fields, words, tableViews, attachedAssignm
     actions: actions, zoneActions: zoneActions, action: action, inspect: inspect, locate: locate,
     clearLocate: clearLocate, escape: escape, navigate: navigate, check: check, selectionBar: selectionBar,
     settings: function (vs) { return vs.settings.bubble.root; },
-    leave: leave, leaveReason: function () { return classify.draftReason(); },
+    leave: leave,
+    leaveReason: function (vs) {
+      return classify.draftReason() ||
+        (vs.settings.held() ? "Correct the Faces settings, or press Escape to restore them, first." : null);
+    },
     // The Classify palette paints this view's columns from their header and their menu.
     headerAction: function (vs, field, label) { return classify.header(field, label); },
     menuValueAction: function (vs, field, entry) { return classify.paint(field, entry.value, entry.label); },

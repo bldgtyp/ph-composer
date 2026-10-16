@@ -364,3 +364,71 @@ test("a shown view that stops being listed leaves as a switch does: its filters 
   assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "1 Zone");
   assert.deepStrictEqual(rowKinds(p), ["Zone"]);
 });
+
+/* ---------------------------------------------------------------- review cycle 2 (PR #149) */
+
+test("a shown view holding a draft stays shown when its section is withdrawn", function () {
+  var p = page(), state = snapshot("example.guarded");
+  p.modules.table_views.register("ph_composer.zones", { id: "example.guarded", label: "Guarded", order: 95,
+    sections: ["example.guard.section"], draftReason: function () { return "Finish draft"; } });
+  state.sections["example.guard.section"] = { status: "completed", value: {} };
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  assert.strictEqual(tab(p, "Guarded").getAttribute("aria-selected"), "true");
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot("example.guarded") });
+  assert.strictEqual(tab(p, "Guarded").getAttribute("aria-selected"), "true", "the draft keeps its view");
+});
+
+test("an invalid Faces settings entry holds the switch", function () {
+  var p = page(), state = snapshot();
+  state.sections["ph_composer.zones.settings"] = { status: "completed", value: {
+    suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130 } };
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  byLabel(p, "Faces settings").listeners.click({});
+  var roof = byLabel(p, "Roof maximum tilt [deg]");
+  roof.value = "170"; roof.listeners.change({});
+  roof.blur();
+  click(tab(p, "Areas"));
+  assert.strictEqual(tab(p, "Faces").getAttribute("aria-selected"), "true");
+  roof.listeners.keydown({ key: "Escape" });
+  click(tab(p, "Areas"));
+  assert.strictEqual(tab(p, "Areas").getAttribute("aria-selected"), "true", "Escape restores and releases it");
+});
+
+test("a Zone filter on a column the next view does not show leaves with the view that shows it", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var menu = byLabel(p, "Building-Segment column menu");
+  click(menu);
+  var box = menu.parentNode.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; })[0];
+  box.checked = false; box.listeners.change({});
+  assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "0 of 1 Zone · 1 filter");
+  p.context.document.activeElement.blur();
+  click(tab(p, "Areas"));
+  assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "1 Zone");
+  click(tab(p, "Faces"));
+  assert.strictEqual(p.section().querySelector(".phc-view-count").textContent, "0 of 1 Zone · 1 filter");
+});
+
+test("a view's filter column has a menu without sorting, and its Zone predicate reaches the viewport", function () {
+  var p = page(), state = snapshot("example.kinds");
+  p.modules.table_views.register("ph_composer.zones", { id: "example.kinds", label: "Kinds", order: 96,
+    sections: ["ph_composer.zones.overview"], zoneFields: [], filteredFields: { kind: true },
+    columns: function () { return [["kind", "Kind"]]; },
+    value: function (vs, row, field) { return field === "kind" ? "A" : ""; },
+    filterValues: function () { return ["a", "b"]; },
+    filterLabel: function (vs, field, value) { return value.toUpperCase(); },
+    zoneMatch: function (vs, record, filters) { return !filters.kind || filters.kind.indexOf("a") >= 0; } });
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  var menu = byLabel(p, "Kind column menu");
+  assert.ok(menu, "a filterable column has a menu");
+  click(menu);
+  assert.strictEqual(menu.parentNode.querySelectorAll("button").filter(function (node) {
+    return node.textContent === "Sort A to Z";
+  }).length, 0, "and offers no sort it did not declare");
+  var a = menu.parentNode.querySelectorAll("input").filter(function (node) {
+    return node.type === "checkbox" && node.parentNode.children[1].textContent === "A";
+  })[0];
+  a.checked = false; a.listeners.change({});
+  var filter = p.sent.filter(function (message) { return message.payload.name === "ph_composer.colour_by.filter"; });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(filter[filter.length - 1].payload.params)), { paths: [] });
+});

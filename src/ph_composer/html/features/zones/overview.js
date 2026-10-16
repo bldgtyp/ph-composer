@@ -136,19 +136,21 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   }
 
   /* Held category filters follow explicit merge/removal results; rename keeps the same ID. They are Zone
-     filters, which stay in the controls whichever view is shown. */
+     filters, held by the controls or, while the shown view lacks their column, by the view that showed it. */
   function reconcileOptionFilters(state, collection, result) {
     var replacements = result.replacement_ids || {};
-    if (state.optionDialog.adopting) {
-      delete state.controls.columnFilters.building_segment; delete state.controls.columnFilters.level; return;
-    }
-    var held = state.controls.columnFilters[collection]; if (!held) return;
-    var mapped = held.map(function (id) {
-      if (!Object.prototype.hasOwnProperty.call(replacements, id)) return id;
-      return replacements[id] || (collection === "level" ? "" : null);
-    }).filter(function (id, index, every) { return id !== null && every.indexOf(id) === index; });
-    if (mapped.length) state.controls.columnFilters[collection] = mapped;
-    else delete state.controls.columnFilters[collection];
+    [state.controls.columnFilters].concat(Object.keys(state.slots).map(function (id) {
+      return state.slots[id].filters;
+    })).forEach(function (filters) {
+      if (state.optionDialog.adopting) { delete filters.building_segment; delete filters.level; return; }
+      var held = filters[collection]; if (!held) return;
+      var mapped = held.map(function (id) {
+        if (!Object.prototype.hasOwnProperty.call(replacements, id)) return id;
+        return replacements[id] || (collection === "level" ? "" : null);
+      }).filter(function (id, index, every) { return id !== null && every.indexOf(id) === index; });
+      if (mapped.length) filters[collection] = mapped;
+      else delete filters[collection];
+    });
   }
 
   /* The control row's count: Zones, how many a filter leaves, and how many column filters apply. */
@@ -163,17 +165,23 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   /* The views listed for this snapshot and the one shown: the session's choice while it is listed, else the
      one this computer last showed, else the first. The view row is rebuilt when the listed views change. */
   function settle(state, root, snapshotState) {
-    var listed = registry.views(snapshotState);
+    var listed = registry.views(snapshotState), current = active(state);
+    // A shown view holding work (a draft, a pending request) stays listed until it lets go, so its controls
+    // and results are not stranded when its section is withdrawn.
+    if (current && current.shown && current.view.id && listed.indexOf(current.view) < 0 &&
+        (call(current, "draftReason", [], null) || call(current, "leaveReason", [], null))) {
+      listed = listed.concat([current.view]);
+    }
     if (!listed.length) listed = [NO_VIEW];
     var ids = listed.map(function (view) { return view.id; });
     state.listed = listed;
     if (ids.indexOf(state.viewId) < 0) {
       // A shown view that stops being listed leaves as a switch away does.
-      var departing = active(state);
-      if (departing && departing.shown) { call(departing, "leave"); stash(state, departing); }
       var remembered = preferences.tableView(HOST);
-      state.viewId = ids.indexOf(remembered) >= 0 ? remembered : ids[0];
-      restore(state, slot(state, listed[ids.indexOf(state.viewId)]));
+      var next = slot(state, listed[ids.indexOf(ids.indexOf(remembered) >= 0 ? remembered : ids[0])]);
+      if (current && current.shown) { call(current, "leave"); stash(state, current, next); }
+      state.viewId = next.view.id;
+      restore(state, next);
     }
     var surfaces = root.querySelector(".phc-zone-views"), owned = listed.map(function (view) {
       return slot(state, view).surface;
@@ -217,19 +225,23 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (previous) {
       var old = state.slots[previous];
       call(old, "leave");
-      stash(state, old);
+      stash(state, old, state.slots[id]);
     }
     restore(state, state.slots[id]);
     if (id) panel.setPreference("table_view", id, { scope: HOST });
     panel.repaint();
   }
 
-  /* A view's column filters and sort leave the shared controls with it; the Zone filters stay. */
-  function stash(state, own) {
+  /* A view's column filters and sort leave the shared controls with it. A Zone filter stays while the next
+     view shows its column; otherwise it leaves with this view, so no filter applies without its column. */
+  function stash(state, own, next) {
     var filters = state.controls.columnFilters, fieldsOwned = own.view.filteredFields || {};
+    var nextShows = zoneFields(next);
     own.filters = Object.create(null);
     Object.keys(filters).forEach(function (field) {
-      if (fieldsOwned[field]) { own.filters[field] = filters[field]; delete filters[field]; }
+      if (fieldsOwned[field] || (ZONE_FILTERED[field] && nextShows.indexOf(field) < 0)) {
+        own.filters[field] = filters[field]; delete filters[field];
+      }
     });
     own.sort = state.controls.columnSort;
     own.shown = false;
@@ -251,6 +263,10 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     return call(own, "columns", [units.profile(AREA, preferences.current())], []).some(function (column) {
       return column[0] === field;
     });
+  }
+
+  function sortable(own, field) {
+    return ZONE_SORTED.concat(own.view.sorted || []).indexOf(field) >= 0;
   }
 
   function filtered(own, field) {
@@ -295,8 +311,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
             manage.className = "phc-action-menu-item"; root.appendChild(manage);
           }
         },
-        sort: { current: function () { return state.controls.columnDirection(field); },
-          choose: function (direction) { state.controls.sortBy(field, direction); } },
+        sort: sortable(own, field) ? { current: function () { return state.controls.columnDirection(field); },
+          choose: function (direction) { state.controls.sortBy(field, direction); } } : null,
         filter: filtered(own, field) ? { values: function () { return filterValues(state, own, field); },
           shown: function () { return state.controls.columnFilter(field); },
           set: function (values) { return state.controls.filterColumn(field, values); } } : null });
@@ -342,7 +358,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     }
     var paint = viewField(own, field) ? call(own, "headerAction", [field, label], null) : null;
     if (paint) actions.push(paint);
-    if (ZONE_SORTED.concat(own.view.sorted || []).indexOf(field) < 0) return actions;
+    if (!sortable(own, field) && !filtered(own, field)) return actions;
     var menu = columnMenu(state, own, field, label);
     return actions.concat([{ node: menu.root, persistent: menu.filtered() }]);
   }
@@ -660,7 +676,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var filters = state.controls.columnFilters;
     // Only column Show filters affect the viewport. Text search and collapsed rows remain table navigation.
     var matchingPaths = state.controls.filterCount() ? zoneRows.reduce(function (all, row) {
-      if (!zoneMatches(own, row.record, filters)) return all;
+      if (!zoneMatches(own, row.record, filters) || !call(own, "zoneMatch", [row.record, filters], true)) return all;
       return all.concat(call(own, "viewportPaths", [row.record, filters], [row.record.zone.reference.zone_path]));
     }, []).sort(function (a, b) { return ui.compareText(JSON.stringify(a), JSON.stringify(b)); }) : null;
     colourBy.filter(state.snapshot, matchingPaths);

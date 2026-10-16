@@ -85,6 +85,21 @@ a shared checked-Zone set lands with the Spaces view, the first view that checks
 for P3a-07. Step 7's one-view preview fixture is covered offline (test 1); the preview always loads
 the example so the browser checks exercise two views.
 
+## Reviews
+
+Code: Codex `gpt-6-astra` on #149. The first pass found four P1 (a native Attached-zone handoff and a
+late-starting paint tool never reached a hidden Faces view; Assemblies' Paint started the tool without
+showing Faces; the no-view fallback threw in Subtabs) and four P2 (a pointer press on a view tab cleared
+Locate; a contributed column could not sort Zone rows; Table options hid Zone modes the shown view had
+no column for; a view that stopped being listed skipped its departure). The fixes: every listed view
+consumes each snapshot, views can be shown through `host.show` and view-only intents, `sortValue`, and
+the departure path shared with switching. The second pass found one P1 (a view holding a draft was
+replaced when its section was withdrawn) and four P2 (an invalid Faces settings entry did not hold a
+switch; a Zone filter outlived its column in a view without it; the default viewport mask ignored the
+view's `zoneMatch`; a filter-only column had no menu). Each of the thirteen was reproduced by a test in
+`tests/zone_views_panel_test.js` and fixed; the second pass's five were gated by `make ci` and
+`make ui-checks` only, at the review cap.
+
 ## Offline
 
 `make ci` pass; `make ui-checks` pass (Playwright from a scratch `NODE_PATH`).
