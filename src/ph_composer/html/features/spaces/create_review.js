@@ -1,0 +1,166 @@
+/* Create Space's review: SketchUp's context menu hands the panel what `create_preview` accepts and leaves out
+ * (the `ph_composer.spaces.create_review` snapshot section), and this shows it in the shared form dialog with
+ * an optional number and name. Create sends `create` with the accepted Faces at the revision the review was
+ * read at, so a Model changed since refuses; Cancel, Escape and the close control change nothing. Either way
+ * the review is closed by its token, so a newer review is never closed by an older dialog.
+ */
+PhComposerUI.define("features/spaces/create_review", ["panel", "request", "snapshot", "workspace"],
+function (panel, requests, snapshot, ui) {
+  "use strict";
+  var SECTION = "ph_composer.spaces.create_review", PREFIX = "ph_composer.spaces";
+
+  function copy(value) { return JSON.parse(JSON.stringify(value)); }
+
+  function faces(count) { return count + (count === 1 ? " Face" : " Faces"); }
+
+  /* `guard()` names held work the review must not interrupt; `reveal` shows the Spaces view
+     (`shown(state)`, `show()`). */
+  function CreateReview(host, guard, reveal) {
+    var self = this;
+    this.host = host;
+    this.guard = guard;
+    this.reveal = reveal;
+    this.review = null;
+    this.token = null;
+    this.creating = requests.channel(host.session, function (type, payload) {
+      host.send(type, Object.assign({}, payload, { expected_revision: self.review.revision }));
+    }, "spaces-create");
+    this.closing = requests.channel(host.session, function (type, payload) { host.send(type, payload); },
+      "spaces-create-review", "view.invoke");
+  }
+
+  CreateReview.prototype.consume = function (state) {
+    this.closing.consume(state);
+    var outcome = this.creating.consume(state);
+    if (outcome) this.settle(outcome);
+    var pending = snapshot.value(state, SECTION);
+    if (!pending || !pending.token || pending.token === this.token) return;
+    var reason = this.guard();
+    if (reason) {
+      if (this.waiting !== pending.token) panel.notify(reason, "warning");
+      this.waiting = pending.token;
+      return;
+    }
+    if (!this.reveal.shown(state)) {
+      if (this.revealing === pending.token) return;
+      this.revealing = pending.token;
+      this.reveal.show();
+      return;
+    }
+    this.waiting = null;
+    this.token = pending.token;
+    this.review = copy(pending);
+    this.render();
+  };
+
+  CreateReview.prototype.render = function () {
+    var self = this, review = this.review, accepted = review.accepted.length;
+    var dialog = this.dialog || (this.dialog = ui.formDialog("phc-create-space", function () { self.cancel(); }));
+    if (!dialog.parentNode) document.body.appendChild(dialog);
+    var zone = review.zone_name || "the Zone";
+    var summary = accepted ? faces(accepted) + " in " + zone + " become one Space with one Volume, each Face a " +
+      "Floor Segment." : "None of the selected Faces can become a Space in " + zone + ".";
+    // The shared form layout spaces the text and sets the two fields side by side.
+    var form = ui.element("form");
+    form.addEventListener("submit", function (event) { event.preventDefault(); self.submit(); });
+    form.appendChild(ui.element("p", "", summary));
+    if (review.left_out.length) {
+      var reasons = Object.create(null), order = [];
+      review.left_out.forEach(function (row) {
+        if (!reasons[row.message]) { reasons[row.message] = 0; order.push(row.message); }
+        reasons[row.message] += 1;
+      });
+      var list = ui.element("ul", "phc-create-space-left-out");
+      order.forEach(function (message) {
+        list.appendChild(ui.element("li", "", faces(reasons[message]) + ": " + message));
+      });
+      var leftOut = ui.element("div");
+      leftOut.appendChild(ui.element("p", "", "Left out:"));
+      leftOut.appendChild(list);
+      form.appendChild(leftOut);
+    }
+    this.number = this.field("Number", "Next free");
+    this.name = this.field("Name", "");
+    // The shared form dialog's error line, as record forms use it.
+    this.error = ui.element("div", "cell-error");
+    this.error.setAttribute("role", "status");
+    this.cancelButton = ui.button("Cancel", function () { self.cancel(); });
+    this.createButton = ui.button("Create", function () { self.submit(); });
+    this.createButton.disabled = !accepted;
+    form.appendChild(this.number.label);
+    form.appendChild(this.name.label);
+    dialog.replaceChildren(ui.element("h2", "", "Create Space"), form, this.error,
+      ui.actionRow(this.cancelButton, this.createButton));
+    dialog.openModal();
+    (accepted ? this.number.input : this.cancelButton).focus();
+  };
+
+  /* One labelled text field; Enter in it creates, as the Create button does. */
+  CreateReview.prototype.field = function (text, placeholder) {
+    var self = this, label = ui.element("label", "", text), input = ui.element("input");
+    input.setAttribute("aria-label", text);
+    if (placeholder) input.setAttribute("placeholder", placeholder);
+    input.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      self.submit();
+    });
+    label.appendChild(input);
+    return { label: label, input: input };
+  };
+
+  CreateReview.prototype.submit = function () {
+    if (!this.review || !this.review.accepted.length || this.creating.busy()) return;
+    var params = { zone: copy(this.review.zone), faces: copy(this.review.accepted),
+      name: this.name.input.value.trim() };
+    var number = this.number.input.value.trim();
+    if (number) params.number = number;
+    this.error.textContent = "";
+    this.creating.run(PREFIX + ".create", params);
+    this.busy(true);
+  };
+
+  CreateReview.prototype.settle = function (outcome) {
+    this.busy(false);
+    if (outcome.status !== "completed") {
+      if (this.error) this.error.textContent = outcome.message || "The Space was not created.";
+      return;
+    }
+    this.finish();
+    panel.notify(outcome.message || "Space created.", "success");
+  };
+
+  CreateReview.prototype.busy = function (busy) {
+    if (!this.createButton) return;
+    this.createButton.disabled = busy || !this.review.accepted.length;
+    this.cancelButton.disabled = busy;
+    this.dialog.closeButton.disabled = busy;
+  };
+
+  /* Cancel, Escape and the close control: nothing is written. Refused while Create is in flight. */
+  CreateReview.prototype.cancel = function () {
+    if (this.creating.busy()) return;
+    this.finish();
+  };
+
+  CreateReview.prototype.finish = function () {
+    if (this.dialog) this.dialog.closeModal();
+    var token = this.token;
+    this.review = null;
+    if (token && !this.host.disposed) this.closing.send(PREFIX + ".create_review.close", { token: token });
+    panel.repaint();
+  };
+
+  CreateReview.prototype.active = function () { return Boolean(this.review); };
+
+  CreateReview.prototype.dispose = function () {
+    this.creating.reset();
+    this.closing.reset();
+    if (this.dialog) {
+      this.dialog.closeModal();
+      if (this.dialog.parentNode) this.dialog.parentNode.removeChild(this.dialog);
+    }
+  };
+
+  return CreateReview;
+});
