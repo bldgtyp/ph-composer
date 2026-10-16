@@ -81,4 +81,16 @@ tool first.
 Tests: `tests/spaces_mark_paint_panel_test.js` (phase doc test 6). The preview host carries the tool's state
 and both view commands; `tools/ui-preview/spaces_checks.cjs` opens the menu, starts the tool from the icon
 for 1, sees the menu close and the pressed glyph appear, and stops it from the glyph, with screenshots of the
-menu and the marking header.
+menu and the marking header. The check also presses Escape with the menu open
+over a running tool and sees the menu close and the tool keep running.
+
+UI polish review (`.agents/skills/ph-composer-ui-polish/SKILL.md`, the "Column-scoped Face painting" pattern):
+the visibility checkbox and the sibling paint icon stay separate controls; 0 and 1 are offered even when
+unused; choosing a value closes the menu and turns on its Colour-by mode, which stays on when the tool stops;
+the pressed header glyph names the value and stops the whole tool; Escape unwinds the menu before the tool.
+No new kit part or token, so the design-system artifact needs no re-sync.
+
+Test 10 does not hold cleanly for this slice: `html/features/zones/overview.js`, the Zone views host, now
+closes a column menu after any value action runs. That is a change to the host behind the Zone views
+contract (`context/EXTENSIBILITY.md`, "Zone views", `menuValueAction`), not a part lifted into the kit, and
+it is the only file under `features/zones/`, `html/features/zones/` or `core/` that P3a-08 changes.

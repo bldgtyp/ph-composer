@@ -72,6 +72,12 @@ function visibleRows(page) {
     const glyph = page.getByRole("button", { name: "Mark floor at Weighting factor 1. Click to stop marking" });
     assert.equal(await glyph.getAttribute("aria-pressed"), "true");
     await page.screenshot({ path: path.join(output, "spaces-marking.png") });
+    // Escape unwinds one layer at a time: an open menu first, then the tool.
+    await page.getByRole("button", { name: "Weighting factor column menu" }).click();
+    await page.locator(".phc-column-menu:visible").waitFor();
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator(".phc-column-menu:visible").count(), 0, "Escape closes the menu");
+    assert.equal(await glyph.getAttribute("aria-pressed"), "true", "and leaves the tool running");
     await glyph.click();
     await glyph.waitFor({ state: "hidden" });
 
