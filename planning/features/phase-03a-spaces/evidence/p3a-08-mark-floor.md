@@ -1,7 +1,7 @@
 # P3a-08 evidence: Mark floor and Create Space
 
 DATE: 2026-10-16
-STATUS: Slice A in review on `feature/spaces-p3a-08a`
+STATUS: Slice A merged ([#156](https://github.com/bldgtyp/ph-composer/pull/156)); slice B in review on `feature/spaces-p3a-08b`
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -66,3 +66,46 @@ gpt-6-astra, cycle 2, at `b8f828d`: three P2 and one P3, fixed and gated by `mak
 - P3: the tool's own refusals now end with "Nothing was written.", as an operation's do.
 - Placement moved to `features/spaces/mark_placement.rb` (`MarkPlacement`), which keeps the tool class within
   the class-length limit, as the Window Place tool's `ToolTarget` does.
+
+## Slice B: the Weighting factor column's paint
+
+`html/features/spaces/mark_paint.js` owns the panel half of step 4. The Weighting factor column menu gives
+each value a paint icon (the Zone views host's `menuValueAction` hook), always including 0 and 1 beside every
+factor in use. Each icon's label states what counts toward iCFA (Phius guidebook 4.4.1.4) and that the tool
+checks none of it. Choosing one runs `mark_tool.start` with that factor, and the host now closes a column
+menu after any value action runs. While the tool runs, the column header shows a pressed paint glyph
+(`headerAction`) that runs `mark_tool.stop`. The state comes from the `ph_composer.spaces.mark_tool` snapshot
+section, so a tool ended in SketchUp releases the glyph. Escape and a switch to another view stop a running
+tool first.
+
+Tests: `tests/spaces_mark_paint_panel_test.js` (phase doc test 6). The preview host carries the tool's state
+and both view commands; `tools/ui-preview/spaces_checks.cjs` opens the menu, starts the tool from the icon
+for 1, sees the menu close and the pressed glyph appear, and stops it from the glyph, with screenshots of the
+menu and the marking header. The check also presses Escape with the menu open
+over a running tool and sees the menu close and the tool keep running.
+
+UI polish review (`.agents/skills/ph-composer-ui-polish/SKILL.md`, the "Column-scoped Face painting" pattern):
+the visibility checkbox and the sibling paint icon stay separate controls; 0 and 1 are offered even when
+unused; choosing a value closes the menu and turns on its Colour-by mode, which stays on when the tool stops;
+the pressed header glyph names the value and stops the whole tool; Escape unwinds the menu before the tool.
+No new kit part or token, so the design-system artifact needs no re-sync.
+
+Test 10 does not hold cleanly for this slice: `html/features/zones/overview.js`, the Zone views host, now
+closes a column menu after any value action runs. That is a change to the host behind the Zone views
+contract (`context/EXTENSIBILITY.md`, "Zone views", `menuValueAction`), not a part lifted into the kit, and
+it is the only file under `features/zones/`, `html/features/zones/` or `core/` that P3a-08 changes.
+
+Review of PR #159, gpt-6.1-sol cycle 1: two P2, each reproduced by a test in
+`tests/spaces_mark_paint_panel_test.js` that failed before its fix. A start that landed after a switch to
+another view left Mark floor running behind the Faces view; the Spaces view now stops the tool on any
+snapshot while it is not shown, as the Faces view does for Classify, and sends one stop per run. The pressed
+icon compared the host's band text with this runtime's number text, which differ for small factors such as
+`1.0e-07`; it now compares numbers.
+
+Cycle 2 at `3f6bce0`: four P2, fixed with tests and gated by `make ci` (the review cap). Escape before a
+start landed lost the cancellation; a start in flight now counts as running for Escape and leaving, and is
+stopped once it lands. Leaving the Zones tab left the tool running with no panel stop; the Spaces view now
+stops it whenever the Zones tab or the Spaces view is not shown. A menu reopened while a start was in flight
+built its icons disabled and never refreshed them; icons are no longer disabled, and a start chosen during
+another is sent too. The menu-closes assertion used a selector the DOM stub never matches; it now reads the
+trigger's `aria-expanded`. A reopened menu's pressed icon can still lag a start in flight until it is reopened.

@@ -325,7 +325,13 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     if (!menu) {
       var ownColumn = viewField(own, field);
       menu = own.menus[field] = new columnMenus.ColumnMenu({ label: label,
-        valueAction: function (entry) { return ownColumn ? call(own, "menuValueAction", [field, entry], null) : null; },
+        // A value action that starts something (a paint) closes the menu once it has run.
+        valueAction: function (entry) {
+          var action = ownColumn ? call(own, "menuValueAction", [field, entry], null) : null;
+          if (!action) return null;
+          var run = action.run;
+          return Object.assign({}, action, { run: function (anchor) { run(anchor); menu.bubble.close(true); } });
+        },
         extra: function (root, anchor, close, reopen) {
           if (ownColumn) call(own, "menuExtra", [field, root, anchor, close, reopen]);
           if (field === "building_segment" || field === "level") {

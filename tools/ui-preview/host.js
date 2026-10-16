@@ -44,6 +44,7 @@
     this.faces = JSON.parse(JSON.stringify(settings.faces || []));
     // The Spaces read: the fixture's, or empty (the section is always published, as the host does).
     this.spaces = settings.spaces ? JSON.parse(JSON.stringify(settings.spaces)) : null;
+    this.markTool = { active: false, weighting_factor: 1, gesture_limit: 250 };
     this.selectedFaces = JSON.parse(JSON.stringify(settings.selectedFaces || []));
     this.makeZone = settings.makeZone || null;
     this.zoneSettings = { suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130 };
@@ -134,6 +135,7 @@
           default_psi_install_id: null, default_install_depth_m: 0 })) },
         ["ph_composer.spaces.spaces"]: { status: "completed", value: JSON.parse(JSON.stringify(this.spaces || {
           spaces: [], zones: [], findings: [], units: { area: "m2", height: "m", volume: "m3", airflow: "m3/h" } })) },
+        ["ph_composer.spaces.mark_tool"]: { status: "completed", value: JSON.parse(JSON.stringify(this.markTool)) },
         [MATERIALS]: { status: "completed", value: JSON.parse(JSON.stringify(this.materials)) },
         [ASSEMBLIES]: { status: "completed", value: JSON.parse(JSON.stringify(this.assemblies)) },
         [ATTACHED]: { status: "completed", code: "ok", revision: this.revision,
@@ -260,6 +262,11 @@
       }
       if (payload.name === "ph_composer.windows.place_tool.stop") this.windows.place_tool.active = false;
       if (payload.name === "ph_composer.windows.units.locate") this.selectedUnits = payload.params.units;
+      if (payload.name === "ph_composer.spaces.mark_tool.start") {
+        this.markTool = { active: true, weighting_factor: payload.params.weighting_factor, gesture_limit: 250 };
+        this.colourBy = { mode: "ph_composer.spaces.by_weighting_factor", isolated: null };
+      }
+      if (payload.name === "ph_composer.spaces.mark_tool.stop") this.markTool.active = false;
       outcome = { status: "completed", code: "ok", message: "Done.", effect: "none", revision: this.revision,
         value: {}, affected: [], findings: [], detail: null };
       this.snapshot();
