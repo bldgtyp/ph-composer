@@ -28,6 +28,9 @@ module PhComposer
                                   "next_cursor" => next_cursor, "total" => rows.length)
       end
 
+      # The Building-Segment a Zone belongs to: the key its sums group by and the name they show.
+      BuildingSegment = Struct.new(:key, :name, keyword_init: true)
+
       def assemble(request)
         scan = Occurrences.scan(request.model)
         catalog = request.registry.catalog
@@ -35,12 +38,14 @@ module PhComposer
           values = zone.fetch("values")
           { "zone_id" => zone.dig("reference", "zone_id"), "zone_path" => zone.dig("reference", "zone_path"),
             "name" => values["name"],
-            :segment => [values["building_segment_id"] || values["building_segment"],
-                         zone.dig("display", "building_segment") || values["building_segment"]] }
+            :building_segment => BuildingSegment.new(
+              :key => values["building_segment_id"] || values["building_segment"],
+              :name => zone.dig("display", "building_segment") || values["building_segment"]
+            ) }
         end
         ids = scan.spaces.map { |space| space.record.fetch("id") }.tally
-        counts = Resolve::TARGETS.transform_values do |(_key, _label, list)|
-          list.call(scan).map { |occurrence| occurrence.record.fetch("id") }.tally
+        counts = Resolve::TARGETS.transform_values do |target|
+          target.occurrences_in(scan).map { |occurrence| occurrence.record.fetch("id") }.tally
         end
         rows = scan.spaces.sort_by(&:path).map do |space|
           space_row(space, zones, ids, catalog, request.model, counts)
@@ -116,7 +121,7 @@ module PhComposer
       def duplicate(counts, kind, record, repeated, ancestor: nil)
         return [] unless repeated || counts.fetch(kind).fetch(record.fetch("id")) > 1
 
-        [Findings.duplicate(Resolve::TARGETS.fetch(kind)[1], :repeated => repeated, :ancestor => ancestor)]
+        [Findings.duplicate(Resolve::TARGETS.fetch(kind).label, :repeated => repeated, :ancestor => ancestor)]
       end
 
       def state(space, ids)
@@ -148,13 +153,15 @@ module PhComposer
       end
 
       # The Zone rows, and the sums per Building-Segment and for the Model, over every Space whatever
-      # page a list returns. A Space outside every Zone counts toward the Model only.
+      # page a list returns. A Space outside every Zone counts toward the Model only. The Symbol key marks
+      # the Zone rows' BuildingSegment as internal: it groups the sums here and is left out of the read.
       def totals(rows, zones)
-        segments = zones.group_by { |zone| zone.fetch(:segment).first }.map do |key, members|
-          { "key" => key.to_s, "name" => members.first.fetch(:segment).last, "zone_count" => members.length }
+        segments = zones.group_by { |zone| zone.fetch(:building_segment).key }.map do |key, members|
+          { "key" => key.to_s, "name" => members.first.fetch(:building_segment).name,
+            "zone_count" => members.length }
             .merge(Metrics.sums(members, Metrics::TOTALS))
         end
-        { "zones" => zones.map { |zone| zone.reject { |key, _value| key == :segment } },
+        { "zones" => zones.map { |zone| zone.reject { |key, _value| key == :building_segment } },
           "building_segments" => segments,
           "model" => Metrics.sums(rows.map { |row| row.fetch("metrics") }, Metrics::TOTALS) }
       end

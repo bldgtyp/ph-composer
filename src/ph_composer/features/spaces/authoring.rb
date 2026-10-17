@@ -248,9 +248,9 @@ module PhComposer
 
       # Every Spaces record at or below `path`, whatever the hierarchy holds it as: what erasing it removes.
       def inside(scan, path)
-        Resolve::TARGETS.flat_map do |kind, (_key, _label, list)|
-          list.call(scan).select { |occurrence| occurrence.path[0, path.length] == path }
-              .map { |occurrence| [kind, occurrence] }
+        Resolve::TARGETS.flat_map do |kind, target|
+          target.occurrences_in(scan).select { |occurrence| occurrence.path[0, path.length] == path }
+                .map { |occurrence| [kind, occurrence] }
         end
       end
 

@@ -91,7 +91,7 @@ module PhComposer
       # Each rewritten record with the path it has after isolation, which the caller can resolve.
       def affected_row(row, path)
         id = row.dig("after", "id")
-        key = Resolve::TARGETS.fetch(row.fetch("kind")).first
+        key = Resolve::TARGETS.fetch(row.fetch("kind")).id_key
         { "kind" => row.fetch("kind"), "id" => id,
           "change" => id == row.dig("before", "id") ? "updated" : "identity_repaired",
           "reference" => { key => id, "entity_path" => path } }
@@ -100,10 +100,10 @@ module PhComposer
       # The eligibility the plan checked holds again at apply.
       def target_occurrence(model)
         scan = Occurrences.scan(model)
-        _key, label, list = Resolve::TARGETS.fetch(@kind)
-        target = list.call(scan).find { |occurrence| occurrence.path == @path }
+        kind_target = Resolve::TARGETS.fetch(@kind)
+        target = kind_target.occurrences_in(scan).find { |occurrence| occurrence.path == @path }
         unless target && target.record == @record
-          raise CodedError.new("target.changed", "That #{label} changed after it was previewed.")
+          raise CodedError.new("target.changed", "That #{kind_target.label} changed after it was previewed.")
         end
 
         IdentityPlan.refuse!(scan, @kind, target)

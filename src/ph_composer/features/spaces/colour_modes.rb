@@ -27,6 +27,7 @@ module PhComposer
       BY_HEIGHT = "#{FEATURE_ID}.by_height"
       # The Supply, Extract and Transfer columns offer By ventilation together.
       VENTILATION_GROUP = "ventilation"
+      # Per category: its legend label, its colour, and the rates its legend row sums.
       VENTILATION = {
         "both" => ["Supply and extract", [44, 160, 44], %w[v_sup_m3h v_eta_m3h]],
         "supply" => ["Supply only", [31, 119, 180], %w[v_sup_m3h]],

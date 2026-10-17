@@ -46,8 +46,9 @@ Each inventory group ends in exactly one of three outcomes, recorded in [STATUS.
   rows ride in the next refactor PR; they get no PR of their own.
 - **Host gate pending**: refactored and merged offline, with native acceptance owed because the
   boundary touches Undo/Redo, observers, edit paths, shared storage or drawing. Host checks are
-  batched into one native-acceptance run per wave so Ed sees one approval, following
-  `.agents/skills/ph-composer-native-acceptance/SKILL.md`.
+  batched across stages, following `.agents/skills/ph-composer-native-acceptance/SKILL.md`, so Ed sees
+  one approval per batch; the cases owed come from `tools/hostkit/acceptance_ledger.py status
+  --changed <path>` for each changed file. Every owed batch runs before the program closes.
 
 A group may also be split into two stages when its trace shows two independent responsibilities.
 
