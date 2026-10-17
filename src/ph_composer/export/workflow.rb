@@ -19,8 +19,10 @@ module PhComposer
         return preflight unless preflight["status"] == "completed"
 
         chosen = chosen_repairs(preflight, repairs)
-        return Outcome.refused("params.invalid", "Choose only declared preflight repairs.",
-                               :revision => session.revision) unless chosen
+        unless chosen
+          return Outcome.refused("params.invalid", "Choose only declared preflight repairs.",
+                                 :revision => session.revision)
+        end
 
         destination, refused = consent(session)
         return refused if refused

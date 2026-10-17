@@ -15,6 +15,11 @@ module PhComposer
 
       module_function
 
+      # The top-level namespace of each dotted user_data key, once each.
+      def namespaces(keys)
+        keys.map { |key| key.split(".").first }.uniq
+      end
+
       def fields(names)
         names.to_h { |name| [name.to_s, nil] }
       end

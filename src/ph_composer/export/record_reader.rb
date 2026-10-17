@@ -20,9 +20,10 @@ module PhComposer
     # - Any other envelope is left out when it declares itself `local_only`, and blocks the export when
     #   it is `required` or its relevance is unknown: nothing guesses from a payload's text.
     class RecordReader
-      Finding = Struct.new(:code, :section, :object_id, :message, keyword_init: true) do
+      # `record_id` leaves as the wire's `object_id`; a member of that name would shadow Object#object_id.
+      Finding = Struct.new(:code, :section, :record_id, :message, keyword_init: true) do
         def to_h
-          { "code" => code, "section" => section, "object_id" => object_id, "message" => message }
+          { "code" => code, "section" => section, "object_id" => record_id, "message" => message }
         end
       end
 
@@ -30,7 +31,8 @@ module PhComposer
 
       attr_reader :findings
 
-      # `claims` maps `[namespace, target_kind]` to the claiming contributor's name.
+      # `claims` maps `[namespace, target_kind]` to the claim (Collection.claims): its contributor, fields and
+      # source section.
       # `reserved` lists the user_data top-level keys a user may not take: PH-Composer's own and every
       # namespace an export contributor declares it writes (Privacy.user_data_keys).
       def initialize(engine, catalog, claims: {}, reserved: [RESERVED_USER_DATA_KEY])
@@ -75,8 +77,7 @@ module PhComposer
           next leave_out(id, namespace, envelope) unless claimed
 
           payload = declared_payload(id, namespace, envelope, claimed.fetch("fields"))
-          capture(namespace, target_kind, claimed, "id" => id, "path" => DeepCopy.call(path),
-                                                   "payload" => payload) if path
+          capture_claimed(namespace, target_kind, claimed, id, path, payload) if path
         end
         { "id" => id }.merge(DeepCopy.call(stored.slice(*fields))).merge(passed)
       end
@@ -90,8 +91,7 @@ module PhComposer
           next unless claimed
 
           payload = declared_payload(stored.fetch("id"), namespace, envelope, claimed.fetch("fields"))
-          capture(namespace, target_kind, claimed, "id" => stored.fetch("id"), "path" => DeepCopy.call(path),
-                                                   "payload" => payload)
+          capture_claimed(namespace, target_kind, claimed, stored.fetch("id"), path, payload)
         end
       end
 
@@ -114,12 +114,18 @@ module PhComposer
         unread = @projected.keys.find { |key| @projected[key].length > @read.fetch(key, 0) }
         return unless unread
 
+        namespace, target_kind = unread
         raise Blocked.new("export.blocked",
-                          "#{unread[0]} data on #{unread[1]} is claimed for export but its exporter did not " \
+                          "#{namespace} data on #{target_kind} is claimed for export but its exporter did not " \
                           "read it. Nothing was written.", "section" => @claims[unread].fetch("contributor"))
       end
 
       private
+
+      # One occurrence's claimed payload, captured for its claimant.
+      def capture_claimed(namespace, target_kind, claimed, id, path, payload)
+        capture(namespace, target_kind, claimed, "id" => id, "path" => DeepCopy.call(path), "payload" => payload)
+      end
 
       # The claim names the section that captures its rows; a capture anywhere else means the
       # declaration and the owner disagree, which no export may paper over.
@@ -196,7 +202,7 @@ module PhComposer
       end
 
       def note(code, id, message)
-        @findings << Finding.new(:code => code, :section => @section, :object_id => id, :message => message)
+        @findings << Finding.new(:code => code, :section => @section, :record_id => id, :message => message)
       end
 
       def block(code, message)
