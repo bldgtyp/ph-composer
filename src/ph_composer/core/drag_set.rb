@@ -9,7 +9,8 @@ module PhComposer
   # its operation over the ceiling and is refused by the one rule that owns the ceiling, instead of
   # arriving full and legal-looking and silently painting part of what the pointer crossed.
   #
-  # It names no feature and knows nothing about Faces: Spaces' Mark floor will collect the same way.
+  # It names no feature and knows nothing about Faces: the Classify tool and Spaces' Mark floor both collect
+  # with it.
   class DragSet
     attr_reader :limit
 

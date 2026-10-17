@@ -125,7 +125,7 @@ module PhComposer
     end
 
     def point_close?(left, right, tolerance)
-      Math.sqrt(left.zip(right).sum { |a, b| (a - b)**2 }) <= tolerance
+      distance(left, right) <= tolerance
     end
 
     def minimum_edge(loop)
