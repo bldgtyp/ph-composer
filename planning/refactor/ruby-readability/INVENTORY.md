@@ -1,6 +1,6 @@
 # Ruby inventory
 
-GENERATED from `2f8becb4` by `ruby planning/refactor/ruby-readability/inventory.rb`. Do not edit by hand;
+GENERATED from the index on `9c8e5acf` by `ruby planning/refactor/ruby-readability/inventory.rb`. Do not edit by hand;
 review status and concerns live in [STATUS.md](STATUS.md). Re-run after a stage that adds or moves files.
 
 Columns: lines; `def` count; largest ABC and cyclomatic values RuboCop reported over its default
@@ -15,20 +15,20 @@ real boundary and may cross groups where an internal contract requires it.
 
 | Id | Responsibility | Files | Lines | Over |
 | --- | --- | ---: | ---: | ---: |
-| R01 | Spaces authoring and height from solid | 5 | 1174 | 39 |
-| R02 | Face classification and Attached-zone operations | 7 | 1818 | 54 |
+| R01 | Spaces authoring and height from solid | 5 | 1204 | 39 |
+| R02 | Face classification and Attached-zone operations | 8 | 1823 | 54 |
 | R03 | Colour-by service and drawing | 14 | 3204 | 104 |
-| R04 | Windows export assessment and export | 5 | 1229 | 46 |
+| R04 | Windows export assessment and export | 5 | 1247 | 49 |
 | R05 | Registration and registry validation | 7 | 2982 | 92 |
 | R06 | Spaces reads, readouts, records and export | 22 | 2626 | 82 |
 | R07 | Spaces identity, move, copy and context | 16 | 2446 | 68 |
 | R08 | Spaces mark tool, create route and scan | 13 | 1766 | 49 |
 | R09 | Faces selection, classify tool, locate and assembly assignment | 23 | 4107 | 116 |
-| R10 | Adjacency, overlap and face split | 8 | 3233 | 124 |
+| R10 | Adjacency, overlap and face split | 8 | 3246 | 126 |
 | R11 | Zone occurrences, names, copy watch and steps | 17 | 3692 | 113 |
 | R12 | Zone repair and split identity | 7 | 2331 | 84 |
 | R13 | Zone options | 8 | 1431 | 71 |
-| R14 | Zones feature root, declarations and export | 14 | 1795 | 33 |
+| R14 | Zones feature root, declarations and export | 14 | 1797 | 33 |
 | R15 | Assemblies and materials | 35 | 3341 | 104 |
 | R16 | Window Types and products | 15 | 2071 | 83 |
 | R17 | Window placement and place tool | 15 | 1783 | 64 |
@@ -51,13 +51,13 @@ real boundary and may cross groups where an internal contract requires it.
 | R34 | Examples and walkthrough scripts | 24 | 3687 | 101 |
 | R35 | Development tools | 2 | 242 | 5 |
 | R36 | Spikes (retained evidence probes) | 8 | 1792 | 60 |
-| | **All** | 550 | 83930 | 2488 |
+| | **All** | 551 | 83998 | 2493 |
 
 ## R01 Spaces authoring and height from solid
 
 | File | Lines | defs | Max ABC | Max cyclomatic | Over |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `src/ph_composer/features/spaces/authoring.rb` | 449 | 32 | 42.1 | 10 | 15 |
+| `src/ph_composer/features/spaces/authoring.rb` | 479 | 36 | 39.2 | 8 | 15 |
 | `src/ph_composer/features/spaces/height_from_solid.rb` | 106 | 7 | 30 |  | 3 |
 | `src/ph_composer/features/spaces/height_from_solid_menu.rb` | 84 | 6 | 27.8 |  | 1 |
 | `tests/spaces_height_from_solid_test.rb` | 144 | 15 | 43.4 |  | 4 |
@@ -68,8 +68,9 @@ real boundary and may cross groups where an internal contract requires it.
 | File | Lines | defs | Max ABC | Max cyclomatic | Over |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | `src/ph_composer/features/zones/faces/attached_zone.rb` | 74 | 2 |  |  | 0 |
+| `src/ph_composer/features/zones/faces/attached_zone_operations.rb` | 141 | 8 | 29.7 |  | 2 |
 | `src/ph_composer/features/zones/faces/classify_guidance.rb` | 39 | 2 |  |  | 0 |
-| `src/ph_composer/features/zones/faces/operations.rb` | 532 | 33 | 45.3 | 12 | 20 |
+| `src/ph_composer/features/zones/faces/operations.rb` | 396 | 25 | 45.3 | 12 | 18 |
 | `src/ph_composer/features/zones/faces/steps.rb` | 106 | 10 | 19 |  | 1 |
 | `tests/attached_zone_create_assign_test.rb` | 250 | 17 | 54.6 | 8 | 11 |
 | `tests/attached_zone_test.rb` | 323 | 25 | 38.8 |  | 6 |
@@ -99,7 +100,7 @@ real boundary and may cross groups where an internal contract requires it.
 | File | Lines | defs | Max ABC | Max cyclomatic | Over |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | `src/ph_composer/features/windows/export.rb` | 131 | 8 | 29.1 |  | 3 |
-| `src/ph_composer/features/windows/export_assessment.rb` | 293 | 18 | 68.7 | 24 | 12 |
+| `src/ph_composer/features/windows/export_assessment.rb` | 311 | 20 | 42.5 | 10 | 15 |
 | `src/ph_composer/features/windows/export_geometry.rb` | 29 | 1 |  |  | 0 |
 | `src/ph_composer/features/windows/snapshot.rb` | 125 | 12 | 27 |  | 3 |
 | `tests/window_export_test.rb` | 651 | 36 | 73.9 | 9 | 28 |
@@ -214,10 +215,10 @@ real boundary and may cross groups where an internal contract requires it.
 
 | File | Lines | defs | Max ABC | Max cyclomatic | Over |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `src/ph_composer/features/zones/adjacency/adjacency.rb` | 476 | 28 | 50.1 | 15 | 31 |
-| `src/ph_composer/features/zones/adjacency/adjacency_steps.rb` | 331 | 30 | 32.1 |  | 7 |
+| `src/ph_composer/features/zones/adjacency/adjacency.rb` | 481 | 28 | 50.1 | 15 | 32 |
+| `src/ph_composer/features/zones/adjacency/adjacency_steps.rb` | 342 | 30 | 32.1 |  | 8 |
 | `src/ph_composer/features/zones/adjacency/face_split.rb` | 109 | 8 | 47.1 |  | 3 |
-| `src/ph_composer/features/zones/adjacency/operations.rb` | 231 | 12 | 52.9 | 9 | 8 |
+| `src/ph_composer/features/zones/adjacency/operations.rb` | 228 | 13 | 52.9 | 9 | 8 |
 | `src/ph_composer/features/zones/adjacency/overlap.rb` | 384 | 35 | 55.8 | 20 | 19 |
 | `tests/zone_cutting_components_test.rb` | 96 | 7 | 28.9 |  | 4 |
 | `tests/zone_overlap_test.rb` | 243 | 29 | 27.6 |  | 3 |
@@ -278,13 +279,13 @@ real boundary and may cross groups where an internal contract requires it.
 | `src/ph_composer/features/zones/colour_modes.rb` | 61 | 3 | 22.8 |  | 1 |
 | `src/ph_composer/features/zones/declarations/adjacency.rb` | 54 | 1 |  |  | 0 |
 | `src/ph_composer/features/zones/declarations/assembly_assignment.rb` | 65 | 1 | 29.4 |  | 1 |
-| `src/ph_composer/features/zones/declarations/faces.rb` | 418 | 7 | 29.3 |  | 4 |
+| `src/ph_composer/features/zones/declarations/faces.rb` | 419 | 7 | 29.3 |  | 4 |
 | `src/ph_composer/features/zones/declarations/repair.rb` | 106 | 2 | 21.2 |  | 1 |
 | `src/ph_composer/features/zones/declarations/selection.rb` | 112 | 3 | 23.4 |  | 3 |
 | `src/ph_composer/features/zones/declarations/shapes.rb` | 16 | 0 |  |  | 0 |
 | `src/ph_composer/features/zones/declarations/zone.rb` | 188 | 2 | 27.9 |  | 2 |
 | `src/ph_composer/features/zones/export.rb` | 163 | 11 | 51.6 | 12 | 7 |
-| `src/ph_composer/features/zones/install.rb` | 90 | 1 |  |  | 0 |
+| `src/ph_composer/features/zones/install.rb` | 91 | 1 |  |  | 0 |
 | `src/ph_composer/features/zones/refuses.rb` | 46 | 0 |  |  | 0 |
 | `tests/phase_one_export_test.rb` | 247 | 15 | 52.8 | 9 | 9 |
 | `tests/zone_settings_test.rb` | 166 | 16 | 33.2 |  | 5 |

@@ -21,7 +21,7 @@ GROUPS = [
    %r{\Asrc/ph_composer/features/spaces/(authoring|height_from_solid(_menu)?)\.rb\z|
       \Atests/spaces_(operations|height_from_solid)_test\.rb\z}x],
   ["R02", "Face classification and Attached-zone operations",
-   %r{\Asrc/ph_composer/features/zones/faces/(operations|attached_zone|steps|classify_guidance)\.rb\z|
+   %r{\Asrc/ph_composer/features/zones/faces/(operations|attached_zone|attached_zone_operations|steps|classify_guidance)\.rb\z|
       \Atests/(attached_zone|attached_zone_create_assign|zone_face)_test\.rb\z}x],
   ["R03", "Colour-by service and drawing",
    %r{\Asrc/ph_composer/colour_by/|\Atests/colour_by_[a-z]+_test\.rb\z|\Atests/colour_by_test\.rb\z|
@@ -180,7 +180,7 @@ end
 
 puts "# Ruby inventory"
 puts
-puts "GENERATED from `#{head}` by `ruby planning/refactor/ruby-readability/inventory.rb`. Do not edit by hand;"
+puts "GENERATED from the index on `#{head}` by `ruby planning/refactor/ruby-readability/inventory.rb`. Do not edit by hand;"
 puts "review status and concerns live in [STATUS.md](STATUS.md). Re-run after a stage that adds or moves files."
 puts
 puts "Columns: lines; `def` count; largest ABC and cyclomatic values RuboCop reported over its default"

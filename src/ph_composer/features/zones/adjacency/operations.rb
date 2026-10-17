@@ -11,10 +11,8 @@ module PhComposer
       plan = Adjacency.plan(request.model, zones)
       plan.findings.each { |finding| proposal.add_finding(finding) }
       unless plan.retirements.empty?
-        scopes = plan.retirements.map do |reference, _before, _after|
-          Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
-        end
-        proposal.add_step(FaceRecordStep.new(:updates => plan.retirements, :change => "retired"), :scopes => scopes)
+        proposal.add_step(FaceRecordStep.new(:updates => plan.retirements, :change => "retired"),
+                          :scopes => record_scopes(plan.retirements))
       end
       pair_ids = Adjacency.components(plan.matches).flat_map do |group|
         if group.length > 1
@@ -170,13 +168,12 @@ module PhComposer
       return pair_id if left_after == left.fetch(:record) && right_after == right.fetch(:record)
 
       updates = [left, right].zip([left_after, right_after]).map do |side, after|
-        occurrence = side.fetch(:occurrence)
-        [occurrence.reference(side.fetch(:record).fetch("id")), side.fetch(:record), after]
+        record = side.fetch(:record)
+        FaceRecordUpdate.new(:reference => side.fetch(:occurrence).reference(record.fetch("id")), :before => record,
+                             :after => after)
       end
-      scopes = updates.map do |reference, _before, _after|
-        Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
-      end
-      proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "updated"), :scopes => scopes)
+      proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "updated"),
+                        :scopes => record_scopes(updates))
       pair_id
     end
 
@@ -189,43 +186,43 @@ module PhComposer
     end
 
     def retire_pair(request, proposal, occurrence, record)
-      local_after, counterpart, other, other_after = Adjacency.retire_records(request.model, occurrence, record)
-      updates = [[occurrence.reference(record.fetch("id")), record, local_after],
-                 [counterpart.reference(other.fetch("id")), other, other_after]]
-      scopes = updates.map do |reference, _before, _after|
-        Operations::EntityScope.new(reference.fetch("zone_path")[0...-1])
-      end
-      proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "retired"), :scopes => scopes)
-      local_after
+      updates = Adjacency.retirement_pair(request.model, occurrence, record)
+      proposal.add_step(FaceRecordStep.new(:updates => updates, :change => "retired"),
+                        :scopes => record_scopes(updates))
+      updates.first.after
+    end
+
+    # The Groups whose contents a set of Face record writes touch: each Face's Zone's parent.
+    def record_scopes(updates)
+      updates.map { |update| Operations::EntityScope.new(update.reference.fetch("zone_path")[0...-1]) }
     end
 
     # Plans the reciprocal retirement for a whole gesture without writing anything. The caller
     # composes the returned records into its own step, so Classify never edits an adjacency
     # envelope itself and one Face is written once even when both endpoints are being classified.
     #
-    # Returns { occurrence key => [reference, before, after] } covering both targets and the
-    # counterparts they drag in.
+    # Returns { occurrence key => FaceRecordUpdate } covering both targets and the counterparts they
+    # drag in.
     def retire_pairs(request, targets, index = nil)
       plan = {}
       targets.each do |occurrence, record|
-        local_after, counterpart, other, other_after =
-          Adjacency.retire_records(request.model, occurrence, record, :index => index)
-        add_retirement(plan, occurrence.reference(record.fetch("id")), record, local_after)
-        add_retirement(plan, counterpart.reference(other.fetch("id")), other, other_after)
+        Adjacency.retirement_pair(request.model, occurrence, record, :index => index).each do |update|
+          add_retirement(plan, update)
+        end
       end
       plan
     end
 
-    def add_retirement(plan, reference, before, after)
-      key = Occurrences.key(reference)
+    def add_retirement(plan, update)
+      key = Occurrences.key(update.reference)
       existing = plan[key]
-      if existing && existing.fetch(2) != after
+      if existing && existing.after != update.after
         raise CodedError.new("gesture.retirement_conflict",
-                             "Face #{before.fetch('id')} would be retired two different ways in one gesture.")
+                             "Face #{update.before.fetch('id')} would be retired two different ways in one gesture.")
       end
 
-      plan[key] = [reference, before, after]
+      plan[key] = update
     end
-    private_class_method :pair_match, :split_match, :check_unpaired!, :side_plan, :add_retirement
+    private_class_method :pair_match, :split_match, :check_unpaired!, :side_plan, :add_retirement, :record_scopes
   end
 end

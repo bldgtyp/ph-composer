@@ -477,6 +477,15 @@ entry's `transform` maps that entity's own contents to world. A value of nil is 
 a projection that knows a record is only half filled in says `state: :incomplete`; the service
 owns the appearance of both, so those two states look the same in every mode.
 
+A legend row's state answers for the one field its mode paints. The Faces table's row state answers
+for the whole record, and is stricter about two things a mode cannot see without a Model walk: a
+dangling Attached zone reference and an adjacency that has gone stale. A Face can therefore read
+complete in the viewport and incomplete in the table. Both call a Face with no record unclassified.
+In the Face type and Boundary condition modes, a record missing the painted field is incomplete in
+both. An Assembly is optional, so the Assembly mode shows a record with no `assembly_id` as
+unclassified while the table can call it classified. Neither is the validation register, which owns
+severities and finding codes.
+
 An entry's `value` is the legend's key, a string, and the legend's select and isolate commands send
 it back unchanged. When the colour is a property of the record a value names rather than a function
 of the value (an Assembly's own colour), the entry supplies `colour: [r, g, b]` and the service uses

@@ -2,30 +2,41 @@
 
 module PhComposer
   module Zones
+    # One planned Face record write: the Face's reference, its record as read, and the record to write.
+    # Pairing and retiring plan these; Classify reads a retirement's `after` as the base it patches.
+    FaceRecordUpdate = Struct.new(:reference, :before, :after, keyword_init: true)
+
+    # Writes FaceRecordUpdates in one step, checking every Face against its `before` first.
     class FaceRecordStep
       attr_reader :affected
 
       def initialize(updates:, change:)
-        @updates = updates.map do |reference, before, after|
-          [DeepCopy.call(reference).freeze, DeepCopy.call(before).freeze, DeepCopy.call(after).freeze]
+        @updates = updates.map do |update|
+          FaceRecordUpdate.new(:reference => DeepCopy.call(update.reference).freeze,
+                               :before => DeepCopy.call(update.before).freeze,
+                               :after => DeepCopy.call(update.after).freeze).freeze
         end.freeze
-        @affected = @updates.map do |reference, _before, after|
-          { "kind" => "face", "id" => after.fetch("id"), "change" => change,
-            "reference" => reference }
+        @affected = @updates.map do |update|
+          { "kind" => "face", "id" => update.after.fetch("id"), "change" => change,
+            "reference" => update.reference }
         end
       end
 
+      # Each update serializes as [reference, before, after], the shape the preview digest has always read.
       def descriptor
-        { "name" => "zone_face_records", "updates" => @updates }
+        { "name" => "zone_face_records",
+          "updates" => @updates.map { |update| [update.reference, update.before, update.after] } }
       end
 
       def apply(model, _slots)
-        resolved = @updates.map do |reference, before, after|
-          occurrence = Occurrences.resolve_face(model, reference, :mutable => true)
+        resolved = @updates.map do |update|
+          occurrence = Occurrences.resolve_face(model, update.reference, :mutable => true)
           current = Faces::FACE_STORE.read(occurrence.entity)
-          raise CodedError.new("target.changed", "A Face changed after the adjacency preview.") unless current == before
+          unless current == update.before
+            raise CodedError.new("target.changed", "A Face changed after the adjacency preview.")
+          end
 
-          [occurrence, after]
+          [occurrence, update.after]
         end
         resolved.each { |occurrence, after| Faces::FACE_STORE.write(occurrence.entity, after) }
       end

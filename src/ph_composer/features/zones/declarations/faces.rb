@@ -5,7 +5,8 @@ module PhComposer
     module Faces
       # The Face submodule's public contract: the Face descriptor and inventory, the faces read,
       # Classify, Suggest classification, Reverse, the viewport commands and the Attached zone kind
-      # and its writes. The handlers are Faces module functions (faces/operations.rb).
+      # and its writes. The handlers are Faces module functions (faces/operations.rb and
+      # faces/attached_zone_operations.rb).
       module Registration
         # Declared, so the engine refuses deleting an Attached zone any Face still names (M3b).
         ATTACHED_ZONE_REFERENCE = Records::Reference.new(
