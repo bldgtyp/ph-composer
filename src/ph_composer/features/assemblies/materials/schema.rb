@@ -41,6 +41,15 @@ module PhComposer
           material.fetch("category", "") == "membrane"
         end
 
+        # A Layer of several Layer-Segments, one of them a membrane: a membrane Layer holds one segment.
+        def membrane_in_mixed_layer?(layer, materials)
+          segments = Array(layer["segments"])
+          segments.length > 1 && segments.any? do |segment|
+            material = materials[segment["material_id"]]
+            material && membrane?(material)
+          end
+        end
+
         def membrane_layer?(layer, materials)
           layer.fetch("segments").all? do |segment|
             material = materials[segment["material_id"]]

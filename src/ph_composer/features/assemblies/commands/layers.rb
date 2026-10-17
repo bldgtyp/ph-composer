@@ -3,6 +3,10 @@
 module PhComposer
   module Assemblies
     module Commands
+      # A membrane Layer thicker than this is reset to MEMBRANE_THICKNESS_MM when its material is set.
+      MEMBRANE_SNAP_ABOVE_MM = 25.0
+      MEMBRANE_THICKNESS_MM = 1.0
+
       module_function
 
       def add_layer(record, index: nil, thickness_mm: 100.0, anchor_layer_id: nil, side: nil,
@@ -34,8 +38,9 @@ module PhComposer
       def remove_layer(record, layer_id:)
         mutate(record) do |assembly|
           layer = layer!(assembly, layer_id)
-          raise CodedError.new("validation.failed", "An Assembly needs at least one Layer.") if
-            assembly.fetch("layers").length == 1
+          if assembly.fetch("layers").length == 1
+            raise CodedError.new("validation.failed", "An Assembly needs at least one Layer.")
+          end
 
           assembly.fetch("layers").delete(layer)
           assembly["air_barrier"] = nil if assembly.dig("air_barrier", "layer_id") == layer_id
@@ -83,8 +88,8 @@ module PhComposer
 
       def flip_orientation(record)
         mutate(record) do |assembly|
-          assembly["orientation"] = assembly.fetch("orientation") == "first_layer_outside" ?
-            "last_layer_outside" : "first_layer_outside"
+          outside_first = assembly.fetch("orientation") == "first_layer_outside"
+          assembly["orientation"] = outside_first ? "last_layer_outside" : "first_layer_outside"
         end
       end
 
@@ -153,8 +158,8 @@ module PhComposer
       end
 
       def snap_membrane!(layer, materials)
-        if layer.fetch("thickness_mm") > 25.0 && Materials::Schema.membrane_layer?(layer, materials)
-          layer["thickness_mm"] = 1.0
+        if layer.fetch("thickness_mm") > MEMBRANE_SNAP_ABOVE_MM && Materials::Schema.membrane_layer?(layer, materials)
+          layer["thickness_mm"] = MEMBRANE_THICKNESS_MM
         end
       end
       private_class_method :snap_membrane!

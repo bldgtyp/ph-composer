@@ -71,6 +71,15 @@ module PhComposer
         end
       end
 
+      # The ordinary Material create.
+      def create
+        params = Shapes.create(Materials::Schema::KIND, :labelled => Materials::Schema::LABELLED_FIELDS)
+        callback(params, Shapes::RESULT, :refuses => Refuses::CREATE) do |request, proposal|
+          Materials::Operations.create(request, proposal, :values => request.params.fetch("values"),
+                                                          :user_data => request.params["user_data"])
+        end
+      end
+
       def replace
         params = Shapes.update(Materials::Schema::KIND, FIELDS, :labelled => Materials::Schema::LABELLED_FIELDS)
         params.fetch("properties").delete("user_data")
@@ -91,13 +100,7 @@ module PhComposer
           :wire_kind => "materials", :wire_version => 1, :fingerprint_version => 1, :wire_schema => wire_schema,
           :mapped_schema => schema, :fingerprint_fields => FIELDS, :map => method(:map), :reverse => method(:reverse),
           :fingerprint => method(:fingerprint), :display_label => ->(mapped) { mapped.fetch("name") },
-          :local_read => local_read,
-          :create => callback(Shapes.create(Materials::Schema::KIND, :labelled => Materials::Schema::LABELLED_FIELDS),
-                              Shapes::RESULT, :refuses => Refuses::CREATE) do |request, proposal|
-                       Materials::Operations.create(request, proposal, :values => request.params.fetch("values"),
-                                                                       :user_data => request.params["user_data"])
-                     end,
-          :replace => replace, :assign => assign
+          :local_read => local_read, :create => create, :replace => replace, :assign => assign
         )
         feature.library_kind(NAME, :contract_version => 1, :record_kind => MATERIAL_KIND, :adapter => adapter)
       end
