@@ -1,6 +1,6 @@
 "use strict";
 
-/* The Spaces view of the Zones tab (P3a-07 slice A): its rows three deep under each Zone, the No Zone group,
+/* The Spaces view of the Zones tab: its rows three deep under each Zone, the No Zone group,
    the read-only columns, the airflow cell states, the Zone sums and the imbalance marker, all read from the
    `spaces` snapshot section. */
 

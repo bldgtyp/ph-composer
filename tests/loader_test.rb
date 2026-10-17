@@ -39,7 +39,7 @@ class LoaderTest < PhComposerTestCase
   end
 
   # The Model already open at load gets its session only after every feature has subscribed, so a
-  # `session_created` subscriber hears it (D3a-19: Spaces protects Volumes a file holds unlocked).
+  # `session_created` subscriber hears it: Spaces protects the Volumes a file holds unlocked.
   def test_the_active_models_session_is_created_after_the_features_compose
     root = File.read(File.join(EXTENSION_ROOT, "extension.rb"))
     composed = root.index(/^    compose$/)

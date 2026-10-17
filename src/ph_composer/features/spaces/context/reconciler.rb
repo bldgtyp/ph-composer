@@ -54,7 +54,7 @@ module PhComposer
         end
       end
 
-      # A save, an autosave included, leaves the user where they are (D3a-19): pending protection of
+      # A save, an autosave included, leaves the user where they are: pending protection of
       # Volumes already left runs, so the file holds them protected, and the Volume still open is left
       # unlocked, so the host restores the context after the save. Inside onPreSaveModel the host reports
       # an empty path, so the settled writes' callbacks are not observed, and a job still queued for the

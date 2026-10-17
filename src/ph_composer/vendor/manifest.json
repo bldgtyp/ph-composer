@@ -96,9 +96,9 @@
       "sha256": "eda6ea45c74703b8779547bc220411664ee3fda12fa74c183777838f9c4f5355"
     },
     "html/features/spaces/actions.js": {
-      "bytes": 14833,
+      "bytes": 14817,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "352a5241583b72a24cd51e81d72ef6b8342ed4cebb030e888958a1627a49a438"
+      "sha256": "4addcf4ba30383762a884fe9383087a1fc905897d782dc3f205f03ca53ee1d7d"
     },
     "html/features/spaces/cells.js": {
       "bytes": 10300,
@@ -116,9 +116,9 @@
       "sha256": "f47862b81e16b0b0a2a6f2a472b337f9176b43183b7c03529a430c7b35f9f6fe"
     },
     "html/features/spaces/selection.js": {
-      "bytes": 14709,
+      "bytes": 14693,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "37338de89bdcb00aba561af1cb489032e5a18d294f9c5dbd0ffc2e4ca899a676"
+      "sha256": "43aac700af82188b8aedfcdeab1af2d23a4664728221022282303a504181888d"
     },
     "html/features/spaces/view.js": {
       "bytes": 20731,

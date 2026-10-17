@@ -68,7 +68,7 @@ class WindowColourModesTest < PhComposerTestCase
     assert_equal before, U::MutationScope.new.capture(@model)
   end
 
-  # Slice B of P3a-05: a swing element pointing left carries two mark segments from the pane's right
+  # A swing element pointing left carries two mark segments from the pane's right
   # corners to its left midpoint, placed by the Unit's transform and drawn in the Type's colour; a Type
   # with no operation draws none.
   def test_by_type_draws_each_elements_operation_marks_in_the_types_colour

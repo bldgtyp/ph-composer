@@ -76,7 +76,7 @@ lint-js:
 # Shipped code and tests never cite planning documents (context/CODING_STANDARDS.md, "Comments").
 # Planning ids: phase stages (P1-D), interview questions (Q18), decisions (D7, R-D4), acceptance
 # cases (A02, R06) and contract or requirement numbers (C4, I10, U1, B2, F8).
-PLANNING_IDS := \b(P\d-[A-F]\d?|Q\d{1,2}|D\d{1,2}|R-D\d+|R0\d|A\d\d|B\d|C\d|I\d{1,2}|U\d|F\d)\b
+PLANNING_IDS := \b(P\d-[A-F]\d?|P\d+[a-z]\d*-\d+|Q\d{1,2}|D\d{1,2}|D\d+[a-z]\d*-\d+|M\d[a-z]|R-D\d+|R0\d|A\d\d|B\d|C\d|I\d{1,2}|U\d|F\d)\b
 # Planning moves when it is archived; a citation into it breaks. The vendored payload is exempt.
 lint-citations:
 	@if git grep $(CITATION_FLAGS) -nP 'planning/|\bPRD\b|CONTRACTS\.md C\d|$(PLANNING_IDS)' -- $(CITATION_PATHS) \

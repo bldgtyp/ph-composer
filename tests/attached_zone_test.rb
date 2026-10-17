@@ -161,7 +161,7 @@ class AttachedZoneTest < PhComposerTestCase
     assert_equal garage, faces.first.dig("values", "attached_zone_id")
   end
 
-  # M3a: a Face moved or exploded out of every Zone keeps its assignment. Delete cannot reach it
+  # A Face moved or exploded out of every Zone keeps its assignment. Delete cannot reach it
   # through a normal operation, so it refuses the whole delete and names the recovery routes.
   def test_delete_refuses_while_a_face_outside_every_zone_names_the_record
     garage = create_zone_record("Garage")

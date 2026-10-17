@@ -3,15 +3,15 @@
 module PhComposer
   module Spaces
     # Makes a fresh native copy of a Space independent automatically, joined to the user's copy so one
-    # Undo removes both (D3a-14, following the Zones copy watcher and context/CONTRACTS.md,
-    # "Reconciliation"). A native copy arrives as an added Group after its transaction commits, already
-    # carrying its Space record (context/SKETCHUP_HOST_BEHAVIOR.md, "Observers and edit contexts"), so the
-    # session's `container_added` event queues a deferred pass. In the pass every Space occurrence whose
-    # path holds none of the added Groups is an original; an id held by exactly one original and by added
-    # occurrences has copies, which are those added occurrences. Two originals sharing an id are left for
-    # the explicit Make independent, as is anything in a file as it opens. A copy inside a component keeps
-    # its finding and gets one notice. The rest run as one
-    # gesture through `HostFollowUp` and Make independent: all or nothing, one notice.
+    # Undo removes both, as the Zones copy watcher does (context/CONTRACTS.md, "Reconciliation"). A native
+    # copy arrives as an added Group after its transaction commits, already carrying its Space record
+    # (context/SKETCHUP_HOST_BEHAVIOR.md, "Observers and edit contexts"), so the session's
+    # `container_added` event queues a deferred pass. In the pass every Space occurrence whose path holds
+    # none of the added Groups is an original; an id held by exactly one original and by added occurrences
+    # has copies, which are those added occurrences. Two originals sharing an id are left for the explicit
+    # Make independent, as is anything in a file as it opens. A copy inside a component keeps its finding
+    # and gets one notice. The rest run as one gesture through `HostFollowUp` and Make independent: all or
+    # nothing, one notice.
     #
     # Undo and Redo drop a pending pass and never repair: an array count (`5x`) undoes the first copy and
     # commits every copy in one transaction, and Redo restores a repaired copy without an addition.

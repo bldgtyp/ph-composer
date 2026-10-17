@@ -8,7 +8,7 @@ module PhComposer
       # and its writes. The handlers are Faces module functions (faces/operations.rb and
       # faces/attached_zone_operations.rb).
       module Registration
-        # Declared, so the engine refuses deleting an Attached zone any Face still names (M3b).
+        # Declared, so the engine refuses deleting an Attached zone any Face still names.
         ATTACHED_ZONE_REFERENCE = Records::Reference.new(
           :key => "attached_zone_id", :target_kind => AttachedZone::KIND_ID, :cardinality => "one", :required => false
         )
