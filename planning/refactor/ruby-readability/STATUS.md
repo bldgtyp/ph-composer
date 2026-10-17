@@ -10,8 +10,8 @@ The program ledger. One row per [INVENTORY.md](INVENTORY.md) group; order and st
 `Reviewed, no change needed` or names its owed host gate, and the native-acceptance batches are
 recorded below.
 
-**Next action:** review and merge R01, then R04 (Windows export assessment) on
-`refactor/ruby-readability-r04`.
+**Next action:** review and merge R04, then R02 with the R10 retirement producer on
+`refactor/ruby-readability-r02`.
 
 ## Ledger
 
@@ -19,10 +19,10 @@ States use the canon vocabulary. `Not traced` means the group has only inventory
 
 | Id | Responsibility | Files | Order | State | Known concerns | Verification to retain | PR | Evidence |
 | --- | --- | ---: | --- | --- | --- | --- | --- | --- |
-| R01 | Spaces authoring and height from solid | 5 | A1 | Implemented on branch | Done: `RecordEdit` replaces the positional edit across Authoring and HeightFromSolid; `partition_faces` and `without_edge_sharing` name eligibility and why the loop repeats; `reserved_numbers` names copy-repair reservation; `marked_floor_segment` lifts the per-Face checks out of `mark_floors`. Kept: `update_metadata` local tuple, `inside` pairs, HeightFromSolid math, menu `pair` | Spaces operations, height-from-solid, identity, mark tool, create route, copy watch; Ruby 2.7.2 spot check. No host gate: no transaction, observer or drawing change | `refactor/ruby-readability-r01` | Focused suites 98 runs, 0 failures; rubocop clean; `make ci` below |
+| R01 | Spaces authoring and height from solid | 5 | A1 | Merged to main | Done: `RecordEdit` replaces the positional edit across Authoring and HeightFromSolid; `partition_faces` and `without_edge_sharing` name eligibility and why the loop repeats; `reserved_numbers` names copy-repair reservation; `marked_floor_segment` lifts the per-Face checks out of `mark_floors`. Kept: `update_metadata` local tuple, `inside` pairs, HeightFromSolid math, menu `pair` | Spaces operations, height-from-solid, identity, mark tool, create route, copy watch; Ruby 2.7.2 spot check. No host gate: no transaction, observer or drawing change | [#199](https://github.com/bldgtyp/ph-composer/pull/199) | Focused suites 98 runs, 0 failures; rubocop clean; `make ci` and both CI jobs green; Codex gpt-6.1-sol: no findings |
 | R02 | Face classification and Attached-zone operations | 7 | A3 | Scoped | Positional retirement triple from adjacency read by index; read, classification and Attached-zone flows share one module; long row-state comment (R1, R4) | Classification, retirement, Attached-zone replacement, reference preservation; native grouping/Undo if touched | | |
 | R03 | Colour-by service and drawing | 14 | A5 | Scoped | Ten-argument `add_entry` threading seven mutable buffers; `rebuild` mixes locals with temporary ivars (R2) | Failure cleanup, revision invalidation, shared occurrences, derived/readout; native drawing lifecycle | | |
-| R04 | Windows export assessment and export | 5 | A2 | Scoped | `validate_products` mixes availability, thermal findings and the Uw limit (R5) | Export outputs, finding severity and order, construction references | | |
+| R04 | Windows export assessment and export | 5 | A2 | Implemented on branch | Done: `validate_products` split into `validate_product_availability` (reusing `Snapshot.product_slots`), `report_thermal_conditions` and `validate_uw_limit` under `assess_unit`, same finding order; `UW_LIMIT_W_M2K` and `ADVISORY_CONDITIONS` name the exporter limit and the one non-blocking condition; construction-id and winding comments. Reviewed, no change: `export.rb`, `export_geometry.rb`, `snapshot.rb`; kept the `[entry, record]` unit pairs and `issue` arguments | Window export, phase-one export, export, preflight, windows walkthrough; no golden change. No host gate: read-only assessment | `refactor/ruby-readability-r04` | Focused suites 59 runs, 0 failures; rubocop clean |
 | R05 | Registration and registry validation | 7 | A4 | Scoped | `check_claim` reads fields through `values_at(*CLAIM_KEYS)` with renames; specialist validators kept together (R6) | Registry, ownership, outside-contributor examples, discovery/API goldens | | |
 | R06 | Spaces reads, readouts, records and export | 22 | B1 | Not traced | | Spaces reads/readouts/export suites | | |
 | R07 | Spaces identity, move, copy and context | 16 | B2 | Not traced | | Identity, move, copy watch; native copy/Undo if touched | | |
@@ -62,4 +62,6 @@ None run. Rows that owe a host gate are listed here when they merge.
 
 ## Pull requests
 
-None yet.
+| Stage | PR | Review | Outcome |
+| --- | --- | --- | --- |
+| R01 | [#199](https://github.com/bldgtyp/ph-composer/pull/199) | gpt-6.1-sol, no findings | Merged 2026-10-17 as `43663a0f` |
