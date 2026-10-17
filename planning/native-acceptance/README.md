@@ -71,7 +71,8 @@ A case's paths name the code its assertions exercise, not the documents that des
 depends on `context/`, so a documentation edit screens nothing (R06 keeps `docs/API_QUICKSTART.md` and
 `docs/API_REFERENCE.md`, because it runs the documented quickstart). Changing a case's paths does not by
 itself make its result stale: a result recorded under an earlier list stays current while the files the
-current list names are unchanged since the result's commit, read from git's objects. Narrowing drops
+current list names are unchanged since the result's commit, read from git's objects, and that commit
+reproduces the result's recorded fingerprint (a result captured on uncommitted changes does not qualify). Narrowing drops
 files the result never needed; widening adds files that have not changed since it was observed. When the
 commit is not available locally, the result reads `needs_recheck`.
 

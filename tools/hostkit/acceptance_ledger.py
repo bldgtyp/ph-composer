@@ -61,19 +61,21 @@ def source_fingerprint(root: Path, patterns: list[str]) -> str:
 
 def fingerprint_at(root: Path, commit: str, patterns: list[str]) -> str | None:
     """What `source_fingerprint` gives for `patterns` when the working tree holds exactly `commit`, read from
-    git's objects; None when the commit is not available locally."""
+    git's objects; None when the commit or one of its files is not available locally."""
+    if not commit:
+        return None
     probe = subprocess.run(
         ["git", "cat-file", "-e", f"{commit}^{{commit}}"], cwd=root, capture_output=True, check=False
     )
-    if not commit or probe.returncode != 0:
+    if probe.returncode != 0:
         return None
     listing = subprocess.check_output(["git", "ls-tree", "-r", "-z", "--full-tree", commit], cwd=root)
     entries = {}
     for line in listing.decode().split("\0"):
         if line:
             meta, name = line.split("\t", 1)
-            mode, _kind, blob = meta.split()
-            if any(fnmatch.fnmatchcase(name, pattern) for pattern in patterns):
+            mode, kind, blob = meta.split()
+            if kind == "blob" and any(fnmatch.fnmatchcase(name, pattern) for pattern in patterns):
                 entries[name] = (mode, blob)
     names = sorted(entries)
     request = "".join(entries[name][1] + "\n" for name in names).encode()
@@ -84,7 +86,10 @@ def fingerprint_at(root: Path, commit: str, patterns: list[str]) -> str | None:
     offset = 0
     for name in names:
         header_end = stream.index(b"\n", offset)
-        size = int(stream[offset:header_end].split()[2])
+        header = stream[offset:header_end].split()
+        if len(header) < 3:
+            return None
+        size = int(header[2])
         content = stream[header_end + 1 : header_end + 1 + size]
         offset = header_end + 1 + size + 1
         digest.update(name.encode() + b"\0")
@@ -96,12 +101,19 @@ def fingerprint_at(root: Path, commit: str, patterns: list[str]) -> str | None:
 def result_is_current(root: Path, case: dict[str, Any], result: dict[str, Any]) -> bool:
     """A result holds while the files its case depends on are unchanged. With the same dependency list that is
     the recorded fingerprint against now. With a narrowed or widened list, the files the current list names
-    must be unchanged since the result's commit: narrowing drops files the result never needed, and widening
-    adds ones that have not changed since it was observed."""
+    must be unchanged since the result's commit, and that commit must reproduce the recorded fingerprint:
+    narrowing drops files the result never needed, and widening adds ones that have not changed since it
+    was observed."""
     current = source_fingerprint(root, case["paths"])
     if result.get("dependency_paths") == case["paths"]:
         return result.get("source_fingerprint") == current
-    return fingerprint_at(root, result.get("commit", ""), case["paths"]) == current
+    commit = result.get("commit", "")
+    # The commit stands for the observed code only if it reproduces the recorded fingerprint: a result
+    # captured with uncommitted changes records HEAD but fingerprints the working tree.
+    observed = fingerprint_at(root, commit, result.get("dependency_paths") or [])
+    if observed is None or observed != result.get("source_fingerprint"):
+        return False
+    return fingerprint_at(root, commit, case["paths"]) == current
 
 
 def snapshot(root: Path, case: dict[str, Any]) -> dict[str, Any]:

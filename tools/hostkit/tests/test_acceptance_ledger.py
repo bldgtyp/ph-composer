@@ -92,7 +92,12 @@ class AcceptanceLedgerTest(unittest.TestCase):
             ledger.source_fingerprint(self.root, ["src/*", "lib/*"]),
             "an unchanged tree fingerprints the same from git's objects as from the files",
         )
-        recorded = {**self.result, "commit": commit, "dependency_paths": ["src/*", "docs/*"]}
+        recorded = {
+            **self.result,
+            "commit": commit,
+            "dependency_paths": ["src/*", "docs/*"],
+            "source_fingerprint": ledger.source_fingerprint(self.root, ["src/*", "docs/*"]),
+        }
         (self.root / ledger.RESULTS).write_text(json.dumps(recorded) + "\n")
         narrowed = {**self.case, "paths": ["src/*"]}
         widened = {**self.case, "paths": ["src/*", "docs/*", "lib/*"]}
@@ -108,6 +113,13 @@ class AcceptanceLedgerTest(unittest.TestCase):
         (self.root / "src/action.rb").write_text("changed")
         self.assertEqual("needs_recheck", ledger.status(self.root, {"C1": narrowed}, [])[0]["state"])
         (self.root / "src/action.rb").write_text("old")
+        dirty = {**recorded, "source_fingerprint": "0" * 64}
+        (self.root / ledger.RESULTS).write_text(json.dumps(dirty) + "\n")
+        self.assertEqual(
+            "needs_recheck",
+            ledger.status(self.root, {"C1": narrowed}, [])[0]["state"],
+            "a result captured on uncommitted changes is not vouched for by its commit",
+        )
         missing = {**recorded, "commit": "f" * 40}
         (self.root / ledger.RESULTS).write_text(json.dumps(missing) + "\n")
         self.assertEqual(
