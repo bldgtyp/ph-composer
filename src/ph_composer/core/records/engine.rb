@@ -122,15 +122,7 @@ module PhComposer
           reserved = reserved_ids(kind, change_set)
           mapping = originals.to_h { |record| [record.fetch("id"), Identity.fresh(kind.id_prefix, reserved)] }
           copies = originals.map do |record|
-            copy = kind.references.reduce(DeepCopy.call(record)) do |value, field|
-              field.target_kind == kind_id ? field.remap(value, mapping) : value
-            end
-            copy["id"] = mapping.fetch(record.fetch("id"))
-            if record.key?("extension_data")
-              copy["extension_data"] = Extension.copy_data(record.fetch("extension_data"), @catalog,
-                                                           kind.label, record.fetch("id"), mapping,
-                                                           :mapping_kind => kind_id)
-            end
+            copy = copy_of(kind, record, mapping)
             if block_given?
               values = yield DeepCopy.call(kind.values(copy))
               unless values.is_a?(Hash)
@@ -220,10 +212,22 @@ module PhComposer
         change_set.put(kind.id, :before => before, :after => after)
       end
 
-      def check_references!(kind, record, change_set)
-        targets = kind.references.flat_map do |reference|
-          reference.ids(record).map { |id| [reference.target_kind, id] }
+      # One original with its new id, its references among the copied records pointed at their copies,
+      # and its extension data copied under the installed copy rules.
+      def copy_of(kind, record, mapping)
+        copy = kind.references.reduce(DeepCopy.call(record)) do |value, field|
+          field.target_kind == kind.id ? field.remap(value, mapping) : value
         end
+        copy["id"] = mapping.fetch(record.fetch("id"))
+        if record.key?("extension_data")
+          copy["extension_data"] = Extension.copy_data(record.fetch("extension_data"), @catalog, kind.label,
+                                                       record.fetch("id"), mapping, :mapping_kind => kind.id)
+        end
+        copy
+      end
+
+      def check_references!(kind, record, change_set)
+        targets = kind.referenced_targets(record)
         record.fetch("extension_data", {}).each do |namespace, envelope|
           next unless Extension.status(envelope, @catalog.extension(namespace)) == "understood"
 

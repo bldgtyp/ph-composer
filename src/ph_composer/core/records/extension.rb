@@ -141,11 +141,7 @@ module PhComposer
           status = status(envelope, installed)
           next if status == "understood" && installed.copy == :remap
 
-          if status == "invalid"
-            message = "#{namespace} data on #{id} does not meet the installed extension's contract, so it cannot " \
-                      "be copied or migrated. Replace it with valid data first."
-            raise CodedError.new("extension.invalid", message, "namespace" => namespace, "status" => status)
-          end
+          Metadata.refuse_extension!(namespace, id, status) if status == "invalid"
           raise CodedError.new(
             "copy.rule_missing",
             "#{label} #{id} carries #{namespace} data (#{status}) that cannot be copied safely.",
