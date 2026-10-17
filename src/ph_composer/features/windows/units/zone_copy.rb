@@ -45,8 +45,9 @@ module PhComposer
             after = DeepCopy.call(item.record)
             if held.include?(item.record.fetch("id"))
               after["id"] = allocator.call("wun")
-              raise CodedError.new("identity.conflict", "The allocated Window identity already exists.") if
-                ids.include?(after["id"])
+              if ids.include?(after["id"])
+                raise CodedError.new("identity.conflict", "The allocated Window identity already exists.")
+              end
 
               ids << after["id"]
             end
@@ -55,8 +56,9 @@ module PhComposer
           end
           copy_extensions(request, updates, description)
           inside.zip(updates).reject { |_item, update| update.after == update.before }.map do |item, update|
-            raise CodedError.new("target.locked", "Unlock the copied Window before making its Zone independent.") if
-              item.locked
+            if item.locked
+              raise CodedError.new("target.locked", "Unlock the copied Window before making its Zone independent.")
+            end
 
             Units.validate!(update.after)
             update

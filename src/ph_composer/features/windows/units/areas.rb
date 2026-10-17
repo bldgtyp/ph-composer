@@ -35,16 +35,16 @@ module PhComposer
 
         def measure(faces, units, types)
           grouped = units.select { |unit| unit["host"] }.group_by { |unit| unit.fetch("host") }
-          areas = {}
+          opening_areas = {}
           rows = faces.map do |face|
             items = grouped.fetch(face.fetch("reference"), [])
             findings = items.flat_map { |unit| unit.fetch("findings").map { |row| row.fetch("code") } }
             values = items.map do |unit|
               id = unit.fetch("values").fetch("window_type_id")
               findings << "window.unknown_type" unless types[id]
-              areas[id] = opening_area(types[id]) unless areas.key?(id)
-              findings << "window_type.geometry_unavailable" if types[id] && areas[id].nil?
-              areas[id]
+              opening_areas[id] = opening_area(types[id]) unless opening_areas.key?(id)
+              findings << "window_type.geometry_unavailable" if types[id] && opening_areas[id].nil?
+              opening_areas[id]
             end
             gross = face.fetch("area_m2")
             glazed = findings.empty? ? values.sum : nil

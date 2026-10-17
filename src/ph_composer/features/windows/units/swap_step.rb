@@ -123,8 +123,9 @@ module PhComposer
           item = NativeUnit.resolve!(occurrences, input.fetch(:reference))
           Occurrences.assert_leaf!(item)
           record = DeepCopy.call(Units.validate!(input.fetch(:expected_record)))
-          NativeUnit.changed!("A Window record differs from the planned identity repair.") unless
-            record == expected.fetch(item.path, item.record)
+          unless record == expected.fetch(item.path, item.record)
+            NativeUnit.changed!("A Window record differs from the planned identity repair.")
+          end
           from_type = input.fetch(:from_type)
           old_plan = source_plan(model, item, record, from_type)
           row = instance_row(item, record, old_plan)
@@ -183,12 +184,14 @@ module PhComposer
 
         def verify_types!(model)
           @missing_types.uniq.each do |id|
-            NativeUnit.changed!("The missing source Window Type reappeared after preview.") unless
-              source_absent?(model, id)
+            next if source_absent?(model, id)
+
+            NativeUnit.changed!("The missing source Window Type reappeared after preview.")
           end
           @types.each_value do |type|
-            NativeUnit.changed!("An authored Window Type changed after preview.") unless
-              Types::KIND.store.read(model, type.fetch("id")) == type
+            next if Types::KIND.store.read(model, type.fetch("id")) == type
+
+            NativeUnit.changed!("An authored Window Type changed after preview.")
           end
         end
 

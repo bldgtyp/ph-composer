@@ -31,37 +31,39 @@ module PhComposer
 
         def list(request, paged: true)
           reads = ReadContext.new(request)
-          counts = reads.occurrences.group_by { |item| item.record.fetch("id") }.transform_values(&:length)
+          id_counts = reads.occurrences.group_by { |item| item.record.fetch("id") }.transform_values(&:length)
           polygons = reads.occurrences.filter_map do |item|
             polygon = reads.read_polygon(item)
             [item.path, polygon] if polygon
           end.to_h
           items = reads.occurrences.sort_by(&:path)
-          items = items.select { |item| request.params.fetch("ids").include?(item.record.fetch("id")) } if
-            request.params.key?("ids")
-          total = items.length
-          items, cursor = Pages.slice(request, "#{FEATURE_ID}.units.list", items, :key => ->(item) {
-                                                                                            item.path
-                                                                                          }) if paged
-          rows = items.map do |item|
-            host = reads.host(item, :writable => false)
-            canonical = primary(request.model, item.record.fetch("window_type_id"))
-            others = polygons.reject { |path, _polygon| path == item.path }.values
-            findings = State.findings(item, :type => reads.type(item), :canonical_definition => canonical,
-                                            :host_geometry => host&.geometry, :existing_polygons_m => others,
-                                            :host_values => host ? host.values : {},
-                                            :host_state => host ? host.zone_state : nil,
-                                            :shared_id => counts.fetch(item.record.fetch("id")) > 1)
-            { "reference" => item.reference, "id" => item.record.fetch("id"), "schema_version" => 1,
-              "values" => RECORD_KIND.values(item.record), "user_data" => item.record.fetch("user_data", {}),
-              "extension_data" => item.record.fetch("extension_data", {}),
-              "extension_status" => Records::Metadata.status_map(item.record, request.registry.catalog),
-              "host" => host&.reference,
-              "findings" => findings }
+          if request.params.key?("ids")
+            items = items.select { |item| request.params.fetch("ids").include?(item.record.fetch("id")) }
           end
+          total = items.length
+          items, cursor = Pages.slice(request, "#{FEATURE_ID}.units.list", items, :key => :path.to_proc) if paged
+          rows = items.map { |item| unit_row(request, reads, item, polygons, id_counts) }
           result = { "units" => rows }
           result.merge!("next_cursor" => cursor, "total" => total) if paged
           result
+        end
+
+        # One Unit occurrence as the list shows it, with the findings its Type, host and neighbours raise.
+        def unit_row(request, reads, item, polygons, id_counts)
+          host = reads.host(item, :writable => false)
+          canonical = primary(request.model, item.record.fetch("window_type_id"))
+          others = polygons.reject { |path, _polygon| path == item.path }.values
+          findings = State.findings(item, :type => reads.type(item), :canonical_definition => canonical,
+                                          :host_geometry => host&.geometry, :existing_polygons_m => others,
+                                          :host_values => host ? host.values : {},
+                                          :host_state => host ? host.zone_state : nil,
+                                          :shared_id => id_counts.fetch(item.record.fetch("id")) > 1)
+          { "reference" => item.reference, "id" => item.record.fetch("id"), "schema_version" => 1,
+            "values" => RECORD_KIND.values(item.record), "user_data" => item.record.fetch("user_data", {}),
+            "extension_data" => item.record.fetch("extension_data", {}),
+            "extension_status" => Records::Metadata.status_map(item.record, request.registry.catalog),
+            "host" => host&.reference,
+            "findings" => findings }
         end
 
         def primary(model, type_id)
@@ -72,7 +74,7 @@ module PhComposer
           nil
         end
 
-        private_class_method :primary
+        private_class_method :primary, :unit_row
       end
     end
   end
