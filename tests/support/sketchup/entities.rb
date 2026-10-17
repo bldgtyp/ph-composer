@@ -687,12 +687,6 @@ module Sketchup
       @observers.delete(observer)
       true
     end
-
-    def notify_modified(entity)
-      @observers.each do |observer|
-        observer.onElementModified(self, entity) if observer.respond_to?(:onElementModified)
-      end
-    end
   end
 
   class Behavior
@@ -879,7 +873,7 @@ module Sketchup
       GroupDefinition.new(@entities)
     end
 
-    # Measured on 26.1.188, 2026-10-12 (copied-Zone P2, S5 and S8): Make Unique gives this placement a
+    # Measured on 26.1.188, 2026-10-12, on copied Zones: Make Unique gives this placement a
     # new definition whose Faces are new entities carrying copies of the shared Faces' dictionaries.
     # The other placement keeps its definition and entities. A nested Group becomes a new placement
     # of its own definition, so it stays shared until it is made unique in turn.

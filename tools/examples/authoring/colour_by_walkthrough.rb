@@ -196,7 +196,7 @@ module ColourByWalkthrough
     group
   end
 
-  # A hole in one wall, so the fill meets the shape Phase 2 windows will make.
+  # A hole in one wall, so the fill meets the shape a Window opening makes.
   def punch(group)
     wall = group.entities.grep(Sketchup::Face).find { |face| face.normal.x.abs > 0.9 }
     return unless wall

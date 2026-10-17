@@ -78,8 +78,9 @@ module BldgtypExampleLibraryWalkthrough
     selected = load.call
     row = all_rows(api, context, "ph_composer.library.in_file", selected)
           .find { |entry| entry.fetch("display_label") == "N-1" }
-    raise "The example tag is already copied; run this on a fresh synthetic Model." unless
-      row && row.dig("resolution", "outcome") == "create"
+    unless row && row.dig("resolution", "outcome") == "create"
+      raise "The example tag is already copied; run this on a fresh synthetic Model."
+    end
 
     sequence = 0
     write = ->(name, params) { previewed(api, context, name, params, sequence += 1) }

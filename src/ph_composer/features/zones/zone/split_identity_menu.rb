@@ -42,8 +42,9 @@ module PhComposer
           end
           return show(preview) unless preview["status"] == "completed"
           return unless UI.messagebox(review(preview.fetch("value"), names), MB_YESNO) == IDYES
-          return UI.messagebox("The active Model changed. Start the repair again in its Model.") unless
-            Sketchup.active_model.equal?(@session.model)
+          unless Sketchup.active_model.equal?(@session.model)
+            return UI.messagebox("The active Model changed. Start the repair again in its Model.")
+          end
 
           @sequence += 1
           result = API.invoke(:context => @context, :name => ACTION, :params => params,
