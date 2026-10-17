@@ -16,6 +16,8 @@ module PhComposer
       Row = Struct.new(:kind, :ordinal, :before, :after, keyword_init: true)
       # `counts` is every record inside the target per [kind, id], what the step finds again at apply.
       Plan = Struct.new(:rows, :counts, keyword_init: true)
+      # While planning: the occurrence a Row rewrites, which extension copying needs for its references.
+      Planned = Struct.new(:occurrence, :row, keyword_init: true)
 
       module_function
 
@@ -27,8 +29,8 @@ module PhComposer
         inside = Authoring.inside(scan, scope).sort_by { |_kind, occurrence| occurrence.path }
         inside.each { |_kind, occurrence| refuse_lock!(occurrence) }
         keys = inside.map { |row_kind, occurrence| [row_kind, occurrence.path] }
-        everywhere = Resolve::TARGETS.flat_map do |row_kind, target|
-          target.occurrences_in(scan).map { |occurrence| [row_kind, occurrence] }
+        everywhere = Resolve::TARGETS.flat_map do |row_kind, kind_target|
+          kind_target.occurrences_in(scan).map { |occurrence| [row_kind, occurrence] }
         end
         taken = everywhere.map { |_row_kind, occurrence| occurrence.record.fetch("id") }
         held = everywhere.reject { |row_kind, occurrence| keys.include?([row_kind, occurrence.path]) }
@@ -44,10 +46,11 @@ module PhComposer
             after["floor_id"] = fresh(allocate, FLOOR_PREFIX, taken) if row_kind == VOLUME_KIND
             after["number"] = number if target && occurrence.equal?(target) && number
           end
-          [row_kind, occurrence, Row.new(:kind => row_kind, :ordinal => ordinal, :before => before, :after => after)]
+          Planned.new(:occurrence => occurrence,
+                      :row => Row.new(:kind => row_kind, :ordinal => ordinal, :before => before, :after => after))
         end
         copy_extensions(planned, catalog, engine, parent)
-        rows = planned.map(&:last).reject { |row| row.after == row.before }
+        rows = planned.map(&:row).reject { |row| row.after == row.before }
         rows.each { |row| Spaces.validate!(KINDS.fetch(row.kind), row.after) }
         Plan.new(:rows => rows,
                  :counts => inside.map { |row_kind, occurrence| [row_kind, occurrence.record.fetch("id")] }.tally)
@@ -104,14 +107,14 @@ module PhComposer
       # whose old id no other record inside the copy holds. A payload naming another id that several
       # records inside the copy hold, renamed or kept, names none of them unambiguously, and refuses.
       def copy_extensions(planned, catalog, engine, parent)
-        rows = planned.map(&:last)
+        rows = planned.map(&:row)
         counts = rows.map { |row| row.before.fetch("id") }.tally
         shared = rows.each_with_object(DeepCopy.call(parent ? parent.fetch(:mapping) : {})) do |row, mapping|
           old_id = row.before.fetch("id")
           mapping[old_id] = row.after.fetch("id") if counts[old_id] == 1 && row.after.fetch("id") != old_id
         end
-        entries = planned.map do |row_kind, occurrence, row|
-          Records::ReferenceEntry.new(:kind => row_kind, :key => occurrence.path, :record => row.after)
+        entries = planned.map do |item|
+          Records::ReferenceEntry.new(:kind => item.row.kind, :key => item.occurrence.path, :record => item.row.after)
         end
         plan = Records::ReferencePlan.new(:entries => (parent ? parent.fetch(:references) : []) + entries)
         rows.each do |row|

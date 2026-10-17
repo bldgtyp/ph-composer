@@ -30,8 +30,9 @@ module PhComposer
 
         reference = { "space_id" => @before.fetch("id"), "entity_path" => @path }
         source = Resolve.occurrence(Occurrences.scan(model), reference, :mutable => true).entity
-        raise CodedError.new("target.changed", "The Space changed after it was previewed.") unless
-          SPACE_STORE.read(source) == @before
+        unless SPACE_STORE.read(source) == @before
+          raise CodedError.new("target.changed", "The Space changed after it was previewed.")
+        end
 
         zone = Occurrences.entity_at(model, @target_zone_path)
         raise CodedError.new("target.not_found", "The target Zone no longer exists.") unless zone.is_a?(Sketchup::Group)
