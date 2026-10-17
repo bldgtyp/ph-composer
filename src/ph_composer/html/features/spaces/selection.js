@@ -1,4 +1,4 @@
-/* The Spaces view's checked rows and the selection bar that edits them together (P3a-07 step 8).
+/* The Spaces view's checked rows and the selection bar that edits them together.
  *
  * The checked set holds Space, Volume and Floor Segment rows. A row's box checks it and everything beneath it,
  * so a Zone's box checks every Space, Volume and Floor Segment in the Zone, and reads mixed while only some are.

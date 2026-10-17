@@ -1,4 +1,4 @@
-/* The Spaces view's row actions (P3a-07 step 9): Locate every row; Open or Close a Space; Enter a Volume;
+/* The Spaces view's row actions: Locate every row; Open or Close a Space; Enter a Volume;
  * Delete a Space and Remove a Volume, each after a confirmation naming what goes; Move a Space to another
  * Zone; and the repair a row's finding names (Restore position, Make independent).
  *

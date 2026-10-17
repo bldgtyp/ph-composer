@@ -112,7 +112,7 @@ class SpacesContextTest < PhComposerTestCase
   end
 
   # Protection still pending for a Volume already left settles inside the save, so the file holds it
-  # protected; the Volume still open is left as it is (D3a-19).
+  # protected; the Volume still open is left as it is.
   def test_save_protects_a_pending_volume_and_leaves_the_open_one_unlocked
     enter(@first)
     @second.locked = false
@@ -163,7 +163,7 @@ class SpacesContextTest < PhComposerTestCase
   end
 
   # A save, an autosave included, leaves the user in the Volume they are editing: nothing is written, and
-  # the host restores the context because the Volume on the path is still unlocked (D3a-19).
+  # the host restores the context because the Volume on the path is still unlocked.
   def test_save_leaves_the_open_volume_open_and_writes_nothing
     enter(@first)
     before = @model.operations.length

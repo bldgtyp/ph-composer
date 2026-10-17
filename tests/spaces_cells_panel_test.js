@@ -1,6 +1,6 @@
 "use strict";
 
-/* The Spaces view's editable cells (P3a-07 slice B): one update per cell commit with the value it was read
+/* The Spaces view's editable cells: one update per cell commit with the value it was read
    with, a refusal that keeps the draft, a range fill and a paste as one batch_update, the factor range, the
    airflow clear marker, and a unit switch that keeps drafts. */
 
