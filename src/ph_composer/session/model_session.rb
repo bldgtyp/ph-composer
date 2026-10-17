@@ -23,7 +23,7 @@ module PhComposer
       @exclusive = false
       @committing = false
       @refresh = CoalescedTimer.new
-      @observers = []
+      @observers = Observers.new
       @feature_state = {}
       @callers = CallerRegistry.new
       @outcomes = OutcomeStore.new

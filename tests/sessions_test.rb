@@ -30,6 +30,15 @@ class SessionsTest < PhComposerTestCase
     refute session.valid?
   end
 
+  def test_a_session_whose_observers_were_never_attached_still_detaches
+    model = Sketchup::Model.new
+    session = PhComposer::ModelSession.new(model)
+    Sessions.send(:sessions)[model.object_id] = session
+
+    assert Sessions.detach(model)
+    refute session.valid?
+  end
+
   def test_installing_registers_the_observer_and_opening_the_active_model_creates_its_session
     created = []
     unsubscribe = Sessions.on_host_event(:session_created) { |session| created << session }

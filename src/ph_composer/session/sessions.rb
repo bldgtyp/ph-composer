@@ -110,7 +110,7 @@ module PhComposer
         session = sessions.delete(model.object_id)
         return true unless session
 
-        observers = session.observers || ModelSession::Observers.new
+        observers = session.observers
         model.remove_observer(observers.model) if observers.model && model.respond_to?(:remove_observer)
         selection = model.selection
         selection.remove_observer(observers.selection) if observers.selection && selection.respond_to?(:remove_observer)
