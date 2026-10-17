@@ -203,46 +203,80 @@ class QuitTest(unittest.TestCase):
             answer = next(answers)
             if isinstance(answer, Exception):
                 raise answer
-            return str(answer)
+            return f"console line mentioning none\n{answer}\n"
 
         running = iter([True, False])
         with (
             patch.object(hb, "sketchup_running", side_effect=lambda: next(running)),
             patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}),
             patch.object(hb, "run_with_dialog_guard", side_effect=guard),
+            patch.object(hb, "evaluate", return_value="another-document"),
             patch.object(hb, "request", side_effect=lambda _state, payload, **_kw: calls.append(payload["code"])),
             patch.object(hb.time, "sleep"),
         ):
             return hb.quit_sketchup("2026"), calls
 
     def test_each_open_document_is_closed_until_none_is_left_then_terminate(self) -> None:
-        outcome, calls = self.quit_with(['"closed"', '"closed"', '"none"'])
-        self.assertEqual(outcome, "SketchUp quit cleanly")
-        self.assertEqual(len(calls), 4, "two documents closed, one empty read, then terminate")
+        outcome, calls = self.quit_with(['"phc_closed:g1"', '"phc_closed:g2"', '"phc_no_document"'])
+        self.assertEqual(outcome, "SketchUp quit cleanly (closed 2 documents)")
         self.assertIn(hb.DISCARD_PATH.format(index=1), calls[1], "each document saves to its own scratch path")
         self.assertEqual(calls[-1], 'Sketchup.send_action("terminate:")')
 
-    def test_a_failed_close_step_still_terminates(self) -> None:
+    def test_a_failed_or_refused_close_step_is_reported_and_still_terminates(self) -> None:
         outcome, calls = self.quit_with([hb.BridgeError("the close step failed")])
-        self.assertEqual(outcome, "SketchUp quit cleanly")
+        self.assertEqual(
+            outcome, "SketchUp quit cleanly (closed 0 documents; the close step failed: the close step failed)"
+        )
         self.assertEqual(calls[-1], 'Sketchup.send_action("terminate:")')
+        outcome, _calls = self.quit_with(['"phc_still_dirty"'])
+        self.assertIn("still modified after its save", outcome)
 
     @unittest.skipUnless(shutil.which("ruby"), "needs a ruby to run the close step")
-    def test_the_close_step_saves_and_closes_any_active_model_and_tolerates_none(self) -> None:
+    def test_the_close_step_saves_closes_a_clean_model_refuses_a_dirty_one_and_tolerates_none(self) -> None:
         stub = (
-            "class M; def save(path); $saved = path; true; end; end; "
+            "class M; def initialize(dirty); @dirty = dirty; end; def modified?; @dirty; end; "
+            'def guid; "G"; end; def save(path); $saved = path; true; end; end; '
             "module Sketchup; def self.active_model; $model; end; "
             "def self.send_action(action); $action = action; true; end; end; "
         )
         code = hb.CLOSE_ACTIVE.replace("{path}", "/private/tmp/x.skp")
         cases = (
-            ("nil", [":none", "nil", "nil"]),
-            ("M.new", [":closed", '"/private/tmp/x.skp"', '"performClose:"']),
+            ("nil", [":phc_no_document", "nil", "nil"]),
+            ("M.new(false)", ['"phc_closed:G"', '"/private/tmp/x.skp"', '"performClose:"']),
+            ("M.new(true)", [":phc_still_dirty", '"/private/tmp/x.skp"', "nil"]),
         )
         for model, expected in cases:
             script = f"{stub}$model = {model}; value = ({code}); puts value.inspect, $saved.inspect, $action.inspect"
             result = subprocess.run(["ruby", "-e", script], capture_output=True, text=True, check=True)
             self.assertEqual(result.stdout.split(), expected, model)
+
+
+class LaunchTest(unittest.TestCase):
+    def launch(self, model: Path, wait: object) -> None:
+        with (
+            patch.object(hb, "quit_sketchup", return_value="SketchUp not running"),
+            patch.object(hb, "sketchup_running", return_value=False),
+            patch.object(hb.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)),
+            patch.object(hb, "wait", side_effect=wait),
+            patch.object(hb, "evaluate", side_effect=[None, model.name]),
+            patch.object(hb, "open_windows", return_value="Open File"),
+            patch.object(hb.time, "sleep"),
+            patch("builtins.print"),
+        ):
+            hb.launch("2026", model, None, 5.0)
+
+    def test_a_scratch_fixtures_recovery_copy_is_removed_before_the_open(self) -> None:
+        with TemporaryDirectory() as folder:
+            copy = Path(folder) / "a09.skp"
+            copy.write_text("autosave")
+            with patch.object(hb, "recovery_copy", return_value=copy):
+                self.launch(Path("/repo/_private/run/a09.skp"), lambda *_args: {"port": 1, "pid": 2})
+            self.assertFalse(copy.exists())
+
+    def test_a_launch_that_never_reaches_the_bridge_names_the_open_windows_and_stays_a_timeout(self) -> None:
+        with patch.object(hb, "recovery_copy", return_value=None), self.assertRaises(TimeoutError) as raised:
+            self.launch(Path("/repo/_private/run/a09.skp"), TimeoutError("no host bridge within 5s"))
+        self.assertIn("Open windows: Open File", str(raised.exception))
 
 
 class RecoveryCopyTest(unittest.TestCase):

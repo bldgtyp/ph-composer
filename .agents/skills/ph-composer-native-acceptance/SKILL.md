@@ -22,10 +22,11 @@ accepted decisions, the existing independent reviewer and unchanged evidence wit
    Apply the [run preflight and receipt procedure](../../../tools/hostkit/ACCEPTANCE_RUN.md):
    verify window activation, tool/edit path, target, actual probe callbacks and evidence writer before
    a human handoff. Capture an immutable run baseline; loading a helper must not overwrite it.
-   `uv run tools/hostkit/acceptance_case.py begin <case> --run-dir _private/host/<run>` does this in
-   one step: it reads the session, tool, edit path and versions from the bridge, checks the installed
-   extension against `dist/ph_composer.rbz`, hashes the fixture, proves the folder writable, captures
-   the baseline, snapshots the ledger and starts the case's `steps.md`.
+   `tools/hostkit/acceptance_case.py begin` does this in one step (full command in
+   [ACCEPTANCE_RUN.md](../../../tools/hostkit/ACCEPTANCE_RUN.md#one-case-in-two-commands)): it reads the
+   session, tool, edit path and versions from the bridge, refuses unless the open document is the
+   unmodified fixture and the installed extension is `dist/ph_composer.rbz`, captures the baseline,
+   snapshots the ledger and starts the case's `steps.md`.
 4. Execute action and readback in separate calls so UI timers run. Capture native window pixels for
    drawing/UI claims and actual references/records for persistence claims. Use the case's required
    refusal, rollback, Undo/Redo and reopen checks; do not infer them from aggregate object counts.

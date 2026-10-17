@@ -216,8 +216,9 @@ uv run tools/hostkit/host_bridge.py quit
 For a scratch fixture, one under a `_private/` folder or the temporary folder, it first removes
 SketchUp's autosave copy of that file, so the open does not stop on "The recovered version of this file
 is newer". When the bridge does not come up it names SketchUp's open windows, since a prompt may be
-waiting on another display. `quit` saves each open document to a scratch path and closes it, the newer
-documents included, so terminating meets no save prompt; only a stuck host is killed.
+waiting on another display. `quit` saves every open document to a scratch path and closes it, including
+documents opened after the first, so terminating meets no save prompt. A host the bridge cannot reach, or
+one still on a prompt after 30 seconds, is killed, and `quit` says so.
 From there `eval`, `state`, `save`, `shot`, `key`, `console` and `quit` cover the fresh-process
 loop. `tools/hostkit/.index.md` lists what each does. Every `eval` runs in one shared binding, so
 a local variable assigned in one call survives into the next and keeps its object alive. Set such
