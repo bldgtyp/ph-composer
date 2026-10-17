@@ -9,6 +9,11 @@ module PhComposer
 
       module_function
 
+      # Top and bottom (even indexes in SIDES) run along the element's width; right and left along its height.
+      def horizontal_edge?(index)
+        index.even?
+      end
+
       def number(value, positive: false, signed: false)
         return nil unless value.is_a?(Numeric) && value.finite? &&
                           (signed || (positive ? value > 0 : value >= 0))
@@ -122,7 +127,7 @@ module PhComposer
             findings << finding("window_type.install_unresolved", "The #{side} edge has no Psi-Install Type.",
                                 :side => side)
           end
-          { "side" => side, "length_m" => i.even? ? width : height, "install" => resolved }
+          { "side" => side, "length_m" => horizontal_edge?(i) ? width : height, "install" => resolved }
         end
         result = { "id" => cell.fetch("id"), "area_m2" => width * height, "edges" => edges, "findings" => findings,
                    "h_construction_w_k" => nil, "h_install_w_k" => nil }
@@ -155,9 +160,10 @@ module PhComposer
         ug = glazing && number(glazing["ug_w_m2k"])
         top, right, bottom, left = widths
         result.fetch("edges").each_with_index do |edge, i|
-          adjacent = i.even? ? left + right : top + bottom
+          # Each corner square is split between its two frames, so a frame loses half of each neighbour's width.
+          adjacent = horizontal_edge?(i) ? left + right : top + bottom
           edge["frame_area_m2"] = widths[i] * (edge.fetch("length_m") - adjacent / 2.0)
-          edge["glass_edge_m"] = i.even? ? glazing_width : glazing_height
+          edge["glass_edge_m"] = horizontal_edge?(i) ? glazing_width : glazing_height
           edge["h_frame_w_k"] = uf[i] && uf[i] * edge.fetch("frame_area_m2")
           edge["h_spacer_w_k"] = psi[i] && psi[i] * edge.fetch("glass_edge_m")
         end
@@ -166,10 +172,8 @@ module PhComposer
           result.fetch("findings") << finding("window_type.construction_unresolved",
                                               "A Glazing Ug, Frame Uf or Frame psi-g value is missing.")
         else
-          result["h_construction_w_k"] = result.fetch("h_glazing_w_k") +
-                                         result.fetch("edges").sum { |edge|
-                                           edge.fetch("h_frame_w_k") + edge.fetch("h_spacer_w_k")
-                                         }
+          edges = result.fetch("edges").sum { |edge| edge.fetch("h_frame_w_k") + edge.fetch("h_spacer_w_k") }
+          result["h_construction_w_k"] = result.fetch("h_glazing_w_k") + edges
         end
         result
       end
