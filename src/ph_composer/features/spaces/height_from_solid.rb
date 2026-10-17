@@ -96,9 +96,9 @@ module PhComposer
       # One Undo step through the same edit `update` makes, guarded by the height the caller last read.
       def apply(request, proposal, volume:, solid:, expected_values:)
         value = preview(request, :volume => volume, :solid => solid)
-        row = Authoring.plan_edit(Occurrences.scan(request.model), volume,
-                                  { "avg_ceiling_height_m" => value.fetch("height_m") }, expected_values)
-        Authoring.propose_edits(request, proposal, [row])
+        edit = Authoring.plan_edit(Occurrences.scan(request.model), volume,
+                                   { "avg_ceiling_height_m" => value.fetch("height_m") }, expected_values)
+        Authoring.propose_edits(request, proposal, [edit])
         value.reject { |key, _value| key == "current_height_m" }.merge("volume_id" => volume.fetch("volume_id"))
       end
     end
