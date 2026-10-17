@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { PANEL_SIZES, setPanelSize, paneFacts, assertPaneFits } = require("./support/pane_fit.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE || fs.mkdtempSync(path.join(os.tmpdir(), "phc-solve-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
@@ -40,39 +41,21 @@ fs.mkdirSync(output, { recursive: true });
       assert(bounds, `all selection controls fit the bar at ${width}`);
       await page.screenshot({ path: path.join(output, `selected-solve-${width}.png`) });
     }
-    // Real panel heights (#188): where the table can spare the room the bar floats at the pane's visible
-    // bottom with Solve in view; at the minimum panel it docks beneath the table. Never over its header.
-    // The preview's development section after the overview takes 129 px the shipping panel does not have,
-    // so the floating case runs at 900 high; the host recheck covers 420 x 732.
-    for (const [width, height, docked] of [[420, 900, false], [360, 520, true]]) {
-      await page.setViewportSize({ width, height });
-      // The panel refits on the resize event, which Chromium fires with the next frame.
-      await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
-      const place = await page.evaluate(() => {
-        const panes = document.querySelector(".panel-panes");
-        const bar = document.querySelector(".phc-selection-bar:not([hidden])");
-        const head = document.querySelector(".phc-zone-view:not([hidden]) thead").getBoundingClientRect();
-        const solve = [...bar.querySelectorAll("button")].find(b => /Solve/.test(b.textContent));
-        const inPane = () => {
-          const pane = panes.getBoundingClientRect(), box = solve.getBoundingClientRect();
-          return box.top >= pane.top && box.bottom <= pane.bottom;
-        };
-        // The preview adds a development section after the overview; the fit leaves it room too.
-        const result = { docked: bar.classList.contains("is-docked"), clearOfHead: bar.getBoundingClientRect().top >= head.bottom,
-          solveInView: inPane(), paneStill: panes.scrollHeight <= panes.clientHeight };
-        // The pane alone scrolls, as a user's wheel over it would; the preview page around it stays put.
-        panes.scrollTop += Math.max(0, solve.getBoundingClientRect().bottom - panes.getBoundingClientRect().bottom);
-        result.solveReached = inPane();
-        panes.scrollTop = 0;
-        return result;
-      });
-      assert.equal(place.docked, docked, `the bar ${docked ? "docks" : "floats"} at ${width} x ${height}`);
-      assert(place.clearOfHead, `the bar leaves the table's header in view at ${width} x ${height}`);
-      if (!docked) {
-        assert(place.solveInView, `Solve is in view without scrolling at ${width} x ${height}`);
-        assert(place.paneStill, `the pane does not scroll when everything fits at ${width} x ${height}`);
+    // Real panel sizes (#188), through the shared pane-fit facts: the bar never covers the table's header
+    // and is always within reach of the pane's scroll; at the panel minimum it docks beneath the table. The
+    // preview's development section after the overview takes 129 px the shipping panel lacks, so the case
+    // where the bar floats with Solve in view and nothing scrolls runs at 420 x 900; the host covers 420 x 732.
+    for (const [width, height] of [...PANEL_SIZES, [420, 900]]) {
+      await setPanelSize(page, width, height);
+      const facts = await paneFacts(page);
+      const docked = await page.locator(".phc-selection-bar:not([hidden])").evaluate(bar => bar.classList.contains("is-docked"));
+      const roomy = width === 420 && height === 900;
+      assertPaneFits(facts, "the checked-Zone bar", { inView: roomy });
+      if (roomy) {
+        assert.equal(docked, false, "the bar floats where the table can spare the room");
+        assert.equal(facts.overflowsDown, false, "the pane does not scroll when everything fits");
       }
-      assert(place.solveReached, `Solve is reachable in the pane at ${width} x ${height}`);
+      if (width === 360 && height === 520) assert.equal(docked, true, "the bar docks at the panel minimum");
       await page.screenshot({ path: path.join(output, `selected-solve-${width}x${height}.png`) });
     }
     await page.setViewportSize({ width: 1280, height: 900 });

@@ -269,11 +269,16 @@ replace the SketchUp walkthrough a host gate requires.
 
 ```sh
 make ui-preview                                  # http://127.0.0.1:8765/tools/ui-preview/
-NODE_PATH=/path/to/scratch/node_modules make ui-checks
+make ui-deps                                     # once: Playwright into ~/.cache/ph-composer-ui
+make ui-checks                                   # every check
+make ui-checks UI_CHECKS=tools/ui-preview/spaces_checks.cjs
 ```
 
-`ui-checks` needs Playwright from `NODE_PATH`, installed outside the repository, and prints a skip
-line without it. `tools/ui-preview/.index.md` describes the page, its fixtures and the checks.
+`ui-checks` finds Playwright in `UI_DEPS` (`~/.cache/ph-composer-ui`, outside the repository) or in
+`NODE_PATH` when that is set, and prints a skip line without it. A check of a panel screen measures the
+panel's own scroller at real panel sizes through `tools/ui-preview/support/pane_fit.cjs`, not the page.
+`tools/ui-preview/.index.md` describes the page, its fixtures, the development sections it adds and the
+checks.
 
 ## The development example
 
