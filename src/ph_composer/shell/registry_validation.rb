@@ -560,9 +560,6 @@ module PhComposer
       end
     end
 
-    # The `participants:` edges of actions, queries and participants. Each named participant must be
-    # installed or in the batch, and owned by the caller's feature or one it requires; participants
-    # that name each other in a cycle are refused, since a call through one would never end.
     # Transitions an action declares and the contributors that join them (Declarations::TransitionContributor).
     class TransitionValidation < Validation
       TRANSITION_NAME = /\A[a-z0-9_]+(\.[a-z0-9_]+)+\z/.freeze
@@ -603,6 +600,9 @@ module PhComposer
       end
     end
 
+    # The `participants:` edges of actions, queries and participants. Each named participant must be
+    # installed or in the batch, and owned by the caller's feature or one it requires; participants
+    # that name each other in a cycle are refused, since a call through one would never end.
     class ParticipantValidation < Validation
       def diagnostics
         callers.each { |caller| check_edges(caller) }

@@ -70,9 +70,10 @@ module PhComposer
     Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :participants, :handler,
                        keyword_init: true)
 
-    # A validated Model change. `handler` is `->(request, changes) { value }`: it proposes record
-    # writes into `changes` (a Records::ChangeSet) and never writes itself. The dispatcher applies the
-    # proposal as one native operation named `undo_name`. `confirmation` is the policy every client
+    # A validated Model change. `handler` is `->(request, proposal) { value }`: it adds steps and record
+    # writes to `proposal` (an Operations::Proposal, whose `record_changes` is the Records::ChangeSet)
+    # and never writes itself. The dispatcher applies the proposal as one native operation named
+    # `undo_name`. `confirmation` is the policy every client
     # must satisfy before the operation opens; only "none" is supported.
     # `participants` names the proposal participants the handler calls through `request.participate`;
     # `transitions` names the transitions it emits through `request.contribute_transition`.
