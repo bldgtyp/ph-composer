@@ -26,21 +26,33 @@ module PhComposer
         "target.ambiguous" => ["classified", "The Face is an envelope Face with a classification."]
       }.freeze
 
+      # A Face Create Space would take: the reference the caller named and the Face's persistent id.
+      EligibleFace = Struct.new(:reference, :face_id, keyword_init: true)
+
+      # One checked edit of a Space, Volume or Floor Segment record: the occurrence it targets, the record
+      # as read and the validated record proposed. `update`, `batch_update` and Height from solid share it.
+      RecordEdit = Struct.new(:kind, :occurrence, :before, :after, keyword_init: true) do
+        def changed?
+          before != after
+        end
+      end
+
       module_function
 
       # Which Faces Create Space would take and which it leaves out, and why. Writes nothing.
       def create_preview(request, zone:, faces:)
         request.locate(ZONE_KIND, zone_reference(zone), :mutable => true)
-        accepted, left_out = sort_faces(request, zone_reference(zone), faces)
-        { "accepted" => accepted.map(&:first), "left_out" => left_out }
+        eligible, left_out = partition_faces(request, zone_reference(zone), faces)
+        { "accepted" => eligible.map(&:reference), "left_out" => left_out }
       end
 
       def create(request, proposal, zone:, faces:, name: nil, number: nil, weighting_factor: 1.0)
         zone = zone_reference(zone)
         request.locate(ZONE_KIND, zone, :mutable => true)
         context_open!(request.model, zone.fetch("zone_path"), "Open the Zone's edit context to create a Space in it.")
-        accepted, = sort_faces(request, zone, faces)
-        if accepted.empty?
+        eligible, = partition_faces(request, zone, faces)
+        face_ids = eligible.map(&:face_id)
+        if face_ids.empty?
           raise CodedError.new("space.nothing_to_create",
                                "None of those Faces can become a Space. Nothing was written.")
         end
@@ -52,9 +64,9 @@ module PhComposer
                   "number" => number || next_number(scan, zone.fetch("zone_path")), "default_height_m" => height,
                   "next_volume_sequence" => 2 }
         volume = new_volume(allocate, 1, height)
-        segments = segments_for(allocate, accepted.map(&:last), weighting_factor)
+        segments = segments_for(allocate, face_ids, weighting_factor)
         [[SPACE, space], [VOLUME, volume]].each { |kind, record| Spaces.validate!(kind, record) }
-        proposal.add_step(GroupStep.new(:context_path => zone.fetch("zone_path"), :face_ids => accepted.map(&:last),
+        proposal.add_step(GroupStep.new(:context_path => zone.fetch("zone_path"), :face_ids => face_ids,
                                         :space => space, :volume => volume, :segments => segments,
                                         :slot => space.fetch("id")),
                           :scopes => [Operations::EntityScope.new(zone.fetch("zone_path"))])
@@ -84,8 +96,8 @@ module PhComposer
       # One record's editable values, guarded by what the caller last read. A null removes an
       # optional value, which for an airflow means unset again.
       def update(request, proposal, reference:, values:, expected_values:)
-        rows = [plan_edit(Occurrences.scan(request.model), reference, values, expected_values)]
-        propose_edits(request, proposal, rows)
+        edits = [plan_edit(Occurrences.scan(request.model), reference, values, expected_values)]
+        propose_edits(request, proposal, edits)
       end
 
       # Many Spaces, Volumes and Floor Segments in one all-or-nothing step: every target is checked
@@ -95,10 +107,10 @@ module PhComposer
         keys = edits.map { |edit| CanonicalJson.generate(edit.fetch("reference")) }
         raise CodedError.new("params.invalid", "A batch names one target twice.") unless keys.uniq.length == keys.length
 
-        rows = edits.map do |edit|
+        planned = edits.map do |edit|
           plan_edit(scan, edit.fetch("reference"), edit.fetch("values"), edit.fetch("expected_values"))
         end
-        propose_edits(request, proposal, rows)
+        propose_edits(request, proposal, planned)
       end
 
       def remove_volume(request, proposal, volume:)
@@ -146,11 +158,10 @@ module PhComposer
         scan = Occurrences.scan(request.model)
         kind = Resolve.kind_of(reference)
         target = Resolve.occurrence(scan, reference, :mutable => false)
-        # A host follow-up plans every copy against one Model state: numbers earlier repairs in this
-        # proposal took are taken.
         zone = zone_of(request, target.path)
-        taken = proposal.steps.grep(IdentityStep).select { |step| step.zone_path == zone }.filter_map(&:number)
-        number = (next_number(scan, zone, zone_paths(request), taken) if kind == SPACE_KIND)
+        if kind == SPACE_KIND
+          number = next_number(scan, zone, zone_paths(request), reserved_numbers(proposal, zone))
+        end
         plan = IdentityPlan.build(scan, target, :number => number,
                                                 :allocate => Records::Identity.allocator(request, request.params),
                                                 :catalog => request.registry.catalog, :engine => request.engine)
@@ -194,30 +205,34 @@ module PhComposer
 
         scan = Occurrences.scan(request.model)
         allocate = Records::Identity.allocator(request, request.params)
-        volumes = scan.volumes + scan.orphan_volumes
         ids = faces.map { |path| Resolve.integer_path(path) }.uniq.map do |path|
-          volume = scan.volumes.find { |candidate| candidate.path == path[0...-1] }
-          unless volume
-            raise CodedError.new("target.wrong_hierarchy", "Mark floor takes Faces directly inside a Volume.")
-          end
-
-          Resolve.writable!(volume, volumes, "Volume")
-          face = Occurrences.entity_at(request.model, path)
-          raise CodedError.new("target.wrong_kind",
-                               "Only Faces become Floor Segments.") unless face.is_a?(Sketchup::Face)
-
-          stored = FLOOR_SEGMENT_STORE.read(face)
-          if stored
-            reference = { "floor_segment_id" => stored.fetch("id"), "entity_path" => path }
-            stored = Resolve.occurrence(scan, reference, :mutable => true).record
-          end
-          before = stored
+          before = marked_floor_segment(request.model, scan, path)
           after = (before || new_segment(allocate)).merge("weighting_factor" => weighting_factor)
           Spaces.validate!(FLOOR_SEGMENT, after)
           record_step(proposal, FLOOR_SEGMENT_KIND, path, before, after) unless before == after
           after.fetch("id")
         end
         { "floor_segment_ids" => ids }
+      end
+
+      # The Floor Segment record already on the Face at `path`, or nil when it is not yet marked. Refuses a
+      # path that is not a Face directly inside a writable Volume, or a marked Face that cannot be written.
+      def marked_floor_segment(model, scan, face_path)
+        volume = scan.volumes.find { |candidate| candidate.path == face_path[0...-1] }
+        unless volume
+          raise CodedError.new("target.wrong_hierarchy", "Mark floor takes Faces directly inside a Volume.")
+        end
+
+        Resolve.writable!(volume, scan.volumes + scan.orphan_volumes, "Volume")
+        face = Occurrences.entity_at(model, face_path)
+        raise CodedError.new("target.wrong_kind",
+                             "Only Faces become Floor Segments.") unless face.is_a?(Sketchup::Face)
+
+        stored = FLOOR_SEGMENT_STORE.read(face)
+        return unless stored
+
+        reference = { "floor_segment_id" => stored.fetch("id"), "entity_path" => face_path }
+        Resolve.occurrence(scan, reference, :mutable => true).record
       end
 
       # The Floor Segment records go; the Faces stay.
@@ -272,33 +287,39 @@ module PhComposer
         end }
       end
 
-      # [reference, face persistent id] for each accepted Face, and a left-out row for the rest.
-      def sort_faces(request, zone, faces)
+      # Splits the selected Faces into the EligibleFaces Create Space would take and a left-out row,
+      # with its reason, for each of the rest.
+      def partition_faces(request, zone, faces)
         index = request.locate_index(FACE_KIND)
-        accepted = []
+        candidates = []
         left_out = []
         faces.uniq.each do |reference|
           reason = face_refusal(request, zone, reference, index)
           if reason
             left_out << { "reference" => reference, "reason" => reason.first, "message" => reason.last }
           else
-            accepted << [reference, Integer(reference.fetch("entity_path").last)]
+            candidates << EligibleFace.new(:reference => reference,
+                                           :face_id => Integer(reference.fetch("entity_path").last))
           end
         end
-        located = request.locate(ZONE_KIND, zone, :mutable => false)
-        kept = accepted
-        loop do
-          shares = Steps.sharing(located.entity.entities, kept.map(&:last))
-          break if shares.empty?
-
-          kept = kept.reject { |_reference, id| shares.include?(id) }
-        end
-        sharing = accepted - kept
-        left_out.concat(sharing.map do |reference, _id|
-          { "reference" => reference, "reason" => "shares_edge",
+        eligible = without_edge_sharing(request.locate(ZONE_KIND, zone, :mutable => false), candidates)
+        left_out.concat((candidates - eligible).map do |face|
+          { "reference" => face.reference, "reason" => "shares_edge",
             "message" => "The Face shares an Edge with an unselected Face; grouping it would split that Face." }
         end)
-        [kept, left_out]
+        [eligible, left_out]
+      end
+
+      # The candidates that share no Edge with a Face outside the set. Dropping a Face makes it an
+      # outside neighbour of the Faces beside it, so the check repeats until nothing more drops.
+      def without_edge_sharing(located_zone, candidates)
+        kept = candidates
+        loop do
+          sharing_ids = Steps.sharing(located_zone.entity.entities, kept.map(&:face_id))
+          return kept if sharing_ids.empty?
+
+          kept = kept.reject { |face| sharing_ids.include?(face.face_id) }
+        end
       end
 
       def face_refusal(request, zone, reference, index)
@@ -356,20 +377,23 @@ module PhComposer
                                                  "read. Nothing was written.")
         end
         after = before.merge(values).compact
-        [kind, occurrence, before, Spaces.validate!(KINDS.fetch(kind), after)]
+        RecordEdit.new(:kind => kind, :occurrence => occurrence, :before => before,
+                       :after => Spaces.validate!(KINDS.fetch(kind), after))
       end
 
-      def propose_edits(request, proposal, rows)
-        height = nil
-        rows.each do |kind, occurrence, before, after|
-          next if before == after
+      # Proposes each changed RecordEdit. A height among them becomes the Model's last height; when a
+      # batch changes several, the last one in the batch wins.
+      def propose_edits(request, proposal, edits)
+        last_height_m = nil
+        edits.each do |edit|
+          next unless edit.changed?
 
-          record_step(proposal, kind, occurrence.path, before, after)
-          key = height_key(kind)
-          height = after[key] if key && after[key] && after[key] != before[key]
+          record_step(proposal, edit.kind, edit.occurrence.path, edit.before, edit.after)
+          key = height_key(edit.kind)
+          last_height_m = edit.after[key] if key && edit.after[key] && edit.after[key] != edit.before[key]
         end
-        record_height(request, proposal, height) if height
-        { "ids" => rows.map { |_kind, occurrence, _before, _after| occurrence.record.fetch("id") } }
+        record_height(request, proposal, last_height_m) if last_height_m
+        { "ids" => edits.map { |edit| edit.occurrence.record.fetch("id") } }
       end
 
       def height_key(kind)
@@ -418,13 +442,19 @@ module PhComposer
       end
 
       # The next free whole number among the Spaces already in this Zone, or outside every Zone when
-      # `zone_path` is nil, and `taken`; `zone_paths` are every Zone's, so a Space in a nested Zone counts
-      # only there.
-      def next_number(scan, zone_path, zone_paths = [zone_path], taken = [])
+      # `zone_path` is nil, and the `reserved` numbers; `zone_paths` are every Zone's, so a Space in a
+      # nested Zone counts only there.
+      def next_number(scan, zone_path, zone_paths = [zone_path], reserved = [])
         numbers = scan.spaces.select { |space| Occurrences.zone_path(space.path, zone_paths.compact) == zone_path }
                       .map { |space| space.record.fetch("number") }
-        numbers = (numbers + taken).filter_map { |number| Integer(number, 10, :exception => false) }
+        numbers = (numbers + reserved).filter_map { |number| Integer(number, 10, :exception => false) }
         ((numbers.max || 0) + 1).to_s
+      end
+
+      # The Space numbers earlier repairs in this proposal give in the Zone at `zone_path`. A host
+      # follow-up plans every copy against one Model state, so a later repair must not reuse them.
+      def reserved_numbers(proposal, zone_path)
+        proposal.steps.grep(IdentityStep).select { |step| step.zone_path == zone_path }.filter_map(&:number)
       end
 
       def zone_paths(request)
