@@ -5,6 +5,11 @@ module PhComposer
     module Options
       module_function
 
+      # The Zone record field that names an option of `collection`.
+      def zone_field(collection)
+        collection == "building_segment" ? "building_segment_id" : "level_id"
+      end
+
       def all(request)
         inventory = Inventory.rows(request.model)
         lists = KINDS.to_h do |collection, kind|
@@ -18,14 +23,15 @@ module PhComposer
                     "adoption" => Adoption.preview(request, inventory))
       end
 
+      # How many live Zones use option `id`, and how many Zones that are gone but recoverable from their
+      # members' stamps do.
       def usage(inventory, collection, id)
-        field = collection == "building_segment" ? "building_segment_id" : "level_id"
+        field = zone_field(collection)
         live_ids = inventory.select { |row| row.fetch(:zone) }.map { |row| row.fetch(:record).fetch("id") }
         matching = inventory.select { |row| row.fetch(:record)[field] == id }
+        remembered = matching.reject { |row| row.fetch(:zone) }.map { |row| row.fetch(:record).fetch("zone_id") }.uniq
         { "live" => matching.count { |row| row.fetch(:zone) },
-          "recoverable" => matching.reject { |row| row.fetch(:zone) }.map { |row|
-            row.fetch(:record).fetch("zone_id")
-          }.uniq.count { |zone_id| !live_ids.include?(zone_id) } }
+          "recoverable" => remembered.count { |zone_id| !live_ids.include?(zone_id) } }
       end
 
       def choice_rows(engine, collection)
@@ -66,9 +72,8 @@ module PhComposer
           values["export_identifier"] = portable&.fetch("export_identifier", nil) ||
                                         export_identifier("#{request.model.guid}:#{request.revision}:#{name}")
         end
-        id = request.engine.propose_create(kind.id, proposal, :values => values,
-                                                              :user_data => portable&.fetch("user_data", nil))
-        id
+        request.engine.propose_create(kind.id, proposal, :values => values,
+                                                         :user_data => portable&.fetch("user_data", nil))
       end
 
       def copy_extensions(request, proposal, kind, portable, id, typed_mappings)
@@ -93,8 +98,9 @@ module PhComposer
         proposal.restage(kind.id, id, :after => after)
       end
 
-      # Keep final-state guards, defaults and reference deletion in commit order.
-      # rubocop:disable Metrics/MethodLength
+      # Replaces one option collection as the dialog left it. The order is the commit order: guards on the
+      # state the dialog read, the staged options, the replacement for each removed one, the default
+      # Building Segment, the Zone rewrites, and last the deletions the rewrites leave unreferenced.
       def manage(request, proposal, collection:, options:, expected_options:, default_segment_id:,
                  expected_default_segment_id:, replacements:)
         inventory = Inventory.rows(request.model)
@@ -115,26 +121,9 @@ module PhComposer
         validate_collection!(final, collection)
         removed = before.map { |row| row.fetch("id") } - final_ids
         refuse("params.invalid", "Replacement names an option that remains") unless (replacements.keys - removed).empty?
-        mapping = removed.to_h do |id|
-          used = usage(inventory, collection, id).values.any?(&:positive?)
-          if used && !replacements.key?(id)
-            refuse("reference.in_use", "Choose a replacement for the used option")
-          end
-          target = created.fetch(replacements[id], replacements[id])
-          if target && !final_ids.include?(target)
-            refuse("reference.invalid", "Choose an option in the final collection")
-          end
-          refuse("reference.invalid", "Building Segment requires a replacement") if collection == "building_segment" &&
-                                                                                    used && target.nil?
-          [id, target]
-        end
-        default_id = created.fetch(default_segment_id, default_segment_id)
-        if collection == "building_segment"
-          refuse("reference.invalid", "Choose the default Building Segment") unless final_ids.include?(default_id)
-          set_settings(request, proposal, default_id) unless default_id == expected_default_segment_id
-        elsif default_id != expected_default_segment_id
-          refuse("params.invalid", "Level management cannot change the default Segment")
-        end
+        mapping = replacement_mapping(inventory, collection, removed, replacements, created, final_ids)
+        stage_default_segment(request, proposal, collection, created.fetch(default_segment_id, default_segment_id),
+                              expected_default_segment_id, final_ids)
         reference_plan = rewrite(request, proposal, collection, mapping, inventory)
         removed.each do |id|
           request.engine.propose_delete(kind.id, id, proposal, :reference_plan => reference_plan)
@@ -142,7 +131,33 @@ module PhComposer
         { "created_ids" => created, "replacement_ids" => mapping }
       end
 
-      # rubocop:enable Metrics/MethodLength
+      # Each removed option id and the final option its users move to, or nil for an unused Level. A used
+      # option needs one, and a Building Segment always does, because every Zone names one.
+      def replacement_mapping(inventory, collection, removed, replacements, created, final_ids)
+        removed.to_h do |id|
+          used = usage(inventory, collection, id).values.any?(&:positive?)
+          refuse("reference.in_use", "Choose a replacement for the used option") if used && !replacements.key?(id)
+
+          target = created.fetch(replacements[id], replacements[id])
+          if target && !final_ids.include?(target)
+            refuse("reference.invalid", "Choose an option in the final collection")
+          end
+          if collection == "building_segment" && used && target.nil?
+            refuse("reference.invalid", "Building Segment requires a replacement")
+          end
+          [id, target]
+        end
+      end
+
+      # The Model's default Building Segment must remain in the final collection; managing Levels leaves it.
+      def stage_default_segment(request, proposal, collection, default_id, expected_default_id, final_ids)
+        if collection == "building_segment"
+          refuse("reference.invalid", "Choose the default Building Segment") unless final_ids.include?(default_id)
+          set_settings(request, proposal, default_id) unless default_id == expected_default_id
+        elsif default_id != expected_default_id
+          refuse("params.invalid", "Level management cannot change the default Segment")
+        end
+      end
 
       def stage_options(request, proposal, collection, options)
         kind = KINDS.fetch(collection)
@@ -163,7 +178,7 @@ module PhComposer
       end
 
       def rewrite(request, proposal, collection, mapping, inventory = Inventory.rows(request.model))
-        field = collection == "building_segment" ? "building_segment_id" : "level_id"
+        field = zone_field(collection)
         writes = []
         entries = []
         inventory.each do |row|
@@ -173,9 +188,9 @@ module PhComposer
           after = DeepCopy.call(before)
           after[field] = mapping.fetch(before[field], before[field])
           after["choice_evidence"] = evidence(request.engine, after, proposal)
-          add_rewrite(row, after, writes) unless after == before
-          next unless after != before
+          next if after == before
 
+          add_rewrite(row, after, writes)
           record = row.fetch(:zone) ? after : after.merge("id" => after.fetch("zone_id"))
           entries << Records::ReferenceEntry.new(:kind => row.fetch(:zone) ? REFERENCE_KIND : STAMP_KIND,
                                                  :key => row.fetch(:path), :record => record)
@@ -184,13 +199,12 @@ module PhComposer
         Records::ReferencePlan.new(:entries => entries)
       end
 
+      # Queues one record write as `[inventory row, record after]`. Shared storage can reach one
+      # dictionary through several rows, so a second write to it must agree with the first.
       def add_rewrite(row, after, writes)
         refuse("target.locked", "A Zone or recoverable member is locked") if row.fetch(:locked)
-        key = [row.fetch(:entity).object_id, row.fetch(:store).dictionary]
-        previous = writes.find { |candidate, _|
-          [candidate.fetch(:entity).object_id,
-           candidate.fetch(:store).dictionary] == key
-        }
+        written = ->(candidate) { [candidate.fetch(:entity).object_id, candidate.fetch(:store).dictionary] }
+        previous = writes.find { |candidate, _| written.call(candidate) == written.call(row) }
         if previous
           refuse("zone.options_conflict", "Shared storage has conflicting choice evidence") if previous.last != after
         else
@@ -222,9 +236,8 @@ module PhComposer
       end
 
       def existing_name(engine, collection, name)
-        matches = records(engine, KINDS.fetch(collection).id).select { |row|
-          name_key(row.fetch("name")) == name_key(name)
-        }
+        wanted = name_key(name)
+        matches = records(engine, KINDS.fetch(collection).id).select { |row| name_key(row.fetch("name")) == wanted }
         refuse("reference.invalid", "Choose an existing #{collection.tr('_', ' ')} option") unless matches.length == 1
         matches.first.fetch("id")
       end

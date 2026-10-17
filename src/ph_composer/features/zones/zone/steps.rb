@@ -233,6 +233,9 @@ module PhComposer
     # back the records apply captured after isolating storage, so the copy keeps storage of its own and
     # the identity it was copied with, which this command can repair later.
     class MakeIndependentStep
+      # One store's state on one entity before apply wrote it; `record` is nil when it held none.
+      Captured = Struct.new(:store, :entity, :record, keyword_init: true)
+
       attr_reader :affected
 
       def initialize(reference:, plan:, catalog:)
@@ -249,8 +252,8 @@ module PhComposer
                        "reference" => @reference.merge("zone_id" => new_id) }]
       end
 
-      # Make Unique on the Zone's Group leaves the Groups inside it shared with the original's (measured,
-      # P2 S5), so each nested Group still sharing its contents is made unique in turn, which leaves the
+      # Make Unique on the Zone's Group leaves the Groups inside it shared with the original's (measured on
+      # SketchUp 26.1), so each nested Group still sharing its contents is made unique in turn, which leaves the
       # original's untouched. Components are left alone: eligibility refuses member Faces inside one.
       def self.isolate_groups(entities)
         entities.to_a.grep(Sketchup::Group).each do |group|
@@ -311,8 +314,9 @@ module PhComposer
         @stamps.each do |group, raw|
           raw.nil? ? STAMP_STORE.delete(group) : group.set_attribute(STAMP_DICTIONARY, STAMP_STORE.key, raw)
         end
-        @captured.each do |store, entity, record|
-          record ? store.write(entity, record) : store.delete(entity)
+        @captured.each do |captured|
+          store = captured.store
+          captured.record ? store.write(captured.entity, captured.record) : store.delete(captured.entity)
         end.length + @stamps.length
       end
 
@@ -322,10 +326,9 @@ module PhComposer
         resolved = live.fetch(:faces).map do |face|
           [Occurrences.face_at(zone, face.fetch(:reference).fetch("entity_path"), :mutable => true), face]
         end
-        @captured = [[ZONE_STORE, zone.entity, ZONE_STORE.read(zone.entity)]]
+        @captured = [capture(ZONE_STORE, zone.entity)]
         resolved.each do |occurrence, _face|
-          @captured << [Faces::FACE_STORE, occurrence.entity, Faces::FACE_STORE.read(occurrence.entity)]
-          @captured << [STAMP_STORE, occurrence.entity, STAMP_STORE.read(occurrence.entity)]
+          @captured << capture(Faces::FACE_STORE, occurrence.entity) << capture(STAMP_STORE, occurrence.entity)
         end
         containers = Occurrences.containers(zone).map(&:first)
         # A container's stamp attribute is captured as stored: its presence makes the Group a container
@@ -339,6 +342,10 @@ module PhComposer
         end
         containers.each { |group| STAMP_STORE.write(group, Schema.stamp(@record)) }
         @affected = @affected.take(1) + resolved.filter_map { |_occurrence, face| face_affected(face) }
+      end
+
+      def capture(store, entity)
+        Captured.new(:store => store, :entity => entity, :record => store.read(entity))
       end
 
       def face_affected(face)
