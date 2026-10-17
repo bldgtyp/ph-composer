@@ -1,7 +1,7 @@
 # Phase 3a: Spaces
 
 DATE: 2026-10-16
-STATUS: In progress. P3a-01 to P3a-11 merged to main (#135 to #167); P3a-12's integrated host run ran 2026-10-16 ([evidence](evidence/p3a-12-acceptance.md)). Ed's four calls are answered, and the acceptance rerun passes S01 to S11 ([rerun evidence](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)); closure waits on the #179 fix and recheck.
+STATUS: In progress. P3a-01 to P3a-11 merged to main (#135 to #167); P3a-12's integrated host run ran 2026-10-16 ([evidence](evidence/p3a-12-acceptance.md)). Ed's four calls are answered, and the acceptance rerun passes S01 to S11 ([rerun evidence](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)); the #179 fix merged (#187) and its recheck passes A09; UXR-PAINT fails on [#188](https://github.com/bldgtyp/ph-composer/issues/188), and whether that blocks closure is Ed's call.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

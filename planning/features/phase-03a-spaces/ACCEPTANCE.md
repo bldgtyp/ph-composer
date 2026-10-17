@@ -1,7 +1,7 @@
 # Phase 3a acceptance register: Spaces
 
 DATE: 2026-10-16
-STATUS: In progress. S01 to S11 pass in the 2026-10-16 rerun with ledger results ([rerun evidence](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)); S12's integrated run is done. Closing waits on the fix for [#179](https://github.com/bldgtyp/ph-composer/issues/179), a P3a-06 regression on the narrow Zones tab, and the recheck of A09 and UXR-PAINT.
+STATUS: In progress. S01 to S11 pass in the 2026-10-16 rerun with ledger results ([rerun evidence](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)); S12's integrated run is done. The fix for [#179](https://github.com/bldgtyp/ph-composer/issues/179), a P3a-06 regression on the narrow Zones tab, merged through #187 and was rechecked on the host ([recheck](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md#179-recheck-a09-and-uxr-paint-on-the-fixed-build)): A09 passes; UXR-PAINT's narrow clause fails on [#188](https://github.com/bldgtyp/ph-composer/issues/188), the selection bar crowding the table at narrow widths (Solve under the footer at 420 px, header covered at 360 x 520). Whether #188 blocks closure is Ed's call.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 

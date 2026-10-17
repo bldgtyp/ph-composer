@@ -1,7 +1,7 @@
 # P3a-12: Spaces acceptance and handoff
 
 DATE: 2026-10-03
-STATUS: In review. Integrated run done 2026-10-16 ([evidence](../evidence/p3a-12-acceptance.md)); Ed's four items answered; the acceptance rerun ran the same day ([rerun evidence](../../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)); closing waits on #179
+STATUS: In review. Integrated run done 2026-10-16 ([evidence](../evidence/p3a-12-acceptance.md)); Ed's four items answered; the acceptance rerun ran the same day ([rerun evidence](../../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)); #179 fixed (#187) and rechecked: A09 passes, UXR-PAINT fails on [#188](https://github.com/bldgtyp/ph-composer/issues/188); closing waits on Ed's call on #188
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
