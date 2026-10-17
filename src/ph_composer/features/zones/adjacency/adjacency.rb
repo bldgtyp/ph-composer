@@ -37,7 +37,7 @@ module PhComposer
           [:left, :right].each do |name|
             side = match.fetch(name)
             update = updates[face_key(side)]
-            side[:record] = update.last if update
+            side[:record] = update.after if update
           end
         end
         Plan.new(:matches => matches, :findings => found.fetch(:findings),
@@ -77,7 +77,7 @@ module PhComposer
               check_retirement_pair!(occurrence, record, counterpart, scope.map(&:path), updates,
                                      authored_face_counts)
             end
-            updates[key] = [reference, record, retired(record)]
+            updates[key] = FaceRecordUpdate.new(:reference => reference, :before => record, :after => retired(record))
           end
         end
         updates
@@ -97,7 +97,8 @@ module PhComposer
         end
 
         check_scope!({ :occurrence => occurrence }, { :occurrence => counterpart }, in_scope)
-        updates[Occurrences.key(other_reference)] = [other_reference, other, retired(other)]
+        updates[Occurrences.key(other_reference)] = FaceRecordUpdate.new(:reference => other_reference,
+                                                                         :before => other, :after => retired(other))
       end
 
       # Only an explicit Solve can rebind an old adjacency path. The Zone and Face authored ids
@@ -370,7 +371,8 @@ module PhComposer
       end
       private_class_method :geometry_current?
 
-      def retire_records(model, occurrence, record, index: nil)
+      # The two FaceRecordUpdates that retire a Surface pair: this Face's, then its counterpart's.
+      def retirement_pair(model, occurrence, record, index: nil)
         unless record && record["boundary_condition"] == "Surface" && record["adjacency"].is_a?(Hash)
           raise CodedError.new("adjacency.not_surface", "That Face has no Surface pair to retire.")
         end
@@ -382,7 +384,10 @@ module PhComposer
           raise CodedError.new("adjacency.unresolved", "The reciprocal Surface endpoint cannot be retired safely.")
         end
 
-        [retired(record), counterpart, other, retired(other)]
+        [FaceRecordUpdate.new(:reference => occurrence.reference(record.fetch("id")), :before => record,
+                              :after => retired(record)),
+         FaceRecordUpdate.new(:reference => counterpart.reference(other.fetch("id")), :before => other,
+                              :after => retired(other))]
       end
 
       def validate_envelope(envelope)

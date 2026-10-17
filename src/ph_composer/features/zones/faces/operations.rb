@@ -3,8 +3,9 @@
 module PhComposer
   module Zones
     module Faces
-      # The Face handlers the declarations register. Each only reads and proposes; the dispatcher
-      # owns the native operation.
+      # The Face handlers the declarations register: the reads, Classify, Suggest and Reverse. The
+      # Attached zone writes are in attached_zone_operations.rb. Each only reads and proposes; the
+      # dispatcher owns the native operation.
 
       module_function
 
@@ -104,8 +105,6 @@ module PhComposer
           "values" => record ? Schema.values(record).slice(*fields) : {} }
       end
 
-      # One gesture, one step, all or nothing. Targets are deduplicated by occurrence before anything
-      # is resolved, so an over-limit gesture refuses without walking the Model once per Face.
       # The user_data and installed extension payloads of recorded Faces, guarded by the two maps as
       # last read, in one step (context/CONTRACTS.md, "Records and extension data"). A Face with no record
       # has no metadata to update and refuses as resolving it does.
@@ -131,6 +130,8 @@ module PhComposer
         end }
       end
 
+      # One gesture, one step, all or nothing. Targets are deduplicated by occurrence before anything
+      # is resolved, so an over-limit gesture refuses without walking the Model once per Face.
       def classify(request, proposal, faces:, intent:, expected_values: {})
         plan_classification(request, proposal, faces, intent, expected_values)
       end
@@ -215,79 +216,6 @@ module PhComposer
         {}
       end
 
-      # Without `id` it creates a record; with it, `values` patches that record.
-      def save_attached_zone(request, proposal, values:, id: nil, expected_values: {}, user_data: nil)
-        patch = values
-        if id
-          # `values` is a partial patch, so the findings have to read the record the save will leave
-          # behind. Reading the patch alone drops the low-factor warning on every edit that does not
-          # happen to name the factor.
-          values = merged_values(request.engine.kind(AttachedZone::KIND_ID)
-                                   .values(request.engine.find(AttachedZone::KIND_ID, id)), patch)
-          request.engine.propose_update(AttachedZone::KIND_ID, id, proposal,
-                                        :values => patch,
-                                        :user_data => user_data, :expected_values => expected_values)
-        else
-          values = { "temperature_reduction_factor" => AttachedZone::DEFAULT_FACTOR }.merge(patch)
-          id = request.engine.propose_create(AttachedZone::KIND_ID, proposal, :values => values,
-                                                                              :user_data => user_data)
-        end
-        AttachedZone.findings(values.merge("id" => id)).each { |finding| proposal.add_finding(finding) }
-        { "id" => id }
-      end
-
-      # The record proposal and the complete Face proposal are validated before the dispatcher
-      # opens its native operation. ClassifyStep then writes the Faces, followed by the staged record
-      # write; a host failure rolls both back. The new id is frozen into preview's normalized digest.
-      def create_and_assign_attached_zone(request, proposal, values:, faces:, intent: {}, expected_values: {},
-                                          user_data: nil)
-        created = save_attached_zone(request, proposal, :values => values, :user_data => user_data)
-        id = created.fetch("id")
-        intent = intent.merge(
-          "boundary_condition" => { "mode" => "set", "value" => "AttachedZone" },
-          "attached_zone_id" => { "mode" => "set", "value" => id }
-        )
-        classified = plan_classification(request, proposal, faces, intent, expected_values)
-        created.merge(classified)
-      end
-
-      # The engine's own patch rule: a named value replaces, and an explicit nil removes.
-      def merged_values(before, patch)
-        patch.each_with_object(DeepCopy.call(before)) do |(key, value), after|
-          value.nil? ? after.delete(key) : after[key] = DeepCopy.call(value)
-        end
-      end
-
-      # Delete with replacement, in one proposal: every Face naming the record moves first, then the
-      # record goes. A Face the caller cannot reach refuses the whole delete, naming the routes. The
-      # engine's own reference check sees every Face through the Face descriptor and reads the planned
-      # reassignment, so it is the backstop for any other caller.
-      def delete_attached_zone(request, proposal, id:, replacement:)
-        request.engine.find(AttachedZone::KIND_ID, id)
-        validate_replacement!(request, replacement, id)
-
-        updates = reassignable_faces(request.model, id).map do |occurrence, record|
-          after = DeepCopy.call(record)
-          if replacement.fetch("mode") == "attached_zone"
-            after["attached_zone_id"] = replacement.fetch("attached_zone_id")
-          else
-            after.delete("attached_zone_id")
-            after["boundary_condition"] = replacement.fetch("boundary_condition")
-          end
-          { "reference" => occurrence.reference(record.fetch("id")), "before" => record,
-            "after" => Schema.validate!(after), "stamp" => nil, "change" => "updated" }
-        end
-        unless updates.empty?
-          scopes = updates.map do |update|
-            Operations::EntityScope.new(update.fetch("reference").fetch("zone_path")[0...-1])
-          end
-          proposal.add_step(ClassifyStep.new(:updates => updates), :scopes => scopes)
-        end
-        request.engine.propose_delete(AttachedZone::KIND_ID, id, proposal,
-                                      :reference_plan => reassignment_plan(updates))
-        { "id" => id, "reassigned_faces" => updates.length }
-      end
-
       # The Faces this delete rewrites, as they will stand, so the engine's reference check reads the
       # reassignment rather than the Faces it is about to replace.
       def reassignment_plan(updates)
@@ -300,68 +228,14 @@ module PhComposer
         Records::ReferencePlan.new(:entries => entries)
       end
 
-      def validate_replacement!(request, replacement, deleted_id)
-        return unless replacement.fetch("mode") == "attached_zone"
-
-        target = replacement["attached_zone_id"]
-        if target.to_s.empty?
-          raise CodedError.new("params.invalid", "A replacement Attached zone needs attached_zone_id.")
-        end
-        if target == deleted_id
-          raise CodedError.new("params.invalid", "The replacement cannot be the Attached zone being deleted.")
-        end
-
-        request.engine.find(AttachedZone::KIND_ID, target)
-      end
-
-      # Every Face naming the record, found through the orphan-inclusive inventory, must be one a
-      # normal Classify could rewrite: inside a Zone and resolvable for mutation. A Face exploded or
-      # moved out of every Zone, or held in storage another placement shares, is never rewritten from
-      # here; the delete refuses and names it.
-      def reassignable_faces(model, attached_zone_id)
-        reasons = {}
-        reachable = referencing_faces(model, attached_zone_id).select do |occurrence, record|
-          Zones::Occurrences.resolve_face(model, occurrence.reference(record.fetch("id")), :mutable => true)
-        rescue CodedError => error
-          reasons[occurrence.zone.path + occurrence.path] = error.code
-          false
-        end
-        keys = reachable.map { |occurrence, _record| occurrence.zone.path + occurrence.path }
-        stranded = ReferenceTargets.entries(model).select do |entry|
-          entry.record["attached_zone_id"] == attached_zone_id && !keys.include?(entry.key)
-        end
-        refuse_stranded!(attached_zone_id, stranded, reasons) unless stranded.empty?
-        reachable
-      end
-
-      def referencing_faces(model, attached_zone_id)
-        Zones::Occurrences.zones(model).flat_map { |zone| Zones::Occurrences.faces(zone) }.filter_map do |occurrence|
-          record = FACE_STORE.read(occurrence.entity)
-          [occurrence, record] if record && record["attached_zone_id"] == attached_zone_id
-        end
-      end
-
-      # What the user can do about each kind of Face the delete cannot reach. A Face outside every
-      # Zone has no reason code of its own; one inside a Zone carries the code its resolution refused.
+      # What the user can do about each kind of Face a reassigning write (the Attached zone delete,
+      # Assembly assignment) cannot reach. A Face outside every Zone has no reason code of its own; one
+      # inside a Zone carries the code its resolution refused.
       STRANDED_ROUTES = {
         "outside_zone" => "Restore its Zone, or remove it",
         "target.shared_definition" => "make its Group unique (right-click, Make Unique)",
         "target.locked" => "unlock its Group or Zone"
       }.freeze
-
-      def refuse_stranded!(attached_zone_id, entries, reasons)
-        faces = entries.map do |entry|
-          { "id" => entry.record.fetch("id"), "path" => entry.key,
-            "reason" => reasons.fetch(entry.key, "outside_zone") }
-        end
-        routes = faces.map { |face| STRANDED_ROUTES.fetch(face.fetch("reason"), "resolve its #{face.fetch('reason')}") }
-        raise CodedError.new(
-          "reference.in_use",
-          "#{faces.length} Face(s) still use Attached zone #{attached_zone_id} where this delete cannot " \
-          "reach them. For each, #{routes.uniq.join('; or ')}, then delete again.",
-          "target_kind" => AttachedZone::KIND_ID, "id" => attached_zone_id, "faces" => faces
-        )
-      end
 
       def face_view(request, occurrence, index:)
         record = FACE_STORE.read(occurrence.entity)
@@ -384,18 +258,8 @@ module PhComposer
 
       # The three words every surface that shows a Face uses, the same ones a Colour-by legend row
       # carries: no record at all, a record that cannot be exported as it stands, or a complete one.
-      # Derived here and never in a view, so no screen coins a fourth word.
-      #
-      # A legend row and this are not the same verdict, and neither is wrong. A legend row answers for
-      # the one field its mode paints; this answers for the whole record. They agree where it matters
-      # to the user: a Face with no record is unclassified to both, and a record missing the field in
-      # front of them is incomplete to both. This is stricter about two things a mode cannot see
-      # without a Model walk, a dangling Attached zone reference and an adjacency that has gone stale,
-      # so a Face can read complete in the viewport and incomplete in the table. That is the table
-      # telling the user something the colours do not carry, not a disagreement about the same fact.
-      #
-      # It is not the validation register, which owns severities and finding codes and is not built
-      # yet. It answers one question: is this row amber.
+      # Derived here and never in a view, so no screen coins a fourth word. It judges the whole record,
+      # so it can be stricter than a legend row (context/EXTENSIBILITY.md, "Colour-by modes").
       def row_state(view)
         values = view.fetch("values")
         return "unclassified" if values.empty?
@@ -438,7 +302,8 @@ module PhComposer
       def classify_updates(request, targets, retirements, intent)
         targets.filter_map do |occurrence, record|
           key = Zones::Occurrences.key(occurrence.reference)
-          base = retirements.key?(key) ? retirements.fetch(key).fetch(2) : record
+          # A Face the gesture also retires is patched from its retired record, so it is written once.
+          base = retirements.key?(key) ? retirements.fetch(key).after : record
           after = patched_record(request, occurrence, base, intent)
           next unless after
 
@@ -454,9 +319,8 @@ module PhComposer
       # boundary condition and keeps everything else.
       def retirement_only_updates(targets, retirements)
         classified = targets.map { |occurrence, _record| Zones::Occurrences.key(occurrence.reference) }
-        retirements.reject { |key, _entry| classified.include?(key) }
-                   .map do |_key, (reference, before, after)|
-          { "reference" => reference, "before" => before, "after" => after, "stamp" => nil,
+        retirements.reject { |key, _update| classified.include?(key) }.map do |_key, update|
+          { "reference" => update.reference, "before" => update.before, "after" => update.after, "stamp" => nil,
             "change" => "retired" }
         end
       end
