@@ -1,0 +1,184 @@
+# Ruby readability review and follow-up
+
+DATE: 2026-10-17
+STATUS: Review complete; local standards and skill added. Shipping-code refactoring is deferred.
+ISSUE: none (local planning draft)
+BASELINE: `60982fc73af6841f0c2bc5f55136dd21cad20930`
+
+Ed requested a wider Ruby sample after reviewing Spaces authoring. The goal is an outside
+contributor who can follow and extend one responsibility without learning the whole application.
+This review authorizes workflow documentation and a repo-local skill. It authorizes no Ruby
+refactor, release, remote issue or PR. Existing dirty planning work belongs to its current owner.
+
+## Workflow decision
+
+Keep durable rules in [coding standards](../context/CODING_STANDARDS.md#ruby-readability-and-contributor-review).
+Use [ph-composer-ruby-quality](../.agents/skills/ph-composer-ruby-quality/SKILL.md) in two contexts:
+the existing phase review of substantive Ruby changes, and a later, separately authorized refactor
+of one selected module. [AGENTS.md](../AGENTS.md#architecture-and-code-review) and the architecture
+skill route to it. The same reviewer covers architecture and Ruby readability.
+
+Keep shared `implement` and `simplify` skills unchanged. Ed identified the Claude workflow at
+`/Users/em/.claude/skills/pr-loop/SKILL.md`. It and its `codex-review` dependency were inspected;
+a matching Codex workflow was created at `/Users/em/.codex/skills/pr-loop/SKILL.md`. It preserves
+one-stage PR delivery, posted independent review and explicit merge delegation, using native Codex
+review tooling instead of Claude's CLI/reconciliation scripts. It includes repository-specific
+Ruby criteria in the same review through AGENTS.md. No webhook or automatic review hook was added.
+
+Do not enable a large new RuboCop rule set immediately. The current lint configuration enforces
+layout, two style rules and method/class size signals. It does not enforce domain naming,
+internal plan shapes or contributor comprehension. The new standards make those review criteria
+explicit. Complexity measurements help select work; future threshold changes need their own
+baseline and justification.
+
+## Sample and deterministic evidence
+
+The inventory found 304 shipping Ruby files. This is a purposive sample of eight, mixing large
+owners with smaller comparators across features, shell and core. It is not a random sample or a
+repository-wide defect audit. Immediate callers and selected helpers were read where needed.
+
+| Reviewed file under `src/ph_composer/` | Lines | Evidence and interpretation |
+| --- | ---: | --- |
+| [Spaces authoring](../src/ph_composer/features/spaces/authoring.rb) | 449 | Four-field edit arrays cross into HeightFromSolid; eligibility is called sorting. `mark_floors` ABC 42.06, cyclomatic 10 |
+| [Spaces height from solid](../src/ph_composer/features/spaces/height_from_solid.rb) | 106 | Pure `height_m` is a good small rule; `apply` consumes Authoring's positional plan. Determinant ABC 30.02 is a warning against mechanical metric reduction |
+| [Faces operations](../src/ph_composer/features/zones/faces/operations.rb) | 532 | Read, classification and Attached-zone workflows share one module; retirement plans use positional fields. `list` ABC 45.32, cyclomatic 12 |
+| [Colour-by service](../src/ph_composer/colour_by/service.rb) | 473 | Named Entry/Row structs are useful; drawing helpers thread coupled mutable buffers through positional arguments. `rebuild` ABC 60.22; `add_entry` cyclomatic 12 |
+| [Registry validation](../src/ph_composer/shell/registry_validation.rb) | 835 | Many bounded validators behind one registration boundary; size alone does not justify splitting. `check_claim` ABC 52.86, cyclomatic 22 |
+| [Windows export assessment](../src/ph_composer/features/windows/export_assessment.rb) | 293 | Product availability, thermal findings and Uw export limits share one method. `validate_products` ABC 68.73, cyclomatic 24 |
+| [Windows authoring](../src/ph_composer/features/windows/authoring.rb) | 95 | Thin coordinator shows the mutation order and delegates to owning operations. No findings from the three diagnostic complexity cops |
+| [Record kind](../src/ph_composer/core/records/record_kind.rb) | 93 | Named keyword inputs and a Descriptor make boundaries visible; explicit validation accumulates problems. `problems` ABC 28.65 alone is not a refactor order |
+
+All eight passed `make lint-ruby` with their explicit file list. A separate run selected
+`Metrics/AbcSize`, `Metrics/CyclomaticComplexity` and `Metrics/PerceivedComplexity` through
+`RUBOCOP_ARGS`. It reported 124 diagnostic offenses against RuboCop's default thresholds, returning
+nonzero as expected. Those are neither 124 defects nor failures of the configured repository gate.
+ABC counts assignments, method calls and conditions; cyclomatic complexity measures decision
+paths. Both need interpretation against the operation's job.
+
+The skill gives reproducible affected-file and diagnostic commands. No lint configuration, Ruby
+source, test or golden was changed. No behavioral suite, coverage run or native host check was
+needed for these documentation changes; this review makes no fresh behavioral acceptance claim.
+
+## Recurring findings
+
+### R1: Internal plans have unnamed fields
+
+[Spaces `plan_edit`, line 359](../src/ph_composer/features/spaces/authoring.rb#L359) returns
+`[kind, occurrence, before, after]`, consumed by `propose_edits` and
+[HeightFromSolid `apply`, line 99](../src/ph_composer/features/spaces/height_from_solid.rb#L99).
+[Faces `classify_updates`, line 441](../src/ph_composer/features/zones/faces/operations.rb#L441)
+uses `retirements.fetch(key).fetch(2)`; the retirement producer stores
+`[reference, record, retired(record)]` in
+[adjacency, line 80](../src/ph_composer/features/zones/adjacency/adjacency.rb#L80).
+
+A contributor changing one field must reconstruct positional agreements across modules. Prefer
+feature-owned named edit/retirement values, changing producer and actual consumers together.
+Preserve the public JSON shapes and record semantics. Do not replace all pairs or geometry arrays.
+This is directly evidenced readability debt, not a demonstrated correctness defect.
+
+### R2: Coupled mutable buffers obscure drawing ownership
+
+[Colour-by `add_entry`, line 307](../src/ph_composer/colour_by/service.rb#L307) takes ten
+positional arguments: entry, state and colour, followed by seven mutable buffers. Its callers and
+`add_derived` must retain each buffer's purpose and mutation behavior.
+`rebuild` mixes local buffers with temporary `@building_lines` and `@building_frames` state.
+
+Consider a feature-local drawing builder that owns related buffers and yields a completed result.
+Preserve the existing failure behavior that clears incomplete drawing state and lets later host
+subscribers run. Changing all arguments to keywords would expose names but leave the ownership
+question. This is a candidate design, requiring caller and failure-path review before implementation.
+
+### R3: Some names and expressions conceal the operation
+
+[Spaces `sort_faces`, line 276](../src/ph_composer/features/spaces/authoring.rb#L276) partitions
+eligible Faces and repeatedly excludes unsafe neighbors; it does not order them.
+[Copy repair, line 152](../src/ph_composer/features/spaces/authoring.rb#L152) filters staged
+identity steps and reserves their numbers in one chain under the name `taken`.
+
+Use names that expose eligibility, path/reference distinctions and proposed number reservations.
+Introduce intermediate values where a chain switches domain concepts. Keep a short `map`, guard
+or pair destructuring when it is already clear. This finding does not justify translating normal
+Ruby idioms into Python-shaped code.
+
+### R4: Comments vary between useful constraints and difficult prose
+
+[Spaces copy-repair comment, line 149](../src/ph_composer/features/spaces/authoring.rb#L149)
+describes number reservation indirectly. The eligibility loop needs the reason it repeats.
+[Faces row-state comment, line 387](../src/ph_composer/features/zones/faces/operations.rb#L387)
+contains an extended table-versus-viewport explanation before a short predicate. Keep the key
+distinction locally and put the longer durable rule in its owning context section.
+
+Preserve measured host constraints, units, transaction ownership and non-obvious recovery rules.
+For example, Colour-by's cache invalidation and projection-failure comments explain behavior that
+syntax cannot. Comment count alone says little about quality.
+
+### R5: A method name covers several different export checks
+
+[Windows `validate_products`, line 187](../src/ph_composer/features/windows/export_assessment.rb#L187)
+checks product availability, turns Type and element thermal findings into export issues, and
+enforces the Honeybee Uw limit. A contributor changing a product lookup must also read the thermal
+condition and exporter policy paths. Separate those named checks under an explicit coordinator,
+preserving issue severity, deduplication and ordering. The immediately destructured `[code, message]`
+pairs are lower priority than the method's mixed responsibilities.
+
+### R6: Registration validators need clearer navigation, with contracts kept together
+
+[Registry `check_claim`, line 451](../src/ph_composer/shell/registry_validation.rb#L451) reads
+four fields through `values_at(*CLAIM_KEYS)`, renaming `target_kind` to `target` and `source_section`
+to `source`. Named reads would expose the dependency and projection checks without a jump to
+the constant. Keep the contributor's declared hash contract and current diagnostic accumulation.
+
+The file already contains specialist validation classes. Move a cohesive specialist to an adjacent
+file only when a real contributor task benefits, and preserve load and diagnostic order. In
+particular, [LibraryValidation, line 705](../src/ph_composer/shell/registry_validation.rb#L705)
+documents why its two seams form one boundary. Its length alone is insufficient reason to split it.
+
+## Proposed refactor queue
+
+This table is the follow-up ledger. No row is implemented or authorized for implementation.
+At the start of a later session, select one row, confirm its current source and record the exact
+slice and authorization here. Do not run the full queue from an ambiguous request to review it.
+
+| Order | Responsibility | Starting slice | Verification to retain | State |
+| --- | --- | --- | --- | --- |
+| 1 | Spaces authoring | Named edit plan with HeightFromSolid consumers; explicit field names and expected-value guards | Spaces operations, height-from-solid, metadata/stale and atomic-batch behavior; identity/move/native gates if those paths change | Proposed |
+| 2 | Face classification plans | Named retirement value across producer/consumers; separate read and Attached-zone responsibilities only if it reduces caller knowledge | Classification, adjacency retirement, Attached-zone replacement and metadata/reference preservation; native grouping/Undo when affected | Proposed |
+| 3 | Colour-by drawing assembly | Cohesive buffer ownership and explicit completed-state publication | Colour-by failure cleanup, revision invalidation, visibility/shared occurrences, derived/readout suites and native drawing lifecycle | Proposed |
+| 4 | Windows export assessment | Separate product availability, thermal conditions and export-limit checks while keeping emission policy explicit | Window export outputs, finding severity/order, construction references and relevant round trips; no golden updates to conceal changes | Proposed |
+| 5 | Registration validation | Review the most complex validators by contribution contract; preserve one deterministic diagnostics boundary | Registry, ownership, outside-contributor examples, diagnostics and discovery/API goldens | Proposed |
+| retain | Windows authoring and RecordKind | Keep as comparators; no rewrite merely because other modules are changing | Recheck only when their contracts or consumers change | No refactor proposed |
+
+Each authorized shipping slice uses focused tests, the established review ladder and final
+`make ci`, with coverage and high-assurance/native checks where its owning workflow requires
+them. Record gates as pending until actually run. New tests protect behavior, not helper layout.
+
+## Later-session prompts
+
+Review only:
+
+> Use $ph-composer-ruby-quality to review the Ruby changes in this phase within its existing
+> coherent-diff review. Report findings and follow-ups; do not refactor unrelated modules.
+
+One authorized refactor:
+
+> Use $ph-composer-ruby-quality and implement the first Spaces edit-plan slice in
+> planning/ruby-readability.md. Refactor that responsibility and its immediate consumers only,
+> preserve behavior and public contracts, run its required checks, and update the ledger.
+
+The second prompt supplies future implementation authorization when Ed actually sends it.
+Its presence in this document grants none now.
+
+## Preparation checks
+
+Both the Ruby quality skill and the Codex PR-loop skill passed the bundled skill creator's
+`quick_validate.py`. Local checks resolved 43 links
+in the affected workflow documents, checked source line references were in range and found no
+whitespace errors. A bounded independent review walked the phase-review and Spaces edit-plan
+requests against the new instructions and found no blocking contradiction. These are preparation
+checks; no future refactor was executed, and the complete implementation/PR loop was not exercised.
+The Codex PR-loop instructions also received a bounded independent comparison with Claude's
+workflow, covering merge delegation, pending CI, reviewer failure and reuse of an existing review.
+
+Next action: Ed selects and authorizes the first responsibility in a later session. Keep this
+queue and its receipt current as each authorized slice is verified. The documentation changes
+remain local and uncommitted.

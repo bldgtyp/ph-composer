@@ -12,6 +12,9 @@ coordinated the three owning feature plans and their acceptance gates. Feature b
 Cross-cutting choices that need Ed's answer are in [DECISIONS.md](DECISIONS.md). Feature-local
 questions remain in their owning PRDs.
 
+Ed inserted [Phase 3a1 agent access](features/phase-03a1/README.md) after Spaces on 2026-10-17.
+Its five workstreams and sixteen stages are planned only; no implementation is authorized.
+
 Update the State column here when a packet's own STATUS changes. Nothing else in this file
 should need regular edits.
 
@@ -112,15 +115,18 @@ library file. METr conversion stays deferred.
 | # | Item | State | Note |
 | --- | --- | --- | --- |
 | 3.1 | [Spaces](archive/phase-03a-spaces/README.md) | Complete 2026-10-17, archived; P3a-01 to P3a-12 merged (#135 to #171); S01 to S11 pass with ledger results; the #179 and #188 regressions fixed and rechecked | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
+| 3a1 | [Agent access after Spaces](features/phase-03a1/README.md) | Scoped 2026-10-17; direction accepted the same day; delivered V1 to V9 starting with P3a1-01, none authorized | API corrections, an MCP connection served from Ruby for the Codex and Claude Code CLIs, token grants and host execution, semantic Spaces access, artifact disclosure and visual context. Owns all 14 post-Spaces review findings |
 | 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09, none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
 
-Ed split Phase 3 on 2026-10-03 into two sub-phases, each one packet planned and worked on its own:
+Ed originally split Phase 3 on 2026-10-03 into two envelope-feature sub-phases:
 [3a Spaces](archive/phase-03a-spaces/README.md) and
-[3b thermal bridges](features/phase-03b-thermal-bridges/README.md). Phase 3 closes when both do.
-3b waits on two 3a stages (P3a-01 and P3a-05) and is otherwise independent.
+[3b thermal bridges](features/phase-03b-thermal-bridges/README.md). Their completion still supplies
+the envelope-model content boundary. 3b's two dependencies on 3a (P3a-01 and P3a-05) are met.
 
-These two are independent of each other and of phase 2. Either can move earlier if a port is
-wanted as a warm-up. They sit here because neither is needed for the Phase 1 canonical HBJSON proof.
+The new [3a1 packet](features/phase-03a1/PLAN.md) is the next planned insertion after Spaces.
+It has its own agent/client acceptance boundary and does not invent a technical prerequisite for
+thermal bridges. Coordinate their shared declarations, Zones context and export files before
+concurrent work. External-agent support and public distribution remain distinct claims.
 
 ## Phase 4: mechanical
 
@@ -154,6 +160,7 @@ wanted as a warm-up. They sit here because neither is needed for the Phase 1 can
                                        ├─ 2.1 assemblies ── 2.2 library seam ── 2.4
 0.5 window spike ──────────────────────┼─ 2.3 window types ──────────────────┘
                                        ├─ 3.1 spaces
+                                       │       └─ 3a1 agent access (planned insertion)
 0.6 edge spike ────────────────────────┴─ 3.2 thermal bridges ─┬─ 4.2 ducting
                                                               └─ 4.4 piping
                                           4.1 ventilators ─────── 4.2 ducting

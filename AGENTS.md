@@ -98,6 +98,11 @@ Before designing contribution boundaries or making substantive code changes, loa
 as the rubric for the existing coherent-diff review. This applies when using `implement`,
 `implement-loop`, `simplify` or direct implementation. Reuse loaded context within a coherent task.
 
+For substantive Ruby work, also load `.agents/skills/ph-composer-ruby-quality/SKILL.md` and give
+its Ruby criteria to that same reviewer. It covers phase review and a separately authorized,
+one-module refactor. The criteria live in `context/CODING_STANDARDS.md`, "Ruby readability and
+contributor review". A review invocation alone authorizes no shipping-code edits.
+
 Keep the shared implementation skills unchanged. Use the established review ladder and give its
 reviewer this project rubric; do not add a second equivalent review. Record the outcome and
 remaining acceptance evidence in the owning packet. Documentation-only edits use a focused

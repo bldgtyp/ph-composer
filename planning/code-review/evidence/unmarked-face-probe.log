@@ -1,0 +1,12 @@
+Run options: --seed 48367
+
+# Running:
+
+UNMARKED_READ: zone_faces=0 volume_floor_segments=0 explicit_host_rows=0
+UNMARKED_WRITE: ["completed", "ok", "committed"]
+COUNTS: {"queries"=>{"ph_composer.records"=>1, "ph_composer.colour_by"=>1, "ph_composer.library"=>5, "ph_composer.locations"=>1, "ph_composer.assemblies"=>5, "ph_composer.zones"=>20, "ph_composer.windows"=>14, "ph_composer.spaces"=>10}, "actions"=>{"ph_composer.library"=>1, "ph_composer.assemblies"=>21, "ph_composer.zones"=>26, "ph_composer.windows"=>39, "ph_composer.spaces"=>15}, "view_commands"=>{"ph_composer.colour_by"=>5, "ph_composer.zones"=>7, "ph_composer.windows"=>3, "ph_composer.spaces"=>8}}
+.
+
+Finished in 0.084644s, 11.8142 runs/s, 94.5135 assertions/s.
+
+1 runs, 8 assertions, 0 failures, 0 errors, 0 skips

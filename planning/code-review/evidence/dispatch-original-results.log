@@ -1,0 +1,20 @@
+$ /Users/em/.rbenv/versions/3.2.2/bin/ruby -Itests /tmp/phc-dispatch-probes.rb
+Run options: --seed 62517
+
+CAPABILITY_ALIAS ["completed", "ok", "committed"]
+WORKER_THREAD ["completed", "ok", "committed"]
+SESSION_ID_ALIAS old=aa73c86b-b04b-4df3-832c-dbb1581f5e4d current=caller-edited-id
+PENDING_CHANGED_PAYLOAD ["pending", "request.pending"]
+
+4 runs, 12 assertions, 3 failures, 0 errors, 0 skips (0.340261s).
+
+Expected contract assertions that failed:
+1. read-only original grant should refuse create request.capability_denied; actual ok.
+2. session authority should retain original UUID; actual caller-edited-id.
+3. differing pending payload should refuse request.sequence_conflict; actual request.pending.
+
+$ /Users/em/.rbenv/versions/3.2.2/bin/ruby -Itests -rapi_test -rapi_client_test -rsessions_test -rhandler_request_test -rregistry_test -e ''
+Run options: --seed 50590
+102 runs, 619 assertions, 0 failures, 0 errors, 0 skips (8.059821s).
+
+This log transcribes retained tool outputs from the original runs; no gates rerun to produce it.

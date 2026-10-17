@@ -1,0 +1,14 @@
+Run options: --seed 4210
+
+# Running:
+
+TOTALS: full model={"floor_area_m2"=>34.0, "weighted_area_m2"=>32.0, "net_volume_m3"=>95.6} filtered model={"floor_area_m2"=>12.0, "weighted_area_m2"=>12.0, "net_volume_m3"=>36.0} zone floor sum=34.0
+.SIZE: spaces=1 floor_segments=600 bytes=238481 next_cursor=nil
+.CREATE_FROM_ROOT: ["refused", "space.context_required", "Open the Zone's edit context to create a Space in it. Nothing was written."]
+CONTEXT_COMMANDS: ["ph_composer.colour_by.select_row", "ph_composer.zones.faces.open_attached_assignment", "ph_composer.zones.faces.locate", "ph_composer.zones.faces.clear_locate", "ph_composer.zones.faces.select", "ph_composer.windows.units.locate", "ph_composer.spaces.context.open", "ph_composer.spaces.context.close", "ph_composer.spaces.locate", "ph_composer.spaces.create_review.open"]
+SPACE_OPEN_SCHEMA: {"type"=>"object", "additionalProperties"=>false, "required"=>["reference"], "properties"=>{"reference"=>{"type"=>"object", "additionalProperties"=>false, "required"=>["entity_path"], "properties"=>{"space_id"=>{"type"=>"string"}, "volume_id"=>{"type"=>"string"}, "entity_path"=>{"type"=>"array", "items"=>{"type"=>"integer"}, "minItems"=>1, "description"=>"The root-to-entity persistent-id path."}}, "description"=>"A Space, or an unprotected Volume, as list returns it."}}}
+.
+
+Finished in 0.347005s, 8.6454 runs/s, 34.5816 assertions/s.
+
+3 runs, 12 assertions, 0 failures, 0 errors, 0 skips

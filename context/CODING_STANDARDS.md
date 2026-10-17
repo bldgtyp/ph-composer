@@ -56,6 +56,47 @@ Four layers, one dependency direction. The founding brief names them; this is wh
 - **Value objects at module boundaries.** A module that hands another module a bare Hash hands it
   a shape nothing declares. `Records::RecordKind` and its `Records::Descriptor` are the pattern.
 
+### Ruby readability and contributor review
+
+Assess whether a contributor can trace an operation from its entrypoint through validation,
+planning and application, including a refusal, without reconstructing undocumented data shapes.
+Use `.agents/skills/ph-composer-ruby-quality/SKILL.md` within the existing coherent-diff review
+for substantive Ruby changes. The architecture rubric still owns contribution boundaries.
+
+- **Give domain plans named fields.** A multi-field array whose positions mean kind, occurrence,
+  before and after is an undeclared record. Use a small named value, such as
+  `Struct.new(..., keyword_init: true)`, when it passes between methods or modules. Ordinary
+  key/value pairs, coordinates, matrices and documented external formats can remain arrays.
+  JSON hashes remain appropriate at persistence and transport boundaries; do not change a wire
+  shape merely to improve an internal representation.
+- **Name the representation.** Distinguish `zone_reference`, `zone_path`, `space_record` and
+  `face_ids`. A method returning IDs says so when its name otherwise suggests entities. Name
+  units on local quantities when the unit is not already unambiguous. Reserve `sort` for ordering;
+  use names such as `partition` or `eligible` for eligibility decisions.
+- **Keep consequential steps visible.** Separate resolution, validation, plan construction and
+  proposal assembly when combining them hides execution order or failure behavior. Introduce
+  intermediate values when a chain switches domain concepts. Normal Ruby guards, blocks,
+  destructuring and short collection chains need no expansion when their meaning is apparent.
+- **Make coupled mutable state explicit.** When helpers pass several drawing or planning buffers
+  together, consider one feature-owned builder with named responsibilities. Keyword arguments help
+  distinguish independent inputs; renaming many positional arguments as keywords alone does not
+  resolve responsibility or mutation ownership. Keep the completed result separate from temporary
+  state when the distinction matters to failure recovery.
+- **Declare the helper boundary.** Keep entrypoints and their supporting operations discoverable.
+  Before making a helper private, find its callers, including module functions used by another
+  module. Extract a cohesive responsibility only when it reduces what those callers must know.
+  Do not split every action into a class or add a generic framework to satisfy a length metric.
+- **Explain the rule that syntax cannot.** Comments state why a loop repeats, which coordinate
+  space a transform uses, or which proposed value wins. Use direct sentences. Keep extended
+  contracts in the owning context document, with a short source comment where needed. Name
+  domain predicates for compound decisions; keep familiar mathematical formulas recognizable.
+
+Review findings cite the source, the contributor task made harder and the smallest adequate
+improvement. Distinguish a contract or correctness problem from optional polish. Existing debt
+outside the changed responsibility goes into a follow-up; a phase review does not authorize a
+repository-wide refactor. Complexity measurements prioritize inspection and never justify
+mechanical fragmentation or a golden update.
+
 ## JavaScript
 
 - **The floor is Chromium 88**, the HtmlDialog engine in SketchUp 2023, so `ecmaVersion: 2020`.

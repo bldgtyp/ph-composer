@@ -38,6 +38,9 @@ review produces recommendations and acceptance checks, not implementation unless
 Trace a representative operation through the actual code, including relevant failure paths.
 Select the applicable questions; do not demand evidence for capabilities outside the change.
 
+For substantive Ruby scope, include `.agents/skills/ph-composer-ruby-quality/SKILL.md` in this review.
+It applies the Ruby criteria in `context/CODING_STANDARDS.md`; it does not add a second reviewer.
+
 - Can built-in and outside features use the same public contract? Does adding one require a
   special branch in shell, session, export orchestration or the UI kit? A composition-root entry
   or generated inventory is permitted. Check explicit dependencies and registration diagnostics.

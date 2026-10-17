@@ -1,0 +1,237 @@
+{
+  "baseline": "60982fc73af6841f0c2bc5f55136dd21cad20930",
+  "counts": {
+    "queries": 57,
+    "actions": 102,
+    "view_commands": 23,
+    "setup_commands": 11,
+    "file_exports": 1,
+    "participants": 2
+  },
+  "features": [
+    {
+      "id": "ph_composer.records",
+      "contract_version": 1,
+      "requires": []
+    },
+    {
+      "id": "ph_composer.colour_by",
+      "contract_version": 1,
+      "requires": []
+    },
+    {
+      "id": "ph_composer.library",
+      "contract_version": 1,
+      "requires": []
+    },
+    {
+      "id": "ph_composer.locations",
+      "contract_version": 1,
+      "requires": []
+    },
+    {
+      "id": "ph_composer.assemblies",
+      "contract_version": 1,
+      "requires": []
+    },
+    {
+      "id": "ph_composer.zones",
+      "contract_version": 1,
+      "requires": [
+        "ph_composer.assemblies"
+      ]
+    },
+    {
+      "id": "ph_composer.windows",
+      "contract_version": 1,
+      "requires": [
+        "ph_composer.zones",
+        "ph_composer.library"
+      ]
+    },
+    {
+      "id": "ph_composer.spaces",
+      "contract_version": 1,
+      "requires": [
+        "ph_composer.zones"
+      ]
+    }
+  ],
+  "discovery_bytes": 52390,
+  "reference_bytes": 1218285,
+  "reference_lines": 47774,
+  "by_owner": {
+    "queries": {
+      "ph_composer.records": 1,
+      "ph_composer.colour_by": 1,
+      "ph_composer.library": 5,
+      "ph_composer.locations": 1,
+      "ph_composer.assemblies": 5,
+      "ph_composer.zones": 20,
+      "ph_composer.windows": 14,
+      "ph_composer.spaces": 10
+    },
+    "actions": {
+      "ph_composer.library": 1,
+      "ph_composer.assemblies": 21,
+      "ph_composer.zones": 26,
+      "ph_composer.windows": 39,
+      "ph_composer.spaces": 15
+    },
+    "view_commands": {
+      "ph_composer.colour_by": 5,
+      "ph_composer.zones": 7,
+      "ph_composer.windows": 3,
+      "ph_composer.spaces": 8
+    },
+    "setup_commands": {
+      "ph_composer.library": 5,
+      "ph_composer.locations": 6
+    },
+    "file_exports": {
+      "ph_composer.library": 1
+    },
+    "participants": {
+      "ph_composer.library": 1,
+      "ph_composer.zones": 1
+    }
+  },
+  "operation_description_bytes": {
+    "queries": [
+      [
+        "ph_composer.spaces.list",
+        14129
+      ],
+      [
+        "ph_composer.spaces.all",
+        13418
+      ],
+      [
+        "ph_composer.windows.types.list",
+        10770
+      ],
+      [
+        "ph_composer.windows.types.all",
+        10066
+      ],
+      [
+        "ph_composer.assemblies.assemblies.list",
+        7510
+      ]
+    ],
+    "actions": [
+      [
+        "ph_composer.windows.types.installs.save",
+        14423
+      ],
+      [
+        "ph_composer.windows.types.update",
+        9758
+      ],
+      [
+        "ph_composer.windows.types.grid.set_element_operation",
+        8172
+      ],
+      [
+        "ph_composer.windows.types.grid.insert",
+        8042
+      ],
+      [
+        "ph_composer.windows.types.grid.set_element_frame",
+        8040
+      ]
+    ],
+    "view_commands": [
+      [
+        "ph_composer.spaces.create_review.open",
+        3797
+      ],
+      [
+        "ph_composer.windows.place_tool.choose",
+        2634
+      ],
+      [
+        "ph_composer.zones.faces.open_attached_assignment",
+        2532
+      ],
+      [
+        "ph_composer.spaces.create_review.close",
+        2075
+      ],
+      [
+        "ph_composer.colour_by.isolate",
+        1728
+      ]
+    ],
+    "setup_commands": [
+      [
+        "ph_composer.library.load",
+        2367
+      ],
+      [
+        "ph_composer.locations.rename",
+        1606
+      ],
+      [
+        "ph_composer.library.providers.add_file",
+        1597
+      ],
+      [
+        "ph_composer.library.providers.add_folder",
+        1528
+      ],
+      [
+        "ph_composer.locations.approve_destination",
+        1503
+      ]
+    ],
+    "file_exports": [
+      [
+        "ph_composer.library.export_file",
+        4982
+      ]
+    ],
+    "participants": [
+      [
+        "ph_composer.library.copy_into_proposal",
+        6451
+      ],
+      [
+        "ph_composer.zones.stamp_container",
+        1702
+      ]
+    ]
+  },
+  "session_fields": [
+    "id",
+    "revision",
+    "file_name",
+    "active",
+    "busy"
+  ],
+  "view_commands": [
+    "ph_composer.colour_by.activate",
+    "ph_composer.colour_by.select_row",
+    "ph_composer.colour_by.isolate",
+    "ph_composer.colour_by.filter",
+    "ph_composer.colour_by.readout",
+    "ph_composer.zones.faces.open_attached_assignment",
+    "ph_composer.zones.faces.close_attached_assignment",
+    "ph_composer.zones.faces.choose",
+    "ph_composer.zones.faces.stop_classifying",
+    "ph_composer.zones.faces.locate",
+    "ph_composer.zones.faces.clear_locate",
+    "ph_composer.zones.faces.select",
+    "ph_composer.windows.place_tool.choose",
+    "ph_composer.windows.place_tool.stop",
+    "ph_composer.windows.units.locate",
+    "ph_composer.spaces.context.open",
+    "ph_composer.spaces.context.close",
+    "ph_composer.spaces.locate",
+    "ph_composer.spaces.labels.set_options",
+    "ph_composer.spaces.mark_tool.start",
+    "ph_composer.spaces.mark_tool.stop",
+    "ph_composer.spaces.create_review.open",
+    "ph_composer.spaces.create_review.close"
+  ]
+}

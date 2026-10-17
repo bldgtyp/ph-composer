@@ -1,0 +1,10 @@
+Run options: --seed 16868
+
+# Running:
+
+REVOKED_LOCATION_TASK {"status":"completed","code":"export.complete","files_written":["model-export-report.html","model.hbjson"]}
+.
+
+Finished in 0.086392s, 11.5751 runs/s, 69.4509 assertions/s.
+
+1 runs, 6 assertions, 0 failures, 0 errors, 0 skips
