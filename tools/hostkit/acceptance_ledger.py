@@ -59,6 +59,51 @@ def source_fingerprint(root: Path, patterns: list[str]) -> str:
     return digest.hexdigest()
 
 
+def fingerprint_at(root: Path, commit: str, patterns: list[str]) -> str | None:
+    """What `source_fingerprint` gives for `patterns` when the working tree holds exactly `commit`, read from
+    git's objects; None when the commit is not available locally."""
+    probe = subprocess.run(
+        ["git", "cat-file", "-e", f"{commit}^{{commit}}"], cwd=root, capture_output=True, check=False
+    )
+    if not commit or probe.returncode != 0:
+        return None
+    listing = subprocess.check_output(["git", "ls-tree", "-r", "-z", "--full-tree", commit], cwd=root)
+    entries = {}
+    for line in listing.decode().split("\0"):
+        if line:
+            meta, name = line.split("\t", 1)
+            mode, _kind, blob = meta.split()
+            if any(fnmatch.fnmatchcase(name, pattern) for pattern in patterns):
+                entries[name] = (mode, blob)
+    names = sorted(entries)
+    request = "".join(entries[name][1] + "\n" for name in names).encode()
+    stream = subprocess.run(
+        ["git", "cat-file", "--batch"], cwd=root, input=request, capture_output=True, check=True
+    ).stdout
+    digest = hashlib.sha256()
+    offset = 0
+    for name in names:
+        header_end = stream.index(b"\n", offset)
+        size = int(stream[offset:header_end].split()[2])
+        content = stream[header_end + 1 : header_end + 1 + size]
+        offset = header_end + 1 + size + 1
+        digest.update(name.encode() + b"\0")
+        digest.update(b"symlink:" + content if entries[name][0] == "120000" else content)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def result_is_current(root: Path, case: dict[str, Any], result: dict[str, Any]) -> bool:
+    """A result holds while the files its case depends on are unchanged. With the same dependency list that is
+    the recorded fingerprint against now. With a narrowed or widened list, the files the current list names
+    must be unchanged since the result's commit: narrowing drops files the result never needed, and widening
+    adds ones that have not changed since it was observed."""
+    current = source_fingerprint(root, case["paths"])
+    if result.get("dependency_paths") == case["paths"]:
+        return result.get("source_fingerprint") == current
+    return fingerprint_at(root, result.get("commit", ""), case["paths"]) == current
+
+
 def snapshot(root: Path, case: dict[str, Any]) -> dict[str, Any]:
     return {
         "schema_version": 1,
@@ -182,9 +227,7 @@ def status(root: Path, cases: dict[str, dict[str, Any]], changed: list[str]) -> 
         elif result.get("evidence_kind") == "historical_summary":
             state = "historical_affected" if affected else "historical_evidence"
         elif result:
-            same = result.get("dependency_paths") == case["paths"] and result.get(
-                "source_fingerprint"
-            ) == source_fingerprint(root, case["paths"])
+            same = result_is_current(root, case, result)
             state = "source_unchanged_environment_unchecked" if same and not affected else "needs_recheck"
         rows.append(
             {
