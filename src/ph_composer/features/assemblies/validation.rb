@@ -60,10 +60,7 @@ module PhComposer
       def layer_findings(layer, materials, identity)
         found = []
         layer_identity = identity.merge("layer_id" => layer.fetch("id"))
-        if layer.fetch("segments").length > 1 && layer.fetch("segments").any? { |segment|
-          material = materials[segment["material_id"]]
-          material && Materials::Schema.membrane?(material)
-        }
+        if Materials::Schema.membrane_in_mixed_layer?(layer, materials)
           found << finding("assembly.membrane_in_mixed_layer", "A membrane Layer holds one Layer-Segment.",
                            layer_identity)
         end

@@ -22,6 +22,9 @@ module PhComposer
         "assembly.calculation_limit" => "The exact thermal calculation exceeds its path budget; no value is available."
       }.freeze
       UNCALCULABLE = "Thermal resistance could not be calculated from the assigned segments."
+      # One way heat crosses a Layer: through one Layer-Segment's material, over that segment's share of
+      # the Layer's width.
+      Path = Struct.new(:resistance_m2k_w, :fraction, keyword_init: true)
 
       module_function
 
@@ -52,12 +55,7 @@ module PhComposer
         flags = layers.each_with_object([]) do |layer, result|
           segments = Array(layer["segments"])
           result << "assembly.geometry_invalid" unless layer["thickness_mm"].to_f.positive?
-          if segments.length > 1 && segments.any? { |entry|
-               materials[entry["material_id"]] &&
-               Materials::Schema.membrane?(materials.fetch(entry["material_id"]))
-             }
-            result << "assembly.membrane_in_mixed_layer"
-          end
+          result << "assembly.membrane_in_mixed_layer" if Materials::Schema.membrane_in_mixed_layer?(layer, materials)
           segments.each { |segment| result.concat(segment_flags(segment, materials)) }
         end
         flags << "assembly.geometry_invalid" if layers.empty?
@@ -150,15 +148,15 @@ module PhComposer
         return [] unless total.positive?
 
         assigned.map do |segment, material|
-          [(layer.fetch("thickness_mm") / 1000.0) / material.fetch("conductivity_w_mk"),
-           segment.fetch("width_mm").to_f / total]
+          Path.new(:resistance_m2k_w => (layer.fetch("thickness_mm") / 1000.0) / material.fetch("conductivity_w_mk"),
+                   :fraction => segment.fetch("width_mm").to_f / total)
         end
       end
       private_class_method :layer_paths
 
       def parallel(paths)
-        uniform, mixed = paths.partition { |path| path.length == 1 }
-        base_resistance = uniform.sum { |path| path.first.first }
+        uniform, mixed = paths.partition { |layer| layer.length == 1 }
+        base_resistance = uniform.sum { |layer| layer.first.resistance_m2k_w }
         return base_resistance if mixed.empty?
 
         # Each mixed Layer has at least two paths. The checked budget therefore bounds recursive
@@ -169,7 +167,9 @@ module PhComposer
             total_u += fraction / resistance if resistance.positive?
             next
           end
-          mixed[index].each { |entry| visit.call(index + 1, resistance + entry[0], fraction * entry[1]) }
+          mixed[index].each do |path|
+            visit.call(index + 1, resistance + path.resistance_m2k_w, fraction * path.fraction)
+          end
         end
         visit.call(0, base_resistance, 1.0)
         total_u.positive? ? 1.0 / total_u : 0.0
@@ -178,9 +178,9 @@ module PhComposer
 
       def isothermal(per_layer)
         per_layer.sum do |paths|
-          next paths.first.first if paths.length == 1
+          next paths.first.resistance_m2k_w if paths.length == 1
 
-          1.0 / paths.sum { |resistance, fraction| fraction / resistance }
+          1.0 / paths.sum { |path| path.fraction / path.resistance_m2k_w }
         end
       end
       private_class_method :isothermal
