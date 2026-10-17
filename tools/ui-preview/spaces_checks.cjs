@@ -8,6 +8,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { PANEL_SIZES, settle, setPanelSize, paneFacts, assertPaneFits } = require("./support/pane_fit.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "phc-spaces-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
@@ -44,10 +45,8 @@ function visibleRows(page) {
     for (const width of [1280, 900, 420, 365]) {
       await page.setViewportSize({ width, height: 900 });
       assert(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `no page overflow at ${width}`);
-      assert(await page.evaluate(() => {
-        const panes = document.querySelector(".panel-panes");
-        return panes.scrollWidth <= panes.clientWidth;
-      }), `the tab does not scroll sideways at ${width} (#179)`);
+      await settle(page);
+      assert.equal((await paneFacts(page, { floating: [] })).sideways, false, `the tab does not scroll sideways at ${width} (#179)`);
       if (width <= 420) {
         assert(await page.evaluate(() => {
           const mount = document.querySelector(".phc-zone-view:not([hidden]) .phc-table-mount");
@@ -65,12 +64,15 @@ function visibleRows(page) {
     assert.equal(await page.getByRole("textbox", { name: "Weighting factor for checked Floor Segments" })
       .getAttribute("placeholder"), "Mixed");
     await page.screenshot({ path: path.join(output, "spaces-checked.png") });
-    // At the minimum panel the shared bar docks beneath the table rather than cover its header (#188).
-    await page.setViewportSize({ width: 360, height: 520 });
-    await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
-    assert(await bar.evaluate(node => node.classList.contains("is-docked") && node.getBoundingClientRect().top >=
-      document.querySelector(".phc-zone-view:not([hidden]) thead").getBoundingClientRect().bottom),
-    "the bar docks clear of the header at 360 x 520");
+    // The shared bar at real panel sizes (#188): never over the table's header, always within reach of the
+    // pane's scroll, docked beneath the table at the panel minimum.
+    for (const [width, height] of PANEL_SIZES) {
+      await setPanelSize(page, width, height);
+      assertPaneFits(await paneFacts(page), "the checked Spaces bar");
+      if (width === 360) {
+        assert(await bar.evaluate(node => node.classList.contains("is-docked")), "the bar docks at the panel minimum");
+      }
+    }
     await page.setViewportSize({ width: 1280, height: 900 });
 
     // The Weighting factor column's paint: an icon beside 0, 1 and each factor in use starts Mark floor, and

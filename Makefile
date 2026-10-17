@@ -1,5 +1,5 @@
 .PHONY: ci syntax lint lint-ruby lint-js lint-python lint-citations test fixtures fixtures-check coverage hostkit-test python-check \
-        panel-manifest panel-manifest-check ui-preview ui-checks rbz rbz-check install clean bridge-install \
+        panel-manifest panel-manifest-check ui-preview ui-deps ui-checks rbz rbz-check install clean bridge-install \
         bridge-uninstall runtime-check runtime-pin-check runtime-manifest runtime-browser-check phase-one-proof \
         hooks hooks-auto
 
@@ -143,13 +143,23 @@ ui-preview:
 	@echo "preview on http://127.0.0.1:$(UI_PREVIEW_PORT)/tools/ui-preview/; ctrl-c stops it"
 	@uv run --no-project python -m http.server $(UI_PREVIEW_PORT) --bind 127.0.0.1
 
+# Playwright is never a project dependency. It lives outside the repository in UI_DEPS, where `make
+# ui-deps` installs the pinned version, and drives the installed Chrome. NODE_PATH, when set, wins.
+UI_DEPS ?= $(HOME)/.cache/ph-composer-ui
+PLAYWRIGHT_VERSION ?= 1.63.0
+ui-deps:
+	@mkdir -p "$(UI_DEPS)" && cd "$(UI_DEPS)" && { [ -f package.json ] || echo '{"private": true}' > package.json; } \
+	  && pnpm add --save-exact playwright@$(PLAYWRIGHT_VERSION)
+
 # The browser checks in tools/ui-preview/ against the preview, on a loopback server this target starts and
-# stops. Playwright is never a project dependency: it resolves from NODE_PATH (a scratch `pnpm add
-# playwright` outside the repository) and drives the installed Chrome. Without it the target skips by name.
-# Not part of `ci`: it launches a browser. A browser pass is not host acceptance.
+# stops. UI_CHECKS narrows the run, as in `make ui-checks UI_CHECKS=tools/ui-preview/spaces_checks.cjs`.
+# Without Playwright the target skips by name. Not part of `ci`: it launches a browser. A browser pass is
+# not host acceptance.
+UI_CHECKS ?= $(sort $(wildcard tools/ui-preview/*.cjs))
 ui-checks:
-	@if ! node -e "require.resolve('playwright')" >/dev/null 2>&1; then \
-	  echo "ui-checks: skipped, Playwright is not resolvable (see tools/ui-preview/.index.md)"; exit 0; \
+	@export NODE_PATH="$${NODE_PATH:-$(UI_DEPS)/node_modules}"; \
+	if ! node -e "require.resolve('playwright')" >/dev/null 2>&1; then \
+	  echo "ui-checks: skipped, Playwright is not resolvable; run 'make ui-deps' (tools/ui-preview/.index.md)"; exit 0; \
 	fi; \
 	if curl -s -o /dev/null "http://127.0.0.1:$(UI_PREVIEW_PORT)/"; then \
 	  echo "ui-checks: port $(UI_PREVIEW_PORT) is already serving; stop that server or set UI_PREVIEW_PORT"; exit 1; \
@@ -158,7 +168,7 @@ ui-checks:
 	trap 'kill $$server 2>/dev/null; wait $$server 2>/dev/null' EXIT; \
 	for attempt in $$(seq 50); do curl -s -o /dev/null "http://127.0.0.1:$(UI_PREVIEW_PORT)/" && break; sleep 0.2; done; \
 	status=0; \
-	for script in $(sort $(wildcard tools/ui-preview/*.cjs)); do \
+	for script in $(UI_CHECKS); do \
 	  UI_PREVIEW_PORT=$(UI_PREVIEW_PORT) node "$$script" || status=1; \
 	done; \
 	exit $$status

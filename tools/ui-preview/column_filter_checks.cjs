@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { setPanelSize, paneFacts } = require("./support/pane_fit.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "phc-column-filters-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
@@ -117,12 +118,12 @@ fs.mkdirSync(output, { recursive: true });
       "Clear filter restores all values after an empty checklist");
     await close();
     // The Faces view keeps its table in its own scroll area at a narrow panel; the tab never scrolls sideways (#179).
-    await page.setViewportSize({ width: 365, height: 900 });
+    await setPanelSize(page, 365, 900);
+    assert.equal((await paneFacts(page, { floating: [] })).sideways, false, "the tab does not scroll sideways at 365");
     assert(await page.evaluate(() => {
-      const panes = document.querySelector(".panel-panes");
       const mount = document.querySelector(".phc-zone-view:not([hidden]) .phc-table-mount");
-      return panes.scrollWidth <= panes.clientWidth && mount.scrollWidth > mount.clientWidth;
-    }), "the Faces table scrolls in its mount, not the tab, at 365");
+      return mount.scrollWidth > mount.clientWidth;
+    }), "the Faces table scrolls in its own mount at 365");
     await page.screenshot({ path: path.join(output, "faces-365.png") });
     for (const width of [1280, 420, 280]) {
       await page.setViewportSize({ width, height: 900 });
