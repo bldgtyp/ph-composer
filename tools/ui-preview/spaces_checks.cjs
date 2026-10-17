@@ -65,6 +65,13 @@ function visibleRows(page) {
     assert.equal(await page.getByRole("textbox", { name: "Weighting factor for checked Floor Segments" })
       .getAttribute("placeholder"), "Mixed");
     await page.screenshot({ path: path.join(output, "spaces-checked.png") });
+    // At the minimum panel the shared bar docks beneath the table rather than cover its header (#188).
+    await page.setViewportSize({ width: 360, height: 520 });
+    await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+    assert(await bar.evaluate(node => node.classList.contains("is-docked") && node.getBoundingClientRect().top >=
+      document.querySelector(".phc-zone-view:not([hidden]) thead").getBoundingClientRect().bottom),
+    "the bar docks clear of the header at 360 x 520");
+    await page.setViewportSize({ width: 1280, height: 900 });
 
     // The Weighting factor column's paint: an icon beside 0, 1 and each factor in use starts Mark floor, and
     // while it runs the header shows a pressed glyph that stops it.

@@ -18,7 +18,8 @@
 @media (max-width: 500px) {
   .phc-overview .phc-table th.col-name, .phc-overview .phc-table td.col-name { left: var(--col-actions-width); }
 }
-/* The tree is the pane's work surface, so it takes the height the shell, the header and the control row leave. */
+/* The tree is the pane's work surface. The overview fits it to the height its pane leaves (overview.js
+   `place`); this budget holds until then, and is the Window schedule's height. */
 .phc-table-mount { overflow: auto; max-height: max(240px, calc(100vh - 250px)); border: 1px solid var(--line); border-radius: 6px; }
 .phc-workspace .phc-blocked-reason { color: var(--warning-ink); border-color: transparent; background: transparent; }
 .phc-overview .phc-row-marker { padding: 1px 4px; border-radius: 3px;
