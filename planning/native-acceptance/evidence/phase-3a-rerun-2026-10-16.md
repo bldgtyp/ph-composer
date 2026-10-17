@@ -282,7 +282,8 @@ recorded order. Counts were derived on this baseline.
   no paint icon. At 420 and 360 px the Type column is reachable only by scrolling the whole tab sideways, which
   takes the selection bar out of view. Narrow-menu painting starts, and Escape stops it. Rechecked
   [below](#179-recheck-a09-and-uxr-paint-on-the-fixed-build): the narrow clause now fails on
-  [#188](https://github.com/bldgtyp/ph-composer/issues/188).
+  [#188](https://github.com/bldgtyp/ph-composer/issues/188); after the #188 fix it passes
+  ([below](#188-recheck-a09-uxr-solve-and-uxr-paint-on-the-fixed-build)).
 - COLOUR: each paint choice selects its Colour-by mode. Escape keeps Boundary or Assembly, and a Face type
   override chosen during Assembly painting survives stopping, with no write.
 - FILTER-OCC: a nested Group Face and two placements of one shared Component Face have three distinct paths.
@@ -466,8 +467,66 @@ during the case.
   the 270 px table mount, including the header, so no column menu can be opened while Faces are checked. With
   the pre-fix rule injected into the live panel, the bar measures the same, so this part predates the fix. A
   native vertical scroll of the tab reveals Solve at both widths.
+- Rechecked after the #188 fix [below](#188-recheck-a09-uxr-solve-and-uxr-paint-on-the-fixed-build): passes.
 
 Restoration (receipt in `RESTORE-179/state.json`): a fresh process (pid 98325) on a clean synthetic Model, with no development constant, script or
 probe loaded. The library setup equals the pre-run setup, and the two approved locations from 2026-10-13
 remain. Units are SI, the autosave interval is 5 and the Zones view preference is Faces. The Model opens
 unmodified at revision 1. A read completes, and a stale edit refuses `target.changed` with nothing written.
+
+## #188 recheck: A09, UXR-SOLVE and UXR-PAINT on the fixed build
+
+Build: PR [#190](https://github.com/bldgtyp/ph-composer/pull/190), merged as `3db8f281`. The ledger rows record the
+PR head `a9140cca`, whose tree is identical to the merge (`git diff a9140cca 3db8f281` is empty). Normal RBZ
+SHA-256 `11b5f00f73c110e708597633f66a3e676a1c37de0e9bd49a854355fe152e9e18`, 454 files, installed package matching.
+Same host versions. Raw files are in `_private/host/acceptance-3a/A09/`, `UXR-SOLVE/`, `UXR-PAINT/` and `UXR3/`;
+the previous runs are kept as `A09-run2/`, `UXR-PAINT-run2/` and `UXR-SOLVE-run1/`.
+
+**What changed.** The overview fits the shown view's table to the height its pane leaves, on render and on
+resize, with a 240 px floor; before, a fixed `100vh - 250px` budget left the tab overflowing whenever the tabs or
+the control row wrapped. The shared selection bar docks in flow beneath the table where floating would cover the
+table's header, which happens at the 360 x 520 minimum; taller panels keep the floating bar. Ed chose docking.
+
+**Scope.** The ledger screens 18 current cases on #190's paths (`selection_bar.js`, `overlay.css`, `overview.js`,
+`zones.css` and the vendor manifest). A09, UXR-SOLVE and UXR-PAINT were rerun in full: the two cases that
+failed on #179 (UXR-PAINT again on #188), and the case whose Solve control lives in the bar. R05 is superseded. The other 14
+(A04, A11, E14, E17, HGUI, ZO-H1, ZO-H2, ZO-H3, ZO-O7, UXR-FILTER, UXR-HATCH, UXR-COLOUR, UXR-FILTER-OCC, S06)
+keep their results by construction: 13 passes, and ZO-O7's fail on #181. The fit only sets the table's maximum height, which at the sizes those
+cases ran changes where the table ends and nothing they assert. The dock applies only where a floating bar
+would reach the table's header. `overlay.css` gains only the `.is-docked` rule, which no other surface uses, so
+HGUI's library and export forms are untouched. S06's view switching re-runs the fit and asserts nothing about
+heights. The manifest records new hashes only. No ledger rows are written for the 14, so the ledger keeps
+screening them stale; this section is their disposition. S07 asserts the Spaces view's selection bar, but its
+dependency paths do not name `selection_bar.js`, so the ledger does not screen it
+([#191](https://github.com/bldgtyp/ph-composer/issues/191)); the shared bar ran natively here and the Spaces
+browser check asserts its dock at 360 x 520.
+
+**UXR-SOLVE: pass.** One fresh process (pid 10954) on a fresh copy of `run-baseline.skp`. Native check-all gave
+12 Faces and 2 Zones checked with Solve enabled, the bar floating at the pane's visible bottom and the pane not
+scrolling; unchecking one Floor gave 11 Faces, 1 Zone and Solve disabled; re-checking enabled it again. Solve
+wrote the reciprocal Surface pair `adj_6c7596c0fa84` (9.0 m2 each), and native Undo and Redo ("Solve Zone
+Adjacency") are exact.
+
+**UXR-PAINT: pass.** Same process, after UXR-SOLVE, with an empty local Assembly created by a labelled public
+setup.
+- Paint, Undo and the icons match the earlier outcomes (new revisions and Assembly id).
+- 420 x 732 with all 12 Faces checked: the tab scrolls neither way, the bar floats at the pane's visible bottom
+  (469 to 660) with Solve in view (621 to 651, pane bottom 696), and the open Type menu draws over the bar inside
+  the window. Narrow-menu Wall paint starts, and a panel Escape stops it.
+- 360 x 520 with all 12 Faces still checked: the bar docks beneath the table and the header stays clear, so the
+  Type menu opens (above its trigger, inside the window). Wall paint starts and Escape stops it. A native
+  vertical scroll of the tab brings the whole bar into view, Solve included.
+- Growing the panel back to 420 x 732 floats the bar again with identical geometry. Nothing was written in the
+  narrow steps.
+
+**A09: pass.** Fresh copies of `envelope/reference-assigned.skp`; the panel clauses in one fresh process, the held
+gestures each in their own (pids 12472 and 12636) under the tools-only tracer. At 365 px the tab scrolls neither
+sideways nor down, the table fills the pane and scrolls in its own mount, Actions stays sticky, and a native
+horizontal scroll moved the mount 200 px and the tab 0 px. Cell drafts, Classify and the edit path, filter and
+tree keys, Cmd-N, and both held gestures repeat the earlier results.
+
+Restoration (receipt in `RESTORE-188/state.json`): a fresh process (pid 12853) on a clean synthetic Model, with no
+development constant, script or probe loaded. The library setup equals the pre-run setup, and the two approved
+locations from 2026-10-13 remain. Units are SI, the autosave interval is 5 and the Zones view preference is
+Faces. The Model opens unmodified at revision 1. A read completes, and a stale edit refuses `target.changed` with
+nothing written.
