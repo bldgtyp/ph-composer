@@ -43,8 +43,8 @@ These decisions establish behavior and implementation bounds, not implementation
 - **Foreign copies:** D-6 does not authorize importing source definitions into another Model or
   matching them by name. D-3's destination policy still applies.
 
-The Spaces carry-forward is [D3a-13](../../features/phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13)
-and is assigned to [P3a-04](../../features/phase-03a-spaces/phases/p3a-04-copies-and-move-space-to-zone.md).
+The Spaces carry-forward is [D3a-13](../phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13)
+and is assigned to [P3a-04](../phase-03a-spaces/phases/p3a-04-copies-and-move-space-to-zone.md).
 It qualifies the standalone-copy rule; it does not decide the twelve existing Spaces architecture
 and UI questions or authorize any Spaces stage.
 

@@ -1,7 +1,7 @@
 # Phase 3a acceptance register: Spaces
 
 DATE: 2026-10-17
-STATUS: In progress. S01 to S11 pass in the 2026-10-16 rerun with ledger results ([rerun evidence](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)); S12's integrated run is done. The fix for [#179](https://github.com/bldgtyp/ph-composer/issues/179), a P3a-06 regression on the narrow Zones tab, merged through #187 and was rechecked on the host ([recheck](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md#179-recheck-a09-and-uxr-paint-on-the-fixed-build)): A09 passes; UXR-PAINT's narrow clause failed on [#188](https://github.com/bldgtyp/ph-composer/issues/188), fixed through #190 and rechecked ([recheck](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md#188-recheck-a09-uxr-solve-and-uxr-paint-on-the-fixed-build)): A09, UXR-SOLVE and UXR-PAINT pass. No acceptance case blocks closure; closing Phase 3a is Ed's call (ZO-O7 fails on #181, a follow-up).
+STATUS: Complete 2026-10-17 and archived. P3a-01 to P3a-12 merged to main (PRs #135 to #171); S01 to S11 pass with ledger results and S12's integrated run is done; the earlier cases the Spaces changes screened were rerun, and the two regressions found (#179, #188) were fixed (#187, #190) and rechecked. ZO-O7 fails on #181, a follow-up. Not released.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -78,6 +78,6 @@ after save, reopen and HBJSON reload; matching counts alone do not prove a round
 ## Completion boundary
 
 S01 to S12 close Phase 3a. Every "through PHX" check in the PRD is excluded
-and stays open in [metr-export](../unscheduled/metr-export/README.md). The height drag handle
-(Q6) is not in any row. Thermal bridges acceptance is T01 to T09 in [its register](../phase-03b-thermal-bridges/ACCEPTANCE.md). SketchUp 2023 and
+and stays open in [metr-export](../../features/unscheduled/metr-export/README.md). The height drag handle
+(Q6) is not in any row. Thermal bridges acceptance is T01 to T09 in [its register](../../features/phase-03b-thermal-bridges/ACCEPTANCE.md). SketchUp 2023 and
 Windows remain their own gates.

@@ -87,7 +87,7 @@ pre-isolation path is insufficient proof of a final write target.
 | Space | Independent storage/identities for Space, Volumes, Floor Segments and logical Space Floors; copied membership and typed internal references remapped; values preserved |
 | Future mechanical equipment | Apply the same ownership pattern; determine definition sharing, instance identity, host relationships and dependent network copying in its product packet |
 
-Window and Space outcomes follow [D3a-13](../../features/phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13).
+Window and Space outcomes follow [D3a-13](../phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13).
 Equipment is an example of an adopter, not an accepted copy policy. A pipe/duct network crossing Zones
 cannot be handled correctly by inventing a generic deep-copy rule here. Likewise, deletion, movement
 and rehosting require their own declared transitions and product decisions when introduced.

@@ -350,7 +350,7 @@ as the table and the totals per Zone and Building-Segment.
 
 ### Carried from zones-and-adjacency
 
-Moved here on 2026-09-30 when the [zones-and-adjacency packet](../../archive/phase-01-zones-and-adjacency/PRD.md) was archived. Its Phase 1
+Moved here on 2026-09-30 when the [zones-and-adjacency packet](../phase-01-zones-and-adjacency/PRD.md) was archived. Its Phase 1
 scope is implemented; these Space-dependent parts are not.
 
 - Every Space group carries the Zone stamp (Zone id, Building-Segment, Level). Limited Restore Zone
@@ -424,7 +424,7 @@ solid on a wedge. Each proves records, metrics, findings and the export mapping.
 face, Ruby's floor area equals the loaded `SpaceFloorSegment.floor_area` and Ruby's net volume equals
 `SpaceVolume.net_volume`. Airflow fixtures for supply only, all unset and all zero, read back
 from the reloaded HBJSON as stored m3/s values, with the Zone row sums for each; the same read
-through PHX as m3/h waits with [metr-export](../unscheduled/metr-export/README.md) (F19). A native Space copy is made independent in
+through PHX as m3/h waits with [metr-export](../../features/unscheduled/metr-export/README.md) (F19). A native Space copy is made independent in
 its own Undo step; a copied Volume and Floor Segment raise `duplicate_identity`, and Make
 independent clears it in one Undo step. `user_data`
 survives edit, Move Space to Zone, Make independent, Undo/Redo and save and reopen. A synthetic
@@ -440,7 +440,7 @@ imbalance marker, move one Space to a second Zone, copy a Space and see it made
 independent, switch between the Faces and Spaces views and between Classify and Mark floor, switch
 through the four modes and read the HUD, select two Spaces and read the totals, Undo each step, save, reopen inside an open
 Volume, export, and confirm the honeybee-ph Spaces, volumes, factors and airflow overrides arrive.
-That PHX writes the METr rooms is checked when [metr-export](../unscheduled/metr-export/README.md)
+That PHX writes the METr rooms is checked when [metr-export](../../features/unscheduled/metr-export/README.md)
 resumes (F19).
 
 ## Prior art and evidence

@@ -6,7 +6,7 @@ AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md) defers exact names and schemas to its plan. This file is that binding, the
-counterpart of Phase 3a's [Spaces bindings](../phase-03a-spaces/CONTRACTS.md), whose H1 to H10 these
+counterpart of Phase 3a's [Spaces bindings](../../archive/phase-03a-spaces/CONTRACTS.md), whose H1 to H10 these
 numbers follow. It restates no
 behavior. Where a row and the PRD disagree about behavior, the PRD wins and this file is corrected.
 Where a row follows a decision in [DECISIONS.md](DECISIONS.md), it names the decision; all were

@@ -14,7 +14,7 @@ recommendation. The bindings that follow from the recommendations are in
 [CONTRACTS.md](CONTRACTS.md); they change when an answer differs.
 
 These are Phase 3b's decisions, D3b-01 to D3b-21, with findings F1 to F26. Phase 3a (Spaces) has
-its own [DECISIONS.md](../phase-03a-spaces/DECISIONS.md), D3a-1 to D3a-12 with its own F1 to F22;
+its own [DECISIONS.md](../../archive/phase-03a-spaces/DECISIONS.md), D3a-1 to D3a-12 with its own F1 to F22;
 a reference to one of those always says Phase 3a. Stages are P3b-01 to P3b-09, tracked in
 [STATUS.md](STATUS.md). The ids were renumbered on 2026-10-03 when Phase 3 split into 3a and 3b
 (D3-13 to D3-33 became D3b-01 to D3b-21, TF1 to TF26 became F1 to F26, P3-13 to P3-21 became

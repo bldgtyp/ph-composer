@@ -16,12 +16,12 @@ Designed once against both users, as the [README](../README.md), "Carried in", r
 Spaces volume preview, labels and selection totals (spaces Q22), and the Window Type mode's
 operation marks (window-types, deferred by D2-6). Ed confirmed D3a-5 on 2026-10-15: the marks
 are built here as slice B. Phase 3b's
-[P3b-06](../../phase-03b-thermal-bridges/phases/p3b-06-thermal-bridge-colour-by.md) is a third
+[P3b-06](../../../features/phase-03b-thermal-bridges/phases/p3b-06-thermal-bridge-colour-by.md) is a third
 user: it draws assigned Edges as `derived` segments with the Edge as `entity`, and adds a per-mode
 stroke weight itself. Nothing for it is built here.
 
 Behavior owners: [Spaces PRD](../PRD.md), "Seeing the data in the model";
-[window-types PRD](../../../archive/window-types/PRD.md), "Schedule and seeing windows in the
+[window-types PRD](../../window-types/PRD.md), "Schedule and seeing windows in the
 model". Contract owner: `context/EXTENSIBILITY.md`, "Colour-by modes". Names:
 [CONTRACTS](../CONTRACTS.md) section 5 (H7, H8).
 
@@ -39,7 +39,7 @@ Paths are relative to `src/ph_composer/`.
    legend counts, and what a readout may read. Added 2026-10-15: name thermal bridges as the third
    user and settle, once, the deferred geometry stage G-03's `ColourBy::LineEntry` against Phase
    3b's D3b-11 `derived` segments, so the contract gets one line primitive
-   ([geometry contribution contracts](../../cross-phase/geometry-contribution-contracts/STATUS.md)).
+   ([geometry contribution contracts](../../../features/cross-phase/geometry-contribution-contracts/STATUS.md)).
    Say how derived shapes interact with the occurrence mask (`Service#filter`) and with a mode's
    `group`, both added since this stage was planned.
 2. **Derived geometry (H7).** `ColourBy::Entry` gains `derived`: a list of world-space polygons,
@@ -105,7 +105,7 @@ lines) drew operation marks directly and is the reference for slice B's geometry
 Fresh process. Activate the synthetic mode: translucent prisms draw depth-tested against model
 geometry, behind and in front. Hide a tag and an ancestor Group. Toggle the synthetic readout
 with a mode on and with none. Orbit a model at the representative size the overlay spike used
-([B2](../../../archive/phase-00-foundation/evidence/spike-overlay.md)) and record draw cost
+([B2](../../phase-00-foundation/evidence/spike-overlay.md)) and record draw cost
 against that baseline. Repeat the Phase 1 and Phase 2 Colour-by cases the ledger screens for
 `colour_by/`. Slice B: marks on the reference model's four units, on a wall and on the flat roof.
 

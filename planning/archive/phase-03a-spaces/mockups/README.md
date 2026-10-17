@@ -6,7 +6,7 @@ ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 `zone-views.html` is a static page that links the panel's real stylesheets and reuses the live
 Zones / Faces markup; no panel script runs. Serve the repository root (`make ui-preview`) and open
-`planning/features/phase-03a-spaces/mockups/zone-views.html?state=<state>`. Add `&views=all` to see
+`planning/archive/phase-03a-spaces/mockups/zone-views.html?state=<state>`. Add `&views=all` to see
 the eight-view row; Ed chose to hide views until they are built, so the PNGs show two.
 
 | PNG | State |

@@ -252,7 +252,7 @@ stronger independent review runs once over P3 and P4 together; host acceptance i
 Shared-parent floor copies are measured by S5 but automatic recursive isolation is deferred in
 the first cut (D-3). Name the prerequisite or unsupported topology; do not offer an inner-Zone
 command that cannot isolate its ancestor. Zone-inside-Zone invalid nesting is a different case.
-Future Spaces child-copy participation follows [D3a-13](../../features/phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13);
+Future Spaces child-copy participation follows [D3a-13](../phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13);
 Zones does not rewrite child dictionaries or treat a parent-only repair as complete independence.
 
 #### P4 outcome

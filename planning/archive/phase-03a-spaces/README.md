@@ -1,19 +1,19 @@
 # Phase 3a: Spaces
 
 DATE: 2026-10-17
-STATUS: In progress. P3a-01 to P3a-11 merged to main (#135 to #167); P3a-12's integrated host run ran 2026-10-16 ([evidence](evidence/p3a-12-acceptance.md)). Ed's four calls are answered, and the acceptance rerun passes S01 to S11 ([rerun evidence](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)); the #179 fix merged (#187) and its recheck passes A09; UXR-PAINT failed on [#188](https://github.com/bldgtyp/ph-composer/issues/188), fixed through #190, and its recheck passes A09, UXR-SOLVE and UXR-PAINT. Closing is Ed's call (ZO-O7 fails on #181 as a follow-up).
+STATUS: Complete 2026-10-17 and archived. P3a-01 to P3a-12 merged to main (PRs #135 to #171); S01 to S11 pass with ledger results and S12's integrated run is done; the earlier cases the Spaces changes screened were rerun, and the two regressions found (#179, #188) were fixed (#187, #190) and rechecked. ZO-O7 fails on #181, a follow-up. Not released.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
 Roadmap item 3.1 from [ROADMAP.md](../../ROADMAP.md). Spaces finishes the room-by-room half of
 the model that the predecessor started: floor area toward iCFA, net volume, and per-Space
 ventilation airflows, authored against the geometry and visible in it. It depends on
-[zones-and-adjacency](../../archive/phase-01-zones-and-adjacency/README.md) for the Zone a Space
-lives in and on [face-assignment](../../archive/face-assignment/README.md) for the Colour-by
+[zones-and-adjacency](../phase-01-zones-and-adjacency/README.md) for the Zone a Space
+lives in and on [face-assignment](../face-assignment/README.md) for the Colour-by
 service. Mark floor is this packet's own tool, a sibling of Classify.
 
 Phase 3 is split into two independent sub-phases, each one flat packet:
-3a Spaces (this folder) and [3b thermal bridges](../phase-03b-thermal-bridges/README.md). Phase 3
+3a Spaces (this folder) and [3b thermal bridges](../../features/phase-03b-thermal-bridges/README.md). Phase 3
 ends when both close: a model carries its Spaces and its thermal bridges and matches what a
 designPH export gave. That is the first internal envelope-model release candidate (D1).
 
@@ -52,18 +52,18 @@ Colour-by modes, Space labels and selection totals.
 
 Out: loads, schedules, equipment and their future Zone views, Space Types, LayOut, CSV, PHPP.
 
-[validation-and-export](../cross-phase/validation-and-export/README.md) and
-[units](../cross-phase/units/README.md) span phases and stay in `cross-phase/`. Their Phase 3a
+[validation-and-export](../../features/cross-phase/validation-and-export/README.md) and
+[units](../../features/cross-phase/units/README.md) span phases and stay in `cross-phase/`. Their Phase 3a
 allocations are in their own STATUS files and in the stages that touch them (P3a-01, P3a-07,
 P3a-10).
 
 ## What Phase 3b needs from this packet
 
 Thermal bridges runs on its own track, but three of its stages wait for stages here:
-[P3b-03](../phase-03b-thermal-bridges/phases/p3b-03-edge-assignment.md) and
-[P3b-08](../phase-03b-thermal-bridges/phases/p3b-08-thermal-bridge-export.md) need P3a-01 (the
+[P3b-03](../../features/phase-03b-thermal-bridges/phases/p3b-03-edge-assignment.md) and
+[P3b-08](../../features/phase-03b-thermal-bridges/phases/p3b-08-thermal-bridge-export.md) need P3a-01 (the
 nested-container rule and R05 item 1; item 2 is already on `main`), and
-[P3b-06](../phase-03b-thermal-bridges/phases/p3b-06-thermal-bridge-colour-by.md) needs P3a-05 (the
+[P3b-06](../../features/phase-03b-thermal-bridges/phases/p3b-06-thermal-bridge-colour-by.md) needs P3a-05 (the
 `derived` geometry it draws edges with). The files both tracks change are listed in
 [PLAN.md](PLAN.md), "Order and parallel work".
 
@@ -74,10 +74,10 @@ nested-container rule and R05 item 1; item 2 is already on `main`), and
   [P3a-05](phases/p3a-05-colour-by-derived-geometry-and-readouts.md), against both users, and
   thermal bridges is its third user. Whether the marks themselves are built there is decision
   D3a-5, which now also settles Phase 3b's competing `LineEntry` proposal (G-03). Phase 2 adds Assembly and Window modes without implementing this extension; see the
-  [accepted decision](../../archive/phase-02-envelope/DECISIONS.md) and the Colour-by contract in
+  [accepted decision](../phase-02-envelope/DECISIONS.md) and the Colour-by contract in
   `context/EXTENSIBILITY.md`.
 - **From the Phase 2 review (R05).** Four export-run items recorded in
-  [validation and export](../cross-phase/validation-and-export/STATUS.md), "Owed from the Phase 2
+  [validation and export](../../features/cross-phase/validation-and-export/STATUS.md), "Owed from the Phase 2
   review". Item 1 is allocated to [P3a-01](phases/p3a-01-contracts-and-groundwork.md), so it is
   settled before the first Spaces export section. Item 2, the section-cycle refusal, merged through
   PR #122. Item 3 is allocated to

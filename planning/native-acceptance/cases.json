@@ -1263,7 +1263,7 @@
       "id": "S01",
       "label": "Spaces groundwork: a Zone-stamped Group inside a Zone is a nested container ignored by the Face table, Suggest, Classify picks, Solve and export; removing the stamp restores the Face",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/zones/zone/occurrences.rb",
         "src/ph_composer/features/zones/export.rb",
@@ -1277,7 +1277,7 @@
       "id": "S02",
       "label": "Spaces records and operations: panel-closed walkthrough, one native Undo and Redo per write, native copy, cut and Make Unique of a Space Group, airflow states and user_data through save and reopen, two Models isolated",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/spaces/*",
         "src/ph_composer/features/zones/zone/steps.rb",
@@ -1291,7 +1291,7 @@
       "id": "S03",
       "label": "Spaces edit contexts: Volume protection on exit by any callback order, direct Volume switch, a save or autosave from an open Volume leaves the user in it and a Volume saved unlocked is protected on open (D3a-19), Restore position, drawing at the Space root, Undo/Redo, two Models isolated",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/session/edit_context.rb",
         "src/ph_composer/session/deferred_work.rb",
@@ -1308,7 +1308,7 @@
       "id": "S04",
       "label": "Spaces copies and moves: a Space copy and an array made independent in the copy's Undo step with the next numbers, cut and paste left alone, Volume and Floor Segment copies found and made independent, a Space in a component found with no repair, Move Space to Zone under a rotated wrapper, a Zone copy with its Spaces, Restore Zone around a Space, save and reopen",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/session/container_watch.rb",
         "src/ph_composer/features/spaces/identity/*",
@@ -1330,7 +1330,7 @@
       "id": "S05",
       "label": "Colour-by derived geometry and readouts: a synthetic mode with derived geometry and a readout draw with no change to callers, depth, tag and hidden-ancestor behavior, legend counts, draw cost at the overlay spike's size, Window Type operation marks",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/colour_by/*",
         "src/ph_composer/features/windows/colour_modes.rb",
@@ -1342,7 +1342,7 @@
       "id": "S06",
       "label": "Zone views: the Zones tab with the Faces and Spaces views and a synthetic Zone-only view; switching keeps the filter, expanded and checked Zones and Locate and sends no action; Classify paint stops on a switch; the active view returns after reopening the panel and the Model",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/html/table_views.js",
         "src/ph_composer/html/features/zones/overview.js",
@@ -1357,7 +1357,7 @@
       "id": "S07",
       "label": "The Spaces view: Zone, Space, Volume and Segment rows; in-place edit with stale refusal; range fill and paste as one Undo step; airflow cell states; Zone sums, imbalance marker and inheriting dash; selection bar and Select by; Locate and context entry; findings with repairs",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/html/features/spaces/*",
         "src/ph_composer/features/spaces/reads.rb",
@@ -1371,7 +1371,7 @@
       "id": "S08",
       "label": "Mark floor and Create Space: Mark floor from the Weighting factor column menu at 1, 0 and a typed factor by click and held drag, the Create Space offer, refusals on the status bar, Escape, deactivation and the pressed glyph, one Undo step per gesture; Create Space from the context menu with its preview; Classify and Mark floor leave one tool",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/spaces/mark_tool.rb",
         "src/ph_composer/features/spaces/mark_placement.rb",
@@ -1390,7 +1390,7 @@
       "id": "S09",
       "label": "Spaces Colour-by modes: Space, Ventilation, Weighting factor and Height colour Floor Segments and prisms, stable Space colours across reopen, the projected prism base, labels and selection totals in SI and IP with no mode active, nothing added to the SKP",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/spaces/prism.rb",
         "src/ph_composer/features/spaces/colour_modes.rb",
@@ -1405,7 +1405,7 @@
       "id": "S10",
       "label": "Spaces export: the packaged RBZ exports the reference model; the HBJSON reloads with each Space on its Zone's Room, metrics equal to the panel, airflows as m3/s, user_data on the three honeybee-ph objects; the off-to-the-side line and per-Zone schedule in the report; a copied Zone's Spaces reload on the copied Room",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/spaces/export.rb",
         "src/ph_composer/features/spaces/scan/extents.rb",
@@ -1422,7 +1422,7 @@
       "id": "S11",
       "label": "Height from solid: the wedge's volume over net floor area, both numbers reported, one native Undo step, refusals for an open solid, a Group of Groups, a Volume or Space as the solid and a wrong selection",
       "mode": "mixed",
-      "authority": "planning/features/phase-03a-spaces/ACCEPTANCE.md",
+      "authority": "planning/archive/phase-03a-spaces/ACCEPTANCE.md",
       "paths": [
         "src/ph_composer/features/spaces/height_from_solid*",
         "src/ph_composer/features/spaces/declarations/height_from_solid.rb",

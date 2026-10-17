@@ -14,9 +14,9 @@ Spaces section would otherwise meet. No Spaces code and no screen. The Ruby `vol
 `airflow` rows (PR #84) and the section-cycle refusal (`registration.cycle`, PR #122) are on
 `main`; this stage only confirms them.
 
-Behavior owners: [face-assignment](../../../archive/face-assignment/PRD.md) and
-[zones-and-adjacency](../../../archive/phase-01-zones-and-adjacency/PRD.md) for the Face walk;
-[validation and export](../../cross-phase/validation-and-export/STATUS.md), "Owed from the Phase 2
+Behavior owners: [face-assignment](../../face-assignment/PRD.md) and
+[zones-and-adjacency](../../phase-01-zones-and-adjacency/PRD.md) for the Face walk;
+[validation and export](../../../features/cross-phase/validation-and-export/STATUS.md), "Owed from the Phase 2
 review", for items 1 and 2. Names: [CONTRACTS](../CONTRACTS.md) sections 5 and 7.
 
 Paths are relative to `src/ph_composer/`.

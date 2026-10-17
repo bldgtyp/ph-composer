@@ -153,7 +153,7 @@ Measured in PH-Composer on 26.1.188, 2026-09-20
 ## Re-placing a Group's definition
 
 Measured in PH-Composer on 26.1.188, 2026-10-15
-([P3a-04](../planning/features/phase-03a-spaces/evidence/p3a-04-copies-and-move.md)).
+([P3a-04](../planning/archive/phase-03a-spaces/evidence/p3a-04-copies-and-move.md)).
 
 | Fact | Consequence |
 | --- | --- |

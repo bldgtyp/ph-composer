@@ -70,7 +70,7 @@ Superseded in part on 2026-10-15 by the Spaces packet's D3a-16 and D3a-17: Space
 Zones tab, beside Faces, in the table-first pattern, with no Levels rail, no Airflow balance subtab
 and a numeric weighting factor rather than two chips. The rulings below record the predecessor
 screen; where they disagree with D3a-16 or D3a-17, those win. See
-[the Spaces mockups](../features/phase-03a-spaces/mockups/README.md).
+[the Spaces mockups](../archive/phase-03a-spaces/mockups/README.md).
 
 What the screenshot shows: a Levels rail on the left with All levels and one checkbox per level,
 each with a count. A control row with Filter, Order by, Direction, Collapse all and Expand all.

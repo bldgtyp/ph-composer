@@ -52,7 +52,7 @@ checks, review and limits. P3a-01 reuses it; no Spaces stage gate is closed by t
 
 | Item | Remaining work | Owner / entry |
 | --- | --- | --- |
-| Saved table layout | Add persisted column order/widths through the host preference store and verify restoration/reset. Shared table resizing exists, but widths are currently in-memory and no layout preference key/API exists | [P3a-07](../../phase-03a-spaces/phases/p3a-07-spaces-view.md); D3a-11 answered 2026-10-15: the Spaces view uses whatever the shared table persists and adds no layout store of its own, so persistence, if wanted, is a shared-table change; not authorized |
+| Saved table layout | Add persisted column order/widths through the host preference store and verify restoration/reset. Shared table resizing exists, but widths are currently in-memory and no layout preference key/API exists | [P3a-07](../../../archive/phase-03a-spaces/phases/p3a-07-spaces-view.md); D3a-11 answered 2026-10-15: the Spaces view uses whatever the shared table persists and adds no layout store of its own, so persistence, if wanted, is a shared-table change; not authorized |
 | U1-F1: large Spaces table | Measured 2026-10-16 in P3a-07 slice D (`tools/ui-preview/spaces_checks.cjs`, fixture `spaceslarge`: 300 Spaces with one Volume and one Floor Segment each; desktop Chrome, Apple M1 Max): median 408 ms per unit switch with the Zones open, 786 ms with every row open, each to the first painted frame (about 1,200 rows). Decision: not optimized in P3a-07, since a unit switch is a rare deliberate act; the cost is above a responsive 100 ms, so issue [#154](https://github.com/bldgtyp/ph-composer/issues/154) carries the investigation, and the S07 host gate re-measures in the HtmlDialog | P3a-07 measured; optimization in #154 |
 | Repaint budget | Agree and record the refresh budget used by P3a-07 before deciding whether optimization is needed. That stage refers to a budget in this packet, but no numeric budget has been set here | Spaces planning; open criterion, not an implementation defect |
 | Piping / Q2 | Confirm nominal pipe-size selection versus converted diameter; reuse length quantities for insulation/run length and add descriptors, vectors and feature-screen checks | [Hot water piping](../../phase-04-mechanical/hot-water-piping/STATUS.md); requested, interview pending |
@@ -76,7 +76,7 @@ versions, focused lint/coverage, local coherent-diff review and `make ci` on bot
 There is no new host-dependent behavior; feature screen/report integration still needs its
 owner's acceptance. The cross-phase packet remains active and is not archived.
 
-Resume later feature work with the owning [Spaces entry gates](../../phase-03a-spaces/STATUS.md)
+Resume later feature work with the owning [Spaces entry gates](../../../archive/phase-03a-spaces/STATUS.md)
 and open decisions. P3a-01 reuses these Ruby rows; saved layout and the U1-F1 measurement/decision
 stay at P3a-07. Mechanical and climate choices wait for their interviews. Do not redo the
 foundation transplant or the completed F3/F4 work.

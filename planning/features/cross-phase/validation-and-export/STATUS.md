@@ -40,7 +40,7 @@ on 2026-10-01. See [PLAN.md](PLAN.md) for the original allocation; later scope r
 
 Added 2026-10-02 from [R05](../../../archive/phase-02-envelope-review/R05-export-layering.md)'s follow-ups.
 Items 1 and 2 are delivered. Item 3 is allocated to
-[P3a-10](../../phase-03a-spaces/phases/p3a-10-spaces-export.md), with the Spaces contributor,
+[P3a-10](../../../archive/phase-03a-spaces/phases/p3a-10-spaces-export.md), with the Spaces contributor,
 section and report schedule, and item 4 to Phase 3b's P3b-08.
 
 1. **Defect: a Room with no Faces.** Delivered by Spaces P3a-01 on 2026-10-15

@@ -15,7 +15,7 @@ honeybee-ph `PhThermalBridge` on its Building-Segment.
 In this plan: thermal bridges, roadmap 3.2, as the [PRD](PRD.md) scopes it after the interview
 of 2026-10-03. The findings, decisions, bindings and register are this folder's
 [DECISIONS](DECISIONS.md), [CONTRACTS](CONTRACTS.md) and [ACCEPTANCE](ACCEPTANCE.md). Spaces,
-roadmap 3.1, is [Phase 3a](../phase-03a-spaces/PLAN.md).
+roadmap 3.1, is [Phase 3a](../../archive/phase-03a-spaces/PLAN.md).
 
 Out of this plan: METr conversion and import (D12; the METr rows and PHX's handling of `quantity`
 wait with [metr-export](../unscheduled/metr-export/README.md)), point thermal bridges and
@@ -72,9 +72,9 @@ P3b-01 ── P3b-02 ── P3b-03 ── P3b-04 ═ T-M1 ─┬─ P3b-05 ═ T
 ## Order and parallel work
 
 The default is one branch at a time in stage order. This track is independent of Phase 3a except
-for three gates: [P3a-01](../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md) before
+for three gates: [P3a-01](../../archive/phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md) before
 P3b-03 and P3b-08, and
-[P3a-05](../phase-03a-spaces/phases/p3a-05-colour-by-derived-geometry-and-readouts.md) before
+[P3a-05](../../archive/phase-03a-spaces/phases/p3a-05-colour-by-derived-geometry-and-readouts.md) before
 P3b-06. P3b-01 and P3b-02 can run before either. Within this track, P3b-05, P3b-06 and P3b-08 can
 proceed in parallel after P3b-04.
 
@@ -132,5 +132,5 @@ changed and repeat the earlier cases that screen reports.
 Every row of [ACCEPTANCE.md](ACCEPTANCE.md) passes on the proving host, this packet records what
 was delivered and what remains, the edge tagging rules are in `context/` for piping and ducting,
 the Phase 4 packets point at them, and `docs/PRODUCT.md` and the generated API reference describe
-what exists. Phase 3 closes when this plan and [Phase 3a](../phase-03a-spaces/PLAN.md) have both
+what exists. Phase 3 closes when this plan and [Phase 3a](../../archive/phase-03a-spaces/PLAN.md) have both
 exited. Nothing here is a release, a SketchUp 2023 or Windows claim, or a certification claim.

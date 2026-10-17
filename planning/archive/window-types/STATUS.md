@@ -14,7 +14,7 @@ Deferred scope remains in the owning [plan](PLAN.md) and [PRD](PRD.md): Spaces/t
 
 **Operation marks (D2-6), 2026-10-15.** Delivered by Phase 3a's P3a-05 slice B: the Window Type
 Colour-by mode draws each glazed element's operation as derived segments in its Type's colour, the
-same marks the Type's elevation draws in the panel ([P3a-05 evidence](../../features/phase-03a-spaces/evidence/p3a-05-colour-by-extension.md)).
+same marks the Type's elevation draws in the panel ([P3a-05 evidence](../phase-03a-spaces/evidence/p3a-05-colour-by-extension.md)).
 Element outlines beyond the pane Faces the service already outlines are not drawn; nothing asks for them.
 SketchUp 2023, Windows, release and certification are separate gates. Historical implementation
 frontiers remain in Git and the phase evidence; they are not current work.
