@@ -127,7 +127,7 @@ module PhComposer
       end
 
       # A Group whose definition another Group shares, or any ComponentInstance, is storage more than
-      # one placement writes through (context/SKETCHUP_HOST_BEHAVIOR.md, Group copies).
+      # one placement writes through (context/SKETCHUP_HOST_BEHAVIOR.md, "Observers and edit contexts").
       def shared_storage?(entity)
         return true if entity.is_a?(Sketchup::ComponentInstance)
 

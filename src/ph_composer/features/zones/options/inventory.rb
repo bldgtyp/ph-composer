@@ -8,10 +8,11 @@ module PhComposer
         module_function
 
         def rows(model)
-          walk(model.entities, [], false, false, [])
+          walk(model.entities, [], [], :shared => false, :locked => false)
         end
 
-        def walk(entities, path, shared, locked, found)
+        # `shared` and `locked` are what the containers above `entities` pass down.
+        def walk(entities, path, found, shared:, locked:)
           entities.each do |entity|
             current = path + [entity.persistent_id]
             container = entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
@@ -29,7 +30,7 @@ module PhComposer
 
             child_shared = shared || Occurrences.shared_storage?(entity)
             children = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
-            walk(children, current, child_shared, locked || entity.locked?, found)
+            walk(children, current, found, :shared => child_shared, :locked => locked || entity.locked?)
           end
           found
         end
@@ -45,18 +46,6 @@ module PhComposer
           return ["Invalid membership stamp projection"] unless record["id"] == record["zone_id"]
 
           Schema.stamp?(record.reject { |key, _| key == "id" }) ? [] : ["Invalid membership stamp"]
-        end
-
-        def usage(model, collection, id)
-          field = collection == "building_segment" ? "building_segment_id" : "level_id"
-          inventory = rows(model)
-          live_ids = inventory.select { |row| row.fetch(:zone) }.map { |row| row.fetch(:record).fetch("id") }
-          matching = inventory.select { |row| row.fetch(:record)[field] == id }
-          { "live" => matching.count { |row| row.fetch(:zone) },
-            "recoverable" => matching.reject { |row| row.fetch(:zone) }
-                                     .map { |row| row.fetch(:record).fetch("zone_id") }.uniq.count { |zone_id|
-                               !live_ids.include?(zone_id)
-                             } }
         end
       end
 
@@ -75,12 +64,12 @@ module PhComposer
           } }
         end
 
+        # A Zone record is reported by its id, a membership stamp by the Zone id it names.
         def affected
-          @writes.map { |write|
-            { "kind" => "zone_options", "id" => write.fetch(:after).fetch("id",
-                                                                          write[:after]["zone_id"]),
-              "change" => "updated" }
-          }
+          @writes.map do |write|
+            after = write.fetch(:after)
+            { "kind" => "zone_options", "id" => after.fetch("id", after["zone_id"]), "change" => "updated" }
+          end
         end
 
         def apply(model, _slots)

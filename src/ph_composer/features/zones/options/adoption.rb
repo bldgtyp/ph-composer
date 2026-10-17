@@ -65,18 +65,16 @@ module PhComposer
           found.values.sort_by { |entry| [entry.fetch("collection"), entry.fetch("name"), entry.fetch("key")] }
         end
 
+        # What adoption would ask the user: each source, and the sources whose names collide within one
+        # collection, as lists of keys.
         def preview(request, inventory)
           entries = sources(request, inventory)
-          { "required" => !entries.empty?, "sources" => entries.map { |entry|
-            entry.reject { |key, _| %w[portable members origin].include?(key) }
-          }, "suggested_segment" => Occurrences.default_segment(request.model),
-            "collision_clusters" => entries.group_by { |entry|
-              [entry.fetch("collection"), Options.name_key(entry.fetch("name"))]
-            }.values.select { |cluster| cluster.length > 1 }.map { |cluster|
-                                      cluster.map { |entry|
-                                        entry.fetch("key")
-                                      }
-                                    } }
+          shown = entries.map { |entry| entry.reject { |key, _| %w[portable members origin].include?(key) } }
+          clusters = entries.group_by { |entry| [entry.fetch("collection"), Options.name_key(entry.fetch("name"))] }
+                            .values.select { |cluster| cluster.length > 1 }
+          { "required" => !entries.empty?, "sources" => shown,
+            "suggested_segment" => Occurrences.default_segment(request.model),
+            "collision_clusters" => clusters.map { |cluster| cluster.map { |entry| entry.fetch("key") } } }
         end
 
         def apply(request, proposal, mappings:)
@@ -95,9 +93,8 @@ module PhComposer
             Options.validate_collection!(Options.records(request.engine, kind.id, proposal), collection)
           end
           current_default = Options.settings(request.engine)&.fetch("default_segment_id")
-          default_id = current_default || mapping.fetch(entries.find { |entry|
-                                                          entry.fetch("collection") == "building_segment"
-                                                        }.fetch("key"))
+          first_segment = entries.find { |entry| entry.fetch("collection") == "building_segment" }
+          default_id = current_default || mapping.fetch(first_segment.fetch("key"))
           Options.set_settings(request, proposal, default_id) unless default_id == current_default
           writes = []
           final_records = []
@@ -114,8 +111,9 @@ module PhComposer
             end
             after["choice_evidence"] = Options.evidence(request.engine, after, proposal)
             Schema.validate!(after) if row.fetch(:zone)
-            Options.refuse("validation.failed", "Invalid converted membership stamp") unless row.fetch(:zone) ||
-                                                                                             Schema.stamp?(after)
+            unless row.fetch(:zone) || Schema.stamp?(after)
+              Options.refuse("validation.failed", "Invalid converted membership stamp")
+            end
             final_records << [row, after]
             Options.add_rewrite(row, after, writes)
           end
@@ -168,8 +166,9 @@ module PhComposer
               pairs = sources.group_by { |source| source.fetch("portable").fetch("id") }
               assignments = pairs.to_h do |source_id, definitions|
                 targets = definitions.map { |definition| mapping.fetch(definition.fetch("key")) }.uniq
-                Options.refuse("zone.options_conflict", "Copied extension references have conflicting destinations") if
-                  targets.length != 1
+                unless targets.length == 1
+                  Options.refuse("zone.options_conflict", "Copied extension references have conflicting destinations")
+                end
                 [source_id, targets.first]
               end
               [kind, assignments]

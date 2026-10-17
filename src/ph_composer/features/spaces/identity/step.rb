@@ -3,14 +3,14 @@
 module PhComposer
   module Spaces
     # Applies an IdentityPlan over the records at or below `scope_path`. For Make independent the scope is
-    # the named target's path: a Space or Volume copied natively shares its definition with the original,
-    # so the step first gives the target storage of its own (Make Unique, then every Group inside it still
-    # sharing, as Zones does: context/SKETCHUP_HOST_BEHAVIOR.md, "Group copies"). For a Zone copy the scope
-    # is the Zone's path, whose storage the Zone's own step isolated first, and there is no target. Either
-    # way every entity inside was replaced, so each row is found again by kind, id and ordinal and must
-    # still hold its pre-image. Restorable: `restore` writes the captured records back for a follow-up
-    # that cannot abort; isolated storage stays isolated, which is consistent (the copy keeps its finding
-    # and its repair).
+    # the named target's path: a Space or Volume copied natively shares its definition with the original
+    # (context/SKETCHUP_HOST_BEHAVIOR.md, "Observers and edit contexts"), so the step first gives the target
+    # storage of its own: Make Unique, then every Group inside it still sharing, as Zones does. For a Zone
+    # copy the scope is the Zone's path, whose storage the Zone's own step isolated first, and there is no
+    # target. Either way every entity inside was replaced, so each row is found again by kind, id and
+    # ordinal and must still hold its pre-image. Restorable: `restore` writes the captured records back for
+    # a follow-up that cannot abort; isolated storage stays isolated, which is consistent (the copy keeps
+    # its finding and its repair).
     class IdentityStep
       # One entity's state before apply wrote it: its store, the record there (nil when none) and its name.
       Captured = Struct.new(:store, :entity, :record, :name, keyword_init: true)
