@@ -131,8 +131,9 @@ module PhComposer
         { "created_ids" => created, "replacement_ids" => mapping }
       end
 
-      # Each removed option id and the final option its users move to, or nil for an unused Level. A used
-      # option needs one, and a Building Segment always does, because every Zone names one.
+      # Each removed option id and the final option its users move to, or nil. A used option needs an
+      # explicit entry in `replacements`; a used Level may map to nil, which clears it, but a used Building
+      # Segment needs a final option. An unused option maps to its replacement or nil.
       def replacement_mapping(inventory, collection, removed, replacements, created, final_ids)
         removed.to_h do |id|
           used = usage(inventory, collection, id).values.any?(&:positive?)
