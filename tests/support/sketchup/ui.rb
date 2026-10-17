@@ -146,6 +146,9 @@ module UI
     end
   end
 
+  # A pending UI.start_timer callback; a repeating one runs again after each call.
+  Timer = Struct.new(:id, :repeat, :block, keyword_init: true)
+
   class << self
     attr_reader :opened_urls, :messages, :last_savepanel, :last_openpanel, :context_menu_handlers
     attr_writer :open_url_result, :messagebox_result
@@ -182,7 +185,7 @@ module UI
       @next_timer_id ||= 0
       @next_timer_id += 1
       (@timer_intervals ||= {})[@next_timer_id] = interval
-      (@timers ||= []) << [@next_timer_id, repeat, block]
+      (@timers ||= []) << Timer.new(:id => @next_timer_id, :repeat => repeat, :block => block)
       @next_timer_id
     end
 
@@ -199,7 +202,7 @@ module UI
 
     def stop_timer(timer_id)
       (@timer_intervals ||= {}).delete(timer_id)
-      (@timers ||= []).reject! { |id, _repeat, _block| id == timer_id }
+      (@timers ||= []).reject! { |timer| timer.id == timer_id }
       true
     end
 
@@ -214,9 +217,8 @@ module UI
     def run_timers(limit = 10_000)
       count = 0
       while (timer = (@timers ||= []).shift)
-        id, repeat, block = timer
-        block.call
-        @timers << [id, repeat, block] if repeat
+        timer.block.call
+        @timers << timer if timer.repeat
         count += 1
         raise "timer limit exceeded" if count > limit
       end
@@ -224,11 +226,11 @@ module UI
     end
 
     def run_timer(timer_id)
-      timer = (@timers ||= []).find { |item| item[0] == timer_id }
+      timer = (@timers ||= []).find { |item| item.id == timer_id }
       return false unless timer
 
       @timers.delete(timer)
-      timer[2].call
+      timer.block.call
       true
     end
 
@@ -236,9 +238,8 @@ module UI
       timer = (@timers ||= []).shift
       return false unless timer
 
-      id, repeat, block = timer
-      block.call
-      @timers << [id, repeat, block] if repeat
+      timer.block.call
+      @timers << timer if timer.repeat
       true
     end
 

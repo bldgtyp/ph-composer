@@ -83,21 +83,25 @@ module Sketchup
       value
     end
 
+    # The operation start_operation opened, with the Model state commit or abort returns to.
+    OpenOperation = Struct.new(:name, :disable_ui, :transparent, :snapshot, keyword_init: true)
+
     def start_operation(name, disable_ui = false, next_transparent = false, transparent = false)
       return false if @current_operation
 
       @operation_starts << [name, disable_ui, next_transparent, transparent]
-      @current_operation = [name, disable_ui, next_transparent, transparent, transaction_snapshot]
+      @current_operation = OpenOperation.new(:name => name, :disable_ui => disable_ui, :transparent => transparent,
+                                             :snapshot => transaction_snapshot)
       true
     end
 
     def commit_operation
       return false unless @current_operation
 
-      name, disable_ui, _next_transparent, transparent, snapshot = @current_operation
-      @undo_stack << snapshot unless transparent && @undo_stack.any?
-      @redo_stack.clear unless transparent
-      @operations << [name, disable_ui, :committed]
+      operation = @current_operation
+      @undo_stack << operation.snapshot unless operation.transparent && @undo_stack.any?
+      @redo_stack.clear unless operation.transparent
+      @operations << [operation.name, operation.disable_ui, :committed]
       @current_operation = nil
       @observers.each do |observer|
         observer.onTransactionCommit(self) if observer.respond_to?(:onTransactionCommit)
@@ -110,9 +114,9 @@ module Sketchup
     def abort_operation
       return false unless @current_operation
 
-      name, disable_ui, _next_transparent, _transparent, snapshot = @current_operation
-      restore_transaction_snapshot(snapshot)
-      @operations << [name, disable_ui, :aborted]
+      operation = @current_operation
+      restore_transaction_snapshot(operation.snapshot)
+      @operations << [operation.name, operation.disable_ui, :aborted]
       @current_operation = nil
       @observers.each do |observer|
         observer.onTransactionUndo(self) if observer.respond_to?(:onTransactionUndo)
@@ -328,10 +332,6 @@ module Sketchup
     def remove_observer(observer)
       (@observers ||= []).delete(observer)
       true
-    end
-
-    def observer_count
-      (@observers ||= []).length
     end
 
     def store_model(path, model)

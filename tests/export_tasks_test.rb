@@ -370,10 +370,10 @@ class ExportTasksTest < PhComposerTestCase
 
   def drain
     100.times do
-      timer = UI.instance_variable_get(:@timers).find { |id, _repeat, _block| UI.timer_intervals[id].zero? }
+      timer = UI.instance_variable_get(:@timers).find { |item| UI.timer_intervals[item.id].zero? }
       return unless timer
 
-      UI.run_timer(timer.first)
+      UI.run_timer(timer.id)
     end
     flunk "Collection did not settle within 100 timer slices"
   end
