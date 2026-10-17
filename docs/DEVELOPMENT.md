@@ -35,7 +35,10 @@ baseline, the installed size at the last phase close. Raising either, or resetti
 phase close, is a recorded decision.
 
 `test` loads the real extension code against a stub SketchUp API and runs the Ruby and Python
-suites in one pass. JavaScript tests are discovered by the glob `tests/*_test.js` and run under
+suites in one pass. The Ruby suite runs as one process per processor, each loading a share of the
+`*_test.rb` files (`tests/parallel_tests.rb`), and reports one summary; `RUBY_TEST_JOBS` sets the
+count. Each shard prints its own Minitest seed. To chase an order-dependent failure, run the suite in
+one process with `ruby -Itests tests/all_tests.rb`. JavaScript tests are discovered by the glob `tests/*_test.js` and run under
 `node --test` against a DOM double. The stubs say in comments what they support and what they
 refuse to pretend to support; see `tests/support/.index.md`. A rule that needs no host is tested
 without the stub: `tests/support/face_geometry_pure.rb` loads only `core/face_geometry.rb` and runs in a
@@ -116,7 +119,7 @@ make ci RUBY=$(rbenv prefix 2.7.2)/bin/ruby    # the floor
 ```
 
 GitHub Actions runs `make ci` on both, one matrix job per version, on every pull request and
-every push to `main`.
+every push to `main`. A newer push to the same pull request cancels the run in progress.
 
 ## Fixtures and coverage
 

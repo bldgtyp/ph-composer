@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
 
+# A newer push to the same pull request supersedes the run in progress; pushes to main always finish.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   offline:
     name: make ci (Ruby ${{ matrix.ruby-version }})
