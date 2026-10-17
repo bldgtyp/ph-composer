@@ -14,6 +14,8 @@ module PhComposer
         ATTACHED_ZONE_CODES = { "absent" => "attached_zone.absent", "dangling" => "attached_zone.dangling",
                                 "invalid" => "attached_zone.invalid", "unavailable" => "attached_zone.unavailable" }
                               .freeze
+        # One preflight finding before it is placed on its Face: `blocking` says whether it blocks export.
+        Issue = Struct.new(:code, :message, :blocking, keyword_init: true)
 
         module_function
 
@@ -72,15 +74,15 @@ module PhComposer
         def face_findings(request, zone, occurrence, index)
           record = Zones::Occurrences.face_record(occurrence.entity)
           issues = if record.nil?
-                     [["face.unclassified", "Zone #{zone.record.fetch('name')} has an unclassified Face.", true]]
+                     [issue("face.unclassified", "Zone #{zone.record.fetch('name')} has an unclassified Face.", true)]
                    elsif !Schema.problems(record).empty?
-                     [["face.invalid", "Face assignment is invalid: #{Schema.problems(record).first}.", true]]
+                     [issue("face.invalid", "Face assignment is invalid: #{Schema.problems(record).first}.", true)]
                    else
                      assignment_issues(request, occurrence, record, index)
                    end
-          issues.map do |code, message, blocking|
-            { "code" => code, "section" => SECTION, "object_id" => record && record["id"],
-              "message" => message, "blocks_export" => blocking, "locate" => {
+          issues.map do |found|
+            { "code" => found.code, "section" => SECTION, "object_id" => record && record["id"],
+              "message" => found.message, "blocks_export" => found.blocking, "locate" => {
                 "name" => "#{PREFIX}.locate", "params" => {
                   "faces" => [occurrence.reference.merge("entity_id" => record && record["id"])]
                 }
@@ -88,23 +90,27 @@ module PhComposer
           end
         end
 
+        def issue(code, message, blocking)
+          Issue.new(:code => code, :message => message, :blocking => blocking)
+        end
+
         def assignment_issues(request, occurrence, record, index)
           issues = []
-          issues << ["face.type_missing", "Choose a Face type before exporting.", true] unless record["face_type"]
+          issues << issue("face.type_missing", "Choose a Face type before exporting.", true) unless record["face_type"]
           unless record["boundary_condition"]
-            issues << ["face.boundary_unassigned", "Face has no boundary condition and will be omitted.", false]
+            issues << issue("face.boundary_unassigned", "Face has no boundary condition and will be omitted.", false)
           end
           state = Zones::Adjacency.state(request.model, occurrence, record, :index => index)
           if state && state != "current"
-            issues << [ADJACENCY_CODES.fetch(state), "Surface adjacency is #{state}; this Face will be omitted.",
-                       false]
+            issues << issue(ADJACENCY_CODES.fetch(state), "Surface adjacency is #{state}; this Face will be omitted.",
+                            false)
           end
           issues.concat(attached_zone_issues(request, record)) if record["boundary_condition"] == "AttachedZone"
           return issues unless record["boundary_condition"] && (!state || state == "current")
 
           issues.concat(construction_issues(request, record))
           issues.concat(AssemblyAssignment.findings(request, occurrence, record, index).map do |finding|
-            [finding.fetch("code"), finding.fetch("message"), false]
+            issue(finding.fetch("code"), finding.fetch("message"), false)
           end)
           issues
         end
@@ -113,31 +119,27 @@ module PhComposer
           id = record["assembly_id"]
           # The finding's object_id carries the Face; its sentence is for a reader and names no record id, so
           # every Face with one cause reads the same.
-          return [["construction.missing", "This Face has no Assembly.", true]] unless id
+          return [issue("construction.missing", "This Face has no Assembly.", true)] unless id
 
           state = AssemblyAssignment.state(request, record)
           if state != "resolved"
             message = UNRESOLVED_ASSEMBLY.fetch(state, "This Face's Assembly is #{state}.")
-            return [[CONSTRUCTION_CODES.fetch(state), message, true]]
+            return [issue(CONSTRUCTION_CODES.fetch(state), message, true)]
           end
           assembly = AssemblyAssignment.catalog(request).fetch(:records).fetch(id)
           return [] if assembly.fetch("export_ready")
 
           reason = assembly.fetch("export_blockers").first.fetch("message")
           name = assembly.fetch("values")["name"]
-          [["construction.incomplete", "This Face's Assembly #{name} is not finished: #{reason}", true]]
+          [issue("construction.incomplete", "This Face's Assembly #{name} is not finished: #{reason}", true)]
         end
 
         def attached_zone_issues(request, record)
           id = record["attached_zone_id"]
-          state = if id.to_s.empty?
-                    "absent"
-                  else
-                    attached_record_state(request, id)
-                  end
+          state = id.to_s.empty? ? "absent" : attached_record_state(request, id)
           return [] if state == "resolved"
 
-          [[ATTACHED_ZONE_CODES.fetch(state), "The Face's Attached zone reference is #{state}.", true]]
+          [issue(ATTACHED_ZONE_CODES.fetch(state), "The Face's Attached zone reference is #{state}.", true)]
         end
 
         def attached_record_state(request, id)
@@ -215,7 +217,7 @@ module PhComposer
 
           ["adjacency.stale", "Face has no current reciprocal Surface endpoint."]
         end
-        private_class_method :face_findings, :assignment_issues, :attached_zone_issues, :attached_record_state,
+        private_class_method :face_findings, :issue, :assignment_issues, :attached_zone_issues, :attached_record_state,
                              :omission_reason, :construction_issues, :zone_faces
       end
     end
