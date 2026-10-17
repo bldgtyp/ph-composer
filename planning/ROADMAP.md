@@ -1,6 +1,6 @@
 # Roadmap
 
-DATE: 2026-10-16
+DATE: 2026-10-17
 STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 merged to main through PR #15 on 2026-10-01 and archived; its eleven review refactors merged by 2026-10-02 and are archived.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
@@ -111,7 +111,7 @@ library file. METr conversion stays deferred.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | In progress; P3a-01 to P3a-11 merged; the 2026-10-16 acceptance rerun passes S01 to S11 with ledger results; the #179 fix merged (#187) and its recheck passes A09; UXR-PAINT fails on #188, and closure waits on Ed's call on it | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
+| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | In progress; P3a-01 to P3a-11 merged; the 2026-10-16 acceptance rerun passes S01 to S11 with ledger results; the #179 and #188 fixes merged (#187, #190) and their rechecks pass A09, UXR-SOLVE and UXR-PAINT; closing is Ed's call | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
 | 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09, none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
 
 Ed split Phase 3 on 2026-10-03 into two sub-phases, each one packet planned and worked on its own:
@@ -203,3 +203,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-15 | Ed authorized the Spaces packet, one stage per pull request; P3a-01 merged through PR #135. |
 | 2026-10-16 | Spaces P3a-01 to P3a-11 merged through PR #167; P3a-12's integrated host run ran on 26.1.188. Ed answered the four closure calls the same day; D3a-19 and D3a-20 merged (#173, #172) and the acceptance rerun passed S01 to S11 (#186); closure waits on #179. |
 | 2026-10-16 | #179 fixed through #187 and rechecked on the host: A09 passes; UXR-PAINT's narrow clause fails on #188 (the selection bar crowds the table: Solve under the footer at 420 px, header covered at 360 x 520). Phase 3a closure is Ed's call on #188. |
+| 2026-10-17 | #188 fixed through #190 and rechecked on the host: A09, UXR-SOLVE and UXR-PAINT pass. No acceptance case blocks Phase 3a closure; closing is Ed's call (ZO-O7 fails on #181 as a follow-up). |
