@@ -62,7 +62,7 @@ Findings that span many groups and one shared check get their own stage.
 
 | Id | Finding | State | PR |
 | --- | --- | --- | --- |
-| X1 | Shipped code and tests cited sub-phase planning ids (`D3a-14`, `D3a-19`, `M3a`, `M3b`, `P3a-05`, `P3a-07`), against `context/CODING_STANDARDS.md`, "Comments". `make lint-citations` missed them because `PLANNING_IDS` predates sub-phase ids. Eight comments rewritten to state their reason (four Ruby, four JavaScript, which the same lint covers); the pattern now matches `D<n><letter>-<n>`, `P<n><letter>-<n>` and `M<n><letter>` | Implemented on branch | `refactor/ruby-readability-citations` |
+| X1 | Shipped code and tests cited sub-phase planning ids (`D3a-14`, `D3a-19`, `M3a`, `M3b`, `P3a-05`, `P3a-07`), against `context/CODING_STANDARDS.md`, "Comments". `make lint-citations` missed them because `PLANNING_IDS` predates sub-phase ids. Twelve comments rewritten to state their reason (eight Ruby in seven files, four JavaScript, which the same lint covers; the JavaScript edits refresh the runtime manifest); the pattern now matches `D<n><letter>-<n>`, `P<n><letter>-<n>` and `M<n><letter>` | Implemented on branch | `refactor/ruby-readability-citations` |
 
 ## Native-acceptance batches
 
