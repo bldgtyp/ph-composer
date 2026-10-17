@@ -94,9 +94,11 @@ module PhComposer
         new(cursor.entries, revision, :model_dictionaries => cursor.model_dictionaries)
       end
 
-      # Yields one Entry per entity, or nil for one the snapshot does not keep, so the Cursor still counts it
-      # as work done. Faces and Edges inside a cutting component are walked but not captured
-      # (`capture_geometry` false): the component's own definition facts describe them.
+      # Yields an Entry for each entity the snapshot keeps and nil as a progress tick: for an entity it does
+      # not keep, and for each child read while capturing a component definition the first time it is met
+      # (native_facts). Cursor#count therefore measures traversal work, not entities. Faces and Edges inside
+      # a cutting component are walked but not captured (`capture_geometry` false): the component's own
+      # definition facts describe them.
       def self.walk(entities, path, transform, definitions = {}, capture_geometry: true, &block)
         entities.each do |entity|
           child_path = path + [entity.persistent_id]
