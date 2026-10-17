@@ -159,9 +159,11 @@ module PhComposer
       def attribution(request, review)
         adapter = review.declaration.adapter
         identity = review.source
+        # The fingerprint is checked before the copy time is taken, so a refused copy caches no time.
+        fingerprint = semantic_fingerprint(adapter, review.mapped)
         snapshot = review.row.fetch("snapshot").slice(*adapter.mapped_schema.fetch("properties").keys)
         copied_at = State.for(request.session).copy_time(request.revision, [review.entry.fetch("generation"), identity])
-        identity.merge("kind" => "library", "fingerprint" => semantic_fingerprint(adapter, review.mapped),
+        identity.merge("kind" => "library", "fingerprint" => fingerprint,
                        "fingerprint_version" => adapter.fingerprint_version, "copied_at" => copied_at,
                        "snapshot" => DeepCopy.call(snapshot))
       end
