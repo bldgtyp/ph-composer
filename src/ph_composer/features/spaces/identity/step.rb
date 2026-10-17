@@ -12,6 +12,9 @@ module PhComposer
     # that cannot abort; isolated storage stays isolated, which is consistent (the copy keeps its finding
     # and its repair).
     class IdentityStep
+      # One entity's state before apply wrote it: its store, the record there (nil when none) and its name.
+      Captured = Struct.new(:store, :entity, :record, :name, keyword_init: true)
+
       attr_reader :affected, :number, :planned, :zone_path
 
       # `zone_path` is the Zone occurrence a target is in, nil outside every Zone: where its number is
@@ -63,8 +66,9 @@ module PhComposer
         end
         @captured = resolved.map do |row, occurrence|
           entity = occurrence.entity
-          [STORES.fetch(row.fetch("kind")), entity, STORES.fetch(row.fetch("kind")).read(entity),
-           entity.respond_to?(:name) ? entity.name : nil]
+          store = STORES.fetch(row.fetch("kind"))
+          Captured.new(:store => store, :entity => entity, :record => store.read(entity),
+                       :name => entity.respond_to?(:name) ? entity.name : nil)
         end
         resolved.each { |row, occurrence| write(row, occurrence.entity) }
         @affected = resolved.map { |row, occurrence| affected_row(row, occurrence.path) }
@@ -74,9 +78,11 @@ module PhComposer
       def restore
         return unless @captured
 
-        @captured.each do |store, entity, record, name|
-          record ? store.write(entity, record) : store.delete(entity)
-          entity.name = name if name && store.equal?(SPACE_STORE) && entity.respond_to?(:name=)
+        @captured.each do |captured|
+          store = captured.store
+          entity = captured.entity
+          captured.record ? store.write(entity, captured.record) : store.delete(entity)
+          entity.name = captured.name if captured.name && store.equal?(SPACE_STORE) && entity.respond_to?(:name=)
         end
       end
 

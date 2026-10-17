@@ -44,9 +44,8 @@ module PhComposer
         @weighting_factor = Float(weighting_factor)
         model = @session.model
         model.select_tool(self) if model.respond_to?(:select_tool)
-        ColourBy.for(@session).activate(ColourModes::BY_WEIGHTING_FACTOR) if ColourBy.registered?(
-          ColourModes::BY_WEIGHTING_FACTOR
-        )
+        mode = ColourModes::BY_WEIGHTING_FACTOR
+        ColourBy.for(@session).activate(mode) if ColourBy.registered?(mode)
         show_instructions
         @session.request_refresh
         self
@@ -210,16 +209,19 @@ module PhComposer
         return if collected.nil? || collected.empty?
 
         items = collected.values
-        kinds = items.map { |item| [item[:kind], item[:target]] }.uniq
-        return refuse(MIXED) unless kinds.length == 1
+        # Every pick in one gesture must mean the same thing in the same place (MarkPlacement#place).
+        places = items.map { |item| [item[:kind], item[:target]] }.uniq
+        return refuse(MIXED) unless places.length == 1
+
+        kind, target = places.first
         # Marking's operation owns the limit and refuses; adding a Volume and offering Create Space take
         # no gesture, so the gesture refuses here rather than writing the first part of what it crossed.
-        return refuse(too_large) if collected.full? && kinds.first.first != :mark
+        return refuse(too_large) if collected.full? && kind != :mark
 
         paths = items.map { |item| item[:entities].map(&:persistent_id) }
-        case kinds.first.first
+        case kind
         when :mark then mark(paths, factor, revision)
-        when :volume then add_volume(items.first[:target], paths, factor, revision)
+        when :volume then add_volume(target, paths, factor, revision)
         else offer(paths)
         end
       end
