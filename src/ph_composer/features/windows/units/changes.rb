@@ -24,9 +24,9 @@ module PhComposer
           if geometry_changed
             reads = ReadContext.new(request)
             definition = DefinitionIndex.resolve(request.model, before.fetch("id"))
-            canonical = reads.occurrences.select { |item|
-              item.entity.definition.persistent_id == definition.persistent_id
-            }
+            # The Units on the Type's primary definition move with it; every other outline is a neighbour.
+            primary_id = definition.persistent_id
+            canonical = reads.occurrences.select { |item| item.entity.definition.persistent_id == primary_id }
             polygons = reads.other_polygons(:except => canonical.map(&:path))
             canonical.each do |item|
               next unless item.entity.glued_to

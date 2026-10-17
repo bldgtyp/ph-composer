@@ -23,13 +23,7 @@ module PhComposer
           @type = DeepCopy.call(type)
           verify_type!(model)
           @plan = DefinitionPlan.build(@type)
-          @index = DeepCopy.call(DefinitionIndex.read(model))
-          @index.each_key { |id| DefinitionIndex.resolve(model, id) unless id == @type.fetch("id") }
-          @definition_id = @index[@type.fetch("id")]
-          definition = model.definitions.to_a.find { |entry| entry.persistent_id == @definition_id }
-          stamp = definition && DEFINITION_STORE.read(definition)
-          @rebuild = !definition || !stamp.is_a?(Hash) || stamp["window_type_id"] != @type.fetch("id")
-          @rewrite = !@rebuild && !clean?(definition)
+          definition = read_primary_definition(model)
           occurrences = Occurrences.all(model)
           selected = selected_items(occurrences, items, expected_records)
           @projected = DeepCopy.call(expected_records).merge(selected.to_h { |item, record| [item.path, record] })
@@ -50,11 +44,7 @@ module PhComposer
           @scope = MutationScope.new(:definition_ids => ids)
           @guard = scope.capture(model, :expected_records => @projected)
           @affected = needed? ? @rows.select { |row| changed_row?(row) }.map { |row| affected_row(row) } : []
-          @findings = @rewrite ? [{ "code" => "window.shared_definition_reset",
-                                    "message" => "Reset replaces the edited primary Window definition for all of " \
-                                                 "its units.",
-                                    "unit_count" => @rows.length,
-                                    "references" => @rows.map { |row| DeepCopy.call(row.fetch("reference")) } }] : []
+          @findings = @rewrite ? [shared_definition_finding] : []
         end
 
         def needed?
@@ -111,6 +101,26 @@ module PhComposer
 
         private
 
+        # Reads the definition index and the Type's primary definition, and decides how reset treats it:
+        # `@rebuild` when it is missing or stamped for another Type, `@rewrite` when it exists but was edited.
+        def read_primary_definition(model)
+          @index = DeepCopy.call(DefinitionIndex.read(model))
+          @index.each_key { |id| DefinitionIndex.resolve(model, id) unless id == @type.fetch("id") }
+          @definition_id = @index[@type.fetch("id")]
+          definition = model.definitions.to_a.find { |entry| entry.persistent_id == @definition_id }
+          stamp = definition && DEFINITION_STORE.read(definition)
+          @rebuild = !definition || !stamp.is_a?(Hash) || stamp["window_type_id"] != @type.fetch("id")
+          @rewrite = !@rebuild && !clean?(definition)
+          definition
+        end
+
+        # Rewriting an edited primary definition changes every Unit on it, so the preview names them all.
+        def shared_definition_finding
+          { "code" => "window.shared_definition_reset",
+            "message" => "Reset replaces the edited primary Window definition for all of its units.",
+            "unit_count" => @rows.length, "references" => @rows.map { |row| DeepCopy.call(row.fetch("reference")) } }
+        end
+
         def verify_type!(model)
           unless @type.is_a?(Hash) && Types::KIND.problems(@type).empty? &&
                  Types::KIND.store.read(model, @type.fetch("id")) == @type
@@ -135,12 +145,12 @@ module PhComposer
         end
 
         def canonical_items(model, occurrences)
-          all = native_parents(model.entities)
+          primary_paths = native_parents(model.entities)
           canonical = occurrences.select { |item| item.entity.definition.persistent_id == @definition_id }
           definition = model.definitions.to_a.find { |entry| entry.persistent_id == @definition_id }
           managed_ids = canonical.map { |item| item.entity.persistent_id }.uniq.sort
           native_ids = definition.instances.map(&:persistent_id).sort
-          unless all.keys.sort == canonical.map(&:path).sort && native_ids == managed_ids
+          unless primary_paths.keys.sort == canonical.map(&:path).sort && native_ids == managed_ids
             raise CodedError.new("record.unreadable",
                                  "Every primary Window instance needs a valid Unit record for reset.")
           end
@@ -259,6 +269,7 @@ module PhComposer
           raise CodedError.new("window.definition_editing", "Close the primary Window definition before reset.")
         end
 
+        # Every instance of the primary definition in the Model, by root path, with its parent transform.
         def native_parents(entities, path = [], transform = Geom::Transformation.new, ancestors = [])
           entities.each_with_object({}) do |entity, found|
             next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)

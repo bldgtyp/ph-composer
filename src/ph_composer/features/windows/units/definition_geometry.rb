@@ -78,6 +78,8 @@ module PhComposer
           points.each_index.map { |index| [points[index], points[(index + 1) % points.length]] }
         end
 
+        # The contour with every corner that lies on the segment between its neighbours removed, one at a
+        # time until none does, keeping at least a triangle.
         def normalized(points)
           values = points.dup
           loop do
