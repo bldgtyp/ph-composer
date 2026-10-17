@@ -1,8 +1,9 @@
 /* A bar that floats over the bottom of a work surface while something there is selected: a count line, the
    controls its owner places in `controls`, and a clear icon. It sits in the work surface's overlay layer, so
    showing or hiding it never reflows the table; while it shows it pads the scroll area it covers by its own
-   height, so the last rows stay reachable. It names no record and no field: the owner supplies the words,
-   the controls and what clearing means. */
+   height, so the last rows stay reachable. On a panel too short to float it without covering the table's
+   header, it docks beneath the work surface instead (`reserve`). It names no record and no field: the owner
+   supplies the words, the controls and what clearing means. */
 PhComposerUI.define("selection_bar", ["dom", "icons"], function (dom, icons) {
   "use strict";
   var FALLBACK_HEIGHT = 52, CLEARANCE = 16;
@@ -32,10 +33,22 @@ PhComposerUI.define("selection_bar", ["dom", "icons"], function (dom, icons) {
 
   SelectionBar.prototype.hide = function () { this.root.hidden = true; };
 
-  /* Pads `scroll` by the bar's height while it shows, and gives the padding back when it goes. */
-  SelectionBar.prototype.reserve = function (scroll) {
-    var height = this.root.hidden ? 0 : (this.root.offsetHeight || FALLBACK_HEIGHT) + CLEARANCE;
-    scroll.style.paddingBottom = height ? height + "px" : "";
+  /* Pads `scroll` by the bar's height while it shows, and gives the padding back when it goes. `keep` is the
+     height at the top of `scroll` the bar must leave in view, such as a table's header: where floating would
+     cover it (the shortest panels), the bar docks in flow after its positioned element's content instead, so
+     the owner places the bar after the work surface. `fit`, if given, sizes the work surface around the bar:
+     it runs with the bar floating, and again if it docks. */
+  SelectionBar.prototype.reserve = function (scroll, keep, fit) {
+    var root = this.root;
+    root.classList.remove("is-docked");
+    scroll.style.paddingBottom = root.hidden ? "" : (root.offsetHeight || FALLBACK_HEIGHT) + CLEARANCE + "px";
+    if (fit) fit();
+    if (!root.hidden && keep !== undefined &&
+        root.getBoundingClientRect().top < scroll.getBoundingClientRect().top + keep) {
+      root.classList.add("is-docked");
+      scroll.style.paddingBottom = "";
+      if (fit) fit();
+    }
   };
 
   return { SelectionBar: SelectionBar };

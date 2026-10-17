@@ -49,6 +49,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   var NO_VIEW = { id: "", label: "Zones" };
 
   var screen = null;
+  var MIN_MOUNT = 240;
   var ZONE_DRAFT = "Finish or cancel the Zone edit first.";
 
   /* One view's hook, called with its own state first; `fallback` when the view does not supply it. */
@@ -696,9 +697,28 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     var overview = document.querySelector("[data-section='ph_composer.overview']");
     root.hidden = true;
     var own = screen && screen.session === state.session && active(screen);
+    if (screen) screen.bar = null;
     if (!own || !overview) return;
-    var bar = call(own, "selectionBar", [overview], null);
-    if (bar) bar.reserve(own.mount);
+    screen.bar = call(own, "selectionBar", [overview], null);
+    place(own, screen.bar);
+  }
+
+  /* The table takes the height its pane leaves, however the tabs and the control row wrap, so the tab does
+     not scroll and a floating selection bar sits at the pane's visible bottom. Below MIN_MOUNT the pane
+     scrolls instead. Where the floating bar would cover the table's header, it docks beneath the table and
+     the table is fitted again around it. */
+  function place(own, bar) {
+    var mount = own.mount, pane = mount.closest(".panel-panes"), overview = mount.closest(".phc-overview");
+    if (!pane || !overview || !mount.getClientRects().length) return;
+    var refit = function () { fit(mount, pane, overview); }, head = mount.querySelector("thead");
+    if (bar) bar.reserve(mount, head ? head.offsetHeight : 0, refit); else refit();
+  }
+
+  function fit(mount, pane, overview) {
+    var paneBox = pane.getBoundingClientRect(), box = mount.getBoundingClientRect();
+    var below = overview.getBoundingClientRect().bottom - box.bottom;
+    var room = pane.clientHeight - (box.top - paneBox.top + pane.scrollTop) - below;
+    mount.style.maxHeight = Math.max(MIN_MOUNT, Math.floor(room)) + "px";
   }
 
   /* A top-level row for one Zone occurrence; a view's group row has no Zone. */
@@ -877,4 +897,8 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
   } });
   panel.workedOn("ph_composer.zones", "overview");
   panel.section("ph_composer.zones.selection_bar", renderBar, { order: 1000 });
+  if (window.addEventListener) window.addEventListener("resize", function () {
+    var own = screen && active(screen);
+    if (own) place(own, screen.bar);
+  });
 });

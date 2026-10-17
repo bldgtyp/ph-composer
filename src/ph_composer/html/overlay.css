@@ -316,6 +316,8 @@
   padding: 8px 10px 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface, #fff);
   box-shadow: 0 6px 24px #0b1f2626, 0 1px 3px #0b1f261a; }
 .phc-selection-bar[hidden] { display: none; }
+/* Docked (selection_bar.js `reserve`): in flow beneath the work surface, so it covers nothing. */
+.phc-selection-bar.is-docked { position: relative; bottom: auto; margin-top: 8px; }
 .phc-selection-bar-count { flex: 0 0 auto; font-weight: 600; font-size: 13px; white-space: nowrap; }
 .phc-selection-bar-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; min-width: 0; }
 .phc-workspace .phc-selection-bar-clear { flex: 0 0 auto; width: 28px; height: 28px; min-height: 28px;
