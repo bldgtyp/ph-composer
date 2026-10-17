@@ -13,6 +13,10 @@ module PhComposer
       # Aperture and construction rows for the translation, the preflight findings, and the batch
       # repairs the preflight offers.
       Result = Struct.new(:apertures, :constructions, :findings, :repairs, keyword_init: true)
+      # The pinned Honeybee simple glazing material accepts a Uw above zero and up to this value.
+      UW_LIMIT_W_M2K = 12
+      # The one thermal condition that is reported without blocking export.
+      ADVISORY_CONDITIONS = %w[window_type.frame_operation_mismatch].freeze
 
       # Assesses every Window Unit in a captured `snapshot` against the authored Types, product
       # collections and settings, placing each on its host from the Zones Faces section's `faces` rows.
@@ -34,10 +38,10 @@ module PhComposer
       def run
         prepare_outlines
         @units.each { |entry, record| assess_unit(entry, record) }
+        # Elements with the same thermal inputs share one construction row.
+        constructions = @constructions.uniq { |row| row.fetch("id") }
         Result.new(:apertures => @apertures.sort_by { |row| row.fetch("id") },
-                   :constructions => @constructions.uniq { |row|
-                                       row.fetch("id")
-                                     }.sort_by { |row| row.fetch("id") },
+                   :constructions => constructions.sort_by { |row| row.fetch("id") },
                    :findings => @findings, :repairs => @repairs).freeze
       end
 
@@ -90,7 +94,9 @@ module PhComposer
         face = host(entry)
         validate_host(entry, face, record, reference)
         thermal = Thermal.calculate(type, @products, @settings["default_psi_install_id"])
-        validate_products(type, thermal, record, reference)
+        validate_product_availability(type, thermal, record, reference)
+        report_thermal_conditions(type, thermal, record, reference)
+        validate_uw_limit(thermal, record, reference)
         return if @findings.drop(start).any? { |finding| finding["blocks_export"] }
 
         emit(entry, record, type, face, thermal)
@@ -184,45 +190,55 @@ module PhComposer
         issue(error.code, error.message, record, reference)
       end
 
-      def validate_products(type, thermal, record, reference)
+      # One finding per non-empty element naming a product the Model does not hold, counting the
+      # Psi-Install the calculation resolved for each edge as well as the authored slots.
+      def validate_product_availability(type, thermal, record, reference)
         type.fetch("elements").reject { |cell| cell["kind"] == "empty" }.each do |cell|
-          identifiers = [[cell["glazing_id"], "glazings"]] +
-                        cell.fetch("frames").values.map { |id| [id, "frames"] } +
-                        cell.fetch("installs").values.map { |id| [id, "psi_install_types"] }
+          slots = Snapshot.product_slots(cell).map { |collection, _side, id| [collection, id] }
           detail = thermal.fetch("elements").find { |row| row["id"] == cell["id"] }
           if detail
-            identifiers += detail.fetch("edges").map { |edge| [edge.fetch("install")["id"], "psi_install_types"] }
+            slots += detail.fetch("edges").map { |edge| ["psi_install_types", edge.fetch("install")["id"]] }
           end
-          if identifiers.any? { |id, collection| id && !@products.fetch(collection).key?(id) }
-            issue("window_type.product_dangling",
-                  "A placed Type names an unavailable Frame, Glazing or Psi-Install Type.",
-                  record, reference)
-          end
+          next unless slots.any? { |collection, id| id && !@products.fetch(collection).key?(id) }
+
+          issue("window_type.product_dangling",
+                "A placed Type names an unavailable Frame, Glazing or Psi-Install Type.",
+                record, reference)
         end
-        # An element's condition names its Window Type and the element, so two elements with one condition are
-        # two rows and each says where it is.
+      end
+
+      # The Type's and its elements' thermal conditions as export findings. Each message says where the
+      # condition is, Type and element, so two elements with one condition are two findings; identical
+      # findings collapse to one. Only ADVISORY_CONDITIONS leave export open.
+      def report_thermal_conditions(type, thermal, record, reference)
         conditions = thermal.fetch("findings").map do |finding|
           message = finding.fetch("message")
           [finding.fetch("code"), type["name"] ? "#{type['name']}: #{message}" : message]
         end
         thermal.fetch("elements").each do |detail|
-          name = type.fetch("elements").find { |cell| cell["id"] == detail["id"] }&.fetch("name", nil)
+          element_name = type.fetch("elements").find { |cell| cell["id"] == detail["id"] }&.fetch("name", nil)
+          where = [type["name"], element_name].compact.join(", ")
           detail.fetch("findings").each do |finding|
             message = finding.fetch("message")
-            where = [type["name"], name].compact.join(", ")
             conditions << [finding.fetch("code"), where.empty? ? message : "#{where}: #{message}"]
           end
         end
         conditions.uniq.each do |code, message|
-          issue(code, message, record, reference, :blocking => code != "window_type.frame_operation_mismatch")
+          issue(code, message, record, reference, :blocking => !ADVISORY_CONDITIONS.include?(code))
         end
+      end
+
+      # The exporter's limit, not an authoring rule: a computed Uw the pinned simple glazing material
+      # cannot carry blocks export and leaves the authored values alone.
+      def validate_uw_limit(thermal, record, reference)
         thermal.fetch("elements").each do |element|
           u_w = element["uw_w_m2k"]
-          next if u_w.nil? || (u_w.finite? && u_w.positive? && u_w <= 12)
+          next if u_w.nil? || (u_w.finite? && u_w.positive? && u_w <= UW_LIMIT_W_M2K)
 
           issue("window_type.construction_unavailable",
                 "The placed element's Uw must be greater than zero and no more than " \
-                "12 W/m2K for the pinned Honeybee simple glazing material. Authored values remain unchanged.",
+                "#{UW_LIMIT_W_M2K} W/m2K for the pinned Honeybee simple glazing material. Authored values " \
+                "remain unchanged.",
                 record, reference)
         end
       end
@@ -261,6 +277,7 @@ module PhComposer
         end
         row = { "name" => glazing.fetch("name"), "uw_w_m2k" => detail.fetch("uw_w_m2k"),
                 "glazing" => glazing.slice("id", "name", "ug_w_m2k", "g_value"), "sides" => sides }
+        # The id digests everything except display names, so renaming a product never renames a construction.
         signature = row.reject { |key, _| key == "name" }.merge(
           "glazing" => row.fetch("glazing").reject { |key, _| key == "name" },
           "sides" => sides.transform_values { |side|
@@ -272,6 +289,7 @@ module PhComposer
         row.merge("id" => "wwc_#{CanonicalJson.digest(signature)}")
       end
 
+      # Whether the pane polygon winds against the host Face's normal.
       def opposite?(polygon, normal)
         a = polygon[1].zip(polygon[0]).map { |b, x| b - x }
         b = polygon[2].zip(polygon[0]).map { |c, x| c - x }
