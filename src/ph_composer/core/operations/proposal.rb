@@ -43,7 +43,7 @@ module PhComposer
 
       def digest
         value = {
-          "record_changes" => record_changes.writes.map { |write| write_descriptor(write) },
+          "record_changes" => record_changes.writes.map(&:descriptor),
           "steps" => steps.map(&:descriptor), "findings" => findings
         }
         CanonicalJson.digest(replace_temporary_ids(value, temporary_id_mapping))
@@ -91,10 +91,6 @@ module PhComposer
       end
 
       private
-
-      def write_descriptor(write)
-        { "kind" => write.kind, "id" => write.id, "before" => write.before, "after" => write.after }
-      end
 
       def temporary_id_mapping
         ids = record_changes.writes.select { |write| write.before.nil? }.map(&:id)

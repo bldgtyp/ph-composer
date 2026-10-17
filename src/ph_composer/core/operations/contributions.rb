@@ -13,7 +13,7 @@ module PhComposer
       module_function
 
       def snapshot(proposal)
-        Snapshot.new(:writes => DeepCopy.call(proposal.writes.map { |write| write_value(write) }),
+        Snapshot.new(:writes => DeepCopy.call(proposal.writes.map(&:descriptor)),
                      :steps => steps(proposal).dup, :descriptors => descriptors(steps(proposal)),
                      :findings => DeepCopy.call(findings(proposal)))
       end
@@ -22,7 +22,7 @@ module PhComposer
       # there, in order: writes and findings by value, steps by identity and by descriptor, so a step
       # whose payload was edited in place counts as changed.
       def preserved!(proposal, before)
-        writes = proposal.writes.first(before.writes.length).map { |write| write_value(write) }
+        writes = proposal.writes.first(before.writes.length).map(&:descriptor)
         steps = steps(proposal).first(before.steps.length)
         kept = writes == before.writes && findings(proposal).first(before.findings.length) == before.findings &&
                steps.length == before.steps.length && steps.zip(before.steps).all? { |now, was| now.equal?(was) } &&
@@ -31,10 +31,6 @@ module PhComposer
 
         raise CodedError.new("proposal.contribution_replaced",
                              "A participant removed or changed what an earlier contributor proposed.")
-      end
-
-      def write_value(write)
-        { "kind" => write.kind, "id" => write.id, "before" => write.before, "after" => write.after }
       end
 
       def steps(proposal)
@@ -48,7 +44,7 @@ module PhComposer
       def findings(proposal)
         proposal.respond_to?(:findings) ? proposal.findings : []
       end
-      private_class_method :write_value, :steps, :descriptors, :findings
+      private_class_method :steps, :descriptors, :findings
     end
   end
 end

@@ -55,6 +55,12 @@ module PhComposer
                        :values_schema => values_schema, :references => references)
       end
 
+      # [[target_kind, id], ...] for every core reference `record` holds (Descriptor#referenced_targets
+      # answers the same for an entity-owned target).
+      def referenced_targets(record)
+        references.flat_map { |reference| reference.ids(record).map { |id| [reference.target_kind, id] } }
+      end
+
       def values(record)
         record.reject { |key, _value| RESERVED_KEYS.include?(key) }
       end

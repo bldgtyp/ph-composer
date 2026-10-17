@@ -44,8 +44,9 @@ module PhComposer
           end
 
           key = CanonicalJson.generate(update.fetch("reference"))
-          raise CodedError.new("params.invalid", "Two updates name one target differently.") \
-            if kept.key?(key) && kept[key] != update
+          if kept.key?(key) && kept[key] != update
+            raise CodedError.new("params.invalid", "Two updates name one target differently.")
+          end
 
           kept[key] = update
         end.values

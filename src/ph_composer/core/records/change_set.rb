@@ -8,6 +8,11 @@ module PhComposer
     # raises marks the set refused, and the dispatcher never applies a refused set.
     class ChangeSet
       Write = Struct.new(:kind, :id, :before, :after, keyword_init: true) do
+        # The write as a proposal's descriptor and a contribution snapshot both record it.
+        def descriptor
+          { "kind" => kind, "id" => id, "before" => before, "after" => after }
+        end
+
         def change
           return "created" if before.nil?
           return "deleted" if after.nil?
@@ -24,7 +29,7 @@ module PhComposer
       end
 
       # The staged writes, in order, as a frozen list of frozen writes: the only way to add or change
-      # one is `put` and `delete`, which the write guard sees.
+      # one is `put`, `restage` and `delete`, which the write guard sees.
       def writes
         @writes.dup.freeze
       end
