@@ -38,8 +38,12 @@ module PhComposer
       !@detached && (!@model.respond_to?(:valid?) || @model.valid?)
     end
 
-    def add_observers(*host_observers)
-      @observers = host_observers
+    # The observers attached to this session's Model, its selection and its tags, kept so detaching removes
+    # exactly those.
+    Observers = Struct.new(:model, :selection, :layers, keyword_init: true)
+
+    def add_observers(observers)
+      @observers = observers
     end
 
     # Why an authoritative read or write cannot run now, or nil when it can. A feature state object

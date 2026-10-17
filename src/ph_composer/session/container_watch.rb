@@ -63,10 +63,10 @@ module PhComposer
       @timer.cancel
       found = {}
       walk(@session.model.entities, :model, found)
-      @observed.each { |known, entities| unobserve(entities) unless found.key?(known) }
-      found.each { |known, entities| entities.add_observer(@observer) unless @observed.key?(known) }
+      @observed.each { |container_key, entities| unobserve(entities) unless found.key?(container_key) }
+      found.each { |container_key, entities| entities.add_observer(@observer) unless @observed.key?(container_key) }
       # The wrapper an observer was added through is kept, so it is the one later removed.
-      @observed = found.to_h { |known, entities| [known, @observed.fetch(known, entities)] }
+      @observed = found.to_h { |container_key, entities| [container_key, @observed.fetch(container_key, entities)] }
     end
 
     def detach
@@ -77,10 +77,10 @@ module PhComposer
 
     private
 
-    def walk(entities, known, found)
-      return if found.key?(known)
+    def walk(entities, container_key, found)
+      return if found.key?(container_key)
 
-      found[known] = entities
+      found[container_key] = entities
       entities.each do |entity|
         next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
 
@@ -88,11 +88,11 @@ module PhComposer
       end
     end
 
-    def observe(known, entities)
-      return if @observed.key?(known)
+    def observe(container_key, entities)
+      return if @observed.key?(container_key)
 
       entities.add_observer(@observer)
-      @observed[known] = entities
+      @observed[container_key] = entities
     end
 
     def key(container)

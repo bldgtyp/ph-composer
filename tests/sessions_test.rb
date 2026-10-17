@@ -26,7 +26,7 @@ class SessionsTest < PhComposerTestCase
     model.close
 
     assert_nil Sessions.find(session.id)
-    refute_includes model.observers, session.observers.first
+    refute_includes model.observers, session.observers.model
     refute session.valid?
   end
 

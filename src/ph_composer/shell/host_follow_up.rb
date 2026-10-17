@@ -63,8 +63,9 @@ module PhComposer
     # Applies the proposal in one transparent operation and always closes it by committing. Answers
     # nil, or the failure and whether every applied step restored what it wrote.
     def join(model, name, proposal, engine)
-      raise ModelOperation::OperationError, "SketchUp refused to start #{name}" unless
-        model.start_operation(name.to_s, true, false, true)
+      # Transparent: the follow-up joins the operation the user's gesture just committed.
+      started = model.start_operation(name.to_s, true, false, true)
+      raise ModelOperation::OperationError, "SketchUp refused to start #{name}" unless started
 
       failure = nil
       begin
