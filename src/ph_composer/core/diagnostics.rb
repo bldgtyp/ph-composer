@@ -66,10 +66,6 @@ module PhComposer
         File.join(data_root, "logs", LOG_NAME)
       end
 
-      def folder
-        File.dirname(path)
-      end
-
       def reset_for_test
         @path_override = nil
         @strict = false

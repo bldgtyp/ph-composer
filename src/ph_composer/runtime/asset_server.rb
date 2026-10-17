@@ -24,16 +24,17 @@ module PhComposer
     MAX_HEADER_BYTES = 16_384
     TEXT = "text/plain; charset=utf-8"
 
-    Request = Struct.new(:method, :relative, :entry, :body)
+    # `verb` is the HTTP method; a member named `method` would shadow Object#method.
+    Request = Struct.new(:verb, :relative, :entry, :body)
     # Checked in order: the first check that names an outcome refuses the request with the route's
     # status, body and extra header. `names_asset` records the asset in the ledger.
-    Route = Struct.new(:status, :body, :check, :header, :names_asset)
+    Route = Struct.new(:status, :body, :check, :header, :names_asset, keyword_init: true)
     ROUTES = [
-      Route.new(400, "bad request", :incomplete),
-      Route.new(405, "method not allowed", :not_get, "Allow: GET"),
-      Route.new(403, "forbidden", :wrong_token),
-      Route.new(404, "not found", :undeclared),
-      Route.new(500, "asset integrity failed", :integrity_failure, nil, true)
+      Route.new(:status => 400, :body => "bad request", :check => :incomplete),
+      Route.new(:status => 405, :body => "method not allowed", :check => :not_get, :header => "Allow: GET"),
+      Route.new(:status => 403, :body => "forbidden", :check => :wrong_token),
+      Route.new(:status => 404, :body => "not found", :check => :undeclared),
+      Route.new(:status => 500, :body => "asset integrity failed", :check => :integrity_failure, :names_asset => true)
     ].freeze
 
     attr_reader :port
@@ -231,11 +232,11 @@ module PhComposer
     end
 
     def incomplete(request)
-      "timeout" unless request.method
+      "timeout" unless request.verb
     end
 
     def not_get(request)
-      "unsupported_method" unless request.method == "GET"
+      "unsupported_method" unless request.verb == "GET"
     end
 
     def wrong_token(request)

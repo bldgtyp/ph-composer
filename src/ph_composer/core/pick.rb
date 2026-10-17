@@ -10,7 +10,7 @@ module PhComposer
   # exists: a whole-Model walk costs tens to hundreds of milliseconds on a Model of a few thousand
   # Faces (the measurement is in features/zones/zone/index.rb), far too much per move.
   #
-  # It names no feature; Spaces' Mark floor will pick the same way.
+  # It names no feature; the Classify tool and Spaces' Mark floor both pick with it.
   module Pick
     module_function
 

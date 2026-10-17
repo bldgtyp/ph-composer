@@ -31,8 +31,11 @@ module PhComposer
     # Opens the runtime page. Refuses a payload whose files differ from the manifest before serving any.
     def start
       raise ArgumentError, "A runtime starts once; build a new one." unless @state == "idle"
-      raise RuntimeManifest::Invalid, "runtime assets differ from the manifest: #{@server.invalid_assets.join(', ')}" \
-        unless @server.invalid_assets.empty?
+
+      invalid = @server.invalid_assets
+      unless invalid.empty?
+        raise RuntimeManifest::Invalid, "runtime assets differ from the manifest: #{invalid.join(', ')}"
+      end
 
       @server.start
       @dialog = @dialog_factory.call
@@ -53,16 +56,20 @@ module PhComposer
     # Asks the page for one probe: boot if needed, then one round trip through the translation package.
     # A probe sent before the page is ready waits for it.
     def probe(request_id, deadline_ms: RuntimeGate.fetch("boot_deadline_ms"))
-      message = { "type" => "runtime.probe", "payload" => { "request_id" => request_id, "deadline_ms" => deadline_ms } }
-      @state == "ready" ? deliver(message) : @queued << message
+      send_or_queue("type" => "runtime.probe",
+                    "payload" => { "request_id" => request_id, "deadline_ms" => deadline_ms })
       request_id
     end
 
     def translate(request_id, document, deadline_ms: RuntimeGate.fetch("boot_deadline_ms"))
-      message = { "type" => "runtime.translate", "payload" => { "request_id" => request_id,
-                                                                "document" => document, "deadline_ms" => deadline_ms } }
-      @state == "ready" ? deliver(message) : @queued << message
+      send_or_queue("type" => "runtime.translate", "payload" => { "request_id" => request_id, "document" => document,
+                                                                  "deadline_ms" => deadline_ms })
       request_id
+    end
+
+    # A message sent before the page is ready waits for it.
+    def send_or_queue(message)
+      @state == "ready" ? deliver(message) : @queued << message
     end
 
     # Stops everything this runtime started and reports it. `before` is what was live when stop began;
