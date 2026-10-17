@@ -1,7 +1,7 @@
 # P3a-12: Spaces acceptance and handoff
 
-DATE: 2026-10-03
-STATUS: In review. Integrated run done 2026-10-16 ([evidence](../evidence/p3a-12-acceptance.md)); Ed's four items answered; the acceptance rerun ran the same day ([rerun evidence](../../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)); #179 fixed (#187) and rechecked: A09 passes, UXR-PAINT failed on [#188](https://github.com/bldgtyp/ph-composer/issues/188), fixed through #190 and rechecked (A09, UXR-SOLVE and UXR-PAINT pass); closing is Ed's call (ZO-O7 fails on #181 as a follow-up)
+DATE: 2026-10-17
+STATUS: Merged to main through PR #171; the acceptance rerun and the #179 and #188 rechecks followed (PRs #186, #189, #192). Phase 3a closed 2026-10-17
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -47,7 +47,7 @@ Register: [ACCEPTANCE](../ACCEPTANCE.md). Host procedure:
 8. **Follow-ups filed.** The refactor candidates from D3a-3 and D3a-4, the toolbar with
    zones-entry-points, the PHX checks with metr-export, and anything a stage deferred, each as a
    row in `planning/STATUS.md` or a note in its owning packet.
-9. **Thermal bridges.** Tell [Phase 3b](../../phase-03b-thermal-bridges/STATUS.md) what Spaces
+9. **Thermal bridges.** Tell [Phase 3b](../../../features/phase-03b-thermal-bridges/STATUS.md) what Spaces
    built that it reuses (the viewport-tool shape, `derived` segments in Colour-by, the container
    rule), noting any shape that differs from its CONTRACTS.
 

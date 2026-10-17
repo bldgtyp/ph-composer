@@ -17,7 +17,7 @@ here. It can run beside P3a-06 to P3a-08, since it needs only records and findin
 writes that pure function and P3a-09 reuses it.
 
 Behavior owner: [Spaces PRD](../PRD.md), "Export mapping" (Q10, Q17, Q21, Q23) and the
-blocking rows of Validation rows; [validation and export](../../cross-phase/validation-and-export/STATUS.md),
+blocking rows of Validation rows; [validation and export](../../../features/cross-phase/validation-and-export/STATUS.md),
 "Owed from the Phase 2 review", items 3 and 4. Contract: `context/CONTRACTS.md`, "Translation
 sections and artifacts". Names: [CONTRACTS](../CONTRACTS.md) sections 4 and 6.
 
@@ -113,7 +113,7 @@ an open Volume and confirm the context and protection are unchanged afterwards.
 
 ## Out of scope
 
-PHX conversion and METr rooms ([metr-export](../../unscheduled/metr-export/README.md)). A CSV of
+PHX conversion and METr rooms ([metr-export](../../../features/unscheduled/metr-export/README.md)). A CSV of
 the schedule. Zone loads. `wufi_type` and Space Types.
 
 ## Done when

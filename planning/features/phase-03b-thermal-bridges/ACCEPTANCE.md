@@ -6,7 +6,7 @@ AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
 The [PRD](PRD.md), "Acceptance shape", supplies the detailed cases. This register supplies the
-closure gates for Phase 3b; Phase 3a's [Spaces register](../phase-03a-spaces/ACCEPTANCE.md)
+closure gates for Phase 3b; Phase 3a's [Spaces register](../../archive/phase-03a-spaces/ACCEPTANCE.md)
 holds S01 to S12. Record a source-controlled evidence summary per stage under this folder's
 `evidence/` with commit, build, fixtures, checks, exact host versions and remaining limits.
 Keep SKP files and captures in `_private/`.

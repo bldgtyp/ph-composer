@@ -14,7 +14,7 @@ This packet also owns the rules for tagging a SketchUp edge, which
 [erv-ducting](../phase-04-mechanical/erv-ducting/README.md) reuse.
 
 Phase 3 is split into two independent sub-phases, each one flat packet:
-[3a Spaces](../phase-03a-spaces/README.md) and 3b thermal bridges (this folder). Phase 3 ends when
+[3a Spaces](../../archive/phase-03a-spaces/README.md) and 3b thermal bridges (this folder). Phase 3 ends when
 both close. That is the first internal envelope-model release candidate (D1).
 
 ## Read order
@@ -51,10 +51,10 @@ both close. That is the first internal envelope-model release candidate (D1).
 ## What this packet needs from Phase 3a
 
 P3b-03 and P3b-08 wait for
-[P3a-01](../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md): the nested-container rule
+[P3a-01](../../archive/phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md): the nested-container rule
 that `zones.containment` must honor, and R05 items 1 and 2 (the empty Room and section-read
 cycles). P3b-06 waits for
-[P3a-05](../phase-03a-spaces/phases/p3a-05-colour-by-derived-geometry-and-readouts.md): the
+[P3a-05](../../archive/phase-03a-spaces/phases/p3a-05-colour-by-derived-geometry-and-readouts.md): the
 `derived` geometry it draws edges with. R05 item 4 (optional attaching sections) is this packet's,
 in P3b-08.
 

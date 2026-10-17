@@ -1,7 +1,7 @@
 # Phase 3a: Spaces, tracking ledger
 
 DATE: 2026-10-17
-STATUS: In progress. Ed authorized the whole packet on 2026-10-15, stage by stage as one pull request each. P3a-01 to P3a-03 merged to main (PRs #135 to #140); P3a-04 merged in slices (#141, #142, #144, #146); P3a-05 merged in two slices (#147, #148); P3a-06 merged (#149); P3a-07 merged in five slices (#150 to #153, #155); P3a-08 merged in three slices (#156, #159, #160); P3a-09 merged in three slices (#162 to #164); P3a-10 merged in two slices (#165, #166); P3a-11 merged (#167). P3a-12's integrated host run ran on 2026-10-16 ([evidence](evidence/p3a-12-acceptance.md)), and the acceptance rerun Ed asked for followed the same day: S01 to S11 pass with ledger results, and of the 31 earlier cases the ledger screened, 30 were rerun (R05 superseded) and all pass except A09 and UXR-PAINT ([#179](https://github.com/bldgtyp/ph-composer/issues/179), a P3a-06 regression) and ZO-O7 ([#181](https://github.com/bldgtyp/ph-composer/issues/181)) ([rerun evidence](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md)). The #179 fix merged through #187; its host recheck ([evidence](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md#179-recheck-a09-and-uxr-paint-on-the-fixed-build)) passes A09, and UXR-PAINT failed on [#188](https://github.com/bldgtyp/ph-composer/issues/188) (the selection bar crowded the table at narrow widths). #188 was fixed through #190 and rechecked ([evidence](../../native-acceptance/evidence/phase-3a-rerun-2026-10-16.md#188-recheck-a09-uxr-solve-and-uxr-paint-on-the-fixed-build)): A09, UXR-SOLVE and UXR-PAINT pass. No acceptance case blocks closure; closing Phase 3a is Ed's call (ZO-O7 fails on #181 as a follow-up).
+STATUS: Complete 2026-10-17 and archived. P3a-01 to P3a-12 merged to main (PRs #135 to #171); S01 to S11 pass with ledger results and S12's integrated run is done; the earlier cases the Spaces changes screened were rerun, and the two regressions found (#179, #188) were fixed (#187, #190) and rechecked. ZO-O7 fails on #181, a follow-up. Not released.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#133](https://github.com/bldgtyp/ph-composer/issues/133)
 
@@ -47,20 +47,12 @@ interview record (2026-10-15). The PRD carries every amendment.
 
 ## Next step
 
-Ed authorized the packet on 2026-10-15: each stage on its own branch as one pull request, reviewed,
-merged on green CI, then the next. P3a-01 merged through PR #135. P3a-02 is too large for one
-coherent review, so it lands as two pull requests: slice A (the records, scan, metrics, findings,
-reads, settings and the Zones seams Spaces needs) and slice B (the operations and the walkthrough).
-Its host gate runs once, after slice B, and only then is the stage `Implemented on branch`.
-
-The stages keep the order the interview left, with four foundation stages ahead of the features
-that need them: groundwork (P3a-01), edit contexts and reconciliation (P3a-03), the Colour-by
-extension (P3a-05) and the Zone view contract (P3a-06). Phase 3b's thermal-bridge track waits on
-P3a-01 and P3a-05; see its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
+None. Ed closed Phase 3a on 2026-10-17 and the packet is archived. Open follow-ups are GitHub issues,
+listed under "Deferred out of this plan" below; Phase 3b's dependency on P3a-01 and P3a-05 is met.
 
 ## Blockers
 
-- None from the overlay spike: it passed on 2026-09-18 ([B2](../../archive/phase-00-foundation/evidence/spike-overlay.md)), and translucent
+- None from the overlay spike: it passed on 2026-09-18 ([B2](../phase-00-foundation/evidence/spike-overlay.md)), and translucent
   depth-tested fills work on the proving host, so the volume preview needs no edge fallback.
 - The foundation transplant landed without the deferred-reconciliation primitives, the
   edit-context writer or Volume protection this PRD expected from it. P3a-03 builds them.
@@ -76,7 +68,7 @@ P3a-01 and P3a-05; see its [STATUS](../phase-03b-thermal-bridges/STATUS.md).
 | The Spaces UI and UX discussion held and the screen stages revised | Closed 2026-10-15: D3a-16 and D3a-17; P3a-06 to P3a-08 restructured |
 | A phase issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Closed 2026-10-15: [#133](https://github.com/bldgtyp/ph-composer/issues/133) |
 | Ed authorizes implementation, stage by stage or for a run of stages | Closed 2026-10-15: the whole packet, one stage per pull request, merged on green CI |
-| Phase 2 review refactors that touch the same shared files are merged or parked | Closed: [shared-deep-freeze](../../archive/shared-deep-freeze.md) merged through PR #83 on 2026-10-07 |
+| Phase 2 review refactors that touch the same shared files are merged or parked | Closed: [shared-deep-freeze](../shared-deep-freeze.md) merged through PR #83 on 2026-10-07 |
 
 ## Stage ledger
 
@@ -97,12 +89,11 @@ only when all three are done and its evidence file exists.
 | [P3a-09](phases/p3a-09-space-modes-preview-labels-totals.md) | Modes, preview, labels and totals | Merged in three slices: A [#162](https://github.com/bldgtyp/ph-composer/pull/162) (`7e87397`), B [#163](https://github.com/bldgtyp/ph-composer/pull/163) (`a8930e4`), C [#164](https://github.com/bldgtyp/ph-composer/pull/164) (`e30528c`) | P3a-05, P3a-07, P3a-08 | #162, #163, #164 | `make ci` pass; `make ui-checks` pass | S09 pass in the 2026-10-16 rerun (ledger) | A strong: two passes, 3 P1 and 5 P2, all fixed; B ordinary: two passes, 4 P2, all fixed; C ordinary: two passes, 1 P2, fixed | [p3a-09](evidence/p3a-09-space-modes.md) | S09 |
 | [P3a-10](phases/p3a-10-spaces-export.md) | Spaces export | Merged in two slices: A [#165](https://github.com/bldgtyp/ph-composer/pull/165) (`558ab56`), B [#166](https://github.com/bldgtyp/ph-composer/pull/166) (`12b7fa7`) | P3a-04 | #165, #166 | `make ci` pass; `make ui-checks` pass; `make runtime-browser-check` pass | S10 pass in the 2026-10-16 rerun (ledger) | A strong: two passes, 1 P1 and 5 P2, all fixed; B strong: two passes, 1 P1 and 2 P2, all fixed | [p3a-10](evidence/p3a-10-spaces-export.md) | S10 |
 | [P3a-11](phases/p3a-11-height-from-solid.md) | Height from solid | Merged to main through PR [#167](https://github.com/bldgtyp/ph-composer/pull/167) (`f910452`) | P3a-07 | #167 | `make ci` pass; `make ui-checks` pass | S11 pass in the 2026-10-16 rerun (ledger), native Undo included | ordinary, UI: two passes, 3 P2 and 1 P3, all fixed | [p3a-11](evidence/p3a-11-height-from-solid.md) | S11 |
-| [P3a-12](phases/p3a-12-spaces-acceptance-and-handoff.md) | Spaces acceptance and handoff | In review: PR [#171](https://github.com/bldgtyp/ph-composer/pull/171); integrated run done, Ed's four items answered, acceptance rerun recorded in PR [#186](https://github.com/bldgtyp/ph-composer/pull/186); #179 and #188 fixed (#187, #190) and rechecked; closing is Ed's call | all | `feature/spaces-p3a-12` | `make ci` pass on Ruby 3.2.2 and 2.7.2 | S12 integrated run, 26.1.188 | none; consolidation | [p3a-12](evidence/p3a-12-acceptance.md) | S12 |
+| [P3a-12](phases/p3a-12-spaces-acceptance-and-handoff.md) | Spaces acceptance and handoff | Merged to main through PR [#171](https://github.com/bldgtyp/ph-composer/pull/171); integrated run done, Ed's four items answered, acceptance rerun recorded in PR [#186](https://github.com/bldgtyp/ph-composer/pull/186); #179 and #188 fixed (#187, #190) and rechecked; closing is Ed's call | all | `feature/spaces-p3a-12` | `make ci` pass on Ruby 3.2.2 and 2.7.2 | S12 integrated run, 26.1.188 | none; consolidation | [p3a-12](evidence/p3a-12-acceptance.md) | S12 |
 
-Milestones: M1 after P3a-04 (Spaces as data; native S03 and S04 rows observed 2026-10-16), M2 after P3a-08
-(authoring on screen; native S08 rows observed 2026-10-16), M3 after P3a-10 (exported and read back; S10 observed
-2026-10-16, including the copied Zone). None has a ledger result yet. Register ids S01 to S12 are in
-[ACCEPTANCE.md](ACCEPTANCE.md).
+Milestones: M1 after P3a-04 (Spaces as data), M2 after P3a-08 (authoring on screen) and M3 after P3a-10
+(exported and read back) are all met: S03, S04, S08 and S10 pass with ledger results in the 2026-10-16 rerun.
+Register ids S01 to S12 are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
 ## Decisions
 
@@ -138,20 +129,20 @@ Milestones: M1 after P3a-04 (Spaces as data; native S03 and S04 rows observed 20
 | Empty Room defect | R05 item 1 | P3a-01 | Merged through #135: refused as `object.unavailable` |
 | Section-read cycle refusal | R05 item 2 | none | Delivered on `main` by PR #122 (`registration.cycle`); P3a-01 corrects validation-and-export's STATUS |
 | Results from runs that cannot publish | R05 item 3 | P3a-10 | Merged through #166 (D3a-10) |
-| Optional attaching section rule | R05 item 4 | Moved to Phase 3b, [P3b-08](../phase-03b-thermal-bridges/phases/p3b-08-thermal-bridge-export.md), which delivers the first optional attaching section (D3b-20) | Moved |
+| Optional attaching section rule | R05 item 4 | Moved to Phase 3b, [P3b-08](../../features/phase-03b-thermal-bridges/phases/p3b-08-thermal-bridge-export.md), which delivers the first optional attaching section (D3b-20) | Moved |
 | Restore Zone reads Space stamps | zones Q14 | P3a-04 | Implemented in slice B1 |
 | Where Zones appear, re-ruled | zones Q13 | none | Settled 2026-10-15 by D3a-16: every view of the Zones tab shows the Zone rows |
 | Unit-switch repaint cost on a large table | units U1-F1 | P3a-07, measure first | Browser preview median 815 ms at 300 Spaces (P3a-12); host measurement in #154 |
-| Ruby `volume` and `airflow` quantities | [units packet](../cross-phase/units/STATUS.md), standalone extraction confirmed 2026-10-07 | none | Merged through PR #84. Nothing left for Spaces but to use them |
+| Ruby `volume` and `airflow` quantities | [units packet](../../features/cross-phase/units/STATUS.md), standalone extraction confirmed 2026-10-07 | none | Merged through PR #84. Nothing left for Spaces but to use them |
 
 ## Deferred out of this plan
 
 | Item | Where it waits |
 | --- | --- |
-| "Through PHX" and METr room checks | [metr-export](../unscheduled/metr-export/README.md) |
+| "Through PHX" and METr room checks | [metr-export](../../features/unscheduled/metr-export/README.md) |
 | Height drag handle (Q6) | Spaces PRD, non-goals |
-| Toolbar buttons for Classify, Place and Mark floor | [zones-entry-points](../unscheduled/zones-entry-points/README.md) E1 |
-| Airflow balance by ventilator; by-unit and by-system modes; the Ventilation and Heat pump assignment views, or Systems tabs listing the Zones each unit serves | [equipment](../phase-04-mechanical/equipment/README.md) |
+| Toolbar buttons for Classify, Place and Mark floor | [zones-entry-points](../../features/unscheduled/zones-entry-points/README.md) E1 |
+| Airflow balance by ventilator; by-unit and by-system modes; the Ventilation and Heat pump assignment views, or Systems tabs listing the Zones each unit serves | [equipment](../../features/phase-04-mechanical/equipment/README.md) |
 | Occupancy, Electric loads and appliances, Lighting and Hot water Zone views | The Zone loads packet, not yet drafted; P3a-06's contract admits a view with no child rows |
 | Inherited airflow values from Zone loads | The Zone loads packet, not yet drafted |
 | One shared duplicate-identity contract across Zones, Windows and Spaces | [#145](https://github.com/bldgtyp/ph-composer/issues/145) (D3a-3), recorded as P3a-04 closed |
@@ -179,7 +170,7 @@ Milestones: M1 after P3a-04 (Spaces as data; native S03 and S04 rows observed 20
 ## Verification
 
 No Spaces stage verification. The standalone Ruby units slice is tracked in the
-[units execution receipt](../cross-phase/units/STATUS.md#current-execution-receipt). It does not
+[units execution receipt](../../features/cross-phase/units/STATUS.md#current-execution-receipt). It does not
 close S01 or the Spaces entry gates. The findings in DECISIONS Part 1 were read from source
 and not reproduced.
 
@@ -226,3 +217,4 @@ and not reproduced.
 | 2026-10-16 | Acceptance rerun on `main` at `e6059fa9` (RBZ `28bac2c8`), with capture baselines, observe receipts and ledger results: S01 to S11 pass (S05 and S06 in synthetic composition); 30 of the 31 screened earlier cases rerun (R05 superseded), all passing except A09 and UXR-PAINT (#179) and ZO-O7 (#181); normal restoration verified. Follow-ups #174 to #185 filed. |
 | 2026-10-16 | #179 fixed through #187 (`9781190f`, RBZ `89afe2ef`) and rechecked on the host: A09 and UXR-PAINT rerun in full with capture baselines, receipts and ledger results; the other 13 screened cases unaffected by construction. A09 passes. UXR-PAINT passes except the narrow clause, which fails on #188 (the selection bar overruns the table; at 420 px a result of the fix's wrapping control row, at 360 x 520 pre-existing). Normal restoration verified. |
 | 2026-10-17 | #188 fixed through #190 (`3db8f281`, RBZ `11b5f00f`): the Zones table fits its pane, and the selection bar docks beneath the table where floating would cover its header (Ed's choice). Host recheck with capture baselines, receipts and ledger results: A09, UXR-SOLVE and UXR-PAINT pass; the other 14 screened cases unaffected by construction (ZO-O7 keeps its fail on #181). Normal restoration verified. Follow-up #191 (S07's dependency paths). |
+| 2026-10-17 | Ed closed Phase 3a; packet archived as `phase-03a-spaces` (issue #133 closed). The archive move rewrote one link in `context/SKETCHUP_HOST_BEHAVIOR.md`, which makes the ledger screen A02, A05 and R01 to R04 stale; a link path changes nothing they assert (over-broad pattern, #178). |

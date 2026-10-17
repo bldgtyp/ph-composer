@@ -47,7 +47,7 @@ work mutates", "Join the user's Undo step"), already used by Zone name restorati
 
 Child-copy direction, D-6: Window Units become new instances of their existing Window Type under
 the Windows protocol. Spaces, when implemented, duplicate as independent authored instances with
-independent children. The [Spaces packet](../../features/phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13)
+independent children. The [Spaces packet](../phase-03a-spaces/DECISIONS.md#confirmed-copy-decision-d3a-13)
 records the future integration requirement. Neither owner is bypassed by Zone repair.
 
 Limits that stay: a Zone inside a ComponentInstance is never made unique automatically, because

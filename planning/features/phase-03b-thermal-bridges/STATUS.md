@@ -20,8 +20,8 @@ question the same day; the PRD and `context/UBIQUITOUS_LANGUAGE.md` carry the an
 ## Next step
 
 Ed says go on P3b-01. The track can start before Spaces is far along, but P3b-03 and P3b-08 wait
-for [P3a-01](../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md), and P3b-06 for
-[P3a-05](../phase-03a-spaces/phases/p3a-05-colour-by-derived-geometry-and-readouts.md).
+for [P3a-01](../../archive/phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md), and P3b-06 for
+[P3a-05](../../archive/phase-03a-spaces/phases/p3a-05-colour-by-derived-geometry-and-readouts.md).
 
 ## Entry gates
 
@@ -30,7 +30,7 @@ for [P3a-01](../phase-03a-spaces/phases/p3a-01-contracts-and-groundwork.md), and
 | Ed answers PRD Q1 to Q11 (the interview) and D3b-01 to D3b-21 | Done 2026-10-03 |
 | A Phase 3 issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Open. Create on Ed's say |
 | Ed authorizes implementation, stage by stage or for a run of stages | Open |
-| P3a-01 merged before P3b-03 and P3b-08 start; P3a-05 merged before P3b-06 starts | Open |
+| P3a-01 merged before P3b-03 and P3b-08 start; P3a-05 merged before P3b-06 starts | Closed: P3a-01 merged through PR #135, P3a-05 through PRs #147 and #148; Phase 3a closed 2026-10-17 |
 
 ## Stage ledger
 
@@ -60,7 +60,7 @@ that packet; this ledger owns when they run.
 
 | Stage | Scope | State | Picked up by | Note |
 | --- | --- | --- | --- | --- |
-| G-01 | Confirm the Edge facts (`vertex_ids`, `face_ids`, visibility), per-segment versus whole-run filtering, legend counting through `member`, line width | Deferred | P3b-01 | Document stage. G-03 proposes a `ColourBy::LineEntry` primitive, while D3b-11 draws Edges as P3a-05 `derived` segments with a stroke weight. One draw path, not two: since 2026-10-15 the choice is made once, in [P3a-05](../phase-03a-spaces/phases/p3a-05-colour-by-derived-geometry-and-readouts.md) step 1's design note (D3a-5), with thermal bridges as a named user; G-01 adopts it |
+| G-01 | Confirm the Edge facts (`vertex_ids`, `face_ids`, visibility), per-segment versus whole-run filtering, legend counting through `member`, line width | Deferred | P3b-01 | Document stage. G-03 proposes a `ColourBy::LineEntry` primitive, while D3b-11 draws Edges as P3a-05 `derived` segments with a stroke weight. One draw path, not two: since 2026-10-15 the choice is made once, in [P3a-05](../../archive/phase-03a-spaces/phases/p3a-05-colour-by-derived-geometry-and-readouts.md) step 1's design note (D3a-5), with thermal bridges as a named user; G-01 adopts it |
 | G-03 | `ColourBy::LineEntry`, the service branch, the overlay line pass | Superseded 2026-10-15 | P3b-06, after G-01 | Not built: P3a-05's design note settled one line primitive, `derived` segments on an ordinary entry (`context/EXTENSIBILITY.md`, "Colour-by derived geometry"). An Edge entry carries the Edge as `entity` and its segment in `derived`; P3b-06 adds only a mode-level stroke weight |
 | G-04 | Thermal-bridge adoption: native drawing proof, export of runs, the 50,000 Edge measurement | Deferred | P3b-06 and P3b-08 | Closes F06 once G-02 and G-03 both have this adopter in use |
 

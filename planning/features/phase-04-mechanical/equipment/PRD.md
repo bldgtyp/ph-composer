@@ -49,7 +49,7 @@ Zone            gains  ventilator_id, hot_water_system_id,
                        heat_pump_ids[], heater_ids[], pump_ids[], fan_ids[]
 ```
 
-Assignment is stored on the Zone as ids. [spaces](../../phase-03a-spaces/PRD.md) already fixed that
+Assignment is stored on the Zone as ids. [spaces](../../../archive/phase-03a-spaces/PRD.md) already fixed that
 equipment belongs to the Zone and a Space inherits it. Appliances are the exception, see
 family 7.
 

@@ -428,7 +428,7 @@ unchanged. Where it is narrower, the horizontal overflow moves from the tab into
 makes a claim about the Zones tab at a narrow panel. ZO-H1's narrow dialog sizes belong to the Zone options
 dialog, which opens in the top layer through `showModal` and is sized by the viewport, not by the overview
 grid. The manifest change records the new stylesheet hashes and nothing else.
-[P3a-01's recheck](../../features/phase-03a-spaces/evidence/p3a-01-groundwork.md) is the precedent. No new ledger
+[P3a-01's recheck](../../archive/phase-03a-spaces/evidence/p3a-01-groundwork.md) is the precedent. No new ledger
 rows are written for the 13, so the ledger keeps screening them stale; this section is their disposition.
 
 **A09: pass.** Fresh copies of `envelope/reference-assigned.skp`, with the panel clauses in one process and the

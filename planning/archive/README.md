@@ -1,6 +1,6 @@
 # Planning archive
 
-DATE: 2026-10-15
+DATE: 2026-10-17
 STATUS: Index of completed and superseded planning work, newest first.
 AUTHOR: Ed May, BLDGTYP
 
@@ -9,6 +9,7 @@ reached.
 
 | Slug | Date | Outcome | Issue or PR |
 | --- | --- | --- | --- |
+| [phase-03a-spaces](phase-03a-spaces/README.md) | 2026-10-17 | Spaces: Space records with protected Volumes and Floor Segments, edit contexts and reconciliation, copies and Move Space to Zone, Colour-by derived geometry, Zone views with the Spaces view, Mark floor and Create Space, the four Spaces modes, Spaces export and Height from solid, in twelve stages merged through PRs #135 to #171. S01 to S11 pass with ledger results on SketchUp 26.1.188; the acceptance rerun's two regressions (#179, #188) fixed and rechecked; ZO-O7 open on #181. Not released | [#133](https://github.com/bldgtyp/ph-composer/issues/133) |
 | [assemblies-layer-drag-reorder](assemblies-layer-drag-reorder/README.md) | 2026-10-15 | Drag a whole Assembly Layer by a six-dot grip beside its gear to any position: one new `layers.reorder` action, one native Undo step, a ghost and drop line with the drawing still, and nothing written on Escape, blur, a lost release, an outside release, a repaint or disposal. Offline gates, the Playwright drag check and native case `E18` passed; reviewed by gpt-6-astra (three findings fixed, second pass clean) | [PR #129](https://github.com/bldgtyp/ph-composer/pull/129); [#128](https://github.com/bldgtyp/ph-composer/issues/128) |
 | [code-review](code-review/README.md) | 2026-10-14 | The Ruby and JavaScript architecture and extensibility review against `cfe01a6`: 17 findings, architecture diagrams, the Windows boundary rationale and baseline evidence. Every finding resolved by [code-review-refactoring](code-review-refactoring/README.md); F06's last geometry stages continue in `features/cross-phase/geometry-contribution-contracts/` | PRs [#99](https://github.com/bldgtyp/ph-composer/pull/99) to [#126](https://github.com/bldgtyp/ph-composer/pull/126) |
 | [copied-zone-windows](copied-zone-windows/README.md) | 2026-10-14 | Product request: a copied Zone's Window Units get their own ids in the same follow-up and Undo step as the Zone. Delivered by [zone-child-lifecycle](zone-child-lifecycle/PLAN.md) | [#113](https://github.com/bldgtyp/ph-composer/issues/113) |

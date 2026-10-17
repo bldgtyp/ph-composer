@@ -17,5 +17,5 @@ In: Duct Type records, a Ducting group linked to a Ventilator, direction, measur
 schedule, a Colour-by mode, export.
 
 Out: duct sizing, pressure drop, routing, room-side distribution ducts, Space airflows (those
-belong to [spaces](../../phase-03a-spaces/README.md)), the Ventilator record itself
+belong to [spaces](../../../archive/phase-03a-spaces/README.md)), the Ventilator record itself
 ([equipment](../equipment/README.md)).

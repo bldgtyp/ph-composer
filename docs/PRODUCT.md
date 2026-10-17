@@ -14,7 +14,7 @@ assignment, local libraries, Window Type records, the Builder and Unit operation
 and accepted on the Phase 2 feature branch for SketchUp 26.1.188 on macOS. Normal export
 includes authored opaque constructions and Apertures. File libraries, Place, Schedule and
 Window Type Colour-by pass their named current-host requirements. Connection libraries are Phase 5. Spaces is
-implemented and has been run end to end on SketchUp 26.1.188 on macOS; its acceptance is still being recorded. Thermal bridges remain proposed.
+implemented and accepted on SketchUp 26.1.188 on macOS. Thermal bridges remain proposed.
 
 ## The working environment
 

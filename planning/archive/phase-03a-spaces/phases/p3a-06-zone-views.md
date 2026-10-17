@@ -15,7 +15,7 @@ unchanged in behavior. It adds no Spaces view; P3a-07 is that view's first use o
 
 Behavior owner: [DECISIONS](../DECISIONS.md), "UI and UX discussion" (D3a-16), and the
 [mockup](../mockups/README.md). The Faces view's behavior is the accepted Zones / Faces table:
-[zones-table-first](../../../archive/zones-table-first/README.md) and the ui-polish reference's
+[zones-table-first](../../zones-table-first/README.md) and the ui-polish reference's
 Zones / Faces entries. Load the UI polish and architecture review skills first. Names:
 [CONTRACTS](../CONTRACTS.md) section 5, H10 and H18.
 
