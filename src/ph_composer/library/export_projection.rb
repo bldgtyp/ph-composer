@@ -8,41 +8,32 @@ module PhComposer
     # Detached, adapter-owned semantic projection. Record metadata is reviewed by field name only;
     # neither extension payloads nor a provider's transport configuration enter a library file.
     module ExportProjection
+      # Which local records an export reads: `scope` is "all" or "selected", `records` the selected ones,
+      # `kinds` the wire kinds written.
+      Selection = Struct.new(:scope, :records, :kinds, keyword_init: true)
+      # What one build collects: rows by wire kind, record origins by wire kind and id, and omissions.
+      Collected = Struct.new(:rows, :origins, :omissions, keyword_init: true)
+
       module_function
 
       def build(request)
-        scope, selected, kinds = scope(request)
+        selection = selection(request)
+        kinds = selection.kinds
         declarations = request.registry.library_kinds.values
-        rows = kinds.sort.to_h { |kind| [kind, []] }
-        origins = {}
-        omissions = []
-        targets(request, scope, selected).each do |record_kind, id|
+        collected = Collected.new(:rows => kinds.sort.to_h { |kind| [kind, []] }, :origins => {}, :omissions => [])
+        targets(request, selection.scope, selection.records).each do |record_kind, id|
           declaration = declarations.find { |row| row.record_kind == record_kind }
           unless declaration
-            omissions << omission(record_kind, id, [], "unsupported_kind")
+            collected.omissions << omission(record_kind, id, [], "unsupported_kind")
             next
           end
           next unless kinds.include?(declaration.adapter.wire_kind)
 
-          record = read_record(request, record_kind, id)
-          row = reverse(declaration.adapter, record)
-          # A row a reader would skip for its label is reported, not written.
-          unless Admission.label_for(declaration.adapter, mapped_values(declaration.adapter, row))
-            omissions << omission(record_kind, id, [], "label_unavailable")
-            next
-          end
-          rows.fetch(declaration.adapter.wire_kind) << row
-          origin = origin(record["source"], declaration.adapter.wire_kind)
-          # A recorded origin carries the source attribution, so `source` is omitted only without one.
-          fields = record.keys - declaration.adapter.wire_schema.fetch("properties").keys - ["schema_version"]
-          fields -= ["source"] if origin
-          omissions << omission(record_kind, id, fields.sort, "fields_not_in_wire_schema") unless fields.empty?
-          if origin
-            (origins[declaration.adapter.wire_kind] ||= {})[id] = origin
-          elsif record["source"].is_a?(Hash) && record["source"]["kind"] == "library"
-            omissions << omission(record_kind, id, ["record_origins"], "origin_identity_unavailable")
-          end
+          collect(request, declaration, record_kind, id, collected)
         end
+        rows = collected.rows
+        origins = collected.origins
+        omissions = collected.omissions
         if rows.values.sum(&:length) > FileProvider::MAX_ROWS
           raise Error.new("library.catalog_too_many_rows", "The library export exceeds the 20,000 row limit.")
         end
@@ -57,7 +48,30 @@ module PhComposer
         projection
       end
 
-      def scope(request)
+      # One local record's library row, its origin, and the omissions that say what the file leaves out.
+      def collect(request, declaration, record_kind, id, collected)
+        adapter = declaration.adapter
+        record = read_record(request, record_kind, id)
+        row = reverse(adapter, record)
+        # A row a reader would skip for its label is reported, not written.
+        unless Admission.label_for(adapter, mapped_values(adapter, row))
+          collected.omissions << omission(record_kind, id, [], "label_unavailable")
+          return
+        end
+        collected.rows.fetch(adapter.wire_kind) << row
+        origin = origin(record["source"], adapter.wire_kind)
+        # A recorded origin carries the source attribution, so `source` is omitted only without one.
+        fields = record.keys - adapter.wire_schema.fetch("properties").keys - ["schema_version"]
+        fields -= ["source"] if origin
+        collected.omissions << omission(record_kind, id, fields.sort, "fields_not_in_wire_schema") unless fields.empty?
+        if origin
+          (collected.origins[adapter.wire_kind] ||= {})[id] = origin
+        elsif record["source"].is_a?(Hash) && record["source"]["kind"] == "library"
+          collected.omissions << omission(record_kind, id, ["record_origins"], "origin_identity_unavailable")
+        end
+      end
+
+      def selection(request)
         params = request.params
         scope = params.fetch("scope", "all")
         selected = params.fetch("records", [])
@@ -72,7 +86,7 @@ module PhComposer
           raise Error.new("library.kind_unavailable", "An export kind has no installed library adapter.")
         end
 
-        [scope, selected, kinds]
+        Selection.new(:scope => scope, :records => selected, :kinds => kinds)
       end
 
       def targets(request, scope, selected)
@@ -162,7 +176,8 @@ module PhComposer
         end
         { "kinds" => kinds, "omissions" => omissions }
       end
-      private_class_method :scope, :targets, :read_record, :reverse, :mapped_values, :origin, :safe_identity?, :omission
+      private_class_method :selection, :collect, :targets, :read_record, :reverse, :mapped_values, :origin,
+                           :safe_identity?, :omission
     end
   end
 end

@@ -9,15 +9,20 @@ module PhComposer
     # Review resolves detached values. Explicit choices call only the record owner's registered
     # callbacks, with copy and assignment sharing the dispatcher's single guarded proposal.
     module Coordinator
+      # What a copy reviews: the kind's declaration, the catalog entry and row, the row mapped to local
+      # values, its source identity, and how it resolves against the local records.
+      Review = Struct.new(:declaration, :entry, :row, :mapped, :source, :resolution, keyword_init: true)
+      FINGERPRINT = /\A[0-9a-f]{64}\z/.freeze
+
       module_function
 
       def inspect_row(request)
         declaration, entry, row = selected(request)
         mapped = map(declaration.adapter, row.fetch("snapshot"))
-        source = identity(request, row)
+        source = source_identity(provider(request), row, request.params.fetch("kind"))
         locals = CallbackInvoker.call(request, declaration, declaration.adapter.local_read, {}, :readonly => true)
-        resolution = resolve(declaration.adapter, source, mapped, locals)
-        [declaration, entry, row, mapped, source, resolution]
+        Review.new(:declaration => declaration, :entry => entry, :row => row, :mapped => mapped, :source => source,
+                   :resolution => resolve(declaration.adapter, source, mapped, locals))
       end
 
       # Compare incoming semantic content with the stored attribution, not with local edits.
@@ -25,16 +30,12 @@ module PhComposer
       def resolve(adapter, source, mapped, locals)
         result = Resolver.resolve(:source => source, :mapped => mapped, :label => label(adapter, mapped),
                                   :locals => locals.map { |row| labelled(adapter, row) })
-        fingerprint = adapter.fingerprint.call(DeepCopy.call(mapped))
-        unless fingerprint.is_a?(String) && /\A[0-9a-f]{64}\z/.match?(fingerprint)
-          raise Error.new("library.adapter_invalid", "The kind adapter returned an invalid semantic fingerprint.")
-        end
-
+        fingerprint = semantic_fingerprint(adapter, mapped)
         result.fetch("candidates").each do |candidate|
           attribution = locals.find { |row| row.fetch("id") == candidate.fetch("id") }["source"]
           compatible = attribution.is_a?(Hash) && attribution["kind"] == "library" &&
                        attribution["fingerprint_version"] == adapter.fingerprint_version &&
-                       attribution["fingerprint"].is_a?(String) && /\A[0-9a-f]{64}\z/.match?(attribution["fingerprint"])
+                       attribution["fingerprint"].is_a?(String) && FINGERPRINT.match?(attribution["fingerprint"])
           candidate["comparison_available"] = !!compatible
           candidate["source_changed"] = compatible ? attribution["fingerprint"] != fingerprint : nil
         end
@@ -54,7 +55,9 @@ module PhComposer
       private_class_method :label, :labelled
 
       def copy(request, proposal)
-        declaration, entry, row, mapped, identity, resolution = inspect_row(request)
+        review = inspect_row(request)
+        declaration = review.declaration
+        resolution = review.resolution
         choice = request.params.fetch("choice")
         result = { "resolution" => resolution, "local_id" => nil, "assigned" => false }
         id = local_id(request.params["local_id"], resolution)
@@ -64,9 +67,8 @@ module PhComposer
             raise Error.new("library.review_required", "Resolve the existing local candidates before copying.")
           end
 
-          source = attribution(request, declaration.adapter, entry, row, identity, mapped)
           value = CallbackInvoker.call(request, declaration, declaration.adapter.create,
-                                       { "values" => mapped.merge("source" => source) })
+                                       { "values" => review.mapped.merge("source" => attribution(request, review)) })
           id = value.fetch("id")
         when "keep_local"
           raise Error.new("library.local_choice_required", "Choose an existing local record.") unless id
@@ -78,9 +80,8 @@ module PhComposer
             raise Error.new("params.invalid", "Replacement needs the reviewed local values.")
           end
 
-          source = attribution(request, declaration.adapter, entry, row, identity, mapped)
           CallbackInvoker.call(request, declaration, declaration.adapter.replace,
-                               { "id" => id, "values" => mapped.merge("source" => source),
+                               { "id" => id, "values" => review.mapped.merge("source" => attribution(request, review)),
                                  "expected_values" => expected })
         else
           raise Error.new("params.invalid", "Choose an explicit library copy action.")
@@ -128,30 +129,42 @@ module PhComposer
         [declaration, entry, rows.first]
       end
 
+      # A catalog snapshot mapped to local values by the kind's adapter, refused when the adapter returns
+      # anything outside its declared mapped schema.
       def map(adapter, snapshot)
         mapped = adapter.map.call(DeepCopy.call(snapshot))
         validate!(mapped, adapter.mapped_schema)
         DeepCopy.call(mapped)
       end
 
-      def identity(request, row)
-        provider = State.for(request.session).provider(request.params.fetch("provider_id"), request.registry)
+      # Where a catalog row comes from, as a copied record's attribution names it.
+      def source_identity(provider, row, record_kind)
         { "provider_kind" => provider.provider_kind, "library_id" => row.fetch("library_id"),
-          "record_kind" => request.params.fetch("kind"), "record_id" => row.fetch("record_id") }
+          "record_kind" => record_kind, "record_id" => row.fetch("record_id") }
       end
 
-      def attribution(request, adapter, entry, row, identity, mapped)
-        fingerprint = adapter.fingerprint.call(DeepCopy.call(mapped))
-        unless fingerprint.is_a?(String) && /\A[0-9a-f]{64}\z/.match?(fingerprint)
-          raise Error.new("library.adapter_invalid", "The kind adapter returned an invalid semantic fingerprint.")
-        end
+      def provider(request)
+        State.for(request.session).provider(request.params.fetch("provider_id"), request.registry)
+      end
 
-        keys = adapter.mapped_schema.fetch("properties").keys
-        snapshot = row.fetch("snapshot").slice(*keys)
+      def semantic_fingerprint(adapter, mapped)
+        fingerprint = adapter.fingerprint.call(DeepCopy.call(mapped))
+        return fingerprint if fingerprint.is_a?(String) && FINGERPRINT.match?(fingerprint)
+
+        raise Error.new("library.adapter_invalid", "The kind adapter returned an invalid semantic fingerprint.")
+      end
+
+      # The `source` a copied record carries: its identity, the semantic fingerprint and the snapshot fields
+      # the adapter maps.
+      def attribution(request, review)
+        adapter = review.declaration.adapter
+        identity = review.source
+        # The fingerprint is checked before the copy time is taken, so a refused copy caches no time.
+        fingerprint = semantic_fingerprint(adapter, review.mapped)
+        snapshot = review.row.fetch("snapshot").slice(*adapter.mapped_schema.fetch("properties").keys)
+        copied_at = State.for(request.session).copy_time(request.revision, [review.entry.fetch("generation"), identity])
         identity.merge("kind" => "library", "fingerprint" => fingerprint,
-                       "fingerprint_version" => adapter.fingerprint_version,
-                       "copied_at" => State.for(request.session).copy_time(request.revision, [entry.fetch("generation"),
-                                                                                              identity]),
+                       "fingerprint_version" => adapter.fingerprint_version, "copied_at" => copied_at,
                        "snapshot" => DeepCopy.call(snapshot))
       end
 
@@ -169,7 +182,8 @@ module PhComposer
 
         raise Error.new("library.adapter_invalid", "The kind adapter returned invalid mapped values.")
       end
-      private_class_method :reviewed_values?, :assign, :selected, :map, :identity, :attribution, :local_id, :validate!
+      private_class_method :reviewed_values?, :assign, :selected, :provider, :semantic_fingerprint, :attribution,
+                           :local_id, :validate!
     end
   end
 end

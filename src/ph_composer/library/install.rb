@@ -141,15 +141,8 @@ module PhComposer
       locals = CallbackInvoker.call(request, declaration, declaration.adapter.local_read, {}, :readonly => true)
       provider = State.for(request.session).provider(request.params.fetch("provider_id"), request.registry)
       rows = page.fetch("rows").map do |row|
-        mapped = declaration.adapter.map.call(DeepCopy.call(row.fetch("snapshot")))
-        valid = JsonValue.problems(mapped).empty? &&
-                JsonSchema.validate(mapped, declaration.adapter.mapped_schema).empty?
-        unless valid
-          raise Error.new("library.adapter_invalid", "The kind adapter returned invalid mapped values.")
-        end
-
-        source = { "provider_kind" => provider.provider_kind, "library_id" => row.fetch("library_id"),
-                   "record_kind" => request.params.fetch("kind"), "record_id" => row.fetch("record_id") }
+        mapped = Coordinator.map(declaration.adapter, row.fetch("snapshot"))
+        source = Coordinator.source_identity(provider, row, request.params.fetch("kind"))
         row.merge("resolution" => Coordinator.resolve(declaration.adapter, source, mapped, locals))
       end
       page.merge("rows" => rows)
