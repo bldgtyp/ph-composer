@@ -34,13 +34,13 @@ module PhComposer
       # choice is remembered.
       def colour_by_mode
         stored = Sketchup.read_default(SECTION, "colour_by_mode", nil)
-        stored.is_a?(String) && Registry::ID_PATTERN.match?(stored) ? stored : nil
+        valid_id?(stored) ? stored : nil
       end
 
       # The view each host table last showed, by host id; a host never switched is absent and shows its first.
       def table_views
         read_map("table_views") do |host, view|
-          Registry::ID_PATTERN.match?(host.to_s) && view.is_a?(String) && Registry::ID_PATTERN.match?(view)
+          valid_id?(host.to_s) && valid_id?(view)
         end
       end
 
@@ -66,8 +66,7 @@ module PhComposer
         when "table_view"
           write_table_view(value, scope)
         when "colour_by_mode"
-          raise UserError, "That Colour-by mode name is not valid." unless value.is_a?(String) &&
-                                                                           Registry::ID_PATTERN.match?(value)
+          raise UserError, "That Colour-by mode name is not valid." unless valid_id?(value)
 
           Sketchup.write_default(SECTION, "colour_by_mode", value)
         else
@@ -90,15 +89,20 @@ module PhComposer
 
       private
 
+      # A dotted lowercase name, as registered names are.
+      def valid_id?(value)
+        value.is_a?(String) && Registry::ID_PATTERN.match?(value)
+      end
+
       def write_dimension_format(value, scope, system)
         raise UserError, "Choose SI or IP for the dimension format." unless UNIT_SYSTEMS.include?(system)
-        raise UserError, "The dimension scope name is not valid." unless scope.is_a?(String) &&
-                                                                         Registry::ID_PATTERN.match?(scope)
+        raise UserError, "The dimension scope name is not valid." unless valid_id?(scope)
         raise UserError, "Choose a valid #{system} dimension format." unless DIMENSION_FORMATS[system].include?(value)
 
         formats = dimension_formats
-        raise UserError, "Too many dimension formats are remembered." if !formats.key?(scope) &&
-                                                                         formats.length >= MAX_SCOPES
+        if !formats.key?(scope) && formats.length >= MAX_SCOPES
+          raise UserError, "Too many dimension formats are remembered."
+        end
 
         formats[scope] = DEFAULT_DIMENSION_FORMAT.merge(formats.fetch(scope, {})).merge(system => value)
         # SketchUp 26.1 stores a string containing a double quote but reads it back as nil, so the JSON
@@ -107,8 +111,8 @@ module PhComposer
       end
 
       def write_table_view(value, scope)
-        raise UserError, "The table name is not valid." unless scope.is_a?(String) && Registry::ID_PATTERN.match?(scope)
-        raise UserError, "The view name is not valid." unless value.is_a?(String) && Registry::ID_PATTERN.match?(value)
+        raise UserError, "The table name is not valid." unless valid_id?(scope)
+        raise UserError, "The view name is not valid." unless valid_id?(value)
 
         views = table_views
         raise UserError, "Too many table views are remembered." if !views.key?(scope) && views.length >= MAX_SCOPES

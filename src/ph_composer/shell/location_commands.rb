@@ -28,6 +28,8 @@ module PhComposer
                           "with the setup grant can add it once by location id."
     }.freeze
     STORE_REFUSES = %w[location.setup_unavailable location.setup_unreadable].freeze
+    # What renaming or revoking one location refuses: the store's refusals and a gone or used id.
+    CHANGE_REFUSES = (STORE_REFUSES + %w[location.revoked location.unknown location.used]).freeze
     MENU_LABELS = { "approve_destination" => "Approve Export Destination…", "approve_file" => "Approve Library File…",
                     "approve_folder" => "Approve Library Folder…" }.freeze
 
@@ -92,15 +94,14 @@ module PhComposer
       example = "location_AAAAAAAAAAAA"
       renamed = { "id" => example, "label" => "Project library" }
       feature.setup_command("#{PREFIX}.rename", :description => "Rename an approved location.",
-                                                :refuses => STORE_REFUSES + %w[location.revoked location.unknown
-                                                                               location.used],
+                                                :refuses => CHANGE_REFUSES,
                                                 :params => object({ "id" => id, "label" => label }), :result => row,
                                                 :examples => [renamed]) do |request|
         ApprovedLocations.rename(request.params.fetch("id"), request.params.fetch("label"))
       end
       feature.setup_command("#{PREFIX}.revoke",
                             :description => "Revoke an approved location. It stays refused as location.revoked.",
-                            :refuses => STORE_REFUSES + %w[location.revoked location.unknown location.used],
+                            :refuses => CHANGE_REFUSES,
                             :params => object({ "id" => id }), :result => locations,
                             :examples => [{ "id" => example }]) do |request|
         ApprovedLocations.revoke(request.params.fetch("id"))
