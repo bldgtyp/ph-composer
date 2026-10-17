@@ -110,9 +110,7 @@ module PhComposer
 
         def activate
           @active = true
-          @pressed = false
-          @collected = nil
-          @intent = nil
+          reset_gesture
           @hover = nil
           force_colour_by
           show_instructions
@@ -210,9 +208,7 @@ module PhComposer
         # with it rather than being left selected against a session that no longer exists, and it
         # gives up the Colour-by mode it forced before it does.
         def detach
-          @collected = nil
-          @intent = nil
-          @pressed = false
+          reset_gesture
           @hover = nil
           return unless @active
 
@@ -247,9 +243,7 @@ module PhComposer
 
           occurrence = Zones::Occurrences.occurrence_for_path(path)
           unless occurrence
-            @collected = nil
-            @intent = nil
-            @pressed = false
+            reset_gesture
             announce(OUTSIDE_ZONE, :warning)
             return
           end
@@ -306,9 +300,7 @@ module PhComposer
           collected = @collected
           intent = @intent
           revision = @revision
-          @collected = nil
-          @intent = nil
-          @pressed = false
+          reset_gesture
           return if collected.nil? || collected.empty?
 
           if intent.empty?
@@ -349,11 +341,16 @@ module PhComposer
           @sequence += 1
         end
 
-        def cancel_gesture
-          pending = !@collected.nil?
+        # The pending gesture's collected Faces, frozen palette and button state; the palette itself stays.
+        def reset_gesture
           @collected = nil
           @intent = nil
           @pressed = false
+        end
+
+        def cancel_gesture
+          pending = !@collected.nil?
+          reset_gesture
           announce(CANCELLED, :warning) if pending
         end
 
@@ -444,9 +441,7 @@ module PhComposer
         # again on the next pointer move, and a notice per move buries the viewport.
         def report_exception(error, view)
           pending = !@collected.nil?
-          @collected = nil
-          @intent = nil
-          @pressed = false
+          reset_gesture
           @hover = nil
           Diagnostics.exception("classify_tool", error)
           announce("The Classify tool could not complete that. #{Outcome::NOTHING_WRITTEN}", :error) if pending

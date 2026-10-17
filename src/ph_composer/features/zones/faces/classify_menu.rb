@@ -18,40 +18,30 @@ module PhComposer
         module_function
 
         def install(feature)
+          classifiable = ->(read) { classifiable?(read.session) }
           FIELDS.each do |field, spec|
-            spec.fetch("values").each { |value| declare(feature, field, value, spec) }
+            spec.fetch("values").each { |value| declare(feature, field, value, spec, classifiable) }
           end
-          feature.menu_entries("#{PREFIX}.assembly_menu", :menu => MENU,
-                                                          :available => ->(read) {
-                                                                          classifiable?(read.session)
-                                                                        }) do |read|
+          feature.menu_entries("#{PREFIX}.assembly_menu", :menu => MENU, :available => classifiable) do |read|
             Selection.client(read.session).assembly_entries
           end
-          feature.menu_entries("#{PREFIX}.attached_choices", :menu => MENU,
-                                                             :available => ->(read) {
-                                                                             classifiable?(read.session)
-                                                                           }) do |read|
+          feature.menu_entries("#{PREFIX}.attached_choices", :menu => MENU, :available => classifiable) do |read|
             Selection.client(read.session).attached_entries
           end
           feature.menu_item("#{PREFIX}.new_attached_zone_menu", :label => "New attached zone…", :menu => MENU,
-                                                                :available => ->(read) {
-                                                                                classifiable?(read.session)
-                                                                              }) do |session|
+                                                                :available => classifiable) do |session|
             Selection.client(session).open_assignment
           end
-          feature.menu_entries("#{PREFIX}.classify_off", :menu => MENU,
-                                                         :available => ->(read) {
-                                                                         Faces.classify_tool(read.session).active?
-                                                                       }) do |_read|
+          tool_active = ->(read) { Faces.classify_tool(read.session).active? }
+          feature.menu_entries("#{PREFIX}.classify_off", :menu => MENU, :available => tool_active) do |_read|
             [Declarations::MenuEntry.new(:label => OFF, :handler => ->(session) { Faces.classify_tool(session).stop })]
           end
         end
 
-        def declare(feature, field, value, spec)
+        def declare(feature, field, value, spec, classifiable)
           label = spec.fetch("labels").fetch(value, value)
           feature.menu_item("#{PREFIX}.classify_#{field}_#{value.downcase}",
-                            :label => label, :menu => MENU,
-                            :available => ->(read) { classifiable?(read.session) }) do |session|
+                            :label => label, :menu => MENU, :available => classifiable) do |session|
             Selection.client(session).classify(field, value)
           end
         end

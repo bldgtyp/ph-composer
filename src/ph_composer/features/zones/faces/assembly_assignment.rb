@@ -8,10 +8,11 @@ module PhComposer
       module AssemblyAssignment
         KIND = "ph_composer.assemblies.assembly"
         READ = "ph_composer.assemblies.assemblies.all"
-        # Each Face value an Assembly hints at: the Assembly field and the finding when they differ.
-        MISMATCHES = { "face_type" => ["type", "face.assembly_type_mismatch"],
-                       "boundary_condition" => ["exterior_condition", "face.assembly_exterior_condition_mismatch"] }
-                     .freeze
+        # Each Face field an Assembly hints at, and the Assembly value that hints it.
+        HINTS = { "face_type" => "type", "boundary_condition" => "exterior_condition" }.freeze
+        # The finding a Face field raises when it differs from its Assembly's hint.
+        MISMATCH_CODES = { "face_type" => "face.assembly_type_mismatch",
+                           "boundary_condition" => "face.assembly_exterior_condition_mismatch" }.freeze
 
         module_function
 
@@ -36,7 +37,7 @@ module PhComposer
           return unless intent.dig("assembly_id", "mode") == "set"
 
           hints = resolve(request, record.fetch("assembly_id")).fetch("values")
-          { "face_type" => "type", "boundary_condition" => "exterior_condition" }.each do |field, hint|
+          HINTS.each do |field, hint|
             mode = intent.dig(field, "mode")
             next unless record[field].nil? && (mode.nil? || mode == "keep")
             next if hints[hint].nil?
@@ -74,11 +75,11 @@ module PhComposer
           assembly = record["assembly_id"] && catalog(request).fetch(:records)[record["assembly_id"]]
           found = []
           if assembly
-            MISMATCHES.each do |field, (hint, code)|
+            HINTS.each do |field, hint|
               value = assembly.fetch("values")[hint]
               next if value.nil? || record[field].nil? || record[field] == value
 
-              found << finding(code, record, mismatch(field, record[field], value))
+              found << finding(MISMATCH_CODES.fetch(field), record, mismatch(field, record[field], value))
             end
           end
           if record["boundary_condition"] == "Surface" && record["adjacency"]
