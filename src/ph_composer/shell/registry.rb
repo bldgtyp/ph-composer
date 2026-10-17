@@ -301,6 +301,11 @@ module PhComposer
         FeatureScope.new(self, declaration)
       end
 
+      # The owner of a name declared in this batch, or else already published.
+      def owner_of(name)
+        owners[name] || @live.owner_of(name)
+      end
+
       def fail(owner, code, message)
         @failures << Declarations::Diagnostic.new(:code => code, :owner => owner.to_s, :subject => owner.to_s,
                                                   :message => message)
