@@ -31,7 +31,7 @@ module PhComposer
       # `{"Room" => 2, "Face" => 12}`: what the report says passed through. A user's own data is not
       # searched for objects.
       def passed(hbjson, declared_keys)
-        namespaces = declared_keys.map { |key| key.split(".").first }
+        namespaces = Privacy.namespaces(declared_keys)
         counts = Hash.new(0)
         pending = [JSON.parse(hbjson)]
         until pending.empty?
@@ -89,7 +89,7 @@ module PhComposer
           refuse("The canonical HBJSON carries user_data at #{path(trail)} that is not an object.")
         end
 
-        namespaces = declared_keys.map { |key| key.split(".").first }
+        namespaces = Privacy.namespaces(declared_keys)
         owned = value.select { |key, _item| namespaces.include?(key.to_s) }
         undeclared = leaf_keys(owned) - declared_keys
         return if undeclared.empty?

@@ -10,12 +10,14 @@ module PhComposer
 
     module_function
 
+    # A SketchUp point (inches) as [x, y, z] metres.
+    def point_m(point)
+      [point.x.to_f * INCH_TO_M, point.y.to_f * INCH_TO_M, point.z.to_f * INCH_TO_M]
+    end
+
     def call(face, transform)
       loops = face.loops.map do |loop|
-        loop.vertices.map do |vertex|
-          point = vertex.position.transform(transform)
-          [point.x.to_f * INCH_TO_M, point.y.to_f * INCH_TO_M, point.z.to_f * INCH_TO_M]
-        end
+        loop.vertices.map { |vertex| point_m(vertex.position.transform(transform)) }
       end
       normal = FaceGeometry.world_normal([face.normal.x, face.normal.y, face.normal.z], transform.to_a)
       FaceGeometry.build(:loops_m => loops, :normal => normal,

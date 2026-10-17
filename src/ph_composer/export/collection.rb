@@ -74,8 +74,9 @@ module PhComposer
         visiting = []
         visit = lambda do |contributor|
           next if done.include?(contributor)
-          raise InternalError,
-                "Export sections require each other at #{contributor.name}." if visiting.include?(contributor)
+          if visiting.include?(contributor)
+            raise InternalError, "Export sections require each other at #{contributor.name}."
+          end
 
           visiting << contributor
           Array(contributor.requires).sort.each { |name| visit.call(by_name[name]) if by_name[name] }
@@ -88,7 +89,7 @@ module PhComposer
 
       # The user_data top-level keys exporters write themselves, which a user's own data may not take.
       def reserved(registry)
-        Privacy.user_data_keys(registry).map { |key| key.split(".").first }.uniq
+        Privacy.namespaces(Privacy.user_data_keys(registry))
       end
 
       # `[namespace, target_kind]` to the claiming contributor and its declared fields.

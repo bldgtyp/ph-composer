@@ -57,8 +57,7 @@ module PhComposer
       def cancel
         return false if terminal? || @stage == "writing"
 
-        finish(Outcome.build("cancelled", "export.cancelled", "Export cancelled. Nothing was written.",
-                             "none", @session.revision))
+        finish(Outcome.build("cancelled", "export.cancelled", Workflow::CANCELLED, "none", @session.revision))
         true
       end
 
@@ -172,6 +171,7 @@ module PhComposer
       end
 
       def watch
+        # Reading the sessions detaches a closed Model's session, and detaching cancels this task.
         Sessions.find(@session.id)
         coherent! unless terminal?
       rescue StandardError => error

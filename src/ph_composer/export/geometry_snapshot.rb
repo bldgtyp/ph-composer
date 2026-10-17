@@ -40,7 +40,7 @@ module PhComposer
           FaceGeometry.check_transform!(transform.to_a)
           points = [edge.start, edge.end].map do |vertex|
             point = vertex.position.transform(transform)
-            [point.x, point.y, point.z].map { |value| value.to_f * FaceGeometry::INCH_TO_M }.freeze
+            FaceCapture.point_m(point).freeze
           end
           unless points.flatten.all?(&:finite?)
             raise CodedError.new("geometry.invalid", "An Edge has a non-finite coordinate.")
@@ -94,18 +94,21 @@ module PhComposer
         new(cursor.entries, revision, :model_dictionaries => cursor.model_dictionaries)
       end
 
-      def self.walk(entities, path, transform, definitions = {}, capture_faces: true, &block)
+      # Yields one Entry per entity, or nil for one the snapshot does not keep, so the Cursor still counts it
+      # as work done. Faces and Edges inside a cutting component are walked but not captured
+      # (`capture_geometry` false): the component's own definition facts describe them.
+      def self.walk(entities, path, transform, definitions = {}, capture_geometry: true, &block)
         entities.each do |entity|
           child_path = path + [entity.persistent_id]
           dictionaries = read_dictionaries(entity)
           if entity.is_a?(Sketchup::Face)
-            entry = if capture_faces
+            entry = if capture_geometry
                       Entry.new(:kind => "face", :path => child_path.freeze, :transform => transform.to_a.freeze,
                                 :dictionaries => dictionaries, :geometry => FaceCapture.call(entity, transform))
                     end
             block.call(entry)
           elsif entity.is_a?(Sketchup::Edge)
-            entry = if capture_faces
+            entry = if capture_geometry
                       Entry.new(:kind => "edge", :path => child_path.freeze, :transform => transform.to_a.freeze,
                                 :dictionaries => dictionaries, :geometry => EdgeGeometry.capture(entity, transform))
                     end
@@ -120,8 +123,8 @@ module PhComposer
             cuts = entity.is_a?(Sketchup::ComponentInstance) && entity.definition.behavior.cuts_opening?
 
             child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
-            walk(child_entities, child_path, child_transform, definitions, :capture_faces => capture_faces && !cuts,
-                 &block)
+            walk(child_entities, child_path, child_transform, definitions,
+                 :capture_geometry => capture_geometry && !cuts, &block)
           else
             block.call(nil)
           end
@@ -157,7 +160,7 @@ module PhComposer
           result.merge("kind" => "face", "geometry" => FaceCapture.call(entity, Geom::Transformation.new).to_h)
         elsif entity.is_a?(Sketchup::Edge)
           points = [entity.start.position, entity.end.position].map do |point|
-            [point.x, point.y, point.z].map { |value| value.to_f * FaceGeometry::INCH_TO_M }.freeze
+            FaceCapture.point_m(point).freeze
           end
           result.merge("kind" => "edge", "points_m" => points.freeze)
         else
