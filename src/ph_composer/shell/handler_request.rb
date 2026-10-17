@@ -51,12 +51,17 @@ module PhComposer
       slot[[owner, key]] = yield
     end
 
+    # Whether this request's owner may use what `target_owner` declared: its own, or a feature it requires.
+    def may_use?(target_owner)
+      target_owner == owner || registry.features.fetch(owner).requires.include?(target_owner)
+    end
+
     # Reads a declared dependency within the current read/proposal phase, without
     # re-entering the public dispatcher or bypassing the query's schemas.
     def query(name, params = {})
       declaration = registry.queries[name]
       raise CodedError.new("operation.query_missing", "No query named #{name} is installed.") unless declaration
-      unless declaration.owner == owner || registry.features.fetch(owner).requires.include?(declaration.owner)
+      unless may_use?(declaration.owner)
         raise CodedError.new("operation.dependency_missing", "#{owner} does not require #{declaration.owner}.")
       end
       if query_stack.include?(name)
@@ -183,7 +188,7 @@ module PhComposer
       end
 
       target_owner = registry.owner_of(kind)
-      unless target_owner == owner || registry.features.fetch(owner).requires.include?(target_owner)
+      unless may_use?(target_owner)
         raise CodedError.new("operation.dependency_missing", "#{owner} does not require #{target_owner}.")
       end
 

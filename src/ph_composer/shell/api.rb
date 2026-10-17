@@ -79,11 +79,11 @@ module PhComposer
         return DeepCopy.call(operation_description(registry, operation))
       end
 
-      # A catalog kind and an entity-owned target describe themselves the same way (Records::Descriptor).
       if (task = Export::TaskContract.describe(name))
         return task
       end
 
+      # A catalog kind and an entity-owned target describe themselves the same way (Records::Descriptor).
       if (target = registry.reference_targets[name])
         return DeepCopy.call({ "kind" => "reference_target", "owner" => registry.owner_of(name) }
                                .merge(target.descriptor.to_h))

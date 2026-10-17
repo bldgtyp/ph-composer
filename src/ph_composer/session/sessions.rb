@@ -45,7 +45,8 @@ module PhComposer
         model.selection.add_observer(selection_observer) if model.selection.respond_to?(:add_observer)
         layers_observer = HostObservers::LayersObserver.new
         model.layers.add_observer(layers_observer) if model.layers.respond_to?(:add_observer)
-        session.add_observers(model_observer, selection_observer, layers_observer)
+        session.add_observers(ModelSession::Observers.new(:model => model_observer, :selection => selection_observer,
+                                                          :layers => layers_observer))
         sessions[model.object_id] = session
         session.host_event(:session_created)
         session
@@ -109,12 +110,12 @@ module PhComposer
         session = sessions.delete(model.object_id)
         return true unless session
 
-        model_observer, selection_observer, layers_observer = session.observers
-        model.remove_observer(model_observer) if model_observer && model.respond_to?(:remove_observer)
+        observers = session.observers
+        model.remove_observer(observers.model) if observers.model && model.respond_to?(:remove_observer)
         selection = model.selection
-        selection.remove_observer(selection_observer) if selection_observer && selection.respond_to?(:remove_observer)
+        selection.remove_observer(observers.selection) if observers.selection && selection.respond_to?(:remove_observer)
         layers = model.respond_to?(:layers) ? model.layers : nil
-        layers.remove_observer(layers_observer) if layers_observer && layers.respond_to?(:remove_observer)
+        layers.remove_observer(observers.layers) if observers.layers && layers.respond_to?(:remove_observer)
         session.detach
         true
       end

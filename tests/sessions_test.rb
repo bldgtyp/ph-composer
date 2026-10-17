@@ -26,7 +26,16 @@ class SessionsTest < PhComposerTestCase
     model.close
 
     assert_nil Sessions.find(session.id)
-    refute_includes model.observers, session.observers.first
+    refute_includes model.observers, session.observers.model
+    refute session.valid?
+  end
+
+  def test_a_session_whose_observers_were_never_attached_still_detaches
+    model = Sketchup::Model.new
+    session = PhComposer::ModelSession.new(model)
+    Sessions.send(:sessions)[model.object_id] = session
+
+    assert Sessions.detach(model)
     refute session.valid?
   end
 

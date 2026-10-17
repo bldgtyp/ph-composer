@@ -18,10 +18,12 @@ module PhComposer
 
     def call(request, name, params)
       declaration = request.registry.proposal_participants[name]
-      refuse!(request, "operation.participant_missing", "No proposal participant named #{name} is installed.") \
-        unless declaration
-      refuse!(request, "operation.proposal_required", "#{name} needs the caller's active proposal.") \
-        unless request.proposal
+      unless declaration
+        refuse!(request, "operation.participant_missing", "No proposal participant named #{name} is installed.")
+      end
+      unless request.proposal
+        refuse!(request, "operation.proposal_required", "#{name} needs the caller's active proposal.")
+      end
       dependency!(request, declaration)
       edge!(request, declaration)
       if request.query_stack.include?(name)
@@ -56,8 +58,7 @@ module PhComposer
     end
 
     def dependency!(request, declaration)
-      return if declaration.owner == request.owner ||
-                request.registry.features.fetch(request.owner).requires.include?(declaration.owner)
+      return if request.may_use?(declaration.owner)
 
       refuse!(request, "operation.dependency_missing", "#{request.owner} does not require #{declaration.owner}.")
     end

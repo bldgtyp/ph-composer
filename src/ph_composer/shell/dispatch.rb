@@ -14,8 +14,6 @@ module PhComposer
 
     REQUEST_KEYS = %w[sequence expected_revision proposal_digest].freeze
 
-    Request = HandlerRequest
-
     def initialize(registry = Registry.current)
       @registry = registry
     end
