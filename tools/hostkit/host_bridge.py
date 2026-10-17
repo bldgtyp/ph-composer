@@ -5,8 +5,9 @@
 
 The bridge (tools/hostkit/host_bridge.rb, installed with `make bridge-install`) evaluates Ruby inside
 the running SketchUp on the main thread. This client wraps it with the lifecycle steps that need
-care on macOS: launching with one document, quitting without a save dialog, saving past the Purge
-Unused prompt, and waiting for deferred work.
+care on macOS: launching with one document (and no recovered-version prompt for a scratch fixture),
+quitting without a save dialog however many documents are open, saving past the Purge Unused prompt,
+and waiting for deferred work.
 
     uv run tools/hostkit/host_bridge.py launch <model.skp> [--fresh-from <accepted.skp>]
     uv run tools/hostkit/host_bridge.py eval 'PhComposerHost.state'
@@ -164,29 +165,98 @@ def run_with_dialog_guard(version: str, code: str, timeout: float = 120.0, escap
     return out.decode("utf-8", "replace").strip()
 
 
-# Saves a modified Model to a scratch path so terminate meets no save prompt; with no document open
-# the active Model is nil and there is nothing to save.
-DISCARD_SAVE = 'm = Sketchup.active_model; m.save("/private/tmp/ph_composer_discard.skp") if m && m.modified?; :ok'
+# Closes the active document without a save prompt: saves it to a scratch path, which leaves it clean
+# whatever its window thinks, then closes its window, answering with its guid. With no document open the
+# active Model is nil. Only the active Model is reachable from Ruby, so a second document (after Cmd-N,
+# say) is closed on the next pass; terminating with one still dirty waits on a save sheet until the process
+# is killed. `performClose:` is queued, so each pass waits for that document to stop being the active one.
+DISCARD_PATH = "/private/tmp/ph_composer_discard_{index}.skp"
+CLOSE_ACTIVE = (
+    "m = Sketchup.active_model; if !m then :phc_no_document "
+    'else m.save("{path}"); if m.modified? then :phc_still_dirty '
+    'else guid = m.guid; Sketchup.send_action("performClose:"); "phc_closed:#{guid}" end end'
+)
+ACTIVE_GUID = "m = Sketchup.active_model; m ? m.guid : :phc_no_document"
+MAX_DOCUMENTS = 8
+
+
+def last_value(output: str) -> str:
+    """The eval's printed value: its last output line, unquoted (console prints come before it)."""
+    lines = output.strip().splitlines()
+    return lines[-1].strip().strip('"') if lines else ""
+
+
+def close_documents(version: str) -> str:
+    """Close every open document clean, one active document at a time; say how far it got."""
+    closed = 0
+    for index in range(MAX_DOCUMENTS):
+        code = CLOSE_ACTIVE.replace("{path}", DISCARD_PATH.format(index=index))
+        try:
+            answer = last_value(run_with_dialog_guard(version, code, timeout=60.0))
+        except (BridgeError, OSError, TimeoutError) as error:
+            return f"closed {closed} documents; the close step failed: {error}"
+        if answer == "phc_no_document":
+            return f"closed {closed} documents"
+        if not answer.startswith("phc_closed:"):
+            return f"closed {closed} documents; stopped: the active document is still modified after its save"
+        guid = answer.removeprefix("phc_closed:")
+        for _ in range(10):
+            time.sleep(0.5)
+            with contextlib.suppress(BridgeError, OSError, TimeoutError):
+                if evaluate(version, ACTIVE_GUID, timeout=10.0) != guid:
+                    break
+        closed += 1
+    return f"closed {closed} documents; stopped at the limit of {MAX_DOCUMENTS}"
+
+
+def remove_discards() -> None:
+    for index in range(MAX_DOCUMENTS):
+        for suffix in (".skp", ".skb"):
+            Path(DISCARD_PATH.format(index=index)).with_suffix(suffix).unlink(missing_ok=True)
 
 
 def quit_sketchup(version: str) -> str:
-    """Quit without a save dialog: discard-save a modified Model to a scratch path, then terminate."""
+    """Quit without a save dialog: save every open document to a scratch path and close it, then terminate.
+    A host the bridge cannot reach, or one still on a prompt after 30 seconds, is killed."""
     if not sketchup_running():
         return "SketchUp not running"
     state = read_state(version)
+    note = "no live bridge, so no document could be closed"
     if state is not None:
-        # SketchUp running with no document has no active Model; the save step must not stop the quit.
-        with contextlib.suppress(BridgeError, OSError, TimeoutError):
-            run_with_dialog_guard(version, DISCARD_SAVE, timeout=60.0)
+        note = close_documents(version)
         with contextlib.suppress(BridgeError, OSError, TimeoutError):
             request(state, {"code": 'Sketchup.send_action("terminate:")'}, timeout=10.0)
     for _ in range(30):
         if not sketchup_running():
-            Path("/private/tmp/ph_composer_discard.skp").unlink(missing_ok=True)
-            return "SketchUp quit cleanly"
+            remove_discards()
+            return f"SketchUp quit cleanly ({note})"
         time.sleep(1.0)
     subprocess.run(["pkill", "-9", "-x", "SketchUp"], capture_output=True, check=False)
-    return "SketchUp did not quit within 30s; killed (its documents may be restored on the next launch)"
+    remove_discards()
+    return f"SketchUp did not quit within 30s; killed ({note}; its documents may be restored on the next launch)"
+
+
+def recovery_copy(version: str, model: Path) -> Path | None:
+    """SketchUp's autosave copy of `model`, which it offers back ("The recovered version of this file is newer")
+    on the next open, for a scratch fixture only: under a `_private/` corpus or the temporary folder. A
+    user's own document keeps its recovery copy."""
+    scratch = "_private" in model.parts or str(model).startswith(("/private/tmp/", "/tmp/"))
+    return SUPPORT / f"SketchUp {version}" / "SketchUp" / "working" / model.name if scratch else None
+
+
+def open_windows() -> str:
+    """The names of SketchUp's open windows, to say which prompt is blocking (needs Accessibility)."""
+    try:
+        done = subprocess.run(
+            ["osascript", "-e", 'tell application "System Events" to get name of every window of process "SketchUp"'],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=15,
+        )
+    except (subprocess.SubprocessError, OSError) as error:
+        return f"(not readable: {error})"
+    return done.stdout.strip() or done.stderr.strip() or "(none readable)"
 
 
 def launch(version: str, model: Path, fresh_from: Path | None, timeout: float) -> dict[str, Any]:
@@ -194,6 +264,8 @@ def launch(version: str, model: Path, fresh_from: Path | None, timeout: float) -
     if fresh_from is not None:
         model.write_bytes(fresh_from.read_bytes())
     print(quit_sketchup(version))
+    if (copy := recovery_copy(version, model)) is not None:
+        copy.unlink(missing_ok=True)
     for _ in range(20):
         if not sketchup_running():
             break
@@ -207,7 +279,12 @@ def launch(version: str, model: Path, fresh_from: Path | None, timeout: float) -
         time.sleep(3.0)
     else:
         raise BridgeError(f"could not open {model} with {app}")
-    state = wait(version, timeout)
+    try:
+        state = wait(version, timeout)
+    except TimeoutError as error:
+        raise TimeoutError(
+            f"{error}; a SketchUp prompt may be waiting, possibly on another display. Open windows: {open_windows()}"
+        ) from error
     evaluate(version, f"load {json.dumps(str(HELPERS))}")
     opened = evaluate(version, "File.basename(Sketchup.active_model.path.to_s)")
     if opened != model.name:

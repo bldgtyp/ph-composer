@@ -4,6 +4,33 @@ Development-only tooling. The bridge and native controls obtain observations; th
 and checks them. It neither controls SketchUp nor awards acceptance. Keep recipes, baselines,
 observations, gate logs and raw evidence in gitignored `_private/host/<run>/`.
 
+## One case in two commands
+
+```sh
+uv run tools/hostkit/acceptance_case.py begin A09 --run-dir _private/host/<run> \
+  --fixture _private/host/<run>/A09/a09.skp --fixture-id "fresh copy of reference-assigned.skp" \
+  --control native --assert narrow-keyboard --assert held-model \
+  --window "a09.skp the only document in a fresh process" --target "Zones west and east, every Face classified" \
+  --probe "tools-only DOM callback for layout reads; held clauses under the HeldClassifyProbe tracer"
+# drive the case; write <run>/A09/steps.md and <run>/A09/observations.json as you go
+uv run tools/hostkit/acceptance_case.py finish A09 --run-dir _private/host/<run> \
+  --evidence planning/native-acceptance/evidence/<run>.md
+```
+
+`begin` checks first and writes last, so a refusal leaves nothing that blocks the retry. It refuses a
+deferred case, a control the case does not accept, an earlier run in the folder (move it aside first, to
+`A09-run1`), an open document other than the fixture or one already modified, and an installed extension
+that differs from `dist/ph_composer.rbz`. It then writes `writer-check.txt`, `recipe.json`, `meta.json`,
+`baseline.json` and `snapshot.json` in the case folder and starts `steps.md`. It warns when HEAD is not on
+`origin/main` or the case's dependencies have uncommitted changes, because the ledger row records HEAD.
+
+`finish` reads `observations.json`: one row per assertion with `id`, `status`, `observation` and
+`evidence`, a file path absolute or relative to the directory you run from (run from the repository root).
+`--evidence` is the committed evidence document, relative to the repository root. `finish` validates the
+result as `acceptance_ledger.py record` does before writing anything, then writes `observed.json` and
+`result.json` and appends the ledger row, so a refused `finish` can be corrected and rerun. Below are the
+underlying commands, for a run the tool does not fit.
+
 ## Preflight and immutable baseline
 
 Before asking for a human gesture, activate the actual document window, verify the active tool,

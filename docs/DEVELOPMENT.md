@@ -213,6 +213,12 @@ uv run tools/hostkit/host_bridge.py quit
 ```
 
 `launch` quits any running SketchUp, opens the Model as the only document and loads the helpers.
+For a scratch fixture, one under a `_private/` folder or the temporary folder, it first removes
+SketchUp's autosave copy of that file, so the open does not stop on "The recovered version of this file
+is newer". When the bridge does not come up it names SketchUp's open windows, since a prompt may be
+waiting on another display. `quit` saves every open document to a scratch path and closes it, including
+documents opened after the first, so terminating meets no save prompt. A host the bridge cannot reach, or
+one still on a prompt after 30 seconds, is killed, and `quit` says so.
 From there `eval`, `state`, `save`, `shot`, `key`, `console` and `quit` cover the fresh-process
 loop. `tools/hostkit/.index.md` lists what each does. Every `eval` runs in one shared binding, so
 a local variable assigned in one call survives into the next and keeps its object alive. Set such
@@ -323,4 +329,6 @@ Windows, public distribution and certification claims retain their separate gate
 The development [acceptance run harness](../tools/hostkit/ACCEPTANCE_RUN.md) freezes observed
 preconditions, screens assertion dependencies, records evidence hashes and checks installed package
 bytes and local Markdown links. It complements the native ledger and does not award host acceptance.
+`tools/hostkit/acceptance_case.py` runs one case's `begin` and `finish` around it, with the host identity
+read from the bridge.
 `make hostkit-test` covers its refusal and evidence-integrity behavior.
