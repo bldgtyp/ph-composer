@@ -17,7 +17,7 @@ module PhComposer
         @after = DeepCopy.frozen(after)
         @name = name&.dup&.freeze
         record = after || before
-        key = Resolve::TARGETS.fetch(kind).first
+        key = Resolve::TARGETS.fetch(kind).id_key
         change = if before.nil? then "created"
                  elsif after.nil? then "deleted"
                  else "updated"
@@ -49,7 +49,7 @@ module PhComposer
       def writable_entity(model)
         scan = Occurrences.scan(model)
         if @before
-          key = Resolve::TARGETS.fetch(@kind).first
+          key = Resolve::TARGETS.fetch(@kind).id_key
           return Resolve.occurrence(scan, { key => @before.fetch("id"), "entity_path" => @path },
                                     :mutable => true).entity
         end

@@ -23,10 +23,14 @@ module PhComposer
                  ["Weighted area (iCFA)", "weighted_area_m2", "area"], ["Height", "height_m", "length"],
                  ["Net volume", "net_volume_m3", "volume"], ["Supply", "v_sup_m3h", "airflow"],
                  ["Extract", "v_eta_m3h", "airflow"], ["Transfer", "v_tran_m3h", "airflow"]].freeze
+      # The batch repair a finding's `repair` names: the action, the param its reference goes in, whether the
+      # preflight ticks it by default, and its label.
+      Repair = Struct.new(:action, :param, :checked, :label, keyword_init: true)
       REPAIRS = {
-        "make_independent" => ["#{FEATURE_ID}.make_independent", "reference", false, "Make the copy independent"],
-        "restore_position" => ["#{FEATURE_ID}.volumes.restore_position", "volume", true,
-                               "Restore the Volume's position"]
+        "make_independent" => Repair.new(:action => "#{FEATURE_ID}.make_independent", :param => "reference",
+                                         :checked => false, :label => "Make the copy independent"),
+        "restore_position" => Repair.new(:action => "#{FEATURE_ID}.volumes.restore_position", :param => "volume",
+                                         :checked => true, :label => "Restore the Volume's position")
       }.freeze
 
       module_function
@@ -185,11 +189,11 @@ module PhComposer
       end
 
       def repair_row(finding, reference)
-        action, param, checked, label = REPAIRS[finding["repair"]]
-        return unless action && reference
+        repair = REPAIRS[finding["repair"]]
+        return unless repair && reference
 
-        { "id" => "#{action}:#{reference.fetch('entity_path').join('/')}", "label" => label, "checked" => checked,
-          "action" => action, "params" => { param => reference } }
+        { "id" => "#{repair.action}:#{reference.fetch('entity_path').join('/')}", "label" => repair.label,
+          "checked" => repair.checked, "action" => repair.action, "params" => { repair.param => reference } }
       end
 
       def records(reader)
@@ -272,13 +276,11 @@ module PhComposer
       # and no Space inside another.
       def structure!(spaces, volumes, segments)
         space_paths = spaces.map { |entry, _| entry.path }
-        if spaces.any? { |entry, _|
-          space_paths.any? { |path|
-            path != entry.path && entry.path[0, path.length] == path
-          }
-        }
-          raise Export::Blocked.new("space.nested", "A Space is inside another Space.")
+        nested = space_paths.any? do |inner|
+          space_paths.any? { |outer| outer != inner && inner[0, outer.length] == outer }
         end
+        raise Export::Blocked.new("space.nested", "A Space is inside another Space.") if nested
+
         unless volumes.all? { |entry, _| space_paths.include?(entry.path[0...-1]) }
           raise Export::Blocked.new("space.volume_nested", "A Volume is not directly inside a Space.")
         end

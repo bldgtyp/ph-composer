@@ -27,8 +27,8 @@ module PhComposer
         inside = Authoring.inside(scan, scope).sort_by { |_kind, occurrence| occurrence.path }
         inside.each { |_kind, occurrence| refuse_lock!(occurrence) }
         keys = inside.map { |row_kind, occurrence| [row_kind, occurrence.path] }
-        everywhere = Resolve::TARGETS.flat_map do |row_kind, (_key, _label, list)|
-          list.call(scan).map { |occurrence| [row_kind, occurrence] }
+        everywhere = Resolve::TARGETS.flat_map do |row_kind, target|
+          target.occurrences_in(scan).map { |occurrence| [row_kind, occurrence] }
         end
         taken = everywhere.map { |_row_kind, occurrence| occurrence.record.fetch("id") }
         held = everywhere.reject { |row_kind, occurrence| keys.include?([row_kind, occurrence.path]) }
@@ -57,13 +57,17 @@ module PhComposer
       # Space inside a component or a copied container is refused first, whatever its id count, because no
       # Spaces repair can isolate that storage.
       def refuse!(scan, kind, target)
-        _key, label, list = Resolve::TARGETS.fetch(kind)
+        kind_target = Resolve::TARGETS.fetch(kind)
+        label = kind_target.label
         if target.shared_above
           raise CodedError.new("target.shared_definition",
                                "That #{label} is inside storage a component or a copied Group above it shares. Draw " \
                                "the Space directly, or make that container unique first. Nothing was written.")
         end
-        unless list.call(scan).count { |occurrence| occurrence.record.fetch("id") == target.record.fetch("id") } > 1
+        copies = kind_target.occurrences_in(scan).count do |occurrence|
+          occurrence.record.fetch("id") == target.record.fetch("id")
+        end
+        unless copies > 1
           raise CodedError.new("space.identity_unique", "That #{label} already has an identity of its own. " \
                                                         "Nothing was written.")
         end

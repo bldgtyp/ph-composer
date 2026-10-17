@@ -6,19 +6,27 @@ module PhComposer
     # candidates; the record id proves identity. Nothing searches by name or geometry to repair a
     # stale reference.
     module Resolve
-      # Per kind: the reference's id key, its label and the occurrences a scan holds for it.
+      # One kind's reference: the id key it carries, the label refusals use, and every occurrence of the
+      # kind a scan holds, strays included.
+      Target = Struct.new(:id_key, :label, :occurrences, keyword_init: true) do
+        def occurrences_in(scan)
+          occurrences.call(scan)
+        end
+      end
+
       TARGETS = {
-        SPACE_KIND => ["space_id", "Space", ->(scan) { scan.spaces }],
-        VOLUME_KIND => ["volume_id", "Volume", ->(scan) { scan.volumes + scan.orphan_volumes }],
-        FLOOR_SEGMENT_KIND => ["floor_segment_id", "Floor Segment",
-                               ->(scan) { scan.segments + scan.misplaced_segments }]
+        SPACE_KIND => Target.new(:id_key => "space_id", :label => "Space", :occurrences => ->(scan) { scan.spaces }),
+        VOLUME_KIND => Target.new(:id_key => "volume_id", :label => "Volume",
+                                  :occurrences => ->(scan) { scan.volumes + scan.orphan_volumes }),
+        FLOOR_SEGMENT_KIND => Target.new(:id_key => "floor_segment_id", :label => "Floor Segment",
+                                         :occurrences => ->(scan) { scan.segments + scan.misplaced_segments })
       }.freeze
 
       module_function
 
       # The reference's kind, read from which id key it carries.
       def kind_of(reference)
-        kinds = TARGETS.select { |_kind, (key, _label, _list)| reference.key?(key) }.keys
+        kinds = TARGETS.select { |_kind, target| reference.key?(target.id_key) }.keys
         return kinds.first if kinds.length == 1
 
         raise CodedError.new("params.invalid", "A reference names one Space, Volume or Floor Segment id.")
@@ -27,16 +35,16 @@ module PhComposer
       # A write refuses a copied identity, shared storage and a lock, each with nothing written.
       def occurrence(scan, reference, mutable:)
         kind = kind_of(reference)
-        key, label, list = TARGETS.fetch(kind)
+        target = TARGETS.fetch(kind)
         path = integer_path(reference.fetch("entity_path"))
-        candidates = list.call(scan)
+        candidates = target.occurrences_in(scan)
         found = candidates.find { |occurrence| occurrence.path == path }
-        raise CodedError.new("target.not_found", "That #{label} occurrence no longer exists.") unless found
-        unless found.record.fetch("id") == reference.fetch(key)
-          raise CodedError.new("target.changed", "The #{label} identity has changed.")
+        raise CodedError.new("target.not_found", "That #{target.label} occurrence no longer exists.") unless found
+        unless found.record.fetch("id") == reference.fetch(target.id_key)
+          raise CodedError.new("target.changed", "The #{target.label} identity has changed.")
         end
 
-        writable!(found, candidates, label) if mutable
+        writable!(found, candidates, target.label) if mutable
         found
       end
 
