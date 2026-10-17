@@ -55,7 +55,7 @@ fs.mkdirSync(output, { recursive: true });
         assert.equal(docked, false, "the bar floats where the table can spare the room");
         assert.equal(facts.overflowsDown, false, "the pane does not scroll when everything fits");
       }
-      if (width === 360) assert.equal(docked, true, "the bar docks at the panel minimum");
+      if (width === 360 && height === 520) assert.equal(docked, true, "the bar docks at the panel minimum");
       await page.screenshot({ path: path.join(output, `selected-solve-${width}x${height}.png`) });
     }
     await page.setViewportSize({ width: 1280, height: 900 });

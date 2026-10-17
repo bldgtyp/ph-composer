@@ -158,8 +158,9 @@ ui-deps:
 UI_CHECKS ?= $(sort $(wildcard tools/ui-preview/*.cjs))
 ui-checks:
 	@export NODE_PATH="$${NODE_PATH:-$(UI_DEPS)/node_modules}"; \
+	if [ -z "$(strip $(UI_CHECKS))" ]; then echo "ui-checks: UI_CHECKS names no check"; exit 1; fi; \
 	if ! node -e "require.resolve('playwright')" >/dev/null 2>&1; then \
-	  echo "ui-checks: skipped, Playwright is not resolvable; run 'make ui-deps' (tools/ui-preview/.index.md)"; exit 0; \
+	  echo "ui-checks: skipped, Playwright is not resolvable from NODE_PATH=$$NODE_PATH; run 'make ui-deps' (tools/ui-preview/.index.md)"; exit 0; \
 	fi; \
 	if curl -s -o /dev/null "http://127.0.0.1:$(UI_PREVIEW_PORT)/"; then \
 	  echo "ui-checks: port $(UI_PREVIEW_PORT) is already serving; stop that server or set UI_PREVIEW_PORT"; exit 1; \

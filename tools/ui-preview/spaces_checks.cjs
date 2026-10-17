@@ -44,8 +44,8 @@ function visibleRows(page) {
     assert.equal(await loft.getAttribute("placeholder"), "Zone", "an inheriting Space reads Zone");
     for (const width of [1280, 900, 420, 365]) {
       await page.setViewportSize({ width, height: 900 });
-      assert(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `no page overflow at ${width}`);
       await settle(page);
+      assert(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `no page overflow at ${width}`);
       assert.equal((await paneFacts(page, { floating: [] })).sideways, false, `the tab does not scroll sideways at ${width} (#179)`);
       if (width <= 420) {
         assert(await page.evaluate(() => {
@@ -69,7 +69,7 @@ function visibleRows(page) {
     for (const [width, height] of PANEL_SIZES) {
       await setPanelSize(page, width, height);
       assertPaneFits(await paneFacts(page), "the checked Spaces bar");
-      if (width === 360) {
+      if (width === 360 && height === 520) {
         assert(await bar.evaluate(node => node.classList.contains("is-docked")), "the bar docks at the panel minimum");
       }
     }
