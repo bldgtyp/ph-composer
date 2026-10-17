@@ -24,13 +24,11 @@ module PhComposer
 
         warnings = notes(batch.warnings)
         unavailable = notes(batch.unavailable)
-        duplicate = batch.rows.group_by { |row| [row.fetch("library_id"), row.fetch("record_id")] }
-                         .select { |_identity, rows| rows.length > 1 }.keys.map(&:first).uniq
+        duplicate = duplicate_libraries(batch.rows)
         duplicate.each do |id|
           unavailable << { "code" => "library.duplicate_record_id", "kind" => kind, "library_id" => id }
         end
-        unsupported = batch.rows.reject { |row| row.fetch("wire_schema_version") == adapter.wire_version }
-                           .map { |row| row.fetch("library_id") }.uniq
+        unsupported = unsupported_libraries(batch.rows, adapter)
         unsupported.each do |id|
           unavailable << { "code" => "library.kind_schema_unsupported", "kind" => kind, "library_id" => id }
         end
@@ -44,13 +42,29 @@ module PhComposer
           label = row.fetch("display_label")
           [row.fetch("library_id"), label.downcase, label, row.fetch("record_id")]
         end
-        freshness = batch.freshness.slice("loaded_at", "exported_at").select do |_key, value|
-          value.is_a?(String) && /\A\d{4}-\d\d-\d\dT[0-9:.+-]+Z?\z/.match?(value)
-        end
         Provider::Batch.new(:rows => rows, :warnings => warnings, :unavailable => unavailable.uniq,
-                            :freshness => freshness)
+                            :freshness => freshness_of(batch))
       rescue JSON::GeneratorError, EncodingError
         raise Error.new("library.provider_invalid", "The provider response is malformed."), :cause => nil
+      end
+
+      # Each library that repeats a record id: the whole library is unavailable, not just the repeat.
+      def duplicate_libraries(rows)
+        rows.group_by { |row| [row.fetch("library_id"), row.fetch("record_id")] }
+            .select { |_identity, repeated| repeated.length > 1 }.keys.map(&:first).uniq
+      end
+
+      # Each library with a row in a wire schema version the adapter does not read.
+      def unsupported_libraries(rows, adapter)
+        rows.reject { |row| row.fetch("wire_schema_version") == adapter.wire_version }
+            .map { |row| row.fetch("library_id") }.uniq
+      end
+
+      # The provider's timestamps that read as ISO 8601; anything else is dropped.
+      def freshness_of(batch)
+        batch.freshness.slice("loaded_at", "exported_at").select do |_key, value|
+          value.is_a?(String) && /\A\d{4}-\d\d-\d\dT[0-9:.+-]+Z?\z/.match?(value)
+        end
       end
 
       # One row with its normalized snapshot and label, or nil with the reason added to `warnings`.

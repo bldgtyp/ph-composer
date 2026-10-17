@@ -11,7 +11,7 @@ module PhComposer
 
       def call(request, declaration, callback, params, readonly: false)
         validate!(params, callback.params, "params.invalid", "Library callback parameters are invalid.")
-        writable = readonly ? [] : owned_kinds(request.registry, declaration.owner)
+        writable = readonly ? [] : ParticipantInvocation.owned_kinds(request.registry, declaration.owner)
         engine = request.engine.projected(request.proposal, :writable_kinds => writable,
                                                             :refusal_code => "proposal.foreign_write")
         nested = request.with(:params => params, :owner => declaration.owner,
@@ -28,17 +28,13 @@ module PhComposer
         raise
       end
 
-      def owned_kinds(registry, owner)
-        registry.catalog.kinds.map(&:id).select { |kind| registry.owner_of(kind) == owner }
-      end
-
       def validate!(value, schema, code, message)
         return if JsonValue.problems(value).empty? && JsonSchema.validate(value, schema).empty?
 
         raise CodedError.new(code, message)
       end
 
-      private_class_method :owned_kinds, :validate!
+      private_class_method :validate!
     end
   end
 end

@@ -8,8 +8,9 @@ module PhComposer
     # catalog values carry configured ids and public labels, never filenames or OS error text.
     class FileProvider
       PROVIDER_KIND = "ph_composer.library.file"
-      MAX_BYTES = 64 * 1024 * 1024
-      MAX_ROWS = 20_000
+      # The catalog limits Admission applies to every provider.
+      MAX_BYTES = Admission::MAX_BYTES
+      MAX_ROWS = Admission::MAX_ROWS
       attr_reader :id, :label, :kinds, :freshness
 
       def initialize(id:, label:, path:, kinds:, adapters:)
@@ -54,10 +55,12 @@ module PhComposer
       def candidate_files
         return [@path] if File.file?(@path)
 
-        return Dir.children(@path).sort.filter_map do |name|
-          path = File.join(@path, name)
-          path if File.file?(path) && File.extname(name).downcase == ".json"
-        end if File.directory?(@path)
+        if File.directory?(@path)
+          return Dir.children(@path).sort.filter_map do |name|
+            path = File.join(@path, name)
+            path if File.file?(path) && File.extname(name).downcase == ".json"
+          end
+        end
 
         raise Error.new("library.file_unreadable", "The configured library file or folder could not be read.")
       end
@@ -79,8 +82,9 @@ module PhComposer
         files.each do |path|
           text = File.open(path, "rb") { |file| file.read(LibraryFile::MAX_BYTES + 1) }
           bytes += text.bytesize
-          raise Error.new("library.catalog_too_large",
-                          "The catalog exceeds the 64 MiB aggregate limit.") if bytes > MAX_BYTES
+          if bytes > MAX_BYTES
+            raise Error.new("library.catalog_too_large", "The catalog exceeds the 64 MiB aggregate limit.")
+          end
 
           document = read_candidate(text, File.directory?(@path), warnings, MAX_ROWS - rows)
           next unless document
