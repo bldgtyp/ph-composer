@@ -207,7 +207,7 @@ callback (tools-only).
   collection, wrote nothing and showed "The Classify gesture was cancelled. Nothing was written." Close
   Group/Component and native Save left the root, unmodified, with the exact fingerprint.
 
-A09 is rechecked on the narrow clause once #179 ships.
+A09 is rechecked on the fixed build in the [#179 recheck](#179-recheck-a09-and-uxr-paint-on-the-fixed-build) below, and passes.
 
 ## R11H and HGUI, library setup, library and HBJSON export, Window Type grid, navigation
 
@@ -407,3 +407,61 @@ loaded:
 - Units are SI, the autosave interval is 5 and the Zones view preference is Faces.
 - The Model opens unmodified at revision 1. Reads complete, and a stale edit refuses `target.changed` with
   nothing written.
+
+## #179 recheck: A09 and UXR-PAINT on the fixed build
+
+Build: `main` at `9781190f`, which merges the #179 fix (PR [#187](https://github.com/bldgtyp/ph-composer/pull/187)).
+Normal RBZ SHA-256 `89afe2ef173edebe56221dd70edefee4cf625469fdfc6724c396bb83f7b3f9f8`, 454 files, installed package
+matching. Same host versions. Raw files are in `_private/host/acceptance-3a/A09/` and `UXR-PAINT/` (run 1 kept as
+`A09-run1/` and `UXR-PAINT-run1/`), with UXR captures in `UXR2/`.
+
+**Scope.** The ledger screens 15 current cases on #187's two shipped paths: `zones.css` (21 cases through
+`src/ph_composer/html/*`) and the vendor manifest (10). A09 and UXR-PAINT, the two cases that failed on #179, were
+rerun in full. The other 13 (A04, A11, E14, E17, ZO-H1, ZO-H2, ZO-H3, ZO-O7, UXR-SOLVE, UXR-FILTER, UXR-HATCH,
+UXR-COLOUR, UXR-FILTER-OCC) are unaffected by construction and keep their run 1 results. The fix changes one
+declaration: `.phc-overview` gets `grid-template-columns: minmax(0, 1fr)`, so its single column track no longer
+grows to the table's min-content width. Where the pane is wider than that width, the computed layout is
+unchanged. Where it is narrower, the horizontal overflow moves from the tab into the table mount. None of the 13
+makes a claim about the Zones tab at a narrow panel. ZO-H1's narrow dialog sizes belong to the Zone options
+dialog, which opens in the top layer through `showModal` and is sized by the viewport, not by the overview
+grid. The manifest change records the new stylesheet hashes and nothing else. P3a-01's recheck is the
+precedent.
+
+**A09: pass.** Fresh copies of `envelope/reference-assigned.skp`, with the panel clauses in one process and the
+held gestures in their own fresh processes (pids 96543 and 96669) under the tools-only tracer.
+- Narrow layout, the #179 clause: at 365 px the tab does not scroll sideways (pane 365 of 365). The table
+  scrolls in its own 349 px mount (1,207 px of content), the control row wraps with every control in view, and
+  after a 400 px table scroll the Actions column stays sticky at its left edge. A native horizontal scroll
+  over the table moved the mount 320 px and the tab 0 px.
+- Cell drafts, Classify and the edit path, filter and tree keys, and Cmd-N from the panel repeat run 1's
+  results exactly.
+- Held, Model switch: down collected one Face; Cmd-N while held; the release arrived in the new Model with the
+  revision, collection and full fingerprint unchanged.
+- Held, edit context: the timer entered the west Zone while the button was down (revision 5 to 7 on
+  navigation). The release cleared the collection, wrote nothing and showed "The Classify gesture was
+  cancelled. Nothing was written." Close Group/Component and native Save left the root, unmodified, with the
+  exact fingerprint.
+
+**UXR-PAINT: fails on a new issue, [#188](https://github.com/bldgtyp/ph-composer/issues/188).** One fresh
+process on a fresh copy of `run-baseline.skp`. Before the baseline, a labelled setup through public actions
+solved the two Zones and created the empty local Assembly (revision 3); run 1 did these in UXR-SOLVE and
+during the case.
+- Paint, Undo and the icons repeat run 1's results exactly. One native drag of the Roof or ceiling icon changed
+  exactly the two front walls, and boundaries were kept. A Ground click changed one boundary and kept its type.
+  The Assembly icon changed only `assembly_id`. Native Undo and Redo are exact for each. Ground, Outdoors and To
+  neighbour carry paint icons; Attached zone, Surface and Assembly None do not.
+- The #179 part of the narrow clause passes. At 420 px and at the 360 x 520 minimum, the tab does not scroll
+  sideways (pane 420 of 420 and 360 of 360). The table scrolls natively in its mount under the sticky identity
+  columns. The open Type menu stays inside the window and draws over the selection bar. Narrow-menu Wall paint
+  starts, and a panel Escape stops it with nothing written.
+- The selection bar fails. At 420 px, the wrapped control row adds 40 px to the tab's vertical overflow (80 px,
+  against 40 before the fix), so "Solve adjacencies for checked Zones" sits under the footer until the tab is
+  scrolled. Run 1's capture at the same size shows it in view. At the 360 x 520 minimum, the 229 px bar covers
+  the 270 px table mount, including the header, so no column menu can be opened while Faces are checked. With
+  the pre-fix rule injected into the live panel, the bar measures the same, so this part predates the fix. A
+  native vertical scroll of the tab reveals Solve at both widths.
+
+Restoration: a fresh process (pid 98325) on a clean synthetic Model, with no development constant, script or
+probe loaded. The library setup equals the pre-run setup, and the two approved locations from 2026-10-13
+remain. Units are SI, the autosave interval is 5 and the Zones view preference is Faces. The Model opens
+unmodified at revision 1. A read completes, and a stale edit refuses `target.changed` with nothing written.

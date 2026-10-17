@@ -111,7 +111,7 @@ library file. METr conversion stays deferred.
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | In progress; P3a-01 to P3a-11 merged; the 2026-10-16 acceptance rerun passes S01 to S11 with ledger results; closure waits on the #179 fix and the recheck of A09 and UXR-PAINT | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
+| 3.1 | [Spaces](features/phase-03a-spaces/README.md) | In progress; P3a-01 to P3a-11 merged; the 2026-10-16 acceptance rerun passes S01 to S11 with ledger results; the #179 fix merged (#187) and its recheck passes A09; UXR-PAINT fails on #188, and closure waits on Ed's call on it | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
 | 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09, none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
 
 Ed split Phase 3 on 2026-10-03 into two sub-phases, each one packet planned and worked on its own:
@@ -202,3 +202,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-15 | Spaces phase issue [#133](https://github.com/bldgtyp/ph-composer/issues/133) created; the packet waits for Ed's go on P3a-01. |
 | 2026-10-15 | Ed authorized the Spaces packet, one stage per pull request; P3a-01 merged through PR #135. |
 | 2026-10-16 | Spaces P3a-01 to P3a-11 merged through PR #167; P3a-12's integrated host run ran on 26.1.188. Ed answered the four closure calls the same day; D3a-19 and D3a-20 merged (#173, #172) and the acceptance rerun passed S01 to S11 (#186); closure waits on #179. |
+| 2026-10-16 | #179 fixed through #187 and rechecked on the host: A09 passes; UXR-PAINT's narrow clause fails on #188 (the selection bar overruns the table at narrow widths). Phase 3a closure is Ed's call on #188. |
