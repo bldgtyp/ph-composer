@@ -280,7 +280,9 @@ recorded order. Counts were derived on this baseline.
   by one drag changed exactly the two front walls, a Ground click changed one boundary and kept its type, and the
   local Assembly paint changed only `assembly_id`. Each has exact native Undo and Redo, and Surface and None have
   no paint icon. At 420 and 360 px the Type column is reachable only by scrolling the whole tab sideways, which
-  takes the selection bar out of view. Narrow-menu painting starts, and Escape stops it.
+  takes the selection bar out of view. Narrow-menu painting starts, and Escape stops it. Rechecked
+  [below](#179-recheck-a09-and-uxr-paint-on-the-fixed-build): the narrow clause now fails on
+  [#188](https://github.com/bldgtyp/ph-composer/issues/188).
 - COLOUR: each paint choice selects its Colour-by mode. Escape keeps Boundary or Assembly, and a Face type
   override chosen during Assembly painting survives stopping, with no write.
 - FILTER-OCC: a nested Group Face and two placements of one shared Component Face have three distinct paths.
@@ -424,19 +426,21 @@ grows to the table's min-content width. Where the pane is wider than that width,
 unchanged. Where it is narrower, the horizontal overflow moves from the tab into the table mount. None of the 13
 makes a claim about the Zones tab at a narrow panel. ZO-H1's narrow dialog sizes belong to the Zone options
 dialog, which opens in the top layer through `showModal` and is sized by the viewport, not by the overview
-grid. The manifest change records the new stylesheet hashes and nothing else. P3a-01's recheck is the
-precedent.
+grid. The manifest change records the new stylesheet hashes and nothing else.
+[P3a-01's recheck](../../features/phase-03a-spaces/evidence/p3a-01-groundwork.md) is the precedent. No new ledger
+rows are written for the 13, so the ledger keeps screening them stale; this section is their disposition.
 
 **A09: pass.** Fresh copies of `envelope/reference-assigned.skp`, with the panel clauses in one process and the
 held gestures in their own fresh processes (pids 96543 and 96669) under the tools-only tracer.
 - Narrow layout, the #179 clause: at 365 px the tab does not scroll sideways (pane 365 of 365). The table
-  scrolls in its own 349 px mount (1,207 px of content), the control row wraps with every control in view, and
+  scrolls in its own 349 px mount (1,207 px of content), the control row wraps with Expand all, the Zone count, more and help in view, and
   after a 400 px table scroll the Actions column stays sticky at its left edge. A native horizontal scroll
   over the table moved the mount 320 px and the tab 0 px.
 - Cell drafts, Classify and the edit path, filter and tree keys, and Cmd-N from the panel repeat run 1's
-  results exactly.
+  results. The empty-filter step typed into the existing text (the field read "eastzzz", because the
+  background select-all was ignored), which still exercises the empty case.
 - Held, Model switch: down collected one Face; Cmd-N while held; the release arrived in the new Model with the
-  revision, collection and full fingerprint unchanged.
+  revision and full fingerprint unchanged and the collection cleared.
 - Held, edit context: the timer entered the west Zone while the button was down (revision 5 to 7 on
   navigation). The release cleared the collection, wrote nothing and showed "The Classify gesture was
   cancelled. Nothing was written." Close Group/Component and native Save left the root, unmodified, with the
@@ -452,16 +456,18 @@ during the case.
   neighbour carry paint icons; Attached zone, Surface and Assembly None do not.
 - The #179 part of the narrow clause passes. At 420 px and at the 360 x 520 minimum, the tab does not scroll
   sideways (pane 420 of 420 and 360 of 360). The table scrolls natively in its mount under the sticky identity
-  columns. The open Type menu stays inside the window and draws over the selection bar. Narrow-menu Wall paint
+  columns. The open Type menu stays inside the window: at 420 px it draws over the selection bar, and at 360 px it
+  flips above its trigger. Narrow-menu Wall paint
   starts, and a panel Escape stops it with nothing written.
 - The selection bar fails. At 420 px, the wrapped control row adds 40 px to the tab's vertical overflow (80 px,
   against 40 before the fix), so "Solve adjacencies for checked Zones" sits under the footer until the tab is
-  scrolled. Run 1's capture at the same size shows it in view. At the 360 x 520 minimum, the 229 px bar covers
+  scrolled. Run 1's 420 px capture (`UXR/out/narrow-420-bar.jpg`), taken before the tab was scrolled
+  sideways, shows it in view. At the 360 x 520 minimum, the 229 px bar covers
   the 270 px table mount, including the header, so no column menu can be opened while Faces are checked. With
   the pre-fix rule injected into the live panel, the bar measures the same, so this part predates the fix. A
   native vertical scroll of the tab reveals Solve at both widths.
 
-Restoration: a fresh process (pid 98325) on a clean synthetic Model, with no development constant, script or
+Restoration (receipt in `RESTORE-179/state.json`): a fresh process (pid 98325) on a clean synthetic Model, with no development constant, script or
 probe loaded. The library setup equals the pre-run setup, and the two approved locations from 2026-10-13
 remain. Units are SI, the autosave interval is 5 and the Zones view preference is Faces. The Model opens
 unmodified at revision 1. A read completes, and a stale edit refuses `target.changed` with nothing written.
