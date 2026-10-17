@@ -21,6 +21,7 @@ module PhComposer
     ].freeze
     MAX_PENDING_NOTICES = 20
     SESSION_CHANGED = "The panel now shows a different Model."
+    EXPORT_TYPES = %w[export.start export.preflight export.status export.cancel export.latest].freeze
     # Export startup failure is reported before a task or a Model operation begins.
     EXPORT_FAILED = Outcome.build(
       "failed", "operation.failed", "Export could not start. Nothing was written.", "none", nil
@@ -151,8 +152,7 @@ module PhComposer
         when "query.invoke" then query(payload)
         when "file_export.invoke" then file_export(payload)
         when "preferences.set" then set_preference(payload)
-        when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
-          export(type, payload)
+        when *EXPORT_TYPES then export(type, payload)
         end
       rescue StandardError => error
         Diagnostics.exception("panel_message", error)
@@ -162,8 +162,7 @@ module PhComposer
         when "setup.invoke" then publish_setup(payload, SETUP_FAILED)
         when "query.invoke" then publish_query(payload, QUERY_FAILED)
         when "file_export.invoke" then publish_file_export(payload, EXPORT_FAILED)
-        when "export.start", "export.preflight", "export.status", "export.cancel", "export.latest"
-          publish_export(payload, EXPORT_FAILED)
+        when *EXPORT_TYPES then publish_export(payload, EXPORT_FAILED)
         when "preferences.set"
           publish_preferences(payload, "failed", "The display preference could not be saved.")
         else publish("panel.failure", "message" => "The panel could not complete that request.")
@@ -180,6 +179,17 @@ module PhComposer
         delivered, waiting = pending_notices.partition { |item| item["session"] == session.id }
         @pending_notices = waiting
         delivered.each { |item| publish("panel.notice", item) }
+      end
+
+      # The active Model's session when the payload names it: the panel acts only on the Model it shows.
+      def shown_session(payload)
+        session = Sessions.current
+        session if session && payload["session"] == session.id
+      end
+
+      # The answer to a request for a Model the panel no longer shows.
+      def inactive_outcome
+        Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
       end
 
       # The panel acts only on the Model it shows. The result follows the authoritative snapshot, so
@@ -216,10 +226,8 @@ module PhComposer
       # refusal publishes nothing, because a section that refused with it would replace good data with the
       # same refusal.
       def view(payload)
-        session = Sessions.current
-        unless session && payload["session"] == session.id
-          return publish_view(payload, Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil))
-        end
+        session = shown_session(payload)
+        return publish_view(payload, inactive_outcome) unless session
 
         outcome = API.view(:context => context_for(session), :name => payload["name"].to_s,
                            :params => payload.fetch("params", {}))
@@ -238,10 +246,8 @@ module PhComposer
       # Session and machine state for the Model the panel shows. A completed command is followed by a
       # snapshot, because a section may show what it changed; the revision does not move.
       def setup(payload)
-        session = Sessions.current
-        unless session && payload["session"] == session.id
-          return publish_setup(payload, Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil))
-        end
+        session = shown_session(payload)
+        return publish_setup(payload, inactive_outcome) unless session
 
         outcome = NativeApproval.setup(context_for(session), payload["name"].to_s, payload.fetch("params", {}))
         if outcome.fetch("status") == "completed"
@@ -258,12 +264,12 @@ module PhComposer
 
       # Read-only queries answer directly; they neither refresh the page nor consume a mutation sequence.
       def query(payload)
-        session = Sessions.current
-        outcome = if session && payload["session"] == session.id
+        session = shown_session(payload)
+        outcome = if session
                     API.query(:context => context_for(session), :name => payload["name"].to_s,
                               :params => payload.fetch("params", {}))
                   else
-                    Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
+                    inactive_outcome
                   end
         publish_query(payload, outcome)
       end
@@ -276,12 +282,12 @@ module PhComposer
       # Registered local file commands use their export grant without a mutation sequence or snapshot refresh.
       # The panel is a native client: it asks the user for a declared destination first (NativeApproval).
       def file_export(payload)
-        session = Sessions.current
-        outcome = if session && payload["session"] == session.id
+        session = shown_session(payload)
+        outcome = if session
                     NativeApproval.file_export(context_for(session), payload["name"].to_s,
                                                payload.fetch("params", {}))
                   else
-                    Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
+                    inactive_outcome
                   end
         publish_file_export(payload, outcome)
       end
@@ -294,12 +300,8 @@ module PhComposer
       # Export acts on the Model the panel shows, like an action, but it is the shell's command: it opens a
       # native destination dialog, so it never runs inside a Model operation.
       def export(type, payload)
-        session = Sessions.current
-        outcome = if session && payload["session"] == session.id
-                    export_request(type, payload, session)
-                  else
-                    Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
-                  end
+        session = shown_session(payload)
+        outcome = session ? export_request(type, payload, session) : inactive_outcome
         publish_export(payload, outcome)
       end
 

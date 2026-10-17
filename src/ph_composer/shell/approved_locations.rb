@@ -30,6 +30,8 @@ module PhComposer
                        "open_folder" => "Library folder" }.freeze
     USES = { "save_file" => "reusable", "open_file" => "single", "open_folder" => "single" }.freeze
     PUBLIC_KEYS = %w[id kind label use approved_at last_used_at].freeze
+    # The store as read: the location rows, the tombstones, and "readable" or "unreadable".
+    Stored = Struct.new(:locations, :retired, :state, keyword_init: true)
     ROW_KEYS = (PUBLIC_KEYS + ["path"]).freeze
 
     module_function
@@ -90,7 +92,7 @@ module PhComposer
 
     # "readable" (including nothing stored yet) or "unreadable".
     def state
-      stored.last
+      stored.state
     end
 
     # Every approved location without its path, and whether it is there now.
@@ -121,7 +123,7 @@ module PhComposer
     def revoke(id)
       current, retired = writable
       row = find!(current, retired, id)
-      save(current.reject { |item| item.equal?(row) }, retire(retired, id, "revoked"))
+      save(current.reject { |item| item.equal?(row) }, with_tombstone(retired, id, "revoked"))
       list
     end
 
@@ -179,7 +181,7 @@ module PhComposer
       row = current.find { |item| item.fetch("id") == id }
       return nil unless row&.fetch("use") == "single"
 
-      save(current.reject { |item| item.equal?(row) }, retire(retired, id, "used"))
+      save(current.reject { |item| item.equal?(row) }, with_tombstone(retired, id, "used"))
       row
     end
 
@@ -205,10 +207,10 @@ module PhComposer
     end
 
     def usable(id, kind)
-      current, retired, readable = stored
-      raise CodedError.new("location.setup_unreadable", UNREADABLE) if readable == "unreadable"
+      store = stored
+      raise CodedError.new("location.setup_unreadable", UNREADABLE) if store.state == "unreadable"
 
-      row = find!(current, retired, id)
+      row = find!(store.locations, store.retired, id)
       return row if row.fetch("kind") == kind
 
       raise CodedError.new("location.kind_mismatch", "The approved location #{row.fetch('label')} is a " \
@@ -260,7 +262,8 @@ module PhComposer
       raise CodedError.new("params.invalid", "A location label is 1 to #{LABEL_LENGTH} characters.")
     end
 
-    def retire(retired, id, reason)
+    # The tombstones with one more for `id`, keeping the newest TOMBSTONES.
+    def with_tombstone(retired, id, reason)
       (retired + [{ "id" => id, "reason" => reason, "retired_at" => now }]).last(TOMBSTONES)
     end
 
@@ -269,31 +272,36 @@ module PhComposer
     end
 
     def rows
-      stored.first
+      stored.locations
     end
 
     # The rows and tombstones, refusing when the stored blob cannot be read: it is reported, never
     # silently replaced.
     def writable
-      current, retired, readable = stored
-      raise CodedError.new("location.setup_unreadable", UNREADABLE) if readable == "unreadable"
+      store = stored
+      raise CodedError.new("location.setup_unreadable", UNREADABLE) if store.state == "unreadable"
 
-      [current, retired]
+      [store.locations, store.retired]
     end
 
     def stored
       raw = Sketchup.read_default(SECTION, KEY, nil)
-      return [[], [], "readable"] if raw.nil?
-      return [[], [], "unreadable"] unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
+      return empty_store("readable") if raw.nil?
+      return empty_store("unreadable") unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
 
       document = JSON.parse(raw.unpack1("m0"))
-      return [[], [], "unreadable"] unless valid?(document)
+      return empty_store("unreadable") unless valid?(document)
 
-      [document.fetch("locations"), document.fetch("retired"), "readable"]
+      Stored.new(:locations => document.fetch("locations"), :retired => document.fetch("retired"),
+                 :state => "readable")
     rescue JSON::ParserError, ArgumentError, EncodingError
-      [[], [], "unreadable"]
+      empty_store("unreadable")
     rescue SystemCallError, IOError
       raise CodedError.new("location.setup_unavailable", "Approved locations could not be read."), :cause => nil
+    end
+
+    def empty_store(state)
+      Stored.new(:locations => [], :retired => [], :state => state)
     end
 
     def save(current, retired)
@@ -331,7 +339,8 @@ module PhComposer
         row["use"] == USES[row["kind"]] && (row["last_used_at"].nil? || row["last_used_at"].is_a?(String))
     end
     private_class_method :reserve, :restore, :public_row, :available, :usable, :find!, :noun, :available?,
-                         :default_label, :checked_label, :retire, :now, :rows, :writable, :stored, :save, :write,
+                         :default_label, :checked_label, :with_tombstone, :now, :rows, :writable, :stored, :empty_store,
+                         :save, :write,
                          :valid?, :valid_row?
   end
 end

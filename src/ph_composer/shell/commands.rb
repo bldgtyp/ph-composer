@@ -67,8 +67,11 @@ module PhComposer
       def install_feature_menus(parent, contextual: false)
         session = Sessions.current
         Registry.current.menu_items.each_value.group_by(&:menu).filter_map do |name, declarations|
-          declarations = declarations.reject(&:entries) unless contextual
-          declarations = declarations.select { |item| available?(item, session) } if contextual
+          declarations = if contextual
+                           declarations.select { |item| available?(item, session) }
+                         else
+                           declarations.reject(&:entries)
+                         end
           entries = declarations.flat_map { |item| menu_entries(item, session) }
           next if entries.empty?
 
@@ -96,14 +99,17 @@ module PhComposer
         return [] unless session
 
         entries = contributed(item, []) { item.entries.call(read_request(item, session)) }
-        unless entries.is_a?(Array) && entries.all? do |entry|
-          entry.is_a?(Declarations::MenuEntry) && entry.label.is_a?(String) && !entry.label.strip.empty? &&
-          entry.handler.respond_to?(:call) && (entry.state.nil? || entry.state.respond_to?(:call))
-        end
+        unless entries.is_a?(Array) && entries.all? { |entry| valid_menu_entry?(entry) }
           raise InternalError, "#{item.name} returned invalid native menu entries."
         end
 
         entries
+      end
+
+      # A MenuEntry with a label to show, a callable handler, and a callable state when it has one.
+      def valid_menu_entry?(entry)
+        entry.is_a?(Declarations::MenuEntry) && entry.label.is_a?(String) && !entry.label.strip.empty? &&
+          entry.handler.respond_to?(:call) && (entry.state.nil? || entry.state.respond_to?(:call))
       end
 
       # An item with no `available` is always offered. One that declines is left out of the
