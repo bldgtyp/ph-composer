@@ -210,7 +210,7 @@ module PhComposer
         @staging.declared_reference_retargeters.each do |retargeter|
           require_kind(retargeter.owner, retargeter.name, retargeter.target_kind)
           problem(retargeter, "needs a callable handler") unless retargeter.handler.respond_to?(:call)
-          target_owner = @staging.owners[retargeter.target_kind] || @live.owner_of(retargeter.target_kind)
+          target_owner = @staging.owner_of(retargeter.target_kind)
           feature = @staging.declared_features.find { |item| item.id == retargeter.owner }
           next if target_owner == retargeter.owner || feature.requires.include?(target_owner)
 
@@ -286,14 +286,15 @@ module PhComposer
         end
       end
 
-      # A Colour-by mode needs a legend label, the entity kind it paints, a colour function and a
-      # projection. Entity kinds are open, so the kind is checked for shape alone and never against a
-      # list the shared service would have to keep. A menu item's submenu label is open prose, like a
-      # mode's entity kind: `shell/` groups by it and never interprets it.
+      # A menu item's submenu label is open prose, like a Colour-by mode's entity kind: `shell/` groups
+      # by it and never interprets it.
       def check_menu_items
         @staging.declared_menu_items.each do |item|
-          content = item.entries ? item.entries.respond_to?(:call) :
-            text?(item.label) && item.handler.respond_to?(:call)
+          content = if item.entries
+                      item.entries.respond_to?(:call)
+                    else
+                      text?(item.label) && item.handler.respond_to?(:call)
+                    end
           next if content && text?(item.menu) &&
                   (item.state.nil? || item.state.respond_to?(:call)) &&
                   (item.available.nil? || item.available.respond_to?(:call))
@@ -304,6 +305,9 @@ module PhComposer
         end
       end
 
+      # A Colour-by mode needs a legend label, the entity kind it paints, a colour function and a
+      # projection. Entity kinds are open, so the kind is checked for shape alone and never against a
+      # list the shared service would have to keep.
       def check_colour_modes
         @staging.declared_colour_modes.each do |mode|
           next if text?(mode.label) && text?(mode.entity_kind) && mode.colours.respond_to?(:call) &&
@@ -448,31 +452,37 @@ module PhComposer
         end
       end
 
+      # The caller has checked that the claim has exactly CLAIM_KEYS. Each check adds its own diagnostic.
       def check_claim(contributor, feature, claim)
-        namespace, target, source, fields = claim.values_at(*CLAIM_KEYS)
+        namespace = claim.fetch("namespace")
+        target_kind = claim.fetch("target_kind")
+        source_section = claim.fetch("source_section")
+        fields = claim.fetch("fields")
         unless fields.is_a?(Array) && !fields.empty? && fields.all? { |field| field.is_a?(String) && !field.empty? }
           claim_problem(contributor, "claim fields must be a non-empty list of payload field names")
         end
-        namespace_owner = @staging.owners[namespace] || @live.owner_of(namespace)
+
         extension = @staging.declared_extensions.any? { |item| item.namespace == namespace } ||
                     @live.extensions.key?(namespace)
-        unless extension && namespace_owner == contributor.owner
+        unless extension && @staging.owner_of(namespace) == contributor.owner
           claim_problem(contributor,
                         "claims #{namespace.inspect}, which is not an extension #{contributor.owner} declares")
         end
-        target_owner = @staging.owners[target] || @live.owner_of(target)
-        registered = @staging.declared_reference_targets.any? { |item| item.id == target } ||
-                     @live.reference_targets.key?(target)
+
+        target_owner = @staging.owner_of(target_kind)
+        registered = @staging.declared_reference_targets.any? { |item| item.id == target_kind } ||
+                     @live.reference_targets.key?(target_kind)
         reachable = target_owner && (target_owner == contributor.owner || feature&.requires&.include?(target_owner))
         unless registered && reachable
           add("registration.missing_dependency", contributor.owner, contributor.name,
-              "#{contributor.name} projects onto #{target.inspect}, a registered entity target its feature must " \
-              "own or require.", target_owner || target)
+              "#{contributor.name} projects onto #{target_kind.inspect}, a registered entity target its feature " \
+              "must own or require.", target_owner || target_kind)
         end
-        return if Array(contributor.requires).include?(source)
+        return if Array(contributor.requires).include?(source_section)
 
         add("registration.missing_dependency", contributor.owner, contributor.name,
-            "#{contributor.name} projects from #{source.inspect}, which it must list in requires.", source)
+            "#{contributor.name} projects from #{source_section.inspect}, which it must list in requires.",
+            source_section)
       end
 
       def claim_problem(contributor, text)
@@ -772,7 +782,7 @@ module PhComposer
               "#{item.name} needs registered catalog kind #{item.record_kind.inspect}.", item.record_kind)
           return
         end
-        kind_owner = @staging.owners[item.record_kind] || @live.owner_of(item.record_kind)
+        kind_owner = @staging.owner_of(item.record_kind)
         problem(item, "must own record kind #{item.record_kind}") unless kind_owner == item.owner
       end
 
