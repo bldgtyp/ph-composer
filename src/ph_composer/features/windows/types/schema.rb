@@ -5,6 +5,7 @@ module PhComposer
     # Inclusive bands describe one rectangular, fully covered layout; dimensions may be missing in
     # an incomplete saved type. Geometry and placement depend on these definitions, never vice versa.
     module Types
+      # Edge order everywhere a Type lists its sides: top and bottom at even indexes, right and left at odd.
       SIDES = %w[top right bottom left].freeze
       # A new Type's width and height when the caller supplies none. A client that wants another start,
       # such as the panel's round imperial size, passes `columns_m` and `rows_m`.
@@ -13,13 +14,10 @@ module PhComposer
       SPAN = { "type" => "array", "minItems" => 2, "maxItems" => 2,
                "items" => { "type" => "integer", "minimum" => 0 } }.freeze
       SIDE_SCHEMA = SchemaShapes.object(SIDES.to_h { |side| [side, ID] }).freeze
+      DIRECTIONS = { "type" => "array", "items" => { "type" => "string", "enum" => %w[left right up down] } }.freeze
       OPERATION = SchemaShapes.object({ "type" => { "type" => "string", "enum" => %w[fixed swing slide] },
-                                        "directions" => { "type" => "array",
-                                                          "items" => { "type" => "string",
-                                                                       "enum" => %w[left right up
-                                                                                    down] } } }).merge("type" => %w[
-                                                                                      object null
-                                                                                    ]).freeze
+                                        "directions" => DIRECTIONS })
+                              .merge("type" => %w[object null]).freeze
       ELEMENT = SchemaShapes.object({
         "id" => { "type" => "string" }, "name" => { "type" => "string" },
         "kind" => { "type" => "string", "enum" => %w[glazed empty] },
@@ -44,6 +42,7 @@ module PhComposer
           "product_photos" => [] }.merge(Fields.defaults(values))
       end
 
+      # Whether the elements tile the grid exactly once, with valid ids, spans and operations.
       def layout_problems(values)
         found = []
         coverage = {}
@@ -60,31 +59,45 @@ module PhComposer
             end
             span
           end
-          if spans.none?(&:nil?)
-            (spans[0].first..spans[0].last).each do |row|
-              (spans[1].first..spans[1].last).each do |column|
-                found << "Elements overlap." if coverage[[row, column]]
-                coverage[[row, column]] = true
-              end
-            end
-          end
-          operation = element["operation"]
-          if operation && operation.fetch("directions").uniq != operation.fetch("directions")
-            found << "Operation directions must be unique."
-          end
-          if operation && operation.fetch("type") == "fixed" && !operation.fetch("directions").empty?
-            found << "Fixed elements carry no operation directions."
-          end
-          if element.fetch("kind") == "empty" && (element["glazing_id"] || operation ||
-            (element.fetch("frames").values + element.fetch("installs").values).any?)
-            found << "Empty elements cannot carry products or operation."
-          end
+          found.concat(cover(coverage, *spans)) if spans.none?(&:nil?)
+          found.concat(element_problems(element))
         end
         found << "Element ids must be unique." unless ids.uniq == ids
         if coverage.length != values.fetch("rows_m").length * values.fetch("columns_m").length
           found << "Every grid cell must be covered."
         end
         found.uniq
+      end
+
+      # Marks every grid cell inside the spans as covered; a cell already covered is an overlap.
+      def cover(coverage, row_span, column_span)
+        overlaps = []
+        (row_span.first..row_span.last).each do |row|
+          (column_span.first..column_span.last).each do |column|
+            overlaps << "Elements overlap." if coverage[[row, column]]
+            coverage[[row, column]] = true
+          end
+        end
+        overlaps
+      end
+
+      def element_problems(element)
+        found = []
+        operation = element["operation"]
+        if operation && operation.fetch("directions").uniq != operation.fetch("directions")
+          found << "Operation directions must be unique."
+        end
+        if operation && operation.fetch("type") == "fixed" && !operation.fetch("directions").empty?
+          found << "Fixed elements carry no operation directions."
+        end
+        if element.fetch("kind") == "empty" && (operation || carries_products?(element))
+          found << "Empty elements cannot carry products or operation."
+        end
+        found
+      end
+
+      def carries_products?(element)
+        element["glazing_id"] || (element.fetch("frames").values + element.fetch("installs").values).any?
       end
 
       FIELDS = Fields.with_source_snapshot(Fields.common + [
@@ -97,18 +110,19 @@ module PhComposer
       REFERENCES = [Records::Reference.new(:key => "elements[].glazing_id", :target_kind => GLAZING_KIND,
                                            :cardinality => "one")] +
                    { "frames" => FRAME_KIND, "installs" => PSI_INSTALL_KIND }.flat_map do |field, target|
-                     SIDES.map { |side|
-                       Records::Reference.new(:key => "elements[].#{field}.#{side}",
-                                              :target_kind => target, :cardinality => "one")
-                     }
+                     SIDES.map do |side|
+                       Records::Reference.new(:key => "elements[].#{field}.#{side}", :target_kind => target,
+                                              :cardinality => "one")
+                     end
                    end
+
+      def record_problems(values)
+        Fields.problems(values) + Fields.source_problems(values["source"], SNAPSHOT_SCHEMA) + layout_problems(values)
+      end
+
       KIND = Records::RecordKind.new(:id => TYPE_KIND, :label => "Window Type", :schema_version => 1,
                                      :id_prefix => "wnt", :fields => FIELDS, :references => REFERENCES,
-                                     :validate => ->(values) {
-                                                    Fields.problems(values) + Fields.source_problems(values["source"],
-                                                                                                     SNAPSHOT_SCHEMA) +
-                                                    layout_problems(values)
-                                                  })
+                                     :validate => method(:record_problems))
 
       def references(record)
         KIND.references.flat_map { |reference| reference.ids(record).map { |id| [reference.target_kind, id] } }.uniq

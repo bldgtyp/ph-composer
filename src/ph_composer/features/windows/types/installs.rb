@@ -12,9 +12,9 @@ module PhComposer
         record.fetch("elements").each do |element|
           next if element.fetch("kind") == "empty"
 
-          layout.classify(element).each_with_index { |classification, i|
+          layout.classify(element).each_with_index do |classification, i|
             yield element, Types::SIDES[i], classification
-          }
+          end
         end
       end
 
@@ -39,8 +39,10 @@ module PhComposer
         element = copy.fetch("elements").find { |cell| cell.fetch("id") == element_id }
         raise CodedError.new("target.not_found", "The element no longer exists.") unless element
 
-        raise CodedError.new("validation.failed",
-                             "Empty elements have no installation edges.") if element["kind"] == "empty"
+        if element["kind"] == "empty"
+          raise CodedError.new("validation.failed", "Empty elements have no installation edges.")
+        end
+
         classification = Grid.new(copy).classify(element).fetch(Types::SIDES.index(side))
         unless classification == :perimeter
           raise CodedError.new("validation.failed", "Only perimeter edges can be painted.")
@@ -58,6 +60,8 @@ module PhComposer
         validate(copy)
       end
 
+      # The grid bands and each element's kind, spans and edge classifications, in span order: what two
+      # Types must share for `copy`. Its digest is the panel's `copy_key`, so its shape stays as it is.
       def topology(record)
         layout = Grid.new(record)
         [record.fetch("rows_m"), record.fetch("columns_m"), record.fetch("elements").map do |element|

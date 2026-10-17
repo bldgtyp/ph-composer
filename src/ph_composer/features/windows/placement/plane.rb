@@ -22,6 +22,8 @@ module PhComposer
           invalid!("The host Face has no usable outer plane.") unless outer.is_a?(Array) && outer.length >= 3
           points = outer.map { |point| vector(point) }
           @origin_m = points.first.freeze
+          # In-plane up is world up projected onto the Face, or world green on a horizontal Face. Right is
+          # up crossed with the normal, and up is then recomputed from the two so the basis is orthonormal.
           projected = subtract(UP, scale(normal, Vector3.dot(UP, normal)))
           projected = subtract(GREEN, scale(normal, Vector3.dot(GREEN, normal))) if projected.all?(&:zero?)
           @y_axis = normalize(projected).freeze
@@ -40,6 +42,11 @@ module PhComposer
         def project(point_m)
           relative = subtract(vector(point_m), origin_m)
           vector([Vector3.dot(relative, x_axis), Vector3.dot(relative, y_axis), 0]).take(2).freeze
+        end
+
+        # The world point (metres) at in-plane coordinates measured from the origin, as `project` returns them.
+        def world(x_m, y_m)
+          3.times.map { |axis| origin_m[axis] + (x_axis[axis] * x_m) + (y_axis[axis] * y_m) }
         end
 
         def signed_distance_m(point_m)
@@ -66,9 +73,10 @@ module PhComposer
           polygon = lambda do |points|
             points.map do |point|
               local = subtract(vector(point), local_anchor)
-              vector(3.times.map { |axis|
+              world = 3.times.map do |axis|
                 target[axis] + x_axis[axis] * local[0] + y_axis[axis] * local[1] + normal[axis] * local[2]
-              }).freeze
+              end
+              vector(world).freeze
             end.freeze
           end
           panes = plan.panes.map do |pane|
