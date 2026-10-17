@@ -244,23 +244,14 @@ module PhComposer
         @entities = {}
         @isolated = nil
         @built_revision = nil
-        @visibility = nil
       end
 
       def rebuild
         declaration = mode
         return deactivate unless declaration
 
-        rows = {}
-        entities = Hash.new { |table, key| table[key] = [] }
-        @building_frames = Hash.new { |table, key| table[key] = [] }
-        fills = Hash.new { |table, colour| table[colour] = [] }
-        outlines = Hash.new { |table, colour| table[colour] = [] }
-        @building_lines = Hash.new { |table, colour| table[colour] = [] }
-        unclassified = []
-        unclassified_triangles = []
-        wash = []
-        @visibility = OccurrenceVisibility.new(@session.model)
+        drawing = Drawing.new(:visibility => OccurrenceVisibility.new(@session.model),
+                              :set_aside => method(:set_aside?), :in_filter => method(:matches_filter?))
         read = HandlerRequest.for(@session, :owner => declaration.owner, :name => declaration.name)
         painted = Array(declaration.projection.call(read)).map do |entry|
           [entry, *paint(declaration, entry)]
@@ -269,19 +260,8 @@ module PhComposer
         # deleted. Keeping the isolation then mutes everything and leaves no row offering to undo it,
         # so a row that is gone releases what it was holding.
         @isolated = nil unless painted.any? { |entry, state, _colour| [entry.value, state] == @isolated }
-        painted.each do |entry, state, colour|
-          add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified, unclassified_triangles, wash)
-        end
-        @rows = order(declaration, rows.values)
-        @entities = settled(entities)
-        # The default block is only for building; a reader must not create a batch by asking for one.
-        @fills = settled(fills)
-        @outlines = settled(outlines)
-        @unclassified_outlines = unclassified
-        @unclassified_hatch = Tessellation.hatch(unclassified_triangles)
-        @wash_triangles = wash
-        @lines = settled(@building_lines)
-        @frames = settled(@building_frames)
+        painted.each { |entry, state, colour| drawing.add(entry, state, colour) }
+        publish(declaration, drawing)
         @built_revision = @session.revision
         @rebuilds += 1
         invalidate_view
@@ -300,61 +280,20 @@ module PhComposer
         self
       end
 
-      def settled(batches)
-        batches.each_with_object({}) { |(colour, points), table| table[colour] = points }
-      end
-
-      def add_entry(entry, state, colour, rows, entities, fills, outlines, unclassified, unclassified_triangles, wash)
-        row = rows[[entry.value, state]] ||= Row.new(:value => entry.value, :label => Legend.label(entry),
-                                                     :colour => colour, :count => 0, :state => state)
-        row.count += 1
-        Legend.add_figure(row, entry.figure)
-        entities[[entry.value, state]] << [entry.entity, entry.transform] if entry.entity
-        add_derived(entry, state, colour, fills, unclassified, unclassified_triangles, wash) if entry.derived
-        return unless entry.entity && @visibility.visible?(entry.path, entry.entity)
-
-        # Set-aside geometry has its own wash pass, with no mode outline. A grey mode value and
-        # the unclassified hatch therefore keep their meaning during isolation.
-        if set_aside?(entry.value, state)
-          wash.concat(Tessellation.call(entry.entity, entry.transform).first)
-          return
-        end
-
-        triangles, segments, muted = Tessellation.partition(entry.entity, entry.transform, entry.path) do |path|
-          matches_filter?(path)
-        end
-        wash.concat(muted)
-        if state == :unclassified
-          unclassified.concat(segments) unless entry.hatch_outline == false
-          unclassified_triangles.concat(triangles)
-        else
-          fills[colour].concat(triangles) unless triangles.empty?
-          outlines[colour].concat(segments) unless segments.empty?
-        end
-      end
-
-      # An entry's shapes: hidden with its occurrence, filtered and set aside as a whole, and otherwise
-      # drawn in its colour, or with the hatch when it is unclassified.
-      def add_derived(entry, state, colour, fills, unclassified, unclassified_triangles, wash)
-        triangles, outlines, segments = Tessellation.derived(entry.derived)
-        @building_frames[[entry.value, state]].concat(triangles + segments)
-        # With an entity, the path must name it, as for the entity's own geometry; without one, the path
-        # names the occurrence the shapes belong to.
-        visible = if entry.entity
-                    @visibility.visible?(entry.path, entry.entity) && !Tessellation.skipped?(entry.entity)
-                  else
-                    @visibility.path_visible?(entry.path)
-                  end
-        return unless visible
-        return wash.concat(triangles) if set_aside?(entry.value, state) || !matches_filter?(entry.path)
-
-        if state == :unclassified
-          unclassified_triangles.concat(triangles)
-          unclassified.concat(outlines + segments) unless entry.hatch_outline == false
-        else
-          fills[colour].concat(triangles) unless triangles.empty?
-          @building_lines[colour].concat(outlines + segments) unless outlines.empty? && segments.empty?
-        end
+      # Replaces the drawing the overlay reads with a completed one. The two steps that can still raise,
+      # the mode's ordering and the hatch, run before anything is assigned.
+      def publish(declaration, drawing)
+        rows = order(declaration, drawing.rows)
+        hatch = Tessellation.hatch(drawing.unclassified_triangles)
+        @rows = rows
+        @entities = drawing.entities
+        @frames = drawing.frames
+        @fills = drawing.fills
+        @outlines = drawing.outlines
+        @lines = drawing.lines
+        @unclassified_outlines = drawing.unclassified_outlines
+        @unclassified_hatch = hatch
+        @wash_triangles = drawing.wash_triangles
       end
 
       # Rebuilds `names`, every readout on by default, keeping the others' drawings. A readout that fails

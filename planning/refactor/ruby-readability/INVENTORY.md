@@ -1,6 +1,6 @@
 # Ruby inventory
 
-GENERATED from the index on `9c8e5acf` by `ruby planning/refactor/ruby-readability/inventory.rb`. Do not edit by hand;
+GENERATED from the index on `986c0d44` by `ruby planning/refactor/ruby-readability/inventory.rb`. Do not edit by hand;
 review status and concerns live in [STATUS.md](STATUS.md). Re-run after a stage that adds or moves files.
 
 Columns: lines; `def` count; largest ABC and cyclomatic values RuboCop reported over its default
@@ -17,9 +17,9 @@ real boundary and may cross groups where an internal contract requires it.
 | --- | --- | ---: | ---: | ---: |
 | R01 | Spaces authoring and height from solid | 5 | 1204 | 39 |
 | R02 | Face classification and Attached-zone operations | 8 | 1823 | 54 |
-| R03 | Colour-by service and drawing | 14 | 3204 | 104 |
+| R03 | Colour-by service and drawing | 15 | 3268 | 104 |
 | R04 | Windows export assessment and export | 5 | 1247 | 49 |
-| R05 | Registration and registry validation | 7 | 2982 | 92 |
+| R05 | Registration and registry validation | 7 | 2998 | 92 |
 | R06 | Spaces reads, readouts, records and export | 22 | 2626 | 82 |
 | R07 | Spaces identity, move, copy and context | 16 | 2446 | 68 |
 | R08 | Spaces mark tool, create route and scan | 13 | 1766 | 49 |
@@ -51,7 +51,7 @@ real boundary and may cross groups where an internal contract requires it.
 | R34 | Examples and walkthrough scripts | 24 | 3687 | 101 |
 | R35 | Development tools | 2 | 242 | 5 |
 | R36 | Spikes (retained evidence probes) | 8 | 1792 | 60 |
-| | **All** | 551 | 83998 | 2493 |
+| | **All** | 552 | 84078 | 2493 |
 
 ## R01 Spaces authoring and height from solid
 
@@ -80,12 +80,13 @@ real boundary and may cross groups where an internal contract requires it.
 
 | File | Lines | defs | Max ABC | Max cyclomatic | Over |
 | --- | ---: | ---: | ---: | ---: | ---: |
+| `src/ph_composer/colour_by/drawing.rb` | 125 | 11 | 44.3 | 12 | 6 |
 | `src/ph_composer/colour_by/install.rb` | 223 | 10 | 41.6 |  | 1 |
 | `src/ph_composer/colour_by/legend.rb` | 46 | 3 | 28.4 | 13 | 3 |
 | `src/ph_composer/colour_by/overlay.rb` | 176 | 15 | 30.7 |  | 3 |
 | `src/ph_composer/colour_by/palette.rb` | 41 | 2 |  |  | 0 |
 | `src/ph_composer/colour_by/readout_output.rb` | 54 | 4 | 21.1 | 8 | 3 |
-| `src/ph_composer/colour_by/service.rb` | 473 | 31 | 60.2 | 12 | 17 |
+| `src/ph_composer/colour_by/service.rb` | 412 | 29 | 34.9 | 10 | 11 |
 | `src/ph_composer/colour_by/tessellation.rb` | 437 | 33 | 58.1 | 12 | 19 |
 | `tests/colour_by_derived_test.rb` | 180 | 18 | 34.7 |  | 7 |
 | `tests/colour_by_hatch_test.rb` | 138 | 12 | 29.8 | 8 | 8 |
@@ -109,9 +110,9 @@ real boundary and may cross groups where an internal contract requires it.
 
 | File | Lines | defs | Max ABC | Max cyclomatic | Over |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `src/ph_composer/shell/declarations.rb` | 250 | 3 |  |  | 0 |
-| `src/ph_composer/shell/registry.rb` | 513 | 48 | 55.6 |  | 4 |
-| `src/ph_composer/shell/registry_validation.rb` | 835 | 63 | 56.4 | 22 | 56 |
+| `src/ph_composer/shell/declarations.rb` | 251 | 3 |  |  | 0 |
+| `src/ph_composer/shell/registry.rb` | 518 | 49 | 55.6 |  | 4 |
+| `src/ph_composer/shell/registry_validation.rb` | 845 | 63 | 56.4 | 20 | 56 |
 | `tests/feature_composition_test.rb` | 464 | 30 | 40.9 |  | 11 |
 | `tests/loader_test.rb` | 82 | 7 | 23.3 |  | 2 |
 | `tests/registry_ownership_test.rb` | 213 | 12 | 69.6 |  | 7 |
