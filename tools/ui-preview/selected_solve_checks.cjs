@@ -42,7 +42,9 @@ fs.mkdirSync(output, { recursive: true });
     }
     // Real panel heights (#188): where the table can spare the room the bar floats at the pane's visible
     // bottom with Solve in view; at the minimum panel it docks beneath the table. Never over its header.
-    for (const [width, height, docked] of [[420, 732, false], [360, 520, true]]) {
+    // The preview's development section after the overview takes 129 px the shipping panel does not have,
+    // so the floating case runs at 900 high; the host recheck covers 420 x 732.
+    for (const [width, height, docked] of [[420, 900, false], [360, 520, true]]) {
       await page.setViewportSize({ width, height });
       // The panel refits on the resize event, which Chromium fires with the next frame.
       await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
@@ -55,8 +57,9 @@ fs.mkdirSync(output, { recursive: true });
           const pane = panes.getBoundingClientRect(), box = solve.getBoundingClientRect();
           return box.top >= pane.top && box.bottom <= pane.bottom;
         };
+        // The preview adds a development section after the overview; the fit leaves it room too.
         const result = { docked: bar.classList.contains("is-docked"), clearOfHead: bar.getBoundingClientRect().top >= head.bottom,
-          solveInView: inPane() };
+          solveInView: inPane(), paneStill: panes.scrollHeight <= panes.clientHeight };
         // The pane alone scrolls, as a user's wheel over it would; the preview page around it stays put.
         panes.scrollTop += Math.max(0, solve.getBoundingClientRect().bottom - panes.getBoundingClientRect().bottom);
         result.solveReached = inPane();
@@ -65,7 +68,10 @@ fs.mkdirSync(output, { recursive: true });
       });
       assert.equal(place.docked, docked, `the bar ${docked ? "docks" : "floats"} at ${width} x ${height}`);
       assert(place.clearOfHead, `the bar leaves the table's header in view at ${width} x ${height}`);
-      if (!docked) assert(place.solveInView, `Solve is in view without scrolling at ${width} x ${height}`);
+      if (!docked) {
+        assert(place.solveInView, `Solve is in view without scrolling at ${width} x ${height}`);
+        assert(place.paneStill, `the pane does not scroll when everything fits at ${width} x ${height}`);
+      }
       assert(place.solveReached, `Solve is reachable in the pane at ${width} x ${height}`);
       await page.screenshot({ path: path.join(output, `selected-solve-${width}x${height}.png`) });
     }

@@ -708,16 +708,19 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
      scrolls instead. Where the floating bar would cover the table's header, it docks beneath the table and
      the table is fitted again around it. */
   function place(own, bar) {
-    var mount = own.mount, pane = mount.closest(".panel-panes"), overview = mount.closest(".phc-overview");
-    if (!pane || !overview || !mount.getClientRects().length) return;
-    var refit = function () { fit(mount, pane, overview); }, head = mount.querySelector("thead");
+    var mount = own.mount, pane = mount.closest(".panel-panes");
+    if (!pane || !mount.closest("[data-pane]") || !mount.getClientRects().length) return;
+    var refit = function () { fit(mount, pane); }, head = mount.querySelector("thead");
     if (bar) bar.reserve(mount, head ? head.offsetHeight : 0, refit); else refit();
   }
 
-  function fit(mount, pane, overview) {
-    var paneBox = pane.getBoundingClientRect(), box = mount.getBoundingClientRect();
-    var below = overview.getBoundingClientRect().bottom - box.bottom;
-    var room = pane.clientHeight - (box.top - paneBox.top + pane.scrollTop) - below;
+  /* Below the table: the rest of the overview (a docked bar) and any section another feature adds to the pane. */
+  function fit(mount, pane) {
+    var paneBox = pane.getBoundingClientRect(), box = mount.getBoundingClientRect(), end = box.bottom;
+    Array.prototype.forEach.call(mount.closest("[data-pane]").children, function (part) {
+      if (part.getClientRects().length) end = Math.max(end, part.getBoundingClientRect().bottom);
+    });
+    var room = pane.clientHeight - (box.top - paneBox.top + pane.scrollTop) - (end - box.bottom);
     mount.style.maxHeight = Math.max(MIN_MOUNT, Math.floor(room)) + "px";
   }
 
