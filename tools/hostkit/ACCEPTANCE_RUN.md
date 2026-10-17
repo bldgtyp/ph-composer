@@ -4,6 +4,25 @@ Development-only tooling. The bridge and native controls obtain observations; th
 and checks them. It neither controls SketchUp nor awards acceptance. Keep recipes, baselines,
 observations, gate logs and raw evidence in gitignored `_private/host/<run>/`.
 
+## One case in two commands
+
+```sh
+uv run tools/hostkit/acceptance_case.py begin A09 --run-dir _private/host/<run> \
+  --fixture _private/host/<run>/A09/a09.skp --fixture-id "fresh copy of reference-assigned.skp" \
+  --control native --assert narrow-keyboard --assert held-model \
+  --window "a09.skp the only document in a fresh process" --target "Zones west and east, every Face classified"
+# drive the case; write <run>/A09/steps.md and <run>/A09/observations.json as you go
+uv run tools/hostkit/acceptance_case.py finish A09 --run-dir _private/host/<run> \
+  --evidence planning/native-acceptance/evidence/<run>.md
+```
+
+`begin` reads the host identity from the live bridge, refuses an installed extension that differs from
+`dist/ph_composer.rbz`, writes `recipe.json`, `meta.json`, `baseline.json` and `snapshot.json` in the case
+folder and starts `steps.md`; it refuses to overwrite an earlier run, which you move aside first
+(`A09-run1`). It warns when HEAD is not on `origin/main`, because the ledger row records HEAD. `finish`
+attaches `observations.json` (one row per assertion, each with an existing evidence file), writes
+`observed.json` and `result.json` and appends the ledger row. The commands below are the steps it runs.
+
 ## Preflight and immutable baseline
 
 Before asking for a human gesture, activate the actual document window, verify the active tool,

@@ -192,14 +192,18 @@ class DialogGuardTest(unittest.TestCase):
 
 
 class QuitTest(unittest.TestCase):
-    """A SketchUp with no document open must still quit cleanly, not be killed."""
+    """Every open document is closed clean before terminate, and no document still means a clean quit."""
 
-    def test_a_failed_save_step_still_terminates_and_the_save_guards_a_missing_model(self) -> None:
+    def quit_with(self, replies: list[object]) -> tuple[str, list[str]]:
         calls: list[str] = []
+        answers = iter(replies)
 
         def guard(_version: str, code: str, **_options: float) -> str:
             calls.append(code)
-            raise hb.BridgeError("the save step failed")
+            answer = next(answers)
+            if isinstance(answer, Exception):
+                raise answer
+            return str(answer)
 
         running = iter([True, False])
         with (
@@ -209,28 +213,44 @@ class QuitTest(unittest.TestCase):
             patch.object(hb, "request", side_effect=lambda _state, payload, **_kw: calls.append(payload["code"])),
             patch.object(hb.time, "sleep"),
         ):
-            outcome = hb.quit_sketchup("2026")
+            return hb.quit_sketchup("2026"), calls
 
+    def test_each_open_document_is_closed_until_none_is_left_then_terminate(self) -> None:
+        outcome, calls = self.quit_with(['"closed"', '"closed"', '"none"'])
         self.assertEqual(outcome, "SketchUp quit cleanly")
-        self.assertEqual(calls, [hb.DISCARD_SAVE, 'Sketchup.send_action("terminate:")'], "save, then terminate")
+        self.assertEqual(len(calls), 4, "two documents closed, one empty read, then terminate")
+        self.assertIn(hb.DISCARD_PATH.format(index=1), calls[1], "each document saves to its own scratch path")
+        self.assertEqual(calls[-1], 'Sketchup.send_action("terminate:")')
 
-    @unittest.skipUnless(shutil.which("ruby"), "needs a ruby to run the save step")
-    def test_the_save_step_saves_only_a_modified_model_and_tolerates_none(self) -> None:
+    def test_a_failed_close_step_still_terminates(self) -> None:
+        outcome, calls = self.quit_with([hb.BridgeError("the close step failed")])
+        self.assertEqual(outcome, "SketchUp quit cleanly")
+        self.assertEqual(calls[-1], 'Sketchup.send_action("terminate:")')
+
+    @unittest.skipUnless(shutil.which("ruby"), "needs a ruby to run the close step")
+    def test_the_close_step_saves_and_closes_any_active_model_and_tolerates_none(self) -> None:
         stub = (
-            "class M; def initialize(modified); @modified = modified; end; def modified?; @modified; end; "
-            "def save(path); $saved = path; true; end; end; "
-            "module Sketchup; def self.active_model; $model; end; end; "
+            "class M; def save(path); $saved = path; true; end; end; "
+            "module Sketchup; def self.active_model; $model; end; "
+            "def self.send_action(action); $action = action; true; end; end; "
         )
-        for model, saved in (
-            ("nil", "nil"),
-            ("M.new(false)", "nil"),
-            ("M.new(true)", '"/private/tmp/ph_composer_discard.skp"'),
-        ):
-            script = (
-                f"{stub}$model = {model}; $saved = nil; value = ({hb.DISCARD_SAVE}); puts value.inspect, $saved.inspect"
-            )
+        code = hb.CLOSE_ACTIVE.replace("{path}", "/private/tmp/x.skp")
+        cases = (
+            ("nil", [":none", "nil", "nil"]),
+            ("M.new", [":closed", '"/private/tmp/x.skp"', '"performClose:"']),
+        )
+        for model, expected in cases:
+            script = f"{stub}$model = {model}; value = ({code}); puts value.inspect, $saved.inspect, $action.inspect"
             result = subprocess.run(["ruby", "-e", script], capture_output=True, text=True, check=True)
-            self.assertEqual(result.stdout.split(), [":ok", saved], model)
+            self.assertEqual(result.stdout.split(), expected, model)
+
+
+class RecoveryCopyTest(unittest.TestCase):
+    def test_only_a_scratch_fixture_has_its_recovery_copy_cleared(self) -> None:
+        working = hb.SUPPORT / "SketchUp 2026" / "SketchUp" / "working"
+        self.assertEqual(hb.recovery_copy("2026", Path("/repo/_private/host/run/a09.skp")), working / "a09.skp")
+        self.assertEqual(hb.recovery_copy("2026", Path("/private/tmp/scratch.skp")), working / "scratch.skp")
+        self.assertIsNone(hb.recovery_copy("2026", Path("/Users/someone/Projects/house.skp")))
 
 
 class TailTest(unittest.TestCase):
