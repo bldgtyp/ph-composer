@@ -43,9 +43,11 @@ NODE_TEST_TIMEOUT_MS ?= 60000
 export JS_TEST_MAX_RSS_MB
 
 # One run reports every language's failures instead of stopping at the first. The JavaScript files
-# are found by glob, so a new `tests/*_test.js` needs no Makefile line.
+# are found by glob, so a new `tests/*_test.js` needs no Makefile line. The Ruby suite runs as one process
+# per processor (tests/parallel_tests.rb; RUBY_TEST_JOBS overrides the count); `$(RUBY) -Itests
+# tests/all_tests.rb` is the same suite in one process.
 test: hooks-auto
-	@$(RUBY) -Itests tests/all_tests.rb; ruby_status=$$?; \
+	@$(RUBY) -Itests tests/parallel_tests.rb; ruby_status=$$?; \
 	 if [ -n "$(JS_TESTS)" ]; then \
 	   node tools/js_test_guard.js node --test --test-timeout=$(NODE_TEST_TIMEOUT_MS) $(JS_TESTS); js_status=$$?; \
 	 else echo "JavaScript suite: no tests found"; js_status=1; fi; \

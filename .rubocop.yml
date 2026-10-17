@@ -8,9 +8,11 @@ AllCops:
   TargetRubyVersion: 2.7
   SuggestExtensions: false
   Exclude:
-    # `_private/` is the gitignored corpus and `vendor/` is other people's code. `syntax` in the
-    # Makefile draws the same boundary: src, tests and tools.
+    # `_private/` is the gitignored corpus and `vendor/` is other people's code. `planning/` holds
+    # retained evidence probes, which are records rather than code. `syntax` in the Makefile and the
+    # pre-commit hook (`RUBY_ROOTS`) draw the same boundary: src, tests and tools.
     - "_private/**/*"
+    - "planning/**/*"
     - "vendor/**/*"
     - "src/ph_composer/vendor/**/*"
     - "tests/fixtures/**/*"
