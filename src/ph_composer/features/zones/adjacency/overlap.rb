@@ -13,6 +13,7 @@ module PhComposer
     #   :partial       the shared region is a proper subset of at least one Face
     #   :same_normal   coplanar and overlapping but pointing the same way: overlapping Zones
     #   :sliver        a real overlap too small or too narrow to cut
+    #   :glued_instances  a partial overlap that would cut a Face carrying glued components
     #   :unsupported   a shape this solver will not cut; reported, never guessed at
     module Overlap
       # Independent area and width thresholds. They are about what is safe to draw, not about
@@ -54,8 +55,9 @@ module PhComposer
         # region they share. Judging the size first would report a real modelling error as an ordinary
         # skip, and "skipped" implies the solver would otherwise have paired them. An unsupported
         # shape is left alone: there the solver never learned whether they overlap.
-        return Result.new(:kind => :same_normal, :area_m2 => shared.area_m2) if aligned == :same &&
-                                                                                %i[partial sliver].include?(shared.kind)
+        if aligned == :same && %i[partial sliver].include?(shared.kind)
+          return Result.new(:kind => :same_normal, :area_m2 => shared.area_m2)
+        end
 
         if shared.kind == :partial &&
            ((left.has_glued_instances && !shared.left_remainders_m.empty?) ||

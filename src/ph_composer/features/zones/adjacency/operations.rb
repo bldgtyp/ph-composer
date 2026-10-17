@@ -38,10 +38,7 @@ module PhComposer
           sides.fetch(key).fetch(:regions) << { "match_index" => index, "polygon_m" => match.fetch(:overlap).polygon_m }
           key
         end
-        pair_id = Records::Identity.derived(
-          "adj", "faces" => [:left, :right].map { |name| match.fetch(name).fetch(:record).fetch("id") }.sort
-        )
-        { "keys" => positions, "pair_id" => pair_id }
+        { "keys" => positions, "pair_id" => Adjacency.pair_id_for(match.fetch(:left), match.fetch(:right)) }
       end
       face_keys = sides.keys
       faces = face_keys.map do |key|
@@ -107,9 +104,7 @@ module PhComposer
     def split_match(request, proposal, match)
       overlap = match.fetch(:overlap)
       check_unpaired!(match)
-      pair_id = Records::Identity.derived(
-        "adj", "faces" => [:left, :right].map { |side| match.fetch(side).fetch(:record).fetch("id") }.sort
-      )
+      pair_id = Adjacency.pair_id_for(match.fetch(:left), match.fetch(:right))
       sides = [:left, :right].map do |name|
         side_plan(request, match.fetch(name), overlap, name == :left ? :left : :right)
       end

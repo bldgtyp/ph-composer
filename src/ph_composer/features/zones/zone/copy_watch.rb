@@ -3,7 +3,7 @@
 module PhComposer
   module Zones
     # Makes a fresh native copy of a Zone independent automatically, joined to the user's copy so one
-    # Undo removes both (D-1). The Zones reconciler for copies, following "Observers report; deferred
+    # Undo removes both. The Zones reconciler for copies, following "Observers report; deferred
     # work mutates" (context/TECH_STACK.md); the host facts it relies on are in
     # context/SKETCHUP_HOST_BEHAVIOR.md and the rule it applies in context/CONTRACTS.md, "Reconciliation".
     #
@@ -14,7 +14,7 @@ module PhComposer
     # has copies, which are those added occurrences. A duplicate that was already there has two
     # originals and is left for the explicit command, as is anything in a file as it opens. Paths
     # through a ComponentInstance are dropped silently, because a component's placements share it by
-    # design (D-7). The rest run as one gesture through `HostFollowUp` and Make Zone
+    # design. The rest run as one gesture through `HostFollowUp` and Make Zone
     # independent: all or nothing, one notice.
     #
     # Undo and Redo drop a pending pass and never repair: an array count (`5x`) undoes the first copy
