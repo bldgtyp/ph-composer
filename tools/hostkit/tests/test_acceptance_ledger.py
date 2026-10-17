@@ -72,6 +72,60 @@ class AcceptanceLedgerTest(unittest.TestCase):
         (self.root / "src/action.rb").unlink()
         self.assertNotEqual(baseline, ledger.source_fingerprint(self.root, self.case["paths"]))
 
+    def commit_all(self) -> str:
+        subprocess.run(["git", "add", "-A"], cwd=self.root, check=True)
+        subprocess.run(
+            ["git", "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "c"],
+            cwd=self.root,
+            check=True,
+        )
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
+
+    def test_a_changed_dependency_list_holds_while_its_files_are_unchanged_since_the_recorded_commit(self) -> None:
+        (self.root / "docs").mkdir()
+        (self.root / "docs/guide.md").write_text("guide")
+        (self.root / "lib").mkdir()
+        (self.root / "lib/helper.rb").write_text("helper")
+        commit = self.commit_all()
+        self.assertEqual(
+            ledger.fingerprint_at(self.root, commit, ["src/*", "lib/*"]),
+            ledger.source_fingerprint(self.root, ["src/*", "lib/*"]),
+            "an unchanged tree fingerprints the same from git's objects as from the files",
+        )
+        recorded = {
+            **self.result,
+            "commit": commit,
+            "dependency_paths": ["src/*", "docs/*"],
+            "source_fingerprint": ledger.source_fingerprint(self.root, ["src/*", "docs/*"]),
+        }
+        (self.root / ledger.RESULTS).write_text(json.dumps(recorded) + "\n")
+        narrowed = {**self.case, "paths": ["src/*"]}
+        widened = {**self.case, "paths": ["src/*", "docs/*", "lib/*"]}
+        (self.root / "docs/guide.md").write_text("reworded guide")
+        self.assertEqual(
+            "source_unchanged_environment_unchecked", ledger.status(self.root, {"C1": narrowed}, [])[0]["state"]
+        )
+        self.assertEqual("needs_recheck", ledger.status(self.root, {"C1": widened}, [])[0]["state"], "docs changed")
+        (self.root / "docs/guide.md").write_text("guide")
+        self.assertEqual(
+            "source_unchanged_environment_unchecked", ledger.status(self.root, {"C1": widened}, [])[0]["state"]
+        )
+        (self.root / "src/action.rb").write_text("changed")
+        self.assertEqual("needs_recheck", ledger.status(self.root, {"C1": narrowed}, [])[0]["state"])
+        (self.root / "src/action.rb").write_text("old")
+        dirty = {**recorded, "source_fingerprint": "0" * 64}
+        (self.root / ledger.RESULTS).write_text(json.dumps(dirty) + "\n")
+        self.assertEqual(
+            "needs_recheck",
+            ledger.status(self.root, {"C1": narrowed}, [])[0]["state"],
+            "a result captured on uncommitted changes is not vouched for by its commit",
+        )
+        missing = {**recorded, "commit": "f" * 40}
+        (self.root / ledger.RESULTS).write_text(json.dumps(missing) + "\n")
+        self.assertEqual(
+            "needs_recheck", ledger.status(self.root, {"C1": narrowed}, [])[0]["state"], "no commit, no proof"
+        )
+
     def test_passing_source_is_not_an_automatic_current_host_pass(self) -> None:
         ledger.validate_result(self.root, self.cases, self.result)
         self.assertEqual("source_unchanged_environment_unchecked", ledger.status(self.root, self.cases, [])[0]["state"])

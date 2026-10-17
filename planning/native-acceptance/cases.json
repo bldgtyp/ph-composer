@@ -7,9 +7,6 @@
       "mode": "mixed",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -35,9 +32,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -61,9 +55,6 @@
       "mode": "mixed",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -94,9 +85,6 @@
       "mode": "mixed",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -130,9 +118,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -160,9 +145,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -188,9 +170,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -216,9 +195,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/colour_by/*",
         "src/ph_composer/core/*",
@@ -247,9 +223,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -283,9 +256,6 @@
       "mode": "mixed",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "pyproject.toml",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
@@ -324,9 +294,6 @@
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
         "Makefile",
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "pyproject.toml",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
@@ -360,9 +327,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "pyproject.toml",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
@@ -405,9 +369,6 @@
       "mode": "mixed",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "pyproject.toml",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
@@ -437,9 +398,6 @@
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
         "Makefile",
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "pyproject.toml",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
@@ -470,9 +428,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "pyproject.toml",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
@@ -503,9 +458,6 @@
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
         "Makefile",
-        "context/EXTENSIBILITY.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "pyproject.toml",
         "src/ph_composer.rb",
         "src/ph_composer/colour_by/*",
@@ -553,8 +505,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -576,8 +526,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -599,8 +547,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -622,8 +568,6 @@
       "mode": "native",
       "authority": "planning/archive/phase-01-faces-and-zones/ACCEPTANCE.md",
       "paths": [
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
-        "context/TECH_STACK.md",
         "src/ph_composer.rb",
         "src/ph_composer/core/*",
         "src/ph_composer/extension.rb",
@@ -701,10 +645,7 @@
         "tests/subtabs_test.js",
         "tests/record_edits_units_test.js",
         "tests/inventory_grid_test.js",
-        "tools/ui-preview/*",
-        "context/CONTRACTS.md",
-        "context/EXTENSIBILITY.md",
-        "context/TECH_STACK.md"
+        "tools/ui-preview/*"
       ],
       "native_control_required": true
     },
@@ -720,8 +661,7 @@
         "src/ph_composer/extension.rb",
         "tests/assembly_records*",
         "tests/support/assembly_record_fixtures.rb",
-        "tools/examples/authoring/assemblies_walkthrough.rb",
-        "context/CONTRACTS.md"
+        "tools/examples/authoring/assemblies_walkthrough.rb"
       ],
       "native_control_required": true
     },
@@ -1096,8 +1036,6 @@
         "src/ph_composer/features/zones/*",
         "src/ph_composer/features/zones/faces/*",
         "src/ph_composer/html/*",
-        "context/TECH_STACK.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
         "tools/hostkit/host_bridge*"
       ],
       "native_control_required": true
@@ -1116,8 +1054,6 @@
         "src/ph_composer/features/zones/*",
         "src/ph_composer/features/zones/faces/*",
         "src/ph_composer/html/*",
-        "context/TECH_STACK.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
         "tools/hostkit/host_bridge*"
       ],
       "native_control_required": true
@@ -1136,8 +1072,6 @@
         "src/ph_composer/features/zones/*",
         "src/ph_composer/features/zones/faces/*",
         "src/ph_composer/html/*",
-        "context/TECH_STACK.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
         "tools/hostkit/host_bridge*"
       ],
       "native_control_required": true
@@ -1156,8 +1090,6 @@
         "src/ph_composer/features/zones/*",
         "src/ph_composer/features/zones/faces/*",
         "src/ph_composer/html/*",
-        "context/TECH_STACK.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
         "tools/hostkit/host_bridge*"
       ],
       "native_control_required": true
@@ -1176,8 +1108,6 @@
         "src/ph_composer/features/zones/*",
         "src/ph_composer/features/zones/faces/*",
         "src/ph_composer/html/*",
-        "context/TECH_STACK.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
         "tools/hostkit/host_bridge*"
       ],
       "native_control_required": true
@@ -1196,8 +1126,6 @@
         "src/ph_composer/features/zones/*",
         "src/ph_composer/features/zones/faces/*",
         "src/ph_composer/html/*",
-        "context/TECH_STACK.md",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
         "tools/hostkit/host_bridge*"
       ],
       "native_control_required": true
@@ -1363,7 +1291,9 @@
         "src/ph_composer/features/spaces/reads.rb",
         "src/ph_composer/features/spaces/scan/*",
         "src/ph_composer/features/spaces/declarations/spaces.rb",
-        "tests/spaces_*panel*"
+        "tests/spaces_*panel*",
+        "src/ph_composer/html/selection_bar.js",
+        "src/ph_composer/html/features/zones/overview.js"
       ],
       "native_control_required": true
     },
