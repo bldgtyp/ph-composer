@@ -239,7 +239,7 @@ module PhComposer
 
     # Whether Make Zone independent can act on this occurrence and, when it cannot, why, in the words
     # the panel shows. Availability runs the same plan the action does, so a copy rule or a duplicated
-    # Face id that would refuse is never offered (D-6). `retired_pairs` is what acting would cost.
+    # Face id that would refuse is never offered. `retired_pairs` is what acting would cost.
     def independence(request, zone, id_count)
       refusal = Repair.independence_refusal(request.model, zone, :id_count => id_count) || plan_refusal(request, zone)
       surface = Occurrences.faces(zone).count do |face|
@@ -256,10 +256,7 @@ module PhComposer
       parent_path = Occurrences.active_path(model)
       parent = Occurrences.entities_at(model, parent_path)
       return nil if selected.empty? || selected.any? { |entity| !parent.include?(entity) }
-
-      valid = (selected.length == 1 && selected.first.is_a?(Sketchup::Group)) ||
-              selected.all? { |entity| entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge) }
-      return nil unless valid
+      return nil unless make_zone_shape?(selected)
 
       target = { "parent_path" => parent_path, "entity_ids" => selected.map(&:persistent_id) }
       validate_make_target!(model, target.fetch("parent_path"), target.fetch("entity_ids"))
@@ -275,9 +272,9 @@ module PhComposer
 
       entities = Occurrences.entities_at(model, parent_path)
       selected = entity_ids.map { |id| Occurrences.unique_entity(entities, id) }
-      valid = (selected.length == 1 && selected.first.is_a?(Sketchup::Group)) ||
-              selected.all? { |entity| entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge) }
-      raise CodedError.new("target.wrong_kind", "Make Zone accepts one Group or loose Faces and Edges.") unless valid
+      unless make_zone_shape?(selected)
+        raise CodedError.new("target.wrong_kind", "Make Zone accepts one Group or loose Faces and Edges.")
+      end
       if Array(model.active_path).any? { |entity| ZONE_STORE.read(entity) }
         raise CodedError.new("target.wrong_hierarchy", "A Zone cannot be made inside another Zone.")
       end
@@ -294,6 +291,12 @@ module PhComposer
           raise CodedError.new("target.locked", "The selected Group is locked.")
         end
       end
+    end
+
+    # Make Zone takes one Group, or loose Faces and Edges.
+    def make_zone_shape?(selected)
+      (selected.length == 1 && selected.first.is_a?(Sketchup::Group)) ||
+        selected.all? { |entity| entity.is_a?(Sketchup::Face) || entity.is_a?(Sketchup::Edge) }
     end
 
     def default_name(model)
@@ -313,7 +316,7 @@ module PhComposer
 
       "found"
     end
-    private_class_method :zone_view, :validate_make_target!, :zone_state, :overview, :duplicate_ids,
+    private_class_method :zone_view, :validate_make_target!, :make_zone_shape?, :zone_state, :overview, :duplicate_ids,
                          :project_row, :independence, :retired_pairs, :plan_refusal
   end
 end

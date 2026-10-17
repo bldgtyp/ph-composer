@@ -2,9 +2,9 @@
 
 require_relative "test_helper"
 
-# A native copy of a Zone becomes independent automatically, joined to the user's copy (D-1). The
-# copy here is a second Group over the same definition carrying the Zone record, added just after its
-# operation commits, the order measured on the host (P2, S1); the deferred pass runs on `UI.run_timers`.
+# A native copy of a Zone becomes independent automatically, joined to the user's copy. The copy here
+# is a second Group over the same definition carrying the Zone record, added just after its operation
+# commits, the order measured on the host; the deferred pass runs on `UI.run_timers`.
 class ZoneCopyWatchTest < PhComposerTestCase
   API = PhComposer::API
   ZONE_STORE = PhComposer::Zones::ZONE_STORE

@@ -33,7 +33,7 @@ module PhComposer
 
       def scan_zones(model)
         found = []
-        walk_zones(model.entities, [], identity, false, false, false, found)
+        walk_zones(model.entities, [], identity, found, :shared => false, :inside_zone => false, :locked => false)
         found
       end
 
@@ -325,7 +325,9 @@ module PhComposer
         matches.first
       end
 
-      def walk_zones(entities, path, transform, shared, inside_zone, locked, found)
+      # `shared`, `inside_zone` and `locked` are what the containers above `entities` pass down: shared
+      # storage, an enclosing Zone, and a lock.
+      def walk_zones(entities, path, transform, found, shared:, inside_zone:, locked:)
         entities.each do |entity|
           next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
           next if cutting_component?(entity)
@@ -344,8 +346,9 @@ module PhComposer
                                         :nested => inside_zone, :locked_parent => locked)
           end
           child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
-          walk_zones(child_entities, child_path, child_transform, child_shared,
-                     inside_zone || !record.nil?, locked || entity.locked?, found)
+          walk_zones(child_entities, child_path, child_transform, found,
+                     :shared => child_shared, :inside_zone => inside_zone || !record.nil?,
+                     :locked => locked || entity.locked?)
         end
       end
 

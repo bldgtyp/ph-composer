@@ -220,14 +220,13 @@ module PhComposer
             next
           end
 
-          sides = group.flat_map do |match|
-            [:left, :right].map do |name|
-              [face_key(match.fetch(name)), match.fetch(name), match.fetch(:overlap).polygon_m]
-            end
+          # Each original Face in the component, with every shared region the component cuts from it.
+          cuts = group.flat_map do |match|
+            [:left, :right].map { |name| { :side => match.fetch(name), :polygon_m => match.fetch(:overlap).polygon_m } }
           end
-          group_partitions = {}
-          sides.group_by(&:first).each do |key, entries|
-            group_partitions[key] = Overlap.partition(entries.first.fetch(1).fetch(:geometry), entries.map(&:last))
+          group_partitions = cuts.group_by { |cut| face_key(cut.fetch(:side)) }.to_h do |key, face_cuts|
+            geometry = face_cuts.first.fetch(:side).fetch(:geometry)
+            [key, Overlap.partition(geometry, face_cuts.map { |cut| cut.fetch(:polygon_m) })]
           end
           if group_partitions.values.any?(&:nil?)
             findings << multiple_neighbours(group)
@@ -244,15 +243,13 @@ module PhComposer
         result = []
         until remaining.empty?
           group = [remaining.shift]
-          keys = group.flat_map { |match| [:left, :right].map { |name| face_key(match.fetch(name)) } }
+          keys = match_keys(group.first)
           loop do
-            connected, remaining = remaining.partition do |match|
-              [:left, :right].any? { |name| keys.include?(face_key(match.fetch(name))) }
-            end
+            connected, remaining = remaining.partition { |match| match_keys(match).any? { |key| keys.include?(key) } }
             break if connected.empty?
 
             group.concat(connected)
-            keys.concat(connected.flat_map { |match| [:left, :right].map { |name| face_key(match.fetch(name)) } })
+            keys.concat(connected.flat_map { |match| match_keys(match) })
           end
           result << group
         end
@@ -261,6 +258,11 @@ module PhComposer
 
       def face_key(side)
         Occurrences.key(side.fetch(:occurrence).reference)
+      end
+
+      # The two Faces a match joins, as occurrence keys.
+      def match_keys(match)
+        [face_key(match.fetch(:left)), face_key(match.fetch(:right))]
       end
 
       def multiple_neighbours(group)
@@ -312,8 +314,14 @@ module PhComposer
           raise CodedError.new("adjacency.stale", "Retire the existing Surface pair before solving again.")
         end
 
-        pair_id = Records::Identity.derived("adj", "faces" => [left_record.fetch("id"), right_record.fetch("id")].sort)
+        pair_id = pair_id_for(left, right)
         [with_pair(left, right, pair_id), with_pair(right, left, pair_id), pair_id]
+      end
+
+      # A pair's id derives from its two Face ids alone, in either order, so a full match, a cut and a
+      # partition all name the same pair the same way.
+      def pair_id_for(left, right)
+        Records::Identity.derived("adj", "faces" => [left, right].map { |side| side.fetch(:record).fetch("id") }.sort)
       end
 
       def state(model, occurrence, record, index: nil)
