@@ -41,7 +41,13 @@ open Models, their Zones, Spaces, Assemblies and Window Types and the values PH-
 and changes nothing. The token is shown once; copy it then, because it is not shown again. The
 token is the only secret: anyone holding it has its access until you revoke it in the same window.
 Revoking keeps the token in the list with the date it was revoked. Up to eight tokens can be live
-at once. No connection serves tokens yet, so the window says agents cannot connect.
+at once.
+
+While a token is live, PH-Composer listens for agents on this computer only, on port 46110, and the
+Agent Access window says so. An agent connects over MCP with the token as a bearer header and can
+read: list the open Models, describe and run the read operations, and preview a change without
+making it. Client setup instructions follow once both supported agents have been checked against an
+installed build.
 
 ## Not yet available
 

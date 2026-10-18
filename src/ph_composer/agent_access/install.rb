@@ -30,17 +30,19 @@ module PhComposer
                                               :available => ->(_read) { false }) { |_session| Dialog.show }
     end
 
-    # Called after every token store write. The dialog shows the new list; the loopback listener, when
-    # it exists, starts with the first live token and stops after the last is revoked.
+    # Called after every token store write: the listener starts with the first live token, takes the
+    # new snapshot and stops after the last revoke, and the dialog shows the new list.
     def tokens_changed
+      Listener.refresh
       Dialog.refresh
     end
 
-    # The listener's state for the dialog. No listener is served yet, so it is always stopped.
+    # The listener's state for the dialog.
     def server_status
-      { "state" => "stopped" }
+      Listener.status
     end
   end
 
   on_reset("agent_access.dialog") { AgentAccess::Dialog.reset_for_test }
+  on_reset("agent_access.listener") { AgentAccess::Listener.stop }
 end

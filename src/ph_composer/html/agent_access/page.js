@@ -11,7 +11,14 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       read: { label: "Read", consent: "Reads the open Models: their Zones, Spaces, Assemblies and Window Types, " +
         "and the values PH-Composer calculates. Changes nothing." }
     };
-    var SERVER = { stopped: "Not listening: agents cannot connect until the connection is switched on." };
+    /* The listener's state as the status line says it. */
+    function serverLine(server) {
+      if (server.state === "listening") {
+        return "Listening on port " + server.port + ": agents with a live token can connect.";
+      }
+      if (server.state === "unavailable") return "Not listening: " + server.message;
+      return "Not listening: agents can connect once a token is issued.";
+    }
 
     function day(iso) { return iso ? new Date(iso).toLocaleDateString() : ""; }
     function capabilityNames(list) {
@@ -57,7 +64,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
         this.pending = false;
         this.tokens = payload.tokens || []; this.offered = payload.offered || ["read"];
         this.unreadable = payload.state === "unreadable";
-        this.serverState = (payload.server || {}).state;
+        this.serverStatus = payload.server || {};
         if (this.revoking && !this.tokens.some(function (row) { return row.id === this.revoking && !row.revoked_at; },
           this)) this.closeRevoke();
         this.paint();
@@ -101,7 +108,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
 
     Page.prototype.paint = function () {
       var self = this;
-      this.server.textContent = SERVER[this.serverState] || SERVER.stopped;
+      this.server.textContent = serverLine(this.serverStatus || {});
       this.list.replaceChildren();
       this.tokens.forEach(function (token) { self.list.appendChild(self.row(token)); });
       if (!this.tokens.length && !this.unreadable) {

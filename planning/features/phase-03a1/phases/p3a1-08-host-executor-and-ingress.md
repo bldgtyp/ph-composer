@@ -1,8 +1,8 @@
 # P3a1-08: Loopback HTTP ingress and main-thread executor
 
 DATE: 2026-10-17
-STATUS: Scoped. Planning only; execution requires separate implementation authorization. Rewritten 2026-10-17 to accepted D3a1-01, 02 and 14: served from Ruby, bridge pattern, ingress-assigned sequence. The write-scope slice follows 07's write slice in V5.
-ISSUE: none (local planning draft)
+STATUS: Read-scope slice implemented on branch `feat/phase-03a1-p3a1-08` with 10's; write-scope slice Scoped (V5).
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership
 

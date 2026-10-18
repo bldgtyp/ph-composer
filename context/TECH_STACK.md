@@ -235,6 +235,12 @@ the panel never loads Pyodide, and nothing starts the runtime when the extension
 opens. The server's token authorizes loading runtime assets and nothing else; it is not an agent
 credential.
 
+The agent listener is a second loopback server (`agent_access/server.rb`), separate from the asset
+server and never sharing its token: it binds a fixed, configurable port while an agent token is
+live, answers MCP over `POST /mcp`, and runs tool calls on the main thread through a UI-timer pump,
+as the asset server's pump lets its own workers run (AGENT_INTERFACE.md, "User-controlled local
+access").
+
 A feature adds export coverage with `feature.export_contributor(name, section_version:, result:,
 report:, preflight:, requires:, projection:)` in its `install`, whose block returns the section's records, and a Python `Section` with
 the same id listed in `python/ph_composer_translation/composition.py`. The block reads through

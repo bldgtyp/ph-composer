@@ -279,7 +279,43 @@ shown once in that dialog; the store, base64 JSON in SketchUp's defaults, keeps 
 most 8 live tokens and the newest 32 revoked rows, with no expiry. Revoking keeps a dated row.
 Nothing about tokens is registered with `PhComposer::API`: no grant lets an agent list, issue or
 revoke one. `Tokens.snapshot` is the frozen digest-to-row table the connection authenticates
-against. No listener serves a token yet; the dialog says the connection is not listening.
+against.
+
+Implemented: the external route is MCP served from Ruby inside SketchUp, `agent_access/server.rb`.
+It listens on `127.0.0.1` at the `agent_access.port` preference (default 46110) while at least one
+token is live, and stops after the last revoke; a port it cannot bind is shown in the dialog and
+nothing falls back to another port. One JSON-RPC 2.0 message per `POST /mcp`, `application/json`
+both ways, `Connection: close`; no SSE, batches or `GET` stream (405). In order, before anything
+runs: a request read within 5 s, headers at most 16 KiB and a body at most 1 MiB (413), `POST` to
+`/mcp` (405, 404), no `Origin` header and a `Host` of `127.0.0.1:<port>` or `localhost:<port>`
+(403), `Authorization: Bearer <token>` matching a live token's digest (401), `application/json`
+(415), one JSON-RPC request (parse error, invalid request for a batch). Worker threads do only this
+and never call Sketchup or UI; the offline stub refuses a host call off the main thread. At most 16
+connections are open.
+
+`initialize`, `ping`, `tools/list`, `resources/list` and `prompts/list` are answered on the worker
+(`agent_access/mcp.rb`): `initialize` answers the client's revision when it is `2025-11-25` (Claude
+Code 2.1.300) or `2025-06-18` (Codex 0.163.0), otherwise the newer, and reports
+`serverInfo.version` and `_meta["ph_composer/api"]`. `tools/call` is queued for the main thread,
+where a UI-timer pump (50 ms while calls wait, 100 ms idle, ending each tick with a short sleep so
+the workers run) hands it to `agent_access/executor.rb`. A token may have 8 calls waiting; a ninth,
+a call older than 30 s, or a pump that has not ticked for 10 s is answered `session.busy` by the
+worker and never runs. Workers do run while the main thread does long Ruby work; under a native
+modal no Ruby thread runs, so the client sees its own tool timeout (measured on 26.1.188).
+
+The executor rechecks the token, validates the arguments against the tool's fixed schema, and makes
+the one API call the tool names (`agent_access/tools.rb`, the allowlist). A token acts on a session
+through one caller handle from `API.connect` with the token's capabilities, kept while both live.
+The tools are the API verbs: `discover` (a compact index of every operation name by kind and owner,
+or one owner's full entries), `describe`, `query`, `preview` and `export_preflight`, all `read`.
+A result is the API's answer as `structuredContent` with one line of text in `content`: Claude Code
+shows its model only `structuredContent`, and Codex shows both, so a second JSON copy would count
+twice. Every Outcome, refusals included, is an ordinary result; `isError` marks an unknown tool,
+arguments outside the schema, a revoked token or a result over 24 KB of `structuredContent`
+(`request.response_too_large`, never truncated). Claude Code 2.1.300 saved a 60 KiB result to a file
+instead of showing it, and Codex 0.163.0 kept about 10,000 tokens of a larger one. A bounded ring of
+recent calls (tool, operation name, session, status, code, time; no params, value, path or token)
+is flushed to the diagnostics log.
 
 Keep a bounded operation history with caller identity, action, target references, outcome and
 revision for diagnosis. Avoid full payload or secret logging. Exact retention and user-visible

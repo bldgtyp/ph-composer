@@ -71,7 +71,7 @@ decision in this register is now answered; D02 stands as D01's engineering defau
 | Model-context read | 200 selected entities per page | Selection paging under C02 |
 | Captures (if D08 lands) | 2 MB PNG, 4 retained per session for 15 min | Follows the outcome lifetime |
 | Request headers | 16 KiB | Added by P3a1-06 from the asset server's `MAX_HEADER_BYTES` |
-| Open TCP connections | 8 | Added by P3a1-06; an agent sends one request at a time |
+| Open TCP connections | 16 (started at 8) | Added by P3a1-06. Raised by P3a1-08: at 8 the connection cap closed one token's ninth call before the 8-pending limit could answer `session.busy` |
 | Request read deadline | 5 s | Added by P3a1-06 from the asset server's `REQUEST_TIMEOUT` |
 | Pump cadence | 50 ms while entries wait, 100 ms idle, 5 ms and 0.5 ms yield slices | Added by P3a1-06 from the bridge and asset server; M2 measured a largest tick gap of 87.6 ms |
 | Port | 46110, configurable | Added by P3a1-06, below the macOS ephemeral range |

@@ -57,6 +57,8 @@ module PhComposer
     Sessions.open_active
     Panel.install
     Commands.install
+    # Serves agent tokens issued before this launch; issuing the first one starts it otherwise.
+    AgentAccess::Listener.refresh
     file_loaded(__FILE__)
   end
 end

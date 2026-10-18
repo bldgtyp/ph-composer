@@ -1,8 +1,8 @@
 # P3a1-10: MCP protocol and the verb tool surface
 
 DATE: 2026-10-17
-STATUS: Scoped. Planning only; execution requires separate implementation authorization. Rewritten 2026-10-17 to accepted D3a1-01, 09 and 14: the protocol is served from Ruby and the tools are the API verbs. Navigation views are `view` commands with declared side effects (D3a1-13) and need no special case.
-ISSUE: none (local planning draft)
+STATUS: Read-scope slice implemented on branch `feat/phase-03a1-p3a1-08` with 08's; write-scope slice Scoped (V5).
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership
 
