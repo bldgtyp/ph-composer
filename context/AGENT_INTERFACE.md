@@ -395,7 +395,12 @@ sets; `outcome` takes a sequence or a key. A lost reply is recovered by reading 
 an invoke, the setup's own read (such as `ph_composer.library.providers`) for a setup command,
 `latest_export` for a started export, and the `context` read for a path change. A client's
 `notifications/cancelled` is accepted and changes nothing: a call already handed to SketchUp runs to
-its outcome, all or nothing, and is never reported as a rollback.
+its outcome, all or nothing, and is never reported as a rollback. A change whose outcome is over the
+reply budget is never reported as refused: it keeps its status, code, effect, revision and
+sequence and drops `value`, `affected` and `findings` (`detail.omitted` names them), and the caller
+reads the records back. Bindings live in `AgentAccess.bindings`, not the transport, so keys and
+sequences survive a listener restart on another port; a token revoked while its call waited answers
+`access.revoked` and its bindings are dropped.
 A result is the API's answer as `structuredContent` with one line of text in `content`: Claude Code
 shows its model only `structuredContent`, and Codex shows both, so a second JSON copy would count
 twice. Every Outcome, refusals included, is an ordinary result; `isError` marks an unknown tool,

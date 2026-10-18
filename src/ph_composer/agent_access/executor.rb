@@ -26,15 +26,20 @@ module PhComposer
 
       Binding = Struct.new(:context, :sequencer)
 
-      def initialize(tools:)
+      # `bindings` outlives this Executor (AgentAccess.bindings), so a listener restarted on another port
+      # keeps each token's caller handle, sequences and keys.
+      def initialize(tools:, bindings: AgentAccess.bindings)
         @tools = tools
-        @bindings = {}
+        @bindings = bindings
       end
 
       # The tool result for one call by `token` (its public row from the snapshot it authenticated with).
       def call(token, name, arguments)
         live = Tokens.snapshot.values.find { |row| row.fetch("id") == token.fetch("id") }
-        return error("This token was revoked; nothing ran.") unless live
+        unless live
+          prune
+          return error("This token was revoked; nothing ran.", "access.revoked")
+        end
 
         tool = @tools[name]
         return error("There is no tool named #{name.to_s[0, MAX_ECHO].inspect}.") unless tool && granted?(live, tool)
@@ -92,6 +97,8 @@ module PhComposer
       # `error`, so none leaves larger than the budget.
       def result(value)
         text = JSON.generate(value)
+        value = trimmed(value) if text.bytesize > MAX_RESULT_BYTES && changed_model?(value)
+        text = JSON.generate(value)
         if text.bytesize > MAX_RESULT_BYTES
           return error("The result is #{text.bytesize} bytes, over the #{MAX_RESULT_BYTES}-byte limit. Ask for " \
                        "less: a smaller page, fewer fields or one owner's operations.",
@@ -100,6 +107,20 @@ module PhComposer
 
         { "content" => [{ "type" => "text", "text" => summary(value) }], "structuredContent" => value,
           "isError" => false }
+      end
+
+      def changed_model?(value)
+        value.is_a?(Hash) && value["status"] && value["effect"] && value["effect"] != "none"
+      end
+
+      # A change that happened is never reported as refused because its answer was large: the outcome keeps
+      # its status, code, effect, revision and sequence, and drops the value and the lists, which the
+      # caller reads back from the Model.
+      def trimmed(outcome)
+        outcome.merge("message" => "#{outcome['message']} The full result was over the reply limit; read the " \
+                                   "changed records back.",
+                      "value" => nil, "affected" => [], "findings" => [],
+                      "detail" => { "omitted" => %w[value affected findings] })
       end
 
       def summary(value)

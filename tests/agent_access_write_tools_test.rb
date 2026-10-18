@@ -87,6 +87,33 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     assert_equal 1, resent["sequence"], "an expired key is never given a new sequence"
   end
 
+  def test_a_committed_change_too_large_to_answer_whole_still_says_it_committed
+    parts = Array.new(400) { |index| { "label" => "Part #{index} #{'x' * 40}", "length_mm" => 1.0 } }
+    sent = invoke("idempotency_key" => "big", "params" => { "parts" => parts })
+    read = call("outcome", "idempotency_key" => "big")
+
+    [sent, read].each do |outcome|
+      assert_equal %w[completed committed], outcome.values_at("status", "effect"), outcome.inspect
+      assert_equal [1, nil, %w[value affected findings]],
+                   [outcome["sequence"], outcome["value"], outcome.dig("detail", "omitted")]
+    end
+  end
+
+  def test_keys_and_sequences_survive_a_listener_restart_and_a_revoke_drops_the_bindings
+    first = invoke("idempotency_key" => "k")
+    restarted = AgentAccess::Executor.new(:tools => AgentAccess::Tools::TABLE)
+    replay = restarted.call(@writer, "invoke", "session" => @session.id, "name" => CREATE, "params" => PARTS,
+                                                "expected_revision" => first["revision"] - 1,
+                                                "idempotency_key" => "k").fetch("structuredContent")
+    AgentAccess::Tokens.revoke(@writer.fetch("id"))
+    refused = restarted.call(@writer, "invoke", "session" => @session.id, "name" => CREATE, "params" => PARTS,
+                                                 "expected_revision" => @session.revision)
+
+    assert_equal [first["value"], 1], [replay["value"], replay["sequence"]]
+    assert_equal "access.revoked", refused.dig("structuredContent", "code")
+    refute(AgentAccess.bindings.keys.any? { |token_id, _session| token_id == @writer.fetch("id") })
+  end
+
   def test_view_and_setup_run_their_commands_and_a_lost_setup_reply_is_read_back_from_its_state
     Dir.mktmpdir("phc-agent-") do |directory|
       path = File.join(directory, "tags.json")

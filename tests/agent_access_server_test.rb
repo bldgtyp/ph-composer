@@ -88,8 +88,6 @@ class AgentAccessServerTest < PhComposerTestCase
 
   def test_a_notification_is_accepted_and_the_lists_answer
     assert_equal "202", post(JSON.generate("jsonrpc" => "2.0", "method" => "notifications/initialized")).code
-    assert_equal "202", post(JSON.generate("jsonrpc" => "2.0", "method" => "notifications/cancelled",
-                                           "params" => { "requestId" => 7 })).code
     assert_equal({}, result_of(post(rpc("ping"))))
     assert_equal({ "resources" => [] }, result_of(post(rpc("resources/list"))))
     assert_equal({ "prompts" => [] }, result_of(post(rpc("prompts/list"))))
@@ -323,6 +321,25 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_equal "completed", result_of(targeted.value).dig("structuredContent", "status")
     assert_equal 1, @session.callers.count
     assert_equal "session.unknown", result_of(closing.value).dig("structuredContent", "code")
+  end
+
+  # A client's cancellation is accepted and changes nothing: the waiting invoke still runs whole, and
+  # its outcome is the committed one, never a rollback.
+  def test_a_cancelled_waiting_invoke_runs_whole_and_its_outcome_is_retained
+    writer = AgentAccess::Tokens.issue(:capabilities => %w[read model_write]).fetch("token")
+    @server.tokens = AgentAccess::Tokens.snapshot
+    arguments = { "session" => @session.id, "name" => "test.fixture.create", "idempotency_key" => "k",
+                  "params" => { "parts" => [] }, "expected_revision" => @session.revision }
+    pending = @server.snapshot.fetch("pending")
+    request = Thread.new { post(rpc("tools/call", "name" => "invoke", "arguments" => arguments), :token => writer) }
+    sleep 0.01 until @server.snapshot.fetch("pending") > pending
+    cancelled = post(JSON.generate("jsonrpc" => "2.0", "method" => "notifications/cancelled",
+                                   "params" => { "requestId" => 7 }), :token => writer)
+    pump_until { !request.alive? }
+
+    assert_equal "202", cancelled.code
+    assert_equal %w[completed committed], result_of(request.value).dig("structuredContent").values_at("status", "effect")
+    assert_equal 1, @session.model.operations.count { |operation| operation.last == :committed }
   end
 
   def test_the_diagnostics_hold_no_token_or_params

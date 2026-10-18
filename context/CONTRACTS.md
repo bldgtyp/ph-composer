@@ -179,7 +179,7 @@ Codes are stable `noun.condition` strings, one per outcome:
 | Area | Codes |
 | --- | --- |
 | Envelope | `request.malformed`, `request.unknown_operation`, `request.api_version`, `request.capability_denied`, `request.response_too_large` (an agent tool result over the reply budget, refused rather than cut) |
-| Access | `access.user_required` (the operation needs a location only the user can choose), `request.cancelled` (the user dismissed that dialog) |
+| Access | `access.user_required` (the operation needs a location only the user can choose), `access.revoked` (the caller's access was revoked; nothing ran), `request.cancelled` (the user dismissed that dialog) |
 | Approved locations | `location.unknown`, `location.revoked`, `location.used` (a single-use location already added its library), `location.kind_mismatch`, `location.unavailable` (no longer there as approved), `location.setup_unreadable`, `location.setup_unavailable` |
 | Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |
 | Session | `session.unknown` (closed, reopened or never issued), `session.busy`, `session.closed`, `session.changed` (a native menu built for another Model), `session.inactive` (panel client only: its Model is no longer shown) |
