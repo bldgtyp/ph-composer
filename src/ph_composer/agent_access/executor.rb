@@ -106,6 +106,7 @@ module PhComposer
         open = Sessions.all.map(&:id)
         live = Tokens.snapshot.values.map { |row| row.fetch("id") }
         @bindings.delete_if { |(token, session), _context| !open.include?(session) || !live.include?(token) }
+        AgentAccess.prune_handles
       end
 
       # The MCP tool result: the answer as `structuredContent` and one line of text, not a second copy of

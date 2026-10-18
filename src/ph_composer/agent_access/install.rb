@@ -41,7 +41,8 @@ module PhComposer
       live = Tokens.snapshot.values.map { |row| row.fetch("id") }
       ended = (handles.keys - live).to_h { |token_id| [token_id, revoke_callers(token_id)] }
       refused = Listener.refresh || {}
-      ended.each do |token_id, summary|
+      (ended.keys | refused.keys).each do |token_id|
+        summary = ended.fetch(token_id) { acknowledgment(token_id).merge("calls_refused" => 0) }
         acknowledgments[token_id] = summary.merge("calls_refused" => refused.fetch(token_id, 0))
       end
       Dialog.refresh
@@ -114,6 +115,11 @@ module PhComposer
 
     def handles
       @handles ||= {}
+    end
+
+    # Forgets every record of a closed session, whichever token held it.
+    def prune_handles
+      handles.each_value { |held| held.select! { |(session, _handle)| session.valid? } }
     end
 
     def reset_handles

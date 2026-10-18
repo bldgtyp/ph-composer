@@ -169,7 +169,19 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     assert_empty AgentAccess.bindings
   end
 
+  def test_a_token_revoked_while_its_first_call_waited_is_acknowledged_with_that_refusal
+    queued = AgentAccess::Tokens.issue(:capabilities => %w[read]).dig("row", "id")
+    waiting = StubAgentServer.new(46_110)
+    waiting.define_singleton_method(:refuse_revoked) { |live| live.include?(queued) ? {} : { queued => 1 } }
+    AgentAccess::Listener.instance_variable_set(:@server, waiting)
+
+    AgentAccess::Tokens.revoke(queued)
+
+    assert_equal 1, AgentAccess.acknowledgment(queued).fetch("calls_refused")
+  end
+
   def test_a_closed_models_caller_is_not_kept_by_a_live_token
+    invoke
     other = Sketchup::Model.new
     closed = PhComposer::Sessions.for(other)
     call("context", { "session" => closed.id })
