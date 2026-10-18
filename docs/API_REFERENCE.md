@@ -4600,6 +4600,7 @@ Result:
         "up",
         "perspective",
         "fov_deg",
+        "fov_axis",
         "height_m"
       ],
       "properties": {
@@ -4632,6 +4633,18 @@ Result:
             "null"
           ],
           "description": "Field of view; null for a parallel view."
+        },
+        "fov_axis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "height",
+            "width",
+            null
+          ],
+          "description": "The view extent fov_deg spans; null for a parallel view."
         },
         "height_m": {
           "type": [

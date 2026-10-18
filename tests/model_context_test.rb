@@ -189,10 +189,12 @@ class ModelContextTest < PhComposerTestCase
     after = context.fetch("value")
 
     assert_in_delta 100.0, camera.dig("eye_m", 2), 1e-9
-    assert_equal [true, 35.0, nil], camera.values_at("perspective", "fov_deg", "height_m")
+    assert_equal [true, 35.0, "height", nil], camera.values_at("perspective", "fov_deg", "fov_axis", "height_m")
     assert_equal before.dig("session", "revision"), after.dig("session", "revision")
     assert_equal before.dig("session", "view_generation") + 1, after.dig("session", "view_generation")
     assert_in_delta 10.0, after.dig("camera", "eye_m", 0), 1e-9
+    view.camera.fov_is_width = true
+    assert_equal "width", context.dig("value", "camera", "fov_axis")
   end
 
   def test_a_large_selection_pages_within_the_entity_and_byte_bounds

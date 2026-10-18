@@ -197,6 +197,12 @@ module Sketchup
     def perspective?
       perspective
     end
+
+    def fov_is_height?
+      !@fov_is_width
+    end
+
+    attr_writer :fov_is_width
   end
 
   class View
