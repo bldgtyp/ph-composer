@@ -9,14 +9,21 @@ module PhComposer
   #
   # The revision is one whole-Model counter (context/CONTRACTS.md, "Revisions, transactions and host
   # execution"). It advances on a committed mutation, Undo, Redo and an edit-path change, and never on
-  # a read, a selection change or a save.
+  # a read, a selection change or a save. The view generation is the second counter: it advances when
+  # what the host shows changes without the Model changing, such as the selection, so a read of the
+  # selection can tell a page of an older selection from the current one.
   class ModelSession
-    attr_reader :model, :id, :revision, :export_generation, :refresh, :observers, :callers, :outcomes
+    attr_reader :model, :id, :revision, :view_generation, :export_generation, :refresh, :observers, :callers,
+                :outcomes
+
+    # Host events that change what the host shows and not the Model.
+    VIEW_EVENTS = %i[selection_changed].freeze
 
     def initialize(model)
       @model = model
       @id = SecureRandom.uuid.freeze
       @revision = 1
+      @view_generation = 1
       @export_generation = 1
       @export_path = Array(model.active_path)
       @own_commits_pending = 0
@@ -96,6 +103,7 @@ module PhComposer
       # It commits preceding content changes separately while the old path is still active.
       navigation_commit = kind == :transaction_committed && path != @export_path
       advance_revision_for(kind)
+      @view_generation += 1 if VIEW_EVENTS.include?(kind)
       if %i[transaction_committed transaction_undone transaction_redone].include?(kind) &&
          @revision != previous && !navigation_commit
         @export_generation += 1

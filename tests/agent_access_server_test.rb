@@ -224,6 +224,14 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_equal [true, "request.response_too_large"], [over["isError"], over.dig("structuredContent", "code")]
   end
 
+  def test_the_context_tool_reads_where_a_session_stands
+    answer = call_tool("context", "session" => @session.id)
+
+    assert_equal [false, "completed"], [answer["isError"], answer.dig("structuredContent", "status")]
+    assert_equal @session.id, answer.dig("structuredContent", "value", "session", "id")
+    assert_includes result_of(post(rpc("tools/list"))).fetch("tools").map { |tool| tool["name"] }, "context"
+  end
+
   def test_one_token_keeps_one_caller_per_session
     2.times { call_tool("query", "session" => @session.id, "name" => "test.fixture.total_length") }
 

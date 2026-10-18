@@ -183,12 +183,14 @@ module PhComposer
     # they are built.
     VALUE_MEMBERS = {
       Declarations::Feature => %i[id contract_version requires],
-      Declarations::Query => %i[name owner description params result examples refuses participants],
+      Declarations::Query => %i[name owner description params result examples refuses participants response
+                                while_busy],
       Declarations::Action => %i[name owner description params result examples refuses undo_name side_effects
-                                 confirmation participants transitions],
-      Declarations::ViewCommand => %i[name owner description params result examples refuses],
-      Declarations::SetupCommand => %i[name owner description params result examples refuses],
-      Declarations::FileExport => %i[name owner description params result examples refuses],
+                                 confirmation participants transitions preconditions],
+      Declarations::ViewCommand => %i[name owner description params result examples refuses side_effects
+                                      preconditions],
+      Declarations::SetupCommand => %i[name owner description params result examples refuses preconditions],
+      Declarations::FileExport => %i[name owner description params result examples refuses preconditions],
       Declarations::SnapshotSection => %i[name owner query params],
       Declarations::ExportContributor => %i[name owner section_version result preflight user_data_keys requires
                                             entity_projections],
@@ -359,31 +361,35 @@ module PhComposer
 
       # Every operation names `refuses:`. It defaults to nil only so validation can name each operation
       # that omits it, rather than one Ruby error ending the feature's install.
-      def query(name, description:, params:, result:, refuses: nil, examples: [], participants: [], &handler)
+      def query(name, description:, params:, result:, refuses: nil, examples: [], participants: [], response: nil,
+                while_busy: false, &handler)
         declaration = Declarations::Query.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :refuses => refuses, :participants => participants, :handler => handler
+          :examples => examples, :refuses => refuses, :participants => participants, :handler => handler,
+          :response => response, :while_busy => while_busy
         )
         @staging.add(:declared_queries, id, name, declaration)
       end
 
       def action(name, description:, params:, result:, undo_name:, side_effects:, examples: [],
-                 refuses: nil, confirmation: "none", participants: [], transitions: [], &handler)
+                 refuses: nil, confirmation: "none", participants: [], transitions: [], preconditions: [], &handler)
         declaration = Declarations::Action.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :undo_name => undo_name, :side_effects => side_effects,
           :confirmation => confirmation, :participants => participants, :transitions => transitions,
-          :handler => handler
+          :handler => handler, :preconditions => preconditions
         )
         @staging.add(:declared_actions, id, name, declaration)
       end
 
       # One viewport-state command: it changes what the host shows and never the Model, so it takes
       # no `undo_name` and no sequence number. A handler that would write a record wants `action`.
-      def view_command(name, description:, params:, result:, refuses: nil, examples: [], &handler)
+      def view_command(name, description:, params:, result:, refuses: nil, examples: [], side_effects: nil,
+                       preconditions: [], &handler)
         declaration = Declarations::ViewCommand.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
-          :examples => examples, :refuses => refuses, :handler => handler
+          :examples => examples, :refuses => refuses, :handler => handler, :side_effects => side_effects,
+          :preconditions => preconditions
         )
         @staging.add(:declared_view_commands, id, name, declaration)
       end
@@ -391,12 +397,12 @@ module PhComposer
       # One session- or machine-state command: it never touches the Model, so it takes no `undo_name`
       # and no sequence number, and it changes nothing the viewport shows unless a refresh follows.
       def setup_command(name, description:, params:, result:, refuses: nil, examples: [], approval: nil,
-                        precondition: nil, &handler)
+                        precondition: nil, preconditions: [], &handler)
         declaration = Declarations::SetupCommand.new(
           :name => name, :owner => id, :description => description,
           :params => ApprovedLocations.with_param(params, approval), :result => result,
           :examples => examples, :refuses => refuses, :approval => approval, :precondition => precondition,
-          :handler => handler
+          :handler => handler, :preconditions => preconditions
         )
         @staging.add(:declared_setup_commands, id, name, declaration)
       end
@@ -407,12 +413,12 @@ module PhComposer
       end
 
       def file_export(name, description:, params:, result:, refuses: nil, examples: [], approval: nil,
-                      precondition: nil, &handler)
+                      precondition: nil, preconditions: [], &handler)
         declaration = Declarations::FileExport.new(
           :name => name, :owner => id, :description => description,
           :params => ApprovedLocations.with_param(params, approval), :result => result,
           :examples => examples, :refuses => refuses, :approval => approval, :precondition => precondition,
-          :handler => handler
+          :handler => handler, :preconditions => preconditions
         )
         @staging.add(:declared_file_exports, id, name, declaration)
       end

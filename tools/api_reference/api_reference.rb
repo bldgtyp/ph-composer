@@ -7,16 +7,19 @@ require "json"
 # the file: `make fixtures` rewrites it and every other run compares it.
 module PhComposerTools
   module ApiReference
-    GROUPS = [["Queries", :queries, "read"], ["Actions", :actions, "model_write"],
-              ["View commands", :view_commands, "view"], ["Setup commands", :setup_commands, "setup"],
-              ["File exports", :file_exports, "export"]].freeze
+    # Each group's capability is the one dispatch enforces for its kind.
+    GROUPS = [["Queries", :queries, "query"], ["Actions", :actions, "action"],
+              ["View commands", :view_commands, "view_command"], ["Setup commands", :setup_commands, "setup_command"],
+              ["File exports", :file_exports, "file_export"]].map do |title, key, kind|
+      [title, key, PhComposer::Declarations::CAPABILITIES.fetch(kind)]
+    end.freeze
 
     module_function
 
     def markdown(registry)
       [intro, kinds(registry), common_refusals,
        *GROUPS.map { |title, key, capability| operations(registry, title, key, capability) },
-       participants(registry), tasks, codes(registry)].join("\n")
+       participants(registry), tasks, codes(registry), changes].join("\n")
     end
 
     def intro
@@ -123,6 +126,13 @@ module PhComposerTools
     end
 
     # Each feature's own codes. Foundation and shared-noun codes are in context/CONTRACTS.md.
+    # Every shape change under this major (PhComposer::API::CHANGES), so a client built against an
+    # earlier minor can see what it would now read.
+    def changes
+      rows = PhComposer::API::CHANGES.map { |row| "| 1.#{row['minor']} | #{row['date']} | #{row['change']} |" }
+      "## API changes\n\n| Version | Date | Change |\n| --- | --- | --- |\n#{rows.join("\n")}\n"
+    end
+
     def codes(registry)
       sections = registry.codes.values.group_by(&:owner).sort.map do |owner, codes|
         rows = codes.sort_by(&:code).map { |code| "| `#{code.code}` | #{code.description} |" }
@@ -135,10 +145,7 @@ module PhComposerTools
 
     def operation_section(declaration, registry)
       lines = ["### `#{declaration.name}`", "", "#{declaration.description} Owner: `#{declaration.owner}`.", ""]
-      if declaration.respond_to?(:side_effects)
-        lines << "Undo step: #{declaration.undo_name}. #{declaration.side_effects}"
-        lines << ""
-      end
+      terms_lines(declaration).each { |line| lines.push(line, "") }
       if declaration.respond_to?(:approval) && declaration.approval
         noun = PhComposer::NativeApproval.noun(declaration.approval)
         lines << if declaration.approval.standing
@@ -162,6 +169,23 @@ module PhComposerTools
       lines.concat(json_block("Result", declaration.result))
       Array(declaration.examples).each { |example| lines.concat(json_block("Example params", example)) }
       lines.join("\n")
+    end
+
+    # The Undo step and side effects, preconditions and an unbounded read's alternative, as declared.
+    def terms_lines(declaration)
+      lines = []
+      if declaration.is_a?(PhComposer::Declarations::Action)
+        lines << "Undo step: #{declaration.undo_name}. #{declaration.side_effects}"
+      elsif declaration.respond_to?(:side_effects) && declaration.side_effects
+        lines << "Side effects: #{declaration.side_effects}"
+      end
+      preconditions = declaration.respond_to?(:preconditions) ? Array(declaration.preconditions) : []
+      lines << "Before calling: #{preconditions.join(' ')}" unless preconditions.empty?
+      if declaration.respond_to?(:response) && declaration.response
+        lines << "Unbounded: answers the whole Model in one result. A client with a reply budget reads " \
+                 "`#{declaration.response['prefer']}` instead."
+      end
+      lines
     end
 
     def refuses_line(declaration, registry)

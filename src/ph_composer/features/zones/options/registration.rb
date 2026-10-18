@@ -38,6 +38,7 @@ module PhComposer
             :references => CHOICE_REFERENCES
           ))
           feature.query("#{PREFIX}.all", :description => "Model-owned Segment/Level choices and adoption preview.",
+                                         :response => { "bounded" => false, "prefer" => "#{PREFIX}.list" },
                                          :params => Shapes::NONE, :result => all_result, :refuses => REFUSALS,
                                          :examples => [{}]) { |request| Options.all(request) }
           feature.query("#{PREFIX}.adoption_preview", :description => "Read-only legacy/copied choice inventory.",

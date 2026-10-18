@@ -8,7 +8,7 @@ module PhComposer
     # to this table. This table is the allowlist the Executor runs and `tools/list` shows.
     module Tools
       OPERATION_KINDS = %w[queries view_commands setup_commands file_exports actions].freeze
-      INDEX_KEYS = %w[api extension capabilities sessions features].freeze
+      INDEX_KEYS = %w[api extension capabilities sessions features schemas].freeze
 
       module_function
 
@@ -87,6 +87,15 @@ module PhComposer
              object({ "session" => SESSION, "name" => NAME, "params" => PARAMS }, %w[session name]),
              :session => true) do |context, arguments|
           API.preview(:context => context, :name => arguments["name"], :params => arguments.fetch("params", {}))
+        end,
+        tool("context", "Where one Model session stands: its file name and path, revision, whether it is busy, " \
+                        "the edit path from the root and the selection, in pages. Read it before acting on the " \
+                        "selection or the open Group.",
+             object({ "session" => SESSION, "limit" => { "type" => "integer" },
+                      "cursor" => string("next_cursor from the previous page.") }, ["session"]),
+             :session => true) do |context, arguments|
+          API.query(:context => context, :name => ContextCommands::READ,
+                    :params => arguments.slice("limit", "cursor"))
         end,
         tool("export_preflight", "Checks whether one Model session can export now and what would block it, " \
                                  "optionally against an approved destination's id.",

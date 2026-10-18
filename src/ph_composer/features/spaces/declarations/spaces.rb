@@ -148,6 +148,7 @@ module PhComposer
                       :refuses => READ + %w[query.cursor_expired query.limit_invalid], :params => LIST_PARAMS,
                       :result => LIST_RESULT, :examples => [{}, { "limit" => 20 }]) { |request| Reads.list(request) }
         feature.query("#{FEATURE_ID}.all",
+                      :response => { "bounded" => false, "prefer" => "#{FEATURE_ID}.list" },
                       :description => "Every Space occurrence in one complete projection, for the panel. Scripts " \
                                       "page #{FEATURE_ID}.list instead.",
                       :refuses => READ, :params => Shapes::NONE, :result => ALL_RESULT,

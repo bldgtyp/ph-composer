@@ -18,6 +18,7 @@ module PhComposer
         check_operations
         check_record_kinds
         @diagnostics.concat(StoreValidation.new(@live, @staging).diagnostics)
+        @diagnostics.concat(TermsValidation.new(@live, @staging).diagnostics)
         check_reference_targets
         check_extensions
         check_snapshot_sections
@@ -529,6 +530,47 @@ module PhComposer
     # dictionary it must refuse. The engine's methods are checked by presence; only `dictionary` is
     # called, once. The default `ph_composer.records.<kind id>` name is not required: a kind may keep a
     # legacy name, as the Attached zone does.
+    # The optional terms `describe` publishes: a view command's `side_effects` and every command's
+    # `preconditions` are sentences a caller reads, and a query's `response` names a bounded query that
+    # exists.
+    class TermsValidation < Validation
+      def diagnostics
+        (@staging.declared_operations + @staging.declared_proposal_participants).each do |operation|
+          check_described_terms(operation)
+        end
+        check_responses
+        @diagnostics
+      end
+
+      private
+
+      def check_described_terms(operation)
+        if operation.is_a?(Declarations::Query) && ![true, false].include?(operation.while_busy)
+          problem(operation, "while_busy must be true or false")
+        end
+        if operation.is_a?(Declarations::ViewCommand) && !(operation.side_effects.nil? || text?(operation.side_effects))
+          problem(operation, "side_effects must be a sentence when declared")
+        end
+        return unless operation.respond_to?(:preconditions)
+        return if operation.preconditions.is_a?(Array) && operation.preconditions.all? { |item| text?(item) }
+
+        problem(operation, "preconditions must be a list of sentences")
+      end
+
+      # A query's `response` marks it unbounded and names a registered query that is itself bounded.
+      def check_responses
+        queries = (@live.queries.values + @staging.declared_queries).to_h { |query| [query.name, query] }
+        @staging.declared_queries.reject { |query| query.response.nil? }.each do |query|
+          response = query.response
+          next if response.is_a?(Hash) && response.keys.all?(String) && response.keys.sort == %w[bounded prefer] &&
+                  response["bounded"] == false && queries.key?(response["prefer"]) &&
+                  queries.fetch(response["prefer"]).response.nil?
+
+          problem(query, "response must be {\"bounded\" => false, \"prefer\" => a registered bounded query's name}")
+        end
+      end
+    end
+
     class StoreValidation < Validation
       STORE_METHODS = %i[dictionary ids read write delete].freeze
 

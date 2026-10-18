@@ -319,6 +319,11 @@ module Sketchup
     attr_accessor :layer, :parent_entities
     attr_writer :hidden
 
+    # The host's type name: "Group", "Face", "ComponentInstance".
+    def typename
+      self.class.name.split("::").last
+    end
+
     def initialize(persistent_id, dictionaries = {})
       @persistent_id = persistent_id
       @hidden = false

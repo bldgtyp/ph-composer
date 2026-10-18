@@ -18,6 +18,25 @@ module PhComposer
     UNVERIFIED = "The change could not be completed, and PH-Composer could not confirm that the Model " \
                  "is unchanged. Check the Model before continuing."
 
+    STATUSES = %w[completed refused failed busy pending cancelled].freeze
+    EFFECTS = %w[none committed rolled_back unknown].freeze
+    # The envelope as JSON Schema, published by discovery so a client can check what it reads.
+    SCHEMA = {
+      "type" => "object", "additionalProperties" => false,
+      "required" => %w[status code message effect revision value affected findings detail proposal_digest],
+      "properties" => {
+        "status" => { "type" => "string", "enum" => STATUSES }, "code" => { "type" => "string" },
+        "message" => { "type" => "string" }, "effect" => { "type" => "string", "enum" => EFFECTS },
+        "revision" => { "type" => %w[integer null] },
+        "value" => { "type" => %w[object array string number integer boolean null],
+                     "description" => "The operation's result, as its result schema says; null unless completed." },
+        "affected" => { "type" => "array", "items" => { "type" => "object" } },
+        "findings" => { "type" => "array", "items" => { "type" => %w[object string] },
+                        "description" => "Advisory rows; a params refusal lists its schema problems as strings." },
+        "detail" => { "type" => %w[object null] }, "proposal_digest" => { "type" => %w[string null] }
+      }
+    }.freeze
+
     module_function
 
     def completed(revision:, value: nil, effect: "none", affected: [], findings: [], proposal_digest: nil,

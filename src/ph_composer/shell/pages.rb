@@ -19,6 +19,9 @@ module PhComposer
     TOTAL = { "type" => "integer", "minimum" => 0,
               "description" => "Rows matching the filter, on every page." }.freeze
     PAGE_KEYS = %w[limit cursor].freeze
+    # The serialized rows of one bounded page stay under this, so the page and its envelope fit an
+    # agent's reply (context/AGENT_INTERFACE.md, "User-controlled local access", the 24 KB budget).
+    MAX_PAGE_BYTES = 16 * 1024
 
     module_function
 
@@ -29,6 +32,21 @@ module PhComposer
       remaining = after.nil? ? rows : rows.select { |row| after_position?(key.call(row), after) }
       page = remaining.first(limit)
       [page, remaining.length > limit ? token(request, query, key.call(page.last), revision) : nil]
+    end
+
+    # As `slice`, then cut at the last whole row that keeps the page's serialized rows under `max_bytes`,
+    # with a cursor that resumes after it. A row is never split; one row larger than the budget comes
+    # alone, and a caller with a reply budget asks for fewer `fields`.
+    def bounded(request, query, rows, key:, revision: request.revision, max_bytes: MAX_PAGE_BYTES)
+      page, next_cursor = slice(request, query, rows, :key => key, :revision => revision)
+      size = 2
+      fitted = page.take_while.with_index do |row, index|
+        size += JSON.generate(row).bytesize + 1
+        index.zero? || size <= max_bytes
+      end
+      return [page, next_cursor] if fitted.length == page.length
+
+      [fitted, token(request, query, key.call(fitted.last), revision)]
     end
 
     def limit(params)

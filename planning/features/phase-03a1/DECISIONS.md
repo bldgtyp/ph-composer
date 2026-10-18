@@ -68,7 +68,7 @@ decision in this register is now answered; D02 stands as D01's engineering defau
 | Response size | 24 KB of `structuredContent` per tool result, else explicit continuation or refusal (started at 80 KB) | Changed 2026-10-18 by P3a1-06 M4: Claude Code 2.1.300 refuses 60 KiB and keeps 40 KiB; Codex 0.163.0 keeps about 10,000 tokens and counts `content` and `structuredContent` together. Drives P3a1-03 page sizes ([receipt](evidence/p3a1-06-connection-design.md)) |
 | Page size | 100 default, 500 maximum, plus the byte cap | Row count alone was the A07 failure |
 | Connections | 8 tokens per installation; no expiry, revoke only | Fits one dialog; expiry would reintroduce the ceremony D05 removed |
-| Model-context read | 200 selected entities per page | Selection paging under C02 |
+| Model-context read | 200 selected entities per page at most, 100 by default, and the 16 KB page byte bound | Selection paging under C02; 500 short-named Groups measured 31 KB, over the reply budget |
 | Captures (if D08 lands) | 2 MB PNG, 4 retained per session for 15 min | Follows the outcome lifetime |
 | Request headers | 16 KiB | Added by P3a1-06 from the asset server's `MAX_HEADER_BYTES` |
 | Open TCP connections | 16 (started at 8) | Added by P3a1-06. Raised by P3a1-08: at 8 the connection cap closed one token's ninth call before the 8-pending limit could answer `session.busy` |

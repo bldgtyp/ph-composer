@@ -212,6 +212,7 @@ module PhComposer
                         :params => LIST_PARAMS, :result => LIST_RESULT,
                         :examples => [{}, LIST_EXAMPLE]) { |request| Faces.list(request) }
           feature.query("#{PREFIX}.all",
+                        :response => { "bounded" => false, "prefer" => "#{PREFIX}.list" },
                         :description => "Every Face occurrence in authored Zones in one complete projection, for the " \
                                         "panel. Scripts page #{PREFIX}.list instead.",
                         :refuses => Refuses::READ + %w[geometry.invalid],

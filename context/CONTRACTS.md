@@ -25,6 +25,7 @@ root (`extension.rb`) lists features explicitly; there is no dynamic loader.
 | Record kind | Kind id, schema version, validator, SI field descriptors, declared references, persistence adapter |
 | Query, action, view command, setup command, FileExport | Namespaced id, description, input and result schemas, examples, refusal codes (`refuses`), handler |
 | Action additions | Side effects, confirmation policy (only `none` today), Undo name, `transitions:` (the transitions of its own feature it emits through `request.contribute_transition`) |
+| Optional terms | `preconditions:` on actions and commands, sentences a caller reads; `side_effects:` on a view command that can trigger a protection boundary; `response:` on a query that answers the whole Model, naming its bounded alternative |
 | Menu item | Label, menu, availability test supplied by the owning feature, handler; or a per-session entries provider |
 | Snapshot section | Owner id, query-backed projection |
 | Export contributor | Owner, section name and version, `contract` callback, optional `preflight` query, result fields, `report` callback, `user_data_keys`, `requires` (sections it reads), optional `projection`, `entity_projections` (claims on another feature's entity payloads) |
@@ -82,8 +83,11 @@ may copy a dependency's public occurrence schema into its declarations without r
 the dependency's implementation constants. This grants no storage access and does not replace the
 declared dependency requirement or batch validation.
 
-Contract versions use exact major compatibility. Unknown fields in operation envelopes are
-rejected; record `user_data` remains intentionally extensible. Declarative schemas drive Ruby
+Contract versions use exact major compatibility. Until the first public release the public API
+changes freely under major 1: every shape change, additive or not, bumps `API::MINOR` once and adds
+one row to `API::CHANGES`, which the generated reference lists under "API changes"; `discover` and
+the agent connection's `initialize` report the minor. The release gate freezes shapes; after it a
+reshape is a major bump. Unknown fields in operation envelopes are rejected; record `user_data` remains intentionally extensible. Declarative schemas drive Ruby
 validation, discovery and the generated `docs/API_REFERENCE.md`; there is no second hand-maintained
 catalog. The shell renders declared menu placements and never branches on a feature's entities.
 
@@ -104,8 +108,9 @@ are clients of it.
 - `query(context:, name:, params:)`: a bounded read returning values, never live SketchUp objects.
 - `preview(context:, name:, params:)`: builds and validates an action's proposal without writing,
   and returns its `proposal_digest`.
-- `view(context:, name:, params:)`: a view command that changes what the host shows and writes
-  nothing to the Model, so it takes no request and leaves no Undo entry.
+- `view(context:, name:, params:)`: a view command that changes what the host shows. It writes no
+  authored data and leaves no Undo entry of its own, so it takes no request; it may trigger the
+  Model's own protection boundaries, which the command declares in `side_effects`.
 - `setup(context:, name:, params:)`: a setup command that changes session or machine state, such
   as the libraries configured on this machine, and never the Model. No request, no Undo entry.
 - `invoke(context:, name:, params:, request:)`: a validated synchronous mutation.

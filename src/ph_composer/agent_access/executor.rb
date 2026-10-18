@@ -102,11 +102,11 @@ module PhComposer
         [value["status"], value["code"], value["message"]].compact.join(": ")
       end
 
+      # A tool error still carries the whole Outcome envelope `discover` publishes.
       def error(message, code = nil)
-        message = message[0, 2 * MAX_ECHO]
-        outcome = { "status" => "refused", "code" => code || "request.malformed", "message" => message,
-                    "effect" => "none" }
-        { "content" => [{ "type" => "text", "text" => message }], "structuredContent" => outcome, "isError" => true }
+        outcome = Outcome.refused(code || "request.malformed", message[0, 2 * MAX_ECHO], :revision => nil)
+        { "content" => [{ "type" => "text", "text" => outcome["message"] }], "structuredContent" => outcome,
+          "isError" => true }
       end
     end
   end
