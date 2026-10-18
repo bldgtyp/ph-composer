@@ -86,13 +86,16 @@ module PhComposer
       { "path" => EditContext.current_ids(model), "changed" => true }
     end
 
-    # The same entity open now and on the destination under another parent occurrence (a copied parent
-    # shares its children) would be left and entered at once, so a boundary could lock what the move
-    # then opens. The caller closes to the shared parent first.
+    # A definition open now and entered again on the destination through another occurrence (a copied
+    # parent shares its children; a copied Volume shares its definition) would be left and entered at
+    # once, so a boundary could lock what the move then opens, and SketchUp would refuse the path after
+    # that write. The caller closes to the root first.
     def reentered!(current, path)
+      ids = ->(entities) { entities.map(&:persistent_id) }
       path.each_with_index do |entity, depth|
-        at = current.index { |open| open.equal?(entity) }
-        next if at.nil? || current[0..at] == path[0..depth]
+        definition = entity.definition.persistent_id
+        at = current.index { |open| open.definition.persistent_id == definition }
+        next if at.nil? || ids.call(current[0..at]) == ids.call(path[0..depth])
 
         raise CodedError.new("target.shared_definition", "Group or Component #{entity.persistent_id} is open " \
                                                          "through another copy of its parent; close to the root " \

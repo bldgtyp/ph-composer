@@ -119,6 +119,17 @@ class ContextNavigationTest < PhComposerTestCase
     assert_equal [@zone, @space, @volume], @model.active_path
   end
 
+  def test_a_copy_of_the_open_volume_beside_it_refuses_with_nothing_locked
+    @volume.locked = false
+    copy = Sketchup::Group.new(113, @volume.entities)
+    @space.entities << copy
+    @model.active_path = [@zone, @space, @volume]
+
+    assert_equal "target.shared_definition", view(OPEN, "path" => [100, 110, 113])["code"]
+    refute @volume.locked?, "no boundary ran"
+    assert_equal({ "path" => [100], "changed" => true }, moved(OPEN, "path" => [100]))
+  end
+
   def test_a_live_component_refuses_before_leaving_an_unprotected_volume
     @volume.locked = false
     live = Sketchup::Group.new(140, Sketchup::Entities.new([]))
