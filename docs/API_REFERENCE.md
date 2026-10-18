@@ -4473,8 +4473,10 @@ Params:
   "required": [],
   "properties": {
     "limit": {
-      "type": "number",
-      "description": "Page size, 1 to 500; 100 when absent."
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "description": "Selected entities per page, 1 to 200; 100 when absent. A page also stops before its rows pass 16384 bytes."
     },
     "cursor": {
       "type": "string",

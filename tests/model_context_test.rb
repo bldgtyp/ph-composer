@@ -180,6 +180,34 @@ class ModelContextTest < PhComposerTestCase
     assert_equal "query.cursor_expired", later["code"]
   end
 
+  def test_a_large_selection_pages_within_the_entity_and_byte_bounds
+    groups = Array.new(250) do |index|
+      @model.entities.add_group.tap { |group| group.name = "Room #{index} #{'x' * 40}" }
+    end
+    groups.each { |group| @model.selection.add(group) }
+
+    pages = [context(@session, "limit" => 200).fetch("value")]
+    while (cursor = pages.last.dig("selection", "next_cursor"))
+      pages << context(@session, "limit" => 200, "cursor" => cursor).fetch("value")
+    end
+
+    sizes = pages.map { |page| JSON.generate(page.dig("selection", "entities")).bytesize }
+    assert_operator sizes.max, :<=, PhComposer::Pages::MAX_PAGE_BYTES
+    assert_equal 250, pages.sum { |page| page.dig("selection", "entities").length }
+    assert_equal "params.invalid", context(@session, "limit" => 201)["code"]
+  end
+
+  def test_an_agent_tool_error_carries_the_published_envelope
+    token = PhComposer::AgentAccess::Tokens.issue.fetch("row")
+    executor = PhComposer::AgentAccess::Executor.new(:tools => PhComposer::AgentAccess::Tools::TABLE)
+
+    errors = [executor.call(token, "nope", {}), executor.call(token, "discover", { "stray" => 1 })]
+
+    assert(errors.all? { |error| error["isError"] })
+    schema = API.discover.dig("schemas", "outcome")
+    assert_empty(errors.flat_map { |error| PhComposer::JsonSchema.validate(error["structuredContent"], schema) })
+  end
+
   def test_the_context_answers_while_the_session_is_busy_and_record_reads_do_not
     @session.feature_state(:probe_deferred) { Struct.new(:pending?).new(true) }
     reader = API.connect(:session_id => @session.id, :capabilities => %w[read])

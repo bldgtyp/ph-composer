@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "pages"
+
 module PhComposer
   # Where a Model session stands, as one read, registered as a foundation capability: which Model it
   # is, its revision and view generation, whether it can take work now, the edit path the user is in,
@@ -11,6 +13,10 @@ module PhComposer
   module ContextCommands
     FEATURE_ID = "ph_composer.context"
     READ = "#{FEATURE_ID}.read"
+    MAXIMUM_LIMIT = 200
+    LIMIT = { "type" => "integer", "minimum" => 1, "maximum" => MAXIMUM_LIMIT,
+              "description" => "Selected entities per page, 1 to #{MAXIMUM_LIMIT}; #{Pages::DEFAULT_LIMIT} when " \
+                               "absent. A page also stops before its rows pass #{Pages::MAX_PAGE_BYTES} bytes." }.freeze
 
     extend SchemaShapes
 
@@ -21,7 +27,7 @@ module PhComposer
       feature.query(READ, :description => "Where this Model session stands: the Model's file name and path, " \
                                           "its revision and view generation, whether it is busy and why, the " \
                                           "edit path from the root, and the selection in pages. Reads only.",
-                          :params => object({ "limit" => Pages::LIMIT, "cursor" => Pages::CURSOR },
+                          :params => object({ "limit" => LIMIT, "cursor" => Pages::CURSOR },
                                             :optional => %w[limit cursor]),
                           :result => result, :refuses => %w[query.cursor_expired query.limit_invalid],
                           :while_busy => true,
@@ -33,8 +39,8 @@ module PhComposer
       model = session.model
       rows = model.selection.to_a.map { |entity| entity_row(entity) }.sort_by { |row| row["persistent_id"] }
       # A cursor position is a String or an Array (shell/pages.rb), so the id travels in one.
-      page, next_cursor = Pages.slice(request, READ, rows, :key => ->(row) { [row["persistent_id"]] },
-                                                           :revision => [session.revision, session.view_generation])
+      page, next_cursor = Pages.bounded(request, READ, rows, :key => ->(row) { [row["persistent_id"]] },
+                                                             :revision => [session.revision, session.view_generation])
       { "session" => { "id" => session.id, "file_name" => File.basename(model.path.to_s), "path" => model.path.to_s,
                        "revision" => session.revision, "view_generation" => session.view_generation,
                        "active" => model.equal?(Sketchup.active_model) },
