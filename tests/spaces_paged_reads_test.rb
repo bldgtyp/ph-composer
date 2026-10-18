@@ -114,6 +114,21 @@ class SpacesPagedReadsTest < PhComposerTestCase
     assert_equal 4, segments.flat_map { |value| value["floor_segments"].map { |row| row["id"] } }.uniq.length
   end
 
+  def test_a_space_scope_keeps_its_misplaced_records_and_an_orphan_volume_reads_by_reference
+    reference_model
+    hall = @model.entities.to_a.first.entities.to_a.last
+    hall.entities << floor_face(1390, rectangle(0, 8, 1, 1), segment_record("M"))
+    orphan = volume_group(2900, volume_record("O"), [floor_face(2901, rectangle(20, 0, 1, 1), segment_record("P"))])
+    @model.entities.to_a.last.entities << orphan
+
+    scoped = read("findings.list", { "space" => HALL }).fetch("findings").map { |finding| finding["code"] }
+    reference = { "volume_id" => "vol_OOOOOOOOOOOO", "entity_path" => [2000, 2900] }
+    segments = read("floor_segments.list", { "volume" => reference }).fetch("floor_segments")
+
+    assert_includes scoped, "space.segment_misplaced"
+    assert_equal %w[fsg_PPPPPPPPPPPP], segments.map { |row| row["id"] }
+  end
+
   def test_floor_segment_loops_only_when_asked
     reference_model
     plain = read("floor_segments.list", { "space" => HALL }).fetch("floor_segments").first

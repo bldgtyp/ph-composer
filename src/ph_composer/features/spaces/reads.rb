@@ -66,6 +66,8 @@ module PhComposer
       # The Building-Segment a Zone belongs to: the key its sums group by and the name they show.
       BuildingSegment = Struct.new(:key, :name, keyword_init: true)
 
+      # The Space rows, the Zone rows, the findings of records outside the hierarchy, and the rows of
+      # Volumes outside every Space, whose Floor Segments are still read by reference.
       def assemble(request)
         scan = Occurrences.scan(request.model)
         catalog = request.registry.catalog
@@ -86,7 +88,10 @@ module PhComposer
           space_row(space, zones, ids, catalog, request.model, counts)
         end
         flag_duplicate_numbers(rows)
-        [rows, zone_rows(zones, rows), stray_findings(scan, counts)]
+        orphans = scan.orphan_volumes.sort_by(&:path).map do |volume|
+          volume_row(volume, catalog, request.model, counts, false)
+        end
+        [rows, zone_rows(zones, rows), stray_findings(scan, counts), orphans]
       end
 
       def space_row(space, zones, ids, catalog, model, counts)

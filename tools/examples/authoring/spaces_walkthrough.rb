@@ -178,11 +178,22 @@ module SpacesWalkthrough
     space = query(client, "#{PREFIX}.list", "ids" => [id]).fetch("spaces").first
     return nil unless space
 
-    volumes = query(client, "#{PREFIX}.volumes.list", "space" => space.fetch("reference")).fetch("volumes")
+    volumes = every_page(client, "#{PREFIX}.volumes.list", { "space" => space.fetch("reference") }, "volumes")
     space.merge("volumes" => volumes.map do |volume|
-      segments = query(client, "#{PREFIX}.floor_segments.list", "volume" => volume.fetch("reference"))
-      volume.merge("floor_segments" => segments.fetch("floor_segments"))
+      volume.merge("floor_segments" => every_page(client, "#{PREFIX}.floor_segments.list",
+                                                  { "volume" => volume.fetch("reference") }, "floor_segments"))
     end)
+  end
+
+  # Every row of a paged read: each page within the reply budget, followed by its cursor.
+  def every_page(client, name, params, key)
+    page = query(client, name, params)
+    rows = page.fetch(key)
+    while (cursor = page["next_cursor"])
+      page = query(client, name, params.merge("cursor" => cursor))
+      rows += page.fetch(key)
+    end
+    rows
   end
 
   def query(client, name, params = {})

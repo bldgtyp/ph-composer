@@ -22,7 +22,7 @@ module PhComposer
       end
 
       def floor_segments(request)
-        rows, = Reads.assemble(request)
+        rows, _zones, _strays, orphans = Reads.assemble(request)
         params = request.params
         unless params.key?("space") ^ params.key?("volume")
           raise CodedError.new("params.invalid", "Name one Space or one Volume whose Floor Segments to read.")
@@ -31,7 +31,8 @@ module PhComposer
         volumes = if params.key?("space")
                     located(rows, params["space"], "space_id", "Space").fetch("volumes")
                   else
-                    [located(rows.flat_map { |row| row.fetch("volumes") }, params["volume"], "volume_id", "Volume")]
+                    [located(rows.flat_map { |row| row.fetch("volumes") } + orphans, params["volume"], "volume_id",
+                             "Volume")]
                   end
         segments = volumes.flat_map { |volume| volume.fetch("floor_segments") }.sort_by(&PATH)
         segments = with_loops(request.model, segments) if Array(params["fields"]).include?("loops_m")
@@ -53,13 +54,20 @@ module PhComposer
       def findings(request)
         rows, zones, strays = Reads.assemble(request)
         params = request.params
-        scope = params.key?("space") ? [located(rows, params["space"], "space_id", "Space")] : rows
-        found = scope.flat_map { |row| row_findings(row) }
-        found += zone_findings(zones) + strays unless params.key?("space")
+        if params.key?("space")
+          space = located(rows, params["space"], "space_id", "Space")
+          found = row_findings(space) + strays.select { |finding| inside?(finding, PATH.call(space)) }
+        else
+          found = rows.flat_map { |row| row_findings(row) } + zone_findings(zones) + strays
+        end
         found = found.select { |finding| params["codes"].include?(finding.fetch("code")) } if params.key?("codes")
         keyed = found.each_with_index.map { |finding, index| [finding_key(finding, index), finding] }.sort_by(&:first)
         page, next_cursor = Pages.bounded(request, FINDINGS, keyed, :key => ->(pair) { pair.first })
         { "findings" => page.map(&:last), "next_cursor" => next_cursor, "total" => found.length }
+      end
+
+      def inside?(finding, path)
+        finding.dig("reference", "entity_path")&.first(path.length) == path
       end
 
       def row_findings(row)

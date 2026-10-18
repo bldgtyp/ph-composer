@@ -19,6 +19,19 @@ class SpacesWalkthroughTest < PhComposerTestCase
     assert_equal committed, @model.operations.length - before, "one Undo step per committed write"
   end
 
+  def test_a_space_is_rebuilt_from_every_page_of_its_children
+    @model = Sketchup.active_model
+    faces = Array.new(600) { |index| floor_face(5000 + index, rectangle(index, 0, 1, 1), segment_record("S")) }
+    space = space_group(1100, space_record("S", :number => "101"), [volume_group(1110, volume_record("S"), faces)])
+    @model.entities << zone_group(1000, "A", [space])
+    context = PhComposer::API.connect(:session_id => PhComposer::Sessions.for(@model).id)
+    client = SpacesWalkthrough::Client.new(:context => context, :sequence => 0, :steps => [])
+
+    row = SpacesWalkthrough.space_row(client, "spc_SSSSSSSSSSSS")
+
+    assert_equal 600, row.dig("volumes", 0, "floor_segments").length
+  end
+
   def test_a_model_with_one_zone_is_refused_before_anything_is_written
     @model = Sketchup.active_model
     @model.entities << zone_group(100, "Z", [])
