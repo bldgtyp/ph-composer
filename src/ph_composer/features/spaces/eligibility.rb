@@ -26,10 +26,24 @@ module PhComposer
         Resolve.writable!(space, scan.spaces, "Space")
       end
 
-      # The operation a candidate Face is for and the refusal it would meet now, or nil for none.
+      # Raises the refusal `volumes.create` gives this Face named alone: one that shares an Edge with
+      # another Face would carry it away. Named together with every Face it touches, it may be accepted.
+      def alone!(face)
+        return if Steps.sharing([face.entity], [face.entity.persistent_id]).empty?
+
+        raise CodedError.new("space.shares_edge", "The Face shares an Edge with another Face; name it together " \
+                                                  "with the Faces it touches to make one Volume of them.")
+      end
+
+      # The operation a candidate Face is for and the refusal it would meet now, named alone, or nil for none.
       def of(scan, face)
         operation = face.volume ? MARK : CREATE_VOLUME
-        face.volume ? floor!(scan, face.volume) : new_volume!(scan, face.space)
+        if face.volume
+          floor!(scan, face.volume)
+        else
+          new_volume!(scan, face.space)
+          alone!(face)
+        end
         [operation, nil]
       rescue CodedError => error
         [operation, { "code" => error.code, "message" => error.message }]

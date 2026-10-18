@@ -84,6 +84,26 @@ class SpacesCandidateFacesTest < PhComposerTestCase
     assert_equal ["target.wrong_hierarchy"] * 2, [row.dig("refusal", "code"), mark["code"]]
   end
 
+  def test_a_loose_face_that_shares_an_edge_is_refused_alone_and_accepted_with_its_neighbour
+    edge = Sketchup::Edge.new(300, Geom::Point3d.new(0, 0, 0), Geom::Point3d.new(0, 1 / 0.0254, 0))
+    pair = [1121, 1122].map do |id|
+      points = rectangle(id - 1121, 6, 1, 1).map { |x, y, z| Geom::Point3d.new(x / 0.0254, y / 0.0254, z / 0.0254) }
+      Sketchup::Face.new(id, {}, :points => points, :edges => [edge])
+    end
+    pair.each { |face| @space.entities << face }
+    @model.active_path = [@zone, @space]
+
+    rows = candidates("space" => SPACE).select { |row| [1121, 1122].include?(row["entity_path"].last) }
+    alone = invoke("ph_composer.spaces.volumes.create", "space" => SPACE, "faces" => [rows.first["entity_path"]])
+    # Grouping stub Faces that carry a shared Edge is not modelled offline, so the pair is previewed.
+    together = API.preview(:context => @context, :name => "ph_composer.spaces.volumes.create",
+                           :params => { "space" => SPACE, "faces" => rows.map { |row| row["entity_path"] } })
+
+    assert_equal %w[space.shares_edge space.shares_edge], rows.map { |row| row.dig("refusal", "code") }
+    assert_equal "space.shares_edge", alone["code"]
+    assert_equal "completed", together["status"], together.inspect
+  end
+
   def test_a_scope_names_one_parent
     assert_equal "params.invalid", query({})["code"]
     assert_equal "target.changed", query("space" => SPACE.merge("space_id" => "spc_XXXXXXXXXXXX"))["code"]
@@ -97,6 +117,7 @@ class SpacesCandidateFacesTest < PhComposerTestCase
     assert_equal %w[number null], values.dig("v_sup_m3h", "type")
     assert_equal "params.invalid", update(volume, { "weighting_factor" => 0.5 }, {})["code"]
     assert_equal "params.invalid", update(volume, { "avg_ceiling_height_m" => "tall" }, {})["code"]
+    assert_equal "params.invalid", update(volume, { "display_name" => "" }, { "v_sup_m3h" => nil })["code"]
     raised = update(volume, { "avg_ceiling_height_m" => 2.7 }, { "avg_ceiling_height_m" => 2.5 })
     assert_equal "committed", raised["effect"]
     cleared = update(volume, { "avg_ceiling_height_m" => nil }, { "avg_ceiling_height_m" => 2.7 })

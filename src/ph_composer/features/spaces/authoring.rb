@@ -364,7 +364,7 @@ module PhComposer
       def plan_edit(scan, reference, values, expected_values)
         occurrence = Resolve.occurrence(scan, reference, :mutable => true)
         kind = Resolve.kind_of(reference)
-        unknown = values.keys - EDITABLE.fetch(kind)
+        unknown = (values.keys | expected_values.keys) - EDITABLE.fetch(kind)
         unless unknown.empty?
           raise CodedError.new("params.invalid",
                                "A #{KINDS.fetch(kind).label} edit cannot change #{unknown.join(', ')}.")
