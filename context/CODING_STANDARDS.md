@@ -68,7 +68,9 @@ for substantive Ruby changes. The architecture rubric still owns contribution bo
   `Struct.new(..., keyword_init: true)`, when it passes between methods or modules. Ordinary
   key/value pairs, coordinates, matrices and documented external formats can remain arrays.
   JSON hashes remain appropriate at persistence and transport boundaries; do not change a wire
-  shape merely to improve an internal representation.
+  shape merely to improve an internal representation. A Struct does not destructure, so replacing
+  a tuple means finding every reader first: multiple assignment, block parameters, `first` and
+  index reads, the initial default the owner sets, and tests that read the internal state.
 - **Name the representation.** Distinguish `zone_reference`, `zone_path`, `space_record` and
   `face_ids`. A method returning IDs says so when its name otherwise suggests entities. Name
   units on local quantities when the unit is not already unambiguous. Reserve `sort` for ordering;
@@ -77,6 +79,9 @@ for substantive Ruby changes. The architecture rubric still owns contribution bo
   proposal assembly when combining them hides execution order or failure behavior. Introduce
   intermediate values when a chain switches domain concepts. Normal Ruby guards, blocks,
   destructuring and short collection chains need no expansion when their meaning is apparent.
+  A guard reads as one statement: a modifier `unless` or `if` stays on the line it guards, and a
+  condition too long for that line becomes an `unless ... end` block rather than a trailing
+  modifier on the next line.
 - **Make coupled mutable state explicit.** When helpers pass several drawing or planning buffers
   together, consider one feature-owned builder with named responsibilities. Keyword arguments help
   distinguish independent inputs; renaming many positional arguments as keywords alone does not

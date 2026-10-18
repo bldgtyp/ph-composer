@@ -1,6 +1,6 @@
 # Planning Status
 
-DATE: 2026-10-17
+DATE: 2026-10-18
 STATUS: Active index of tracked planning work.
 AUTHOR: Ed May, BLDGTYP
 
@@ -9,8 +9,8 @@ Master index. Every active item gets a row; archived items move to
 
 The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 
-Phase 0, its four completed investigations, Phase 1, Phase 2 and Phase 3a (Spaces) are in
-[the archive](archive/README.md).
+Phase 0, its four completed investigations, Phase 1, Phase 2, Phase 3a (Spaces) and the Ruby readability
+program are in [the archive](archive/README.md).
 Feature packets are grouped in phase directories under `features/`; the Phase column below is
 the roadmap phase, `cross` spans phases, `none` is unscheduled and `n/a` is not a feature packet.
 The remote exists. Historical `none (no remote)` issue cells below mean no issue was recorded;
@@ -22,7 +22,6 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 | ----- | ---- | ---- | ----- | ----- | ------- |
 | 3a1 | Agent access after Spaces | feature/refactoring | Scoped 2026-10-17; direction accepted the same day (MCP served from Ruby over loopback HTTP, a token as the connection, the API verbs as tools, delivery order V1 to V9); P3a1-01 is the first implementation stage; no implementation authorized | none (local planning draft) | [features/phase-03a1/](features/phase-03a1/README.md); [ledger](features/phase-03a1/STATUS.md), accepted and open decisions, order, dependencies, acceptance and cleanup |
 | n/a | Agent access architecture review after Spaces | review | Review complete 2026-10-17; all 14 findings assigned to Phase 3a1, none fixed by planning | none (local review requested by Ed) | [code-review/](code-review/README.md); [owning implementation plan](features/phase-03a1/README.md) |
-| n/a | Ruby contributor readability | refactoring | In progress; repository-wide program authorized 2026-10-17, 36 responsibility groups, one PR per refactored group, merge delegated | [#198](https://github.com/bldgtyp/ph-composer/issues/198) | [refactor/ruby-readability/](refactor/ruby-readability/README.md); [ledger](refactor/ruby-readability/STATUS.md), plan, inventory and the seeding eight-file review |
 | 3b | Thermal bridges | feature | Scoped, interviewed 2026-10-03; planned as P3b-01 to P3b-09, none authorized | none (local planning draft) | [features/phase-03b-thermal-bridges/](features/phase-03b-thermal-bridges/README.md); tracked in its [ledger](features/phase-03b-thermal-bridges/STATUS.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
 | 4 | ERV ducting | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/erv-ducting/](features/phase-04-mechanical/erv-ducting/README.md) |

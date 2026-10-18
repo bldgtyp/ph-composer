@@ -22,9 +22,10 @@ Resolve repository paths from its root and reuse authorities and checks already 
   smallest supporting changes needed for that responsibility. Review or planning alone does not
   authorize this mode.
 
-The repository-wide program lives in `planning/refactor/ruby-readability/`: its plan, inventory and
-ledger say which responsibility is next and what is authorized. Recheck the selected source and
-callers before editing; do not repeat the original sample or treat the largest file as the next task.
+The repository-wide program completed on 2026-10-18 and is archived in `planning/archive/ruby-readability/`:
+its ledger records each responsibility's outcome and the follow-ups it left. A new refactor names its
+own module and authorization. Recheck the selected source and callers before editing; do not treat the
+largest file as the next task.
 
 ## Establish what must stay true
 

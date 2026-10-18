@@ -2,7 +2,7 @@
 
 # Deterministic Ruby inventory for the readability program. Development evidence only; never shipped.
 #
-#   ruby planning/refactor/ruby-readability/inventory.rb > planning/refactor/ruby-readability/INVENTORY.md
+#   ruby planning/archive/ruby-readability/inventory.rb > planning/archive/ruby-readability/INVENTORY.md
 #
 # Scope is every tracked Ruby file under src/, tests/ and tools/, minus vendored code and fixtures,
 # which is the boundary `.rubocop.yml` and the Makefile's `syntax` target already draw. Each file maps
@@ -180,7 +180,7 @@ end
 
 puts "# Ruby inventory"
 puts
-puts "GENERATED from the index on `#{head}` by `ruby planning/refactor/ruby-readability/inventory.rb`. Do not edit by hand;"
+puts "GENERATED from the index on `#{head}` by `ruby planning/archive/ruby-readability/inventory.rb`. Do not edit by hand;"
 puts "review status and concerns live in [STATUS.md](STATUS.md). Re-run after a stage that adds or moves files."
 puts
 puts "Columns: lines; `def` count; largest ABC and cyclomatic values RuboCop reported over its default"

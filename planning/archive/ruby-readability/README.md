@@ -1,7 +1,7 @@
 # Ruby contributor readability
 
-DATE: 2026-10-17
-STATUS: In progress
+DATE: 2026-10-18
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP
 ISSUE: [#198](https://github.com/bldgtyp/ph-composer/issues/198)
 
@@ -10,8 +10,8 @@ trace and change, delivered one responsibility per reviewed pull request. It cov
 tests and development tools; vendored code, fixtures, generated payloads and the private corpus are
 out of scope.
 
-This packet sits under `refactor/`, the canon's folder for cross-cutting refactors. The repository's
-only declared deviation groups `features/` by roadmap phase and does not apply here.
+This packet was worked under `refactor/`, the canon's folder for cross-cutting refactors, and is archived flat
+by slug. The program completed on 2026-10-18; its ledger records every group's outcome and the open follow-ups.
 
 ## Read order
 
