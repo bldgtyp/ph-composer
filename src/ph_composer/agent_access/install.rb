@@ -47,6 +47,11 @@ module PhComposer
       @bindings ||= {}
     end
 
+    # Forgets the bindings of every token not in `live_ids`.
+    def drop_bindings(live_ids)
+      bindings.delete_if { |(token_id, _session), _binding| !live_ids.include?(token_id) }
+    end
+
     def reset_bindings
       @bindings = {}
     end

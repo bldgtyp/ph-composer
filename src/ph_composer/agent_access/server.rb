@@ -109,6 +109,26 @@ module PhComposer
         true
       end
 
+      # Answers every waiting call of a token no longer in `live_ids` as revoked, so none runs and each
+      # client hears why, and returns how many it answered. Main thread, inside the revoke.
+      def refuse_revoked(live_ids)
+        @lock.synchronize do
+          revoked = @queue.select { |entry| entry.state == :waiting && !live_ids.include?(entry.token.fetch("id")) }
+          revoked.each do |entry|
+            entry.result = @executor.revoked
+            entry.state = :done
+            @queue.delete(entry)
+          end
+          @answered.broadcast
+          revoked.length
+        end
+      end
+
+      # Stops on the next pump tick, after the workers have written the answers just given.
+      def stop_soon
+        @lock.synchronize { @stop_requested = true }
+      end
+
       def stopped?
         @lock.synchronize { @stopped }
       end
@@ -124,6 +144,8 @@ module PhComposer
       # Entries are taken one at a time, so those not yet run stay queued and count against their token's
       # pending limit while an earlier one runs.
       def pump
+        return stop if @lock.synchronize { @stop_requested }
+
         @lock.synchronize { @last_tick = @clock.call }
         ran = 0
         while (entry = take_next)

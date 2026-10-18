@@ -99,6 +99,18 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     end
   end
 
+  def test_an_oversized_refusal_keeps_its_sequence_through_invoke_and_outcome
+    edits = Array.new(1000) { |index| { "part_id" => "missing_#{index}", "values" => { "label" => "x" * 20 } } }
+    sent = call("invoke", "name" => "test.fixture.update_parts", "params" => { "edits" => edits },
+                          "expected_revision" => @session.revision)
+    read = call("outcome", "sequence" => sent.fetch("sequence"))
+
+    [sent, read].each do |outcome|
+      assert_equal [1, "none"], outcome.values_at("sequence", "effect"), outcome.inspect
+      assert_equal %w[value affected findings], outcome.dig("detail", "omitted")
+    end
+  end
+
   def test_keys_and_sequences_survive_a_listener_restart_and_a_revoke_drops_the_bindings
     first = invoke("idempotency_key" => "k")
     restarted = AgentAccess::Executor.new(:tools => AgentAccess::Tools::TABLE)

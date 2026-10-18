@@ -20,9 +20,17 @@ module PhComposer
       class << self
         attr_writer :server_factory
 
+        # A revoke answers the token's waiting calls first; when it ended the last live token, the listener
+        # stops on its next tick, once those answers are written.
         def refresh
+          @server = nil if @server&.stopped?
           snapshot = Tokens.snapshot
-          return stop if snapshot.empty?
+          live = snapshot.values.map { |row| row.fetch("id") }
+          answered = @server ? @server.refuse_revoked(live) : 0
+          AgentAccess.drop_bindings(live)
+          if snapshot.empty?
+            return answered.positive? ? @server.stop_soon : stop
+          end
 
           start unless @server
           @server&.tokens = snapshot
@@ -43,6 +51,7 @@ module PhComposer
         # The dialog's status line: listening on a port, stopped with no live token, or unable to bind,
         # which a stopped listener checks too so a taken port shows before the first token is issued.
         def status
+          @server = nil if @server&.stopped?
           return { "state" => "listening", "port" => @server.port } if @server
 
           failure = @failure || (port_free? ? nil : in_use)

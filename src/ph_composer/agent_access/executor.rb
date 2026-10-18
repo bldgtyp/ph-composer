@@ -38,7 +38,7 @@ module PhComposer
         live = Tokens.snapshot.values.find { |row| row.fetch("id") == token.fetch("id") }
         unless live
           prune
-          return error("This token was revoked; nothing ran.", "access.revoked")
+          return revoked
         end
 
         tool = @tools[name]
@@ -57,9 +57,14 @@ module PhComposer
 
           binding = binding_for(live, session)
         end
-        result(tool.run.call(binding.context, arguments, live, binding.sequencer))
+        result(tool.run.call(binding.context, arguments, live, binding.sequencer), :acted => tool.capability != "read")
       rescue CodedError => error
         result(Outcome.refused(error.code, error.message, :revision => nil, :detail => error.detail))
+      end
+
+      # The answer to a call whose token was revoked before it ran.
+      def revoked
+        error("This token was revoked; nothing ran.", "access.revoked")
       end
 
       # The answer a worker gives without the main thread: no SketchUp call, only an Outcome.
@@ -95,9 +100,11 @@ module PhComposer
       # The MCP tool result: the answer as `structuredContent` and one line of text, not a second copy of
       # the JSON, which a client that shows both would count twice. Every result passes through here or
       # `error`, so none leaves larger than the budget.
-      def result(value)
+      # `acted` marks a tool that may have changed something (every tool but the reads): its outcome is
+      # never turned into a refusal by its size.
+      def result(value, acted: false)
         text = JSON.generate(value)
-        value = trimmed(value) if text.bytesize > MAX_RESULT_BYTES && changed_model?(value)
+        value = trimmed(value) if text.bytesize > MAX_RESULT_BYTES && acted && outcome?(value)
         text = JSON.generate(value)
         if text.bytesize > MAX_RESULT_BYTES
           return error("The result is #{text.bytesize} bytes, over the #{MAX_RESULT_BYTES}-byte limit. Ask for " \
@@ -109,16 +116,16 @@ module PhComposer
           "isError" => false }
       end
 
-      def changed_model?(value)
-        value.is_a?(Hash) && value["status"] && value["effect"] && value["effect"] != "none"
+      def outcome?(value)
+        value.is_a?(Hash) && value.key?("status") && value.key?("effect")
       end
 
-      # A change that happened is never reported as refused because its answer was large: the outcome keeps
-      # its status, code, effect, revision and sequence, and drops the value and the lists, which the
-      # caller reads back from the Model.
+      # What a tool that acts did is never reported as refused because its answer was large: the outcome
+      # keeps its status, code, effect, revision and sequence, and drops the value and the lists, which the
+      # caller reads back.
       def trimmed(outcome)
-        outcome.merge("message" => "#{outcome['message']} The full result was over the reply limit; read the " \
-                                   "changed records back.",
+        outcome.merge("message" => "#{outcome['message']} The full result was over the reply limit; read back " \
+                                   "what it changed.",
                       "value" => nil, "affected" => [], "findings" => [],
                       "detail" => { "omitted" => %w[value affected findings] })
       end

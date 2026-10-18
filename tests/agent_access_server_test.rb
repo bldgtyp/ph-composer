@@ -342,6 +342,30 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_equal 1, @session.model.operations.count { |operation| operation.last == :committed }
   end
 
+  # Revoking a token answers its waiting call as revoked, and revoking the last stops the listener only
+  # once that answer is written.
+  def test_a_revoke_answers_the_waiting_call_and_the_last_one_stops_after_it
+    writer = AgentAccess::Tokens.issue(:capabilities => %w[read model_write])
+    @server.tokens = AgentAccess::Tokens.snapshot
+    arguments = { "session" => @session.id, "name" => "test.fixture.create", "params" => { "parts" => [] },
+                  "expected_revision" => @session.revision }
+    pending = @server.snapshot.fetch("pending")
+    request = Thread.new do
+      post(rpc("tools/call", "name" => "invoke", "arguments" => arguments), :token => writer.fetch("token"))
+    end
+    sleep 0.01 until @server.snapshot.fetch("pending") > pending
+    [@row, writer.fetch("row")].each { |row| AgentAccess::Tokens.revoke(row.fetch("id")) }
+
+    assert_equal 1, @server.refuse_revoked([])
+    @server.stop_soon
+    answer = request.value
+    @server.pump
+
+    assert_equal "access.revoked", result_of(answer).dig("structuredContent", "code")
+    assert @server.stopped?
+    assert_empty @session.model.operations
+  end
+
   def test_the_diagnostics_hold_no_token_or_params
     call_tool("query", "session" => @session.id, "name" => "test.fixture.total_length",
                        "params" => { "secret" => "value-in-params" })
