@@ -3,9 +3,16 @@
 module PhComposer
   module Export
     # Bounded process-local handles. File recovery does not depend on this in-memory task history.
+    # A task belongs to the caller that started it: only that caller polls, cancels or finds it as its
+    # latest, so through the agent connection a task is its token's (context/AGENT_INTERFACE.md,
+    # "Locations only the user can choose").
     class Tasks
       LIMIT = 20
       RETENTION_SECONDS = 30 * 60
+      # The caller handle that started a task, and whether that caller's access is still live, which the
+      # task asks before it writes. Export code names no token.
+      Owner = Struct.new(:handle, :live)
+      FOREIGN = "Another caller started that export; only it can poll or cancel it."
 
       def self.for(session)
         session.feature_state("#{EXTENSION_ID}.export.tasks") { new(session) }
@@ -19,7 +26,7 @@ module PhComposer
       # The destination is an approved `location` param, or the native Export workflow's own `approval`,
       # a NativeApproval::Granted (Task). A destination the pair would refuse is refused here, before any
       # task exists, whichever route chose it.
-      def start(location: nil, approval: nil, runtime_factory: nil)
+      def start(owner:, location: nil, approval: nil, runtime_factory: nil)
         approval ||= ApprovedLocations.grant_param(location, "save_file")
         prune
         if @tasks.values.any? { |task| !task.terminal? }
@@ -32,25 +39,32 @@ module PhComposer
           raise Blocked.new("session.busy", @session.busy_reason)
         end
 
-        task = Task.new(@session, :approval => approval, :runtime_factory => runtime_factory)
+        task = Task.new(@session, :approval => approval, :runtime_factory => runtime_factory, :owner => owner)
         task.start
         @tasks[task.id] = task
         task.snapshot
       end
 
-      def status(id)
-        fetch(id).snapshot
+      def status(id, owner)
+        fetch(id, owner).snapshot
       end
 
-      def cancel(id)
-        task = fetch(id)
+      def cancel(id, owner)
+        task = fetch(id, owner)
         task.cancel
         task.snapshot
       end
 
-      def latest
+      def latest(owner)
         prune
-        @tasks.values.last&.snapshot
+        @tasks.values.reverse.find { |task| task.owner.handle == owner.handle }&.snapshot
+      end
+
+      # The tasks `handle` started, for the acknowledgment of a revoked token: those that completed and
+      # those its revocation stopped.
+      def owned_by(handle)
+        prune
+        @tasks.values.select { |task| task.owner.handle == handle }
       end
 
       def detach
@@ -60,11 +74,14 @@ module PhComposer
 
       private
 
-      def fetch(id)
+      def fetch(id, owner)
         prune
-        @tasks.fetch(id) do
+        task = @tasks.fetch(id) do
           raise Blocked.new("task.expired", "That export handle expired or belongs to another Model session.")
         end
+        raise Blocked.new("task.foreign", FOREIGN) unless task.owner.handle == owner.handle
+
+        task
       end
 
       def prune

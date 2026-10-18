@@ -25,7 +25,8 @@ module PhComposer
       OUTBOUND = {
         "access.state" => %w[state tokens offered server model],
         "access.issued" => %w[token row clients],
-        "access.failure" => %w[message]
+        "access.failure" => %w[message],
+        "access.revoked" => %w[id summary]
       }.freeze
 
       class << self
@@ -133,7 +134,7 @@ module PhComposer
           case type
           when "access.ready" then refresh
           when "access.issue" then issue(payload)
-          when "access.revoke" then Tokens.revoke(payload["id"])
+          when "access.revoke" then revoke(payload["id"])
           when "access.reset" then Tokens.reset
           when "access.port"
             Listener.port = payload["port"]
@@ -168,6 +169,13 @@ module PhComposer
           refresh
           raise CodedError.new("agent_access.model_changed", "The open Model changed since this form showed it. " \
                                                              "Check This Model only again and create the token.")
+        end
+
+        # The revoke takes effect here, on the main thread, before the next call is run; the page shows
+        # what the token's exports had done.
+        def revoke(id)
+          Tokens.revoke(id)
+          publish("access.revoked", "id" => id, "summary" => AgentAccess.revoke_callers(id))
         end
 
         def publish(type, payload)

@@ -60,9 +60,39 @@ module PhComposer
     def server_status
       Listener.status
     end
+
+    # Records the caller handle a token acts through on a session, so a revoke can end it there too.
+    def bound(token_id, session, handle)
+      (handles[token_id] ||= []) << [session, handle]
+    end
+
+    # Ends every caller handle the token held and says what its exports had done: completed ones keep
+    # their files; one still running is stopped at its commit check and writes nothing. A call already
+    # running finishes whole; the next one is refused as revoked.
+    def revoke_callers(token_id)
+      summary = { "exports_completed" => 0, "exports_stopped" => 0 }
+      Array(handles.delete(token_id)).each do |session, handle|
+        next unless session.valid?
+
+        tasks = Export::Tasks.for(session).owned_by(handle)
+        summary["exports_completed"] += tasks.count { |task| task.snapshot.dig("outcome", "code") == "export.complete" }
+        summary["exports_stopped"] += tasks.count { |task| !task.terminal? }
+        session.callers.revoke(handle)
+      end
+      summary
+    end
+
+    def handles
+      @handles ||= {}
+    end
+
+    def reset_handles
+      @handles = {}
+    end
   end
 
   on_reset("agent_access.dialog") { AgentAccess::Dialog.reset_for_test }
   on_reset("agent_access.listener") { AgentAccess::Listener.reset }
   on_reset("agent_access.bindings") { AgentAccess.reset_bindings }
+  on_reset("agent_access.handles") { AgentAccess.reset_handles }
 end

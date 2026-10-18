@@ -141,6 +141,21 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     end
   end
 
+  def test_revoking_in_the_dialog_ends_the_tokens_callers_and_acknowledges_its_exports
+    invoke
+    dialog = AgentAccess::Dialog.show
+    dialog.fire(AgentAccess::Dialog::CALLBACK, JSON.generate("type" => "access.revoke",
+                                                             "payload" => { "id" => @writer.fetch("id") }))
+    acknowledged = dialog.scripts.map { |script| script[/receive\((.*)\)\z/, 1] }.compact.map { |json| JSON.parse(json) }
+                         .find { |message| message["type"] == "access.revoked" }
+    refused = @executor.call(@writer, "invoke", "session" => @session.id, "name" => CREATE, "params" => PARTS,
+                                                "expected_revision" => @session.revision)
+
+    assert_equal({ "exports_completed" => 0, "exports_stopped" => 0 }, acknowledged.dig("payload", "summary"))
+    assert refused["isError"]
+    assert_equal "access.revoked", refused.dig("structuredContent", "code")
+  end
+
   def test_a_lost_start_export_reply_is_found_with_latest_export
     Dir.mktmpdir("phc-agent-") do |directory|
       PhComposer::ApprovedLocations.approve(:kind => "save_file", :path => File.join(directory, "model.hbjson"))

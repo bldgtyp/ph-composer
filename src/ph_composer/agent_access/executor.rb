@@ -85,9 +85,11 @@ module PhComposer
 
       # One caller handle and one Sequencer per token and session, so sequences and keys carry across calls.
       def binding_for(token, session)
-        @bindings[[token.fetch("id"), session.id]] ||=
-          Binding.new(API.connect(:session_id => session.id, :capabilities => token.fetch("capabilities")),
-                      Sequencer.new)
+        @bindings[[token.fetch("id"), session.id]] ||= begin
+          context = API.connect(:session_id => session.id, :capabilities => token.fetch("capabilities"))
+          AgentAccess.bound(token.fetch("id"), session, context.caller)
+          Binding.new(context, Sequencer.new)
+        end
       end
 
       # Forgets the handles of closed sessions and revoked tokens.

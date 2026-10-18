@@ -203,4 +203,11 @@ test("This Model only binds the Model the open form named, whatever becomes acti
     server: { state: "listening", port: 46110 } } });
   o.view.submitCreate();
   assert.strictEqual(o.sent.pop().payload.model_only, "kA");
+test("a revoke is acknowledged with what the token's exports had done", function () {
+  var o = setup();
+  o.view.receive({ type: "access.revoked", payload: { id: TOKEN.id,
+    summary: { exports_completed: 1, exports_stopped: 1 } } });
+  var text = allText(o.view.notice);
+  assert.ok(text.includes("Token revoked") && text.includes("1 export(s) it started had completed") &&
+    text.includes("stop without writing"));
 });

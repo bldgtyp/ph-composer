@@ -16,6 +16,7 @@ module PhComposer
 
     def initialize
       @callers = {}
+      @revoked = {}
     end
 
     # The registry keeps its own frozen copy of the capabilities and returns a frozen handle, so nothing
@@ -32,6 +33,16 @@ module PhComposer
 
     def fetch(handle)
       @callers[handle]
+    end
+
+    # Ends a handle for good: dispatch refuses it from the next call on, and work it started checks it
+    # before it writes (an export's commit). The handle is remembered, so its refusal says why.
+    def revoke(handle)
+      @revoked[handle] = true if @callers.delete(handle)
+    end
+
+    def revoked?(handle)
+      @revoked.key?(handle)
     end
 
     def count
