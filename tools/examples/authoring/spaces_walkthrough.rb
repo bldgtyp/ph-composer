@@ -35,8 +35,8 @@ module SpacesWalkthrough
 
     zone = zones.first
 
-    faces = [0, 1.5, 3].map { |x| fixture_outline(model, zone.fetch("zone_path"), x, 0) }
     navigate(client, "open", "path" => zone.fetch("zone_path"), "expected_path" => edit_path(client))
+    faces = [0, 1.5, 3].map { |x| fixture_outline(model, zone.fetch("zone_path"), x, 0) }
     created = invoke(client, "create", "zone" => zone, "name" => "Walkthrough", "faces" => faces.map do |face|
       zone.merge("entity_path" => [face.persistent_id], "entity_id" => nil)
     end)

@@ -160,6 +160,17 @@ module Sketchup
       container.respond_to?(:entities) ? container.entities : container.definition.entities
     end
 
+    # The host names the active tool: Select when none is chosen, and "RubyTool" for an extension's own.
+    Tools = Struct.new(:model) do
+      def active_tool_name
+        model.active_tool ? "RubyTool" : "SelectionTool"
+      end
+    end
+
+    def tools
+      Tools.new(self)
+    end
+
     def select_tool(tool)
       previous = @active_tool
       @active_tool = tool

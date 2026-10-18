@@ -12,6 +12,13 @@ class ContextNavigationTest < PhComposerTestCase
   API = PhComposer::API
   SPACES = PhComposer::Spaces
   OPEN = PhComposer::ContextCommands::OPEN
+  # A tool the user has chosen, which may hold a gesture.
+  class UserTool
+    def activate; end
+
+    def deactivate(_view); end
+  end
+
   ROOT = PhComposer::ContextCommands::ROOT
 
   def setup
@@ -77,6 +84,23 @@ class ContextNavigationTest < PhComposerTestCase
     assert_equal "session.busy", view(OPEN, "path" => [100])["code"]
     assert_equal "session.busy", view(ROOT)["code"]
     assert_nil @model.active_path
+  end
+
+  def test_a_locked_copy_or_a_users_tool_refuses_before_any_boundary_runs
+    @volume.locked = false
+    @model.active_path = [@zone, @space, @volume]
+    copy = Sketchup::Group.new(120, @space.entities)
+    copy.locked = true
+    @model.entities << copy
+    revision = @session.revision
+    sibling = view(OPEN, "path" => [120])
+    @model.select_tool(UserTool.new)
+    busy = view(ROOT)
+
+    assert_equal %w[target.locked session.busy], [sibling["code"], busy["code"]]
+    refute @volume.locked?, "no boundary ran"
+    assert_equal [@zone, @space, @volume], @model.active_path
+    assert_equal revision, @session.revision
   end
 
   def test_navigation_declares_the_lock_it_may_trigger

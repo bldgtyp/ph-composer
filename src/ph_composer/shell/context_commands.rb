@@ -23,6 +23,8 @@ module PhComposer
                    "unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself " \
                    "records leaving a Group as an Undo entry, and undoing it reopens the Group."
     MOVE_REFUSES = %w[target.not_found target.locked target.edit_path_changed].freeze
+    # The tools during which the edit path may move: selecting and moving the camera hold no gesture.
+    IDLE_TOOLS = %w[SelectionTool CameraOrbitTool CameraPanTool CameraZoomTool CameraZoomWindowTool].freeze
     MAXIMUM_LIMIT = 200
     LIMIT = { "type" => "integer", "minimum" => 1, "maximum" => MAXIMUM_LIMIT,
               "description" => "Selected entities per page, 1 to #{MAXIMUM_LIMIT}; #{Pages::DEFAULT_LIMIT} when " \
@@ -73,6 +75,7 @@ module PhComposer
                                                          "ph_composer.context.read again.")
       end
 
+      tool_free!(model)
       path = resolve(model, ids)
       changed = EditContext.current(model) != path
       EditContext.enter(model, path) if changed
@@ -85,10 +88,25 @@ module PhComposer
         entity = entities.to_a.find { |candidate| container?(candidate) && candidate.persistent_id == id }
         raise CodedError.new("target.not_found", "No Group or Component #{id} is at that step.") unless entity
         raise CodedError.new("target.locked", "Group or Component #{id} is locked; nothing moved.") if entity.locked?
+        if entity.definition.instances.any?(&:locked?)
+          raise CodedError.new("target.locked", "Another copy of Group or Component #{id} is locked, so SketchUp " \
+                                                "cannot open it; nothing moved.")
+        end
 
         entities = entity.definition.entities
         entity
       end
+    end
+
+    # A user's tool other than Select or a camera tool may hold a gesture that a path change would end, so
+    # the move waits for the user rather than closing it.
+    def tool_free!(model)
+      tools = model.respond_to?(:tools) ? model.tools : nil
+      name = tools.respond_to?(:active_tool_name) ? tools.active_tool_name.to_s : ""
+      return if name.empty? || IDLE_TOOLS.include?(name)
+
+      raise CodedError.new("session.busy", "The #{name} tool is in use in SketchUp; the edit path moves once the " \
+                                           "user returns to Select. Nothing moved.")
     end
 
     def container?(entity)
