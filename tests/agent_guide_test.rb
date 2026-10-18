@@ -3,7 +3,9 @@
 require_relative "test_helper"
 
 # docs/AGENT_GUIDE.md names operations and tools an agent will call as written: each must exist, so the
-# guide cannot drift from what discovery answers.
+# guide cannot drift from what discovery answers. The recipes run elsewhere: the Spaces one, public calls
+# only after native fixture setup, in tests/spaces_walkthrough_test.rb; the write and export ones in
+# tests/agent_access_write_tools_test.rb and tests/api_client_test.rb.
 class AgentGuideTest < PhComposerTestCase
   GUIDE = File.read(File.expand_path("../docs/AGENT_GUIDE.md", __dir__))
 

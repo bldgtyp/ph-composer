@@ -54,15 +54,19 @@ last read; if the Model holds something else now, the edit is refused and nothin
 
 ### Spaces from loose Faces
 
+A new Space or Volume is made from floor Faces a person draws in SketchUp; the connection does not
+draw geometry. Ask the user to draw the outlines first, then:
+
 1. `context`, then `ph_composer.context.open` with the Zone's path and `expected_path`.
-2. `ph_composer.spaces.create` from the Faces that will be the Space's floor.
-3. `ph_composer.context.open` the new Space; `ph_composer.spaces.candidate_faces.list` for the
-   Space lists loose Faces that can become a Volume, with the operation each is for and the refusal
-   it would meet now. Faces that share an Edge go together.
-4. `ph_composer.spaces.volumes.create` from those Faces, `ph_composer.spaces.floors.mark` for a
-   Face in a Volume, then `ph_composer.spaces.update` for heights and airflows.
-5. `ph_composer.context.root`, then `ph_composer.spaces.move_to_zone` if the Space belongs in
-   another Zone. Read every changed reference back.
+2. `ph_composer.spaces.create` from loose Faces in the Zone. They become the new Space's first Volume
+   and its Floor Segments; no loose Face is left over.
+3. For another Volume, `ph_composer.context.open` the new Space and ask the user to draw its outline
+   there. `ph_composer.spaces.candidate_faces.list` for the Space then lists it, with the operation it
+   is for and the refusal it would meet now. Faces that share an Edge go together.
+4. `ph_composer.spaces.volumes.create` from those Faces, `ph_composer.spaces.floors.mark` for a Face in
+   a Volume, then `ph_composer.spaces.update` for heights and airflows.
+5. `ph_composer.context.root`, then `ph_composer.spaces.move_to_zone` if the Space belongs in another
+   Zone. Read every changed reference back.
 
 Leaving a Volume locks it again; the navigation commands say so in `side_effects`.
 
@@ -79,14 +83,20 @@ read `ph_composer.windows.units.list` back.
 
 ### Library records
 
-A library is optional. `ph_composer.library.in_file` shows what the Model already has;
-`ph_composer.library.copy` makes an editable local copy. The Model owns the copy from then on.
+A library is optional. `ph_composer.library.providers` lists the libraries configured on this
+computer; `ph_composer.library.load` (a setup command, which needs the `setup` grant) reads one
+provider's catalog of a kind into the session. `ph_composer.library.in_file` then pages that catalog,
+saying for each row whether the Model already has it; `ph_composer.library.copy` makes an editable
+local copy, which the Model owns from then on. What the Model already holds is read through the owning
+feature's own list, such as `ph_composer.assemblies.assemblies.list`.
 
 ### Export
 
 `ph_composer.locations.list` shows the destinations the user approved; you cannot add one.
 `export_preflight` says what would block the export. `start_export` with a location's id, then
-`export_status` until the outcome arrives. When it is `export.complete`, `artifacts` gives each
+`export_status` until the outcome arrives. While `cancellable` is true, `cancel_export` with the
+task's `task_id` stops it and writes nothing; once writing has started it finishes, and polling shows
+its outcome. Cancelling or dropping your own request does not cancel the task. When it is `export.complete`, `artifacts` gives each
 file's path, SHA-256 and size, for you alone. Read the file with your own tools and compare the
 hash before parsing it; a later export to the same destination replaces it.
 
