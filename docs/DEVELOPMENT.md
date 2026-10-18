@@ -197,8 +197,11 @@ identify which claims require native pixels or a human gesture.
 ## Driving SketchUp from a terminal
 
 This section concerns development tooling. Scripts and in-process clients use the public interface
-in [API_QUICKSTART.md](API_QUICKSTART.md); the external connection for users' agents is planned in
-[AGENT_ACCESS.md](AGENT_ACCESS.md). Development `eval` is neither.
+in [API_QUICKSTART.md](API_QUICKSTART.md); users' agents connect through the agent listener in
+[AGENT_ACCESS.md](AGENT_ACCESS.md), which ships in the RBZ, needs a token the user issues and runs only
+the public operations. The development bridge is neither: it evaluates arbitrary Ruby, is installed
+by hand and never ships. `tools/hostkit/agent_access_probe.py` runs both supported agents headless
+against a configured listener and keeps a transcript with the token masked.
 
 Host work defaults to the development bridge, not to a person at the Ruby Console.
 `make bridge-install` places the bridge in the SketchUp Plugins folder, never in the RBZ, and

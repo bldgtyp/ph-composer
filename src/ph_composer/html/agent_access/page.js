@@ -21,6 +21,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
     }
 
     function day(iso) { return iso ? new Date(iso).toLocaleDateString() : ""; }
+    function time(iso) { return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }
     function capabilityNames(list) {
       return list.map(function (name) {
         return (CAPABILITIES[name] || { label: dom.titleCase(name) }).label;
@@ -35,10 +36,21 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       this.notice = overlay.floatingNotice(this.root);
       var layer = el("div", "phc-notice-layer"); layer.appendChild(this.notice); this.root.appendChild(layer);
       this.create = dom.button("New token", function () { self.openCreate(); });
-      this.header = header.pageHeader({ title: "Agent Access", primary: this.create });
+      this.help = overlay.helpButton("Disconnecting an agent", "Revoke its token here; the agent can no longer " +
+        "connect. To remove it from a client as well, run claude mcp remove ph-composer, or delete the " +
+        "[mcp_servers.ph-composer] block from ~/.codex/config.toml.");
+      this.header = header.pageHeader({ title: "Agent Access", actions: [this.help], primary: this.create });
       this.root.appendChild(this.header.root);
       this.server = el("p", "muted agent-access-server"); this.server.setAttribute("role", "status");
       this.root.appendChild(this.server);
+      this.portRow = el("div", "agent-access-port"); this.portRow.hidden = true;
+      this.portInput = el("input"); this.portInput.type = "number"; this.portInput.min = "1024";
+      this.portInput.max = "65535"; this.portInput.setAttribute("aria-label", "Port");
+      this.portApply = dom.button("Use this port", function () {
+        self.send("access.port", { port: Number(self.portInput.value) });
+      });
+      this.portRow.appendChild(this.portInput); this.portRow.appendChild(this.portApply);
+      this.root.appendChild(this.portRow);
       this.unreadableNotice = el("div", "phc-notice agent-access-unreadable");
       this.unreadableNotice.setAttribute("data-tone", "warning");
       this.unreadableNotice.appendChild(el("p", "", "The agent tokens stored on this computer cannot be read. " +
@@ -50,6 +62,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       this.list.setAttribute("aria-label", "Agent tokens");
       this.root.appendChild(this.list);
       this.buildCreateDialog(); this.buildIssuedDialog(); this.buildRevokeDialog();
+      overlay.attachTooltip(this.root);
       this.paint();
     }
 
@@ -69,7 +82,8 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
           this)) this.closeRevoke();
         this.paint();
       } else if (message.type === "access.issued") {
-        this.pending = false; this.createDialog.closeModal(); this.showIssued(payload.token, payload.row);
+        this.pending = false; this.createDialog.closeModal();
+        this.showIssued(payload.token, payload.row, payload.clients || []);
       } else if (message.type === "access.failure") {
         this.pending = false; this.fail(payload.message); this.paint();
       }
@@ -94,7 +108,8 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       text.appendChild(el("span", "agent-access-row-label", token.label));
       var facts = [capabilityNames(token.capabilities), "created " + day(token.created_at)];
       if (token.revoked_at) facts.push("revoked " + day(token.revoked_at));
-      else facts.push(token.last_used_at ? "last used " + day(token.last_used_at) : "not used yet");
+      else if (token.last_call) facts.push("last call " + time(token.last_call.at) + ", " + token.last_call.status);
+      else facts.push("no calls since SketchUp started");
       text.appendChild(el("small", "muted", facts.join(" · ")));
       row.appendChild(text);
       if (!token.revoked_at) {
@@ -108,7 +123,11 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
 
     Page.prototype.paint = function () {
       var self = this;
-      this.server.textContent = serverLine(this.serverStatus || {});
+      var server = this.serverStatus || {};
+      this.server.textContent = serverLine(server);
+      this.portRow.hidden = server.state !== "unavailable";
+      if (this.portRow.hidden || document.activeElement !== this.portInput) this.portInput.value = server.port || "";
+      this.portApply.disabled = this.pending;
       this.list.replaceChildren();
       this.tokens.forEach(function (token) { self.list.appendChild(self.row(token)); });
       if (!this.tokens.length && !this.unreadable) {
@@ -177,12 +196,10 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       this.issuedDialog.appendChild(this.issuedTitle);
       this.issuedDialog.appendChild(el("p", "", "Copy this token now and give it to the agent. It is not shown " +
         "again; if it is lost, revoke it and create another."));
-      var field = el("div", "agent-access-secret");
-      this.secret = el("input", "agent-access-secret-value"); this.secret.readOnly = true;
-      this.secret.setAttribute("aria-label", "Agent token");
-      this.copy = icons.iconButton("Copy token", "duplicate", function () { self.copySecret(); });
-      field.appendChild(this.secret); field.appendChild(this.copy);
-      this.issuedDialog.appendChild(field);
+      var field = this.copyField("token", "input");
+      this.secret = field.value; this.copy = field.copy;
+      this.issuedDialog.appendChild(field.root);
+      this.clients = el("div", "agent-access-clients"); this.issuedDialog.appendChild(this.clients);
       this.copyStatus = inlineMessage("status"); this.issuedDialog.appendChild(this.copyStatus);
       var done = dom.button("I have copied it", function () { self.closeIssued(); });
       done.className = "primary";
@@ -190,25 +207,56 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       this.issuedDialog.appendChild(actions);
       this.root.appendChild(this.issuedDialog);
     };
-    Page.prototype.showIssued = function (token, row) {
+    /* A read-only field with its copy button; `tag` is "input" for one line or "textarea" for a command. */
+    Page.prototype.copyField = function (label, tag) {
+      var self = this, root = el("div", "agent-access-secret"), value = el(tag, "agent-access-secret-value");
+      value.readOnly = true; value.setAttribute("aria-label", label);
+      if (tag === "textarea") value.rows = 3;
+      var copy = icons.iconButton("Copy " + label, "duplicate", function () {
+        self.copyText(value, label);
+      });
+      root.appendChild(value); root.appendChild(copy);
+      return { root: root, value: value, copy: copy };
+    };
+    /* Each client's setup, the token already in it, with the command that checks it. */
+    Page.prototype.showClients = function (clients) {
+      var self = this;
+      this.clients.replaceChildren();
+      clients.forEach(function (client) {
+        var section = el("section", "agent-access-client");
+        section.appendChild(el("h3", "", client.client));
+        client.forms.forEach(function (form) {
+          section.appendChild(el("p", "muted", form.title));
+          var field = self.copyField(client.client + " setup", "textarea");
+          field.value.value = form.text; section.appendChild(field.root);
+        });
+        section.appendChild(el("p", "muted", "Check it with " + client.check + "."));
+        self.clients.appendChild(section);
+      });
+    };
+    Page.prototype.showIssued = function (token, row, clients) {
       this.issuedTitle.textContent = "Token created: " + row.label;
       this.secret.value = token; this.copyStatus.textContent = "";
+      this.showClients(clients);
       this.issuedDialog.openModal(); this.secret.select();
     };
-    /* Copies the selected token within the click, which a file page needs; the clipboard API is the second
-       try. Either way the token stays selected, so Command-C works when both are refused. The answer is said
+    /* Copies the selected text within the click, which a file page needs; the clipboard API is the second
+       try. Either way the text stays selected, so Command-C works when both are refused. The answer is said
        inside the dialog, which holds the focus. */
-    Page.prototype.copySecret = function () {
+    Page.prototype.copyText = function (field, label) {
       var clipboard = window.navigator && window.navigator.clipboard, self = this;
-      var copied = function () { self.copyStatus.textContent = "Token copied."; };
-      var manual = function () { self.copyStatus.textContent = "Copy the selected token with Command-C."; };
-      this.secret.select();
+      var copied = function () {
+        self.copyStatus.textContent = label.charAt(0).toUpperCase() + label.slice(1) + " copied.";
+      };
+      var manual = function () { self.copyStatus.textContent = "Copy the selected text with Command-C."; };
+      field.select();
       if (document.execCommand && document.execCommand("copy")) copied();
-      else if (clipboard && clipboard.writeText) clipboard.writeText(this.secret.value).then(copied, manual);
+      else if (clipboard && clipboard.writeText) clipboard.writeText(field.value).then(copied, manual);
       else manual();
     };
+    /* Nothing that holds the token outlives this dialog. */
     Page.prototype.closeIssued = function () {
-      this.secret.value = ""; this.issuedDialog.closeModal();
+      this.secret.value = ""; this.clients.replaceChildren(); this.issuedDialog.closeModal();
     };
 
     /* Revoke confirms in the shared dialog, naming the token that goes. */

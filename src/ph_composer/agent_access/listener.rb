@@ -49,6 +49,27 @@ module PhComposer
           @server
         end
 
+        # Stores a new port and moves a running or failed listener onto it. Raises CodedError for a port
+        # outside 1024 to 65535.
+        def port=(value)
+          unless value.is_a?(Integer) && PORTS.cover?(value)
+            raise CodedError.new("params.invalid", "A port is a whole number from #{PORTS.min} to #{PORTS.max}.")
+          end
+
+          Sketchup.write_default(Preferences::SECTION, PORT_KEY, value)
+          stop
+          refresh
+        end
+
+        # Each token's latest call since SketchUp started, by token id: its time and how it ended.
+        def last_calls
+          return {} unless @server
+
+          @server.snapshot.fetch("recent").each_with_object({}) do |row, calls|
+            calls[row["token"]] = { "at" => row["at"], "status" => row["error"] ? "error" : row["status"].to_s }
+          end
+        end
+
         private
 
         def start

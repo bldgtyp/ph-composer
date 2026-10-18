@@ -44,10 +44,27 @@ Revoking keeps the token in the list with the date it was revoked. Up to eight t
 at once.
 
 While a token is live, PH-Composer listens for agents on this computer only, on port 46110, and the
-Agent Access window says so. An agent connects over MCP with the token as a bearer header and can
-read: list the open Models, describe and run the read operations, and preview a change without
-making it. Client setup instructions follow once both supported agents have been checked against an
-installed build.
+Agent Access window says so. If another program holds that port, the window says so and offers a
+field to choose another. An agent connects over MCP with the token as a bearer header and can read:
+list the open Models, describe and run the read operations, and preview a change without making it.
+Each token's latest call since SketchUp started shows beside it.
+
+### Connect your client
+
+When a token is created, the window shows what to paste for each supported client, with the token
+already in it. Checked with Claude Code 2.1.300 and Codex 0.163.0 on macOS:
+
+- Claude Code: run the `claude mcp add --transport http --scope user ph-composer ...` command it
+  shows. Check it with `claude mcp get ph-composer`, which should say Connected.
+- Codex: paste the `[mcp_servers.ph-composer]` block it shows into `~/.codex/config.toml`, and the
+  `export PH_COMPOSER_TOKEN=...` line into your shell profile, such as `~/.zshrc`; or paste the
+  other block, which carries the token itself, instead of both. Check it with
+  `codex mcp get ph-composer`. Edit the file by hand rather than with `codex mcp add`, which
+  rewrites the whole file and drops its comments.
+
+To disconnect an agent, revoke its token in the Agent Access window. To remove the entry from a
+client as well, run `claude mcp remove ph-composer`, or delete the `[mcp_servers.ph-composer]`
+block from `~/.codex/config.toml`. PH-Composer itself is removed with SketchUp's Extension Manager.
 
 ## Not yet available
 

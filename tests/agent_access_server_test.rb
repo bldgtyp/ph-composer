@@ -315,18 +315,34 @@ class AgentAccessServerTest < PhComposerTestCase
 
     AgentAccess::Listener.refresh
     taken = AgentAccess::Listener.status
-    blocker.close
-    AgentAccess::Listener.stop
-    AgentAccess::Listener.refresh
+    probe = TCPServer.new("127.0.0.1", 0)
+    free = probe.addr[1]
+    probe.close
+    AgentAccess::Listener.port = free
     listening = AgentAccess::Listener.status
+    error = assert_raises(PhComposer::CodedError) { AgentAccess::Listener.port = 80 }
     AgentAccess::Tokens.revoke(@row.fetch("id"))
 
     assert_equal %w[unavailable listening stopped],
                  [taken, listening, AgentAccess::Listener.status].map { |status| status.fetch("state") }
     assert_includes taken.fetch("message"), port.to_s
-    assert_equal port, listening.fetch("port")
+    assert_equal [free, "params.invalid"], [listening.fetch("port"), error.code]
   ensure
+    blocker&.close
     AgentAccess::Listener.stop
+  end
+
+  def test_a_tokens_latest_call_is_reported_by_token_without_its_params
+    AgentAccess::Listener.stop
+    AgentAccess::Listener.server_factory = ->(_port) { @server }
+    AgentAccess::Listener.refresh
+    call_tool("query", "session" => @session.id, "name" => "test.fixture.total_length", "params" => { "p" => "secret" })
+
+    calls = AgentAccess::Listener.last_calls
+
+    assert_equal [@row.fetch("id")], calls.keys
+    assert_equal "completed", calls.dig(@row.fetch("id"), "status")
+    refute_includes JSON.generate(calls), "secret"
   end
 
   def test_the_stub_refuses_host_calls_off_the_main_thread

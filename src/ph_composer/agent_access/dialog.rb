@@ -18,11 +18,12 @@ module PhComposer
         "access.ready" => [],
         "access.issue" => %w[label capabilities],
         "access.revoke" => %w[id],
-        "access.reset" => []
+        "access.reset" => [],
+        "access.port" => %w[port]
       }.freeze
       OUTBOUND = {
         "access.state" => %w[state tokens offered server],
-        "access.issued" => %w[token row],
+        "access.issued" => %w[token row clients],
         "access.failure" => %w[message]
       }.freeze
 
@@ -79,9 +80,11 @@ module PhComposer
           "PhComposerUI.get(\"agent_access/page\").receive(#{JSON.generate('type' => type, 'payload' => payload)})"
         end
 
-        # What the page shows. `server` describes the listener, which no stage runs yet.
+        # What the page shows: every token with its latest call since SketchUp started, and the listener.
         def state
-          { "state" => Tokens.state, "tokens" => Tokens.list, "offered" => Tokens::OFFERED,
+          calls = Listener.last_calls
+          tokens = Tokens.list.map { |row| row.merge("last_call" => calls[row["id"]]) }
+          { "state" => Tokens.state, "tokens" => tokens, "offered" => Tokens::OFFERED,
             "server" => AgentAccess.server_status }
         end
 
@@ -118,9 +121,13 @@ module PhComposer
           when "access.ready" then refresh
           when "access.issue"
             issued = Tokens.issue(:label => payload["label"], :capabilities => payload.fetch("capabilities", []))
-            publish("access.issued", issued)
+            clients = ClientConfig.for(:port => Listener.port, :token => issued.fetch("token"))
+            publish("access.issued", issued.merge("clients" => clients))
           when "access.revoke" then Tokens.revoke(payload["id"])
           when "access.reset" then Tokens.reset
+          when "access.port"
+            Listener.port = payload["port"]
+            refresh
           end
         end
 

@@ -2,6 +2,7 @@
 
 require "json"
 require "socket"
+require "time"
 
 module PhComposer
   module AgentAccess
@@ -362,7 +363,7 @@ module PhComposer
                    "operation" => entry.arguments["name"].is_a?(String) ? entry.arguments["name"][0, 120] : nil,
                    "session" => entry.arguments["session"].is_a?(String) ? entry.arguments["session"][0, 60] : nil,
                    "status" => outcome["status"], "code" => outcome["code"], "error" => result["isError"] == true,
-                   "ms" => ((@clock.call - started) * 1000).round }
+                   "ms" => ((@clock.call - started) * 1000).round, "at" => Time.now.utc.iso8601 }
         @ring.shift while @ring.length > RING
         @unflushed = (@unflushed || 0) + 1
       end
