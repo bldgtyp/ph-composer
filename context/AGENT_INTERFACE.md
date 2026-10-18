@@ -172,8 +172,9 @@ PH-Composer's overlays, tool drawing and panels are absent, which the result say
 (`capture.view_changed`). Each session keeps its four newest captures for 15 minutes in its own
 temporary folder. Measured on 26.1.188 with SketchUp frontmost; its behaviour with the window hidden,
 minimized, behind another application or under a modal is not measured. SketchUp's Ruby API exposes no
-window state to refuse on, so every result says `window_state: "unverified"`; a native modal stops the
-pump, so a call made under one answers `session.busy` and never captures.
+window state to refuse on, so every result says `window_state: "unverified"`. A native modal stops
+Ruby entirely, workers included, so a call made under one is never captured and the client sees its own
+timeout rather than a refusal.
 
 Support explicit selection, reveal and camera operations for visual inspection, plus viewport
 capture where the host permits it. Captures identify their model session, revision, camera and

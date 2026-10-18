@@ -55,9 +55,13 @@ module PhComposer
       width, height = size(request.params, view)
       folder = folder_for(session)
       path = File.join(folder, "cap_#{SecureRandom.hex(8)}.png")
-      written = view.write_image(:filename => path, :width => width, :height => height, :antialias => true,
-                                 :transparent => false)
-      raise CodedError.new("capture.failed", CODES.fetch("capture.failed")) unless written && File.file?(path)
+      written = begin
+        view.write_image(:filename => path, :width => width, :height => height, :antialias => true,
+                         :transparent => false)
+      rescue StandardError
+        false
+      end
+      fail_with(path, "capture.failed") unless written && File.file?(path)
 
       check!(path, before, session)
       bytes = File.binread(path)
@@ -68,16 +72,16 @@ module PhComposer
       prune(folder) if folder
     end
 
+    # Removes whatever this attempt left, a partial file included, and refuses with `code`.
+    def fail_with(path, code)
+      File.delete(path) if File.exist?(path)
+      raise CodedError.new(code, CODES.fetch(code))
+    end
+
     # Refuses, and removes the file, when the view moved during the write or the image is too large.
     def check!(path, before, session)
-      if [session.view_generation, session.revision] != before
-        File.delete(path)
-        raise CodedError.new("capture.view_changed", CODES.fetch("capture.view_changed"))
-      end
-      return if File.size(path) <= MAX_BYTES
-
-      File.delete(path)
-      raise CodedError.new("capture.too_large", CODES.fetch("capture.too_large"))
+      fail_with(path, "capture.view_changed") if [session.view_generation, session.revision] != before
+      fail_with(path, "capture.too_large") if File.size(path) > MAX_BYTES
     end
 
     # The asked size, or the viewport's own clamped to MAX_SIDE.

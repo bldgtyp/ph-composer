@@ -48,7 +48,14 @@ class CaptureCommandTest < PhComposerTestCase
   def test_a_failed_write_a_moved_view_and_an_oversized_image_refuse_and_leave_no_file
     view = @model.active_view
     outcomes = [
-      ->(_options) { false },
+      lambda do |options|
+        File.binwrite(options.fetch(:filename), "partial")
+        false
+      end,
+      lambda do |options|
+        File.binwrite(options.fetch(:filename), "partial")
+        raise "the renderer failed"
+      end,
       lambda do |options|
         File.binwrite(options.fetch(:filename), "png")
         @session.host_event(:camera_changed)
@@ -63,7 +70,7 @@ class CaptureCommandTest < PhComposerTestCase
       capture.fetch("code")
     end
 
-    assert_equal %w[capture.failed capture.view_changed capture.too_large], outcomes
+    assert_equal %w[capture.failed capture.failed capture.view_changed capture.too_large], outcomes
     folder = File.dirname(view.images.last.fetch(:filename))
     assert_empty Dir.glob(File.join(folder, "cap_*.png"))
   end
