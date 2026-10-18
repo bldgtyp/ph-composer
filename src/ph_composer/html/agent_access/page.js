@@ -27,6 +27,16 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       return "Not listening: agents can connect once a token is issued.";
     }
 
+    /* What a revoke ended, as the acknowledgment says it. */
+    function revokedLine(summary) {
+      var line = "Token revoked. Calls it sends from now on are refused; one already running finishes.";
+      if (summary.exports_completed) line += " " + summary.exports_completed + " export(s) it started had completed.";
+      if (summary.exports_stopped) line += " " + summary.exports_stopped + " running export(s) stop without writing.";
+      if (summary.changes_committed) line += " " + summary.changes_committed + " change(s) it made stay in the Model.";
+      if (summary.calls_refused) line += " " + summary.calls_refused + " waiting call(s) were refused.";
+      return line;
+    }
+
     function day(iso) { return iso ? new Date(iso).toLocaleDateString() : ""; }
     function time(iso) { return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }
     function capabilityNames(list) {
@@ -93,6 +103,8 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       } else if (message.type === "access.issued") {
         this.pending = false; this.createDialog.closeModal();
         this.showIssued(payload.token, payload.row, payload.clients || []);
+      } else if (message.type === "access.revoked") {
+        this.notice.show(revokedLine(payload.summary || {}), { tone: "success" });
       } else if (message.type === "access.failure") {
         this.pending = false; this.fail(payload.message); this.paint();
       }

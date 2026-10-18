@@ -34,11 +34,38 @@ module PhComposer
                                               :available => ->(_read) { false }) { |_session| Dialog.show }
     end
 
-    # Called after every token store write: the listener starts with the first live token, takes the
-    # new snapshot and stops after the last revoke, and the dialog shows the new list.
+    # Called after every token store write, a revoke or a reset alike: the caller handles of every token
+    # that is no longer live end at once, its waiting calls are answered as revoked, the listener takes
+    # the new snapshot (stopping after the last token), and the dialog shows the new list.
     def tokens_changed
-      Listener.refresh
+      live = Tokens.snapshot.values.map { |row| row.fetch("id") }
+      ended = (handles.keys - live).to_h { |token_id| [token_id, revoke_callers(token_id)] }
+      refused = Listener.refresh || {}
+      (ended.keys | refused.keys).each do |token_id|
+        summary = ended.fetch(token_id) { acknowledgment(token_id).merge("calls_refused" => 0) }
+        acknowledgments[token_id] = summary.merge("calls_refused" => refused.fetch(token_id, 0))
+      end
       Dialog.refresh
+    end
+
+    # What ending a token stopped and what it had already done, for the dialog's acknowledgment.
+    def acknowledgment(token_id)
+      acknowledgments.fetch(token_id) do
+        { "exports_completed" => 0, "exports_stopped" => 0, "changes_committed" => 0, "calls_refused" => 0 }
+      end
+    end
+
+    def acknowledgments
+      @acknowledgments ||= {}
+    end
+
+    # A change a token's invoke committed, counted once per session and sequence however often it replays.
+    def committed(token_id, session_id, sequence)
+      (changes[token_id] ||= {})[[session_id, sequence]] = true
+    end
+
+    def changes
+      @changes ||= {}
     end
 
     # Each token's caller handle and sequences per Model session, kept here rather than in the Executor so
@@ -60,9 +87,50 @@ module PhComposer
     def server_status
       Listener.status
     end
+
+    # Records the caller handle a token acts through on a session, so a revoke can end it there too.
+    # Records of closed sessions are dropped on the way, so a long-lived token holds no closed Model.
+    def bound(token_id, session, handle)
+      held = (handles[token_id] ||= [])
+      held.select! { |(open, _handle)| open.valid? }
+      held << [session, handle]
+    end
+
+    # Ends every caller handle the token held and says what its exports had done: completed ones keep
+    # their files; one still running is stopped at its commit check and writes nothing. A call already
+    # running finishes whole; the next one is refused as revoked.
+    def revoke_callers(token_id)
+      summary = { "exports_completed" => 0, "exports_stopped" => 0,
+                  "changes_committed" => (changes.delete(token_id) || {}).length }
+      Array(handles.delete(token_id)).each do |session, handle|
+        next unless session.valid?
+
+        tasks = Export::Tasks.for(session).owned_by(handle)
+        summary["exports_completed"] += tasks.count { |task| task.snapshot.dig("outcome", "code") == "export.complete" }
+        summary["exports_stopped"] += tasks.count { |task| !task.terminal? }
+        session.callers.revoke(handle)
+      end
+      summary
+    end
+
+    def handles
+      @handles ||= {}
+    end
+
+    # Forgets every record of a closed session, whichever token held it.
+    def prune_handles
+      handles.each_value { |held| held.select! { |(session, _handle)| session.valid? } }
+    end
+
+    def reset_handles
+      @handles = {}
+      @acknowledgments = {}
+      @changes = {}
+    end
   end
 
   on_reset("agent_access.dialog") { AgentAccess::Dialog.reset_for_test }
   on_reset("agent_access.listener") { AgentAccess::Listener.reset }
   on_reset("agent_access.bindings") { AgentAccess.reset_bindings }
+  on_reset("agent_access.handles") { AgentAccess.reset_handles }
 end

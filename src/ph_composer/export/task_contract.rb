@@ -75,15 +75,18 @@ module PhComposer
         },
         "export_status" => {
           "capability" => "export", "params" => TASK_PARAMS, "result" => STATUS, "examples" => [EXAMPLE_TASK],
-          "description" => "Poll one task. An expired or other-Model handle refuses task.expired."
+          "description" => "Poll one task this caller started. An expired or other-Model handle refuses " \
+                           "task.expired; another caller's refuses task.foreign."
         },
         "cancel_export" => {
           "capability" => "export", "params" => TASK_PARAMS, "result" => STATUS, "examples" => [EXAMPLE_TASK],
-          "description" => "Cancel a task before it starts writing; nothing is written."
+          "description" => "Cancel a task this caller started before it starts writing; nothing is " \
+                           "written. Another caller's refuses task.foreign."
         },
         "latest_export" => {
           "capability" => "export", "params" => NO_PARAMS, "result" => STATUS.merge("type" => %w[object null]),
-          "examples" => [{}], "description" => "The most recent task still retained, or null."
+          "examples" => [{}], "description" => "The most recent retained task this caller started, or null; another " \
+                                               "caller's tasks are not shown."
         }
       }.freeze
 

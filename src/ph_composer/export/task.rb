@@ -9,13 +9,14 @@ module PhComposer
     class Task
       PAIR_FAILED = "The HBJSON and Export report could not be written. The destination was left as it was."
 
-      attr_reader :id, :finished_at
+      attr_reader :id, :finished_at, :owner
 
       # `approval` is the NativeApproval::Granted for the destination: from the native Save sheet, or
       # resolved from an approved location, whose id and label the completed outcome names instead of
       # a path.
-      def initialize(session, approval:, runtime_factory: nil)
+      def initialize(session, approval:, owner:, runtime_factory: nil)
         @session = session
+        @owner = owner
         @id = "export_#{SecureRandom.hex(12)}"
         @destination = File.expand_path(approval.path)
         @location = approval.location_id && { "id" => approval.location_id, "label" => approval.label }
@@ -132,6 +133,8 @@ module PhComposer
         end
         html = Report.render(@result, :display_units => @units)
         coherent!
+        return revoked unless still_permitted?
+
         @stage = "writing"
         pair_step { @pair.commit(@result.fetch("canonical_model").fetch("hbjson"), html) }
         ApprovedLocations.mark_used(@location.fetch("id")) if @location
@@ -205,6 +208,29 @@ module PhComposer
         return if approval.state == @prior
 
         raise Blocked.new("export.destination_changed", "The destination pair changed after review. Preflight again.")
+      end
+
+      # Immediately before the pair is written, the access that started the task and the approved location
+      # it named are checked again: a revocation acknowledged before this point writes nothing.
+      def still_permitted?
+        return false unless @owner.live.call
+        return true unless @location
+
+        File.expand_path(ApprovedLocations.resolve(@location.fetch("id"), :kind => "save_file")) == @destination
+      rescue CodedError => error
+        @revocation = error
+        false
+      end
+
+      def revoked
+        error = @revocation
+        code, message = if error
+                          [error.code, error.message]
+                        else
+                          ["export.revoked", "The access that started this export was revoked before it wrote " \
+                                             "anything. No files were written."]
+                        end
+        finish(Outcome.build("refused", code, message, "none", @session.revision))
       end
 
       def failed(error)

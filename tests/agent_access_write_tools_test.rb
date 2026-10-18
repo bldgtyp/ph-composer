@@ -141,6 +141,56 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     end
   end
 
+  def test_revoking_in_the_dialog_ends_the_tokens_callers_and_acknowledges_its_exports
+    invoke
+    dialog = AgentAccess::Dialog.show
+    dialog.fire(AgentAccess::Dialog::CALLBACK, JSON.generate("type" => "access.revoke",
+                                                             "payload" => { "id" => @writer.fetch("id") }))
+    acknowledged = dialog.scripts.map { |script|
+      script[/receive\((.*)\)\z/, 1]
+    }.compact.map { |json| JSON.parse(json) }
+     .find { |message| message["type"] == "access.revoked" }
+    refused = @executor.call(@writer, "invoke", "session" => @session.id, "name" => CREATE, "params" => PARTS,
+                                                "expected_revision" => @session.revision)
+
+    assert_equal({ "exports_completed" => 0, "exports_stopped" => 0, "changes_committed" => 1, "calls_refused" => 0 },
+                 acknowledged.dig("payload", "summary"))
+    assert refused["isError"]
+    assert_equal "access.revoked", refused.dig("structuredContent", "code")
+  end
+
+  def test_resetting_an_unreadable_store_ends_every_tokens_callers
+    invoke
+    handle = AgentAccess.bindings.values.first.context.caller
+    Sketchup.write_default(AgentAccess::Tokens::SECTION, AgentAccess::Tokens::KEY, ["not json"].pack("m0"))
+    AgentAccess::Tokens.reset
+
+    assert @session.callers.revoked?(handle)
+    assert_empty AgentAccess.bindings
+  end
+
+  def test_a_token_revoked_while_its_first_call_waited_is_acknowledged_with_that_refusal
+    queued = AgentAccess::Tokens.issue(:capabilities => %w[read]).dig("row", "id")
+    waiting = StubAgentServer.new(46_110)
+    waiting.define_singleton_method(:refuse_revoked) { |live| live.include?(queued) ? {} : { queued => 1 } }
+    AgentAccess::Listener.instance_variable_set(:@server, waiting)
+
+    AgentAccess::Tokens.revoke(queued)
+
+    assert_equal 1, AgentAccess.acknowledgment(queued).fetch("calls_refused")
+  end
+
+  def test_a_closed_models_caller_is_not_kept_by_a_live_token
+    invoke
+    other = Sketchup::Model.new
+    closed = PhComposer::Sessions.for(other)
+    call("context", { "session" => closed.id })
+    other.close
+    invoke
+
+    assert_equal [@session], AgentAccess.handles.fetch(@writer.fetch("id")).map(&:first)
+  end
+
   def test_a_lost_start_export_reply_is_found_with_latest_export
     Dir.mktmpdir("phc-agent-") do |directory|
       PhComposer::ApprovedLocations.approve(:kind => "save_file", :path => File.join(directory, "model.hbjson"))

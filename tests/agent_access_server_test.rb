@@ -357,7 +357,7 @@ class AgentAccessServerTest < PhComposerTestCase
     sleep 0.01 until @server.snapshot.fetch("pending") > pending
     [@row, writer.fetch("row")].each { |row| AgentAccess::Tokens.revoke(row.fetch("id")) }
 
-    assert_equal 1, @server.refuse_revoked([])
+    assert_equal({ writer.dig("row", "id") => 1 }, @server.refuse_revoked([]))
     @server.stop_soon
     answer = request.value
     @server.pump

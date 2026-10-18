@@ -48594,7 +48594,7 @@ Example arguments:
 
 ### `PhComposer::API.export_status`
 
-Poll one task. An expired or other-Model handle refuses task.expired. Needs `export`.
+Poll one task this caller started. An expired or other-Model handle refuses task.expired; another caller's refuses task.foreign. Needs `export`.
 
 Keyword arguments besides context:
 
@@ -48731,7 +48731,7 @@ Example arguments:
 
 ### `PhComposer::API.cancel_export`
 
-Cancel a task before it starts writing; nothing is written. Needs `export`.
+Cancel a task this caller started before it starts writing; nothing is written. Another caller's refuses task.foreign. Needs `export`.
 
 Keyword arguments besides context:
 
@@ -48868,7 +48868,7 @@ Example arguments:
 
 ### `PhComposer::API.latest_export`
 
-The most recent task still retained, or null. Needs `export`.
+The most recent retained task this caller started, or null; another caller's tasks are not shown. Needs `export`.
 
 Keyword arguments besides context:
 

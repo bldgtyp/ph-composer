@@ -26,13 +26,14 @@ module PhComposer
     # use the same explicit session as starting the task, even when another Model is foreground. A
     # start names an approved location; only the native Export workflow passes its own `approval`.
     def export_task(context, operation, arguments)
-      session, = resolve(context, "export", nil, nil)
+      session, caller, = resolve(context, "export", nil, nil)
       tasks = Export::Tasks.for(session)
+      owner = Export::Tasks::Owner.new(caller.handle, -> { !session.callers.fetch(caller.handle).nil? })
       value = case operation
-              when :start then tasks.start(**arguments)
-              when :status then tasks.status(arguments.fetch(:task_id))
-              when :cancel then tasks.cancel(arguments.fetch(:task_id))
-              when :latest then tasks.latest
+              when :start then tasks.start(**arguments, :owner => owner)
+              when :status then tasks.status(arguments.fetch(:task_id), owner)
+              when :cancel then tasks.cancel(arguments.fetch(:task_id), owner)
+              when :latest then tasks.latest(owner)
               else raise InternalError, "Unknown export task operation."
               end
       Outcome.completed(:revision => session.revision, :value => value)
@@ -249,6 +250,9 @@ module PhComposer
       raise CodedError.new("session.unknown", "That Model session is closed or was never opened.") unless session
 
       caller = session.callers.fetch(context.caller)
+      if session.callers.revoked?(context.caller)
+        raise CodedError.new("access.revoked", "This caller's access was revoked; nothing ran.")
+      end
       raise CodedError.new("session.unknown", "This caller was not connected to that Model session.") unless caller
 
       declaration = declarations && declarations[name]

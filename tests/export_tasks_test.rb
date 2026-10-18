@@ -4,6 +4,7 @@ require_relative "test_helper"
 require "tmpdir"
 
 class ExportTasksTest < PhComposerTestCase
+  OWNER = PhComposer::Export::Tasks::Owner.new("test-owner", -> { true })
   class Runtime
     attr_reader :document, :stopped
 
@@ -68,8 +69,8 @@ class ExportTasksTest < PhComposerTestCase
   def test_tasks_are_pollable_detached_and_can_cancel_before_collection_without_boot
     task = start
     task["stage"] = "tampered"
-    assert_equal "queued", @tasks.status(task.fetch("task_id")).fetch("stage")
-    result = @tasks.cancel(task.fetch("task_id"))
+    assert_equal "queued", @tasks.status(task.fetch("task_id"), OWNER).fetch("stage")
+    result = @tasks.cancel(task.fetch("task_id"), OWNER)
     drain
 
     assert_equal "cancelled", result.dig("outcome", "status")
@@ -82,13 +83,13 @@ class ExportTasksTest < PhComposerTestCase
     @session.model.active_path = []
     @session.model.selection.add(Sketchup::Face.new(99))
     drain
-    assert_equal "translating", @tasks.status(task.fetch("task_id")).fetch("stage")
+    assert_equal "translating", @tasks.status(task.fetch("task_id"), OWNER).fetch("stage")
 
     @session.model.start_operation("External edit")
     @session.model.set_attribute("test", "value", 1)
     @session.model.commit_operation
     @runtime.blocked
-    assert_equal "export.model_changed", @tasks.status(task.fetch("task_id")).dig("outcome", "code")
+    assert_equal "export.model_changed", @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "code")
     assert @runtime.stopped
     assert_empty Dir.children(@directory)
   end
@@ -111,7 +112,7 @@ class ExportTasksTest < PhComposerTestCase
     task = start
     drain
     @runtime.blocked
-    outcome = @tasks.status(task.fetch("task_id")).fetch("outcome")
+    outcome = @tasks.status(task.fetch("task_id"), OWNER).fetch("outcome")
 
     assert_equal %w[refused export.blocked none], outcome.values_at("status", "code", "effect")
     assert_equal "Choose an authored construction.", outcome.dig("findings", 0, "message")
@@ -126,7 +127,7 @@ class ExportTasksTest < PhComposerTestCase
     @runtime.blocked(:canonical => { "hbjson" => JSON.generate("type" => "Model", "rooms" => [],
                                                                "identifier" => "PARTIAL-MODEL-BYTES"),
                                      "rooms" => 1, "faces" => 0, "surface_pairs" => 0 })
-    html = @tasks.status(task.fetch("task_id")).dig("outcome", "value", "report_html")
+    html = @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "value", "report_html")
     refute_includes html, "PARTIAL-MODEL-BYTES"
   end
 
@@ -143,7 +144,7 @@ class ExportTasksTest < PhComposerTestCase
     task = start
     drain
     @runtime.blocked
-    html = @tasks.status(task.fetch("task_id")).dig("outcome", "value", "report_html")
+    html = @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "value", "report_html")
     assert_includes html, "<h1>Export not created</h1>"
     assert_includes html, PhComposer::Export::Report::BLOCKED_LINE
     assert_empty Dir.children(@directory), "nothing is written beside the destination"
@@ -154,10 +155,10 @@ class ExportTasksTest < PhComposerTestCase
     drain
     @runtime.blocked(:canonical => { "hbjson" => JSON.generate("type" => "Model", "rooms" => []),
                                      "rooms" => 1, "faces" => 6, "surface_pairs" => 0 })
-    outcome = @tasks.status(task.fetch("task_id")).fetch("outcome")
+    outcome = @tasks.status(task.fetch("task_id"), OWNER).fetch("outcome")
     refute outcome.dig("value", "result", "canonical_model").key?("hbjson")
     assert_equal 1, outcome.dig("value", "result", "canonical_model", "rooms")
-    assert_equal outcome, @tasks.latest.fetch("outcome")
+    assert_equal outcome, @tasks.latest(OWNER).fetch("outcome")
     assert_equal 1, outcome.fetch("findings").length
     assert_empty Dir.children(@directory)
   end
@@ -166,7 +167,7 @@ class ExportTasksTest < PhComposerTestCase
     task = start
     drain
     @runtime.close
-    assert_equal "runtime.closed", @tasks.status(task.fetch("task_id")).dig("outcome", "code")
+    assert_equal "runtime.closed", @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "code")
     assert @runtime.stopped
 
     start
@@ -175,7 +176,7 @@ class ExportTasksTest < PhComposerTestCase
     UI.run_timer(UI.timer_intervals.find { |_id, interval| interval == 0.2 }.first)
     drain
     assert @runtime.stopped
-    assert_nil @tasks.latest
+    assert_nil @tasks.latest(OWNER)
     assert_empty Dir.children(@directory)
   end
 
@@ -198,8 +199,8 @@ class ExportTasksTest < PhComposerTestCase
     task = start
     drain
     @runtime.success
-    assert_equal "checking", @tasks.status(task.fetch("task_id")).fetch("stage")
-    @tasks.cancel(task.fetch("task_id"))
+    assert_equal "checking", @tasks.status(task.fetch("task_id"), OWNER).fetch("stage")
+    @tasks.cancel(task.fetch("task_id"), OWNER)
     drain
 
     assert_empty Dir.children(@directory)
@@ -211,13 +212,13 @@ class ExportTasksTest < PhComposerTestCase
     drain
     @runtime.success
     drain
-    result = @tasks.status(task.fetch("task_id"))
+    result = @tasks.status(task.fetch("task_id"), OWNER)
     contents = Dir.children(@directory).sort.to_h { |name| [name, File.binread(File.join(@directory, name))] }
 
     assert_equal %w[completed export.complete none], result.fetch("outcome").values_at("status", "code", "effect")
     assert_equal ["test-export-report.html", "test.hbjson"], contents.keys
-    assert_equal result, @tasks.status(task.fetch("task_id"))
-    assert_equal result, @tasks.latest
+    assert_equal result, @tasks.status(task.fetch("task_id"), OWNER)
+    assert_equal result, @tasks.latest(OWNER)
     refute result.dig("outcome", "value", "result", "canonical_model").key?("hbjson")
     assert_equal 0, result.dig("outcome", "value", "result", "canonical_model", "rooms")
     after = Dir.children(@directory).sort.to_h { |name| [name, File.binread(File.join(@directory, name))] }
@@ -235,7 +236,7 @@ class ExportTasksTest < PhComposerTestCase
     @runtime.success
     File.chmod(0o555, @directory)
     drain
-    [@tasks.status(task.fetch("task_id")), @tasks.latest].each do |status|
+    [@tasks.status(task.fetch("task_id"), OWNER), @tasks.latest(OWNER)].each do |status|
       assert_equal %w[failed export.failed], status.fetch("outcome").values_at("status", "code")
       assert_equal PhComposer::Export::Task::PAIR_FAILED, status.dig("outcome", "message")
       ["test.hbjson", @directory].each { |secret| refute_includes JSON.generate(status), secret }
@@ -251,7 +252,7 @@ class ExportTasksTest < PhComposerTestCase
     File.write(@destination, "another writer")
     drain
 
-    assert_equal "export.destination_changed", @tasks.status(task.fetch("task_id")).dig("outcome", "code")
+    assert_equal "export.destination_changed", @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "code")
     assert_equal "another writer", File.read(@destination)
     refute File.exist?(PhComposer::Export::ArtifactPair.report_path(@destination))
   end
@@ -276,6 +277,65 @@ class ExportTasksTest < PhComposerTestCase
     assert_equal "task.expired", api.export_status(:context => second, :task_id => id).fetch("code")
     assert_equal "request.capability_denied", api.export_status(:context => read, :task_id => id).fetch("code")
     assert_empty Dir.children(@directory)
+  end
+
+  def test_a_task_answers_only_the_caller_that_started_it
+    api = PhComposer::API
+    location = { "id" => approved_destination }
+    mine = api.connect(:session_id => @session.id, :capabilities => ["export"])
+    theirs = api.connect(:session_id => @session.id, :capabilities => ["export"])
+    id = api.start_export(:context => mine, :location => location).dig("value", "task_id")
+
+    assert_equal %w[task.foreign task.foreign], [api.export_status(:context => theirs, :task_id => id),
+                                                 api.cancel_export(:context => theirs,
+                                                                   :task_id => id)].map { |o| o["code"] }
+    assert_nil api.latest_export(:context => theirs).fetch("value")
+    assert_equal id, api.latest_export(:context => mine).dig("value", "task_id")
+    assert_equal "cancelled", api.cancel_export(:context => mine, :task_id => id).dig("value", "outcome", "status")
+  end
+
+  def test_a_revoke_before_commit_writes_nothing_and_after_commit_keeps_the_pair
+    live = true
+    owner = PhComposer::Export::Tasks::Owner.new("agent", -> { live })
+    approval = PhComposer::NativeApproval::Granted.new(:path => @destination, :replace => false)
+    task = @tasks.start(:owner => owner, :approval => approval, :runtime_factory => @factory)
+    drain
+    live = false
+    @runtime.success
+    drain
+    refused = @tasks.status(task.fetch("task_id"), owner).fetch("outcome")
+
+    assert_equal %w[refused export.revoked none], refused.values_at("status", "code", "effect")
+    assert_empty Dir.children(@directory)
+    live = true
+    second = @tasks.start(:owner => owner, :approval => approval, :runtime_factory => @factory)
+    drain
+    @runtime.success
+    drain
+    live = false
+    assert_equal "export.complete", @tasks.status(second.fetch("task_id"), owner).dig("outcome", "code")
+    assert_equal ["test-export-report.html", "test.hbjson"], Dir.children(@directory).sort
+  end
+
+  def test_a_location_revoked_before_commit_refuses_and_writes_nothing
+    location = approved_destination
+    task = @tasks.start(:owner => OWNER, :location => { "id" => location }, :runtime_factory => @factory)
+    drain
+    PhComposer::ApprovedLocations.revoke(location)
+    @runtime.success
+    drain
+
+    assert_equal %w[refused location.revoked], @tasks.status(task.fetch("task_id"), OWNER)
+                                                     .fetch("outcome").values_at("status", "code")
+    assert_empty Dir.children(@directory)
+  end
+
+  def test_a_revoked_caller_is_refused_from_its_next_call
+    api = PhComposer::API
+    context = api.connect(:session_id => @session.id, :capabilities => ["export"])
+    @session.callers.revoke(context.caller)
+
+    assert_equal "access.revoked", api.latest_export(:context => context).fetch("code")
   end
 
   # The export task methods describe themselves, and a client built only from those descriptions
@@ -329,11 +389,11 @@ class ExportTasksTest < PhComposerTestCase
     assert_equal "params.invalid", no_state["code"]
     consented = { "id" => id, "replace" => true, "expected_destination" => reviewed.fetch("state") }
     # What start_export runs, with this test's runtime in place of the translation runtime.
-    task = @tasks.start(:location => consented, :runtime_factory => @factory)
+    task = @tasks.start(:owner => OWNER, :location => consented, :runtime_factory => @factory)
     drain
     @runtime.success
     drain
-    value = @tasks.status(task.fetch("task_id")).dig("outcome", "value")
+    value = @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "value")
     assert_equal({ "id" => id, "label" => "Export destination 1" }, value.fetch("location"))
     refute_includes JSON.generate(value), @directory
     refute_equal "{}", File.read(@destination)
@@ -343,23 +403,23 @@ class ExportTasksTest < PhComposerTestCase
   def test_task_retention_is_bounded_and_old_handles_never_restart_a_write
     ids = 21.times.map do
       task = start
-      @tasks.cancel(task.fetch("task_id"))
+      @tasks.cancel(task.fetch("task_id"), OWNER)
       task.fetch("task_id")
     end
-    error = assert_raises(PhComposer::CodedError) { @tasks.status(ids.first) }
+    error = assert_raises(PhComposer::CodedError) { @tasks.status(ids.first, OWNER) }
     assert_equal "task.expired", error.code
-    assert_equal ids.last, @tasks.latest.fetch("task_id")
+    assert_equal ids.last, @tasks.latest(OWNER).fetch("task_id")
     assert_empty Dir.children(@directory)
   end
 
   def test_terminal_task_expires_after_the_documented_retention_without_repeating_work
     task = start
     id = task.fetch("task_id")
-    @tasks.cancel(id)
+    @tasks.cancel(id, OWNER)
     now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     Process.stub(:clock_gettime, ->(*) { now + PhComposer::Export::Tasks::RETENTION_SECONDS + 1 }) do
-      assert_nil @tasks.latest
-      error = assert_raises(PhComposer::CodedError) { @tasks.status(id) }
+      assert_nil @tasks.latest(OWNER)
+      error = assert_raises(PhComposer::CodedError) { @tasks.status(id, OWNER) }
       assert_equal "task.expired", error.code
     end
     assert_empty Dir.children(@directory)
@@ -380,7 +440,7 @@ class ExportTasksTest < PhComposerTestCase
 
   def start(replace: false)
     approval = PhComposer::NativeApproval::Granted.new(:path => @destination, :replace => replace)
-    @tasks.start(:approval => approval, :runtime_factory => @factory)
+    @tasks.start(:owner => OWNER, :approval => approval, :runtime_factory => @factory)
   end
 
   def approved_destination

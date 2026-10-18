@@ -10,7 +10,7 @@ module PhComposer
     # revoking the last live token stops the listener once those answers are written.
     module ServerRevocation
       # Answers every waiting call of a token no longer in `live_ids` as revoked, so none runs and each
-      # client hears why, and returns how many it answered. Main thread, inside the revoke.
+      # client hears why, and returns how many it answered per token id. Main thread, inside the revoke.
       def refuse_revoked(live_ids)
         @lock.synchronize do
           revoked = @queue.select { |entry| entry.state == :waiting && !live_ids.include?(entry.token.fetch("id")) }
@@ -21,7 +21,7 @@ module PhComposer
             record(entry, entry.result, @clock.call)
           end
           @answered.broadcast
-          revoked.length
+          revoked.map { |entry| entry.token.fetch("id") }.tally
         end
       end
 

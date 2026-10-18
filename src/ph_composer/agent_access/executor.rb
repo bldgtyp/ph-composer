@@ -57,7 +57,9 @@ module PhComposer
 
           binding = binding_for(live, session)
         end
-        result(tool.run.call(binding.context, arguments, live, binding.sequencer), :acted => tool.capability != "read")
+        answer = tool.run.call(binding.context, arguments, live, binding.sequencer)
+        note_committed(live, arguments, answer) if name == "invoke"
+        result(answer, :acted => tool.capability != "read")
       rescue CodedError => error
         result(Outcome.refused(error.code, error.message, :revision => nil, :detail => error.detail))
       end
@@ -77,6 +79,13 @@ module PhComposer
         result(Outcome.failed(:effect => "unknown", :revision => nil))
       end
 
+      # Counts a committed invoke for the token's revoke acknowledgment; a replay counts once.
+      def note_committed(token, arguments, answer)
+        return unless answer.is_a?(Hash) && answer["effect"] == "committed"
+
+        AgentAccess.committed(token.fetch("id"), arguments["session"], answer["sequence"])
+      end
+
       def granted?(token, tool)
         token.fetch("capabilities").include?(tool.capability)
       end
@@ -85,9 +94,11 @@ module PhComposer
 
       # One caller handle and one Sequencer per token and session, so sequences and keys carry across calls.
       def binding_for(token, session)
-        @bindings[[token.fetch("id"), session.id]] ||=
-          Binding.new(API.connect(:session_id => session.id, :capabilities => token.fetch("capabilities")),
-                      Sequencer.new)
+        @bindings[[token.fetch("id"), session.id]] ||= begin
+          context = API.connect(:session_id => session.id, :capabilities => token.fetch("capabilities"))
+          AgentAccess.bound(token.fetch("id"), session, context.caller)
+          Binding.new(context, Sequencer.new)
+        end
       end
 
       # Forgets the handles of closed sessions and revoked tokens.
@@ -95,6 +106,7 @@ module PhComposer
         open = Sessions.all.map(&:id)
         live = Tokens.snapshot.values.map { |row| row.fetch("id") }
         @bindings.delete_if { |(token, session), _context| !open.include?(session) || !live.include?(token) }
+        AgentAccess.prune_handles
       end
 
       # The MCP tool result: the answer as `structuredContent` and one line of text, not a second copy of
