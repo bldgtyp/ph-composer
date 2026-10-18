@@ -46,6 +46,12 @@ class SpacesWalkthroughTest < PhComposerTestCase
     refute_match(/PhComposer::(Spaces|Zones)::/, text)
   end
 
+  def test_the_client_moves_the_edit_path_only_through_the_public_commands
+    text = File.read(File.expand_path("../tools/examples/authoring/spaces_walkthrough.rb", __dir__))
+    refute_match(/active_path\s*=/, text)
+    assert_match(/ph_composer\.context\.\#\{command\}/, text)
+  end
+
   def test_height_from_solid_sets_the_first_volumes_height_from_a_drawn_solid
     @model = Sketchup.active_model
     @model.entities << zone_group(100, "Z", []) << zone_group(200, "Y", [])

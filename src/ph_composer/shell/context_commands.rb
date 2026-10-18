@@ -3,16 +3,26 @@
 require_relative "pages"
 
 module PhComposer
-  # Where a Model session stands, as one read, registered as a foundation capability: which Model it
-  # is, its revision and view generation, whether it can take work now, the edit path the user is in,
-  # and the selection in pages (context/AGENT_INTERFACE.md, "Model context"). It reads only; it never
-  # moves the edit path, the selection or the camera.
+  # Where a Model session stands, as one read, and the two commands that move the edit path, registered
+  # as a foundation capability (context/AGENT_INTERFACE.md, "Model context"). The read never moves the
+  # edit path, the selection or the camera. `open` and `root` move the edit path through EditContext, so
+  # every feature's boundary runs: leaving an open Volume, Spaces protects it, which both commands declare
+  # in `side_effects`. They name no feature.
   #
   # A selection page is bound to the revision and the view generation it was read at, so a cursor
   # expires when the selection changes even though the Model did not.
   module ContextCommands
     FEATURE_ID = "ph_composer.context"
     READ = "#{FEATURE_ID}.read"
+    OPEN = "#{FEATURE_ID}.open"
+    ROOT = "#{FEATURE_ID}.root"
+    PATH = { "type" => "array", "items" => { "type" => "integer" },
+             "description" => "Persistent ids of Groups and Components from the root, outermost first." }.freeze
+    EXPECTED_PATH = PATH.merge("description" => "The edit path as last read; refused when it has changed since.")
+    SIDE_EFFECTS = "Moves the edit path, which advances the Model revision. Leaving a Volume that was open and " \
+                   "unprotected protects it again (Spaces locks it); no authored value changes and no Undo step " \
+                   "is added."
+    MOVE_REFUSES = %w[target.not_found target.locked target.edit_path_changed].freeze
     MAXIMUM_LIMIT = 200
     LIMIT = { "type" => "integer", "minimum" => 1, "maximum" => MAXIMUM_LIMIT,
               "description" => "Selected entities per page, 1 to #{MAXIMUM_LIMIT}; #{Pages::DEFAULT_LIMIT} when " \
@@ -24,6 +34,7 @@ module PhComposer
 
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION)
+      install_navigation(feature)
       feature.query(READ, :description => "Where this Model session stands: the Model's file name and path, " \
                                           "its revision and view generation, whether it is busy and why, the " \
                                           "edit path from the root, and the selection in pages. Reads only.",
@@ -32,6 +43,56 @@ module PhComposer
                           :result => result, :refuses => %w[query.cursor_expired query.limit_invalid],
                           :while_busy => true,
                           :examples => [{}, { "limit" => 50 }]) { |request| read(request) }
+    end
+
+    def install_navigation(feature)
+      moved = object({ "path" => PATH, "changed" => { "type" => "boolean" } })
+      terms = { :result => moved, :refuses => MOVE_REFUSES, :side_effects => SIDE_EFFECTS }
+      feature.view_command(OPEN, **terms,
+                           :description => "Open the Group or Component at the end of path as the edit context, " \
+                                           "through every one above it. Refuses a locked or missing step.",
+                           :params => object({ "path" => PATH, "expected_path" => EXPECTED_PATH },
+                                             :optional => ["expected_path"]),
+                           :examples => [{ "path" => [1201] },
+                                         { "path" => [1201, 1202], "expected_path" => [] }]) do |request|
+        move(request, request.params.fetch("path"))
+      end
+      feature.view_command(ROOT, **terms,
+                           :description => "Close every open Group and Component, back to the Model's root.",
+                           :params => object({ "expected_path" => EXPECTED_PATH }, :optional => ["expected_path"]),
+                           :examples => [{}, { "expected_path" => [1201] }]) { |request| move(request, []) }
+    end
+
+    # Resolves every step before anything moves, then enters through EditContext, so each feature's
+    # boundary runs. A path equal to the current one changes nothing.
+    def move(request, ids)
+      model = request.model
+      expected = request.params["expected_path"]
+      if expected && expected != EditContext.current_ids(model)
+        raise CodedError.new("target.edit_path_changed", "The edit path changed since it was read; read " \
+                                                         "ph_composer.context.read again.")
+      end
+
+      path = resolve(model, ids)
+      changed = EditContext.current(model) != path
+      EditContext.enter(model, path) if changed
+      { "path" => EditContext.current_ids(model), "changed" => changed }
+    end
+
+    def resolve(model, ids)
+      entities = model.entities
+      ids.map do |id|
+        entity = entities.to_a.find { |candidate| container?(candidate) && candidate.persistent_id == id }
+        raise CodedError.new("target.not_found", "No Group or Component #{id} is at that step.") unless entity
+        raise CodedError.new("target.locked", "Group or Component #{id} is locked; nothing moved.") if entity.locked?
+
+        entities = entity.definition.entities
+        entity
+      end
+    end
+
+    def container?(entity)
+      entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
     end
 
     def read(request)

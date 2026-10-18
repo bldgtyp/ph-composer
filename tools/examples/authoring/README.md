@@ -248,16 +248,17 @@ row's chip in the panel. The edit must refuse and the row must go back to what t
 ## Spaces: records, operations, copies and moves with the panel closed
 
 `spaces_walkthrough.rb` needs a Model with two Zones, and refuses before writing anything without
-them. It draws three 1 m floor outlines loose in the
-first Zone, 0.5 m up, opens the Zone's edit context and then works only through `PhComposer::API`:
-Create Space from the three, a second Volume from a fourth outline drawn in the Space, one Floor
-Segment marked as not counting, a height, two airflows and one cleared, the read-back, and recovery
-from a stale edit. Create Space and a new Volume group Faces, which SketchUp does reliably only in
-the open edit context, so the script opens it as a user would. It then copies a Volume as SketchUp
-copies a Group, reads the duplicate identity on both, makes the copy independent, and moves the Space
-into the second Zone. A Space
-copied on its own is not part of the script: the copy watcher makes it independent after the script
-returns.
+them. Its `fixture_` methods are native setup, what a user does with SketchUp's own tools: three 1 m
+floor outlines drawn loose in the first Zone, 0.5 m up, a fourth drawn in the new Space, and a Volume
+copied as SketchUp copies a Group. Everything else is a client using only `PhComposer::API`. It opens
+the Zone with `ph_composer.context.open`, creates the Space from the three outlines, opens the Space,
+finds the fourth outline with `spaces.candidate_faces.list` and makes it a second Volume, closes to the
+root with `ph_composer.context.root`, marks one Floor Segment as not counting, sets a height, two
+airflows and clears one, reads back, recovers from a stale edit, reads the copy's duplicate identity
+and makes it independent, and moves the Space into the second Zone. It ends with the refusals a
+client meets: a stale `expected_path`, a locked step and a wrong session, each leaving the path and
+the revision unchanged. The client never assigns the edit path; a test refuses one. A Space copied on
+its own is not part of the script: the copy watcher makes it independent after the script returns.
 
 ```sh
 uv run tools/hostkit/host_bridge.py eval \

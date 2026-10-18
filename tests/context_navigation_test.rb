@@ -1,0 +1,85 @@
+# frozen_string_literal: true
+
+require_relative "test_helper"
+require_relative "support/space_fixtures"
+
+# The foundation's edit-path commands (context/AGENT_INTERFACE.md, "Model context"): `context.open` and
+# `context.root` move the path through EditContext with only the `view` capability, so every feature's
+# boundary runs; each refuses before anything moves.
+class ContextNavigationTest < PhComposerTestCase
+  include SpaceFixtures
+
+  API = PhComposer::API
+  SPACES = PhComposer::Spaces
+  OPEN = PhComposer::ContextCommands::OPEN
+  ROOT = PhComposer::ContextCommands::ROOT
+
+  def setup
+    super
+    @model = Sketchup.active_model
+    @session = PhComposer::Sessions.for(@model)
+    @viewer = API.connect(:session_id => @session.id, :capabilities => %w[read view])
+    @volume = volume_group(111, volume_record("A"), [floor_face(112, rectangle(0, 0, 2, 2), segment_record("A"))])
+    @space = space_group(110, space_record("S", :number => "1"), [@volume])
+    @zone = zone_group(100, "Z", [@space])
+    @model.entities << @zone
+  end
+
+  def view(name, params = {})
+    API.view(:context => @viewer, :name => name, :params => params)
+  end
+
+  def moved(name, params = {})
+    result = view(name, params)
+    assert_equal "completed", result["status"], result.inspect
+    result.fetch("value")
+  end
+
+  def test_open_enters_a_zone_and_reopening_it_changes_nothing
+    revision = @session.revision
+
+    assert_equal({ "path" => [100, 110], "changed" => true }, moved(OPEN, "path" => [100, 110]))
+    assert_equal [@zone, @space], @model.active_path
+    assert_operator @session.revision, :>, revision
+    revision = @session.revision
+    assert_equal({ "path" => [100, 110], "changed" => false },
+                 moved(OPEN, "path" => [100, 110], "expected_path" => [100, 110]))
+    assert_equal revision, @session.revision
+  end
+
+  def test_root_from_an_unprotected_volume_protects_it_and_adds_no_undo_step_of_its_own
+    @volume.locked = false
+    @model.active_path = [@zone, @space, @volume]
+    before = @model.operation_starts.length
+
+    assert_equal({ "path" => [], "changed" => true }, moved(ROOT, "expected_path" => [100, 110, 111]))
+    assert_nil @model.active_path
+    assert @volume.locked?
+    assert_equal [["Protect Volume", true]], @model.operation_starts[before..].map { |start| start.values_at(0, 3) }
+  end
+
+  def test_a_locked_or_missing_step_or_a_stale_path_moves_nothing
+    @model.active_path = [@zone]
+    revision = @session.revision
+
+    refusals = [view(OPEN, "path" => [100, 110, 111]), view(OPEN, "path" => [100, 999]),
+                view(OPEN, "path" => [100, 110], "expected_path" => []), view(ROOT, "expected_path" => [100, 110])]
+
+    assert_equal %w[target.locked target.not_found target.edit_path_changed target.edit_path_changed],
+                 refusals.map { |result| result["code"] }
+    assert_equal [@zone], @model.active_path
+    assert_equal revision, @session.revision
+  end
+
+  def test_navigation_declares_the_lock_it_may_trigger
+    names = [OPEN, ROOT, "ph_composer.spaces.context.open", "ph_composer.spaces.context.close",
+             "ph_composer.spaces.locate"]
+
+    names.each do |name|
+      described = API.describe(:name => name)
+      assert_equal "view", described.fetch("capability"), name
+      assert_match(/protects it again/, described.fetch("side_effects").to_s, name)
+    end
+    assert_match(/edit path.*unchanged/, API.describe(:name => "ph_composer.zones.faces.locate")["side_effects"])
+  end
+end
