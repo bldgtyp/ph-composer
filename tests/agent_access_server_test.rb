@@ -88,6 +88,8 @@ class AgentAccessServerTest < PhComposerTestCase
 
   def test_a_notification_is_accepted_and_the_lists_answer
     assert_equal "202", post(JSON.generate("jsonrpc" => "2.0", "method" => "notifications/initialized")).code
+    assert_equal "202", post(JSON.generate("jsonrpc" => "2.0", "method" => "notifications/cancelled",
+                                           "params" => { "requestId" => 7 })).code
     assert_equal({}, result_of(post(rpc("ping"))))
     assert_equal({ "resources" => [] }, result_of(post(rpc("resources/list"))))
     assert_equal({ "prompts" => [] }, result_of(post(rpc("prompts/list"))))

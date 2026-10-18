@@ -54,8 +54,10 @@ Agent Access window says so. If another program holds that port, the window says
 to choose another and holds New token until one is free, so a token's setup never names a port
 nothing listens on. An agent connects over MCP with the token as a bearer header and can read:
 list the open Models, describe and run the read operations, and preview a change without making it.
-The connection does not yet offer the operations that use View, Edit the Model, Setup or Export; a
-token holding them is ready for when it does.
+A token holding more can also apply changes (each one Undo step, refused with nothing written if the
+Model changed since the agent read it), move the camera, selection and open Group, change library
+setup, and run exports to folders you approved. An agent can name each change it sends; if a reply
+is lost, sending the same name again returns the first result and never applies the change twice.
 Each token's latest call since SketchUp started shows beside it.
 
 ### Connect your client

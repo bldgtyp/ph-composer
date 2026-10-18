@@ -381,7 +381,21 @@ The executor rechecks the token, validates the arguments against the tool's fixe
 the one API call the tool names (`agent_access/tools.rb`, the allowlist). A token acts on a session
 through one caller handle from `API.connect` with the token's capabilities, kept while both live.
 The tools are the API verbs: `discover` (a compact index of every operation name by kind and owner,
-or one owner's full entries), `describe`, `query`, `preview` and `export_preflight`, all `read`.
+or one owner's full entries), `describe`, `query`, `preview`, `context` and `export_preflight`, all
+`read`; `invoke` and `outcome` (`model_write`); `view`; `setup`; and `export_file`, `start_export`,
+`export_status`, `cancel_export` and `latest_export` (`export`). `tools/list` shows a token only the
+tools its capabilities reach, and the executor refuses the rest as unknown. An agent never counts
+sequences: per token and session (`agent_access/sequencer.rb`) each `invoke` takes the next integer,
+and an optional `idempotency_key` (at most 64 characters) keeps the sequence it was first given, so a
+repeated key goes through the retained-outcome path as the same sequence: the same request answers
+its first outcome, another conflicts (`request.sequence_conflict`), and one whose outcome has expired
+is `request.outcome_unavailable` and is never given a new sequence. Every `invoke` and `outcome`
+result carries `sequence`, an optional field of the published Outcome schema that only this route
+sets; `outcome` takes a sequence or a key. A lost reply is recovered by reading state: `outcome` for
+an invoke, the setup's own read (such as `ph_composer.library.providers`) for a setup command,
+`latest_export` for a started export, and the `context` read for a path change. A client's
+`notifications/cancelled` is accepted and changes nothing: a call already handed to SketchUp runs to
+its outcome, all or nothing, and is never reported as a rollback.
 A result is the API's answer as `structuredContent` with one line of text in `content`: Claude Code
 shows its model only `structuredContent`, and Codex shows both, so a second JSON copy would count
 twice. Every Outcome, refusals included, is an ordinary result; `isError` marks an unknown tool,
