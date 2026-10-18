@@ -290,6 +290,30 @@ class ApiTest < PhComposerTestCase
     assert_equal [operations, undo_steps], [@model.operations.length, @model.instance_variable_get(:@undo_stack).length]
   end
 
+  # ------------------------------------------------------------------ connection authority
+
+  def test_changing_the_capabilities_passed_to_connect_changes_no_grant
+    granted = [String.new("read")]
+    reader = API.connect(:session_id => @session.id, :capabilities => granted)
+    granted.first.replace("model_write")
+    granted << "model_write"
+
+    result = API.invoke(:context => reader, :name => "test.fixture.create",
+                        :params => { "parts" => [part_values] }, :request => request(1))
+
+    assert_equal "request.capability_denied", result.fetch("code")
+    assert_equal %w[read], @session.callers.fetch(reader.caller).capabilities
+  end
+
+  def test_the_connection_values_cannot_be_edited_in_place
+    assert_raises(FrozenError) { @context.session_id.replace("edited") }
+    assert_raises(FrozenError) { @context.caller.replace("edited") }
+    assert_raises(FrozenError) { @session.callers.fetch(@context.caller).capabilities.first.replace("export") }
+
+    assert_same @session, PhComposer::Sessions.find(@context.session_id)
+    assert_equal "completed", create_parts(1).fetch("status")
+  end
+
   # ------------------------------------------------------------------ retries
 
   def test_a_retry_with_the_same_payload_returns_the_first_outcome_without_running_again
@@ -330,6 +354,20 @@ class ApiTest < PhComposerTestCase
     result = invoke("test.fixture.reenter", {}, 1)
 
     assert_equal %w[pending request.pending], result.dig("value", "inner").values_at("status", "code")
+  end
+
+  def test_a_different_request_while_the_first_attempt_runs_conflicts
+    variants = [["test.fixture.create", {}, {}], ["test.fixture.reenter", { "different" => true }, {}],
+                ["test.fixture.reenter", {}, { "expected_revision" => @session.revision + 1 }],
+                ["test.fixture.reenter", {}, { "proposal_digest" => "other" }]]
+
+    codes = variants.each_with_index.map do |(name, params, changed), index|
+      TestFeature.reentry = { :context => @context, :name => name, :params => params,
+                              :request => request(index + 1).merge(changed) }
+      invoke("test.fixture.reenter", {}, index + 1).dig("value", "inner", "code")
+    end
+
+    assert_equal ["request.sequence_conflict"] * variants.length, codes
   end
 
   # A handler that starts another change, even through another caller, finds the session busy.

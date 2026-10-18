@@ -120,9 +120,11 @@ are clients of it.
   `latest_export`) are specified in AGENT_INTERFACE.md, "Implemented export task contract".
 
 The context is a typed value: API major, Model session id, caller handle and capabilities.
-Serialized input cannot grant capabilities. Nothing defaults to `Sketchup.active_model` or the
-selection: a client that acts on the selection reads it through a query first and then sends
-explicit references.
+Serialized input cannot grant capabilities. The session keeps its own frozen copy of the granted
+capabilities, and the session id and caller handle are frozen when minted, so editing the Array
+passed to `connect` or a returned value changes no grant or lookup. Nothing defaults to
+`Sketchup.active_model` or the selection: a client that acts on the selection reads it through a
+query first and then sends explicit references.
 
 The `request` envelope holds exactly `sequence`, `expected_revision` and an optional
 `proposal_digest` from a preview. Mutations also carry explicit targets and any feature-specific
@@ -258,11 +260,12 @@ clients have separate handles.
 | Acceptance | Refusals before acceptance (malformed envelope, unknown session or caller, unknown operation, missing capability, busy) consume no sequence and are not retained. Everything after acceptance, including `params.invalid` and `revision.stale`, is retained |
 
 The same sequence and payload returns the retained outcome without another transaction; the same
-sequence with a different payload is `request.sequence_conflict`. A running request answers
-`pending`. An expired outcome is `request.outcome_unavailable` and never becomes new work. The store
-returns detached copies, so a caller editing a returned outcome cannot change a later lookup.
-`outcome()` needs `model_write`. There is no exactly-once claim across a process failure: a lost
-handle requires fresh discovery and state inspection.
+sequence with a different payload is `request.sequence_conflict`, whether the first is running or
+complete. A retry of a running request with the same payload answers `pending`. An expired outcome
+is `request.outcome_unavailable` and never becomes new work. The store returns detached copies, so a
+caller editing a returned outcome cannot change a later lookup. `outcome()` needs `model_write`.
+There is no exactly-once claim across a process failure: a lost handle requires fresh discovery
+and state inspection.
 
 ## Records and extension data
 
