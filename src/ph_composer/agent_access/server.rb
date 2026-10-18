@@ -33,7 +33,6 @@ module PhComposer
       IDLE_INTERVAL = 0.1
       BUSY_SLICE = 0.005
       IDLE_SLICE = 0.0005
-      RING = 64
       PATH = "/mcp"
 
       # One tool call. `state` is :waiting in the queue, :running once the pump has taken it (it then always
@@ -65,7 +64,7 @@ module PhComposer
         @tokens = {}.freeze
         @queue = []
         @clients = []
-        @ring = []
+        @calls = CallLog.new
         @stopped = true
       end
 
@@ -139,7 +138,7 @@ module PhComposer
       def snapshot
         @lock.synchronize do
           { "port" => @port, "stopped" => @stopped, "pending" => @queue.length,
-            "clients" => @clients.count(&:alive?), "recent" => @ring.map(&:dup) }
+            "clients" => @clients.count(&:alive?), "recent" => @calls.recent }
         end
       end
 
@@ -279,6 +278,7 @@ module PhComposer
                           :deadline => @clock.call + @handoff_seconds, :state => :waiting)
         @lock.synchronize do
           if @queue.count { |queued| queued.token.fetch("id") == token.fetch("id") } >= MAX_PENDING_PER_TOKEN
+            record_busy(entry)
             return @executor.busy("This token already has #{MAX_PENDING_PER_TOKEN} calls waiting for SketchUp.")
           end
 
@@ -292,8 +292,12 @@ module PhComposer
       def wait(entry)
         loop do
           return entry.result if entry.state == :done
+
           # Dropped by the pump past its deadline, or by `stop`.
-          return @executor.busy("SketchUp did not pick this call up in time.") if entry.state == :cancelled
+          if entry.state == :cancelled
+            record_busy(entry)
+            return @executor.busy("SketchUp did not pick this call up in time.")
+          end
 
           if entry.state == :waiting
             return busy(entry, "PH-Composer was stopped.") if @stopped
@@ -337,7 +341,19 @@ module PhComposer
       def busy(entry, message)
         entry.state = :cancelled
         @queue.delete(entry)
+        record_busy(entry)
         @executor.busy(message)
+      end
+
+      # Called with the lock held, on a worker: a busy answer is a call as far as the diagnostics go, and
+      # the next pump tick passes it on with the rest.
+      def record_busy(entry)
+        record(entry, { "structuredContent" => { "status" => "busy", "code" => "session.busy" } }, @clock.call)
+      end
+
+      # Called with the lock held.
+      def record(entry, result, started)
+        @calls.add(entry.token, entry.tool, entry.arguments, result, ((@clock.call - started) * 1000).round)
       end
 
       # On the main thread. An entry the worker gave up on, or that expired in the queue, never runs.
@@ -357,26 +373,8 @@ module PhComposer
         end
       end
 
-      # Called with the lock held. No params, value, path or token: the tool, the operation name the
-      # arguments carry, the session, the outcome's status and code, and the time it took.
-      def record(entry, result, started)
-        outcome = result["structuredContent"].is_a?(Hash) ? result["structuredContent"] : {}
-        @ring << { "token" => entry.token.fetch("id"), "tool" => entry.tool,
-                   "operation" => entry.arguments["name"].is_a?(String) ? entry.arguments["name"][0, 120] : nil,
-                   "session" => entry.arguments["session"].is_a?(String) ? entry.arguments["session"][0, 60] : nil,
-                   "status" => outcome["status"] || "completed", "code" => outcome["code"],
-                   "error" => result["isError"] == true,
-                   "ms" => ((@clock.call - started) * 1000).round, "at" => Time.now.utc.iso8601 }
-        @ring.shift while @ring.length > RING
-        @unflushed = (@unflushed || 0) + 1
-      end
-
       def flush_ring
-        rows = @lock.synchronize do
-          count = @unflushed.to_i
-          @unflushed = 0
-          @ring.last(count)
-        end
+        rows = @lock.synchronize { @calls.take_unread }
         @on_calls&.call(rows) unless rows.empty?
         rows.each do |row|
           Diagnostics.log("agent_access_call", "operation" => [row["tool"], row["operation"]].compact.join(" "),

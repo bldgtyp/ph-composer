@@ -160,6 +160,22 @@ class AgentAccessTokensTest < PhComposerTestCase
     assert_equal 1, delivered(dialog, "access.issued").length
   end
 
+  def test_a_token_whose_listener_cannot_bind_is_not_kept_and_the_dialog_says_why
+    taken = Struct.new(:port) do
+      def start
+        raise Errno::EADDRINUSE
+      end
+    end
+    PhComposer::AgentAccess::Listener.server_factory = ->(port) { taken.new(port) }
+    dialog = Dialog.show
+
+    dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => "Late", "capabilities" => ["read"]))
+
+    assert_empty delivered(dialog, "access.issued")
+    assert_includes delivered(dialog, "access.failure").last.fetch("message"), "in use"
+    refute Tokens.live?
+  end
+
   def test_a_refused_or_malformed_message_answers_a_failure_and_issues_nothing
     dialog = Dialog.show
     dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => nil, "capabilities" => %w[read export]))

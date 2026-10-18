@@ -10,8 +10,6 @@ module PhComposer
     module Listener
       PORT_KEY = "agent_access.port"
       PORTS = (1024..65_535).freeze
-      # Latest calls kept, one per token, for the life of the process.
-      MAX_TOKENS_REMEMBERED = 64
 
       # Builds the Server for a port. The offline suite replaces it so no test binds the agent port.
       DEFAULT_FACTORY = lambda do |port|
@@ -89,7 +87,10 @@ module PhComposer
             calls.delete(row["token"])
             calls[row["token"]] = { "at" => row["at"], "status" => row["error"] ? "error" : row["status"] }
           end
-          calls.shift while calls.length > MAX_TOKENS_REMEMBERED
+          # Kept for every token the store still lists (at most its live and revoked rows), however many
+          # other tokens called since.
+          listed = Tokens.list.map { |row| row["id"] }
+          calls.select! { |token, _call| listed.include?(token) }
           Dialog.refresh
         end
 

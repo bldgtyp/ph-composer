@@ -119,16 +119,30 @@ module PhComposer
         def handle(type, payload)
           case type
           when "access.ready" then refresh
-          when "access.issue"
-            issued = Tokens.issue(:label => payload["label"], :capabilities => payload.fetch("capabilities", []))
-            clients = ClientConfig.for(:port => Listener.port, :token => issued.fetch("token"))
-            publish("access.issued", issued.merge("clients" => clients))
+          when "access.issue" then issue(payload)
           when "access.revoke" then Tokens.revoke(payload["id"])
           when "access.reset" then Tokens.reset
           when "access.port"
             Listener.port = payload["port"]
             refresh
           end
+        end
+
+        # A token is shown only with setup for a port that is listening. If the port was taken in the
+        # moment between the form and the issue, the token is revoked at once and the user is told to
+        # choose another port, rather than handed setup for a port nothing listens on.
+        def issue(payload)
+          issued = Tokens.issue(:label => payload["label"], :capabilities => payload.fetch("capabilities", []))
+          status = Listener.status
+          unless status["state"] == "listening"
+            Tokens.revoke(issued.dig("row", "id"))
+            return publish("access.failure", "message" => "#{status['message'] || 'PH-Composer could not listen.'} " \
+                                                          "The token was not kept; create it again once the " \
+                                                          "connection is listening.")
+          end
+
+          clients = ClientConfig.for(:port => status["port"], :token => issued.fetch("token"))
+          publish("access.issued", issued.merge("clients" => clients))
         end
 
         def publish(type, payload)
