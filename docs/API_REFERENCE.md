@@ -44667,7 +44667,7 @@ Open the Group or Component at the end of path as the edit context, through ever
 
 Side effects: Moves the edit path, which advances the Model revision. Leaving a Volume that was open and unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
 
-Refuses: `target.edit_path_changed`, `target.locked`, `target.not_found`, and the `view_command` common set.
+Refuses: `target.edit_path_changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, and the `view_command` common set.
 
 Params:
 
@@ -44750,7 +44750,7 @@ Close every open Group and Component, back to the Model's root. Owner: `ph_compo
 
 Side effects: Moves the edit path, which advances the Model revision. Leaving a Volume that was open and unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
 
-Refuses: `target.edit_path_changed`, `target.locked`, `target.not_found`, and the `view_command` common set.
+Refuses: `target.edit_path_changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, and the `view_command` common set.
 
 Params:
 
