@@ -35,8 +35,9 @@ module PhComposer
       RING = 64
       PATH = "/mcp"
 
-      # One queued tool call. `state` is :waiting until the pump answers (:done) or the worker gives up
-      # (:cancelled); a cancelled entry is never run.
+      # One tool call. `state` is :waiting in the queue, :running once the pump has taken it (it then always
+      # finishes), and :done with its result; a worker gives up only on a :waiting entry, which becomes
+      # :cancelled and is never run.
       Entry = Struct.new(:token, :tool, :arguments, :deadline, :result, :state, keyword_init: true)
 
       attr_reader :port
@@ -118,14 +119,17 @@ module PhComposer
 
       # The main-thread tick: runs every waiting entry, drops the cancelled and the expired unrun, flushes
       # the diagnostics ring, then sleeps a slice so the workers can write their replies.
+      # Entries are taken one at a time, so those not yet run stay queued and count against their token's
+      # pending limit while an earlier one runs.
       def pump
-        entries = @lock.synchronize do
-          @last_tick = @clock.call
-          @queue.slice!(0, @queue.length)
+        @lock.synchronize { @last_tick = @clock.call }
+        ran = 0
+        while (entry = take_next)
+          run(entry)
+          ran += 1
         end
-        entries.each { |entry| run(entry) }
         flush_ring
-        sleep(entries.empty? ? IDLE_SLICE : BUSY_SLICE)
+        sleep(ran.zero? ? IDLE_SLICE : BUSY_SLICE)
       end
 
       # What the server holds and the recent calls, for diagnosis. Holds no token, params or value.
@@ -281,16 +285,44 @@ module PhComposer
       end
 
       # Called with the lock held.
+      # A running entry is waited out: the call has started and its result is the only true answer.
       def wait(entry)
         loop do
           return entry.result if entry.state == :done
-          return busy(entry, "PH-Composer was stopped.") if @stopped
-          return busy(entry, "SketchUp has not answered for #{entry_age(entry)} s.") if @clock.call >= entry.deadline
-          if @clock.call - @last_tick >= @starvation_seconds
-            return busy(entry, "SketchUp is busy with other work and has not picked this call up.")
+          # Dropped by the pump past its deadline, or by `stop`.
+          return @executor.busy("SketchUp did not pick this call up in time.") if entry.state == :cancelled
+
+          if entry.state == :waiting
+            return busy(entry, "PH-Composer was stopped.") if @stopped
+            return busy(entry, "SketchUp has not picked this call up within #{entry_age(entry)} s.") if expired?(entry)
+            if @clock.call - @last_tick >= @starvation_seconds
+              return busy(entry, "SketchUp is busy with other work and has not picked this call up.")
+            end
           end
 
           @answered.wait(@lock, WAIT_STEP)
+        end
+      end
+
+      def expired?(entry)
+        @clock.call >= entry.deadline
+      end
+
+      # The next waiting entry, now :running; an expired one at the head is dropped unrun.
+      def take_next
+        @lock.synchronize do
+          while (entry = @queue.shift)
+            next if entry.state != :waiting
+
+            if expired?(entry)
+              entry.state = :cancelled
+              @answered.broadcast
+              next
+            end
+            entry.state = :running
+            return entry
+          end
+          nil
         end
       end
 
@@ -307,8 +339,6 @@ module PhComposer
 
       # On the main thread. An entry the worker gave up on, or that expired in the queue, never runs.
       def run(entry)
-        return if @lock.synchronize { entry.state != :waiting || @clock.call >= entry.deadline }
-
         started = @clock.call
         result = begin
           @executor.call(entry.token, entry.tool, entry.arguments)
@@ -318,8 +348,6 @@ module PhComposer
         end
         @lock.synchronize do
           record(entry, result, started)
-          next unless entry.state == :waiting
-
           entry.result = result
           entry.state = :done
           @answered.broadcast

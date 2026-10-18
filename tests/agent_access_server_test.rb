@@ -180,6 +180,50 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_equal 2, timers.blocks.length
   end
 
+  def test_a_running_call_is_answered_with_its_result_and_unrun_calls_keep_counting
+    @server.stop
+    @server = server(:starvation_seconds => 0.3)
+    admitted = []
+    gate = Queue.new
+    @executor.define_singleton_method(:call) do |_token, _tool, arguments|
+      gate.pop if arguments["slow"]
+      busy("finished") # any ordinary result
+    end
+    first = Thread.new { post(rpc("tools/call", "name" => "discover", "arguments" => { "slow" => true })) }
+    sleep 0.01 until @server.snapshot.fetch("pending") == 1
+    Array.new(AgentAccess::Server::MAX_PENDING_PER_TOKEN - 1) do
+      admitted << Thread.new { post(rpc("tools/call", "name" => "discover", "arguments" => {})) }
+    end
+    sleep 0.01 until @server.snapshot.fetch("pending") == AgentAccess::Server::MAX_PENDING_PER_TOKEN
+    pump = Thread.new { @server.send(:take_next).tap { |entry| @server.send(:run, entry) } }
+    sleep 0.05 until @server.snapshot.fetch("pending") == AgentAccess::Server::MAX_PENDING_PER_TOKEN - 1
+    sleep 0.5 # past the starvation bound while the first call runs
+
+    extra = result_of(post(rpc("tools/call", "name" => "discover", "arguments" => {})))
+    gate << :go
+    pump.join
+
+    assert_equal "session.busy", extra.dig("structuredContent", "code")
+    assert_equal "finished", result_of(first.value).dig("structuredContent", "message")
+    admitted.each(&:kill)
+  end
+
+  def test_a_result_at_the_budget_passes_whole_and_one_over_is_refused
+    sized = lambda do |bytes|
+      tool = AgentAccess::Executor::Tool.new(:name => "sized", :capability => "read", :session => false,
+                                             :input_schema => { "type" => "object" },
+                                             :run => ->(*) { { "text" => "x" * (bytes - 11) } })
+      AgentAccess::Executor.new(:tools => { "sized" => tool }).call(@row, "sized", {})
+    end
+
+    whole = sized.call(AgentAccess::Executor::MAX_RESULT_BYTES)
+    over = sized.call(AgentAccess::Executor::MAX_RESULT_BYTES + 1)
+
+    assert_equal [false, AgentAccess::Executor::MAX_RESULT_BYTES],
+                 [whole["isError"], JSON.generate(whole["structuredContent"]).bytesize]
+    assert_equal [true, "request.response_too_large"], [over["isError"], over.dig("structuredContent", "code")]
+  end
+
   def test_one_token_keeps_one_caller_per_session
     2.times { call_tool("query", "session" => @session.id, "name" => "test.fixture.total_length") }
 
