@@ -48,7 +48,8 @@ last read; if the Model holds something else now, the edit is refused and nothin
 - **A setup command, an export start or a path change whose reply was lost.** Read its state: the
   setup's own read, `latest_export`, or `context`.
 - **Disconnected or revoked.** A dropped connection changes nothing. A revoked token is refused at
-  once; ask the user for a new token rather than retrying.
+  once. When it was the last live token, the connection itself closes, so the next call fails to
+  connect. Either way, ask the user for a new token rather than retrying.
 
 ## Recipes
 
