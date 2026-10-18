@@ -357,10 +357,13 @@ class ExportTasksTest < PhComposerTestCase
       assert_equal [Digest::SHA256.hexdigest(bytes), bytes.bytesize], disclosed.fetch(file).values_at("sha256", "bytes")
     end
     assert_equal disclosed, @tasks.latest(OWNER).dig("outcome", "value", "artifacts")
-    assert_equal "task.foreign", assert_raises(PhComposer::CodedError) { @tasks.status(task.fetch("task_id"), other) }.code
+    assert_equal "task.foreign", assert_raises(PhComposer::CodedError) {
+      @tasks.status(task.fetch("task_id"), other)
+    }.code
     assert_nil @tasks.latest(other)
     refute_includes JSON.generate(@tasks.owned_by(OWNER.handle).map(&:snapshot)), @directory
-    refute_includes File.read(PhComposer::Diagnostics.path), @directory if File.exist?(PhComposer::Diagnostics.path.to_s)
+    refute_includes File.read(PhComposer::Diagnostics.path),
+                    @directory if File.exist?(PhComposer::Diagnostics.path.to_s)
   end
 
   def test_a_refused_or_cancelled_task_discloses_nothing_and_a_replacement_changes_the_hashes

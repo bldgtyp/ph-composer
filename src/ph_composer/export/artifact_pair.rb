@@ -74,12 +74,11 @@ module PhComposer
           mark_committed(paths, journal)
           @committed = true
           cleanup_committed(paths)
-          Result.new(:hbjson_path => @hbjson_path, :report_path => @report_path, :replaced => prior, :files => files)
+          result(prior, files)
         rescue StandardError => error
           if @committed
             cleanup_committed(paths) if paths
-            return Result.new(:hbjson_path => @hbjson_path, :report_path => @report_path, :replaced => prior,
-                              :files => files)
+            return result(prior, files)
           end
           restore_from_journal
           @owned.each { |path| safe_delete(path) }
@@ -230,13 +229,19 @@ module PhComposer
         end
 
         # Answers each file's SHA-256 and size, from the bytes it compared.
+        def result(prior, files)
+          Result.new(:hbjson_path => @hbjson_path, :report_path => @report_path, :replaced => prior, :files => files)
+        end
+
         def verify_final!(hbjson, report_html)
           written = { "hbjson" => File.binread(@hbjson_path), "report" => File.binread(@report_path) }
           unless written.fetch("hbjson") == hbjson.b && written.fetch("report") == report_html.b
             raise PairError, "The final artifact pair failed byte verification."
           end
 
-          written.transform_values { |bytes| { "sha256" => Digest::SHA256.hexdigest(bytes), "bytes" => bytes.bytesize } }
+          written.transform_values { |bytes|
+            { "sha256" => Digest::SHA256.hexdigest(bytes), "bytes" => bytes.bytesize }
+          }
         end
 
         def mark_committed(paths, journal)
