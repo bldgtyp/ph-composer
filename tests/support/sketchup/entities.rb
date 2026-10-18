@@ -53,6 +53,7 @@ module Sketchup
   class EntityObserver; end
   class EntitiesObserver; end
   class SelectionObserver; end
+  class ViewObserver; end
   class PagesObserver; end
   class LayersObserver; end
 
@@ -186,11 +187,22 @@ module Sketchup
     end
   end
 
-  Camera = Struct.new(:eye)
+  # The host's Camera, with the stub's defaults: looking down from the eye, perspective, 35 degrees.
+  Camera = Struct.new(:eye, :target, :up, :perspective, :fov, :height) do
+    def initialize(eye, target = nil, up = nil, perspective = true, fov = 35.0, height = 0.0)
+      super(eye, target || Geom::Point3d.new(eye.x, eye.y, 0), up || Geom::Vector3d.new(0, 1, 0), perspective, fov,
+            height)
+    end
+
+    def perspective?
+      perspective
+    end
+  end
 
   class View
     attr_accessor :line_width, :drawing_color, :pick_result, :line_stipple, :tooltip
-    attr_accessor :camera, :model_units_per_pixel
+    attr_accessor :model_units_per_pixel
+    attr_reader :camera
     attr_reader :model, :draws, :screen_draws, :texts, :invalidations, :zoomed, :picks
 
     def initialize(model)
@@ -205,6 +217,22 @@ module Sketchup
       # pixel, so a test can state the lift it expects.
       @camera = Camera.new(Geom::Point3d.new(0, 0, 1_000_000))
       @model_units_per_pixel = 1.0
+    end
+
+    # A camera change notifies the view's observers, as the host's onViewChanged does.
+    def camera=(camera)
+      @camera = camera
+      (@observers || []).each { |observer| observer.onViewChanged(self) if observer.respond_to?(:onViewChanged) }
+    end
+
+    def add_observer(observer)
+      (@observers ||= []) << observer
+      true
+    end
+
+    def remove_observer(observer)
+      (@observers || []).delete(observer)
+      true
     end
 
     def pixels_to_model(pixels, _point)

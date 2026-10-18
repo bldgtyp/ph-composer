@@ -150,6 +150,7 @@ module PhComposer
                        "active" => model.equal?(Sketchup.active_model) },
         "readiness" => readiness(session, model),
         "edit_path" => Array(model.active_path).map { |instance| entity_row(instance) },
+        "camera" => camera(model),
         "selection" => { "count" => rows.length, "entities" => page, "next_cursor" => next_cursor } }
     end
 
@@ -163,6 +164,21 @@ module PhComposer
     end
 
     # One entity as the context names it: its persistent id, its SketchUp type and its name, if any.
+    # Where the view looks from, in metres in model space, as SketchUp's camera says it. Reading it moves
+    # nothing; a camera change advances the view generation (HostObservers::ViewObserver).
+    def camera(model)
+      view = model.respond_to?(:active_view) ? model.active_view : nil
+      camera = view&.camera
+      return nil unless camera.respond_to?(:target)
+
+      metres = ->(point) { [point.x, point.y, point.z].map { |value| value.to_f * FaceGeometry::INCH_TO_M } }
+      perspective = camera.perspective?
+      { "eye_m" => metres.call(camera.eye), "target_m" => metres.call(camera.target),
+        "up" => [camera.up.x, camera.up.y, camera.up.z].map(&:to_f), "perspective" => perspective,
+        "fov_deg" => perspective ? camera.fov.to_f : nil,
+        "height_m" => perspective ? nil : camera.height.to_f * FaceGeometry::INCH_TO_M }
+    end
+
     def entity_row(entity)
       name = entity.respond_to?(:name) ? entity.name.to_s : ""
       definition = entity.respond_to?(:definition) ? entity.definition : nil
@@ -177,7 +193,8 @@ module PhComposer
     end
 
     def session_shape
-      generation = { "type" => "integer", "description" => "Advances when the selection changes, without a revision." }
+      generation = { "type" => "integer", "description" => "Advances when the selection or the camera changes, " \
+                                                           "without a revision." }
       object({ "id" => { "type" => "string" }, "file_name" => { "type" => "string" },
                "path" => { "type" => "string", "description" => "The Model's file path; empty until it is saved." },
                "revision" => { "type" => "integer" }, "view_generation" => generation,
@@ -199,7 +216,19 @@ module PhComposer
       path = list(entity, :description => "The open Groups and Components from the root, outermost first; empty " \
                                           "at the root.")
       object({ "session" => session_shape, "readiness" => readiness_shape, "edit_path" => path,
-               "selection" => selection_shape })
+               "camera" => camera_shape, "selection" => selection_shape })
+    end
+
+    def camera_shape
+      point = { "type" => "array", "items" => { "type" => "number" }, "x-unit" => "m" }
+      object({ "eye_m" => point, "target_m" => point,
+               "up" => { "type" => "array", "items" => { "type" => "number" } },
+               "perspective" => { "type" => "boolean" },
+               "fov_deg" => { "type" => %w[number null], "description" => "Field of view; null for a parallel view." },
+               "height_m" => { "type" => %w[number null], "x-unit" => "m",
+                               "description" => "The view's height; null for a perspective view." } }).merge(
+                                 "type" => %w[object null], "description" => "The view's camera; null with no view."
+                               )
     end
   end
 end

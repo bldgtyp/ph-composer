@@ -74,6 +74,15 @@ module PhComposer
       end
     end
 
+    # The camera moved: the view generation advances, so a selection page or a capture read before it is
+    # known to be of another view. No refresh: nothing the panel shows depends on the camera.
+    class ViewObserver < Sketchup::ViewObserver
+      def onViewChanged(view)
+        model = view.respond_to?(:model) ? view.model : Sketchup.active_model
+        Sessions.for(model)&.host_event(:camera_changed)
+      end
+    end
+
     class SelectionObserver < Sketchup::SelectionObserver
       def onSelectionBulkChange(selection)
         selection_changed(selection)

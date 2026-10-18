@@ -180,6 +180,21 @@ class ModelContextTest < PhComposerTestCase
     assert_equal "query.cursor_expired", later["code"]
   end
 
+  def test_the_camera_reads_in_metres_and_a_camera_change_advances_only_the_view_generation
+    view = @model.active_view
+    view.camera = Sketchup::Camera.new(Geom::Point3d.new(0, 0, 100 / 0.0254), Geom::Point3d.new(0, 0, 0))
+    before = context.fetch("value")
+    camera = before.fetch("camera")
+    view.camera = Sketchup::Camera.new(Geom::Point3d.new(10 / 0.0254, 0, 0), Geom::Point3d.new(0, 0, 0))
+    after = context.fetch("value")
+
+    assert_in_delta 100.0, camera.dig("eye_m", 2), 1e-9
+    assert_equal [true, 35.0, nil], camera.values_at("perspective", "fov_deg", "height_m")
+    assert_equal before.dig("session", "revision"), after.dig("session", "revision")
+    assert_equal before.dig("session", "view_generation") + 1, after.dig("session", "view_generation")
+    assert_in_delta 10.0, after.dig("camera", "eye_m", 0), 1e-9
+  end
+
   def test_a_large_selection_pages_within_the_entity_and_byte_bounds
     groups = Array.new(250) do |index|
       @model.entities.add_group.tap { |group| group.name = "Room #{index} #{'x' * 40}" }
