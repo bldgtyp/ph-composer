@@ -11,9 +11,9 @@
       "sha256": "83a38bedcc92ca6663d73c17000c7de5504a8560a9d37a63a780af8a3c0f2c9c"
     },
     "html/agent_access/page.js": {
-      "bytes": 17186,
+      "bytes": 18643,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "7e962beae34850a9a84b331d5aba8210477c80b3f2cee2270944c795af49c59f"
+      "sha256": "a72271685d38109f76159261a4d8c79f999187cea28edcc6edf9451119222749"
     },
     "html/base.css": {
       "bytes": 12863,

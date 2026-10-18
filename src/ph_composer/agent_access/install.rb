@@ -16,7 +16,8 @@ module PhComposer
       "agent_access.limit" => "This machine already has the most live agent tokens it keeps; revoke one first.",
       "agent_access.token_unknown" => "No agent token has that id on this machine.",
       "agent_access.store_unreadable" => "The stored agent tokens cannot be read; reset them before issuing another.",
-      "agent_access.store_unavailable" => "The agent tokens could not be read or saved on this machine."
+      "agent_access.store_unavailable" => "The agent tokens could not be read or saved on this machine.",
+      "agent_access.model_unsaved" => "A token can be bound only to a Model that has been saved to a file."
     }.freeze
 
     module_function

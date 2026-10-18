@@ -88,8 +88,31 @@ test("New token offers Read fixed and sends the label and capabilities once", fu
   o.view.labelInput.value = "  Codex  ";
   o.view.submitCreate(); o.view.submitCreate();
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent)),
-    [{ type: "access.issue", payload: { label: "Codex", capabilities: ["read"] } }]);
+    [{ type: "access.issue", payload: { label: "Codex", capabilities: ["read"], model_only: false } }]);
 });
+
+test("every capability is offered unchecked beside Read, with its consent, and This Model only binds a saved Model",
+  function () {
+    var all = ["read", "view", "model_write", "setup", "export"];
+    var o = setup({ offered: all, model: null });
+    named(o.view.root, "New token").dispatchEvent({ type: "click" });
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(o.view.checks.map(function (box) {
+      return [box.value, box.checked];
+    }))), all.map(function (name) { return [name, name === "read"]; }));
+    var form = allText(o.view.createDialog);
+    assert.ok(form.includes("lock it again") && form.includes("every Model") && form.includes("one Undo step"));
+    assert.ok(o.view.modelOnly.disabled && form.includes("Save this Model first"));
+    o.view.createDialog.closeModal();
+    o.view.receive({ type: "access.state", payload: { state: "readable", offered: all, model: "house.skp",
+      server: { state: "listening", port: 46110 },
+      tokens: [Object.assign({}, TOKEN, { capabilities: ["read", "view"], model_name: "house.skp" })] } });
+    assert.ok(allText(o.view.list).includes("only house.skp") && allText(o.view.list).includes("View"));
+    named(o.view.root, "New token").dispatchEvent({ type: "click" });
+    o.view.modelOnly.checked = true; o.view.checks[2].checked = true;
+    o.view.submitCreate();
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent.pop())), { type: "access.issue",
+      payload: { label: null, capabilities: ["read", "model_write"], model_only: true } });
+  });
 
 test("the issued token shows once and is gone after I have copied it", function () {
   var o = setup();

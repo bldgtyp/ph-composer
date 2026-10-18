@@ -16,13 +16,13 @@ module PhComposer
       TITLE = "#{EXTENSION_NAME} Agent Access".freeze
       INBOUND = {
         "access.ready" => [],
-        "access.issue" => %w[label capabilities],
+        "access.issue" => %w[label capabilities model_only],
         "access.revoke" => %w[id],
         "access.reset" => [],
         "access.port" => %w[port]
       }.freeze
       OUTBOUND = {
-        "access.state" => %w[state tokens offered server],
+        "access.state" => %w[state tokens offered server model],
         "access.issued" => %w[token row clients],
         "access.failure" => %w[message]
       }.freeze
@@ -85,7 +85,14 @@ module PhComposer
           calls = Listener.last_calls
           tokens = Tokens.list.map { |row| row.merge("last_call" => calls[row["id"]]) }
           { "state" => Tokens.state, "tokens" => tokens, "offered" => Tokens::OFFERED,
-            "server" => AgentAccess.server_status }
+            "server" => AgentAccess.server_status, "model" => active_model }
+        end
+
+        # The Model a token issued now would be bound to for "this Model only": its file name, or null
+        # when it has never been saved. The path itself stays in Ruby.
+        def active_model
+          path = Sketchup.active_model&.path.to_s
+          path.empty? ? nil : File.basename(path)
         end
 
         private
@@ -132,7 +139,9 @@ module PhComposer
         # moment between the form and the issue, the token is revoked at once and the user is told to
         # choose another port, rather than handed setup for a port nothing listens on.
         def issue(payload)
-          issued = Tokens.issue(:label => payload["label"], :capabilities => payload.fetch("capabilities", []))
+          model_file = payload["model_only"] ? Sketchup.active_model&.path.to_s : nil
+          issued = Tokens.issue(:label => payload["label"], :capabilities => payload.fetch("capabilities", []),
+                                :model_file => model_file)
           status = Listener.status
           unless status["state"] == "listening"
             Tokens.revoke(issued.dig("row", "id"))

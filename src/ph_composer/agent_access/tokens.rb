@@ -16,6 +16,10 @@ module PhComposer
     # Machine state read on every call, like ApprovedLocations, whose storage shape this copies: base64
     # JSON in SketchUp's defaults, a byte cap, an unreadable store reported and never silently replaced.
     # A revoked token stays as a row with `revoked_at`, so the dialog can show when it was revoked.
+    #
+    # A token issued for "this Model only" also keeps the saved Model's file path, plaintext as approved
+    # locations keep theirs, and serves only a session of a Model at that path. The path never leaves the
+    # store and the ingress: a public row carries only its file name, as `model_name`.
     module Tokens
       SECTION = "ph_composer.agent_access"
       KEY = "tokens"
@@ -24,11 +28,13 @@ module PhComposer
       MAX_STORED_BYTES = 64 * 1024
       LABEL_LENGTH = 80
       DEFAULT_LABEL = "Agent token"
-      # What a token may be issued with. Every token holds `read`; the other capabilities are offered
-      # once their consent copy and enforcement exist.
-      OFFERED = %w[read].freeze
+      # What a token may be issued with: every capability dispatch enforces, each with its consent copy
+      # in the dialog. Every token holds `read`.
+      OFFERED = CallerRegistry::CAPABILITIES
       PUBLIC_KEYS = %w[id label capabilities created_at last_used_at revoked_at].freeze
       ROW_KEYS = (PUBLIC_KEYS + ["token_sha256"]).freeze
+      MODEL_FILE = "model_file"
+      MAX_PATH = 4096
       UNREADABLE = "The agent tokens stored on this machine cannot be read. Reset them before issuing another; " \
                    "every agent must then be given a new token."
 
@@ -47,9 +53,11 @@ module PhComposer
       end
 
       # Issues a token and returns `{"token" => secret, "row" => public row}`. The secret is not kept.
-      def issue(label: nil, capabilities: OFFERED)
+      # `model_file`, a saved Model's path, binds the token to that Model only.
+      def issue(label: nil, capabilities: %w[read], model_file: nil)
         current = writable
         granted = checked_capabilities(capabilities)
+        checked_model_file(model_file) if model_file
         live = current.count { |row| row["revoked_at"].nil? }
         if live >= MAX_LIVE
           raise CodedError.new("agent_access.limit", "This machine already has #{MAX_LIVE} live agent tokens. " \
@@ -60,6 +68,7 @@ module PhComposer
         row = { "id" => Records::Identity.mint("token"), "label" => label ? checked_label(label) : next_label(current),
                 "capabilities" => granted, "created_at" => now, "last_used_at" => nil, "revoked_at" => nil,
                 "token_sha256" => digest(token) }
+        row[MODEL_FILE] = model_file if model_file
         save(current + [row])
         { "token" => token, "row" => public_row(row) }
       end
@@ -89,12 +98,20 @@ module PhComposer
         rows.any? { |row| row["revoked_at"].nil? }
       end
 
-      # The live tokens by the hex SHA-256 of their secret, each with its public row, frozen. The
-      # ingress compares a presented token's digest against these keys and touches nothing else.
+      # The live tokens by the hex SHA-256 of their secret, each with its public row and any Model file it
+      # is bound to, frozen. The ingress compares a presented token's digest against these keys and touches
+      # nothing else.
       def snapshot
         rows.select { |row| row["revoked_at"].nil? }
-            .to_h { |row| [row.fetch("token_sha256"), public_row(row)] }
+            .to_h { |row| [row.fetch("token_sha256"), public_row(row).merge(row.slice(MODEL_FILE))] }
             .then { |table| DeepCopy.frozen(table) }
+      end
+
+      # Whether a token (a snapshot row) may act on `session`: any session, or only one whose Model is
+      # saved at the path the token was bound to.
+      def serves?(token, session)
+        bound = token[MODEL_FILE]
+        bound.nil? || session.model.path.to_s == bound
       end
 
       def digest(token)
@@ -102,7 +119,8 @@ module PhComposer
       end
 
       def public_row(row)
-        row.slice(*PUBLIC_KEYS)
+        public = row.slice(*PUBLIC_KEYS)
+        row[MODEL_FILE] ? public.merge("model_name" => File.basename(row[MODEL_FILE])) : public
       end
 
       def checked_capabilities(capabilities)
@@ -112,6 +130,13 @@ module PhComposer
         end
 
         CallerRegistry::CAPABILITIES.select { |name| granted.include?(name) }
+      end
+
+      def checked_model_file(path)
+        return if path.is_a?(String) && !path.empty? && path.length <= MAX_PATH
+
+        raise CodedError.new("agent_access.model_unsaved", "Save this Model first: a token can be bound only to " \
+                                                           "a Model that has a file.")
       end
 
       def checked_label(label)
@@ -172,9 +197,11 @@ module PhComposer
           tokens.map { |row| row["token_sha256"] }.uniq.length == tokens.length
       end
 
-      # Exactly the stored keys: a row missing `revoked_at` would otherwise read as live.
+      # Exactly the stored keys, a Model file only when bound: a row missing `revoked_at` would otherwise
+      # read as live.
       def valid_row?(row)
-        row.is_a?(Hash) && row.keys.sort == ROW_KEYS.sort &&
+        row.is_a?(Hash) && (row.keys - [MODEL_FILE]).sort == ROW_KEYS.sort &&
+          (!row.key?(MODEL_FILE) || row[MODEL_FILE].is_a?(String) && !row[MODEL_FILE].empty?) &&
           row["id"].to_s.match?(Records::Identity.pattern("token")) && row["label"].is_a?(String) &&
           row["label"].length.between?(1, LABEL_LENGTH) && row["token_sha256"].to_s.match?(/\A\h{64}\z/) &&
           row["capabilities"].is_a?(Array) && row["capabilities"].include?("read") &&
@@ -187,7 +214,8 @@ module PhComposer
       def save(current)
         live, revoked = current.partition { |row| row["revoked_at"].nil? }
         kept = live + revoked.last(MAX_REVOKED)
-        text = JSON.generate("tokens" => current.select { |row| kept.include?(row) }.map { |row| row.slice(*ROW_KEYS) })
+        text = JSON.generate("tokens" => current.select { |row| kept.include?(row) }
+                                                 .map { |row| row.slice(*ROW_KEYS, MODEL_FILE) })
         if text.bytesize > MAX_STORED_BYTES
           raise CodedError.new("agent_access.store_unavailable", "Agent tokens exceed their storage limit. " \
                                                                  "Revoke some first.")
