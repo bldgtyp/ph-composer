@@ -42,22 +42,22 @@ module PhComposer
         task = Task.new(@session, :approval => approval, :runtime_factory => runtime_factory, :owner => owner)
         task.start
         @tasks[task.id] = task
-        task.snapshot
+        task.snapshot(owner)
       end
 
       def status(id, owner)
-        fetch(id, owner).snapshot
+        fetch(id, owner).snapshot(owner)
       end
 
       def cancel(id, owner)
         task = fetch(id, owner)
         task.cancel
-        task.snapshot
+        task.snapshot(owner)
       end
 
       def latest(owner)
         prune
-        @tasks.values.reverse.find { |task| task.owner.handle == owner.handle }&.snapshot
+        @tasks.values.reverse.find { |task| task.owner.handle == owner.handle }&.snapshot(owner)
       end
 
       # The tasks `handle` started, for the acknowledgment of a revoked token: those that completed and

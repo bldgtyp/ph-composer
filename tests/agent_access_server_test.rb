@@ -375,6 +375,17 @@ class AgentAccessServerTest < PhComposerTestCase
     refute @server.stopped?
   end
 
+  def test_the_call_ring_never_holds_a_disclosed_artifact_path
+    log = AgentAccess::CallLog.new
+    result = { "structuredContent" => { "status" => "completed", "code" => "ok", "value" => {
+      "outcome" => { "value" => { "artifacts" => { "hbjson" => { "path" => "/projects/secret/house.hbjson" } } } }
+    } }, "isError" => false }
+
+    log.add(@row, "export_status", { "session" => @session.id, "task_id" => "export_1" }, result, 3)
+
+    refute_includes JSON.generate(log.recent), "/projects/secret"
+  end
+
   def test_the_diagnostics_hold_no_token_or_params
     call_tool("query", "session" => @session.id, "name" => "test.fixture.total_length",
                        "params" => { "secret" => "value-in-params" })

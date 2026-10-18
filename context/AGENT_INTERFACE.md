@@ -240,7 +240,8 @@ scope and identity choices; `export_preview` returns the counts and omissions th
 
 A setup command or FileExport may declare an approval: a file to open, a folder or a save
 destination that only the user can choose. `describe` returns it as `approval` (`kind`, `title`).
-The user answers it in one of two ways, and a path never travels through the API either way.
+The user answers it in one of two ways, and a path never travels into the API either way; the one
+path that comes out is the written export pair, to the caller that started it (below).
 
 **Now, in a native dialog.** The panel and the native menus run the operation through
 `shell/native_approval.rb`. It first asks dispatch whether the call would be refused (grant, params,
@@ -290,17 +291,20 @@ is given against the file as it is when the user answers.
 
 Three operations take a location today: `ph_composer.library.export_file`,
 `ph_composer.library.providers.add_file` and `.providers.add_folder`; the HBJSON export task takes
-one too. The path never appears in params, a result, an outcome or a log; an HBJSON write the filesystem
-refuses fails as `export.failed` in fixed words. Any caller holding the grant may use any approved
-location (D3a1-05). A task belongs to the caller that started it: another caller's `export_status`
-and `cancel_export` refuse `task.foreign` and its `latest_export` omits the task, so through the agent
-connection a task is its token's and one the panel started is the panel's. Every token store write,
-a revoke or a reset alike, ends the caller handles of each token no longer live (`access.revoked` from
-the next call) and answers its waiting calls as revoked; its running export checks its owner's access
-and the location again just before writing and finishes `refused` with `export.revoked` (or the
-location's refusal), writing nothing, while a pair already written stays `export.complete`. The
-dialog acknowledges a revoke with what the token's exports and changes had done and how many waiting
-calls were refused.
+one too. The path never appears in params or a log, nor in a result or outcome but one: once an HBJSON
+export has written its pair, the caller that started the task reads `outcome.value.artifacts` from
+`export_status` and `latest_export`, each file's path, SHA-256 and byte size from the bytes the final
+verification read, to read the files with its own tools and compare the hash before parsing (a later
+export to the same destination replaces them). An HBJSON write the filesystem refuses fails as
+`export.failed` in fixed words. Any caller holding the grant may use any approved location (D3a1-05).
+A task belongs to the caller that started it: another caller's `export_status` and `cancel_export`
+refuse `task.foreign` and its `latest_export` omits the task, so a second token, or an agent asking
+about a task the panel started, never sees a path. Every token store write, a revoke or a reset alike,
+ends the caller handles of each token no longer live (`access.revoked` from the next call) and answers
+its waiting calls as revoked; its running export checks its owner's access and the location again
+just before writing and finishes `refused` with `export.revoked` (or the location's refusal), writing
+nothing, while a pair already written stays `export.complete`. The dialog acknowledges a revoke with
+what the token's exports and changes had done and how many waiting calls were refused.
 
 Panel clients correlate
 `file_export.invoke` and `file_export.result` by request id and Model session in a separate result
@@ -317,7 +321,8 @@ answers each task method with its grant, keyword params, result schema and an ex
 
 One task may run per Model session. Status is detached, carries counts and diagnostics, and omits
 canonical HBJSON bytes. A successful result names the approved location, by id and label, and the
-run; never a path. Read the files where the user approved them. A lost reply or timeout does not cancel a task. Poll or use `latest_export`
+run; to the caller that started the task alone it also gives `artifacts`, each written file's path,
+SHA-256 and size, and to every other caller no path. A lost reply or timeout does not cancel a task. Poll or use `latest_export`
 before deciding whether to retry. Polling never repeats a write. The latest 20 terminal tasks are
 retained for at most 30 minutes using a monotonic clock. Model close releases the task and runtime;
 panel or client loss does not. Reopen and host restart expire old handles. File-journal recovery

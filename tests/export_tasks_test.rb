@@ -41,11 +41,15 @@ class ExportTasksTest < PhComposerTestCase
     end
 
     def success
+      success_with("type" => "Model", "rooms" => [])
+    end
+
+    def success_with(model)
       @callback.call("runtime.translation", "request_id" => @id, "result" => {
         "schema_version" => 1, "run_id" => @id, "state" => "complete",
         "summary" => { "objects" => 0, "unavailable" => 0, "findings" => 0, "publishable" => true },
         "sections" => [], "failure" => nil, "findings" => [],
-        "canonical_model" => { "hbjson" => JSON.generate("type" => "Model", "rooms" => []),
+        "canonical_model" => { "hbjson" => JSON.generate(model),
                                "rooms" => 0, "faces" => 0, "surface_pairs" => 0 }
       })
     end
@@ -338,6 +342,49 @@ class ExportTasksTest < PhComposerTestCase
     assert_equal "access.revoked", api.latest_export(:context => context).fetch("code")
   end
 
+  def test_the_owner_alone_learns_where_the_written_pair_is_and_what_it_hashes_to
+    other = PhComposer::Export::Tasks::Owner.new("someone-else", -> { true })
+    task = start
+    assert_nil @tasks.status(task.fetch("task_id"), OWNER).fetch("outcome")
+    drain
+    @runtime.success
+    drain
+    disclosed = @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "value", "artifacts")
+
+    assert_equal @destination, disclosed.dig("hbjson", "path")
+    %w[hbjson report].each do |file|
+      bytes = File.binread(disclosed.dig(file, "path"))
+      assert_equal [Digest::SHA256.hexdigest(bytes), bytes.bytesize], disclosed.fetch(file).values_at("sha256", "bytes")
+    end
+    assert_equal disclosed, @tasks.latest(OWNER).dig("outcome", "value", "artifacts")
+    assert_equal "task.foreign", assert_raises(PhComposer::CodedError) {
+      @tasks.status(task.fetch("task_id"), other)
+    }.code
+    assert_nil @tasks.latest(other)
+    refute_includes JSON.generate(@tasks.owned_by(OWNER.handle).map(&:snapshot)), @directory
+    refute_includes File.read(PhComposer::Diagnostics.path),
+                    @directory if File.exist?(PhComposer::Diagnostics.path.to_s)
+  end
+
+  def test_a_refused_or_cancelled_task_discloses_nothing_and_a_replacement_changes_the_hashes
+    first = start
+    drain
+    @runtime.success
+    drain
+    before = @tasks.status(first.fetch("task_id"), OWNER).dig("outcome", "value", "artifacts", "hbjson", "sha256")
+    second = start(:replace => true)
+    @tasks.cancel(second.fetch("task_id"), OWNER)
+
+    refute @tasks.status(second.fetch("task_id"), OWNER).dig("outcome", "value").to_h.key?("artifacts")
+    third = start(:replace => true)
+    drain
+    @runtime.success_with("type" => "Model", "rooms" => [{ "identifier" => "Zone_A" }])
+    drain
+    after = @tasks.status(third.fetch("task_id"), OWNER).dig("outcome", "value", "artifacts", "hbjson", "sha256")
+    refute_equal before, after
+    assert_equal Digest::SHA256.hexdigest(File.binread(@destination)), after
+  end
+
   # The export task methods describe themselves, and a client built only from those descriptions
   # preflights, starts, polls, cancels and reads the latest task with the panel closed.
   def test_a_client_built_from_the_task_descriptions_runs_the_export_methods
@@ -395,7 +442,7 @@ class ExportTasksTest < PhComposerTestCase
     drain
     value = @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "value")
     assert_equal({ "id" => id, "label" => "Export destination 1" }, value.fetch("location"))
-    refute_includes JSON.generate(value), @directory
+    refute_includes JSON.generate(value.reject { |key, _value| key == "artifacts" }), @directory
     refute_equal "{}", File.read(@destination)
     refute_nil PhComposer::ApprovedLocations.list.first.fetch("last_used_at")
   end

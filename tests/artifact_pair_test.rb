@@ -134,8 +134,13 @@ class ArtifactPairTest < PhComposerTestCase
       assert_raises(Crash) do
         Pair::Transaction.new(hbjson, :run_id => "crash", :fault => fault).commit(model("new"), report_html("crash"))
       end
-      Pair::Transaction.new(hbjson, :run_id => "next").commit(model("next"), report_html("next"))
+      written = Pair::Transaction.new(hbjson, :run_id => "next").commit(model("next"), report_html("next"))
 
+      [[hbjson, "hbjson"], [report, "report"]].each do |file, key|
+        bytes = File.binread(file)
+        assert_equal [Digest::SHA256.hexdigest(bytes), bytes.bytesize],
+                     written.files.fetch(key).values_at("sha256", "bytes")
+      end
       assert_equal model("next"), File.read(hbjson)
       assert_equal report_html("next"), File.read(report)
       assert_empty owned_files(directory)

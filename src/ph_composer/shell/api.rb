@@ -18,7 +18,7 @@ module PhComposer
   # never live SketchUp objects.
   module API
     MAJOR = 1
-    MINOR = 6
+    MINOR = 7
     # One line per shape change under this major, newest last (context/CONTRACTS.md, "Public
     # interface"); the generated reference lists them.
     CHANGES = [
@@ -41,7 +41,10 @@ module PhComposer
                     "camera changes." },
       { "minor" => 6, "date" => "2026-10-18",
         "change" => "The Outcome schema gains an optional sequence, set only by the agent connection's invoke and " \
-                    "outcome results." }
+                    "outcome results." },
+      { "minor" => 7, "date" => "2026-10-18",
+        "change" => "export_status and latest_export give the caller that started a task its written pair's paths, " \
+                    "SHA-256 and sizes as outcome.value.artifacts." }
     ].freeze
     # A mutation's `request` envelope.
     REQUEST_SCHEMA = {

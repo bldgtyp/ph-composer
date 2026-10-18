@@ -48556,7 +48556,75 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Only the caller that started the task, once the pair is written, also gets artifacts.",
+          "properties": {
+            "artifacts": {
+              "type": "object",
+              "required": [
+                "run_id",
+                "source_revision",
+                "export_generation",
+                "hbjson",
+                "report"
+              ],
+              "description": "Where the written pair is and what its bytes hash to, for the caller that started the task only. Read the files with your own tools and compare the SHA-256 before parsing: a later export to the same destination replaces them.",
+              "properties": {
+                "run_id": {
+                  "type": "string"
+                },
+                "source_revision": {
+                  "type": "integer"
+                },
+                "export_generation": {
+                  "type": "integer"
+                },
+                "location": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "hbjson": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "report": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         "affected": {
           "type": "array"
@@ -48695,7 +48763,75 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Only the caller that started the task, once the pair is written, also gets artifacts.",
+          "properties": {
+            "artifacts": {
+              "type": "object",
+              "required": [
+                "run_id",
+                "source_revision",
+                "export_generation",
+                "hbjson",
+                "report"
+              ],
+              "description": "Where the written pair is and what its bytes hash to, for the caller that started the task only. Read the files with your own tools and compare the SHA-256 before parsing: a later export to the same destination replaces them.",
+              "properties": {
+                "run_id": {
+                  "type": "string"
+                },
+                "source_revision": {
+                  "type": "integer"
+                },
+                "export_generation": {
+                  "type": "integer"
+                },
+                "location": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "hbjson": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "report": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         "affected": {
           "type": "array"
@@ -48832,7 +48968,75 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Only the caller that started the task, once the pair is written, also gets artifacts.",
+          "properties": {
+            "artifacts": {
+              "type": "object",
+              "required": [
+                "run_id",
+                "source_revision",
+                "export_generation",
+                "hbjson",
+                "report"
+              ],
+              "description": "Where the written pair is and what its bytes hash to, for the caller that started the task only. Read the files with your own tools and compare the SHA-256 before parsing: a later export to the same destination replaces them.",
+              "properties": {
+                "run_id": {
+                  "type": "string"
+                },
+                "source_revision": {
+                  "type": "integer"
+                },
+                "export_generation": {
+                  "type": "integer"
+                },
+                "location": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "hbjson": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "report": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         "affected": {
           "type": "array"
@@ -48964,7 +49168,75 @@ Result value:
             "object",
             "null"
           ],
-          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Never a path."
+          "description": "When completed: the compact result and, for a start from an approved location, that location's id and label. Only the caller that started the task, once the pair is written, also gets artifacts.",
+          "properties": {
+            "artifacts": {
+              "type": "object",
+              "required": [
+                "run_id",
+                "source_revision",
+                "export_generation",
+                "hbjson",
+                "report"
+              ],
+              "description": "Where the written pair is and what its bytes hash to, for the caller that started the task only. Read the files with your own tools and compare the SHA-256 before parsing: a later export to the same destination replaces them.",
+              "properties": {
+                "run_id": {
+                  "type": "string"
+                },
+                "source_revision": {
+                  "type": "integer"
+                },
+                "export_generation": {
+                  "type": "integer"
+                },
+                "location": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "hbjson": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "report": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         "affected": {
           "type": "array"
@@ -49163,3 +49435,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | 1.4 | 2026-10-18 | ph_composer.context.open and ph_composer.context.root are new view commands; the Spaces context commands and both locate commands declare side_effects. |
 | 1.5 | 2026-10-18 | ph_composer.context.read answers the camera; the view generation also advances when the camera changes. |
 | 1.6 | 2026-10-18 | The Outcome schema gains an optional sequence, set only by the agent connection's invoke and outcome results. |
+| 1.7 | 2026-10-18 | export_status and latest_export give the caller that started a task its written pair's paths, SHA-256 and sizes as outcome.value.artifacts. |

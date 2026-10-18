@@ -183,6 +183,17 @@ status["outcome"]             # nil while running; then completed, refused, fail
 PhComposer::API.latest_export(context: context)
 ```
 
+When the outcome is `export.complete`, its `value.artifacts` says where the pair is, for you alone
+as the caller that started it. Read the file and check its hash before parsing it:
+
+```ruby
+written = status["outcome"]["value"]["artifacts"]["hbjson"]
+bytes = File.binread(written["path"])
+# A later export to the same destination replaces the file; stop rather than parse another run's model.
+raise "the export was replaced since this task" unless Digest::SHA256.hexdigest(bytes) == written["sha256"]
+model = JSON.parse(bytes)
+```
+
 A Face without an authored Assembly blocks the export as `export.blocked`, and the preflight
 findings name each one with the code `construction.missing`. Assign Assemblies with
 `ph_composer.zones.faces.assign_assembly` before starting a real export.
