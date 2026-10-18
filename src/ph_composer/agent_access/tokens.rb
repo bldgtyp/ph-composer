@@ -214,8 +214,8 @@ module PhComposer
       def save(current)
         live, revoked = current.partition { |row| row["revoked_at"].nil? }
         kept = live + revoked.last(MAX_REVOKED)
-        text = JSON.generate("tokens" => current.select { |row| kept.include?(row) }
-                                                 .map { |row| row.slice(*ROW_KEYS, MODEL_FILE) })
+        rows = current.select { |row| kept.include?(row) }.map { |row| row.slice(*ROW_KEYS, MODEL_FILE) }
+        text = JSON.generate("tokens" => rows)
         if text.bytesize > MAX_STORED_BYTES
           raise CodedError.new("agent_access.store_unavailable", "Agent tokens exceed their storage limit. " \
                                                                  "Revoke some first.")
