@@ -36,7 +36,7 @@ Existing files changed:
 | `ph_composer.spaces.findings.list` | The Model, or one Space | A finding row: code, reference, message | `space`, `codes`, `limit`, `cursor` |
 | `ph_composer.spaces.all` | The Model | Unchanged, whole | Unchanged |
 
-Pages: 100 default, 500 maximum, plus the 80 KB response budget (D3a1-12); a page that would exceed
+Pages: 100 default, 500 maximum, plus the 24 KB response budget (D3a1-12, lowered from 80 KB by the P3a1-06 receipt); a page that would exceed
 the budget is cut at the last whole row that fits and says so in `next_cursor`, never inside a row.
 Cursors bind session, read, scope, `fields`, filter and revision as every list does.
 
@@ -58,7 +58,7 @@ Cursors bind session, read, scope, `fields`, filter and revision as every list d
 
 - FX2 totals stay 34, 32 and 95.6 under `ids`, empty `ids`, `limit` and cursor; per-Zone and
   per-Segment totals have the same declared scope.
-- FX3: `list` with `limit: 1` returns one summary under 80 KB with no embedded children or stray
+- FX3: `list` with `limit: 1` returns one summary under 24 KB with no embedded children or stray
   findings; 600 segments page through `floor_segments.list`; `fields` omits geometry and metadata.
 - Cursors refuse or expire as declared for the wrong session, read, scope, projection or revision;
   long Unicode labels and large optional metadata respect the budget.

@@ -65,11 +65,16 @@ decision in this register is now answered; D02 stands as D01's engineering defau
 | Request body | 1 MB | A batch edit is kilobytes; 4 MB was the bridge's eval ceiling |
 | Pending handoffs | 8 per connection, 30 s lifetime, then `session.busy` | Transient, not durable; under the 60 s client timeout |
 | Pump-starvation bound | 10 s without a main-thread tick answers `session.busy` off-thread | Six times the measured idle pump, one sixth of the client timeout; V2 measures whether the acceptor runs at all |
-| Response size | 80 KB per tool result, else explicit continuation or refusal | Under the 25,000-token cap with margin; drives P3a1-03 page sizes |
+| Response size | 24 KB of `structuredContent` per tool result, else explicit continuation or refusal (started at 80 KB) | Changed 2026-10-18 by P3a1-06 M4: Claude Code 2.1.300 refuses 60 KiB and keeps 40 KiB; Codex 0.163.0 keeps about 10,000 tokens and counts `content` and `structuredContent` together. Drives P3a1-03 page sizes ([receipt](evidence/p3a1-06-connection-design.md)) |
 | Page size | 100 default, 500 maximum, plus the byte cap | Row count alone was the A07 failure |
 | Connections | 8 tokens per installation; no expiry, revoke only | Fits one dialog; expiry would reintroduce the ceremony D05 removed |
 | Model-context read | 200 selected entities per page | Selection paging under C02 |
 | Captures (if D08 lands) | 2 MB PNG, 4 retained per session for 15 min | Follows the outcome lifetime |
+| Request headers | 16 KiB | Added by P3a1-06 from the asset server's `MAX_HEADER_BYTES` |
+| Open TCP connections | 8 | Added by P3a1-06; an agent sends one request at a time |
+| Request read deadline | 5 s | Added by P3a1-06 from the asset server's `REQUEST_TIMEOUT` |
+| Pump cadence | 50 ms while entries wait, 100 ms idle, 5 ms and 0.5 ms yield slices | Added by P3a1-06 from the bridge and asset server; M2 measured a largest tick gap of 87.6 ms |
+| Port | 46110, configurable | Added by P3a1-06, below the macOS ephemeral range |
 
 A stage that changes a value records the measurement beside the new value in this table.
 
