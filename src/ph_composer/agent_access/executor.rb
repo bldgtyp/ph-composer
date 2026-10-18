@@ -142,8 +142,19 @@ module PhComposer
       def trimmed(outcome)
         outcome.merge("message" => "#{outcome['message']} The full result was over the reply limit; read back " \
                                    "what it changed.",
-                      "value" => nil, "affected" => [], "findings" => [],
+                      "value" => task_receipt(outcome["value"]), "affected" => [], "findings" => [],
                       "detail" => { "omitted" => %w[value affected findings] })
+      end
+
+      # An export task's identity, stage and outcome with its artifacts, so a caller keeps where its files
+      # are and what they hash to when the task's diagnostics are too large to send; nil for anything else.
+      def task_receipt(value)
+        return nil unless value.is_a?(Hash) && value.key?("task_id")
+
+        outcome = value["outcome"]
+        kept = outcome && outcome.slice("status", "code", "message", "effect", "revision")
+                                 .merge("value" => outcome["value"].is_a?(Hash) ? outcome["value"].slice("artifacts") : nil)
+        value.slice("task_id", "stage", "count", "cancellable").merge("outcome" => kept)
       end
 
       # Only what says what happened, for an outcome still over the budget once trimmed.

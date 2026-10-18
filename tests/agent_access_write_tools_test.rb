@@ -191,6 +191,20 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     assert_equal [@session], AgentAccess.handles.fetch(@writer.fetch("id")).map(&:first)
   end
 
+  def test_an_export_status_too_large_to_send_keeps_its_artifacts
+    artifacts = { "hbjson" => { "path" => "/x/house.hbjson", "sha256" => "a" * 64, "bytes" => 10 } }
+    status = { "task_id" => "export_1", "stage" => "finished", "count" => 3, "cancellable" => false,
+               "outcome" => { "status" => "completed", "code" => "export.complete", "message" => "Done.",
+                              "effect" => "none", "revision" => 1,
+                              "value" => { "artifacts" => artifacts, "result" => { "rows" => ["x" * 100] * 400 } } } }
+    answer = @executor.send(:result, PhComposer::Outcome.completed(:revision => 1, :value => status), :acted => true)
+    value = answer.fetch("structuredContent").fetch("value")
+
+    assert_equal %w[export_1 export.complete], [value["task_id"], value.dig("outcome", "code")]
+    assert_equal artifacts, value.dig("outcome", "value", "artifacts")
+    refute value.dig("outcome", "value").key?("result")
+  end
+
   def test_a_lost_start_export_reply_is_found_with_latest_export
     Dir.mktmpdir("phc-agent-") do |directory|
       PhComposer::ApprovedLocations.approve(:kind => "save_file", :path => File.join(directory, "model.hbjson"))

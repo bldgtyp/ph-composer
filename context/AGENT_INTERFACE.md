@@ -240,7 +240,8 @@ scope and identity choices; `export_preview` returns the counts and omissions th
 
 A setup command or FileExport may declare an approval: a file to open, a folder or a save
 destination that only the user can choose. `describe` returns it as `approval` (`kind`, `title`).
-The user answers it in one of two ways, and a path never travels through the API either way.
+The user answers it in one of two ways, and a path never travels into the API either way; the one
+path that comes out is the written export pair, to the caller that started it (below).
 
 **Now, in a native dialog.** The panel and the native menus run the operation through
 `shell/native_approval.rb`. It first asks dispatch whether the call would be refused (grant, params,
@@ -320,7 +321,8 @@ answers each task method with its grant, keyword params, result schema and an ex
 
 One task may run per Model session. Status is detached, carries counts and diagnostics, and omits
 canonical HBJSON bytes. A successful result names the approved location, by id and label, and the
-run; never a path. Read the files where the user approved them. A lost reply or timeout does not cancel a task. Poll or use `latest_export`
+run; to the caller that started the task alone it also gives `artifacts`, each written file's path,
+SHA-256 and size, and to every other caller no path. A lost reply or timeout does not cancel a task. Poll or use `latest_export`
 before deciding whether to retry. Polling never repeats a write. The latest 20 terminal tasks are
 retained for at most 30 minutes using a monotonic clock. Model close releases the task and runtime;
 panel or client loss does not. Reopen and host restart expire old handles. File-journal recovery
