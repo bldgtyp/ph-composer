@@ -42,7 +42,7 @@ StubAgentServer = Struct.new(:port, :tokens) do
   end
 
   def refuse_revoked(_live_ids)
-    0
+    {}
   end
 end
 

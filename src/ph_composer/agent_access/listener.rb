@@ -26,14 +26,16 @@ module PhComposer
           @server = nil if @server&.stopped?
           snapshot = Tokens.snapshot
           live = snapshot.values.map { |row| row.fetch("id") }
-          answered = @server ? @server.refuse_revoked(live) : 0
+          answered = @server ? @server.refuse_revoked(live) : {}
           AgentAccess.drop_bindings(live)
           if snapshot.empty?
-            return answered.positive? ? @server.stop_soon : stop
+            answered.empty? ? stop : @server.stop_soon
+            return answered
           end
 
           start unless @server
           @server&.tokens = snapshot
+          answered
         end
 
         def stop

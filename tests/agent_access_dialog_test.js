@@ -208,8 +208,8 @@ test("This Model only binds the Model the open form named, whatever becomes acti
 test("a revoke is acknowledged with what the token's exports had done", function () {
   var o = setup();
   o.view.receive({ type: "access.revoked", payload: { id: TOKEN.id,
-    summary: { exports_completed: 1, exports_stopped: 1 } } });
+    summary: { exports_completed: 1, exports_stopped: 1, changes_committed: 2, calls_refused: 1 } } });
   var text = allText(o.view.notice);
   assert.ok(text.includes("Token revoked") && text.includes("1 export(s) it started had completed") &&
-    text.includes("stop without writing"));
+    text.includes("stop without writing") && text.includes("2 change(s)") && text.includes("1 waiting call(s)"));
 });

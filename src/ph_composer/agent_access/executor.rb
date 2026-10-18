@@ -57,7 +57,9 @@ module PhComposer
 
           binding = binding_for(live, session)
         end
-        result(tool.run.call(binding.context, arguments, live, binding.sequencer), :acted => tool.capability != "read")
+        answer = tool.run.call(binding.context, arguments, live, binding.sequencer)
+        note_committed(live, arguments, answer) if name == "invoke"
+        result(answer, :acted => tool.capability != "read")
       rescue CodedError => error
         result(Outcome.refused(error.code, error.message, :revision => nil, :detail => error.detail))
       end
@@ -75,6 +77,13 @@ module PhComposer
       # The answer for a call that raised unexpectedly; the cause is in the diagnostics log only.
       def failed
         result(Outcome.failed(:effect => "unknown", :revision => nil))
+      end
+
+      # Counts a committed invoke for the token's revoke acknowledgment; a replay counts once.
+      def note_committed(token, arguments, answer)
+        return unless answer.is_a?(Hash) && answer["effect"] == "committed"
+
+        AgentAccess.committed(token.fetch("id"), arguments["session"], answer["sequence"])
       end
 
       def granted?(token, tool)

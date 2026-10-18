@@ -32,6 +32,8 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       var line = "Token revoked. Calls it sends from now on are refused; one already running finishes.";
       if (summary.exports_completed) line += " " + summary.exports_completed + " export(s) it started had completed.";
       if (summary.exports_stopped) line += " " + summary.exports_stopped + " running export(s) stop without writing.";
+      if (summary.changes_committed) line += " " + summary.changes_committed + " change(s) it made stay in the Model.";
+      if (summary.calls_refused) line += " " + summary.calls_refused + " waiting call(s) were refused.";
       return line;
     }
 

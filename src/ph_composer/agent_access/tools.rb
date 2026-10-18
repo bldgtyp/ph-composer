@@ -194,7 +194,8 @@ module PhComposer
              task_schema("cancel_export"), :session => true, :capability => "export") do |context, arguments|
           API.cancel_export(:context => context, :task_id => arguments.fetch("task_id"))
         end,
-        tool("latest_export", "This Model's most recent export task, to find one after a lost reply.",
+        tool("latest_export", "The most recent export task this token started on the Model, to find one after a " \
+                              "lost reply.",
              object({ "session" => SESSION }, ["session"]), :session => true, :capability => "export",
                                                             :annotations => READ_ONLY) do |context, _arguments|
           API.latest_export(:context => context)

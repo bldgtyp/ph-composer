@@ -175,7 +175,7 @@ module PhComposer
         # what the token's exports had done.
         def revoke(id)
           Tokens.revoke(id)
-          publish("access.revoked", "id" => id, "summary" => AgentAccess.revoke_callers(id))
+          publish("access.revoked", "id" => id, "summary" => AgentAccess.acknowledgment(id))
         end
 
         def publish(type, payload)
