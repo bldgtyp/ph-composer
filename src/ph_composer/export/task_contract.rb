@@ -8,6 +8,18 @@ module PhComposer
     # call them from their declarations alone. Each params key is the method's keyword argument.
     module TaskContract
       TASK_ID = { "type" => "string", "description" => "task_id from start_export." }.freeze
+      FILE = { "type" => "object", "required" => %w[path sha256 bytes],
+               "properties" => { "path" => { "type" => "string" }, "sha256" => { "type" => "string" },
+                                 "bytes" => { "type" => "integer" } } }.freeze
+      ARTIFACTS = {
+        "type" => "object", "required" => %w[run_id source_revision export_generation hbjson report],
+        "description" => "Where the written pair is and what its bytes hash to, for the caller that started the " \
+                         "task only. Read the files with your own tools and compare the SHA-256 before parsing: a " \
+                         "later export to the same destination replaces them.",
+        "properties" => { "run_id" => { "type" => "string" }, "source_revision" => { "type" => "integer" },
+                          "export_generation" => { "type" => "integer" },
+                          "location" => { "type" => %w[object null] }, "hbjson" => FILE, "report" => FILE }
+      }.freeze
       OUTCOME = {
         "type" => %w[object null],
         "description" => "Null until the task ends; then the outcome shape every call answers with.",
@@ -20,7 +32,9 @@ module PhComposer
           "revision" => { "type" => %w[integer null] },
           "value" => { "type" => %w[object null],
                        "description" => "When completed: the compact result and, for a start from an approved " \
-                                        "location, that location's id and label. Never a path." },
+                                        "location, that location's id and label. Only the caller that started " \
+                                        "the task, once the pair is written, also gets artifacts.",
+                       "properties" => { "artifacts" => ARTIFACTS } },
           "affected" => { "type" => "array" }, "findings" => { "type" => "array" },
           "detail" => { "type" => %w[object null] }, "proposal_digest" => { "type" => %w[string null] }
         }

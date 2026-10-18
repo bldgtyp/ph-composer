@@ -290,17 +290,20 @@ is given against the file as it is when the user answers.
 
 Three operations take a location today: `ph_composer.library.export_file`,
 `ph_composer.library.providers.add_file` and `.providers.add_folder`; the HBJSON export task takes
-one too. The path never appears in params, a result, an outcome or a log; an HBJSON write the filesystem
-refuses fails as `export.failed` in fixed words. Any caller holding the grant may use any approved
-location (D3a1-05). A task belongs to the caller that started it: another caller's `export_status`
-and `cancel_export` refuse `task.foreign` and its `latest_export` omits the task, so through the agent
-connection a task is its token's and one the panel started is the panel's. Every token store write,
-a revoke or a reset alike, ends the caller handles of each token no longer live (`access.revoked` from
-the next call) and answers its waiting calls as revoked; its running export checks its owner's access
-and the location again just before writing and finishes `refused` with `export.revoked` (or the
-location's refusal), writing nothing, while a pair already written stays `export.complete`. The
-dialog acknowledges a revoke with what the token's exports and changes had done and how many waiting
-calls were refused.
+one too. The path never appears in params or a log, nor in a result or outcome but one: once an HBJSON
+export has written its pair, the caller that started the task reads `outcome.value.artifacts` from
+`export_status` and `latest_export`, each file's path, SHA-256 and byte size from the bytes the final
+verification read, to read the files with its own tools and compare the hash before parsing (a later
+export to the same destination replaces them). An HBJSON write the filesystem refuses fails as
+`export.failed` in fixed words. Any caller holding the grant may use any approved location (D3a1-05).
+A task belongs to the caller that started it: another caller's `export_status` and `cancel_export`
+refuse `task.foreign` and its `latest_export` omits the task, so a second token, or an agent asking
+about a task the panel started, never sees a path. Every token store write, a revoke or a reset alike,
+ends the caller handles of each token no longer live (`access.revoked` from the next call) and answers
+its waiting calls as revoked; its running export checks its owner's access and the location again
+just before writing and finishes `refused` with `export.revoked` (or the location's refusal), writing
+nothing, while a pair already written stays `export.complete`. The dialog acknowledges a revoke with
+what the token's exports and changes had done and how many waiting calls were refused.
 
 Panel clients correlate
 `file_export.invoke` and `file_export.result` by request id and Model session in a separate result

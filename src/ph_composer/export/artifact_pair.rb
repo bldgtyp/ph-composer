@@ -17,7 +17,9 @@ module PhComposer
 
       INCOMPLETE = "Only one destination artifact exists. Move or rename it before replacing the coordinated pair."
 
-      Result = Struct.new(:hbjson_path, :report_path, :replaced, keyword_init: true)
+      # `files` is each committed file's SHA-256 and byte size, by "hbjson" and "report", from the bytes the
+      # final verification read.
+      Result = Struct.new(:hbjson_path, :report_path, :replaced, :files, keyword_init: true)
 
       class Transaction
         attr_reader :hbjson_path, :report_path
@@ -68,15 +70,16 @@ module PhComposer
           trip(:after_hbjson_commit)
           File.rename(paths.fetch("report_stage"), @report_path)
           trip(:after_report_commit)
-          verify_final!(hbjson, report_html)
+          files = verify_final!(hbjson, report_html)
           mark_committed(paths, journal)
           @committed = true
           cleanup_committed(paths)
-          Result.new(:hbjson_path => @hbjson_path, :report_path => @report_path, :replaced => prior)
+          Result.new(:hbjson_path => @hbjson_path, :report_path => @report_path, :replaced => prior, :files => files)
         rescue StandardError => error
           if @committed
             cleanup_committed(paths) if paths
-            return Result.new(:hbjson_path => @hbjson_path, :report_path => @report_path, :replaced => prior)
+            return Result.new(:hbjson_path => @hbjson_path, :report_path => @report_path, :replaced => prior,
+                              :files => files)
           end
           restore_from_journal
           @owned.each { |path| safe_delete(path) }
@@ -226,10 +229,14 @@ module PhComposer
           raise PairError, "The staged HBJSON is invalid JSON (#{error.message})."
         end
 
+        # Answers each file's SHA-256 and size, from the bytes it compared.
         def verify_final!(hbjson, report_html)
-          unless File.binread(@hbjson_path) == hbjson.b && File.binread(@report_path) == report_html.b
+          written = { "hbjson" => File.binread(@hbjson_path), "report" => File.binread(@report_path) }
+          unless written.fetch("hbjson") == hbjson.b && written.fetch("report") == report_html.b
             raise PairError, "The final artifact pair failed byte verification."
           end
+
+          written.transform_values { |bytes| { "sha256" => Digest::SHA256.hexdigest(bytes), "bytes" => bytes.bytesize } }
         end
 
         def mark_committed(paths, journal)

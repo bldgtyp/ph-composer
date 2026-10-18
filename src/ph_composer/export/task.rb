@@ -37,6 +37,7 @@ module PhComposer
       def start
         @session.settle
         @generation = @session.export_generation
+        @source_revision = @session.revision
         @builder = Collection::Builder.new(@session.model, :run_id => id)
         @watchdog = UI.start_timer(0.2, true) { watch }
         schedule
@@ -50,9 +51,15 @@ module PhComposer
         !@outcome.nil?
       end
 
-      def snapshot
+      # `asker`, the Tasks::Owner polling, sees where the committed pair is and what it hashes to only when
+      # it started the task (context/AGENT_INTERFACE.md, "Locations only the user can choose").
+      def snapshot(asker = nil)
+        outcome = @outcome
+        if @artifacts && asker && asker.handle == @owner.handle
+          outcome = outcome.merge("value" => outcome.fetch("value").merge("artifacts" => @artifacts))
+        end
         DeepCopy.call("task_id" => id, "stage" => @stage, "count" => @count,
-                      "cancellable" => !terminal? && @stage != "writing", "outcome" => @outcome)
+                      "cancellable" => !terminal? && @stage != "writing", "outcome" => outcome)
       end
 
       def cancel
@@ -136,7 +143,8 @@ module PhComposer
         return revoked unless still_permitted?
 
         @stage = "writing"
-        pair_step { @pair.commit(@result.fetch("canonical_model").fetch("hbjson"), html) }
+        written = pair_step { @pair.commit(@result.fetch("canonical_model").fetch("hbjson"), html) }
+        @artifacts = artifacts(written)
         ApprovedLocations.mark_used(@location.fetch("id")) if @location
         value = { "result" => compact_result(@result) }
         value["location"] = @location if @location
@@ -208,6 +216,14 @@ module PhComposer
         return if approval.state == @prior
 
         raise Blocked.new("export.destination_changed", "The destination pair changed after review. Preflight again.")
+      end
+
+      # Where the committed pair is and what its bytes hash to, kept for the caller that started the task.
+      def artifacts(written)
+        { "run_id" => id, "source_revision" => @source_revision, "export_generation" => @generation,
+          "location" => @location,
+          "hbjson" => { "path" => written.hbjson_path }.merge(written.files.fetch("hbjson")),
+          "report" => { "path" => written.report_path }.merge(written.files.fetch("report")) }
       end
 
       # Immediately before the pair is written, the access that started the task and the approved location
