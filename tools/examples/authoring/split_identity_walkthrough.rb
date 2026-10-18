@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-# P1-D's explicit split-Face recovery through the public API. This never draws a split or repairs
+require_relative "client"
+
+# Explicit split-Face recovery through the public API. This never draws a split or repairs
 # on read: first use SketchUp's Line tool, then inspect the duplicate references. Pass the exact
 # Zone reference, old Face UUID and mutation scope to preview. A Surface record's stored original
 # endpoint may prove the retaining piece; otherwise pass retaining_entity_path explicitly.
@@ -21,13 +23,7 @@ module SplitIdentityWalkthrough
   API = PhComposer::API
   ACTION = "ph_composer.zones.repair_split_face"
 
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
+  class Client < AuthoringExample::Client
     def duplicates
       query("ph_composer.zones.faces.all").dig("value", "faces")
                                           .group_by { |face| face.dig("reference", "entity_id") }
@@ -40,10 +36,6 @@ module SplitIdentityWalkthrough
       end
     end
 
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
     def preview(params)
       API.preview(:context => @context, :name => ACTION, :params => params)
     end
@@ -51,10 +43,8 @@ module SplitIdentityWalkthrough
     def invoke(params, preview)
       raise ArgumentError, "A completed preview is required." unless preview.fetch("status") == "completed"
 
-      @sequence += 1
-      API.invoke(:context => @context, :name => ACTION, :params => params,
-                 :request => { "sequence" => @sequence, "expected_revision" => preview.fetch("revision"),
-                               "proposal_digest" => preview.fetch("proposal_digest") })
+      send_invoke(ACTION, params, { "sequence" => next_sequence, "expected_revision" => preview.fetch("revision"),
+                                    "proposal_digest" => preview.fetch("proposal_digest") })
     end
   end
 end

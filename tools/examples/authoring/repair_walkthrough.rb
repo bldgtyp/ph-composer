@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-# P1-D D3's fresh-host walkthrough: explicit Zone identity repair and limited Restore Zone.
+require_relative "client"
+
+# A fresh-host walkthrough of explicit Zone identity repair and limited Restore Zone.
 # Geometry setup and the native copy and explode are development-only. Every repair goes through
 # the public operation contracts, with the panel closed.
 #
@@ -8,17 +10,16 @@
 # native copy really does duplicate the dictionaries, and that a native explode really does leave
 # the stamped Faces behind with their payloads.
 module RepairWalkthrough
-  API = PhComposer::API
   PREFIX = "p1d_walkthrough_"
 
   module_function
 
   def setup
     model = Sketchup.active_model
-    model.start_operation("P1-D repair walkthrough geometry", true)
+    model.start_operation("Repair walkthrough geometry", true)
     old = model.entities.grep(Sketchup::Group).select { |group| group.name.start_with?(PREFIX) }
     model.entities.erase_entities(old) unless old.empty?
-    box(model.entities, "#{PREFIX}source", [0, 0, 0], 5000.mm)
+    AuthoringExample.box(model.entities, "#{PREFIX}source", [0, 0, 0], 5000.mm)
     raise "SketchUp refused the walkthrough geometry." unless model.commit_operation
 
     author
@@ -51,7 +52,7 @@ module RepairWalkthrough
   def copy_shared
     model = Sketchup.active_model
     source = named_group("#{PREFIX}source")
-    model.start_operation("P1-D walkthrough shared copy", true)
+    model.start_operation("Repair walkthrough shared copy", true)
     wrapper = model.entities.add_group([source])
     component = wrapper.to_component
     component.definition.name = "#{PREFIX}shared_definition"
@@ -111,7 +112,7 @@ module RepairWalkthrough
     model = Sketchup.active_model
     source = named_group("#{PREFIX}source")
     zone_id = PhComposer::Zones::ZONE_STORE.read(source).fetch("id")
-    model.start_operation("P1-D walkthrough explode", true)
+    model.start_operation("Repair walkthrough explode", true)
     source.explode
     raise "SketchUp refused the explode." unless model.commit_operation
 
@@ -134,12 +135,12 @@ module RepairWalkthrough
   # Native Undo goes through the menu action, not through the Model: SketchUp has no Model#undo.
   # It runs on the UI queue, so read the result in a later call, never in this one.
   def undo
-    Sketchup.send_action("editUndo:")
+    AuthoringExample.undo
     verify
   end
 
   def redo_last
-    Sketchup.send_action("editRedo:")
+    AuthoringExample.redo
     verify
   end
 
@@ -172,16 +173,6 @@ module RepairWalkthrough
     stamp.nil? || stamp.fetch("zone_id") == zone_id
   end
 
-  def box(entities, name, origin, width)
-    group = entities.add_group
-    group.name = name
-    group.transformation = Geom::Transformation.new(origin)
-    floor = group.entities.add_face([0, 0, 0], [0, 4000.mm, 0], [width, 4000.mm, 0], [width, 0, 0])
-    floor.reverse! if floor.normal.z.positive?
-    floor.pushpull(-3000.mm)
-    group
-  end
-
   # Make Zone renames a Group to its Zone name, so the walkthrough's own prefix is gone after the
   # first step. Both spellings are accepted.
   def named_group(name)
@@ -190,27 +181,5 @@ module RepairWalkthrough
             .find { |group| [name, short, short.capitalize].include?(group.name) }
   end
 
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
-    def preview(name, params)
-      API.preview(:context => @context, :name => name, :params => params)
-    end
-
-    def invoke(name, params, proposal_digest = nil)
-      @sequence += 1
-      revision = query("ph_composer.zones.all").fetch("revision")
-      request = { "sequence" => @sequence, "expected_revision" => revision }
-      request["proposal_digest"] = proposal_digest if proposal_digest
-      API.invoke(:context => @context, :name => name, :params => params, :request => request)
-    end
-  end
+  class Client < AuthoringExample::Client; end
 end

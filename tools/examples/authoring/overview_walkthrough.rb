@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-# P1-D D7's fresh-host walkthrough: the Overview screen, the Colour-by legend and the Classify
+require_relative "client"
+
+# A fresh-host walkthrough of the Overview screen, the Colour-by legend and the Classify
 # palette, as a user drives them.
 #
 # Almost none of this can be scripted. The panel is an HtmlDialog, and nothing in the Ruby API
@@ -16,10 +18,11 @@
 #      (evidence/p1-d-gesture-cost.md), but painting the rows is this slice's own cost and nothing
 #      has measured it.
 #   2. Does Locate from a row, and from a legend row, select and reveal Faces inside a Zone that is
-#      not the active edit context? D6 asked this of the native menu; the panel is a second caller
-#      and the answer must not depend on which one asked.
+#      not the active edit context? The Classify tool walkthrough asked this of the native menu;
+#      the panel is a second caller and the answer must not depend on which one asked.
 #   3. Does the camera move Locate makes land where the user expects when the panel has focus?
-#      `View#zoom` is called while an HtmlDialog is frontmost, which is not the case D6 measured.
+#      `View#zoom` is called while an HtmlDialog is frontmost, which is not the case the Classify
+#      tool walkthrough measured.
 #   4. Does "Show only this" repaint the overlay at once, and does the muted grey read as set aside
 #      rather than as another value? This is drawing, so only a window capture answers it.
 #   5. Does turning a Colour-by mode on from the panel leave the same state the native Colour by
@@ -42,7 +45,7 @@ module OverviewWalkthrough
   # unclassified, which is what the Zone row's marker and the legend's count are about.
   def setup(per_zone = 6, classified = 4)
     model = Sketchup.active_model
-    model.start_operation("P1-D Overview walkthrough geometry", true)
+    model.start_operation("Overview walkthrough geometry", true)
     model.entities.erase_entities(zone_groups) unless zone_groups.empty?
     groups = %w[Living Attic].each_with_index.map { |name, index| box(model, name, index) }
     raise "SketchUp refused the walkthrough geometry." unless model.commit_operation
@@ -95,7 +98,7 @@ module OverviewWalkthrough
   # A Model big enough to answer question 1. One Zone of `count` panels, none of them classified.
   def crowd(count = 500)
     model = Sketchup.active_model
-    model.start_operation("P1-D Overview crowd", true)
+    model.start_operation("Overview crowd", true)
     group = model.entities.add_group
     group.name = "#{PREFIX}crowd"
     group.transformation = Geom::Transformation.translation([0, 12_000.mm, 0])
@@ -160,29 +163,12 @@ module OverviewWalkthrough
   end
 
   # Make Zone renames the Group, so the walkthrough's own Groups are found by their Zone record
-  # rather than by the name they were given (D6's cleanup missed them exactly this way).
+  # rather than by the name they were given (the Classify tool walkthrough's cleanup once missed them this way).
   def zone_groups
     Sketchup.active_model.entities.grep(Sketchup::Group).select do |group|
       PhComposer::Zones::ZONE_STORE.read(group)
     end
   end
 
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
-    def invoke(name, params)
-      @sequence += 1
-      revision = query("ph_composer.zones.all").fetch("revision")
-      API.invoke(:context => @context, :name => name, :params => params,
-                 :request => { "sequence" => @sequence, "expected_revision" => revision })
-    end
-  end
+  class Client < AuthoringExample::Client; end
 end

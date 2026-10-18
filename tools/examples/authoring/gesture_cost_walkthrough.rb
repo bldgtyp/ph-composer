@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-# P1-D D6's two measurements, on the proving host rather than the offline stub.
+require_relative "client"
+
+# Two measurements of the Classify gesture, on the proving host rather than the offline stub.
 #
 #   1. Is the 250-Face gesture ceiling defensible? It was lowered from the proposed 1,000 on
 #      stub evidence alone: a 1,000-Face gesture measured about 13 s there. A ceiling bounds the
@@ -39,11 +41,11 @@ module GestureCostWalkthrough
   # A grid of boxes, flush along each row so every interior box shares one wall with the box on
   # either side, and a solve produces real reciprocal Surface pairs. Retirement is the expensive
   # path and a gesture that never touches a pair would measure the cheap half of the problem. Rows
-  # stand clear of each other, so no wall ever meets two neighbours, which D4 reports rather than
+  # stand clear of each other, so no wall ever meets two neighbours, which the solver reports rather than
   # cuts.
   def build(boxes = 42)
     model = Sketchup.active_model
-    model.start_operation("P1-D gesture cost geometry", true)
+    model.start_operation("Gesture cost geometry", true)
     model.entities.erase_entities(zone_groups) unless zone_groups.empty?
     boxes.times { |index| box(model.entities, index) }
     raise "SketchUp refused the walkthrough geometry." unless model.commit_operation
@@ -175,46 +177,12 @@ module GestureCostWalkthrough
     column = index % 10
     row = index / 10
     origin = [(column * 3000).mm, (row * 6000).mm, 0]
-    group = entities.add_group
-    group.name = "#{PREFIX}#{index}"
-    group.transformation = Geom::Transformation.new(origin)
-    floor = group.entities.add_face([0, 0, 0], [0, 4000.mm, 0], [3000.mm, 4000.mm, 0], [3000.mm, 0, 0])
-    floor.reverse! if floor.normal.z.positive?
-    floor.pushpull(-3000.mm)
-    group
+    AuthoringExample.box(entities, "#{PREFIX}#{index}", origin, 3000.mm)
   end
 
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
-    def preview(name, params)
-      API.preview(:context => @context, :name => name, :params => params)
-    end
-
-    def invoke(name, params, proposal_digest = nil)
-      request = { "sequence" => next_sequence, "expected_revision" => revision }
-      request["proposal_digest"] = proposal_digest if proposal_digest
-      send_invoke(name, params, request)
-    end
-
-    # The timed path: everything the request needs is already decided, so this is the operation and
-    # nothing else.
-    def send_invoke(name, params, request)
-      API.invoke(:context => @context, :name => name, :params => params, :request => request)
-    end
-
-    def next_sequence
-      @sequence += 1
-    end
-
+  # The timed path reads the revision from discovery rather than from a Zone query, so that a timed
+  # request costs the operation and nothing else.
+  class Client < AuthoringExample::Client
     def revision
       API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("revision")
     end

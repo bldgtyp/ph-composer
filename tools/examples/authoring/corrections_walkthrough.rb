@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
-# PR #3 foundation corrections, native cases R01 to R04 and R06
-# (planning/archive/phase-01-faces-and-zones-refactor/PLAN.md). Development only; never shipped.
+require_relative "client"
+
+# Native checks of Zone and Face corrections: shared child Groups (R01), a nested Zone path (R02), an
+# orphaned Attached zone (R03), a partial Attached zone cut (R04) and a panel-closed API client (R06).
+# Each case's methods carry its label. Development only; never shipped.
 #
 # Geometry setup is development-only. Every product write goes through the public operations with
 # the panel closed. The steps a person performs are named in the method that follows them; each
@@ -350,12 +353,12 @@ module CorrectionsWalkthrough
   end
 
   def undo
-    Sketchup.send_action("editUndo:")
+    AuthoringExample.undo
     { "next" => "read back in a later call" }
   end
 
   def redo_last
-    Sketchup.send_action("editRedo:")
+    AuthoringExample.redo
     { "next" => "read back in a later call" }
   end
 
@@ -375,7 +378,7 @@ module CorrectionsWalkthrough
   def clear
     model = Sketchup.active_model
     model.active_path = nil if model.active_path
-    model.start_operation("PR3 walkthrough reset", true)
+    model.start_operation("Corrections walkthrough reset", true)
     model.entities.erase_entities(model.entities.to_a) unless model.entities.to_a.empty?
     PhComposer::Zones::Faces::AttachedZone::RECORD_KIND.store.ids(model).each do |id|
       PhComposer::Zones::Faces::AttachedZone::RECORD_KIND.store.delete(model, id)
@@ -384,13 +387,8 @@ module CorrectionsWalkthrough
   end
 
   def box(entities, name, origin, width)
-    group = entities.add_group
-    group.name = name
+    group = AuthoringExample.box(entities, name, origin, width)
     groups[name] = group.persistent_id
-    group.transformation = Geom::Transformation.new(origin)
-    floor = group.entities.add_face([0, 0, 0], [0, 4000.mm, 0], [width, 4000.mm, 0], [width, 0, 0])
-    floor.reverse! if floor.normal.z.positive?
-    floor.pushpull(-3000.mm)
     group
   end
 
@@ -445,17 +443,7 @@ module CorrectionsWalkthrough
     face && PhComposer::Zones::Faces::FACE_STORE.read(face)
   end
 
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name, params = {})
-      API.query(:context => @context, :name => name, :params => params)
-    end
-
+  class Client < AuthoringExample::Client
     def zones_value
       query("ph_composer.zones.all").fetch("value")
     end
@@ -471,21 +459,6 @@ module CorrectionsWalkthrough
     def attached_ids
       query("ph_composer.records.list", "kind" => "ph_composer.zones.faces.attached_zone")
         .dig("value", "records").map { |record| record.fetch("id") }
-    end
-
-    def revision
-      query("ph_composer.zones.all").fetch("revision")
-    end
-
-    def preview(name, params)
-      API.preview(:context => @context, :name => name, :params => params)
-    end
-
-    def invoke(name, params, proposal_digest = nil)
-      @sequence += 1
-      request = { "sequence" => @sequence, "expected_revision" => revision }
-      request["proposal_digest"] = proposal_digest if proposal_digest
-      API.invoke(:context => @context, :name => name, :params => params, :request => request)
     end
   end
 end

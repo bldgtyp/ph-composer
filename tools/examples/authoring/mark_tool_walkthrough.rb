@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "client"
+
 # The Mark floor tool and Create Space as a user drives them, after classify_tool_walkthrough.rb.
 #
 # SketchUp delivers pointer events to the active tool and nothing in the Ruby API synthesizes them, so the
@@ -119,7 +121,7 @@ module MarkToolWalkthrough
 
   # Questions 2 and 6. Native Undo goes through the menu action; read the result in a later call.
   def undo
-    Sketchup.send_action("editUndo:")
+    AuthoringExample.undo
     nil
   end
 
@@ -140,24 +142,9 @@ module MarkToolWalkthrough
     @client ||= Client.new
   end
 
-  class Client
-    attr_reader :context
-
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
+  class Client < AuthoringExample::Client
     def invoke(name, params)
-      @sequence += 1
-      revision = query("ph_composer.zones.all").fetch("revision")
-      result = API.invoke(:context => @context, :name => name, :params => params,
-                          :request => { "sequence" => @sequence, "expected_revision" => revision })
+      result = super
       raise "#{name}: #{result.fetch('message')}" unless result.fetch("status") == "completed"
 
       result

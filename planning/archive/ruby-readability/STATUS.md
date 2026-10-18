@@ -147,8 +147,10 @@ Recorded during the program; none was in its scope. Each needs its own authoriza
 - **Test-only public APIs** to reconsider: `JsonValue.check!`, `EditContext.enter_root`, `Setup.provider`, the
   `redact` secrets list.
 - **Library.** FileProvider's duplicate-record check may duplicate Admission's (R30).
-- **Examples (R34).** The eleven authoring walkthroughs each define the same `Client`, `box`, `zone_groups` and
-  Undo helpers and cite archived planning ids; one shared `client.rb` and comment rewrites are an examples stage.
+- **Examples (R34).** Done on branch `refactor/ruby-readability-r34-authoring-client`: the eleven authoring
+  walkthroughs share `tools/examples/authoring/client.rb` (the API client, the box Group and native Undo/Redo);
+  `zone_groups` stays per walkthrough because each selects differently. Headers, comments and Undo names say what
+  each walkthrough demonstrates instead of citing planning ids; fixture `PREFIX` names are unchanged.
 - **Seen in the native batch, behaviour outside this program.** Zone Restore with its parent context closed
   refuses `target.edit_path_changed` with a message naming "Make Zone"; the Restore offer could also say the
   parent context must be open (S04). The open issues [#157](https://github.com/bldgtyp/ph-composer/issues/157)

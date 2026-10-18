@@ -1,20 +1,22 @@
 # frozen_string_literal: true
 
-# P1-C's fresh-host walkthrough. Geometry setup is development-only; every Zone, classification,
-# adjacency and retirement change after setup goes through the public operation contracts.
+require_relative "client"
+
+# Face adjacency between two touching Zones, on a fresh host. Geometry setup is development-only;
+# every Zone, classification, adjacency and retirement change after setup goes through the public
+# operation contracts.
 module AdjacencyWalkthrough
-  API = PhComposer::API
   PREFIX = "p1c_walkthrough_"
 
   module_function
 
   def setup
     model = Sketchup.active_model
-    model.start_operation("P1-C walkthrough geometry", true)
+    model.start_operation("Adjacency walkthrough geometry", true)
     old = model.entities.grep(Sketchup::Group).select { |group| group.name.start_with?(PREFIX) }
     model.entities.erase_entities(old) unless old.empty?
-    west = box(model.entities, "#{PREFIX}west", [0, 0, 0], 5000.mm)
-    east = box(model.entities, "#{PREFIX}east", [5000.mm, 0, 0], 4000.mm)
+    west = AuthoringExample.box(model.entities, "#{PREFIX}west", [0, 0, 0], 5000.mm)
+    east = AuthoringExample.box(model.entities, "#{PREFIX}east", [5000.mm, 0, 0], 4000.mm)
     tolerance_fixtures(model.entities)
     raise "SketchUp refused the walkthrough geometry." unless model.commit_operation
 
@@ -141,16 +143,6 @@ module AdjacencyWalkthrough
     group
   end
 
-  def box(entities, name, origin, width)
-    group = entities.add_group
-    group.name = name
-    group.transformation = Geom::Transformation.new(origin)
-    floor = group.entities.add_face([0, 0, 0], [0, 4000.mm, 0], [width, 4000.mm, 0], [width, 0, 0])
-    floor.reverse! if floor.normal.z.positive?
-    floor.pushpull(-3000.mm)
-    group
-  end
-
   def zone_groups
     Sketchup.active_model.entities.grep(Sketchup::Group).select do |group|
       ["#{PREFIX}west", "#{PREFIX}east", "west", "east"].include?(group.name)
@@ -161,27 +153,5 @@ module AdjacencyWalkthrough
     Sketchup.active_model.entities.grep(Sketchup::Group).find { |group| group.name == name }
   end
 
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
-    def preview(name, params)
-      API.preview(:context => @context, :name => name, :params => params)
-    end
-
-    def invoke(name, params, proposal_digest = nil)
-      @sequence += 1
-      revision = query("ph_composer.zones.all").fetch("revision")
-      request = { "sequence" => @sequence, "expected_revision" => revision }
-      request["proposal_digest"] = proposal_digest if proposal_digest
-      API.invoke(:context => @context, :name => name, :params => params, :request => request)
-    end
-  end
+  class Client < AuthoringExample::Client; end
 end
