@@ -4601,6 +4601,7 @@ Result:
         "perspective",
         "fov_deg",
         "fov_axis",
+        "two_point",
         "height_m"
       ],
       "properties": {
@@ -4645,6 +4646,13 @@ Result:
             null
           ],
           "description": "The view extent fov_deg spans; null for a parallel view."
+        },
+        "two_point": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Two-point perspective's pan offset (center, in the view's own units) and scale; null for an ordinary camera."
         },
         "height_m": {
           "type": [

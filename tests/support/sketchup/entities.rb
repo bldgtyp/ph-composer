@@ -203,6 +203,19 @@ module Sketchup
     end
 
     attr_writer :fov_is_width
+    attr_accessor :two_point_center, :two_point_scale
+
+    def is_2d?
+      !two_point_center.nil?
+    end
+
+    def center_2d
+      Geom::Point3d.new(*two_point_center, 0)
+    end
+
+    def scale_2d
+      two_point_scale
+    end
   end
 
   class View

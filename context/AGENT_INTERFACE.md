@@ -133,7 +133,7 @@ Implemented: the Model context read, `ph_composer.context.read` (and the agent `
 answers the session (id, file name, the Model's own file path, revision, view generation, whether it
 is the active Model), readiness (busy and why, and the active SketchUp tool), the edit path from the
 root as persistent id, type and name per open Group or Component, the camera (eye and target in
-metres, up, perspective with its field of view or parallel with its height), and the selection in pages by
+metres, up, perspective with its field of view and the extent it spans or parallel with its height, and two-point perspective's offset and scale), and the selection in pages by
 persistent id: at most 200 entities, 100 by default, and never more than 16 KB of rows
 (`Pages.bounded`, which cuts at the last whole row and resumes after it). The path is the user's own document, not an approved destination, so it is shown: two
 open Models with the same file name differ by it. The view generation is a second session counter

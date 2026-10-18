@@ -177,6 +177,7 @@ module PhComposer
         "up" => [camera.up.x, camera.up.y, camera.up.z].map(&:to_f), "perspective" => perspective,
         "fov_deg" => perspective ? camera.fov.to_f : nil,
         "fov_axis" => perspective ? fov_axis(camera) : nil,
+        "two_point" => two_point(camera),
         "height_m" => perspective ? nil : camera.height.to_f * FaceGeometry::INCH_TO_M }
     end
 
@@ -184,6 +185,15 @@ module PhComposer
     # otherwise.
     def fov_axis(camera)
       !camera.respond_to?(:fov_is_height?) || camera.fov_is_height? ? "height" : "width"
+    end
+
+    # Two-point perspective frames the view by a pan offset and a scale on top of the camera; null when the
+    # camera is an ordinary one.
+    def two_point(camera)
+      return nil unless camera.respond_to?(:is_2d?) && camera.is_2d?
+
+      center = camera.center_2d
+      { "center" => [center.x.to_f, center.y.to_f], "scale" => camera.scale_2d.to_f }
     end
 
     def entity_row(entity)
@@ -234,6 +244,9 @@ module PhComposer
                "fov_deg" => { "type" => %w[number null], "description" => "Field of view; null for a parallel view." },
                "fov_axis" => { "type" => %w[string null], "enum" => ["height", "width", nil],
                                "description" => "The view extent fov_deg spans; null for a parallel view." },
+               "two_point" => { "type" => %w[object null],
+                                "description" => "Two-point perspective's pan offset (center, in the view's own " \
+                                                 "units) and scale; null for an ordinary camera." },
                "height_m" => { "type" => %w[number null], "x-unit" => "m",
                                "description" => "The view's height; null for a perspective view." } }).merge(
                                  "type" => %w[object null], "description" => "The view's camera; null with no view."

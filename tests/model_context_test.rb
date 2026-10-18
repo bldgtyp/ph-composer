@@ -194,7 +194,11 @@ class ModelContextTest < PhComposerTestCase
     assert_equal before.dig("session", "view_generation") + 1, after.dig("session", "view_generation")
     assert_in_delta 10.0, after.dig("camera", "eye_m", 0), 1e-9
     view.camera.fov_is_width = true
+    view.camera.two_point_center = [0.25, -0.5]
+    view.camera.two_point_scale = 2.0
     assert_equal "width", context.dig("value", "camera", "fov_axis")
+    assert_nil before.dig("camera", "two_point")
+    assert_equal({ "center" => [0.25, -0.5], "scale" => 2.0 }, context.dig("value", "camera", "two_point"))
   end
 
   def test_a_large_selection_pages_within_the_entity_and_byte_bounds
