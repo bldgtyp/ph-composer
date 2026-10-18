@@ -25,9 +25,9 @@ module PhComposer
         sums = totals(rows, zones)
         params = request.params
         chosen = params.key?("ids") ? rows.select { |row| params["ids"].include?(row.fetch("id")) } : rows
-        whole = chosen.map { |row| Summaries.space(row, zones, nil) }
+        whole = chosen.map { |row| Summaries.space(row, zones, nil, strays) }
         aggregates = PageAggregates.new(sums, whole)
-        summaries = chosen.map { |row| Summaries.space(row, zones, params["fields"]) }
+        summaries = chosen.map { |row| Summaries.space(row, zones, params["fields"], strays) }
         page, next_cursor = Pages.bounded(request, "#{FEATURE_ID}.list", summaries,
                                           :key => PageAggregates::PATH, :size => aggregates.method(:size))
         { "spaces" => page, "model" => sums.fetch("model"), **aggregates.of(page),
@@ -66,8 +66,6 @@ module PhComposer
       # The Building-Segment a Zone belongs to: the key its sums group by and the name they show.
       BuildingSegment = Struct.new(:key, :name, keyword_init: true)
 
-      # The Space rows, the Zone rows, the findings of records outside the hierarchy, and the rows of
-      # Volumes outside every Space, whose Floor Segments are still read by reference.
       def assemble(request)
         scan = Occurrences.scan(request.model)
         catalog = request.registry.catalog
@@ -81,17 +79,29 @@ module PhComposer
             ) }
         end
         ids = scan.spaces.map { |space| space.record.fetch("id") }.tally
-        counts = Resolve::TARGETS.transform_values do |target|
-          target.occurrences_in(scan).map { |occurrence| occurrence.record.fetch("id") }.tally
-        end
+        counts = occurrence_counts(scan)
         rows = scan.spaces.sort_by(&:path).map do |space|
           space_row(space, zones, ids, catalog, request.model, counts)
         end
         flag_duplicate_numbers(rows)
-        orphans = scan.orphan_volumes.sort_by(&:path).map do |volume|
-          volume_row(volume, catalog, request.model, counts, false)
+        [rows, zone_rows(zones, rows), stray_findings(scan, counts)]
+      end
+
+      # The row of the Volume outside every Space at `path`, if there is one, so its Floor Segments read by
+      # reference. Built only when asked: `all` reports such a Volume as a stray finding and never
+      # measures it.
+      def orphan_rows(request, path)
+        scan = Occurrences.scan(request.model)
+        counts = occurrence_counts(scan)
+        scan.orphan_volumes.select { |volume| volume.path == path }.map do |volume|
+          volume_row(volume, request.registry.catalog, request.model, counts, false)
         end
-        [rows, zone_rows(zones, rows), stray_findings(scan, counts), orphans]
+      end
+
+      def occurrence_counts(scan)
+        Resolve::TARGETS.transform_values do |target|
+          target.occurrences_in(scan).map { |occurrence| occurrence.record.fetch("id") }.tally
+        end
       end
 
       def space_row(space, zones, ids, catalog, model, counts)

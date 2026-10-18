@@ -20,11 +20,14 @@ module PhComposer
 
       module_function
 
-      def space(row, zones, fields)
+      # `strays` are the findings of records outside the hierarchy; those inside this Space count here, as
+      # its scoped findings read returns them.
+      def space(row, zones, fields, strays)
         volumes = row.fetch("volumes")
         segments = volumes.flat_map { |volume| volume.fetch("floor_segments") }
         findings = row.fetch("findings") + volumes.flat_map { |volume| volume.fetch("findings") } +
-                   segments.flat_map { |segment| segment.fetch("findings") }
+                   segments.flat_map { |segment| segment.fetch("findings") } +
+                   inside(strays, row.dig("reference", "entity_path"))
         zone = row["zone"] && zones.find { |candidate| candidate.fetch("zone_path") == row.dig("zone", "zone_path") }
         whole = row.reject { |key, _value| %w[volumes findings].include?(key) }.merge(
           "building_segment" => zone && zone.fetch(:building_segment).key.to_s,
@@ -32,6 +35,11 @@ module PhComposer
           "finding_counts" => findings.map { |finding| finding.fetch("code") }.tally
         )
         project(whole, fields, SPACE_FIELDS)
+      end
+
+      # The findings whose reference lies under the occurrence at `path`.
+      def inside(findings, path)
+        findings.select { |finding| finding.dig("reference", "entity_path")&.first(path.length) == path }
       end
 
       def volume(row, fields)

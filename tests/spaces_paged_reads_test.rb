@@ -125,8 +125,26 @@ class SpacesPagedReadsTest < PhComposerTestCase
     reference = { "volume_id" => "vol_OOOOOOOOOOOO", "entity_path" => [2000, 2900] }
     segments = read("floor_segments.list", { "volume" => reference }).fetch("floor_segments")
 
+    counted = read("list", { "ids" => ["spc_HHHHHHHHHHHH"] }).dig("spaces", 0, "finding_counts")
+
     assert_includes scoped, "space.segment_misplaced"
+    assert_equal scoped.tally, counted
     assert_equal %w[fsg_PPPPPPPPPPPP], segments.map { |row| row["id"] }
+  end
+
+  def test_an_orphan_volume_that_cannot_be_measured_leaves_all_and_list_reading
+    reference_model
+    tiny = Sketchup::Group.new(2900, Sketchup::Entities.new([floor_face(2901, rectangle(20, 0, 1, 1),
+                                                                        segment_record("P"))]),
+                               :locked => true, :transformation => Geom::Transformation.scaling(1e-5))
+    SPACES::VOLUME_STORE.write(tiny, volume_record("O"))
+    @model.entities << tiny
+
+    whole = query("all", {})
+    listed = query("list", {})
+
+    assert_equal %w[completed completed], [whole, listed].map { |result| result["status"] }, whole.inspect
+    assert_equal 4, whole.dig("value", "spaces").length
   end
 
   def test_floor_segment_loops_only_when_asked

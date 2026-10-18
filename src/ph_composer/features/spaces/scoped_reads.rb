@@ -22,7 +22,7 @@ module PhComposer
       end
 
       def floor_segments(request)
-        rows, _zones, _strays, orphans = Reads.assemble(request)
+        rows, = Reads.assemble(request)
         params = request.params
         unless params.key?("space") ^ params.key?("volume")
           raise CodedError.new("params.invalid", "Name one Space or one Volume whose Floor Segments to read.")
@@ -31,8 +31,7 @@ module PhComposer
         volumes = if params.key?("space")
                     located(rows, params["space"], "space_id", "Space").fetch("volumes")
                   else
-                    [located(rows.flat_map { |row| row.fetch("volumes") } + orphans, params["volume"], "volume_id",
-                             "Volume")]
+                    [located(scope_volumes(request, rows, params["volume"]), params["volume"], "volume_id", "Volume")]
                   end
         segments = volumes.flat_map { |volume| volume.fetch("floor_segments") }.sort_by(&PATH)
         segments = with_loops(request.model, segments) if Array(params["fields"]).include?("loops_m")
@@ -49,6 +48,13 @@ module PhComposer
         end
       end
 
+      # Every Space's Volumes, and the Volume outside every Space the reference names when it is one.
+      def scope_volumes(request, rows, reference)
+        volumes = rows.flat_map { |row| row.fetch("volumes") }
+        path = Resolve.integer_path(reference.fetch("entity_path"))
+        volumes.any? { |volume| PATH.call(volume) == path } ? volumes : volumes + Reads.orphan_rows(request, path)
+      end
+
       # Each finding with the reference of what it is about: a Space, Volume, Floor Segment or Zone, or a
       # record outside the hierarchy that should hold it. Ordered by that reference's path, then code.
       def findings(request)
@@ -56,7 +62,7 @@ module PhComposer
         params = request.params
         if params.key?("space")
           space = located(rows, params["space"], "space_id", "Space")
-          found = row_findings(space) + strays.select { |finding| inside?(finding, PATH.call(space)) }
+          found = row_findings(space) + Summaries.inside(strays, PATH.call(space))
         else
           found = rows.flat_map { |row| row_findings(row) } + zone_findings(zones) + strays
         end
@@ -64,10 +70,6 @@ module PhComposer
         keyed = found.each_with_index.map { |finding, index| [finding_key(finding, index), finding] }.sort_by(&:first)
         page, next_cursor = Pages.bounded(request, FINDINGS, keyed, :key => ->(pair) { pair.first })
         { "findings" => page.map(&:last), "next_cursor" => next_cursor, "total" => found.length }
-      end
-
-      def inside?(finding, path)
-        finding.dig("reference", "entity_path")&.first(path.length) == path
       end
 
       def row_findings(row)
