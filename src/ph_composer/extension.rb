@@ -23,7 +23,7 @@ module PhComposer
   # alphabetically within each. A file whose body names a later file's constant at load names that
   # file with `require_relative`.
   unless const_defined?(:FOUNDATION_DIRECTORIES)
-    FOUNDATION_DIRECTORIES = %w[core session shell runtime export colour_by library].freeze
+    FOUNDATION_DIRECTORIES = %w[core session shell runtime export colour_by library agent_access].freeze
   end
   FOUNDATION_DIRECTORIES.each do |directory|
     Dir[File.join(__dir__, directory, "**", "*.rb")].sort.each { |path| require path }
@@ -40,7 +40,7 @@ module PhComposer
 
   # Capabilities the foundation itself provides, registered through the same interface as a feature.
   unless const_defined?(:FOUNDATION_FEATURES)
-    FOUNDATION_FEATURES = [RecordQueries, ColourBy, Library, LocationCommands].freeze
+    FOUNDATION_FEATURES = [RecordQueries, ColourBy, Library, LocationCommands, AgentAccess].freeze
   end
 
   # Registers the foundation and every listed feature. A registration problem fails loading here,

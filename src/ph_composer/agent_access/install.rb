@@ -1,0 +1,46 @@
+# frozen_string_literal: true
+
+require_relative "tokens"
+require_relative "dialog"
+
+module PhComposer
+  # Local agent access (context/AGENT_INTERFACE.md, "User-controlled local access"), registered as a
+  # foundation capability. It declares one native menu item, which opens the Agent Access dialog, and
+  # no public operation: tokens are managed only by the user in that dialog.
+  module AgentAccess
+    FEATURE_ID = "ph_composer.agent_access"
+    MENU = "Agent Access"
+    # What the dialog can be refused. No public operation raises these; they are declared so every code
+    # the extension raises is described in one catalog.
+    CODES = {
+      "agent_access.limit" => "This machine already has the most live agent tokens it keeps; revoke one first.",
+      "agent_access.token_unknown" => "No agent token has that id on this machine.",
+      "agent_access.store_unreadable" => "The stored agent tokens cannot be read; reset them before issuing another.",
+      "agent_access.store_unavailable" => "The agent tokens could not be read or saved on this machine."
+    }.freeze
+
+    module_function
+
+    def install(registry)
+      feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION)
+      CODES.each { |code, description| feature.code(code, :description => description) }
+      # Kept out of the viewport's right-click menu: managing tokens has nothing to do with what is under
+      # the pointer.
+      feature.menu_item("#{FEATURE_ID}.open", :label => "Agent Access…", :menu => MENU,
+                                              :available => ->(_read) { false }) { |_session| Dialog.show }
+    end
+
+    # Called after every token store write. The dialog shows the new list; the loopback listener, when
+    # it exists, starts with the first live token and stops after the last is revoked.
+    def tokens_changed
+      Dialog.refresh
+    end
+
+    # The listener's state for the dialog. No listener is served yet, so it is always stopped.
+    def server_status
+      { "state" => "stopped" }
+    end
+  end
+
+  on_reset("agent_access.dialog") { AgentAccess::Dialog.reset_for_test }
+end

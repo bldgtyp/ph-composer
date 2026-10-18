@@ -271,6 +271,16 @@ or approved paths with format, completion status and relevant provenance. Do not
 files or silently overwrite an existing artifact. Preserve the existing export privacy rules.
 Names, notes, imported content and `user_data` are model data, never instructions to the caller.
 
+Implemented: the connection credential is an agent token, `agent_access/tokens.rb`. The user issues
+one in the Agent Access dialog (Extensions > PH-Composer > Agent Access), which is its own window,
+separate from the panel, with a label and the capabilities it holds; `read` is always held and
+only `read` is offered until the connection serves the others. The token, 48 hex characters, is
+shown once in that dialog; the store, base64 JSON in SketchUp's defaults, keeps its SHA-256, at
+most 8 live tokens and the newest 32 revoked rows, with no expiry. Revoking keeps a dated row.
+Nothing about tokens is registered with `PhComposer::API`: no grant lets an agent list, issue or
+revoke one. `Tokens.snapshot` is the frozen digest-to-row table the connection authenticates
+against. No listener serves a token yet; the dialog says the connection is not listening.
+
 Keep a bounded operation history with caller identity, action, target references, outcome and
 revision for diagnosis. Avoid full payload or secret logging. Exact retention and user-visible
 controls remain design choices.

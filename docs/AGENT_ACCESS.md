@@ -1,8 +1,8 @@
 # Using PH-Composer with your agent
 
-DATE: 2026-09-30
-STATUS: The in-process public interface is implemented. No external connection endpoint or client
-setup is available yet.
+DATE: 2026-10-18
+STATUS: The in-process public interface and agent tokens are implemented. No external connection
+endpoint or client setup is available yet.
 
 PH-Composer will let users' agents inspect and edit building models through documented public
 operations. Users choose their agent. No built-in LLM, model-provider account or AI subscription is
@@ -31,6 +31,17 @@ a location only the user can choose. The user approves it once in the Libraries 
 Libraries menu, and a script then names it by id; a path never passes through the interface. The
 user sees, renames and revokes approved locations in the same dialog. A script that names no
 approved location is refused with `access.user_required`.
+
+### Agent tokens
+
+An agent connects with a token you issue in SketchUp: Extensions > PH-Composer > Agent Access opens
+the Agent Access window, separate from the panel, so a change you are making there is left alone.
+New token asks for a name and the access the token holds. Read is always included: it reads the
+open Models, their Zones, Spaces, Assemblies and Window Types and the values PH-Composer calculates,
+and changes nothing. The token is shown once; copy it then, because it is not shown again. The
+token is the only secret: anyone holding it has its access until you revoke it in the same window.
+Revoking keeps the token in the list with the date it was revoked. Up to eight tokens can be live
+at once. No connection serves tokens yet, so the window says agents cannot connect.
 
 ## Not yet available
 
