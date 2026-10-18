@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
-# P1-D D6's fresh-host walkthrough: the Classify tool as a user drives it.
+require_relative "client"
+
+# A fresh-host walkthrough of the Classify tool as a user drives it.
 #
 # The gesture is the part of this that no script can perform. SketchUp delivers pointer events to
 # the active tool and nothing in the Ruby API synthesizes them, so the steps below arm the tool and
 # then ask the operator to click and drag; the reports read back what the tool and the Model did.
-# That is deliberate. A scripted "gesture" would measure the operation D1 already tests and would
-# say nothing about the pick, the modifier mask or the edit context, which are the three things
-# this gate exists to answer.
+# That is deliberate. A scripted "gesture" would measure the classify operation the offline suite
+# already tests and would say nothing about the pick, the modifier mask or the edit context, which
+# are the three things this gate exists to answer.
 #
 # Questions it has to answer, because the implementation assumes all of them:
 #
@@ -20,9 +22,10 @@
 #      deliver a mouse-up after a drag that left the viewport?
 #   4. What does the host do to an active tool when the Model changes underneath it: another Model
 #      is activated, the edit context opens or closes, the tool is replaced by a native one?
-#   5. Does one drag over forty Faces revert in one native Undo? This is D1's deferred native check,
-#      kept here because a real gesture is what it needs.
-#   6. Does a gesture of 251 refuse in the viewport the way it refuses through the API? Also D1's.
+#   5. Does one drag over forty Faces revert in one native Undo? This is the classify operation's
+#      deferred native check, kept here because a real gesture is what it needs.
+#   6. Does a gesture of 251 refuse in the viewport the way it refuses through the API? Also
+#      deferred from the operation.
 #   7. Does forcing Colour-by on and off with the tool leave the user's remembered mode alone?
 #   8. Does Locate select and reveal a Face inside a Zone that is not the active edit context?
 #   9. Two context-menu questions. With no tool running, does SketchUp select the right-clicked
@@ -30,7 +33,6 @@
 #      about what the cursor was over. With the tool running, does `getMenu` fire instead, and do
 #      the global handlers fire as well, which would offer the submenu twice?
 module ClassifyToolWalkthrough
-  API = PhComposer::API
   PREFIX = "p1d_classify_"
 
   module_function
@@ -39,7 +41,7 @@ module ClassifyToolWalkthrough
   # Faces is question 5's fixture; pass 251 for question 6.
   def setup(count = 40)
     model = Sketchup.active_model
-    model.start_operation("P1-D Classify walkthrough geometry", true)
+    model.start_operation("Classify walkthrough geometry", true)
     model.entities.erase_entities(zone_groups) unless zone_groups.empty?
     group = model.entities.add_group
     group.name = "#{PREFIX}zone"
@@ -91,7 +93,7 @@ module ClassifyToolWalkthrough
   # Shift-click on any panel must take all eight and stop at the return.
   def shift_fixture
     model = Sketchup::active_model
-    model.start_operation("P1-D Shift-click fixture", true)
+    model.start_operation("Shift-click fixture", true)
     group = model.entities.add_group
     group.name = "#{PREFIX}plane"
     group.transformation = Geom::Transformation.translation([0, 6000.mm, 0])
@@ -171,11 +173,11 @@ module ClassifyToolWalkthrough
 
   # Question 5. Native Undo goes through the menu action; read the result in a later call.
   def undo
-    Sketchup.send_action("editUndo:")
+    AuthoringExample.undo
     nil
   end
 
-  # Question 8. Select every unclassified Face, which is the read D7's legend will make of it. Select,
+  # Question 8. Select every unclassified Face, which is the read the Overview legend makes of it. Select,
   # not Locate: Locate leaves the selection alone, and the question is what a selection outside the
   # edit context shows.
   def locate_unclassified
@@ -207,22 +209,5 @@ module ClassifyToolWalkthrough
     end
   end
 
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
-    def invoke(name, params)
-      @sequence += 1
-      revision = query("ph_composer.zones.all").fetch("revision")
-      API.invoke(:context => @context, :name => name, :params => params,
-                 :request => { "sequence" => @sequence, "expected_revision" => revision })
-    end
-  end
+  class Client < AuthoringExample::Client; end
 end

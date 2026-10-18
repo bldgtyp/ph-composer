@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
-# P1-D D5's fresh-host walkthrough: what the shared Colour-by service does on a real SketchUp.
+require_relative "client"
+
+# A fresh-host walkthrough of what the shared Colour-by service does on a real SketchUp.
 #
-# B2 measured that a filled overlay is affordable and behaves correctly (occlusion, alpha, picking).
-# This measures the feature built on it, which B2 did not have: the cache, its invalidation and the
+# An earlier host spike measured that a filled overlay is affordable and behaves correctly (occlusion, alpha, picking).
+# This measures the feature built on it, which the spike did not have: the cache, its invalidation and the
 # HUD. Questions it has to answer, because the implementation assumes all of them:
 #
 #   1. Does `Face#mesh` triangulate a concave and a holed Face the way the fill needs? The offline
@@ -17,7 +19,6 @@
 #   6. Does the HUD legend draw legibly, and does the overlay leave with its Model?
 #   7. What does SketchUp's own Overlays panel do to a mode the user unticks there?
 module ColourByWalkthrough
-  API = PhComposer::API
   PREFIX = "p1d_colour_"
   MODE = "ph_composer.zones.faces.by_face_type"
 
@@ -27,10 +28,10 @@ module ColourByWalkthrough
   # one Face with a hole for question 1. A concave fixture is a separate gate setup.
   def setup
     model = Sketchup.active_model
-    model.start_operation("P1-D Colour-by walkthrough geometry", true)
+    model.start_operation("Colour-by walkthrough geometry", true)
     model.entities.erase_entities(zone_groups) unless zone_groups.empty?
-    box(model.entities, "#{PREFIX}west", [0, 0, 0], 5000.mm, 4000.mm)
-    east = box(model.entities, "#{PREFIX}east", [6000.mm, 0, 0], 4000.mm, 4000.mm)
+    AuthoringExample.box(model.entities, "#{PREFIX}west", [0, 0, 0], 5000.mm, 4000.mm)
+    east = AuthoringExample.box(model.entities, "#{PREFIX}east", [6000.mm, 0, 0], 4000.mm, 4000.mm)
     punch(east)
     raise "SketchUp refused the walkthrough geometry." unless model.commit_operation
 
@@ -142,7 +143,7 @@ module ColourByWalkthrough
     report
   end
 
-  # Question 5, on the Model as it stands. Ruby time only: the GPU cost is B2's measurement.
+  # Question 5, on the Model as it stands. Ruby time only: the GPU cost is the spike's measurement.
   def cost(samples = 20)
     view = Sketchup.active_model.active_view
     rebuilds = samples.times.map { timed { service.invalidate!(:force => true) } }
@@ -168,12 +169,12 @@ module ColourByWalkthrough
   # Native Undo goes through the menu action; SketchUp has no Model#undo. Read the result in a
   # later call, never in this one.
   def undo
-    Sketchup.send_action("editUndo:")
+    AuthoringExample.undo
     report
   end
 
   def redo_last
-    Sketchup.send_action("editRedo:")
+    AuthoringExample.redo
     report
   end
 
@@ -184,16 +185,6 @@ module ColourByWalkthrough
   def zone_groups
     Sketchup.active_model.entities.grep(Sketchup::Group)
             .select { |group| group.name.start_with?(PREFIX) || %w[west east].include?(group.name) }
-  end
-
-  def box(entities, name, origin, width, depth, height = 3000.mm)
-    group = entities.add_group
-    group.name = name
-    group.transformation = Geom::Transformation.new(origin)
-    floor = group.entities.add_face([0, 0, 0], [0, depth, 0], [width, depth, 0], [width, 0, 0])
-    floor.reverse! if floor.normal.z.positive?
-    floor.pushpull(-height)
-    group
   end
 
   # A hole in one wall, so the fill meets the shape a Window opening makes.
@@ -207,27 +198,5 @@ module ColourByWalkthrough
     opening.erase!
   end
 
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
-    def preview(name, params)
-      API.preview(:context => @context, :name => name, :params => params)
-    end
-
-    def invoke(name, params, proposal_digest = nil)
-      @sequence += 1
-      revision = query("ph_composer.zones.all").fetch("revision")
-      request = { "sequence" => @sequence, "expected_revision" => revision }
-      request["proposal_digest"] = proposal_digest if proposal_digest
-      API.invoke(:context => @context, :name => name, :params => params, :request => request)
-    end
-  end
+  class Client < AuthoringExample::Client; end
 end

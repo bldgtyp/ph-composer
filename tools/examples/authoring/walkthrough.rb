@@ -1,21 +1,22 @@
 # frozen_string_literal: true
 
-# P1-B's public-operation walkthrough. Run only in a fresh synthetic Model; setup replaces earlier
+require_relative "client"
+
+# Zone and Face authoring through the public operations. Run only in a fresh synthetic Model; setup replaces earlier
 # `p1b_walkthrough_*` fixtures. Geometry construction is deliberately outside the product API. All
 # authoring after that point uses the same PhComposer::API contracts available with the panel closed.
 module AuthoringWalkthrough
-  API = PhComposer::API
   PREFIX = "p1b_walkthrough_"
 
   module_function
 
   def setup
     model = Sketchup.active_model
-    model.start_operation("P1-B walkthrough geometry", true)
+    model.start_operation("Authoring walkthrough geometry", true)
     old = model.entities.grep(Sketchup::Group).select { |group| group.name.start_with?(PREFIX) }
     model.entities.erase_entities(old) unless old.empty?
-    first = box(model.entities, "#{PREFIX}west", [0, 0, 0])
-    second = box(model.entities, "#{PREFIX}east", [4000.mm, 0, 0])
+    first = AuthoringExample.box(model.entities, "#{PREFIX}west", [0, 0, 0])
+    second = AuthoringExample.box(model.entities, "#{PREFIX}east", [4000.mm, 0, 0])
     raise "SketchUp refused the walkthrough geometry." unless model.commit_operation
 
     { "groups" => [first.persistent_id, second.persistent_id] }
@@ -62,12 +63,12 @@ module AuthoringWalkthrough
   end
 
   def undo
-    Sketchup.send_action("editUndo:")
+    AuthoringExample.undo
     :undo_requested
   end
 
   def redo
-    Sketchup.send_action("editRedo:")
+    AuthoringExample.redo
     :redo_requested
   end
 
@@ -107,37 +108,5 @@ module AuthoringWalkthrough
     end
   end
 
-  def box(entities, name, origin)
-    group = entities.add_group
-    group.name = name
-    group.transformation = Geom::Transformation.new(origin)
-    floor = group.entities.add_face([0, 0, 0], [0, 4000.mm, 0], [4000.mm, 4000.mm, 0], [4000.mm, 0, 0])
-    floor.reverse! if floor.normal.z.positive?
-    floor.pushpull(-3000.mm)
-    group
-  end
-
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
-    def preview(name, params)
-      API.preview(:context => @context, :name => name, :params => params)
-    end
-
-    def invoke(name, params, proposal_digest = nil)
-      @sequence += 1
-      revision = query("ph_composer.zones.all").fetch("revision")
-      request = { "sequence" => @sequence, "expected_revision" => revision }
-      request["proposal_digest"] = proposal_digest if proposal_digest
-      API.invoke(:context => @context, :name => name, :params => params, :request => request)
-    end
-  end
+  class Client < AuthoringExample::Client; end
 end

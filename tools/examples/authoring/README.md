@@ -1,9 +1,13 @@
 # Zone and face authoring walkthrough
 
-This development-only walkthrough exercises the first Phase 1 building features through
+This development-only walkthrough exercises the Zone and Face features through
 `PhComposer::API` while the panel is closed. It creates two synthetic box Groups, makes each a
 Zone, edits Zone details, classifies one Face in each Zone, and reads the persisted values back.
 It uses only public discovery, query, preview and invoke contracts after creating the geometry.
+
+The Zone and Face walkthroughs share `client.rb`: a public-API client bound to the active Model,
+the box Group most of them draw, and native Undo and Redo. Each walkthrough requires it, so loading
+any one walkthrough file is enough.
 
 Run it in a fresh scratch Model through the development bridge:
 
@@ -23,7 +27,7 @@ reports the Zone and classified-Face counts, the canonical Zone values, occurren
 agreement between each Face record and its Zone membership stamp. The fixture contains no
 licensed or project data and is never included in the RBZ.
 
-## P1-D repairs: identity repair and limited Restore Zone
+## Repairs: identity repair and limited Restore Zone
 
 `repair_walkthrough.rb` covers the two explicit Zone repairs. Run it in a fresh scratch Model:
 
@@ -47,7 +51,7 @@ uv run tools/hostkit/host_bridge.py eval 'RepairWalkthrough.repair_copy'
 ```
 
 `adopt_copy` reports `copy_has_own_zone_record` and `copy_shares_definition`. Record both: they are
-the host evidence A06 wants for copy references, and they decide which branch repair takes.
+the host evidence copy references need, and they decide which branch repair takes.
 After repair, `duplicate_zone_ids` is empty, both `zone_states` read `found`, and no Face id appears
 twice.
 
@@ -67,11 +71,11 @@ count. `restore_source` reports `unrecoverable`: the Zone name, ground depth and
 not recovered, and the restored Zone takes a fresh default name. Reopen the saved Model and run
 `RepairWalkthrough.verify` to confirm nothing became current across save and reopen.
 
-## P1-D Colour-by: the overlay, its cache and the HUD
+## Colour-by: the overlay, its cache and the HUD
 
-`colour_by_walkthrough.rb` is the host gate for A08. B2 measured that a filled overlay is
-affordable and correct; this measures the feature built on it, which B2 did not have. Run it in a
-fresh scratch Model:
+`colour_by_walkthrough.rb` is the Colour-by host gate. An earlier host spike measured that a filled
+overlay is affordable and correct; this measures the feature built on it, which the spike did not
+have. Run it in a fresh scratch Model:
 
 ```sh
 uv run tools/hostkit/host_bridge.py eval \
@@ -123,7 +127,7 @@ change observer or belongs in a later slice.
 Finally switch to another open Model and back, and close the walkthrough Model, confirming the
 overlay leaves with it and comes back with it.
 
-## P1-D D6: what a Classify gesture costs
+## What a Classify gesture costs
 
 `gesture_cost_walkthrough.rb` is the harness behind
 [the gesture cost evidence](../../../planning/archive/phase-01-faces-and-zones/evidence/p1-d-gesture-cost.md). It answers
@@ -148,13 +152,13 @@ Run the two curves in that order and read them together. A gesture cost that gro
 at a fixed gesture size is the Model walk, not the gesture, and no ceiling fixes it. `inventory`
 reports `list_ms` alongside, which is how the quadratic Face read was found.
 
-## P1-D D6: the Classify tool
+## The Classify tool
 
 `classify_tool_walkthrough.rb` is the tool's own gate. The gesture is the part no script can
 perform: SketchUp delivers pointer events to the active tool and the Ruby API synthesizes none, so
-this arms the tool and then asks you to click and drag. A scripted gesture would only re-measure
-the operation D1 already tests and would say nothing about the pick, the modifier mask or the edit
-context, which are what this gate exists to answer.
+this arms the tool and then asks you to click and drag. A scripted gesture would only re-measure the
+classify operation the offline suite already tests and would say nothing about the pick, the
+modifier mask or the edit context, which are what this gate exists to answer.
 
 ```sh
 uv run tools/hostkit/host_bridge.py eval \
@@ -182,8 +186,8 @@ another Model, open and close an edit context, and pick a native tool, recording
 to the active tool each time.
 
 Run `setup(251)` and drag over the lot: the gesture must refuse in the viewport the way it refuses
-through the API, with nothing painted. That is D1's deferred native check, kept here because a real
-gesture is what it needs.
+through the API, with nothing painted. That is the classify operation's deferred native check, kept
+here because a real gesture is what it needs.
 
 Right-click over a Face and then over empty space, once with no tool running and once with the
 Classify tool running. The submenu is offered only where a Face is under the cursor, but the two
@@ -199,7 +203,7 @@ different mode from the Colour by menu while it runs, and stop the tool; that mo
 choice and must survive. Then `locate_unclassified` with the Zone closed and open, recording
 whether SketchUp shows a selection made outside the active edit context.
 
-## P1-D D7: the Overview screen, the legend and the palette
+## The Overview screen, the legend and the palette
 
 `overview_walkthrough.rb` is the panel's gate. Almost none of it can be scripted: the panel is an
 HtmlDialog and nothing in the Ruby API clicks one, so this builds a Model worth looking at and reads
@@ -221,9 +225,10 @@ order and filter by the controls above the table, select a Zone row and save its
 the two-Zone Model, then run `crowd(500)` and take it again: that is the first measurement of what
 this screen costs to paint, and nothing offline can stand in for it.
 
-Locate is the one thing D6 already asked of the native menu, and the panel is a second caller. Use a
-row's Locate with the Zone closed and again with it open, and then a legend row's, recording whether
-SketchUp shows the selection and where the camera lands while the panel has focus.
+Locate is the one thing the Classify tool gate already asked of the native menu, and the panel is a
+second caller. Use a row's Locate with the Zone closed and again with it open, and then a legend
+row's, recording whether SketchUp shows the selection and where the camera lands while the panel has
+focus.
 
 For the legend: turn each mode on from the panel and confirm the viewport matches what the native
 Colour by menu gives, including the remembered mode after a restart. Press "Show only this" on one
@@ -240,7 +245,7 @@ confirm the new record is chosen at once. Stop classifying and confirm the viewp
 Last, the stale case: with the panel open, change a Face through the Ruby Console, then use that
 row's chip in the panel. The edit must refuse and the row must go back to what the Model holds.
 
-## P3a-02 and P3a-04 Spaces: records, operations, copies and moves with the panel closed
+## Spaces: records, operations, copies and moves with the panel closed
 
 `spaces_walkthrough.rb` needs a Model with two Zones, and refuses before writing anything without
 them. It draws three 1 m floor outlines loose in the
@@ -259,12 +264,12 @@ uv run tools/hostkit/host_bridge.py eval \
   'load "/absolute/path/to/ph-composer/tools/examples/authoring/spaces_walkthrough.rb"; SpacesWalkthrough.run'
 ```
 
-## P3a-08 Spaces: the Mark floor tool and Create Space
+## Spaces: the Mark floor tool and Create Space
 
-`mark_tool_walkthrough.rb` is the S08 host gate's script, after the Classify one. It builds one Zone
-holding a Space of one Volume with four floor Faces at factor 0 and a Face at the Space's root, four
-loose floor Faces, a classified wall and a Face outside every Zone, then arms the tool; you click,
-drag and right-click.
+`mark_tool_walkthrough.rb` is the Mark floor tool's host gate script, after the Classify one. It
+builds one Zone holding a Space of one Volume with four floor Faces at factor 0 and a Face at the
+Space's root, four loose floor Faces, a classified wall and a Face outside every Zone, then arms the
+tool; you click, drag and right-click.
 
 ```sh
 uv run tools/hostkit/host_bridge.py eval \
@@ -282,7 +287,7 @@ selected, the wall among them, choose Create Space from SketchUp's context menu:
 must accept two, leave the wall out with its reason, and Create must make one Space in one Undo
 step.
 
-## P3a-09 Spaces: Colour-by modes and readouts with the panel closed
+## Spaces: Colour-by modes and readouts with the panel closed
 
 `spaces_colour_by_walkthrough.rb` turns each Spaces mode on through `ph_composer.colour_by.activate`,
 reads its legend (labels, counts and summed figures) back from `ph_composer.colour_by.state`, shows the

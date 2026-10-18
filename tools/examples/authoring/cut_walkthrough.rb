@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-# P1-D D4's fresh-host walkthrough: what SketchUp actually does when the solver cuts a Face.
+require_relative "client"
+
+# A fresh-host walkthrough of what SketchUp actually does when the solver cuts a Face.
 #
 # The offline suite models a split so the record consequences can be tested. This measures the
 # thing that model stands in for. Four questions it has to answer, because the implementation
@@ -11,7 +13,6 @@
 #   3. Does a shared region wholly inside a Face come back as one Face with a hole?
 #   4. Is the whole cut, on both sides, one Undo step?
 module CutWalkthrough
-  API = PhComposer::API
   PREFIX = "p1d_cut_"
   FACE_STORE = PhComposer::Zones::Faces::FACE_STORE
 
@@ -21,10 +22,10 @@ module CutWalkthrough
   # A spans y 0..4, B spans y 2..6, so they share y 2..4 over the full 3 m height.
   def setup
     model = Sketchup.active_model
-    model.start_operation("P1-D cut walkthrough geometry", true)
+    model.start_operation("Cut walkthrough geometry", true)
     model.entities.erase_entities(zone_groups) unless zone_groups.empty?
-    box(model.entities, "#{PREFIX}west", [0, 0, 0], 5000.mm, 4000.mm)
-    box(model.entities, "#{PREFIX}east", [5000.mm, 2000.mm, 0], 4000.mm, 4000.mm)
+    AuthoringExample.box(model.entities, "#{PREFIX}west", [0, 0, 0], 5000.mm, 4000.mm)
+    AuthoringExample.box(model.entities, "#{PREFIX}east", [5000.mm, 2000.mm, 0], 4000.mm, 4000.mm)
     raise "SketchUp refused the walkthrough geometry." unless model.commit_operation
 
     author
@@ -34,10 +35,10 @@ module CutWalkthrough
   # the same plane, so the region it shares is an island in the larger wall.
   def setup_contained
     model = Sketchup.active_model
-    model.start_operation("P1-D contained walkthrough geometry", true)
+    model.start_operation("Contained cut walkthrough geometry", true)
     model.entities.erase_entities(zone_groups) unless zone_groups.empty?
-    box(model.entities, "#{PREFIX}west", [0, 0, 0], 5000.mm, 4000.mm)
-    inner = box(model.entities, "#{PREFIX}east", [5000.mm, 1000.mm, 500.mm], 4000.mm, 2000.mm, 2000.mm)
+    AuthoringExample.box(model.entities, "#{PREFIX}west", [0, 0, 0], 5000.mm, 4000.mm)
+    inner = AuthoringExample.box(model.entities, "#{PREFIX}east", [5000.mm, 1000.mm, 500.mm], 4000.mm, 2000.mm, 2000.mm)
     inner.name = "#{PREFIX}east"
     raise "SketchUp refused the walkthrough geometry." unless model.commit_operation
 
@@ -99,12 +100,12 @@ module CutWalkthrough
   # Native Undo goes through the menu action, not through the Model: SketchUp has no Model#undo.
   # It runs on the UI queue, so read the result in a later call, never in this one.
   def undo
-    Sketchup.send_action("editUndo:")
+    AuthoringExample.undo
     report
   end
 
   def redo_last
-    Sketchup.send_action("editRedo:")
+    AuthoringExample.redo
     report
   end
 
@@ -147,37 +148,5 @@ module CutWalkthrough
             .select { |group| group.name.start_with?(PREFIX) || %w[west east].include?(group.name) }
   end
 
-  def box(entities, name, origin, width, depth, height = 3000.mm)
-    group = entities.add_group
-    group.name = name
-    group.transformation = Geom::Transformation.new(origin)
-    floor = group.entities.add_face([0, 0, 0], [0, depth, 0], [width, depth, 0], [width, 0, 0])
-    floor.reverse! if floor.normal.z.positive?
-    floor.pushpull(-height)
-    group
-  end
-
-  class Client
-    def initialize
-      session = API.discover.fetch("sessions").find { |row| row.fetch("active") }.fetch("id")
-      @context = API.connect(:session_id => session)
-      @sequence = 0
-    end
-
-    def query(name)
-      API.query(:context => @context, :name => name)
-    end
-
-    def preview(name, params)
-      API.preview(:context => @context, :name => name, :params => params)
-    end
-
-    def invoke(name, params, proposal_digest = nil)
-      @sequence += 1
-      revision = query("ph_composer.zones.all").fetch("revision")
-      request = { "sequence" => @sequence, "expected_revision" => revision }
-      request["proposal_digest"] = proposal_digest if proposal_digest
-      API.invoke(:context => @context, :name => name, :params => params, :request => request)
-    end
-  end
+  class Client < AuthoringExample::Client; end
 end
