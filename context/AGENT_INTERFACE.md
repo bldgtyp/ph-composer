@@ -145,15 +145,17 @@ or walks geometry to reach a context. `ph_composer.context.open` takes `path`, t
 the Groups and Components from the root, outermost first; `ph_composer.context.root` closes every one.
 Both take an optional `expected_path`, the path the client last read, and refuse when it has changed
 (`target.edit_path_changed`); `open` resolves every step first and refuses a missing one
-(`target.not_found`) or one that is locked or has a locked copy (`target.locked`, which SketchUp
-would refuse too), and both refuse `session.busy` while the user has a tool other than Select or a
+(`target.not_found`), one that is locked or has a locked copy (`target.locked`, which SketchUp
+would refuse too), a Live Component (`target.wrong_kind`) and an entity open now that the destination
+reaches through another copy of its parent (`target.shared_definition`), and both refuse `session.busy` while the user has a tool other than Select or a
 camera tool active, whose gesture a path change would end; each refusal comes before any boundary
 runs, with nothing moved. They enter through
 `EditContext`, so each feature's boundary runs: leaving an unprotected Volume, Spaces protects it in a
 transparent step joined to the move. SketchUp records a path change that leaves a Group as an Undo
 entry of its own ([host behavior](SKETCHUP_HOST_BEHAVIOR.md)); undoing it reopens the Group, and
 entering a Group from the root added none on 26.1.188. Each answers the path and `changed`; a path equal to the
-current one changes nothing and leaves the revision where it was. Spaces keeps `spaces.context.open`
+current one changes nothing and leaves the revision where it was, even when one of its steps has
+since been locked. Spaces keeps `spaces.context.open`
 and `.close` as reference-aware conveniences, and they and both `locate` commands declare their effects
 in `side_effects`. [tools/examples/authoring/spaces_walkthrough.rb](../tools/examples/authoring/spaces_walkthrough.rb)
 keeps native fixture setup apart from a client segment that uses only these public calls.

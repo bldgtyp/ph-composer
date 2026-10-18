@@ -103,6 +103,35 @@ class ContextNavigationTest < PhComposerTestCase
     assert_equal revision, @session.revision
   end
 
+  def test_the_current_path_reopens_as_unchanged_even_when_a_step_is_locked
+    @model.active_path = [@zone, @space, @volume]
+
+    assert_equal({ "path" => [100, 110, 111], "changed" => false }, moved(OPEN, "path" => [100, 110, 111]))
+  end
+
+  def test_a_volume_reached_through_another_copy_of_its_space_refuses_with_nothing_locked
+    @volume.locked = false
+    @zone.entities << Sketchup::Group.new(130, @space.entities)
+    @model.active_path = [@zone, @space, @volume]
+
+    assert_equal "target.shared_definition", view(OPEN, "path" => [100, 130, 111])["code"]
+    refute @volume.locked?, "no boundary ran"
+    assert_equal [@zone, @space, @volume], @model.active_path
+  end
+
+  def test_a_live_component_refuses_before_leaving_an_unprotected_volume
+    @volume.locked = false
+    live = Sketchup::Group.new(140, Sketchup::Entities.new([]))
+    definition = live.definition
+    definition.define_singleton_method(:live_component?) { true }
+    live.define_singleton_method(:definition) { definition }
+    @model.entities << live
+    @model.active_path = [@zone, @space, @volume]
+
+    assert_equal "target.wrong_kind", view(OPEN, "path" => [140])["code"]
+    refute @volume.locked?, "no boundary ran"
+  end
+
   def test_navigation_declares_the_lock_it_may_trigger
     names = [OPEN, ROOT, "ph_composer.spaces.context.open", "ph_composer.spaces.context.close",
              "ph_composer.spaces.locate"]

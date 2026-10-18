@@ -22,7 +22,8 @@ module PhComposer
     SIDE_EFFECTS = "Moves the edit path, which advances the Model revision. Leaving a Volume that was open and " \
                    "unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself " \
                    "records leaving a Group as an Undo entry, and undoing it reopens the Group."
-    MOVE_REFUSES = %w[target.not_found target.locked target.edit_path_changed].freeze
+    MOVE_REFUSES = %w[target.not_found target.locked target.wrong_kind target.shared_definition
+                      target.edit_path_changed].freeze
     # The tools during which the edit path may move: selecting and moving the camera hold no gesture.
     IDLE_TOOLS = %w[SelectionTool CameraOrbitTool CameraPanTool CameraZoomTool CameraZoomWindowTool].freeze
     MAXIMUM_LIMIT = 200
@@ -65,21 +66,38 @@ module PhComposer
                            :examples => [{}, { "expected_path" => [1201] }]) { |request| move(request, []) }
     end
 
-    # Resolves every step before anything moves, then enters through EditContext, so each feature's
-    # boundary runs. A path equal to the current one changes nothing.
+    # Every refusal comes before EditContext runs a feature's boundary, which may write (Spaces protects a
+    # Volume it leaves), so a refused move leaves the Model as it was. A path equal to the current one
+    # changes nothing, whatever state its steps are in.
     def move(request, ids)
       model = request.model
+      current = EditContext.current_ids(model)
       expected = request.params["expected_path"]
-      if expected && expected != EditContext.current_ids(model)
+      if expected && expected != current
         raise CodedError.new("target.edit_path_changed", "The edit path changed since it was read; read " \
                                                          "ph_composer.context.read again.")
       end
+      return { "path" => current, "changed" => false } if ids == current
 
       tool_free!(model)
       path = resolve(model, ids)
-      changed = EditContext.current(model) != path
-      EditContext.enter(model, path) if changed
-      { "path" => EditContext.current_ids(model), "changed" => changed }
+      reentered!(EditContext.current(model), path)
+      EditContext.enter(model, path)
+      { "path" => EditContext.current_ids(model), "changed" => true }
+    end
+
+    # The same entity open now and on the destination under another parent occurrence (a copied parent
+    # shares its children) would be left and entered at once, so a boundary could lock what the move
+    # then opens. The caller closes to the shared parent first.
+    def reentered!(current, path)
+      path.each_with_index do |entity, depth|
+        at = current.index { |open| open.equal?(entity) }
+        next if at.nil? || current[0..at] == path[0..depth]
+
+        raise CodedError.new("target.shared_definition", "Group or Component #{entity.persistent_id} is open " \
+                                                         "through another copy of its parent; close to the root " \
+                                                         "first. Nothing moved.")
+      end
     end
 
     def resolve(model, ids)
@@ -88,6 +106,10 @@ module PhComposer
         entity = entities.to_a.find { |candidate| container?(candidate) && candidate.persistent_id == id }
         raise CodedError.new("target.not_found", "No Group or Component #{id} is at that step.") unless entity
         raise CodedError.new("target.locked", "Group or Component #{id} is locked; nothing moved.") if entity.locked?
+        if entity.definition.respond_to?(:live_component?) && entity.definition.live_component?
+          raise CodedError.new("target.wrong_kind", "Component #{id} is a Live Component, which SketchUp does not " \
+                                                    "open for editing; nothing moved.")
+        end
         if entity.definition.instances.any?(&:locked?)
           raise CodedError.new("target.locked", "Another copy of Group or Component #{id} is locked, so SketchUp " \
                                                 "cannot open it; nothing moved.")
