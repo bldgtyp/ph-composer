@@ -152,8 +152,8 @@ module PhComposer
         return nil unless value.is_a?(Hash) && value.key?("task_id")
 
         outcome = value["outcome"]
-        kept = outcome && outcome.slice("status", "code", "message", "effect", "revision")
-                                 .merge("value" => outcome["value"].is_a?(Hash) ? outcome["value"].slice("artifacts") : nil)
+        inner = outcome && outcome["value"].is_a?(Hash) ? outcome["value"].slice("artifacts") : nil
+        kept = outcome && outcome.slice("status", "code", "message", "effect", "revision").merge("value" => inner)
         value.slice("task_id", "stage", "count", "cancellable").merge("outcome" => kept)
       end
 
