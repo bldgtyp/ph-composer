@@ -150,10 +150,11 @@ module PhComposer
                      "setup_command" => "setup", "file_export" => "export" }.freeze
     PREVIEW_CAPABILITY = "read"
 
-    # The grant `declaration` needs: its own when it declares one, else its kind's.
+    # The grant `declaration` needs: its own when it declares one, else its kind's; nil for a kind no
+    # client calls (a proposal participant).
     def self.capability_of(declaration, kind)
       own = declaration.respond_to?(:capability) ? declaration.capability : nil
-      own || CAPABILITIES.fetch(kind)
+      own || CAPABILITIES[kind]
     end
 
     # A panel snapshot section: the result of one registered query, under the section's name.

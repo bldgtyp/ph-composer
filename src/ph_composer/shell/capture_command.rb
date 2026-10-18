@@ -33,7 +33,8 @@ module PhComposer
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION)
       CODES.each { |code, description| feature.code(code, :description => description) }
-      side = { "type" => "integer", "minimum" => 64, "maximum" => MAX_SIDE }
+      side = { "type" => "integer", "minimum" => 64, "maximum" => MAX_SIDE,
+               "description" => "Pixels; give width and height together, or neither for the viewport's size." }
       feature.view_command(CAPTURE, :capability => "capture",
                                     :description => "Write a PNG of the current view at the current camera and " \
                                                     "answer its path, hash and what it shows. Geometry only.",

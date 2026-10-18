@@ -45750,12 +45750,14 @@ Params:
     "width": {
       "type": "integer",
       "minimum": 64,
-      "maximum": 4096
+      "maximum": 4096,
+      "description": "Pixels; give width and height together, or neither for the viewport's size."
     },
     "height": {
       "type": "integer",
       "minimum": 64,
-      "maximum": 4096
+      "maximum": 4096,
+      "description": "Pixels; give width and height together, or neither for the viewport's size."
     }
   },
   "required": []

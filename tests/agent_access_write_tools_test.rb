@@ -43,7 +43,8 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     assert_equal %w[discover describe query preview context export_preflight], listed.call(reader)
     assert_equal AgentAccess::Tools::TABLE.keys, listed.call(@writer)
     assert @executor.call(reader, "invoke", "session" => @session.id)["isError"]
-    assert_equal({ "invoke" => "model_write", "outcome" => "model_write", "view" => %w[view capture], "setup" => "setup",
+    assert_equal({ "invoke" => "model_write", "outcome" => "model_write", "view" => %w[view capture],
+                   "setup" => "setup",
                    "export_file" => "export", "start_export" => "export", "latest_export" => "export" },
                  AgentAccess::Tools::TABLE.slice(*%w[invoke outcome view setup export_file start_export
                                                      latest_export]).transform_values(&:capability))
