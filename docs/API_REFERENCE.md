@@ -45778,7 +45778,8 @@ Result:
     "height",
     "captured_at",
     "provenance",
-    "overlays"
+    "overlays",
+    "window_state"
   ],
   "properties": {
     "path": {
@@ -45810,6 +45811,13 @@ Result:
         "not_included"
       ],
       "description": "PH-Composer's overlays, tool drawing and panels are not in the image."
+    },
+    "window_state": {
+      "type": "string",
+      "enum": [
+        "unverified"
+      ],
+      "description": "SketchUp's Ruby API cannot tell whether its window is frontmost, hidden or minimized, and the image was measured only frontmost; compare it with the provenance before relying on it."
     }
   }
 }

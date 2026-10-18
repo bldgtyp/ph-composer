@@ -45,6 +45,29 @@ class CaptureCommandTest < PhComposerTestCase
     assert_equal [1600, 1000], capture.dig("value").values_at("width", "height")
   end
 
+  def test_a_failed_write_a_moved_view_and_an_oversized_image_refuse_and_leave_no_file
+    view = @model.active_view
+    outcomes = [
+      ->(_options) { false },
+      lambda do |options|
+        File.binwrite(options.fetch(:filename), "png")
+        @session.host_event(:camera_changed)
+        true
+      end,
+      lambda do |options|
+        File.binwrite(options.fetch(:filename), "x" * (PhComposer::CaptureCommand::MAX_BYTES + 1))
+        true
+      end
+    ].map do |hook|
+      view.write_image_hook = hook
+      capture.fetch("code")
+    end
+
+    assert_equal %w[capture.failed capture.view_changed capture.too_large], outcomes
+    folder = File.dirname(view.images.last.fetch(:filename))
+    assert_empty Dir.glob(File.join(folder, "cap_*.png"))
+  end
+
   def test_one_side_alone_and_a_busy_session_refuse
     assert_equal "params.invalid", capture("width" => 800)["code"]
     @session.feature_state(:probe_deferred) { Struct.new(:pending?).new(true) }

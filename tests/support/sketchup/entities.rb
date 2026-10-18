@@ -248,8 +248,14 @@ module Sketchup
       1000
     end
 
+    # A test sets `write_image_hook` to stand in for what the host does while writing: answer false, write
+    # other bytes, or move the view.
+    attr_accessor :write_image_hook
+
     def write_image(options)
       (@images ||= []) << options
+      return write_image_hook.call(options) if write_image_hook
+
       File.binwrite(options.fetch(:filename), "\x89PNG\r\n\x1A\n#{options[:width]}x#{options[:height]}".b)
       true
     end

@@ -63,7 +63,7 @@ module PhComposer
       bytes = File.binread(path)
       { "path" => path, "sha256" => Digest::SHA256.hexdigest(bytes), "bytes" => bytes.bytesize,
         "width" => width, "height" => height, "captured_at" => Time.now.utc.iso8601,
-        "provenance" => provenance(session), "overlays" => "not_included" }
+        "provenance" => provenance(session), "overlays" => "not_included", "window_state" => "unverified" }
     ensure
       prune(folder) if folder
     end
@@ -119,7 +119,7 @@ module PhComposer
       text = { "type" => "string" }
       count = { "type" => "integer" }
       { "type" => "object", "additionalProperties" => false,
-        "required" => %w[path sha256 bytes width height captured_at provenance overlays],
+        "required" => %w[path sha256 bytes width height captured_at provenance overlays window_state],
         "properties" => {
           "path" => text.merge("description" => "The PNG, for you to read with your own tools."),
           "sha256" => text, "bytes" => count, "width" => count, "height" => count, "captured_at" => text,
@@ -127,7 +127,11 @@ module PhComposer
                                                                  "camera, edit path and a selection digest " \
                                                                  "the image was taken at." },
           "overlays" => { "type" => "string", "enum" => ["not_included"],
-                          "description" => "PH-Composer's overlays, tool drawing and panels are not in the image." }
+                          "description" => "PH-Composer's overlays, tool drawing and panels are not in the image." },
+          "window_state" => { "type" => "string", "enum" => ["unverified"],
+                              "description" => "SketchUp's Ruby API cannot tell whether its window is frontmost, " \
+                                               "hidden or minimized, and the image was measured only frontmost; " \
+                                               "compare it with the provenance before relying on it." }
         } }
     end
   end

@@ -171,8 +171,9 @@ PH-Composer's overlays, tool drawing and panels are absent, which the result say
 "not_included"`. It moves nothing. A view or revision change during the write refuses
 (`capture.view_changed`). Each session keeps its four newest captures for 15 minutes in its own
 temporary folder. Measured on 26.1.188 with SketchUp frontmost; its behaviour with the window hidden,
-minimized, behind another application or under a modal is not measured, so the image is described
-only for the frontmost case.
+minimized, behind another application or under a modal is not measured. SketchUp's Ruby API exposes no
+window state to refuse on, so every result says `window_state: "unverified"`; a native modal stops the
+pump, so a call made under one answers `session.busy` and never captures.
 
 Support explicit selection, reveal and camera operations for visual inspection, plus viewport
 capture where the host permits it. Captures identify their model session, revision, camera and
