@@ -66,6 +66,8 @@ module PhComposer
       # The Building-Segment a Zone belongs to: the key its sums group by and the name they show.
       BuildingSegment = Struct.new(:key, :name, keyword_init: true)
 
+      # Every Space row in path order, each Zone's row with its sums, and the findings of records outside
+      # the hierarchy that should hold them. One scan and one metric calculation every Spaces read shares.
       def assemble(request)
         scan = Occurrences.scan(request.model)
         catalog = request.registry.catalog
