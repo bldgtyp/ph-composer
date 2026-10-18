@@ -26,8 +26,8 @@ are in [PLAN](PLAN.md); case definitions in [ACCEPTANCE](ACCEPTANCE.md).
 
 | Stage | Order | Workstream | State | Depends on | Case | Offline / review / host / client evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| P3a1-01 | V1 | W1 | Implemented on branch `fix/phase-03a1-p3a1-01` | Implementation authorization | C01 | Three regression tests in `tests/api_test.rb` fail before and pass after; review probes rerun (alias refused, pending mismatch conflicts, session id frozen); `make ci` green; native N/A (value and digest correction, no native dispatch change) |
-| P3a1-06 | V2 | W3 | Scoped | 01 | C06 | Not run |
+| P3a1-01 | V1 | W1 | Merged to main ([#222](https://github.com/bldgtyp/ph-composer/pull/222), Codex gpt-6.1-sol review: one P3 docs finding fixed) | Implementation authorization | C01 | Three regression tests in `tests/api_test.rb` fail before and pass after; review probes rerun (alias refused, pending mismatch conflicts, session id frozen); `make ci` green; native N/A (value and digest correction, no native dispatch change) |
+| P3a1-06 | V2 | W3 | Implemented on branch `docs/phase-03a1-p3a1-06` | 01 | C06 | [Receipt](evidence/p3a1-06-connection-design.md): M1 no Ruby thread runs under a native modal (1 tick in 11.8 s), workers run under long Ruby work; M2 largest pump gap 87.6 ms on 26.1.188; M3 Claude Code 2.1.300 `initialize` 2025-11-25, Codex 0.163.0 2025-06-18, `codex exec` loads `mcp_servers`; M4 response budget lowered to 24 KB. Docs-only: `make ci` green |
 | P3a1-07 | V2 read, V5 write | W3 | Scoped | 06; write slice in V5 (D06 and D13 consent copy) | C07 | Not run |
 | P3a1-08 | V2 read, V5 write | W3 | Scoped | 06, 07 (same slice); D12 from 06 | C08 | Not run |
 | P3a1-10 | V2 read, V5 write | W4 | Scoped | 08 (same slice), D09/D13/D14 | C10 | Not run |
@@ -50,8 +50,8 @@ are in [PLAN](PLAN.md); case definitions in [ACCEPTANCE](ACCEPTANCE.md).
 | A01 | 07, 08, 10, 11, 12 | Both CLIs use the token-authenticated loopback connection from an installed RBZ, read-only at M1 and with writes at M2 | Planned |
 | A02 | 06, 07, 09 | Named tokens with capability sets and revoke, acknowledged at the pump and before an export's commit, with lifecycle evidence | Planned |
 | A03 | 06, 08 | Main-thread executor and worker-side busy answer proved under modal, activation and close | Planned |
-| A04 | 01 | Mutable-input/context regression tests pass | Fixed on branch (01) |
-| A05 | 01 | Pending/completed mismatched payloads conflict | Fixed on branch (01) |
+| A04 | 01 | Mutable-input/context regression tests pass | Fixed, merged in #222 |
+| A05 | 01 | Pending/completed mismatched payloads conflict | Fixed, merged in #222 |
 | A06 | 03 | Whole-model aggregates invariant under focused reads | Planned |
 | A07 | 03, 08 | Bounded reads set from the clients' measured output caps; the ingress refuses over budget and never truncates; legacy behavior clearly labeled | Planned |
 | A08 | 05 | Root-start and root-exit/move workflow public-only through the foundation context commands (D04) with declared lock effects (D13) | Planned |

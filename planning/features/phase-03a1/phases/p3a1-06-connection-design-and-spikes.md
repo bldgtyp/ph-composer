@@ -1,8 +1,8 @@
 # P3a1-06: Connection design receipt and host measurements
 
 DATE: 2026-10-17
-STATUS: Scoped. Planning only; execution requires separate implementation authorization. Rewritten 2026-10-17 to the accepted D3a1-01 and D3a1-02 direction: a design receipt, not a transport search.
-ISSUE: none (local planning draft)
+STATUS: Implemented on branch `docs/phase-03a1-p3a1-06`: [receipt](../evidence/p3a1-06-connection-design.md).
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership
 

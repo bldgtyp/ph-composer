@@ -64,7 +64,7 @@ On the main thread, the pump (a UI timer at 50 ms while entries wait and 100 ms 
    pruned when `Sessions.all` no longer lists the session or the token is revoked.
 9. Validates the arguments against the tool's fixed schema (`JsonSchema.validate`), then calls the
    one `PhComposer::API` method the frozen verb table names for the tool. Nothing else is callable.
-10. Serializes the result; over the 80 KB response budget (D3a1-12) it answers `request.response_too_large`, a
+10. Serializes the result; over the 24 KB response budget (D3a1-12) it answers `request.response_too_large`, a
     provisional foundation code naming the bounded reads 02 later describes, and never truncates.
 11. Appends one row to a bounded diagnostics ring (time, token id, tool, operation name, session,
     status and code, milliseconds; no params, token, path or value), flushed through `Diagnostics.log`
