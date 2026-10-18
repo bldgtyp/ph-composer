@@ -5,7 +5,7 @@ STATUS: Complete 2026-10-18, archived. Every stage merged (#222 to #243); eviden
 ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 BASELINE: `main@60982fc73af6841f0c2bc5f55136dd21cad20930`
 
-This phase turns the [post-Spaces agent-access review](../../code-review/README.md) into five
+This phase turns the [post-Spaces agent-access review](../agent-access-review/README.md) into five
 implementation workstreams and sixteen bounded stages. The folder name `phase-03a1` is Ed's
 explicit choice. Stage IDs are `P3a1-01` through `P3a1-16`.
 
@@ -60,9 +60,9 @@ every bounded store.
 
 ## Source and evidence
 
-The review's [findings](../../code-review/FINDINGS.md),
-[retained probes](../../code-review/evidence/README.md) and
-[client research](../../code-review/CLIENT_INTEGRATION.md) are inputs, not new acceptance receipts.
+The review's [findings](../agent-access-review/FINDINGS.md),
+[retained probes](../agent-access-review/evidence/README.md) and
+[client research](../agent-access-review/CLIENT_INTEGRATION.md) are inputs, not new acceptance receipts.
 Durable authority remains in [AGENT_INTERFACE](../../../context/AGENT_INTERFACE.md),
 [CONTRACTS](../../../context/CONTRACTS.md),
 [EXTENSIBILITY](../../../context/EXTENSIBILITY.md) and

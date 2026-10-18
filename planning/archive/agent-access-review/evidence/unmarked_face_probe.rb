@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../../../tests/test_helper'
-require_relative '../../../tests/support/space_fixtures'
+require_relative '../../../../tests/test_helper'
+require_relative '../../../../tests/support/space_fixtures'
 class AgentUnmarkedReviewProbe < PhComposerTestCase
   include SpaceFixtures
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: false
 
-require_relative '../../../tests/test_helper'
-require_relative '../../../tools/api_reference/api_reference'
+require_relative '../../../../tests/test_helper'
+require_relative '../../../../tools/api_reference/api_reference'
 Sketchup.reset
 PhComposer.reset_for_test
 PhComposer::Diagnostics.strict = true

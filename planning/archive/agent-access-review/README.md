@@ -1,12 +1,12 @@
 # Agent access architecture review
 
 DATE: 2026-10-17
-STATUS: Review complete; recommendations only. Implementation is not authorized by this packet.
+STATUS: Complete, archived 2026-10-18. Every finding closed by Phase 3a1; dispositions in [its stage 16 receipt](../phase-03a1/evidence/p3a1-16-integrated-acceptance.md).
 ISSUE: none (local review requested by Ed)
 BASELINE: `main` at `60982fc73af6841f0c2bc5f55136dd21cad20930`
 
 FOLLOW-UP: Ed requested detailed plans on 2026-10-17. All findings now have owners in
-[Phase 3a1](../archive/phase-03a1/README.md); its [ledger](../archive/phase-03a1/STATUS.md)
+[Phase 3a1](../phase-03a1/README.md); its [ledger](../phase-03a1/STATUS.md)
 tracks implementation. Planning has fixed none of the findings.
 
 PH-Composer has a useful application API for agents, but users cannot yet connect Codex or Claude
@@ -45,7 +45,7 @@ define grants and host execution; prove a shared local adapter with both clients
 retrieval and visual context. [FOLLOW_UP.md](FOLLOW_UP.md) records dependencies and the narrower
 read-only pilot that can precede write support.
 
-This review does not reopen the [archived general architecture review](../archive/code-review/README.md).
+This review does not reopen the [archived general architecture review](../code-review/README.md).
 Its completed refactors remain the baseline. Existing geometry-contribution work and release gates
 retain their owners.
 
@@ -63,5 +63,5 @@ to test yet. Existing Spaces native acceptance is historical evidence for that f
 of external-client support. See [the evidence limits](evidence/README.md).
 
 Only review documents and reproducible evidence were added, with a router in
-[planning status](../STATUS.md). Shipping source, normal tests and generated API reference are
+[planning status](../../STATUS.md). Shipping source, normal tests and generated API reference are
 unchanged. No commit, issue, PR, installation or release was performed.

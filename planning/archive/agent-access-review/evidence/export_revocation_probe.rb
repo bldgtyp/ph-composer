@@ -1,6 +1,6 @@
 # frozen_string_literal: false
 
-require_relative '../../../tests/test_helper'
+require_relative '../../../../tests/test_helper'
 class AgentExportRevocationProbe < PhComposerTestCase
   class Runtime
     def initialize(&callback); @callback = callback; end

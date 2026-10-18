@@ -26,9 +26,9 @@ flowchart TD
 ```
 
 The composition root loads the same feature declarations for all clients:
-[extension.rb](../../src/ph_composer/extension.rb),
-[API](../../src/ph_composer/shell/api.rb#L23),
-[dispatch](../../src/ph_composer/shell/dispatch.rb#L13).
+[extension.rb](../../../src/ph_composer/extension.rb),
+[API](../../../src/ph_composer/shell/api.rb#L23),
+[dispatch](../../../src/ph_composer/shell/dispatch.rb#L13).
 Registration supplies input/result schemas, examples and refusal codes. The generated reference
 is a derivative of those declarations, not another operation catalog to maintain.
 
@@ -36,9 +36,9 @@ The dependency direction remains useful. Zones owns authored Faces and adjacency
 on Zones through declared reads, references and a proposal participant. Export contributors read
 a detached snapshot. Python attaches Spaces to Rooms through composition; exporters consume
 HBJSON. The transport should neither recalculate iCFA nor manipulate feature dictionaries.
-See [Spaces export](../../src/ph_composer/features/spaces/export.rb#L34),
-[collection](../../src/ph_composer/export/collection.rb#L17) and
-[Python composition](../../src/ph_composer/python/ph_composer_translation/composition.py#L19).
+See [Spaces export](../../../src/ph_composer/features/spaces/export.rb#L34),
+[collection](../../../src/ph_composer/export/collection.rb#L17) and
+[Python composition](../../../src/ph_composer/python/ph_composer_translation/composition.py#L19).
 
 ## Recommended connection boundary
 

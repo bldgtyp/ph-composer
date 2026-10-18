@@ -26,11 +26,11 @@ No native corruption, release readiness or external-client compatibility is clai
 
 ## A01: no supported external connection
 
-[AGENT_ACCESS.md](../../docs/AGENT_ACCESS.md#L3) accurately says no endpoint or client setup is
-available. [API.connect](../../src/ph_composer/shell/api.rb#L96) issues a trusted in-process
+[AGENT_ACCESS.md](../../../docs/AGENT_ACCESS.md#L3) accurately says no endpoint or client setup is
+available. [API.connect](../../../src/ph_composer/shell/api.rb#L96) issues a trusted in-process
 context. The only development connection capable of arbitrary host control evaluates Ruby:
-[host_bridge.rb](../../tools/hostkit/host_bridge.rb#L186). The shipped
-[asset server](../../src/ph_composer/runtime/asset_server.rb#L8) serves pinned runtime assets
+[host_bridge.rb](../../../tools/hostkit/host_bridge.rb#L186). The shipped
+[asset server](../../../src/ph_composer/runtime/asset_server.rb#L8) serves pinned runtime assets
 and explicitly says its token is not an agent credential.
 
 **Consequence:** neither Codex nor Claude Code can use the application through a supported semantic
@@ -39,21 +39,21 @@ Ruby knowledge and privileges that exceed the intended interface.
 
 **Correction:** deliver one authenticated local application ingress and a shared MCP companion,
 with explicit host/model targeting and generated operation mappings. Keep eval and runtime-asset
-serving separate. [AGENT_INTERFACE](../../context/AGENT_INTERFACE.md#L21) already establishes this
+serving separate. [AGENT_INTERFACE](../../../context/AGENT_INTERFACE.md#L21) already establishes this
 separation. Validate with both clients and an outside synthetic feature; no adapter feature branches.
 
 ## A02: named connection grants and revocation are not implemented
 
-[CallerRegistry](../../src/ph_composer/session/caller_registry.rb#L13) holds capabilities and
+[CallerRegistry](../../../src/ph_composer/session/caller_registry.rb#L13) holds capabilities and
 sequence state, with issue/fetch/count only. It has no connection identity, expiry or individual
-revoke operation. [ApprovedLocations](../../src/ph_composer/shell/approved_locations.rb#L7)
+revoke operation. [ApprovedLocations](../../../src/ph_composer/shell/approved_locations.rb#L7)
 is machine-local and grants are not bound to a caller. The current
-[documented limitation](../../context/AGENT_INTERFACE.md#L228) is explicit: approved locations
+[documented limitation](../../../context/AGENT_INTERFACE.md#L228) is explicit: approved locations
 are usable by callers holding the appropriate operation grant until connection work lands.
 
 **Consequence:** trusted Ruby grants are useful dispatch checks, but cannot yet support the
 visible, explicit and revocable external access promised by
-[the authority](../../context/AGENT_INTERFACE.md#L254). An external adapter must not simply
+[the authority](../../../context/AGENT_INTERFACE.md#L254). An external adapter must not simply
 forward client-requested capabilities to `connect`.
 
 **Correction:** a host-owned connection authority maps authenticated identity to approved Models
@@ -64,9 +64,9 @@ revocation while queued, reopen/restart, and denial without side effects.
 
 ## A03: host-safe execution is assumed at the public entrypoint
 
-[API methods](../../src/ph_composer/shell/api.rb#L111) enter dispatch synchronously.
-[Mutation dispatch](../../src/ph_composer/shell/dispatch.rb#L166) executes on the calling Ruby
-thread. [ModelSession.busy_reason](../../src/ph_composer/session/model_session.rb#L44) recognizes
+[API methods](../../../src/ph_composer/shell/api.rb#L111) enter dispatch synchronously.
+[Mutation dispatch](../../../src/ph_composer/shell/dispatch.rb#L166) executes on the calling Ruby
+thread. [ModelSession.busy_reason](../../../src/ph_composer/session/model_session.rb#L44) recognizes
 exclusive mutations and feature-deferred work; it has no main-thread, modal or model-transition
 readiness check. The retained thread probe commits on a worker in the stub.
 
@@ -78,24 +78,24 @@ timer routing protects its own call path, not arbitrary API callers.
 schedule off-thread calls, bound queued work, and recheck target/grant/readiness/revision at execution.
 Document the existing caller-thread precondition until then. Native checks must cover modal conflicts,
 active tools, model activation/close during queued work, concurrent user edits and fresh-process
-Undo/Redo. Governing rule: [host lifecycle](../../context/AGENT_INTERFACE.md#L151).
+Undo/Redo. Governing rule: [host lifecycle](../../../context/AGENT_INTERFACE.md#L151).
 
 ## A04: connection authority retains mutable caller values
 
-[CallerRegistry.issue](../../src/ph_composer/session/caller_registry.rb#L21) freezes a shallow
+[CallerRegistry.issue](../../../src/ph_composer/session/caller_registry.rb#L21) freezes a shallow
 copy of the capability array. Its strings remain shared with the input. Connecting with
 `cap = String.new("read")` and then calling `cap.replace("model_write")` changes the stored grant.
 A create operation then completes and commits, because
-[dispatch](../../src/ph_composer/shell/dispatch.rb#L252) reads the altered capabilities.
+[dispatch](../../../src/ph_composer/shell/dispatch.rb#L252) reads the altered capabilities.
 
-[API.connect](../../src/ph_composer/shell/api.rb#L107) also returns the exact mutable session ID
-from [ModelSession](../../src/ph_composer/session/model_session.rb#L18). Calling
+[API.connect](../../../src/ph_composer/shell/api.rb#L107) also returns the exact mutable session ID
+from [ModelSession](../../../src/ph_composer/session/model_session.rb#L18). Calling
 `context.session_id.replace(...)` changes the authority's ID, invalidating previously discovered
 detached IDs. The caller handle shares the same ownership pattern by source inspection.
 
 This is an integrity defect in a trusted in-process API. Such a caller can already request broader
 grants through `connect`; this is not evidence of an external privilege escalation. It violates
-the [authority ownership rule](../../context/CONTRACTS.md#L122) and makes a future adapter harder
+the [authority ownership rule](../../../context/CONTRACTS.md#L122) and makes a future adapter harder
 to reason about.
 
 **Correction:** own and deeply freeze capability strings, freeze IDs and handles when minted, and
@@ -104,9 +104,9 @@ returned context values cannot alter effective grants, session lookup or retry i
 
 ## A05: a different pending request is reported as the same running request
 
-[retained_outcome](../../src/ph_composer/shell/dispatch.rb#L280) returns pending before comparing
+[retained_outcome](../../../src/ph_composer/shell/dispatch.rb#L280) returns pending before comparing
 the payload digest. The probe reenters with the same caller and sequence but different params;
-the result is `request.pending`, where the [retry contract](../../context/CONTRACTS.md#L246)
+the result is `request.pending`, where the [retry contract](../../../context/CONTRACTS.md#L246)
 requires `request.sequence_conflict`.
 
 **Consequence:** no second write occurs, but the client is told its different intent is running.
@@ -118,10 +118,10 @@ same-payload pending and completed replay behavior.
 
 ## A06: ID filtering changes a field documented as whole-model totals
 
-[Spaces.list](../../src/ph_composer/features/spaces/reads.rb#L21) filters rows before calling
-`totals`. [totals](../../src/ph_composer/features/spaces/reads.rb#L150) computes model sums from
+[Spaces.list](../../../src/ph_composer/features/spaces/reads.rb#L21) filters rows before calling
+`totals`. [totals](../../../src/ph_composer/features/spaces/reads.rb#L150) computes model sums from
 those filtered rows, while Zone and Building-Segment aggregates use all Spaces.
-[The schema](../../src/ph_composer/features/spaces/declarations/spaces.rb#L99) says model totals
+[The schema](../../../src/ph_composer/features/spaces/declarations/spaces.rb#L99) says model totals
 cover every Space.
 
 The reference fixture reads model floor area **34 m2** unfiltered. Filtering to the Loft gives
@@ -135,15 +135,15 @@ Building-Segment totals stay invariant under ID filters, page size and cursor.
 
 ## A07: paging Spaces does not bound the response
 
-[Reads](../../src/ph_composer/features/spaces/reads.rb#L22) assembles complete Spaces, Volumes and
-Floor Segments before filtering. [The row builder](../../src/ph_composer/features/spaces/reads.rb#L52)
-embeds all children. [The result](../../src/ph_composer/features/spaces/declarations/spaces.rb#L93)
+[Reads](../../../src/ph_composer/features/spaces/reads.rb#L22) assembles complete Spaces, Volumes and
+Floor Segments before filtering. [The row builder](../../../src/ph_composer/features/spaces/reads.rb#L52)
+embeds all children. [The result](../../../src/ph_composer/features/spaces/declarations/spaces.rb#L93)
 also carries global Zone/Building-Segment collections and stray findings. Params provide only
 IDs, limit and cursor, with no fields or child paging.
 
 The probe returns **238,481 bytes**, including **600 Floor Segments**, for `limit: 1`, with
 `next_cursor: null`. Lowering the top-level limit cannot reduce it. This directly misses the
-[focused-read requirement](../../context/AGENT_INTERFACE.md#L69). Full assembly also implies
+[focused-read requirement](../../../context/AGENT_INTERFACE.md#L69). Full assembly also implies
 unnecessary read work; native timing was not measured.
 
 **Correction:** compact/projected Space summaries, separately paged child records and findings,
@@ -153,14 +153,14 @@ and projection that actually suppresses geometry/metadata. Define response budge
 
 ## A08: semantic clients cannot enter the Zone for the first Space or generally exit to root
 
-[Spaces.create](../../src/ph_composer/features/spaces/authoring.rb#L38) requires the Zone's exact
-open edit context. [context.open](../../src/ph_composer/features/spaces/declarations/context.rb#L51)
+[Spaces.create](../../../src/ph_composer/features/spaces/authoring.rb#L38) requires the Zone's exact
+open edit context. [context.open](../../../src/ph_composer/features/spaces/declarations/context.rb#L51)
 accepts a Space or Volume, so it cannot enter a Zone that has no Space. No registered Zone or generic
 context-entry command supplies the missing step. The root-start probe refuses `space.context_required`.
-The [walkthrough](../../tools/examples/authoring/spaces_walkthrough.rb#L33) satisfies the precondition
+The [walkthrough](../../../tools/examples/authoring/spaces_walkthrough.rb#L33) satisfies the precondition
 with host traversal and its private `open` helper.
 
-The reverse route is incomplete too: [context.close](../../src/ph_composer/features/spaces/context/navigation.rb#L47)
+The reverse route is incomplete too: [context.close](../../../src/ph_composer/features/spaces/context/navigation.rb#L47)
 stops after leaving a Space/Volume at its Zone, while `move_to_zone` requires closed context.
 
 **Correction:** guarded Zone entry and root/parent exit through the established EditContext boundary,
@@ -170,8 +170,8 @@ no private host navigation after the client begins. Preserve protection and pend
 
 ## A09: eligible unrecorded internal Faces have no semantic discovery route
 
-[Zones traversal](../../src/ph_composer/features/zones/zone/occurrences.rb#L367) stops at stamped
-authoring containers, as ownership requires. [Spaces scanning](../../src/ph_composer/features/spaces/scan/occurrences.rb#L94)
+[Zones traversal](../../../src/ph_composer/features/zones/zone/occurrences.rb#L367) stops at stamped
+authoring containers, as ownership requires. [Spaces scanning](../../../src/ph_composer/features/spaces/scan/occurrences.rb#L94)
 only returns Faces already carrying Floor Segment records. A correctly stamped Space fixture with
 an unmarked Volume Face returns zero Zone Faces, zero explicit `host_context` rows and zero Floor
 Segments. Supplying its native-known path to `spaces.floors.mark` nevertheless commits successfully.
@@ -187,8 +187,8 @@ eligibility/refusal and geometry summaries. Retrieve full geometry explicitly. T
 
 ## A10: discovery lacks some facts needed to choose a valid operation
 
-[Session summary](../../src/ph_composer/shell/api.rb#L166) omits edit path and readiness reason.
-[Operation descriptions](../../src/ph_composer/shell/api.rb#L179) omit required grants,
+[Session summary](../../../src/ph_composer/shell/api.rb#L166) omits edit path and readiness reason.
+[Operation descriptions](../../../src/ph_composer/shell/api.rb#L179) omit required grants,
 non-action side effects and declarative preconditions. Task descriptions carry grants, creating
 an avoidable inconsistency. A client must carry an out-of-band kind/method-to-grant mapping and
 cannot inspect the first-Space context requirement as structured metadata.
@@ -196,9 +196,9 @@ cannot inspect the first-Space context requirement as structured metadata.
 **Correction:** generate grant/verb effects from the operation kinds; expose revision-bound model
 context and readiness; add only useful operation-specific preconditions rather than duplicate
 validation code. Publish the transport outcome/context/request schemas as well as each `value`
-schema. Preserve the [existing discovery contract](../../context/AGENT_INTERFACE.md#L43).
+schema. Preserve the [existing discovery contract](../../../context/AGENT_INTERFACE.md#L43).
 
-Optional related improvement: [Spaces edit schemas](../../src/ph_composer/features/spaces/declarations/operations.rb#L24)
+Optional related improvement: [Spaces edit schemas](../../../src/ph_composer/features/spaces/declarations/operations.rb#L24)
 leave `values`/`expected_values` as arbitrary objects and target-kind keys optional. Runtime
 validation exists and record descriptors are typed. Reuse typed editable-field schemas with units
 and null-clearing rules, so agents can construct valid Space, Volume and Floor Segment edits without
@@ -206,10 +206,10 @@ mining prose. This is schema usability, not evidence of unsafe persistence.
 
 ## A11: completed export is not yet a supported semantic artifact read-back
 
-[Task status](../../src/ph_composer/export/task.rb#L147) intentionally strips canonical bytes.
+[Task status](../../../src/ph_composer/export/task.rb#L147) intentionally strips canonical bytes.
 Successful output identifies an approved location and run, never its local path. That preserves
 privacy and keeps polling small. There is no public API artifact retrieval method in
-[API](../../src/ph_composer/shell/api.rb#L138) or [TaskContract](../../src/ph_composer/export/task_contract.rb#L49).
+[API](../../../src/ph_composer/shell/api.rb#L138) or [TaskContract](../../../src/ph_composer/export/task_contract.rb#L49).
 The quickstart tells a script to read the approved files, but an external caller holding only opaque
 location/task IDs cannot do that through the supported interface.
 
@@ -221,9 +221,9 @@ change, destination replacement, expired handle and denied cross-connection read
 ## A12: visual context remains a planned capability
 
 The 23 view commands offer useful locate/select/Colour-by/tool controls; there is no public camera
-snapshot or viewport capture operation. The [development shot helper](../../tools/hostkit/host_helpers.rb#L30)
+snapshot or viewport capture operation. The [development shot helper](../../../tools/hostkit/host_helpers.rb#L30)
 zooms extents and writes an image, so it is not a side-effect-free public capture. The
-[agent authority](../../context/AGENT_INTERFACE.md#L99) requires capture provenance and explicit
+[agent authority](../../../context/AGENT_INTERFACE.md#L99) requires capture provenance and explicit
 unsupported states. Existing host evidence also distinguishes viewport images from native overlay/HUD
 captures; do not imply one captures the other.
 
@@ -234,8 +234,8 @@ result where no trustworthy capture exists. Test that reads never move the camer
 
 ## A13: Spaces and client guidance lag the implemented interface
 
-[AGENT_INTERFACE](../../context/AGENT_INTERFACE.md#L306) inventories Phase 2 operations but has no
-equivalent Spaces workflow/limitations section. [The quickstart](../../docs/API_QUICKSTART.md)
+[AGENT_INTERFACE](../../../context/AGENT_INTERFACE.md#L306) inventories Phase 2 operations but has no
+equivalent Spaces workflow/limitations section. [The quickstart](../../../docs/API_QUICKSTART.md)
 predates Spaces and starts with a prepared selection. The generated reference is current but
 **47,774 lines / 1,218,285 bytes**; discovery is **52,390 JSON bytes** in the synthetic session.
 Those are useful references, not sufficient operating guidance for a first-time client.
@@ -248,9 +248,9 @@ See [cleanup](CLEANUP.md) for specific stale guidance and preservation rules.
 
 ## A14: in-flight location revocation needs an explicit contract
 
-[Tasks.start](../../src/ph_composer/export/tasks.rb#L20) resolves the approved location once;
-[Task](../../src/ph_composer/export/task.rb#L17) retains its destination. Commit checks model
-generation and destination state, but [does not resolve the location again](../../src/ph_composer/export/task.rb#L126).
+[Tasks.start](../../../src/ph_composer/export/tasks.rb#L20) resolves the approved location once;
+[Task](../../../src/ph_composer/export/task.rb#L17) retains its destination. Commit checks model
+generation and destination state, but [does not resolve the location again](../../../src/ph_composer/export/task.rb#L126).
 The retained probe starts translation, revokes the location, then completes translation. It still
 writes the HBJSON/report pair and reports `export.complete`.
 

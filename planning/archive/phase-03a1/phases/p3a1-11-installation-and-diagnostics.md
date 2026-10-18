@@ -97,7 +97,7 @@ entries with the documented commands and confirm each client no longer lists the
 CL08: after acceptance, the test entries are removed from the real client configurations with the
 documented commands and the test tokens revoked; the snapshot of each configuration taken before
 the run is compared after. The review's companion recommendation in
-[CLIENT_INTEGRATION](../../../code-review/CLIENT_INTEGRATION.md) stays as evidence and is superseded
+[CLIENT_INTEGRATION](../../agent-access-review/CLIENT_INTEGRATION.md) stays as evidence and is superseded
 by the receipt; `docs/AGENT_ACCESS.md` says what is proved and nothing more.
 Record affected context/docs, exact checks and evidence in [STATUS](../STATUS.md) through docs-pass.
 Shipping source/tests cite durable context rather than this plan. Preserve unrelated dirty work.

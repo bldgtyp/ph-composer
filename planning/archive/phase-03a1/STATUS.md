@@ -5,7 +5,7 @@ STATUS: Complete 2026-10-18, archived. Ed authorized implementation of the whole
 ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 BASELINE: `60982fc73af6841f0c2bc5f55136dd21cad20930`
 
-This is the one place delivery completeness is read from. The [review](../../code-review/README.md)
+This is the one place delivery completeness is read from. The [review](../agent-access-review/README.md)
 is complete; this phase is implemented as recorded below. Earlier review tests remain review evidence only.
 
 ## Entry gates

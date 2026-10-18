@@ -56,19 +56,19 @@ registration in the offline stub, not by counting source occurrences.
 
 ## Strong paths worth preserving
 
-- [API quickstart](../../docs/API_QUICKSTART.md) and its
-  [executable client test](../../tests/api_client_test.rb) use public discovery/read/preview/write/read-back,
+- [API quickstart](../../../docs/API_QUICKSTART.md) and its
+  [executable client test](../../../tests/api_client_test.rb) use public discovery/read/preview/write/read-back,
   stale refusal, retry, Assembly assignment and export task cancellation.
-- [Windows placement walkthrough](../../tools/examples/authoring/windows_placement_walkthrough.rb)
+- [Windows placement walkthrough](../../../tools/examples/authoring/windows_placement_walkthrough.rb)
   demonstrates the explicit-reference counterpart to pointer placement. That is a useful pattern for
   the Spaces candidate and context work.
-- [Spaces walkthrough](../../tools/examples/authoring/spaces_walkthrough.rb) covers public domain
+- [Spaces walkthrough](../../../tools/examples/authoring/spaces_walkthrough.rb) covers public domain
   operations after native geometry/context setup. Label its native setup clearly; retain its fixture
   utility while adding a strictly public client scenario.
-- [Separate library provider example](../../docs/LIBRARY_PROVIDER_EXAMPLE.md) exercises an outside
+- [Separate library provider example](../../../docs/LIBRARY_PROVIDER_EXAMPLE.md) exercises an outside
   contributor. Use an equivalent outside-feature test to prove the MCP adapter remains generic.
-- [Spaces export](../../src/ph_composer/features/spaces/export.rb#L34) declares a contributor and
-  preflight, and [Python composition](../../src/ph_composer/python/ph_composer_translation/composition.py#L19)
+- [Spaces export](../../../src/ph_composer/features/spaces/export.rb#L34) declares a contributor and
+  preflight, and [Python composition](../../../src/ph_composer/python/ph_composer_translation/composition.py#L19)
   attaches it through the existing section contract. Agents should consume this canonical output.
 
 ## Verification limits by layer
@@ -79,7 +79,7 @@ and snapshot/privacy boundaries were inspected for access design; this was not a
 or numerical-translation audit. JavaScript was inspected only where it establishes private panel
 context or workflow coupling; there was no visual UI review or browser run.
 
-[Spaces acceptance](../archive/phase-03a-spaces/ACCEPTANCE.md) and its
-[status ledger](../archive/phase-03a-spaces/STATUS.md) remain the feature evidence, including their
+[Spaces acceptance](../phase-03a-spaces/ACCEPTANCE.md) and its
+[status ledger](../phase-03a-spaces/STATUS.md) remain the feature evidence, including their
 recorded follow-ups. This review adds no new native-host acceptance and makes no SketchUp 2023,
 Windows, METr or public-distribution claim.

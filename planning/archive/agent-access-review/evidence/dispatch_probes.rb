@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../../../tests/test_helper'
-require_relative '../../../tests/support/test_feature'
+require_relative '../../../../tests/test_helper'
+require_relative '../../../../tests/support/test_feature'
 
 class DispatchReviewProbes < PhComposerTestCase
   API = PhComposer::API

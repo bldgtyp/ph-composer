@@ -189,7 +189,7 @@ replays through the normal retained-outcome path. This is a new decision, D3a1-1
   headless (`claude -p`, `codex exec`), so acceptance can be scripted and repeated. Desktop
   surfaces cannot be driven that way and should follow, not lead. The Codex MCP page fetched
   2026-10-17 does not say whether `codex exec` loads MCP config; confirm at V2 before relying on it.
-- **This overturns the source review.** `code-review/ARCHITECTURE.md` recommends keeping "the
+- **This overturns the source review.** `agent-access-review/ARCHITECTURE.md` recommends keeping "the
   MCP SDK out of embedded Ruby unless a small compatibility spike proves a better outcome". The
   recommendation here is to serve MCP from Ruby with no SDK at all, on the strength of the asset
   server and bridge as the spike. The two documents disagree until Ed answers D3a1-01.

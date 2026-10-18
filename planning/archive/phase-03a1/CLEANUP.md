@@ -4,7 +4,7 @@ DATE: 2026-10-17
 STATUS: Closed 2026-10-18; dispositions in [the stage 16 receipt](evidence/p3a1-16-integrated-acceptance.md).
 ISSUE: none (local planning draft)
 
-The [review cleanup inventory](../../code-review/CLEANUP.md) supplies the evidence. Remove only
+The [review cleanup inventory](../agent-access-review/CLEANUP.md) supplies the evidence. Remove only
 verified superseded code/docs in the owning stage; source searches are followed by consumer and
 round-trip checks. The phase does not authorize deletion of public interfaces by assumption.
 

@@ -39,11 +39,11 @@ Run from the repository root. Use the selected Ruby, not macOS system Ruby:
 
 ```sh
 PHC_REVIEW_RUBY="$(rbenv which ruby)"
-"$PHC_REVIEW_RUBY" planning/code-review/evidence/inventory.rb
-"$PHC_REVIEW_RUBY" planning/code-review/evidence/spaces_probes.rb
-"$PHC_REVIEW_RUBY" planning/code-review/evidence/unmarked_face_probe.rb
-"$PHC_REVIEW_RUBY" planning/code-review/evidence/dispatch_probes.rb
-"$PHC_REVIEW_RUBY" planning/code-review/evidence/export_revocation_probe.rb
+"$PHC_REVIEW_RUBY" planning/archive/agent-access-review/evidence/inventory.rb
+"$PHC_REVIEW_RUBY" planning/archive/agent-access-review/evidence/spaces_probes.rb
+"$PHC_REVIEW_RUBY" planning/archive/agent-access-review/evidence/unmarked_face_probe.rb
+"$PHC_REVIEW_RUBY" planning/archive/agent-access-review/evidence/dispatch_probes.rb
+"$PHC_REVIEW_RUBY" planning/archive/agent-access-review/evidence/export_revocation_probe.rb
 ```
 
 Run separately to observe each exit status. `inventory.rb` prints JSON followed by Minitest's empty
