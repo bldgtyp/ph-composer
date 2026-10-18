@@ -57,7 +57,8 @@ function start(context, roots, stubs) {
 
 var cachedManifest = null;
 function manifest() {
-  if (!cachedManifest) cachedManifest = require("../../tools/panel_manifest").graph();
+  // Every module under html/, other pages' included, so a suite can start any page's entry.
+  if (!cachedManifest) cachedManifest = require("../../tools/panel_manifest").graph(true);
   return cachedManifest;
 }
 

@@ -33,19 +33,27 @@ var DEVELOPMENT_PAGES = [
   { path: path.join(panelFiles.root, "tools", "ui-preview", "index.html"), prefix: "../../src/ph_composer/html/" }
 ];
 
+/* Shipped pages other than the panel, each in its own folder under html/ with an entry module. A page loads
+   its entry and what that needs from the shared kit; the panel never loads a page's own modules. */
+var PAGES = [
+  { path: path.join(panelFiles.html, "agent_access", "index.html"), folder: "agent_access/",
+    entry: "agent_access/page", prefix: "../" }
+];
+
 function moduleName(file) {
   return path.relative(panelFiles.html, file).split(path.sep).join("/").replace(/\.js$/, "");
 }
 
-/* { order: [name], definitions: { name: { file, dependencies } } } for every panel module. */
-function graph() {
+/* { order: [name], definitions: { name: { file, dependencies } } } for the panel's modules, or with
+   `withPages` for every module under html/, the other pages' own included. */
+function graph(withPages) {
   var context = { window: {} };
   var definitions = {};
   vm.runInNewContext(fs.readFileSync(path.join(panelFiles.html, "module.js"), "utf8"), context);
   var registry = context.window.PhComposerUI;
   panelFiles.panelFiles().forEach(function (file) {
     var name = moduleName(file);
-    if (name === "module") return;
+    if (name === "module" || (!withPages && pageModule(name))) return;
     var declared = [];
     context.PhComposerUI = {
       define: function (defined, dependencies, factory) {
@@ -61,6 +69,22 @@ function graph() {
     }
   });
   return { order: registry.order(), definitions: definitions };
+}
+
+/* Whether `name` belongs to a page other than the panel. */
+function pageModule(name) {
+  return PAGES.some(function (page) { return name.indexOf(page.folder) === 0; });
+}
+
+/* The modules `entry` needs, itself included, in `order`. */
+function closure(order, definitions, entry) {
+  var needed = Object.create(null);
+  (function visit(name) {
+    if (needed[name]) return;
+    needed[name] = true;
+    definitions[name].dependencies.forEach(visit);
+  })(entry);
+  return order.filter(function (name) { return needed[name]; });
 }
 
 function scriptTags(order, prefix) {
@@ -95,12 +119,17 @@ function renderDevelopmentPage(page, index, order, prefix) {
 
 function main() {
   var write = process.argv.indexOf("--write") !== -1;
-  var order = graph().order;
+  var order = graph().order, modules = graph(true);
   var index = fs.readFileSync(INDEX, "utf8");
   var pages = [[INDEX, index, render(index, order)]];
   DEVELOPMENT_PAGES.forEach(function (entry) {
     var page = fs.readFileSync(entry.path, "utf8");
     pages.push([entry.path, page, renderDevelopmentPage(page, pages[0][2], order, entry.prefix)]);
+  });
+  PAGES.forEach(function (entry) {
+    var page = fs.readFileSync(entry.path, "utf8");
+    var needed = closure(modules.order, modules.definitions, entry.entry);
+    pages.push([entry.path, page, render(page, needed, entry.prefix)]);
   });
   var stale = pages.filter(function (page) { return page[1] !== page[2]; });
   if (write) {
@@ -118,6 +147,7 @@ function main() {
 }
 
 module.exports = { graph: graph, render: render, renderDevelopmentPage: renderDevelopmentPage,
-  DEVELOPMENT_PAGES: DEVELOPMENT_PAGES, BEGIN: BEGIN, END: END };
+  pageModule: pageModule, closure: closure, DEVELOPMENT_PAGES: DEVELOPMENT_PAGES, PAGES: PAGES, BEGIN: BEGIN,
+  END: END };
 
 if (require.main === module) main();

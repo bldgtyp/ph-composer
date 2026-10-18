@@ -1,0 +1,133 @@
+# frozen_string_literal: true
+
+require "json"
+
+module PhComposer
+  module AgentAccess
+    # The Agent Access dialog: the native place where the user issues, reads and revokes agent tokens.
+    # It is its own HtmlDialog, separate from the panel, so issuing or revoking never touches a draft
+    # open there, and it needs no open panel. Its callbacks run on the main thread and reach Tokens
+    # directly; nothing here is registered with PhComposer::API.
+    #
+    # Every message is `{"type": ..., "payload": {...}}`, as the panel's are, on its own callback.
+    module Dialog
+      PAGE = File.join(__dir__, "..", "html", "agent_access", "index.html")
+      CALLBACK = "ph_composer_agent_access"
+      TITLE = "#{EXTENSION_NAME} Agent Access".freeze
+      INBOUND = {
+        "access.ready" => [],
+        "access.issue" => %w[label capabilities],
+        "access.revoke" => %w[id],
+        "access.reset" => []
+      }.freeze
+      OUTBOUND = {
+        "access.state" => %w[state tokens offered server],
+        "access.issued" => %w[token row],
+        "access.failure" => %w[message]
+      }.freeze
+
+      class << self
+        def show
+          if @dialog
+            @dialog.bring_to_front
+          else
+            @dialog = build_dialog
+            @dialog.show
+          end
+          @dialog
+        end
+
+        def open?
+          !@dialog.nil?
+        end
+
+        # Republishes the token list to an open dialog; Tokens calls this through
+        # AgentAccess.tokens_changed after every write.
+        def refresh
+          publish("access.state", state) if @dialog
+        end
+
+        def reset_for_test
+          @dialog&.close
+          @dialog = nil
+        end
+
+        # The type and payload of one message from the page; raises UserError when it is not one.
+        def parse(raw)
+          message = JSON.parse(raw.to_s)
+          raise UserError, "The Agent Access message is not an object." unless message.is_a?(Hash)
+
+          type = message["type"]
+          payload = message.fetch("payload", {})
+          raise UserError, "The Agent Access message type #{type.inspect} is not accepted." unless INBOUND.key?(type)
+          raise UserError, "The #{type} payload must be an object." unless payload.is_a?(Hash)
+
+          stray = payload.keys - INBOUND.fetch(type)
+          raise UserError, "The #{type} payload carries #{stray.join(', ')}." unless stray.empty?
+
+          [type, payload]
+        rescue JSON::ParserError
+          raise UserError, "The Agent Access message is not JSON."
+        end
+
+        # The script that delivers one message to the page.
+        def script(type, payload)
+          declared = OUTBOUND.fetch(type) { raise ArgumentError, "#{type} is not an outbound Agent Access message." }
+          stray = payload.keys - declared
+          raise ArgumentError, "#{type} does not declare #{stray.join(', ')}." unless stray.empty?
+
+          "PhComposerUI.get(\"agent_access/page\").receive(#{JSON.generate('type' => type, 'payload' => payload)})"
+        end
+
+        # What the page shows. `server` describes the listener, which no stage runs yet.
+        def state
+          { "state" => Tokens.state, "tokens" => Tokens.list, "offered" => Tokens::OFFERED,
+            "server" => AgentAccess.server_status }
+        end
+
+        private
+
+        def build_dialog
+          dialog = UI::HtmlDialog.new(
+            :dialog_title => TITLE, :preferences_key => "#{EXTENSION_ID}.agent_access", :scrollable => true,
+            :resizable => true, :width => 560, :height => 600, :min_width => 360, :min_height => 420,
+            :style => UI::HtmlDialog::STYLE_DIALOG
+          )
+          dialog.set_file(PAGE)
+          # Bound to this dialog: a message from a page that has since closed is ignored.
+          dialog.add_action_callback(CALLBACK) { |_context, raw| receive(dialog, raw) }
+          dialog.set_on_closed { @dialog = nil if @dialog.equal?(dialog) }
+          dialog
+        end
+
+        def receive(dialog, raw)
+          return unless @dialog.equal?(dialog)
+
+          handle(*parse(raw))
+        rescue UserError => error
+          # A CodedError is a refusal the user can act on; anything else is a malformed page message.
+          publish("access.failure", "message" => error.message)
+          refresh
+        rescue StandardError => error
+          Diagnostics.exception("agent_access_message", error)
+          publish("access.failure", "message" => "Agent Access could not complete that request.")
+        end
+
+        def handle(type, payload)
+          case type
+          when "access.ready" then refresh
+          when "access.issue"
+            issued = Tokens.issue(:label => payload["label"], :capabilities => payload.fetch("capabilities", []))
+            publish("access.issued", issued)
+          when "access.revoke" then Tokens.revoke(payload["id"])
+          when "access.reset" then Tokens.reset
+          end
+        end
+
+        def publish(type, payload)
+          @dialog&.execute_script(script(type, payload))
+        end
+      end
+    end
+  end
+end

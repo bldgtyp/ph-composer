@@ -129,8 +129,9 @@ working namespace D8 confirmed; the final public name is still open. The followi
 | `features/` | One folder per feature, each registering itself in one `install`. `zones/` owns Zones, Faces and adjacency; `assemblies/` owns Materials and Assemblies; `windows/` owns products, Types, Units and Aperture export |
 | `colour_by/` | The shared Colour-by service: the mode registry's consumers, the viewport overlay and HUD, and the drawing cache. Names no feature |
 | `library/` | The optional provider seam, file/folder provider, catalog/copy coordinator and model-library export |
+| `agent_access/` | Local agent access: the token store and the Agent Access dialog, a foundation capability with no public operation |
 | `export/` | The export run: contributors, the attribute guard, artifact hygiene, the report, and the exporter registry |
-| `html/` | The panel: the UI kit at its top level (a module graph with a generated script list and owned stylesheets), the foundation's screens in `sections/` and `library/`, and one folder per feature in `features/` |
+| `html/` | The panel: the UI kit at its top level (a module graph with a generated script list and owned stylesheets), the foundation's screens in `sections/` and `library/`, one folder per feature in `features/`, and other dialogs' pages in their own folder with a generated script list (`agent_access/`) |
 | `python/`, `runtime/`, `vendor/` | The translation package and exporter registry (no exporter registered yet), the Pyodide loader and the pinned payload |
 
 Outside it: `tests/` for the offline suites and fixtures, `tools/` for development-only build,
