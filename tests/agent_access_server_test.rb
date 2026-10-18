@@ -92,7 +92,8 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_equal({ "resources" => [] }, result_of(post(rpc("resources/list"))))
     assert_equal({ "prompts" => [] }, result_of(post(rpc("prompts/list"))))
     tools = result_of(post(rpc("tools/list"))).fetch("tools")
-    assert_equal AgentAccess::Tools::TABLE.keys, tools.map { |tool| tool.fetch("name") }
+    read_tools = AgentAccess::Tools::TABLE.values.select { |tool| tool.capability == "read" }.map(&:name)
+    assert_equal read_tools, tools.map { |tool| tool.fetch("name") }
     assert(tools.all? { |tool| tool.dig("annotations", "readOnlyHint") })
   end
 

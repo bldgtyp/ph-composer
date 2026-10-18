@@ -33,7 +33,10 @@ module PhComposer
         "affected" => { "type" => "array", "items" => { "type" => "object" } },
         "findings" => { "type" => "array", "items" => { "type" => %w[object string] },
                         "description" => "Advisory rows; a params refusal lists its schema problems as strings." },
-        "detail" => { "type" => %w[object null] }, "proposal_digest" => { "type" => %w[string null] }
+        "detail" => { "type" => %w[object null] }, "proposal_digest" => { "type" => %w[string null] },
+        "sequence" => { "type" => "integer",
+                        "description" => "The mutation sequence an agent connection assigned; only on its invoke " \
+                                         "and outcome results." }
       }
     }.freeze
 

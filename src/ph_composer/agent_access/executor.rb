@@ -14,7 +14,7 @@ module PhComposer
     # sequences and retained outcomes carry across calls. Dispatch enforces the grants as for any caller.
     class Executor
       # `run` receives the caller's OperationContext (nil for a tool that names no session), the validated
-      # arguments and the token's public row, and returns the API's answer.
+      # arguments, the token's public row and that binding's Sequencer, and returns the API's answer.
       Tool = Struct.new(:name, :description, :capability, :input_schema, :session, :annotations, :run,
                         keyword_init: true)
       # Serialized `structuredContent` larger than this is refused, never truncated: both target clients
@@ -23,6 +23,8 @@ module PhComposer
       # The most of a caller's own text (a name, a schema path) an error message repeats back.
       MAX_ECHO = 160
       SESSION_UNKNOWN = "That Model session is closed or was never opened. Call discover for the open ones."
+
+      Binding = Struct.new(:context, :sequencer)
 
       def initialize(tools:)
         @tools = tools
@@ -41,16 +43,16 @@ module PhComposer
         return error("The arguments are not valid: #{findings.first.to_s[0, MAX_ECHO]}.") unless findings.empty?
 
         prune
-        context = nil
+        binding = Binding.new(nil, nil)
         if tool.session
           session = Sessions.find(arguments["session"])
           unless session && Tokens.serves?(live, session)
             return result(Outcome.refused("session.unknown", SESSION_UNKNOWN, :revision => nil))
           end
 
-          context = binding_for(live, session)
+          binding = binding_for(live, session)
         end
-        result(tool.run.call(context, arguments, live))
+        result(tool.run.call(binding.context, arguments, live, binding.sequencer))
       rescue CodedError => error
         result(Outcome.refused(error.code, error.message, :revision => nil, :detail => error.detail))
       end
@@ -71,9 +73,11 @@ module PhComposer
 
       private
 
+      # One caller handle and one Sequencer per token and session, so sequences and keys carry across calls.
       def binding_for(token, session)
         @bindings[[token.fetch("id"), session.id]] ||=
-          API.connect(:session_id => session.id, :capabilities => token.fetch("capabilities"))
+          Binding.new(API.connect(:session_id => session.id, :capabilities => token.fetch("capabilities")),
+                      Sequencer.new)
       end
 
       # Forgets the handles of closed sessions and revoked tokens.
