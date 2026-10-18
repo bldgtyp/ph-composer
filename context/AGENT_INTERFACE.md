@@ -96,6 +96,20 @@ projections `ph_composer.zones.all` and `ph_composer.zones.faces.all`; scripts p
 reference, values and the write refusal its path shows, scanning only the collections on each path,
 for a caller that holds a path and needs no Face table.
 
+`Pages.bounded` also cuts a page at the last whole row that keeps its serialized rows under 16 KB
+(`Pages::MAX_PAGE_BYTES`), so a page and its envelope fit the agent reply budget; a row is never
+split, and the cursor resumes after the last row sent. The Spaces reads use it:
+`ph_composer.spaces.list` answers Space summaries (values, metrics, Zone and Building-Segment, and
+counts of Volumes, Floor Segments and findings by code) with a `fields` projection whose default
+leaves out `user_data`, `extension_data` and `extension_status`. Its `model` sums are taken over
+every Space before any filter, and its `zones` and `building_segments` are the sums of the Zones and
+Building-Segments its page's Spaces belong to. `spaces.volumes.list` (one Space),
+`spaces.floor_segments.list` (one Space or one Volume, exactly one) and `spaces.findings.list` (the
+Model or one Space, optionally by `codes`, each finding with the reference of what it is about)
+answer the children; a scope reference resolves by path and then id (`target.not_found`,
+`target.changed`). `spaces.all` stays whole for the panel and names `spaces.list` as its bounded
+alternative.
+
 Some reads carry derived facts so no client recomputes a domain rule. Every Window Type row's
 `display.install_topology` gives each non-empty element's four edges with their classification
 (`perimeter`, `shared`, `partial`) and whether an installation can be painted there, an opaque

@@ -16,21 +16,58 @@ module PhComposer
         totals(rows, zones).merge("spaces" => rows, "findings" => findings, "units" => UNITS)
       end
 
-      # One page of Space occurrences in path order, optionally only some ids. Zone sums always cover
-      # every Space of the Zone, whatever the page holds.
+      # One bounded page of Space summaries in path order, optionally only some ids. The sums are taken
+      # over every Space before any filter, so a page never changes them: the Model's, and those of the
+      # Zones and Building-Segments the page's Spaces belong to. Children and findings have reads of their
+      # own (ScopedReads).
       def list(request)
-        rows, zones, findings = assemble(request)
+        rows, zones, strays = assemble(request)
+        sums = totals(rows, zones)
         params = request.params
-        rows = rows.select { |row| params["ids"].include?(row.fetch("id")) } if params.key?("ids")
-        page, next_cursor = Pages.slice(request, "#{FEATURE_ID}.list", rows,
-                                        :key => ->(row) { row.dig("reference", "entity_path") })
-        totals(rows, zones).merge("spaces" => page, "findings" => findings, "units" => UNITS,
-                                  "next_cursor" => next_cursor, "total" => rows.length)
+        chosen = params.key?("ids") ? rows.select { |row| params["ids"].include?(row.fetch("id")) } : rows
+        whole = chosen.map { |row| Summaries.space(row, zones, nil, strays) }
+        aggregates = PageAggregates.new(sums, whole)
+        summaries = chosen.map { |row| Summaries.space(row, zones, params["fields"], strays) }
+        page, next_cursor = Pages.bounded(request, "#{FEATURE_ID}.list", summaries,
+                                          :key => PageAggregates::PATH, :size => aggregates.method(:size))
+        { "spaces" => page, "model" => sums.fetch("model"), **aggregates.of(page),
+          "stray_finding_count" => strays.length, "units" => UNITS, "next_cursor" => next_cursor,
+          "total" => chosen.length }
+      end
+
+      # The Zone and Building-Segment sums a page names, chosen by each Space's membership whatever
+      # `fields` projects away, and counted in the page's byte budget the first time a page names them.
+      class PageAggregates
+        PATH = ->(row) { row.dig("reference", "entity_path") }
+
+        def initialize(sums, whole)
+          @zones = sums.fetch("zones").to_h { |zone| [zone.fetch("zone_path"), Summaries.zone(zone)] }
+          @segments = sums.fetch("building_segments").to_h { |row| [row.fetch("key"), row] }
+          @membership = whole.to_h do |row|
+            [PATH.call(row), [@zones[row.dig("zone", "zone_path")], @segments[row["building_segment"]]]]
+          end
+          @counted = {}
+        end
+
+        # A row's serialized size plus that of each aggregate it brings onto the page first.
+        def size(row)
+          fresh = @membership.fetch(PATH.call(row)).compact.reject { |aggregate| @counted[aggregate.object_id] }
+          fresh.each { |aggregate| @counted[aggregate.object_id] = true }
+          ([row] + fresh).sum { |item| JSON.generate(item).bytesize + 1 }
+        end
+
+        def of(page)
+          zones, segments = page.map { |row| @membership.fetch(PATH.call(row)) }.transpose
+          { "zones" => Array(zones).compact.uniq(&:object_id),
+            "building_segments" => Array(segments).compact.uniq(&:object_id) }
+        end
       end
 
       # The Building-Segment a Zone belongs to: the key its sums group by and the name they show.
       BuildingSegment = Struct.new(:key, :name, keyword_init: true)
 
+      # Every Space row in path order, each Zone's row with its sums, and the findings of records outside
+      # the hierarchy that should hold them. One scan and one metric calculation every Spaces read shares.
       def assemble(request)
         scan = Occurrences.scan(request.model)
         catalog = request.registry.catalog
@@ -44,14 +81,29 @@ module PhComposer
             ) }
         end
         ids = scan.spaces.map { |space| space.record.fetch("id") }.tally
-        counts = Resolve::TARGETS.transform_values do |target|
-          target.occurrences_in(scan).map { |occurrence| occurrence.record.fetch("id") }.tally
-        end
+        counts = occurrence_counts(scan)
         rows = scan.spaces.sort_by(&:path).map do |space|
           space_row(space, zones, ids, catalog, request.model, counts)
         end
         flag_duplicate_numbers(rows)
         [rows, zone_rows(zones, rows), stray_findings(scan, counts)]
+      end
+
+      # The row of the Volume outside every Space at `path`, if there is one, so its Floor Segments read by
+      # reference. Built only when asked: `all` reports such a Volume as a stray finding and never
+      # measures it.
+      def orphan_rows(request, path)
+        scan = Occurrences.scan(request.model)
+        counts = occurrence_counts(scan)
+        scan.orphan_volumes.select { |volume| volume.path == path }.map do |volume|
+          volume_row(volume, request.registry.catalog, request.model, counts, false)
+        end
+      end
+
+      def occurrence_counts(scan)
+        Resolve::TARGETS.transform_values do |target|
+          target.occurrences_in(scan).map { |occurrence| occurrence.record.fetch("id") }.tally
+        end
       end
 
       def space_row(space, zones, ids, catalog, model, counts)

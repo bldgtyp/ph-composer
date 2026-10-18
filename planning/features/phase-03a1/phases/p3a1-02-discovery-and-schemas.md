@@ -1,7 +1,7 @@
 # P3a1-02: Discovery, Model context and schema agreement
 
 DATE: 2026-10-17
-STATUS: Implemented on branch `feat/phase-03a1-p3a1-02`.
+STATUS: Merged to main (#227).
 ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership
