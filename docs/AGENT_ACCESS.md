@@ -1,10 +1,11 @@
 # Using PH-Composer with your agent
 
 DATE: 2026-10-18
-STATUS: The in-process public interface and agent tokens are implemented. No external connection
-endpoint or client setup is available yet.
+STATUS: Agent tokens, the local connection and client setup are implemented and checked with Claude
+Code 2.1.300 and Codex 0.163.0 on macOS. This is a development build, not a released or supported
+product.
 
-PH-Composer will let users' agents inspect and edit building models through documented public
+PH-Composer lets users' agents inspect and edit building models through documented public
 operations. Users choose their agent. No built-in LLM, model-provider account or AI subscription is
 required by PH-Composer, and ordinary hand authoring remains complete.
 
@@ -81,13 +82,17 @@ To disconnect an agent, revoke its token in the Agent Access window. To remove t
 client as well, run `claude mcp remove ph-composer`, or delete the `[mcp_servers.ph-composer]`
 block from `~/.codex/config.toml`. PH-Composer itself is removed with SketchUp's Extension Manager.
 
+## Working with an agent
+
+Give your agent [AGENT_GUIDE.md](AGENT_GUIDE.md) before it starts: it is the operating guide for
+the connection, from finding the Model to reading back what changed, with recipes and what to do
+when a request is refused or a reply is lost. Both clients above completed its core scenario
+against a SketchUp Model: reading, a change with a replayed key, recovery from a stale revision, and
+an export whose file they read and checked.
+
 ## Not yet available
 
-A local MCP adapter is the recommended first integration. The application contract remains usable
-by scripts and other clients. Transport and installation details are still design work; no current
-agent client is claimed as supported. Arbitrary Ruby evaluation bridges remain development tools.
-
-When the external connection lands, this page will provide its tested installation steps and
-client configurations.
-The engineering requirements and acceptance checks are in
-[AGENT_INTERFACE.md](../context/AGENT_INTERFACE.md).
+Taking an image of the view is offered as a separate permission and is not yet supported for agent
+use. The connection serves agents on this computer only; a remote or hosted connector is not
+planned. Arbitrary Ruby evaluation bridges remain development tools. The engineering requirements
+and acceptance checks are in [AGENT_INTERFACE.md](../context/AGENT_INTERFACE.md).
