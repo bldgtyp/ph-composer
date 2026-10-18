@@ -11,7 +11,7 @@ module PhComposer
     # `container_added` carries the added Group or ComponentInstance (ContainerWatch).
     HOST_EVENTS = %i[
       session_created model_opened model_activated transaction_committed transaction_undone transaction_redone
-      active_path_changed selection_changed tags_changed pre_save post_save container_added
+      active_path_changed selection_changed camera_changed tags_changed pre_save post_save container_added
     ].freeze
 
     class << self
@@ -45,8 +45,11 @@ module PhComposer
         model.selection.add_observer(selection_observer) if model.selection.respond_to?(:add_observer)
         layers_observer = HostObservers::LayersObserver.new
         model.layers.add_observer(layers_observer) if model.layers.respond_to?(:add_observer)
+        view = model.respond_to?(:active_view) ? model.active_view : nil
+        view_observer = HostObservers::ViewObserver.new
+        view.add_observer(view_observer) if view.respond_to?(:add_observer)
         session.add_observers(ModelSession::Observers.new(:model => model_observer, :selection => selection_observer,
-                                                          :layers => layers_observer))
+                                                          :layers => layers_observer, :view => view_observer))
         sessions[model.object_id] = session
         session.host_event(:session_created)
         session
@@ -116,6 +119,8 @@ module PhComposer
         selection.remove_observer(observers.selection) if observers.selection && selection.respond_to?(:remove_observer)
         layers = model.respond_to?(:layers) ? model.layers : nil
         layers.remove_observer(observers.layers) if observers.layers && layers.respond_to?(:remove_observer)
+        view = model.respond_to?(:active_view) ? model.active_view : nil
+        view.remove_observer(observers.view) if observers.view && view.respond_to?(:remove_observer)
         session.detach
         true
       end

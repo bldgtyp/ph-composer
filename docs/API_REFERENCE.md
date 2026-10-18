@@ -4496,6 +4496,7 @@ Result:
     "session",
     "readiness",
     "edit_path",
+    "camera",
     "selection"
   ],
   "properties": {
@@ -4526,7 +4527,7 @@ Result:
         },
         "view_generation": {
           "type": "integer",
-          "description": "Advances when the selection changes, without a revision."
+          "description": "Advances when the selection or the camera changes, without a revision."
         },
         "active": {
           "type": "boolean"
@@ -4586,6 +4587,83 @@ Result:
         }
       },
       "description": "The open Groups and Components from the root, outermost first; empty at the root."
+    },
+    "camera": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "eye_m",
+        "target_m",
+        "up",
+        "perspective",
+        "fov_deg",
+        "fov_axis",
+        "two_point",
+        "height_m"
+      ],
+      "properties": {
+        "eye_m": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "x-unit": "m"
+        },
+        "target_m": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "x-unit": "m"
+        },
+        "up": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "perspective": {
+          "type": "boolean"
+        },
+        "fov_deg": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Field of view; null for a parallel view."
+        },
+        "fov_axis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "height",
+            "width",
+            null
+          ],
+          "description": "The view extent fov_deg spans; null for a parallel view."
+        },
+        "two_point": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Two-point perspective's pan offset (center, in the view's own units) and scale; null for an ordinary camera."
+        },
+        "height_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m",
+          "description": "The view's height; null for a perspective view."
+        }
+      },
+      "description": "The view's camera; null with no view."
     },
     "selection": {
       "type": "object",
@@ -49083,3 +49161,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | 1.2 | 2026-10-18 | ph_composer.spaces.list answers bounded summaries with fields, the Model's sums before any filter and the sums of the page's Zones and Building-Segments; spaces.volumes.list, spaces.floor_segments.list and spaces.findings.list are new, Floor Segment loops only when fields asks. |
 | 1.3 | 2026-10-18 | ph_composer.spaces.candidate_faces.list is new; spaces.update and spaces.batch_update type values and expected_values by field, with units, and refuse unknown keys at the schema. |
 | 1.4 | 2026-10-18 | ph_composer.context.open and ph_composer.context.root are new view commands; the Spaces context commands and both locate commands declare side_effects. |
+| 1.5 | 2026-10-18 | ph_composer.context.read answers the camera; the view generation also advances when the camera changes. |
