@@ -1,8 +1,8 @@
 # Using PH-Composer with your agent
 
 DATE: 2026-10-18
-STATUS: Agent tokens, the local connection and client setup are implemented and checked with Claude
-Code 2.1.300 and Codex 0.163.0 on macOS. This is a development build, not a released or supported
+STATUS: Agent tokens, the local connection, client setup and the agent scenarios are implemented and
+checked with Claude Code 2.1.300 and Codex 0.163.0 on SketchUp 2026 for macOS. This is a development build, not a released or supported
 product.
 
 PH-Composer lets users' agents inspect and edit building models through documented public
@@ -88,13 +88,18 @@ block from `~/.codex/config.toml`. PH-Composer itself is removed with SketchUp's
 
 Give your agent [AGENT_GUIDE.md](AGENT_GUIDE.md) before it starts: it is the operating guide for
 the connection, from finding the Model to reading back what changed, with recipes and what to do
-when a request is refused or a reply is lost. Both clients above completed its core scenario
-against a SketchUp Model: reading, a change with a replayed key, recovery from a stale revision, and
-an export whose file they read and checked.
+when a request is refused or a reply is lost. Both clients above completed its scenarios against
+SketchUp 2026 on macOS: reading, a change with a replayed key, recovery from a stale revision and
+from a change you made meanwhile, Spaces built from loose Faces, an Assembly assignment, a library
+copy, a Window placed at a position you gave, an image of the view, and an export whose file they
+read and checked.
+
+An agent granted Capture the view can take an image of the Model SketchUp is showing, at the
+viewport's size or one it asks for. The image leaves out PH-Composer's own overlays.
 
 ## Not yet available
 
-Taking an image of the view is offered as a separate permission and is not yet supported for agent
-use. The connection serves agents on this computer only; a remote or hosted connector is not
+An agent cannot yet work out where a Window fits on a wall by itself: no read gives a Face's width
+and height, so tell it the dimensions. The connection serves agents on this computer only; a remote or hosted connector is not
 planned. Arbitrary Ruby evaluation bridges remain development tools. The engineering requirements
 and acceptance checks are in [AGENT_INTERFACE.md](../context/AGENT_INTERFACE.md).

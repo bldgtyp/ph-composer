@@ -63,13 +63,15 @@ module PhComposer
         feature.view_command("#{FEATURE_ID}.context.close",
                              :description => "Leave the innermost open Space or Volume for its parent, protecting a " \
                                              "Volume being left.",
-                             :refuses => [], :params => Shapes::NONE, :result => PATH_RESULT, :side_effects => LEAVING,
+                             :refuses => %w[session.inactive], :params => Shapes::NONE, :result => PATH_RESULT,
+                             :side_effects => LEAVING,
                              :examples => [{}]) { |request| Navigation.close(request) }
         feature.view_command("#{FEATURE_ID}.locate",
                              :description => "Select and frame one Space, Volume or Floor Segment. Nothing is " \
                                              "unlocked: the path opens up to the first locked Group, such as a " \
                                              "protected Volume, and that Group is selected instead.",
-                             :refuses => TARGET, :params => Shapes.object({ "reference" => ANY_PARAM }),
+                             :refuses => TARGET + %w[session.inactive],
+                             :params => Shapes.object({ "reference" => ANY_PARAM }),
                              :side_effects => "Selects and frames. #{LEAVING}",
                              :result => PATH_RESULT, :examples => [{ "reference" => EXAMPLE_SPACE }]) do |request|
           Navigation.locate(request, :reference => request.params.fetch("reference"))

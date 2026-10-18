@@ -44745,7 +44745,7 @@ Open the Group or Component at the end of path as the edit context, through ever
 
 Side effects: Moves the edit path, which advances the Model revision. Leaving a Volume that was open and unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
 
-Refuses: `target.edit_path_changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, and the `view_command` common set.
+Refuses: `session.inactive`, `target.edit_path_changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, and the `view_command` common set.
 
 Params:
 
@@ -44828,7 +44828,7 @@ Close every open Group and Component, back to the Model's root. Owner: `ph_compo
 
 Side effects: Moves the edit path, which advances the Model revision. Leaving a Volume that was open and unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
 
-Refuses: `target.edit_path_changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, and the `view_command` common set.
+Refuses: `session.inactive`, `target.edit_path_changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_kind`, and the `view_command` common set.
 
 Params:
 
@@ -44896,7 +44896,7 @@ Leave the innermost open Space or Volume for its parent, protecting a Volume bei
 
 Side effects: Moves the edit path, which advances the Model revision; leaving a Volume that was open and unprotected protects it again. No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
 
-Refuses: only the `view_command` common set.
+Refuses: `session.inactive`, and the `view_command` common set.
 
 Params:
 
@@ -45533,7 +45533,7 @@ Select and frame one Space, Volume or Floor Segment. Nothing is unlocked: the pa
 
 Side effects: Selects and frames. Moves the edit path, which advances the Model revision; leaving a Volume that was open and unprotected protects it again. No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
 
-Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `view_command` common set.
+Refuses: `record.unreadable`, `session.inactive`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `view_command` common set.
 
 Params:
 

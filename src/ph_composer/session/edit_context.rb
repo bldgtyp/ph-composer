@@ -24,8 +24,15 @@ module PhComposer
 
     # Opens `path` (Groups and ComponentInstances, outermost first) as the edit context. Each boundary
     # runs first; a path equal to the current one is not assigned again, so the host reports no change.
+    # SketchUp ignores a return to the root on a Model that is not the active document
+    # (context/SKETCHUP_HOST_BEHAVIOR.md), so that move is refused before any boundary writes.
     def enter(model, path)
       path = Array(path)
+      if path.empty? && !current(model).empty? && !model.equal?(Sketchup.active_model)
+        raise CodedError.new("session.inactive", "SketchUp closes Groups only in the Model it shows; switch to " \
+                                                 "this Model's window first. Nothing moved.")
+      end
+
       close(model, :to => path)
       model.active_path = path.empty? ? nil : path unless current(model) == path
       path
