@@ -7277,7 +7277,8 @@ Params:
           "minItems": 1,
           "description": "The root-to-entity persistent-id path."
         }
-      }
+      },
+      "description": "The Space whose children to read, by the reference a read returned."
     },
     "codes": {
       "type": "array",
@@ -7373,7 +7374,7 @@ Example params:
 ```json
 {
   "codes": [
-    "space.no_volume"
+    "space.empty"
   ]
 }
 ```
@@ -7411,7 +7412,8 @@ Params:
           "minItems": 1,
           "description": "The root-to-entity persistent-id path."
         }
-      }
+      },
+      "description": "The Space whose children to read, by the reference a read returned."
     },
     "volume": {
       "type": "object",
@@ -7432,7 +7434,8 @@ Params:
           "minItems": 1,
           "description": "The root-to-entity persistent-id path."
         }
-      }
+      },
+      "description": "The Volume whose children to read, by the reference a read returned."
     },
     "fields": {
       "type": "array",
@@ -8535,7 +8538,8 @@ Params:
           "minItems": 1,
           "description": "The root-to-entity persistent-id path."
         }
-      }
+      },
+      "description": "The Space whose children to read, by the reference a read returned."
     },
     "fields": {
       "type": "array",

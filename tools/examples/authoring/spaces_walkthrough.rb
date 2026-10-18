@@ -172,8 +172,17 @@ module SpacesWalkthrough
     entities.add_face(corners.map { |px, py| Geom::Point3d.new(px * INCHES, py * INCHES, 0.5 * INCHES) })
   end
 
+  # A Space with its Volumes and their Floor Segments, read as a client with a reply budget reads them:
+  # the summary, then each child by reference.
   def space_row(client, id)
-    query(client, "#{PREFIX}.list", "ids" => [id]).fetch("spaces").first
+    space = query(client, "#{PREFIX}.list", "ids" => [id]).fetch("spaces").first
+    return nil unless space
+
+    volumes = query(client, "#{PREFIX}.volumes.list", "space" => space.fetch("reference")).fetch("volumes")
+    space.merge("volumes" => volumes.map do |volume|
+      segments = query(client, "#{PREFIX}.floor_segments.list", "volume" => volume.fetch("reference"))
+      volume.merge("floor_segments" => segments.fetch("floor_segments"))
+    end)
   end
 
   def query(client, name, params = {})

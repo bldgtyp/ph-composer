@@ -175,13 +175,17 @@ module PhComposer
         end
       end
 
+      def self.scope(reference, what)
+        Shapes.described(reference, "The #{what} whose children to read, by the reference a read returned.")
+      end
+
       def install_scoped(feature)
         refuses = READ + %w[query.cursor_expired query.limit_invalid target.not_found target.changed]
         example = { "space_id" => "spc_Ab12Cd34Ef56", "entity_path" => [1201, 1202] }
         feature.query(ScopedReads::VOLUMES,
                       :description => "One page of one Space's Volumes, each with its Floor Segment count.",
                       :refuses => refuses, :examples => [{ "space" => example }],
-                      :params => Shapes.object({ "space" => SPACE_REFERENCE,
+                      :params => Shapes.object({ "space" => scope(SPACE_REFERENCE, "Space"),
                                                  "fields" => fields(Summaries::VOLUME_FIELDS) }.merge(PAGE),
                                                :optional => %w[fields limit cursor]),
                       :result => paged("volumes", VOLUME_SUMMARY, "One page in path order.")) do |request|
@@ -190,7 +194,8 @@ module PhComposer
         feature.query(ScopedReads::FLOOR_SEGMENTS,
                       :description => "One page of the Floor Segments of one Space or one Volume: name exactly one.",
                       :refuses => refuses, :examples => [{ "space" => example }],
-                      :params => Shapes.object({ "space" => SPACE_REFERENCE, "volume" => VOLUME_REFERENCE,
+                      :params => Shapes.object({ "space" => scope(SPACE_REFERENCE, "Space"),
+                                                 "volume" => scope(VOLUME_REFERENCE, "Volume"),
                                                  "fields" => fields(Summaries::SEGMENT_FIELDS) }.merge(PAGE),
                                                :optional => %w[space volume fields limit cursor]),
                       :result => paged("floor_segments", SEGMENT_SUMMARY, "One page in path order.")) do |request|
@@ -199,8 +204,8 @@ module PhComposer
         feature.query(ScopedReads::FINDINGS,
                       :description => "One page of the findings of the Model, or of one Space and its children, " \
                                       "each with the reference of what it is about; optionally only some codes.",
-                      :refuses => refuses, :examples => [{}, { "codes" => ["space.no_volume"] }],
-                      :params => Shapes.object({ "space" => SPACE_REFERENCE,
+                      :refuses => refuses, :examples => [{}, { "codes" => ["space.empty"] }],
+                      :params => Shapes.object({ "space" => scope(SPACE_REFERENCE, "Space"),
                                                  "codes" => { "type" => "array", "items" => Shapes::TEXT,
                                                               "description" => "Only findings with these codes." } }
                                                  .merge(PAGE), :optional => %w[space codes limit cursor]),
