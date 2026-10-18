@@ -104,16 +104,51 @@ module PhComposer
           [key, { "type" => "string", "enum" => [unit] }]
         })
       })
+      def self.fields(allowed)
+        { "type" => "array", "items" => { "type" => "string", "enum" => allowed },
+          "description" => "What each row carries beside its id and reference. Absent, every field but the " \
+                           "metadata (user_data, extension_data, extension_status)." }
+      end
+
+      def self.paged(key, row, description)
+        Shapes.object({ key => Shapes.list(row, :description => description), "next_cursor" => Pages::NEXT_CURSOR,
+                        "total" => Pages::TOTAL, "units" => ALL_RESULT.dig("properties", "units") })
+      end
+
+      PAGE = { "limit" => Pages::LIMIT, "cursor" => Pages::CURSOR }.freeze
       LIST_PARAMS = Shapes.object({
         "ids" => { "type" => "array", "items" => Shapes::TEXT,
                    "maxItems" => Pages::MAXIMUM_LIMIT,
                    "description" => "Only occurrences of these Space ids." },
-        "limit" => Pages::LIMIT, "cursor" => Pages::CURSOR
-      }, :optional => %w[ids limit cursor])
-      LIST_RESULT = Shapes.object(ALL_RESULT.fetch("properties").merge(
-        "spaces" => Shapes.list(SPACE_ROW, :description => "One page in path order."),
+        "fields" => fields(Summaries::SPACE_FIELDS)
+      }.merge(PAGE), :optional => %w[ids fields limit cursor])
+      # A summary row: identity always, the rest as `fields` asks. Children and findings are counted here
+      # and read through the scoped reads.
+      def self.summary(row, drop, extra)
+        { "type" => "object", "required" => %w[id schema_version reference],
+          "properties" => row.fetch("properties").reject { |key, _value| drop.include?(key) }.merge(extra) }.freeze
+      end
+
+      FINDING_COUNTS = { "type" => "object", "description" => "Findings by code, its children's too." }.freeze
+      SUMMARY_ROW = summary(SPACE_ROW, %w[volumes findings],
+                            "building_segment" => { "type" => %w[string null] }, "volume_count" => Shapes::COUNT,
+                            "floor_segment_count" => Shapes::COUNT, "finding_counts" => FINDING_COUNTS)
+      LIST_EXAMPLES = [{}, { "limit" => 20, "fields" => %w[values metrics] }].freeze
+      ZONE_SUMS = Shapes.object(ZONE_ROW.fetch("properties").slice("zone_id", "zone_path", "name", "space_count")
+                                        .merge(TOTAL_PROPERTIES))
+      LIST_RESULT = Shapes.object({
+        "spaces" => Shapes.list(SUMMARY_ROW, :description => "One page in path order, within the reply budget."),
+        "model" => ALL_RESULT.dig("properties", "model"),
+        "zones" => Shapes.list(ZONE_SUMS, :description => "The sums of the Zones this page's Spaces are in."),
+        "building_segments" => Shapes.list(BUILDING_SEGMENT_ROW,
+                                           :description => "The sums of this page's Building-Segments."),
+        "stray_finding_count" => Shapes::COUNT, "units" => ALL_RESULT.dig("properties", "units"),
         "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL
-      ))
+      })
+      VOLUME_SUMMARY = summary(VOLUME_ROW, %w[floor_segments], "floor_segment_count" => Shapes::COUNT)
+      SEGMENT_SUMMARY = summary(SEGMENT_ROW, [], {})
+      SCOPED_FINDING = Shapes.with(FINDING, "reference" => { "type" => "object",
+                                                             "description" => "What the finding is about." })
       # What the Spaces walk refuses, and what the Zones read it depends on can.
       READ = %w[geometry.invalid record.unreadable target.wrong_kind validation.failed].freeze
 
@@ -140,13 +175,52 @@ module PhComposer
         end
       end
 
+      def install_scoped(feature)
+        refuses = READ + %w[query.cursor_expired query.limit_invalid target.not_found target.changed]
+        example = { "space_id" => "spc_Ab12Cd34Ef56", "entity_path" => [1201, 1202] }
+        feature.query(ScopedReads::VOLUMES,
+                      :description => "One page of one Space's Volumes, each with its Floor Segment count.",
+                      :refuses => refuses, :examples => [{ "space" => example }],
+                      :params => Shapes.object({ "space" => SPACE_REFERENCE,
+                                                 "fields" => fields(Summaries::VOLUME_FIELDS) }.merge(PAGE),
+                                               :optional => %w[fields limit cursor]),
+                      :result => paged("volumes", VOLUME_SUMMARY, "One page in path order.")) do |request|
+          ScopedReads.volumes(request)
+        end
+        feature.query(ScopedReads::FLOOR_SEGMENTS,
+                      :description => "One page of the Floor Segments of one Space or one Volume: name exactly one.",
+                      :refuses => refuses, :examples => [{ "space" => example }],
+                      :params => Shapes.object({ "space" => SPACE_REFERENCE, "volume" => VOLUME_REFERENCE,
+                                                 "fields" => fields(Summaries::SEGMENT_FIELDS) }.merge(PAGE),
+                                               :optional => %w[space volume fields limit cursor]),
+                      :result => paged("floor_segments", SEGMENT_SUMMARY, "One page in path order.")) do |request|
+          ScopedReads.floor_segments(request)
+        end
+        feature.query(ScopedReads::FINDINGS,
+                      :description => "One page of the findings of the Model, or of one Space and its children, " \
+                                      "each with the reference of what it is about; optionally only some codes.",
+                      :refuses => refuses, :examples => [{}, { "codes" => ["space.no_volume"] }],
+                      :params => Shapes.object({ "space" => SPACE_REFERENCE,
+                                                 "codes" => { "type" => "array", "items" => Shapes::TEXT,
+                                                              "description" => "Only findings with these codes." } }
+                                                 .merge(PAGE), :optional => %w[space codes limit cursor]),
+                      :result => Shapes.object({ "findings" => Shapes.list(SCOPED_FINDING),
+                                                 "next_cursor" => Pages::NEXT_CURSOR,
+                                                 "total" => Pages::TOTAL })) do |request|
+          ScopedReads.findings(request)
+        end
+      end
+
       def install(feature)
         targets.each { |target| feature.reference_target(target) }
         feature.query("#{FEATURE_ID}.list",
-                      :description => "One page of Space occurrences with their Volumes and Floor Segments, " \
-                                      "SI metrics, states and findings, and every Zone's sums.",
+                      :description => "One page of Space summaries in path order: values, SI metrics, Zone and " \
+                                      "Building-Segment, and counts of Volumes, Floor Segments and findings. The " \
+                                      "Model's sums cover every Space whatever the filter; the Zone and " \
+                                      "Building-Segment sums are those of this page's Spaces.",
                       :refuses => READ + %w[query.cursor_expired query.limit_invalid], :params => LIST_PARAMS,
-                      :result => LIST_RESULT, :examples => [{}, { "limit" => 20 }]) { |request| Reads.list(request) }
+                      :result => LIST_RESULT, :examples => LIST_EXAMPLES) { |request| Reads.list(request) }
+        install_scoped(feature)
         feature.query("#{FEATURE_ID}.all",
                       :response => { "bounded" => false, "prefer" => "#{FEATURE_ID}.list" },
                       :description => "Every Space occurrence in one complete projection, for the panel. Scripts " \

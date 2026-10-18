@@ -66,7 +66,7 @@ decision in this register is now answered; D02 stands as D01's engineering defau
 | Pending handoffs | 8 per connection, 30 s lifetime, then `session.busy` | Transient, not durable; under the 60 s client timeout |
 | Pump-starvation bound | 10 s without a main-thread tick answers `session.busy` off-thread | Six times the measured idle pump, one sixth of the client timeout; V2 measures whether the acceptor runs at all |
 | Response size | 24 KB of `structuredContent` per tool result, else explicit continuation or refusal (started at 80 KB) | Changed 2026-10-18 by P3a1-06 M4: Claude Code 2.1.300 refuses 60 KiB and keeps 40 KiB; Codex 0.163.0 keeps about 10,000 tokens and counts `content` and `structuredContent` together. Drives P3a1-03 page sizes ([receipt](evidence/p3a1-06-connection-design.md)) |
-| Page size | 100 default, 500 maximum, plus the byte cap | Row count alone was the A07 failure |
+| Page size | 100 default, 500 maximum, plus the byte cap: a page's rows under 16 KB (`Pages::MAX_PAGE_BYTES`) | Row count alone was the A07 failure; P3a1-03 set 16 KB so a page with its sums and envelope stays under the 24 KB reply |
 | Connections | 8 tokens per installation; no expiry, revoke only | Fits one dialog; expiry would reintroduce the ceremony D05 removed |
 | Model-context read | 200 selected entities per page at most, 100 by default, and the 16 KB page byte bound | Selection paging under C02; 500 short-named Groups measured 31 KB, over the reply budget |
 | Captures (if D08 lands) | 2 MB PNG, 4 retained per session for 15 min | Follows the outcome lifetime |

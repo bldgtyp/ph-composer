@@ -7244,6 +7244,447 @@ Example params:
 {}
 ```
 
+### `ph_composer.spaces.findings.list`
+
+One page of the findings of the Model, or of one Space and its children, each with the reference of what it is about; optionally only some codes. Owner: `ph_composer.spaces`.
+
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "space_id",
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      }
+    },
+    "codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Only findings with these codes."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings",
+    "next_cursor",
+    "total"
+  ],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "blocks_export",
+          "reference"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "blocks_export": {
+            "type": "boolean"
+          },
+          "repair": {
+            "type": "string",
+            "enum": [
+              "make_independent",
+              "restore_position"
+            ],
+            "description": "The operation that repairs it, when one does."
+          },
+          "reference": {
+            "type": "object",
+            "description": "What the finding is about."
+          }
+        }
+      }
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "codes": [
+    "space.no_volume"
+  ]
+}
+```
+
+### `ph_composer.spaces.floor_segments.list`
+
+One page of the Floor Segments of one Space or one Volume: name exactly one. Owner: `ph_composer.spaces`.
+
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "space_id",
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      }
+    },
+    "volume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume_id",
+        "entity_path"
+      ],
+      "properties": {
+        "volume_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "values",
+          "metrics",
+          "weighting_band",
+          "findings",
+          "user_data",
+          "extension_data",
+          "extension_status"
+        ]
+      },
+      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status)."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "floor_segments",
+    "next_cursor",
+    "total",
+    "units"
+  ],
+  "properties": {
+    "floor_segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "schema_version",
+          "reference"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "display_name",
+              "weighting_factor",
+              "net_area_factor"
+            ],
+            "properties": {
+              "display_name": {
+                "type": "string"
+              },
+              "weighting_factor": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The share of the area that counts toward the weighted floor area (iCFA, or TFA)."
+              },
+              "net_area_factor": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The share of the area that counts toward net volume."
+              }
+            }
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status against what is installed."
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "floor_segment_id",
+              "entity_path"
+            ],
+            "properties": {
+              "floor_segment_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "description": "The root-to-entity persistent-id path."
+              }
+            }
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "floor_area_m2",
+              "weighted_area_m2",
+              "net_area_m2",
+              "horizontal"
+            ],
+            "properties": {
+              "floor_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Plan area, projected onto the horizontal plane."
+              },
+              "weighted_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Area times weighting factor."
+              },
+              "net_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Area times net area factor."
+              },
+              "horizontal": {
+                "type": "boolean"
+              }
+            }
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "blocks_export"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "blocks_export": {
+                  "type": "boolean"
+                },
+                "repair": {
+                  "type": "string",
+                  "enum": [
+                    "make_independent",
+                    "restore_position"
+                  ],
+                  "description": "The operation that repairs it, when one does."
+                }
+              }
+            }
+          },
+          "weighting_band": {
+            "type": "string",
+            "description": "The weighting factor as By weighting factor's legend and a filter key it."
+          }
+        }
+      },
+      "description": "One page in path order."
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area",
+        "height",
+        "volume",
+        "airflow"
+      ],
+      "properties": {
+        "area": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        },
+        "height": {
+          "type": "string",
+          "enum": [
+            "m"
+          ]
+        },
+        "volume": {
+          "type": "string",
+          "enum": [
+            "m3"
+          ]
+        },
+        "airflow": {
+          "type": "string",
+          "enum": [
+            "m3/h"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "space": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1202
+    ]
+  }
+}
+```
+
 ### `ph_composer.spaces.labels.options`
 
 Which optional lines the Space labels show, for this Model session. Owner: `ph_composer.spaces`.
@@ -7297,7 +7738,7 @@ Example params:
 
 ### `ph_composer.spaces.list`
 
-One page of Space occurrences with their Volumes and Floor Segments, SI metrics, states and findings, and every Zone's sums. Owner: `ph_composer.spaces`.
+One page of Space summaries in path order: values, SI metrics, Zone and Building-Segment, and counts of Volumes, Floor Segments and findings. The Model's sums cover every Space whatever the filter; the Zone and Building-Segment sums are those of this page's Spaces. Owner: `ph_composer.spaces`.
 
 Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
@@ -7316,6 +7757,29 @@ Params:
       },
       "maxItems": 500,
       "description": "Only occurrences of these Space ids."
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "values",
+          "metrics",
+          "zone",
+          "building_segment",
+          "state",
+          "nested",
+          "airflow_mode",
+          "airflows",
+          "volume_count",
+          "floor_segment_count",
+          "finding_counts",
+          "user_data",
+          "extension_data",
+          "extension_status"
+        ]
+      },
+      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status)."
     },
     "limit": {
       "type": "number",
@@ -7337,10 +7801,10 @@ Result:
   "additionalProperties": false,
   "required": [
     "spaces",
+    "model",
     "zones",
     "building_segments",
-    "model",
-    "findings",
+    "stray_finding_count",
     "units",
     "next_cursor",
     "total"
@@ -7350,23 +7814,10 @@ Result:
       "type": "array",
       "items": {
         "type": "object",
-        "additionalProperties": false,
         "required": [
           "id",
           "schema_version",
-          "values",
-          "user_data",
-          "extension_data",
-          "extension_status",
-          "reference",
-          "zone",
-          "state",
-          "nested",
-          "metrics",
-          "airflow_mode",
-          "airflows",
-          "findings",
-          "volumes"
+          "reference"
         ],
         "properties": {
           "id": {
@@ -7571,374 +8022,54 @@ Result:
               }
             }
           },
-          "findings": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "code",
-                "message",
-                "blocks_export"
-              ],
-              "properties": {
-                "code": {
-                  "type": "string"
-                },
-                "message": {
-                  "type": "string"
-                },
-                "blocks_export": {
-                  "type": "boolean"
-                },
-                "repair": {
-                  "type": "string",
-                  "enum": [
-                    "make_independent",
-                    "restore_position"
-                  ],
-                  "description": "The operation that repairs it, when one does."
-                }
-              }
-            }
+          "building_segment": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
-          "volumes": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "id",
-                "schema_version",
-                "values",
-                "user_data",
-                "extension_data",
-                "extension_status",
-                "reference",
-                "nested",
-                "open",
-                "protected",
-                "moved",
-                "metrics",
-                "findings",
-                "floor_segments"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "schema_version": {
-                  "type": "integer"
-                },
-                "values": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "number",
-                    "display_name",
-                    "floor_id"
-                  ],
-                  "properties": {
-                    "number": {
-                      "type": "integer",
-                      "minimum": 1
-                    },
-                    "display_name": {
-                      "type": "string"
-                    },
-                    "avg_ceiling_height_m": {
-                      "type": "number",
-                      "exclusiveMinimum": 0,
-                      "x-unit": "m",
-                      "description": "Average clear ceiling height; absent until entered."
-                    },
-                    "floor_id": {
-                      "type": "string",
-                      "pattern": "^flr_[A-Za-z0-9]{12}$",
-                      "description": "The logical Space Floor's id."
-                    },
-                    "home_transform": {
-                      "type": "array",
-                      "items": {
-                        "type": "number"
-                      },
-                      "minItems": 16,
-                      "maxItems": 16,
-                      "description": "The Volume's transform relative to its Space at the last reconcile, for Restore position."
-                    }
-                  }
-                },
-                "user_data": {
-                  "type": "object",
-                  "description": "Contributor metadata, preserved as written."
-                },
-                "extension_data": {
-                  "type": "object",
-                  "description": "Versioned payloads registered extensions own."
-                },
-                "extension_status": {
-                  "type": "object",
-                  "description": "Each extension envelope's status against what is installed."
-                },
-                "reference": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "volume_id",
-                    "entity_path"
-                  ],
-                  "properties": {
-                    "volume_id": {
-                      "type": "string"
-                    },
-                    "entity_path": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer"
-                      },
-                      "minItems": 1,
-                      "description": "The root-to-entity persistent-id path."
-                    }
-                  }
-                },
-                "nested": {
-                  "type": "boolean"
-                },
-                "open": {
-                  "type": "boolean",
-                  "description": "Open for editing on the path."
-                },
-                "protected": {
-                  "type": "boolean",
-                  "description": "Locked, so the Space selects it whole."
-                },
-                "moved": {
-                  "type": "boolean",
-                  "description": "Away from where it was last left."
-                },
-                "metrics": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "floor_area_m2",
-                    "weighted_area_m2",
-                    "net_area_m2",
-                    "net_volume_m3"
-                  ],
-                  "properties": {
-                    "floor_area_m2": {
-                      "type": "number",
-                      "x-unit": "m2",
-                      "description": "Plan area, projected onto the horizontal plane."
-                    },
-                    "weighted_area_m2": {
-                      "type": "number",
-                      "x-unit": "m2",
-                      "description": "Summed weighted area."
-                    },
-                    "net_area_m2": {
-                      "type": "number",
-                      "x-unit": "m2",
-                      "description": "Summed net area."
-                    },
-                    "net_volume_m3": {
-                      "type": [
-                        "number",
-                        "null"
-                      ],
-                      "x-unit": "m3",
-                      "description": "Net area times height; null until a height is entered."
-                    }
-                  }
-                },
-                "findings": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "code",
-                      "message",
-                      "blocks_export"
-                    ],
-                    "properties": {
-                      "code": {
-                        "type": "string"
-                      },
-                      "message": {
-                        "type": "string"
-                      },
-                      "blocks_export": {
-                        "type": "boolean"
-                      },
-                      "repair": {
-                        "type": "string",
-                        "enum": [
-                          "make_independent",
-                          "restore_position"
-                        ],
-                        "description": "The operation that repairs it, when one does."
-                      }
-                    }
-                  }
-                },
-                "floor_segments": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "id",
-                      "schema_version",
-                      "values",
-                      "user_data",
-                      "extension_data",
-                      "extension_status",
-                      "reference",
-                      "metrics",
-                      "findings",
-                      "weighting_band"
-                    ],
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "schema_version": {
-                        "type": "integer"
-                      },
-                      "values": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "display_name",
-                          "weighting_factor",
-                          "net_area_factor"
-                        ],
-                        "properties": {
-                          "display_name": {
-                            "type": "string"
-                          },
-                          "weighting_factor": {
-                            "type": "number",
-                            "minimum": 0,
-                            "maximum": 1,
-                            "description": "The share of the area that counts toward the weighted floor area (iCFA, or TFA)."
-                          },
-                          "net_area_factor": {
-                            "type": "number",
-                            "minimum": 0,
-                            "maximum": 1,
-                            "description": "The share of the area that counts toward net volume."
-                          }
-                        }
-                      },
-                      "user_data": {
-                        "type": "object",
-                        "description": "Contributor metadata, preserved as written."
-                      },
-                      "extension_data": {
-                        "type": "object",
-                        "description": "Versioned payloads registered extensions own."
-                      },
-                      "extension_status": {
-                        "type": "object",
-                        "description": "Each extension envelope's status against what is installed."
-                      },
-                      "reference": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "floor_segment_id",
-                          "entity_path"
-                        ],
-                        "properties": {
-                          "floor_segment_id": {
-                            "type": "string"
-                          },
-                          "entity_path": {
-                            "type": "array",
-                            "items": {
-                              "type": "integer"
-                            },
-                            "minItems": 1,
-                            "description": "The root-to-entity persistent-id path."
-                          }
-                        }
-                      },
-                      "metrics": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "floor_area_m2",
-                          "weighted_area_m2",
-                          "net_area_m2",
-                          "horizontal"
-                        ],
-                        "properties": {
-                          "floor_area_m2": {
-                            "type": "number",
-                            "x-unit": "m2",
-                            "description": "Plan area, projected onto the horizontal plane."
-                          },
-                          "weighted_area_m2": {
-                            "type": "number",
-                            "x-unit": "m2",
-                            "description": "Area times weighting factor."
-                          },
-                          "net_area_m2": {
-                            "type": "number",
-                            "x-unit": "m2",
-                            "description": "Area times net area factor."
-                          },
-                          "horizontal": {
-                            "type": "boolean"
-                          }
-                        }
-                      },
-                      "findings": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "additionalProperties": false,
-                          "required": [
-                            "code",
-                            "message",
-                            "blocks_export"
-                          ],
-                          "properties": {
-                            "code": {
-                              "type": "string"
-                            },
-                            "message": {
-                              "type": "string"
-                            },
-                            "blocks_export": {
-                              "type": "boolean"
-                            },
-                            "repair": {
-                              "type": "string",
-                              "enum": [
-                                "make_independent",
-                                "restore_position"
-                              ],
-                              "description": "The operation that repairs it, when one does."
-                            }
-                          }
-                        }
-                      },
-                      "weighting_band": {
-                        "type": "string",
-                        "description": "The weighting factor as By weighting factor's legend and a filter key it."
-                      }
-                    }
-                  }
-                }
-              }
-            }
+          "volume_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "floor_segment_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "finding_counts": {
+            "type": "object",
+            "description": "Findings by code, its children's too."
           }
         }
       },
-      "description": "One page in path order."
+      "description": "One page in path order, within the reply budget."
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "floor_area_m2",
+        "weighted_area_m2",
+        "net_volume_m3"
+      ],
+      "properties": {
+        "floor_area_m2": {
+          "type": "number",
+          "x-unit": "m2",
+          "description": "Plan area, projected onto the horizontal plane."
+        },
+        "weighted_area_m2": {
+          "type": "number",
+          "x-unit": "m2",
+          "description": "Summed weighted area (iCFA)."
+        },
+        "net_volume_m3": {
+          "type": "number",
+          "x-unit": "m3",
+          "description": "Summed net volume."
+        }
+      },
+      "description": "Sums over every Space in the Model."
     },
     "zones": {
       "type": "array",
@@ -7952,11 +8083,7 @@ Result:
           "space_count",
           "floor_area_m2",
           "weighted_area_m2",
-          "net_volume_m3",
-          "airflows",
-          "inheriting_count",
-          "imbalanced",
-          "findings"
+          "net_volume_m3"
         ],
         "properties": {
           "zone_id": {
@@ -7992,84 +8119,10 @@ Result:
             "type": "number",
             "x-unit": "m3",
             "description": "Summed net volume."
-          },
-          "airflows": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "v_sup_m3h",
-              "v_eta_m3h",
-              "v_tran_m3h"
-            ],
-            "properties": {
-              "v_sup_m3h": {
-                "type": [
-                  "number",
-                  "null"
-                ],
-                "x-unit": "m3/h",
-                "description": "Summed over user-specified Spaces; null while any Space inherits."
-              },
-              "v_eta_m3h": {
-                "type": [
-                  "number",
-                  "null"
-                ],
-                "x-unit": "m3/h",
-                "description": "Summed over user-specified Spaces; null while any Space inherits."
-              },
-              "v_tran_m3h": {
-                "type": [
-                  "number",
-                  "null"
-                ],
-                "x-unit": "m3/h",
-                "description": "Summed over user-specified Spaces; null while any Space inherits."
-              }
-            }
-          },
-          "inheriting_count": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "imbalanced": {
-            "type": "boolean",
-            "description": "Supply and extract differ by more than 10 percent of the larger."
-          },
-          "findings": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "code",
-                "message",
-                "blocks_export"
-              ],
-              "properties": {
-                "code": {
-                  "type": "string"
-                },
-                "message": {
-                  "type": "string"
-                },
-                "blocks_export": {
-                  "type": "boolean"
-                },
-                "repair": {
-                  "type": "string",
-                  "enum": [
-                    "make_independent",
-                    "restore_position"
-                  ],
-                  "description": "The operation that repairs it, when one does."
-                }
-              }
-            }
           }
         }
       },
-      "description": "Each Zone's sums."
+      "description": "The sums of the Zones this page's Spaces are in."
     },
     "building_segments": {
       "type": "array",
@@ -8115,71 +8168,11 @@ Result:
           }
         }
       },
-      "description": "Each Building-Segment's sums over its Zones."
+      "description": "The sums of this page's Building-Segments."
     },
-    "model": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "floor_area_m2",
-        "weighted_area_m2",
-        "net_volume_m3"
-      ],
-      "properties": {
-        "floor_area_m2": {
-          "type": "number",
-          "x-unit": "m2",
-          "description": "Plan area, projected onto the horizontal plane."
-        },
-        "weighted_area_m2": {
-          "type": "number",
-          "x-unit": "m2",
-          "description": "Summed weighted area (iCFA)."
-        },
-        "net_volume_m3": {
-          "type": "number",
-          "x-unit": "m3",
-          "description": "Summed net volume."
-        }
-      },
-      "description": "Sums over every Space in the Model."
-    },
-    "findings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "code",
-          "message",
-          "blocks_export",
-          "reference"
-        ],
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "blocks_export": {
-            "type": "boolean"
-          },
-          "repair": {
-            "type": "string",
-            "enum": [
-              "make_independent",
-              "restore_position"
-            ],
-            "description": "The operation that repairs it, when one does."
-          },
-          "reference": {
-            "type": "object",
-            "description": "The misplaced record's reference."
-          }
-        }
-      },
-      "description": "Records outside the hierarchy that holds them."
+    "stray_finding_count": {
+      "type": "integer",
+      "minimum": 0
     },
     "units": {
       "type": "object",
@@ -8243,7 +8236,11 @@ Example params:
 
 ```json
 {
-  "limit": 20
+  "limit": 20,
+  "fields": [
+    "values",
+    "metrics"
+  ]
 }
 ```
 
@@ -8500,6 +8497,330 @@ Example params:
     1300,
     1400
   ]
+}
+```
+
+### `ph_composer.spaces.volumes.list`
+
+One page of one Space's Volumes, each with its Floor Segment count. Owner: `ph_composer.spaces`.
+
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space"
+  ],
+  "properties": {
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "space_id",
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "values",
+          "metrics",
+          "nested",
+          "open",
+          "protected",
+          "moved",
+          "floor_segment_count",
+          "findings",
+          "user_data",
+          "extension_data",
+          "extension_status"
+        ]
+      },
+      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status)."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "volumes",
+    "next_cursor",
+    "total",
+    "units"
+  ],
+  "properties": {
+    "volumes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "schema_version",
+          "reference"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "number",
+              "display_name",
+              "floor_id"
+            ],
+            "properties": {
+              "number": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "display_name": {
+                "type": "string"
+              },
+              "avg_ceiling_height_m": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "x-unit": "m",
+                "description": "Average clear ceiling height; absent until entered."
+              },
+              "floor_id": {
+                "type": "string",
+                "pattern": "^flr_[A-Za-z0-9]{12}$",
+                "description": "The logical Space Floor's id."
+              },
+              "home_transform": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 16,
+                "maxItems": 16,
+                "description": "The Volume's transform relative to its Space at the last reconcile, for Restore position."
+              }
+            }
+          },
+          "user_data": {
+            "type": "object",
+            "description": "Contributor metadata, preserved as written."
+          },
+          "extension_data": {
+            "type": "object",
+            "description": "Versioned payloads registered extensions own."
+          },
+          "extension_status": {
+            "type": "object",
+            "description": "Each extension envelope's status against what is installed."
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "volume_id",
+              "entity_path"
+            ],
+            "properties": {
+              "volume_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "description": "The root-to-entity persistent-id path."
+              }
+            }
+          },
+          "nested": {
+            "type": "boolean"
+          },
+          "open": {
+            "type": "boolean",
+            "description": "Open for editing on the path."
+          },
+          "protected": {
+            "type": "boolean",
+            "description": "Locked, so the Space selects it whole."
+          },
+          "moved": {
+            "type": "boolean",
+            "description": "Away from where it was last left."
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "floor_area_m2",
+              "weighted_area_m2",
+              "net_area_m2",
+              "net_volume_m3"
+            ],
+            "properties": {
+              "floor_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Plan area, projected onto the horizontal plane."
+              },
+              "weighted_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Summed weighted area."
+              },
+              "net_area_m2": {
+                "type": "number",
+                "x-unit": "m2",
+                "description": "Summed net area."
+              },
+              "net_volume_m3": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m3",
+                "description": "Net area times height; null until a height is entered."
+              }
+            }
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "blocks_export"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "blocks_export": {
+                  "type": "boolean"
+                },
+                "repair": {
+                  "type": "string",
+                  "enum": [
+                    "make_independent",
+                    "restore_position"
+                  ],
+                  "description": "The operation that repairs it, when one does."
+                }
+              }
+            }
+          },
+          "floor_segment_count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "description": "One page in path order."
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area",
+        "height",
+        "volume",
+        "airflow"
+      ],
+      "properties": {
+        "area": {
+          "type": "string",
+          "enum": [
+            "m2"
+          ]
+        },
+        "height": {
+          "type": "string",
+          "enum": [
+            "m"
+          ]
+        },
+        "volume": {
+          "type": "string",
+          "enum": [
+            "m3"
+          ]
+        },
+        "airflow": {
+          "type": "string",
+          "enum": [
+            "m3/h"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "space": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1202
+    ]
+  }
 }
 ```
 
@@ -48005,3 +48326,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | Version | Date | Change |
 | --- | --- | --- |
 | 1.1 | 2026-10-18 | describe adds capability, preview_capability, a view command's side_effects, preconditions and a query's response and while_busy; discover adds schemas; ph_composer.context.read is new. |
+| 1.2 | 2026-10-18 | ph_composer.spaces.list answers bounded summaries with fields, the Model's sums before any filter and the sums of the page's Zones and Building-Segments; spaces.volumes.list, spaces.floor_segments.list and spaces.findings.list are new. |

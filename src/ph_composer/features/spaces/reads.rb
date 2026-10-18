@@ -16,16 +16,26 @@ module PhComposer
         totals(rows, zones).merge("spaces" => rows, "findings" => findings, "units" => UNITS)
       end
 
-      # One page of Space occurrences in path order, optionally only some ids. Zone sums always cover
-      # every Space of the Zone, whatever the page holds.
+      # One bounded page of Space summaries in path order, optionally only some ids. The sums are taken
+      # over every Space before any filter, so a page never changes them: the Model's, and those of the
+      # Zones and Building-Segments the page's Spaces belong to. Children and findings have reads of their
+      # own (ScopedReads).
       def list(request)
-        rows, zones, findings = assemble(request)
+        rows, zones, strays = assemble(request)
+        sums = totals(rows, zones)
         params = request.params
-        rows = rows.select { |row| params["ids"].include?(row.fetch("id")) } if params.key?("ids")
-        page, next_cursor = Pages.slice(request, "#{FEATURE_ID}.list", rows,
-                                        :key => ->(row) { row.dig("reference", "entity_path") })
-        totals(rows, zones).merge("spaces" => page, "findings" => findings, "units" => UNITS,
-                                  "next_cursor" => next_cursor, "total" => rows.length)
+        chosen = params.key?("ids") ? rows.select { |row| params["ids"].include?(row.fetch("id")) } : rows
+        summaries = chosen.map { |row| Summaries.space(row, zones, params["fields"]) }
+        page, next_cursor = Pages.bounded(request, "#{FEATURE_ID}.list", summaries,
+                                          :key => ->(row) { row.dig("reference", "entity_path") })
+        zone_paths = page.filter_map { |row| row.dig("zone", "zone_path") }.uniq
+        on_page = sums.fetch("zones").select { |zone| zone_paths.include?(zone.fetch("zone_path")) }
+        segment_keys = page.filter_map { |row| row["building_segment"] }.uniq
+        { "spaces" => page, "model" => sums.fetch("model"),
+          "zones" => on_page.map { |zone| Summaries.zone(zone) },
+          "building_segments" => sums.fetch("building_segments").select { |row| segment_keys.include?(row["key"]) },
+          "stray_finding_count" => strays.length, "units" => UNITS, "next_cursor" => next_cursor,
+          "total" => chosen.length }
       end
 
       # The Building-Segment a Zone belongs to: the key its sums group by and the name they show.
