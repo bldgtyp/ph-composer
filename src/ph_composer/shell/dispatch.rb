@@ -201,7 +201,7 @@ module PhComposer
       session, _caller, declaration = resolve(context, capability, name, declarations)
       check_params!(declaration, params, session)
       approval, params = NativeApproval.admit(declaration, approval, params)
-      refuse_if_busy!(session)
+      refuse_if_busy!(session) unless declaration.respond_to?(:while_busy) && declaration.while_busy
       check_precondition!(session, params, declaration)
       # A call that does not complete, even one whose result fails its schema after writing, keeps the
       # location for a retry.

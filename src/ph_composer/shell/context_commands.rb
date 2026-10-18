@@ -24,6 +24,7 @@ module PhComposer
                           :params => object({ "limit" => Pages::LIMIT, "cursor" => Pages::CURSOR },
                                             :optional => %w[limit cursor]),
                           :result => result, :refuses => %w[query.cursor_expired query.limit_invalid],
+                          :while_busy => true,
                           :examples => [{}, { "limit" => 50 }]) { |request| read(request) }
     end
 

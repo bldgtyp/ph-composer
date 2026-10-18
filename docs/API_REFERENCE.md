@@ -48002,4 +48002,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 
 | Version | Date | Change |
 | --- | --- | --- |
-| 1.1 | 2026-10-18 | describe adds capability, preview_capability, a view command's side_effects, preconditions and a query's response; discover adds schemas; ph_composer.context.read is new. |
+| 1.1 | 2026-10-18 | describe adds capability, preview_capability, a view command's side_effects, preconditions and a query's response and while_busy; discover adds schemas; ph_composer.context.read is new. |

@@ -24,7 +24,7 @@ module PhComposer
     CHANGES = [
       { "minor" => 1, "date" => "2026-10-18",
         "change" => "describe adds capability, preview_capability, a view command's side_effects, preconditions " \
-                    "and a query's response; discover adds schemas; ph_composer.context.read is new." }
+                    "and a query's response and while_busy; discover adds schemas; ph_composer.context.read is new." }
     ].freeze
     # A mutation's `request` envelope.
     REQUEST_SCHEMA = {
@@ -33,7 +33,7 @@ module PhComposer
         "sequence" => { "type" => "integer", "minimum" => 1,
                         "description" => "This caller's mutation count from 1; a retry repeats it." },
         "expected_revision" => { "type" => "integer", "description" => "The revision the caller last read." },
-        "proposal_digest" => { "type" => "string", "description" => "From a preview of the same change." }
+        "proposal_digest" => { "type" => %w[string null], "description" => "From a preview of the same change." }
       }
     }.freeze
 
@@ -220,6 +220,7 @@ module PhComposer
       preconditions = operation.respond_to?(:preconditions) ? Array(operation.preconditions) : []
       terms["preconditions"] = preconditions unless preconditions.empty?
       terms["response"] = operation.response if operation.is_a?(Declarations::Query) && operation.response
+      terms["while_busy"] = true if operation.is_a?(Declarations::Query) && operation.while_busy
       terms
     end
 

@@ -183,12 +183,14 @@ module PhComposer
     # they are built.
     VALUE_MEMBERS = {
       Declarations::Feature => %i[id contract_version requires],
-      Declarations::Query => %i[name owner description params result examples refuses participants],
+      Declarations::Query => %i[name owner description params result examples refuses participants response
+                                while_busy],
       Declarations::Action => %i[name owner description params result examples refuses undo_name side_effects
-                                 confirmation participants transitions],
-      Declarations::ViewCommand => %i[name owner description params result examples refuses],
-      Declarations::SetupCommand => %i[name owner description params result examples refuses],
-      Declarations::FileExport => %i[name owner description params result examples refuses],
+                                 confirmation participants transitions preconditions],
+      Declarations::ViewCommand => %i[name owner description params result examples refuses side_effects
+                                      preconditions],
+      Declarations::SetupCommand => %i[name owner description params result examples refuses preconditions],
+      Declarations::FileExport => %i[name owner description params result examples refuses preconditions],
       Declarations::SnapshotSection => %i[name owner query params],
       Declarations::ExportContributor => %i[name owner section_version result preflight user_data_keys requires
                                             entity_projections],
@@ -360,11 +362,11 @@ module PhComposer
       # Every operation names `refuses:`. It defaults to nil only so validation can name each operation
       # that omits it, rather than one Ruby error ending the feature's install.
       def query(name, description:, params:, result:, refuses: nil, examples: [], participants: [], response: nil,
-                &handler)
+                while_busy: false, &handler)
         declaration = Declarations::Query.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :participants => participants, :handler => handler,
-          :response => response
+          :response => response, :while_busy => while_busy
         )
         @staging.add(:declared_queries, id, name, declaration)
       end

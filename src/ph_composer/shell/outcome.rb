@@ -31,7 +31,8 @@ module PhComposer
         "value" => { "type" => %w[object array string number integer boolean null],
                      "description" => "The operation's result, as its result schema says; null unless completed." },
         "affected" => { "type" => "array", "items" => { "type" => "object" } },
-        "findings" => { "type" => "array", "items" => { "type" => "object" } },
+        "findings" => { "type" => "array", "items" => { "type" => %w[object string] },
+                        "description" => "Advisory rows; a params refusal lists its schema problems as strings." },
         "detail" => { "type" => %w[object null] }, "proposal_digest" => { "type" => %w[string null] }
       }
     }.freeze

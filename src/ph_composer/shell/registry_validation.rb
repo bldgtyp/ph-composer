@@ -545,6 +545,9 @@ module PhComposer
       private
 
       def check_described_terms(operation)
+        if operation.is_a?(Declarations::Query) && ![true, false].include?(operation.while_busy)
+          problem(operation, "while_busy must be true or false")
+        end
         if operation.is_a?(Declarations::ViewCommand) && !(operation.side_effects.nil? || text?(operation.side_effects))
           problem(operation, "side_effects must be a sentence when declared")
         end
@@ -554,15 +557,16 @@ module PhComposer
         problem(operation, "preconditions must be a list of sentences")
       end
 
-      # A query's `response` marks it unbounded and names a bounded query that exists.
+      # A query's `response` marks it unbounded and names a registered query that is itself bounded.
       def check_responses
-        queries = @staging.declared_queries.map(&:name) + @live.queries.keys
+        queries = (@live.queries.values + @staging.declared_queries).to_h { |query| [query.name, query] }
         @staging.declared_queries.reject { |query| query.response.nil? }.each do |query|
           response = query.response
-          next if response.is_a?(Hash) && response.keys.sort == %w[bounded prefer] && response["bounded"] == false &&
-                  queries.include?(response["prefer"]) && response["prefer"] != query.name
+          next if response.is_a?(Hash) && response.keys.all?(String) && response.keys.sort == %w[bounded prefer] &&
+                  response["bounded"] == false && queries.key?(response["prefer"]) &&
+                  queries.fetch(response["prefer"]).response.nil?
 
-          problem(query, "response must be {\"bounded\" => false, \"prefer\" => a registered query's name}")
+          problem(query, "response must be {\"bounded\" => false, \"prefer\" => a registered bounded query's name}")
         end
       end
     end

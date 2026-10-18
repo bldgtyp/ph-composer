@@ -67,7 +67,39 @@ class ModelContextTest < PhComposerTestCase
     [{ :side_effects => "" }, { :preconditions => ["ok", " "] }].each do |terms|
       assert_raises(PhComposer::RegistrationError) { install_view("bad.view", **terms) }
     end
-    assert_raises(PhComposer::RegistrationError) { install_query("bad.query", { "bounded" => false, "prefer" => "x" }) }
+    [{ "bounded" => false, "prefer" => "x" }, { "bounded" => false, :prefer => "ph_composer.zones.list" },
+     { "bounded" => false, "prefer" => "ph_composer.zones.all" }].each do |response|
+      assert_raises(PhComposer::RegistrationError) { install_query("bad.query", response) }
+    end
+  end
+
+  def test_two_reads_cannot_name_each_other_as_the_bounded_one
+    feature_module = Module.new
+    feature_module.define_singleton_method(:install) do |registry|
+      feature = registry.feature("loop.reads", :contract_version => PhComposer::Declarations::CONTRACT_VERSION)
+      %w[first second].zip(%w[second first]).each do |name, other|
+        response = { "bounded" => false, "prefer" => "loop.reads.#{other}" }
+        feature.query("loop.reads.#{name}", :description => "Probe.", :params => { "type" => "object" },
+                                            :result => { "type" => "object" }, :refuses => [],
+                                            :response => response) { {} }
+      end
+    end
+
+    assert_raises(PhComposer::RegistrationError) { PhComposer::Registry.install([feature_module]) }
+  end
+
+  def test_published_terms_are_owned_copies_of_what_a_contributor_passed
+    response = { "bounded" => false, "prefer" => "ph_composer.zones.list" }
+    preconditions = [String.new("A Zone is open.")]
+    install_query("owned.query", response)
+    install_view("owned.view", :preconditions => preconditions)
+
+    response["prefer"] = "nowhere"
+    preconditions.first.replace("Changed.")
+    preconditions << "Added."
+
+    assert_equal "ph_composer.zones.list", API.describe(:name => "owned.query.all").dig("response", "prefer")
+    assert_equal ["A Zone is open."], API.describe(:name => "owned.view.go").fetch("preconditions")
   end
 
   def test_a_view_commands_side_effects_and_preconditions_reach_describe
@@ -91,8 +123,14 @@ class ModelContextTest < PhComposerTestCase
                 PhComposer::Outcome.failed(:effect => "unknown", :revision => 3)]
 
     assert_empty(outcomes.flat_map { |outcome| PhComposer::JsonSchema.validate(outcome, schemas.fetch("outcome")) })
+    reader = API.connect(:session_id => @session.id, :capabilities => %w[read])
+    refusal = API.query(:context => reader, :name => "ph_composer.records.list", :params => { "kind" => 7 })
+    assert_equal "params.invalid", refusal["code"]
+    assert_empty PhComposer::JsonSchema.validate(refusal, schemas.fetch("outcome"))
     request = schemas.fetch("request")
     assert_empty PhComposer::JsonSchema.validate({ "sequence" => 1, "expected_revision" => 1 }, request)
+    assert_empty PhComposer::JsonSchema.validate({ "sequence" => 1, "expected_revision" => 1,
+                                                   "proposal_digest" => nil }, request)
     refute_empty PhComposer::JsonSchema.validate({ "sequence" => 0, "expected_revision" => 1 }, request)
   end
 
@@ -140,6 +178,19 @@ class ModelContextTest < PhComposerTestCase
     assert_equal revision, @session.revision
     assert_equal first.dig("session", "view_generation") + 1, @session.view_generation
     assert_equal "query.cursor_expired", later["code"]
+  end
+
+  def test_the_context_answers_while_the_session_is_busy_and_record_reads_do_not
+    @session.feature_state(:probe_deferred) { Struct.new(:pending?).new(true) }
+    reader = API.connect(:session_id => @session.id, :capabilities => %w[read])
+
+    read = context
+    records = API.query(:context => reader, :name => "ph_composer.zones.list", :params => {})
+
+    assert_equal [true, "This Model has deferred work that has not finished."],
+                 read.dig("value", "readiness").values_at("busy", "reason")
+    assert_equal "session.busy", records["code"]
+    assert API.describe(:name => READ).fetch("while_busy")
   end
 
   private

@@ -71,9 +71,11 @@ module PhComposer
     #
     # `response`, optional, says how large an answer can be: `{"bounded" => false, "prefer" => name}` marks
     # a whole-Model read, such as a panel snapshot, and names the bounded query a client with a reply
-    # budget reads instead.
+    # budget reads instead. `while_busy`, optional, marks a read of session state alone, such as the
+    # Model context, that answers while a change or deferred work keeps the session busy; a read of
+    # records never does.
     Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :participants, :handler,
-                       :response, keyword_init: true)
+                       :response, :while_busy, keyword_init: true)
 
     # A validated Model change. `handler` is `->(request, proposal) { value }`: it adds steps and record
     # writes to `proposal` (an Operations::Proposal, whose `record_changes` is the Records::ChangeSet)
