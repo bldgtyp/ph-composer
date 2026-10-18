@@ -4,6 +4,10 @@ module PhComposer
   module Spaces
     # The edit-context commands, Unprotect, Restore position and the reconciler's subscriptions.
     module ContextRegistration
+      # The protection boundary these commands may trigger (context/AGENT_INTERFACE.md, view commands).
+      LEAVING = "Moves the edit path, which advances the Model revision; leaving a Volume that was open and " \
+                "unprotected protects it again. No authored value changes; SketchUp itself records leaving a " \
+                "Group as an Undo entry, and undoing it reopens the Group."
       PATH_RESULT = Shapes.object({ "path" => Shapes::ZONE_PATH.merge("description" => "The edit path afterwards.") })
       TARGET = %w[record.unreadable target.ambiguous target.changed target.locked target.not_found
                   target.shared_definition validation.failed].freeze
@@ -51,7 +55,7 @@ module PhComposer
         feature.view_command("#{FEATURE_ID}.context.open",
                              :description => "Open a Space, or a Volume volumes.unprotect unlocked, as the edit " \
                                              "context; a Volume being left is protected first.",
-                             :refuses => TARGET + %w[space.volume_protected],
+                             :refuses => TARGET + %w[space.volume_protected], :side_effects => LEAVING,
                              :params => Shapes.object({ "reference" => OPEN_PARAM }), :result => PATH_RESULT,
                              :examples => [{ "reference" => EXAMPLE_SPACE }]) do |request|
           Navigation.open(request, :reference => request.params.fetch("reference"))
@@ -59,13 +63,14 @@ module PhComposer
         feature.view_command("#{FEATURE_ID}.context.close",
                              :description => "Leave the innermost open Space or Volume for its parent, protecting a " \
                                              "Volume being left.",
-                             :refuses => [], :params => Shapes::NONE, :result => PATH_RESULT,
+                             :refuses => [], :params => Shapes::NONE, :result => PATH_RESULT, :side_effects => LEAVING,
                              :examples => [{}]) { |request| Navigation.close(request) }
         feature.view_command("#{FEATURE_ID}.locate",
                              :description => "Select and frame one Space, Volume or Floor Segment. Nothing is " \
                                              "unlocked: the path opens up to the first locked Group, such as a " \
                                              "protected Volume, and that Group is selected instead.",
                              :refuses => TARGET, :params => Shapes.object({ "reference" => ANY_PARAM }),
+                             :side_effects => "Selects and frames. #{LEAVING}",
                              :result => PATH_RESULT, :examples => [{ "reference" => EXAMPLE_SPACE }]) do |request|
           Navigation.locate(request, :reference => request.params.fetch("reference"))
         end

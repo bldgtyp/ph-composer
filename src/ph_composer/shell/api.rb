@@ -18,7 +18,7 @@ module PhComposer
   # never live SketchUp objects.
   module API
     MAJOR = 1
-    MINOR = 3
+    MINOR = 4
     # One line per shape change under this major, newest last (context/CONTRACTS.md, "Public
     # interface"); the generated reference lists them.
     CHANGES = [
@@ -32,7 +32,10 @@ module PhComposer
                     "fields asks." },
       { "minor" => 3, "date" => "2026-10-18",
         "change" => "ph_composer.spaces.candidate_faces.list is new; spaces.update and spaces.batch_update type " \
-                    "values and expected_values by field, with units, and refuse unknown keys at the schema." }
+                    "values and expected_values by field, with units, and refuse unknown keys at the schema." },
+      { "minor" => 4, "date" => "2026-10-18",
+        "change" => "ph_composer.context.open and ph_composer.context.root are new view commands; the Spaces context " \
+                    "commands and both locate commands declare side_effects." }
     ].freeze
     # A mutation's `request` envelope.
     REQUEST_SCHEMA = {

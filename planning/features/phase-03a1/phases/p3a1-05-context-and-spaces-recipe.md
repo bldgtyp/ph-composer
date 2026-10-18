@@ -1,8 +1,8 @@
 # P3a1-05: Context navigation and public-only Spaces authoring
 
 DATE: 2026-10-17
-STATUS: Scoped. Planning only; execution requires separate implementation authorization. Rewritten 2026-10-17 to accepted D3a1-04 (foundation-owned navigation) and D3a1-13 (navigation stays `view` and declares the lock it may trigger).
-ISSUE: none (local planning draft)
+STATUS: Implemented on branch `feat/phase-03a1-p3a1-05`; see [STATUS](../STATUS.md). Rewritten 2026-10-17 to accepted D3a1-04 (foundation-owned navigation) and D3a1-13 (navigation stays `view` and declares the lock it may trigger).
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership
 

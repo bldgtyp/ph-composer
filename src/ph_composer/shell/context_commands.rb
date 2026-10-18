@@ -3,16 +3,29 @@
 require_relative "pages"
 
 module PhComposer
-  # Where a Model session stands, as one read, registered as a foundation capability: which Model it
-  # is, its revision and view generation, whether it can take work now, the edit path the user is in,
-  # and the selection in pages (context/AGENT_INTERFACE.md, "Model context"). It reads only; it never
-  # moves the edit path, the selection or the camera.
+  # Where a Model session stands, as one read, and the two commands that move the edit path, registered
+  # as a foundation capability (context/AGENT_INTERFACE.md, "Model context"). The read never moves the
+  # edit path, the selection or the camera. `open` and `root` move the edit path through EditContext, so
+  # every feature's boundary runs: leaving an open Volume, Spaces protects it, which both commands declare
+  # in `side_effects`. They name no feature.
   #
   # A selection page is bound to the revision and the view generation it was read at, so a cursor
   # expires when the selection changes even though the Model did not.
   module ContextCommands
     FEATURE_ID = "ph_composer.context"
     READ = "#{FEATURE_ID}.read"
+    OPEN = "#{FEATURE_ID}.open"
+    ROOT = "#{FEATURE_ID}.root"
+    PATH = { "type" => "array", "items" => { "type" => "integer" },
+             "description" => "Persistent ids of Groups and Components from the root, outermost first." }.freeze
+    EXPECTED_PATH = PATH.merge("description" => "The edit path as last read; refused when it has changed since.")
+    SIDE_EFFECTS = "Moves the edit path, which advances the Model revision. Leaving a Volume that was open and " \
+                   "unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself " \
+                   "records leaving a Group as an Undo entry, and undoing it reopens the Group."
+    MOVE_REFUSES = %w[target.not_found target.locked target.wrong_kind target.shared_definition
+                      target.edit_path_changed].freeze
+    # The tools during which the edit path may move: selecting and moving the camera hold no gesture.
+    IDLE_TOOLS = %w[SelectionTool CameraOrbitTool CameraPanTool CameraZoomTool CameraZoomWindowTool].freeze
     MAXIMUM_LIMIT = 200
     LIMIT = { "type" => "integer", "minimum" => 1, "maximum" => MAXIMUM_LIMIT,
               "description" => "Selected entities per page, 1 to #{MAXIMUM_LIMIT}; #{Pages::DEFAULT_LIMIT} when " \
@@ -24,6 +37,7 @@ module PhComposer
 
     def install(registry)
       feature = registry.feature(FEATURE_ID, :contract_version => Declarations::CONTRACT_VERSION)
+      install_navigation(feature)
       feature.query(READ, :description => "Where this Model session stands: the Model's file name and path, " \
                                           "its revision and view generation, whether it is busy and why, the " \
                                           "edit path from the root, and the selection in pages. Reads only.",
@@ -32,6 +46,96 @@ module PhComposer
                           :result => result, :refuses => %w[query.cursor_expired query.limit_invalid],
                           :while_busy => true,
                           :examples => [{}, { "limit" => 50 }]) { |request| read(request) }
+    end
+
+    def install_navigation(feature)
+      moved = object({ "path" => PATH, "changed" => { "type" => "boolean" } })
+      terms = { :result => moved, :refuses => MOVE_REFUSES, :side_effects => SIDE_EFFECTS }
+      feature.view_command(OPEN, **terms,
+                           :description => "Open the Group or Component at the end of path as the edit context, " \
+                                           "through every one above it. Refuses a locked or missing step.",
+                           :params => object({ "path" => PATH, "expected_path" => EXPECTED_PATH },
+                                             :optional => ["expected_path"]),
+                           :examples => [{ "path" => [1201] },
+                                         { "path" => [1201, 1202], "expected_path" => [] }]) do |request|
+        move(request, request.params.fetch("path"))
+      end
+      feature.view_command(ROOT, **terms,
+                           :description => "Close every open Group and Component, back to the Model's root.",
+                           :params => object({ "expected_path" => EXPECTED_PATH }, :optional => ["expected_path"]),
+                           :examples => [{}, { "expected_path" => [1201] }]) { |request| move(request, []) }
+    end
+
+    # Every refusal comes before EditContext runs a feature's boundary, which may write (Spaces protects a
+    # Volume it leaves), so a refused move leaves the Model as it was. A path equal to the current one
+    # changes nothing, whatever state its steps are in.
+    def move(request, ids)
+      model = request.model
+      current = EditContext.current_ids(model)
+      expected = request.params["expected_path"]
+      if expected && expected != current
+        raise CodedError.new("target.edit_path_changed", "The edit path changed since it was read; read " \
+                                                         "ph_composer.context.read again.")
+      end
+      return { "path" => current, "changed" => false } if ids == current
+
+      tool_free!(model)
+      path = resolve(model, ids)
+      reentered!(EditContext.current(model), path)
+      EditContext.enter(model, path)
+      { "path" => EditContext.current_ids(model), "changed" => true }
+    end
+
+    # A definition open now and entered again on the destination through another occurrence (a copied
+    # parent shares its children; a copied Volume shares its definition) would be left and entered at
+    # once, so a boundary could lock what the move then opens, and SketchUp would refuse the path after
+    # that write. The caller closes to the root first.
+    def reentered!(current, path)
+      ids = ->(entities) { entities.map(&:persistent_id) }
+      path.each_with_index do |entity, depth|
+        definition = entity.definition.persistent_id
+        at = current.index { |open| open.definition.persistent_id == definition }
+        next if at.nil? || ids.call(current[0..at]) == ids.call(path[0..depth])
+
+        raise CodedError.new("target.shared_definition", "Group or Component #{entity.persistent_id} is open " \
+                                                         "through another copy of its parent; close to the root " \
+                                                         "first. Nothing moved.")
+      end
+    end
+
+    def resolve(model, ids)
+      entities = model.entities
+      ids.map do |id|
+        entity = entities.to_a.find { |candidate| container?(candidate) && candidate.persistent_id == id }
+        raise CodedError.new("target.not_found", "No Group or Component #{id} is at that step.") unless entity
+        raise CodedError.new("target.locked", "Group or Component #{id} is locked; nothing moved.") if entity.locked?
+        if entity.definition.respond_to?(:live_component?) && entity.definition.live_component?
+          raise CodedError.new("target.wrong_kind", "Component #{id} is a Live Component, which SketchUp does not " \
+                                                    "open for editing; nothing moved.")
+        end
+        if entity.definition.instances.any?(&:locked?)
+          raise CodedError.new("target.locked", "Another copy of Group or Component #{id} is locked, so SketchUp " \
+                                                "cannot open it; nothing moved.")
+        end
+
+        entities = entity.definition.entities
+        entity
+      end
+    end
+
+    # A user's tool other than Select or a camera tool may hold a gesture that a path change would end, so
+    # the move waits for the user rather than closing it.
+    def tool_free!(model)
+      tools = model.respond_to?(:tools) ? model.tools : nil
+      name = tools.respond_to?(:active_tool_name) ? tools.active_tool_name.to_s : ""
+      return if name.empty? || IDLE_TOOLS.include?(name)
+
+      raise CodedError.new("session.busy", "The #{name} tool is in use in SketchUp; the edit path moves once the " \
+                                           "user returns to Select. Nothing moved.")
+    end
+
+    def container?(entity)
+      entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
     end
 
     def read(request)

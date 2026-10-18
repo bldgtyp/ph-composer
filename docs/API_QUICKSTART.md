@@ -31,6 +31,12 @@ PhComposer::API.describe(name: "ph_composer.zones.make")        # params, result
 PhComposer::API.describe(name: "ph_composer.zones.faces.face")  # values, references, occurrence
 ```
 
+`ph_composer.context.read` says where the session stands before you act: its revision, whether it
+is busy, the edit path the user is in, and the selection. Some writes need a Group open, as a user
+would open it by double-clicking; the view commands `ph_composer.context.open` (a path of persistent
+ids from the root) and `ph_composer.context.root` move the edit path for you, and each declares in
+`side_effects` what leaving a context can trigger.
+
 ## 2. Make a Zone from the selection
 
 The Zones read offers the params Make Zone takes for whatever the user has selected, or null.

@@ -41,9 +41,27 @@ class SpacesWalkthroughTest < PhComposerTestCase
     assert_equal before, @model.operations.length
   end
 
+  def test_a_locked_first_zone_is_refused_before_any_fixture_is_drawn
+    @model = Sketchup.active_model
+    first = zone_group(100, "Z", [])
+    first.locked = true
+    @model.entities << first << zone_group(200, "Y", [])
+
+    error = assert_raises(RuntimeError) { SpacesWalkthrough.run }
+
+    assert_match(/target.locked/, error.message)
+    assert_empty first.entities.to_a
+  end
+
   def test_the_walkthrough_names_no_feature_module
     text = File.read(File.expand_path("../tools/examples/authoring/spaces_walkthrough.rb", __dir__))
     refute_match(/PhComposer::(Spaces|Zones)::/, text)
+  end
+
+  def test_the_client_moves_the_edit_path_only_through_the_public_commands
+    text = File.read(File.expand_path("../tools/examples/authoring/spaces_walkthrough.rb", __dir__))
+    refute_match(/active_path\s*=/, text)
+    assert_match(/ph_composer\.context\.\#\{command\}/, text)
   end
 
   def test_height_from_solid_sets_the_first_volumes_height_from_a_drawn_solid

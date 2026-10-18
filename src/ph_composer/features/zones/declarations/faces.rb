@@ -334,6 +334,9 @@ module PhComposer
                                :description => "Bring an explicit set of Faces into view and outline them, " \
                                                "leaving the selection alone.",
                                :refuses => [],
+                               :side_effects => "Moves the camera to frame the Faces and outlines them until " \
+                                                "the selection changes. The edit path, the selection and the " \
+                                                "revision are unchanged.",
                                :params => LOCATE_PARAMS, :result => LOCATE_RESULT,
                                :examples => [{ "faces" => [EXAMPLE_FACE] }]) do |request|
             Faces.locate(request, :faces => request.params.fetch("faces"))

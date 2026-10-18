@@ -6,8 +6,11 @@ STATUS: Agent access is an accepted product priority. The in-process programming
 PR #1 from Phase 0 P0-D with a panel-closed synthetic client. Phase 1 (PR #3, PR #6) added `view`,
 the selection, reveal and camera verb; per-operation schemas and examples; bounded, filtered and
 projected reads; the export task methods; and in-process grants (`read`, `view`, `model_write`,
-`export`) enforced at dispatch. Transport, packaging, the user-facing access grant and the
-external adapter remain proposed.
+`export`) enforced at dispatch. Phase 3a1 added the external path: a loopback MCP endpoint served
+from the extension with per-user bearer tokens granted in the Agent Access dialog; the Model context
+read and the edit-path commands; capability and declared terms in `describe`; and the bounded Spaces
+reads with candidate Faces. Its remaining stages (write grants, artifacts, capture) are proposed
+until their owning packet records them.
 
 Users bring their own agents. PH-Composer supplies documented access to inspect, view and edit
 the authored model without requiring an agent to understand private Ruby internals or operate
@@ -136,6 +139,26 @@ open Models with the same file name differ by it. The view generation is a secon
 that advances on a selection change and never with the revision; a selection page is bound to both,
 so its cursor expires (`query.cursor_expired`) when the selection changes even though the Model did
 not. The read moves neither the edit path, the selection nor the camera.
+
+Implemented: the edit path moves through two foundation view commands, so a client never assigns it
+or walks geometry to reach a context. `ph_composer.context.open` takes `path`, the persistent ids of
+the Groups and Components from the root, outermost first; `ph_composer.context.root` closes every one.
+Both take an optional `expected_path`, the path the client last read, and refuse when it has changed
+(`target.edit_path_changed`); `open` resolves every step first and refuses a missing one
+(`target.not_found`), one that is locked or has a locked copy (`target.locked`, which SketchUp
+would refuse too), a Live Component (`target.wrong_kind`) and an entity open now that the destination
+reaches through another copy of its parent (`target.shared_definition`), and both refuse `session.busy` while the user has a tool other than Select or a
+camera tool active, whose gesture a path change would end; each refusal comes before any boundary
+runs, with nothing moved. They enter through
+`EditContext`, so each feature's boundary runs: leaving an unprotected Volume, Spaces protects it in a
+transparent step joined to the move. SketchUp records a path change that leaves a Group as an Undo
+entry of its own ([host behavior](SKETCHUP_HOST_BEHAVIOR.md)); undoing it reopens the Group, and
+entering a Group from the root added none on 26.1.188. Each answers the path and `changed`; a path equal to the
+current one changes nothing and leaves the revision where it was, even when one of its steps has
+since been locked. Spaces keeps `spaces.context.open`
+and `.close` as reference-aware conveniences, and they and both `locate` commands declare their effects
+in `side_effects`. [tools/examples/authoring/spaces_walkthrough.rb](../tools/examples/authoring/spaces_walkthrough.rb)
+keeps native fixture setup apart from a client segment that uses only these public calls.
 
 Support explicit selection, reveal and camera operations for visual inspection, plus viewport
 capture where the host permits it. Captures identify their model session, revision, camera and
@@ -296,8 +319,10 @@ unknown interrupted task succeeded.
 
 External access is explicit and revocable, with a visible connection/access state. Separate read,
 view, model-write, setup and file/import/export capabilities so the user can grant useful scope.
-`view` is the selection, reveal and camera operations below: it moves nothing in the SKP, so it is
-granted apart from model-write, and a read never carries it. `setup` changes session or machine
+`view` is the selection, reveal, camera and edit-path operations below. A view command writes no
+authored data and creates no Undo entry of its own; it may trigger the Model's own protection
+boundaries, such as a Volume locking when the edit path leaves it, and declares each in
+`side_effects`. So it is granted apart from model-write, and a read never carries it. `setup` changes session or machine
 state, such as the libraries configured on this machine; it is never in the default grant. Enforce grants
 at dispatch; an action description or a client-supplied confirmation flag is not authorization.
 Do not require renewed permission for every request already covered by a valid grant.

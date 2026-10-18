@@ -2,13 +2,18 @@
 
 # Panel-closed public API example for Spaces, on any Model with two Zones:
 #   SpacesWalkthrough.run
-# Draws three 1 m floor outlines loose in the first Zone, 0.5 m above its origin, and a fourth in the new Space with the
-# SketchUp API, as a user's script would, and does everything else through PhComposer::API: Create
-# Space from the three, a second Volume, one Floor Segment marked as not counting, a height, two
-# airflows and one cleared, the read-back, and recovery from a stale edit. Then it copies a Volume the
-# way a native copy leaves it, reads the duplicate identity, makes the copy independent and moves the
-# Space into the second Zone. Each write is one Undo step. `height_from_solid` then sets a Volume's height from
-# a solid the operator draws.
+# Two kinds of step, kept apart. Native fixture setup (the `fixture_` methods) does what a user does with
+# SketchUp's own tools: it draws three 1 m floor outlines loose in the first Zone, 0.5 m above its origin,
+# a fourth in the new Space, and later copies a Volume as a native copy leaves it. Everything else is the
+# client, through PhComposer::API alone: it moves the edit path only with `ph_composer.context.open` and
+# `.root`, finds the loose Face with `spaces.candidate_faces.list`, and never assigns a path or walks
+# geometry. The client creates the Space from the three outlines, a second Volume, one Floor Segment
+# marked as not counting, a height, two airflows and one cleared, reads back, recovers from a stale edit,
+# reads the copy's duplicate identity and makes it independent, and moves the Space into the second
+# Zone. Each write is one Undo step; navigation adds no operation of its own, though SketchUp records
+# leaving a Group on its Undo stack. The refusals segment shows a stale path, a locked step and a wrong
+# session each leaving the path and the Model as they were. `height_from_solid` then sets a Volume's
+# height from a solid the operator draws.
 module SpacesWalkthrough
   API = PhComposer::API
   PREFIX = "ph_composer.spaces"
@@ -30,21 +35,20 @@ module SpacesWalkthrough
 
     zone = zones.first
 
-    zone_group = open(model, zone.fetch("zone_path"))
-    faces = [0, 1.5, 3].map { |x| outline(zone_group.entities, x, 0) }
+    navigate(client, "open", "path" => zone.fetch("zone_path"), "expected_path" => edit_path(client))
+    faces = [0, 1.5, 3].map { |x| fixture_outline(model, zone.fetch("zone_path"), x, 0) }
     created = invoke(client, "create", "zone" => zone, "name" => "Walkthrough", "faces" => faces.map do |face|
       zone.merge("entity_path" => [face.persistent_id], "entity_id" => nil)
     end)
     space = space_row(client, created.fetch("space_id"))
-    space_group = zone_group.entities.to_a.find { |entity|
-      entity.persistent_id == space.dig("reference", "entity_path").last
-    }
-    open(model, space.dig("reference", "entity_path"))
-    hall = outline(space_group.entities, 0, 2)
-    invoke(client, "volumes.create", "space" => space.fetch("reference"),
-                                     "faces" => [space.dig("reference", "entity_path") + [hall.persistent_id]])
+    navigate(client, "open", "path" => space.dig("reference", "entity_path"))
+    fixture_outline(model, space.dig("reference", "entity_path"), 0, 2)
+    loose = query(client, "#{PREFIX}.candidate_faces.list", "space" => space.fetch("reference"))
+            .fetch("candidate_faces").find { |row| row.fetch("candidate") == "volume" }
+    invoke(client, loose.fetch("operation").delete_prefix("#{PREFIX}."),
+           "space" => space.fetch("reference"), "faces" => [loose.fetch("entity_path")])
     space = space_row(client, created.fetch("space_id"))
-    model.active_path = nil
+    navigate(client, "root")
     first = space.dig("volumes", 0, "floor_segments", 0)
     invoke(client, "floors.mark", "faces" => [first.dig("reference", "entity_path")], "weighting_factor" => 0.0)
     invoke(client, "update", "reference" => space.dig("volumes", 0, "reference"),
@@ -58,7 +62,8 @@ module SpacesWalkthrough
     recover_from_stale_edit(client, created.fetch("space_id"))
     result = read_back(client, session_id, created.fetch("space_id"))
     copy_and_repair(client, model, created.fetch("space_id"))
-    move_to_second_zone(client, model, created.fetch("space_id"))
+    move_to_second_zone(client, created.fetch("space_id"))
+    refusals(client, created.fetch("space_id"))
     result.merge("passed" => client.steps.all? { |row| row.fetch("passed") }, "steps" => client.steps)
   end
 
@@ -89,13 +94,7 @@ module SpacesWalkthrough
 
   def copy_and_repair(client, model, space_id)
     space = space_row(client, space_id)
-    space_group = entity_at(model, space.dig("reference", "entity_path"))
-    volume = entity_at(model, space.dig("volumes", 0, "reference", "entity_path"))
-    copy = space_group.entities.add_instance(volume.definition, volume.transformation)
-    Array(volume.attribute_dictionaries).each do |dictionary|
-      dictionary.each { |key, value| copy.set_attribute(dictionary.name, key, value) }
-    end
-    copy.locked = true
+    copy = fixture_copy(model, space.dig("volumes", 0, "reference", "entity_path"))
     copied = space_row(client, space_id).fetch("volumes").find do |row|
       row.dig("reference", "entity_path").last == copy.persistent_id
     end
@@ -107,8 +106,8 @@ module SpacesWalkthrough
   end
 
   # Move Space to Zone needs the edit context closed; the Space keeps its ids and lands in the second Zone.
-  def move_to_second_zone(client, model, space_id)
-    model.active_path = nil
+  def move_to_second_zone(client, space_id)
+    navigate(client, "root")
     space = space_row(client, space_id)
     zone = query(client, "ph_composer.zones.list").fetch("zones").map { |row| row.fetch("reference") }
                                                   .find { |reference| reference != space.fetch("zone") }
@@ -121,13 +120,22 @@ module SpacesWalkthrough
     row.fetch("findings").any? { |finding| finding["code"] == "space.duplicate_identity" }
   end
 
-  def entity_at(model, path)
-    entities = model.entities
-    path.map do |persistent_id|
-      entity = entities.to_a.find { |candidate| candidate.persistent_id == persistent_id }
-      entities = entity.respond_to?(:entities) ? entity.entities : nil
-      entity
-    end.last
+  # A stale path, a locked step and a wrong session each refuse with the path and the revision unchanged.
+  def refusals(client, space_id)
+    volume = space_row(client, space_id).dig("volumes", 0, "reference", "entity_path")
+    before = [edit_path(client), revision(client)]
+    stale = API.view(:context => client.context, :name => "ph_composer.context.open",
+                     :params => { "path" => volume[0, 1], "expected_path" => volume })
+    locked = API.view(:context => client.context, :name => "ph_composer.context.open", :params => { "path" => volume })
+    stranger = begin
+      API.connect(:session_id => "no-such-session")
+    rescue PhComposer::CodedError => e
+      e.code
+    end
+    unchanged = [edit_path(client), revision(client)] == before
+    client.steps << { "step" => "refusals", "passed" => unchanged && stale["code"] == "target.edit_path_changed" &&
+                                                        locked["code"] == "target.locked" &&
+                                                        stranger == "session.unknown" }
   end
 
   # The Space has both Volumes, 3 m² weighted (one of four 1 m² Floor Segments counts nothing), and the
@@ -154,22 +162,52 @@ module SpacesWalkthrough
                              "expected_values" => { "name" => fresh.dig("values", "name") })
   end
 
-  # Opens the edit context at a root-to-Group path, as a user double-clicking into it would.
-  def open(model, path)
-    entities = model.entities
-    groups = path.map do |persistent_id|
-      group = entities.to_a.find { |entity| entity.persistent_id == persistent_id }
-      entities = group.entities
-      group
-    end
-    model.active_path = groups
-    groups.last
+  # Native fixture setup: a 1 m square a user draws loose in the Group at `path`, at (x, y) metres and
+  # 0.5 m up so it never splits an envelope Floor.
+  def fixture_outline(model, path, x, y)
+    corners = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]]
+    fixture_entity(model, path).entities.add_face(corners.map do |px, py|
+      Geom::Point3d.new(px * INCHES, py * INCHES, 0.5 * INCHES)
+    end)
   end
 
-  # A 1 m square drawn loose in `entities` at (x, y) metres, 0.5 m up so it never splits an envelope Floor.
-  def outline(entities, x, y)
-    corners = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]]
-    entities.add_face(corners.map { |px, py| Geom::Point3d.new(px * INCHES, py * INCHES, 0.5 * INCHES) })
+  # Native fixture setup: the Volume at `path` copied as SketchUp copies a Group, a new placement of its
+  # definition carrying its dictionaries, beside it in its Space.
+  def fixture_copy(model, path)
+    volume = fixture_entity(model, path)
+    copy = fixture_entity(model, path[0...-1]).entities.add_instance(volume.definition, volume.transformation)
+    Array(volume.attribute_dictionaries).each do |dictionary|
+      dictionary.each { |key, value| copy.set_attribute(dictionary.name, key, value) }
+    end
+    copy.locked = true
+    copy
+  end
+
+  def fixture_entity(model, path)
+    entities = model.entities
+    path.map do |persistent_id|
+      entity = entities.to_a.find { |candidate| candidate.persistent_id == persistent_id }
+      entities = entity.respond_to?(:entities) ? entity.entities : nil
+      entity
+    end.last
+  end
+
+  # The client's edit path and the Model revision, from the context read.
+  def edit_path(client)
+    query(client, "ph_composer.context.read").fetch("edit_path").map { |step| step.fetch("persistent_id") }
+  end
+
+  def revision(client)
+    query(client, "ph_composer.context.read").dig("session", "revision")
+  end
+
+  # `ph_composer.context.open` or `.root`, a view command: it moves the edit path and writes nothing.
+  def navigate(client, command, params = {})
+    outcome = API.view(:context => client.context, :name => "ph_composer.context.#{command}", :params => params)
+    client.steps << { "step" => "context.#{command}", "passed" => outcome["status"] == "completed" }
+    raise "context.#{command} failed: #{outcome['code']}: #{outcome['message']}" unless outcome["status"] == "completed"
+
+    outcome.fetch("value")
   end
 
   # A Space with its Volumes and their Floor Segments, read as a client with a reply budget reads them:
