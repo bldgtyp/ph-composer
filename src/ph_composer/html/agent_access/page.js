@@ -92,7 +92,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       row.appendChild(text);
       if (!token.revoked_at) {
         var revoke = dom.button("Revoke", function () { self.openRevoke(token); });
-        revoke.className = "phc-danger-action"; revoke.setAttribute("aria-label", "Revoke " + token.label);
+        revoke.className = "agent-access-revoke"; revoke.setAttribute("aria-label", "Revoke " + token.label);
         revoke.disabled = this.pending || this.unreadable;
         row.appendChild(revoke);
       }

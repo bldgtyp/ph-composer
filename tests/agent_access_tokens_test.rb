@@ -86,14 +86,16 @@ class AgentAccessTokensTest < PhComposerTestCase
     assert_equal ["readable", []], [Tokens.state, Tokens.list]
   end
 
-  def test_a_store_with_a_repeated_id_or_over_the_byte_cap_is_unreadable_and_resets
-    row = { "id" => "token_AAAAAAAAAAAA", "label" => "A", "capabilities" => ["read"], "created_at" => "t",
+  def test_a_store_with_a_repeated_id_a_missing_field_or_over_the_byte_cap_is_unreadable_and_resets
+    row = { "id" => "token_AAAAAAAAAAAA", "label" => "A", "capabilities" => ["read"],
+            "created_at" => "2026-10-18T12:00:00Z",
             "last_used_at" => nil, "revoked_at" => nil, "token_sha256" => "a" * 64 }
     twin = row.merge("token_sha256" => "b" * 64)
     oversized = Array.new(300) do |index|
       row.merge("id" => format("token_%012d", index), "label" => "x" * 80, "token_sha256" => format("%064x", index))
     end
-    [[row, twin], oversized].each do |tokens|
+    incomplete = [row.reject { |key, _value| key == "revoked_at" }]
+    [[row, twin], oversized, incomplete].each do |tokens|
       Sketchup.write_default(Tokens::SECTION, Tokens::KEY, [JSON.generate("tokens" => tokens)].pack("m0"))
 
       assert_equal ["unreadable", {}], [Tokens.state, Tokens.snapshot]

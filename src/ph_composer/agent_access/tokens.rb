@@ -172,12 +172,14 @@ module PhComposer
           tokens.map { |row| row["token_sha256"] }.uniq.length == tokens.length
       end
 
+      # Exactly the stored keys: a row missing `revoked_at` would otherwise read as live.
       def valid_row?(row)
-        row.is_a?(Hash) && (row.keys - ROW_KEYS).empty? && row["id"].is_a?(String) && row["label"].is_a?(String) &&
+        row.is_a?(Hash) && row.keys.sort == ROW_KEYS.sort &&
+          row["id"].to_s.match?(Records::Identity.pattern("token")) && row["label"].is_a?(String) &&
           row["label"].length.between?(1, LABEL_LENGTH) && row["token_sha256"].to_s.match?(/\A\h{64}\z/) &&
           row["capabilities"].is_a?(Array) && row["capabilities"].include?("read") &&
-          (row["capabilities"] - CallerRegistry::CAPABILITIES).empty? &&
-          (row["revoked_at"].nil? || row["revoked_at"].is_a?(String))
+          (row["capabilities"] - CallerRegistry::CAPABILITIES).empty? && row["created_at"].is_a?(String) &&
+          %w[last_used_at revoked_at].all? { |key| row[key].nil? || row[key].is_a?(String) }
       end
 
       # Keeps every live token and the MAX_REVOKED most recently revoked ones (revoke stores rows in the

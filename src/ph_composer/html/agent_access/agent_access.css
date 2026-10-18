@@ -1,5 +1,7 @@
 /* The Agent Access dialog (page.js). Built on base.css and overlay.css; only its own regions here. */
-.agent-access { padding: 0 16px 16px; }
+/* The page scrolls inside its own region: the workspace body clips, and eight live tokens with their
+   revoked history outgrow the smallest window. */
+.agent-access { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 16px; }
 .agent-access-server { margin: 0 0 12px; }
 .agent-access-unreadable { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--warning-border);
   border-radius: 6px; background: var(--warning-surface); color: var(--warning-ink); }
@@ -22,3 +24,6 @@
 .agent-access-inline { margin: 8px 0 0; color: #8f2f27; }
 .agent-access-inline[role="status"] { color: var(--muted); }
 .agent-access-inline:empty { display: none; }
+/* base.css sizes a bare button to its container; as in the panel (shell.css), buttons size to their label. */
+.agent-access button { width: auto; font-weight: 400; }
+.agent-access .agent-access-revoke { flex: none; color: var(--red); }
