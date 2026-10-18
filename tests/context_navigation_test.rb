@@ -150,13 +150,17 @@ class ContextNavigationTest < PhComposerTestCase
     @model.active_path = [@zone, @space, @volume]
     other = Sketchup::Model.new
     Sketchup.active_model = other
+    revision = @session.revision
+    starts = @model.operation_starts.length
 
     refused = [view(ROOT), view(OPEN, "path" => [])].map { |result| result["code"] }
-    deeper = moved(OPEN, "path" => [100])
 
     assert_equal %w[session.inactive session.inactive], refused
-    assert_equal({ "path" => [100], "changed" => true }, deeper)
-    refute_equal [], @model.active_path
+    refute @volume.locked?, "no boundary ran"
+    assert_equal [@zone, @space, @volume], @model.active_path
+    assert_equal revision, @session.revision
+    assert_equal starts, @model.operation_starts.length
+    assert_equal({ "path" => [100], "changed" => true }, moved(OPEN, "path" => [100]))
   ensure
     Sketchup.active_model = @model
   end
