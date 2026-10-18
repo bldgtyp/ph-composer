@@ -195,6 +195,8 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
           row.appendChild(box); row.appendChild(text); self.capabilityList.appendChild(row);
           return box;
         });
+      // The Model this form names, kept until it is submitted: a later state cannot change what it binds.
+      this.formModel = this.model;
       this.modelOnly.checked = false; this.modelOnly.disabled = !this.model;
       this.modelOnlyText.textContent = this.model ? "Reaches " + this.model.name + " and no other Model." :
         "Save this Model first to limit a token to it.";
@@ -206,7 +208,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       var capabilities = this.checks.filter(function (box) { return box.checked; })
         .map(function (box) { return box.value; });
       this.send("access.issue", { label: label || null, capabilities: capabilities,
-        model_only: this.modelOnly.checked && this.model ? this.model.key : false });
+        model_only: this.modelOnly.checked && this.formModel ? this.formModel.key : false });
     };
 
     /* The token, shown once. Closing this dialog is the last time the page holds it. */

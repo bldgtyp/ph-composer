@@ -194,3 +194,13 @@ test("Copy token copies the selected token within the click, or says to copy it 
   assert.strictEqual(o.view.copyStatus.textContent, "Token copied.");
   assert.strictEqual(o.view.notice.hidden, true);
 });
+
+test("This Model only binds the Model the open form named, whatever becomes active", function () {
+  var o = setup({ offered: ["read"], model: { name: "a.skp", key: "kA" } });
+  named(o.view.root, "New token").dispatchEvent({ type: "click" });
+  o.view.modelOnly.checked = true;
+  o.view.receive({ type: "access.state", payload: { state: "readable", tokens: [], offered: ["read"], model: null,
+    server: { state: "listening", port: 46110 } } });
+  o.view.submitCreate();
+  assert.strictEqual(o.sent.pop().payload.model_only, "kA");
+});
