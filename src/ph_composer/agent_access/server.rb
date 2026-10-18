@@ -66,6 +66,7 @@ module PhComposer
         @clients = []
         @calls = CallLog.new
         @stopped = true
+        @stop_requested = false
       end
 
       # Binds the port and starts accepting. Raises SystemCallError (EADDRINUSE among them) when the port
@@ -118,6 +119,7 @@ module PhComposer
             entry.result = @executor.revoked
             entry.state = :done
             @queue.delete(entry)
+            record(entry, entry.result, @clock.call)
           end
           @answered.broadcast
           revoked.length
@@ -135,8 +137,12 @@ module PhComposer
 
       # Replaces the live tokens the workers authenticate against: digest => public row, frozen. Called
       # on the main thread after every token store write.
+      # A live token cancels a stop the last revoke asked for.
       def tokens=(snapshot)
-        @lock.synchronize { @tokens = snapshot }
+        @lock.synchronize do
+          @tokens = snapshot
+          @stop_requested = false unless snapshot.empty?
+        end
       end
 
       # The main-thread tick: runs every waiting entry, drops the cancelled and the expired unrun, flushes

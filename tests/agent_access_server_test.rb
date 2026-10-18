@@ -366,6 +366,14 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_empty @session.model.operations
   end
 
+  def test_a_token_issued_before_the_pending_stop_keeps_the_listener_running
+    @server.stop_soon
+    @server.tokens = AgentAccess::Tokens.snapshot
+    @server.pump
+
+    refute @server.stopped?
+  end
+
   def test_the_diagnostics_hold_no_token_or_params
     call_tool("query", "session" => @session.id, "name" => "test.fixture.total_length",
                        "params" => { "secret" => "value-in-params" })

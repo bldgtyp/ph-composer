@@ -104,8 +104,12 @@ module PhComposer
       # never turned into a refusal by its size.
       def result(value, acted: false)
         text = JSON.generate(value)
-        value = trimmed(value) if text.bytesize > MAX_RESULT_BYTES && acted && outcome?(value)
-        text = JSON.generate(value)
+        if text.bytesize > MAX_RESULT_BYTES && acted && outcome?(value)
+          value = trimmed(value)
+          text = JSON.generate(value)
+          value = minimal(value) if text.bytesize > MAX_RESULT_BYTES
+          text = JSON.generate(value)
+        end
         if text.bytesize > MAX_RESULT_BYTES
           return error("The result is #{text.bytesize} bytes, over the #{MAX_RESULT_BYTES}-byte limit. Ask for " \
                        "less: a smaller page, fewer fields or one owner's operations.",
@@ -128,6 +132,13 @@ module PhComposer
                                    "what it changed.",
                       "value" => nil, "affected" => [], "findings" => [],
                       "detail" => { "omitted" => %w[value affected findings] })
+      end
+
+      # Only what says what happened, for an outcome still over the budget once trimmed.
+      def minimal(outcome)
+        Outcome.build(outcome["status"], outcome["code"], "The result was over the reply limit; read back what " \
+                                                          "it changed.", outcome["effect"], outcome["revision"])
+               .merge(outcome.slice("sequence"))
       end
 
       def summary(value)
