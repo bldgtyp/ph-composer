@@ -10,9 +10,10 @@
 # geometry. The client creates the Space from the three outlines, a second Volume, one Floor Segment
 # marked as not counting, a height, two airflows and one cleared, reads back, recovers from a stale edit,
 # reads the copy's duplicate identity and makes it independent, and moves the Space into the second
-# Zone. Each write is one Undo step; navigation adds none. The refusals segment shows a stale path, a
-# locked step and a wrong session each leaving the path and the Model as they were. `height_from_solid`
-# then sets a Volume's height from a solid the operator draws.
+# Zone. Each write is one Undo step; navigation adds no operation of its own, though SketchUp records
+# leaving a Group on its Undo stack. The refusals segment shows a stale path, a locked step and a wrong
+# session each leaving the path and the Model as they were. `height_from_solid` then sets a Volume's
+# height from a solid the operator draws.
 module SpacesWalkthrough
   API = PhComposer::API
   PREFIX = "ph_composer.spaces"

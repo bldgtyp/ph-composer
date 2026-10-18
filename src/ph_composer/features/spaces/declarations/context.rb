@@ -6,7 +6,8 @@ module PhComposer
     module ContextRegistration
       # The protection boundary these commands may trigger (context/AGENT_INTERFACE.md, view commands).
       LEAVING = "Moves the edit path, which advances the Model revision; leaving a Volume that was open and " \
-                "unprotected protects it again. No authored value changes and no Undo step is added."
+                "unprotected protects it again. No authored value changes; SketchUp itself records leaving a " \
+                "Group as an Undo entry, and undoing it reopens the Group."
       PATH_RESULT = Shapes.object({ "path" => Shapes::ZONE_PATH.merge("description" => "The edit path afterwards.") })
       TARGET = %w[record.unreadable target.ambiguous target.changed target.locked target.not_found
                   target.shared_definition validation.failed].freeze

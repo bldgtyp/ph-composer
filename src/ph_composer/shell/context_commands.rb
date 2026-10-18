@@ -20,8 +20,8 @@ module PhComposer
              "description" => "Persistent ids of Groups and Components from the root, outermost first." }.freeze
     EXPECTED_PATH = PATH.merge("description" => "The edit path as last read; refused when it has changed since.")
     SIDE_EFFECTS = "Moves the edit path, which advances the Model revision. Leaving a Volume that was open and " \
-                   "unprotected protects it again (Spaces locks it); no authored value changes and no Undo step " \
-                   "is added."
+                   "unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself " \
+                   "records leaving a Group as an Undo entry, and undoing it reopens the Group."
     MOVE_REFUSES = %w[target.not_found target.locked target.edit_path_changed].freeze
     MAXIMUM_LIMIT = 200
     LIMIT = { "type" => "integer", "minimum" => 1, "maximum" => MAXIMUM_LIMIT,

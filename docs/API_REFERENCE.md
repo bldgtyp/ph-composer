@@ -44661,9 +44661,162 @@ Example params:
 }
 ```
 
+### `ph_composer.context.open`
+
+Open the Group or Component at the end of path as the edit context, through every one above it. Refuses a locked or missing step. Owner: `ph_composer.context`.
+
+Side effects: Moves the edit path, which advances the Model revision. Leaving a Volume that was open and unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
+
+Refuses: `target.edit_path_changed`, `target.locked`, `target.not_found`, and the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "Persistent ids of Groups and Components from the root, outermost first."
+    },
+    "expected_path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "The edit path as last read; refused when it has changed since."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "changed"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "Persistent ids of Groups and Components from the root, outermost first."
+    },
+    "changed": {
+      "type": "boolean"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "path": [
+    1201
+  ]
+}
+```
+
+Example params:
+
+```json
+{
+  "path": [
+    1201,
+    1202
+  ],
+  "expected_path": []
+}
+```
+
+### `ph_composer.context.root`
+
+Close every open Group and Component, back to the Model's root. Owner: `ph_composer.context`.
+
+Side effects: Moves the edit path, which advances the Model revision. Leaving a Volume that was open and unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
+
+Refuses: `target.edit_path_changed`, `target.locked`, `target.not_found`, and the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "expected_path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "The edit path as last read; refused when it has changed since."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "changed"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "Persistent ids of Groups and Components from the root, outermost first."
+    },
+    "changed": {
+      "type": "boolean"
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "expected_path": [
+    1201
+  ]
+}
+```
+
 ### `ph_composer.spaces.context.close`
 
 Leave the innermost open Space or Volume for its parent, protecting a Volume being left. Owner: `ph_composer.spaces`.
+
+Side effects: Moves the edit path, which advances the Model revision; leaving a Volume that was open and unprotected protects it again. No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
 
 Refuses: only the `view_command` common set.
 
@@ -44708,6 +44861,8 @@ Example params:
 ### `ph_composer.spaces.context.open`
 
 Open a Space, or a Volume volumes.unprotect unlocked, as the edit context; a Volume being left is protected first. Owner: `ph_composer.spaces`.
+
+Side effects: Moves the edit path, which advances the Model revision; leaving a Volume that was open and unprotected protects it again. No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
 
 Refuses: `record.unreadable`, `space.volume_protected`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `view_command` common set.
 
@@ -45297,6 +45452,8 @@ Example params:
 ### `ph_composer.spaces.locate`
 
 Select and frame one Space, Volume or Floor Segment. Nothing is unlocked: the path opens up to the first locked Group, such as a protected Volume, and that Group is selected instead. Owner: `ph_composer.spaces`.
+
+Side effects: Selects and frames. Moves the edit path, which advances the Model revision; leaving a Volume that was open and unprotected protects it again. No authored value changes; SketchUp itself records leaving a Group as an Undo entry, and undoing it reopens the Group.
 
 Refuses: `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `view_command` common set.
 
@@ -46096,6 +46253,8 @@ Example params:
 ### `ph_composer.zones.faces.locate`
 
 Bring an explicit set of Faces into view and outline them, leaving the selection alone. Owner: `ph_composer.zones`.
+
+Side effects: Moves the camera to frame the Faces and outlines them until the selection changes. The edit path, the selection and the revision are unchanged.
 
 Refuses: only the `view_command` common set.
 
@@ -48921,3 +49080,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | 1.1 | 2026-10-18 | describe adds capability, preview_capability, a view command's side_effects, preconditions and a query's response and while_busy; discover adds schemas; ph_composer.context.read is new. |
 | 1.2 | 2026-10-18 | ph_composer.spaces.list answers bounded summaries with fields, the Model's sums before any filter and the sums of the page's Zones and Building-Segments; spaces.volumes.list, spaces.floor_segments.list and spaces.findings.list are new, Floor Segment loops only when fields asks. |
 | 1.3 | 2026-10-18 | ph_composer.spaces.candidate_faces.list is new; spaces.update and spaces.batch_update type values and expected_values by field, with units, and refuse unknown keys at the schema. |
+| 1.4 | 2026-10-18 | ph_composer.context.open and ph_composer.context.root are new view commands; the Spaces context commands and both locate commands declare side_effects. |

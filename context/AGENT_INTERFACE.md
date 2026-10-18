@@ -147,7 +147,9 @@ Both take an optional `expected_path`, the path the client last read, and refuse
 (`target.edit_path_changed`); `open` resolves every step first and refuses a missing one
 (`target.not_found`) or a locked one (`target.locked`) with nothing moved. They enter through
 `EditContext`, so each feature's boundary runs: leaving an unprotected Volume, Spaces protects it in a
-transparent step that adds no Undo entry. Each answers the path and `changed`; a path equal to the
+transparent step joined to the move. SketchUp records a path change that leaves a Group as an Undo
+entry of its own ([host behavior](SKETCHUP_HOST_BEHAVIOR.md)); undoing it reopens the Group, and
+entering a Group from the root added none on 26.1.188. Each answers the path and `changed`; a path equal to the
 current one changes nothing and leaves the revision where it was. Spaces keeps `spaces.context.open`
 and `.close` as reference-aware conveniences, and they and both `locate` commands declare their effects
 in `side_effects`. [tools/examples/authoring/spaces_walkthrough.rb](../tools/examples/authoring/spaces_walkthrough.rb)
