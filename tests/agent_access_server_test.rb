@@ -232,6 +232,26 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_includes result_of(post(rpc("tools/list"))).fetch("tools").map { |tool| tool["name"] }, "context"
   end
 
+  def test_a_model_only_token_sees_and_reaches_only_its_own_model
+    @session.model.path = "/projects/a/house.skp"
+    other = Sketchup::Model.new
+    other.path = "/projects/b/house.skp"
+    second = PhComposer::Sessions.for(other)
+    issued = AgentAccess::Tokens.issue(:model_file => "/projects/a/house.skp")
+    row = AgentAccess::Tokens.snapshot.fetch(AgentAccess::Tokens.digest(issued.fetch("token")))
+
+    found = @executor.call(row, "discover", {}).fetch("structuredContent")
+    refused = @executor.call(row, "context", "session" => second.id).fetch("structuredContent")
+    read = @executor.call(row, "context", "session" => @session.id).fetch("structuredContent")
+
+    assert_equal [@session.id], found.fetch("sessions").map { |session| session["id"] }
+    assert_equal "house.skp", found.dig("connection", "model_name")
+    refute_includes JSON.generate(found), "/projects/"
+    assert_equal "session.unknown", refused["code"]
+    assert_equal "completed", read["status"]
+    assert_equal 2, @executor.call(@row, "discover", {}).dig("structuredContent", "sessions").length
+  end
+
   def test_one_token_keeps_one_caller_per_session
     2.times { call_tool("query", "session" => @session.id, "name" => "test.fixture.total_length") }
 

@@ -44,7 +44,9 @@ module PhComposer
         context = nil
         if tool.session
           session = Sessions.find(arguments["session"])
-          return result(Outcome.refused("session.unknown", SESSION_UNKNOWN, :revision => nil)) unless session
+          unless session && Tokens.serves?(live, session)
+            return result(Outcome.refused("session.unknown", SESSION_UNKNOWN, :revision => nil))
+          end
 
           context = binding_for(live, session)
         end

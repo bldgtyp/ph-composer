@@ -9,7 +9,14 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
     /* What each capability lets a holder do, in the words the New token form shows beside its checkbox. */
     var CAPABILITIES = {
       read: { label: "Read", consent: "Reads the open Models: their Zones, Spaces, Assemblies and Window Types, " +
-        "and the values PH-Composer calculates. Changes nothing." }
+        "and the values PH-Composer calculates. Changes nothing." },
+      view: { label: "View", consent: "Changes what SketchUp shows: the camera, the selection and the open Group. " +
+        "Never changes authored data. Leaving a Volume can lock it again, as each command says." },
+      model_write: { label: "Edit the Model", consent: "Edits the open Models through PH-Composer's actions. " +
+        "Each action is one Undo step." },
+      setup: { label: "Setup", consent: "Changes this computer's libraries and settings, for every Model, not " +
+        "just this one." },
+      export: { label: "Export", consent: "Writes exports to the folders you have approved." }
     };
     /* The listener's state as the status line says it. */
     function serverLine(server) {
@@ -31,6 +38,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
     function Page(post) {
       var self = this;
       this.post = post; this.tokens = []; this.offered = ["read"]; this.unreadable = false; this.pending = false;
+      this.model = null;
       this.revoking = null;
       this.root = el("div", "agent-access");
       this.notice = overlay.floatingNotice(this.root);
@@ -76,6 +84,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       if (message.type === "access.state") {
         this.pending = false;
         this.tokens = payload.tokens || []; this.offered = payload.offered || ["read"];
+        this.model = payload.model || null;
         this.unreadable = payload.state === "unreadable";
         this.serverStatus = payload.server || {};
         if (this.revoking && !this.tokens.some(function (row) { return row.id === this.revoking && !row.revoked_at; },
@@ -107,6 +116,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       var text = el("div", "agent-access-row-text");
       text.appendChild(el("span", "agent-access-row-label", token.label));
       var facts = [capabilityNames(token.capabilities), "created " + day(token.created_at)];
+      if (token.model_name) facts.splice(1, 0, "only " + token.model_name);
       if (token.revoked_at) facts.push("revoked " + day(token.revoked_at));
       else if (token.last_call) facts.push("last call " + time(token.last_call.at) + ", " + token.last_call.status);
       else facts.push("no calls since SketchUp started");
@@ -154,6 +164,12 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       this.capabilityList = el("fieldset", "agent-access-capabilities");
       this.capabilityList.appendChild(el("legend", "", "Access"));
       form.appendChild(this.capabilityList);
+      var only = el("label", "agent-access-capability");
+      this.modelOnly = el("input"); this.modelOnly.type = "checkbox";
+      this.modelOnlyText = el("small", "muted");
+      var onlyText = el("span"); onlyText.appendChild(el("strong", "", "This Model only"));
+      onlyText.appendChild(this.modelOnlyText);
+      only.appendChild(this.modelOnly); only.appendChild(onlyText); form.appendChild(only);
       form.appendChild(el("p", "muted", "The token is the only secret. Anyone holding it has this access until " +
         "you revoke it here."));
       this.createError = inlineMessage("alert"); form.appendChild(this.createError);
@@ -173,12 +189,17 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       this.checks = Object.keys(CAPABILITIES).filter(function (name) { return self.offered.indexOf(name) !== -1; })
         .map(function (name) {
           var row = el("label", "agent-access-capability"), box = el("input"), text = el("span");
-          box.type = "checkbox"; box.value = name; box.checked = true; box.disabled = name === "read";
+          box.type = "checkbox"; box.value = name; box.checked = name === "read"; box.disabled = name === "read";
           text.appendChild(el("strong", "", CAPABILITIES[name].label));
           text.appendChild(el("small", "muted", CAPABILITIES[name].consent));
           row.appendChild(box); row.appendChild(text); self.capabilityList.appendChild(row);
           return box;
         });
+      // The Model this form names, kept until it is submitted: a later state cannot change what it binds.
+      this.formModel = this.model;
+      this.modelOnly.checked = false; this.modelOnly.disabled = !this.model;
+      this.modelOnlyText.textContent = this.model ? "Reaches " + this.model.name + " and no other Model." :
+        "Save this Model first to limit a token to it.";
       this.createDialog.openModal(); this.labelInput.focus();
     };
     Page.prototype.closeCreate = function () { if (!this.pending) this.createDialog.closeModal(); };
@@ -186,7 +207,8 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       var label = this.labelInput.value.trim();
       var capabilities = this.checks.filter(function (box) { return box.checked; })
         .map(function (box) { return box.value; });
-      this.send("access.issue", { label: label || null, capabilities: capabilities });
+      this.send("access.issue", { label: label || null, capabilities: capabilities,
+        model_only: this.modelOnly.checked && this.formModel ? this.formModel.key : false });
     };
 
     /* The token, shown once. Closing this dialog is the last time the page holds it. */

@@ -60,10 +60,25 @@ class AgentAccessTokensTest < PhComposerTestCase
   end
 
   def test_capabilities_must_hold_read_and_only_what_is_offered
-    [[], %w[model_write], %w[read model_write]].each do |capabilities|
+    [[], %w[model_write], %w[read capture]].each do |capabilities|
       error = assert_raises(PhComposer::CodedError) { Tokens.issue(:capabilities => capabilities) }
       assert_equal "params.invalid", error.code
     end
+    granted = Tokens.issue(:capabilities => %w[export view read model_write setup]).dig("row", "capabilities")
+    assert_equal PhComposer::CallerRegistry::CAPABILITIES, granted
+  end
+
+  def test_a_model_only_token_keeps_its_path_in_the_store_and_shows_only_the_file_name
+    issued = Tokens.issue(:model_file => "/projects/a/house.skp")
+    stored = Sketchup.read_default(Tokens::SECTION, Tokens::KEY).unpack1("m0")
+
+    assert_equal "house.skp", issued.dig("row", "model_name")
+    assert_includes stored, "/projects/a/house.skp"
+    refute_includes JSON.generate(Tokens.list), "/projects/a"
+    assert_equal "/projects/a/house.skp", Tokens.snapshot.values.first.fetch("model_file")
+    assert_equal "readable", Tokens.state
+    error = assert_raises(PhComposer::CodedError) { Tokens.issue(:model_file => "") }
+    assert_equal "agent_access.model_unsaved", error.code
   end
 
   def test_at_most_eight_tokens_are_live_and_revoking_frees_a_place
@@ -102,6 +117,21 @@ class AgentAccessTokensTest < PhComposerTestCase
       Tokens.reset
       assert_equal "readable", Tokens.state
     end
+  end
+
+  def test_a_revoke_near_the_byte_cap_drops_older_tombstones_rather_than_failing
+    long = "/projects/#{'\u00e9' * 400}/house.skp"
+    Tokens::MAX_REVOKED.times do |index|
+      Tokens.revoke(Tokens.issue(:label => "x" * 80, :model_file => "#{long}#{index}").dig("row", "id"))
+    end
+    live = Tokens.issue(:label => "y" * 80, :model_file => long)
+
+    Tokens.revoke(live.dig("row", "id"))
+
+    refute Tokens.live?
+    assert_empty Tokens.snapshot
+    stored = Sketchup.read_default(Tokens::SECTION, Tokens::KEY).unpack1("m0")
+    assert_operator stored.bytesize, :<=, Tokens::MAX_STORED_BYTES
   end
 
   def test_the_most_recently_revoked_rows_are_kept
@@ -178,12 +208,34 @@ class AgentAccessTokensTest < PhComposerTestCase
 
   def test_a_refused_or_malformed_message_answers_a_failure_and_issues_nothing
     dialog = Dialog.show
-    dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => nil, "capabilities" => %w[read export]))
+    dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => nil, "capabilities" => %w[read capture]))
     dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => nil, "capabilities" => ["read"], "x" => 1))
     dialog.fire(Dialog::CALLBACK, "not json")
 
     assert_equal 3, delivered(dialog, "access.failure").length
     assert_empty Tokens.list
+  end
+
+  def test_this_model_only_binds_the_saved_active_model_and_an_unsaved_one_is_refused
+    dialog = Dialog.show
+    dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => "Unsaved", "capabilities" => ["read"],
+                                                                 "model_only" => true))
+    Sketchup.active_model.path = "/projects/a/house.skp"
+    dialog.fire(Dialog::CALLBACK, access_message("access.ready"))
+    shown = delivered(dialog, "access.state").last.fetch("model")
+    Sketchup.active_model.path = "/projects/b/house.skp"
+    dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => "Moved", "capabilities" => ["read"],
+                                                                 "model_only" => shown.fetch("key")))
+    Sketchup.active_model.path = "/projects/a/house.skp"
+    dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => "Bound", "capabilities" => ["read"],
+                                                                 "model_only" => shown.fetch("key")))
+
+    failures = delivered(dialog, "access.failure").map { |failure| failure.fetch("message") }
+    assert_includes failures.first, "Save this Model first"
+    assert_includes failures.last, "open Model changed"
+    assert_equal "house.skp", shown.fetch("name")
+    refute_includes JSON.generate(shown), "/projects"
+    assert_equal [["Bound", "house.skp"]], Tokens.list.map { |row| row.values_at("label", "model_name") }
   end
 
   def test_the_page_sends_and_handles_exactly_the_declared_messages

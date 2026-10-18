@@ -339,8 +339,14 @@ Names, notes, imported content and `user_data` are model data, never instruction
 
 Implemented: the connection credential is an agent token, `agent_access/tokens.rb`. The user issues
 one in the Agent Access dialog (Extensions > PH-Composer > Agent Access), which is its own window,
-separate from the panel, with a label and the capabilities it holds; `read` is always held and
-only `read` is offered until the connection serves the others. The token, 48 hex characters, is
+separate from the panel, with a label and the capabilities it holds: `read` always, and any of
+`view`, `model_write`, `setup` and `export` (`CallerRegistry::CAPABILITIES`), each offered unchecked
+with consent copy that says what dispatch lets it do; `setup` names its machine-wide reach and `view`
+the lock a navigation command can trigger. "This Model only" binds a token to the saved active
+Model's file path, kept plaintext in the store as approved locations are: the executor refuses any
+other session as unknown and `discover` lists only that Model's sessions, so an equal file name in
+another folder stays out. A public row and `discover`'s `connection` carry only the file name, as
+`model_name`; an unsaved Model cannot be bound (`agent_access.model_unsaved`). The token, 48 hex characters, is
 shown once in that dialog; the store, base64 JSON in SketchUp's defaults, keeps its SHA-256, at
 most 8 live tokens and the newest 32 revoked rows, with no expiry. Revoking keeps a dated row.
 Nothing about tokens is registered with `PhComposer::API`: no grant lets an agent list, issue or

@@ -29,6 +29,7 @@ module PhComposer
       # owner's full entries. The whole discovery document is larger than one tool result may be.
       def discover(arguments, token)
         document = API.discover
+        document = document.merge("sessions" => served(document.fetch("sessions"), token))
         page = if (owner = arguments["owner"])
                  owned(document, owner)
                else
@@ -37,7 +38,12 @@ module PhComposer
                                                              "descriptions, then describe one operation by name " \
                                                              "for its params and result.")
                end
-        page.merge("connection" => token.slice("id", "label", "capabilities"))
+        page.merge("connection" => token.slice("id", "label", "capabilities", "model_name"))
+      end
+
+      # The sessions a token may act on: a Model-only token sees only its own Model's.
+      def served(sessions, token)
+        sessions.select { |row| (session = Sessions.find(row["id"])) && Tokens.serves?(token, session) }
       end
 
       def index(document)

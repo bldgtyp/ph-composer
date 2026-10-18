@@ -38,7 +38,13 @@ An agent connects with a token you issue in SketchUp: Extensions > PH-Composer >
 the Agent Access window, separate from the panel, so a change you are making there is left alone.
 New token asks for a name and the access the token holds. Read is always included: it reads the
 open Models, their Zones, Spaces, Assemblies and Window Types and the values PH-Composer calculates,
-and changes nothing. The token is shown once; copy it then, because it is not shown again. The
+and changes nothing. The rest start unchecked, each with what it allows: View changes what SketchUp
+shows (the camera, the selection and the open Group, never authored data; leaving a Volume can lock
+it again), Edit the Model runs PH-Composer's actions with one Undo step each, Setup changes this
+computer's libraries and settings for every Model, and Export writes to the folders you approved.
+This Model only limits the token to the Model open now, which must be saved: the agent then sees
+and reaches no other Model, not even one with the same file name in another folder. The list shows
+each token's access and, for such a token, the Model's file name. The token is shown once; copy it then, because it is not shown again. The
 token is the only secret: anyone holding it has its access until you revoke it in the same window.
 Revoking keeps the token in the list with the date it was revoked. Up to eight tokens can be live
 at once.
@@ -48,6 +54,8 @@ Agent Access window says so. If another program holds that port, the window says
 to choose another and holds New token until one is free, so a token's setup never names a port
 nothing listens on. An agent connects over MCP with the token as a bearer header and can read:
 list the open Models, describe and run the read operations, and preview a change without making it.
+The connection does not yet offer the operations that use View, Edit the Model, Setup or Export; a
+token holding them is ready for when it does.
 Each token's latest call since SketchUp started shows beside it.
 
 ### Connect your client
