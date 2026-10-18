@@ -71,6 +71,14 @@ class ContextNavigationTest < PhComposerTestCase
     assert_equal revision, @session.revision
   end
 
+  def test_a_busy_session_refuses_and_nothing_moves
+    @session.feature_state(:probe_deferred) { Struct.new(:pending?).new(true) }
+
+    assert_equal "session.busy", view(OPEN, "path" => [100])["code"]
+    assert_equal "session.busy", view(ROOT)["code"]
+    assert_nil @model.active_path
+  end
+
   def test_navigation_declares_the_lock_it_may_trigger
     names = [OPEN, ROOT, "ph_composer.spaces.context.open", "ph_composer.spaces.context.close",
              "ph_composer.spaces.locate"]
