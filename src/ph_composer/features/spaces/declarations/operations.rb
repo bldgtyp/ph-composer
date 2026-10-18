@@ -21,17 +21,35 @@ module PhComposer
                                 :optional => %w[space_id volume_id floor_segment_id],
                                 :description => "A Space, Volume or Floor Segment reference, as list returns it.")
       FACTOR = Schema.factor("The weighting factor to write, 0 to 1; 1 counts the whole area.")
+      # Every editable field of the three kinds, typed from its definition with its unit, and the kinds that
+      # take it. An optional field accepts null, which removes it. Runtime still refuses a field the
+      # referenced kind does not take.
+      def self.editable_fields(nullable:)
+        Authoring::EDITABLE.each_with_object({}) do |(kind_id, keys), fields|
+          kind = KINDS.fetch(kind_id)
+          keys.each do |key|
+            definition = kind.fields.find { |field| field.key == key }
+            schema = fields[key] || definition.schema.dup
+            types = Array(schema["type"]) | (nullable || !definition.required ? ["null"] : [])
+            takers = Authoring::EDITABLE.select { |_id, editable| editable.include?(key) }
+                                        .map { |id, _editable| KINDS.fetch(id).label }
+            fields[key] = schema.merge("type" => types.length == 1 ? types.first : types,
+                                       "description" => "#{definition.schema['description'] || key} " \
+                                                        "(#{takers.join(', ')})".strip)
+          end
+        end
+      end
+
       EDIT = Shapes.object({
         "reference" => REFERENCE,
-        "values" => { "type" => "object",
-                      "description" => "The values to change. A Space takes name, number, " \
-                                       "default_height_m and the three airflows; a Volume " \
-                                       "display_name and avg_ceiling_height_m; a Floor " \
-                                       "Segment display_name, weighting_factor and " \
-                                       "net_area_factor. null removes an optional value." },
-        "expected_values" => { "type" => "object",
-                               "description" => "Each named value as last read; a key absent " \
-                                                "here expects the value absent." }
+        "values" => { "type" => "object", "additionalProperties" => false,
+                      "properties" => editable_fields(:nullable => false),
+                      "description" => "The values to change, each taken by the kinds named; null removes " \
+                                       "an optional value." },
+        "expected_values" => { "type" => "object", "additionalProperties" => false,
+                               "properties" => editable_fields(:nullable => true),
+                               "description" => "Each named value as last read; a key absent here, or null, " \
+                                                "expects the value absent." }
       })
       IDS = Shapes.object({ "ids" => Shapes.list(Shapes::TEXT) })
       LEFT_OUT = Shapes.object({ "reference" => FACE, "reason" => Shapes::TEXT, "message" => Shapes::TEXT })

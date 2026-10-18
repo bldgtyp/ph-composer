@@ -108,7 +108,14 @@ Building-Segments its page's Spaces belong to. `spaces.volumes.list` (one Space)
 Model or one Space, optionally by `codes`, each finding with the reference of what it is about)
 answer the children; a scope reference resolves by path and then id (`target.not_found`,
 `target.changed`). `spaces.all` stays whole for the panel and names `spaces.list` as its bounded
-alternative.
+alternative. `spaces.candidate_faces.list` (one Space or one Volume) answers the Faces that carry no
+record yet: a Face directly in a Volume is a Floor candidate for `spaces.floors.mark`, a Face loose
+at a Space's root a candidate for `spaces.volumes.create` (which also needs the Space open). Each row
+gives its path, plan area and normal (loops when `fields` asks), the operation, and the refusal that
+operation would give now, from one rule the read and both actions share (`Spaces::Eligibility`).
+`spaces.update` and `spaces.batch_update` type `values` and `expected_values` field by field from the
+record definitions, with units; null clears an optional value, and a field the referenced kind does
+not take is refused.
 
 Some reads carry derived facts so no client recomputes a domain rule. Every Window Type row's
 `display.install_topology` gives each non-empty element's four edges with their classification

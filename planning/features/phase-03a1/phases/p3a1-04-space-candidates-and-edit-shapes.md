@@ -1,8 +1,8 @@
 # P3a1-04: Candidate geometry and typed editable fields
 
 DATE: 2026-10-17
-STATUS: Scoped. Planning only; execution requires separate implementation authorization. Rewritten 2026-10-17 to accepted D3a1-03 (scoped reads) and D3a1-10 (typed edit shapes may replace the open objects without a compatibility shim).
-ISSUE: none (local planning draft)
+STATUS: Implemented on branch `feat/phase-03a1-p3a1-04`.
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership
 

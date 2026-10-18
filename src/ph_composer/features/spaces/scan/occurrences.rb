@@ -27,6 +27,10 @@ module PhComposer
       end
     end
 
+    # A Face with no Floor Segment record directly inside a Volume (a Floor candidate) or loose at a
+    # Space's root (a candidate for a new Volume). `volume` is set for the first, `space` for the second.
+    UnmarkedFace = Struct.new(:entity, :path, :transform, :space, :volume, :shared, :locked, keyword_init: true)
+
     # `shared` is storage another placement writes through, `shared_above` as for a Volume; `locked` a
     # lock on the Space or above it; `outer` the Space this one sits inside, when it is nested.
     SpaceOccurrence = Struct.new(:entity, :path, :transform, :record, :volumes, :shared, :shared_above, :locked,
@@ -38,7 +42,7 @@ module PhComposer
 
     # One walk of a Model: every Space occurrence with its Volumes and Floor Segments, and the records
     # found where the hierarchy does not put them. Valid only while the Model is unchanged.
-    Scan = Struct.new(:spaces, :orphan_volumes, :misplaced_segments, keyword_init: true) do
+    Scan = Struct.new(:spaces, :orphan_volumes, :misplaced_segments, :unmarked_faces, keyword_init: true) do
       def volumes
         spaces.flat_map(&:volumes)
       end
@@ -60,7 +64,7 @@ module PhComposer
       # record in the Model reading; false, none, for an inventory that only answers which ids exist. A
       # record that need not read and does not is left out, as though it were not there.
       def scan(model, strict: true)
-        found = Scan.new(:spaces => [], :orphan_volumes => [], :misplaced_segments => [])
+        found = Scan.new(:spaces => [], :orphan_volumes => [], :misplaced_segments => [], :unmarked_faces => [])
         reader = lambda do |store, kind, entity, path|
           read(store, kind, entity)
         rescue CodedError
@@ -83,7 +87,7 @@ module PhComposer
           child_path = path + [entity.persistent_id]
           if entity.is_a?(Sketchup::Face)
             face(entity, child_path, transform, found, volume, direct, :shared => shared, :locked => locked,
-                                                                       :reader => reader)
+                                                                       :reader => reader, :space => space)
           elsif entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
             container(entity, child_path, transform, found, :shared => shared, :locked => locked, :space => space,
                                                             :volume => volume, :direct => direct, :reader => reader)
@@ -91,9 +95,16 @@ module PhComposer
         end
       end
 
-      def face(entity, path, transform, found, volume, direct, shared:, locked:, reader:)
+      def face(entity, path, transform, found, volume, direct, shared:, locked:, reader:, space: nil)
         record = reader.call(FLOOR_SEGMENT_STORE, FLOOR_SEGMENT, entity, path)
-        return unless record
+        unless record
+          if direct && (volume || space)
+            found.unmarked_faces << UnmarkedFace.new(:entity => entity, :path => path, :transform => transform,
+                                                     :space => volume ? nil : space, :volume => volume,
+                                                     :shared => shared, :locked => locked)
+          end
+          return
+        end
 
         occurrence = SegmentOccurrence.new(:entity => entity, :path => path, :transform => transform, :record => record,
                                            :shared => shared, :locked => locked)

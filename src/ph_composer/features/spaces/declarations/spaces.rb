@@ -151,6 +151,26 @@ module PhComposer
                 "description" => "The Face's outer loop then its holes, each a list of [x, y, z] points in model " \
                                  "space. Only when `fields` asks for it." }.freeze
       SEGMENT_SUMMARY = summary(SEGMENT_ROW, [], "loops_m" => LOOPS)
+      REFUSAL = { "type" => %w[object null], "required" => %w[code message],
+                  "properties" => { "code" => Shapes::TEXT, "message" => Shapes::TEXT },
+                  "description" => "What `operation` would refuse with now, or null when it would accept." }.freeze
+      CANDIDATE_ROW = { "type" => "object",
+                        "required" => %w[entity_path candidate space volume operation refusal requires],
+                        "properties" => {
+                          "entity_path" => Shapes::ZONE_PATH.merge("description" => "The Face's path from the root."),
+                          "candidate" => { "type" => "string", "enum" => %w[floor volume],
+                                           "description" => "floor: in a Volume, to mark; volume: loose at a " \
+                                                            "Space's root, to group into a new Volume." },
+                          "space" => SPACE_REFERENCE.merge("type" => %w[object null]),
+                          "volume" => VOLUME_REFERENCE.merge("type" => %w[object null]),
+                          "operation" => Shapes::TEXT, "refusal" => REFUSAL,
+                          "requires" => { "type" => %w[string null],
+                                          "description" => "What the operation needs first." },
+                          "plan_area_m2" => AREA,
+                          "normal" => { "type" => "array", "items" => { "type" => "number" } },
+                          "horizontal" => { "type" => "boolean" },
+                          "loops_m" => LOOPS
+                        } }.freeze
       SCOPED_FINDING = Shapes.with(FINDING, "reference" => { "type" => "object",
                                                              "description" => "What the finding is about." })
       # What the Spaces walk refuses, and what the Zones read it depends on can.
@@ -183,6 +203,24 @@ module PhComposer
         Shapes.described(reference, "The #{what} whose children to read, by the reference a read returned.")
       end
 
+      def install_candidates(feature, refuses, example)
+        feature.query(ScopedReads::CANDIDATE_FACES,
+                      :description => "One page of the Faces of one Space or one Volume that carry no record yet: " \
+                                      "Floor candidates inside a Volume (for floors.mark) and loose Faces at the " \
+                                      "Space's root (for volumes.create), each with the refusal its operation would " \
+                                      "give now. Name exactly one.",
+                      :refuses => refuses, :examples => [{ "space" => example }],
+                      :params => Shapes.object({ "space" => scope(SPACE_REFERENCE, "Space"),
+                                                 "volume" => scope(VOLUME_REFERENCE, "Volume"),
+                                                 "fields" => fields(ScopedReads::CANDIDATE_FIELDS) }.merge(PAGE),
+                                               :optional => %w[space volume fields limit cursor]),
+                      :result => Shapes.object({ "candidate_faces" => Shapes.list(CANDIDATE_ROW),
+                                                 "next_cursor" => Pages::NEXT_CURSOR,
+                                                 "total" => Pages::TOTAL })) do |request|
+          ScopedReads.candidate_faces(request)
+        end
+      end
+
       def install_scoped(feature)
         refuses = READ + %w[query.cursor_expired query.limit_invalid target.not_found target.changed]
         example = { "space_id" => "spc_Ab12Cd34Ef56", "entity_path" => [1201, 1202] }
@@ -205,6 +243,7 @@ module PhComposer
                       :result => paged("floor_segments", SEGMENT_SUMMARY, "One page in path order.")) do |request|
           ScopedReads.floor_segments(request)
         end
+        install_candidates(feature, refuses, example)
         feature.query(ScopedReads::FINDINGS,
                       :description => "One page of the findings of the Model, or of one Space and its children, " \
                                       "each with the reference of what it is about; optionally only some codes.",
