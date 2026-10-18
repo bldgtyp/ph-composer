@@ -287,7 +287,8 @@ class ExportTasksTest < PhComposerTestCase
     id = api.start_export(:context => mine, :location => location).dig("value", "task_id")
 
     assert_equal %w[task.foreign task.foreign], [api.export_status(:context => theirs, :task_id => id),
-                                                 api.cancel_export(:context => theirs, :task_id => id)].map { |o| o["code"] }
+                                                 api.cancel_export(:context => theirs,
+                                                                   :task_id => id)].map { |o| o["code"] }
     assert_nil api.latest_export(:context => theirs).fetch("value")
     assert_equal id, api.latest_export(:context => mine).dig("value", "task_id")
     assert_equal "cancelled", api.cancel_export(:context => mine, :task_id => id).dig("value", "outcome", "status")

@@ -146,8 +146,10 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     dialog = AgentAccess::Dialog.show
     dialog.fire(AgentAccess::Dialog::CALLBACK, JSON.generate("type" => "access.revoke",
                                                              "payload" => { "id" => @writer.fetch("id") }))
-    acknowledged = dialog.scripts.map { |script| script[/receive\((.*)\)\z/, 1] }.compact.map { |json| JSON.parse(json) }
-                         .find { |message| message["type"] == "access.revoked" }
+    acknowledged = dialog.scripts.map { |script|
+      script[/receive\((.*)\)\z/, 1]
+    }.compact.map { |json| JSON.parse(json) }
+     .find { |message| message["type"] == "access.revoked" }
     refused = @executor.call(@writer, "invoke", "session" => @session.id, "name" => CREATE, "params" => PARTS,
                                                 "expected_revision" => @session.revision)
 
