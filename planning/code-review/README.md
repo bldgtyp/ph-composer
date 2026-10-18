@@ -6,7 +6,7 @@ ISSUE: none (local review requested by Ed)
 BASELINE: `main` at `60982fc73af6841f0c2bc5f55136dd21cad20930`
 
 FOLLOW-UP: Ed requested detailed plans on 2026-10-17. All findings now have owners in
-[Phase 3a1](../features/phase-03a1/README.md); its [ledger](../features/phase-03a1/STATUS.md)
+[Phase 3a1](../archive/phase-03a1/README.md); its [ledger](../archive/phase-03a1/STATUS.md)
 tracks implementation. Planning has fixed none of the findings.
 
 PH-Composer has a useful application API for agents, but users cannot yet connect Codex or Claude

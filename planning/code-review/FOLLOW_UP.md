@@ -1,9 +1,9 @@
 # Follow-up investigations and implementation boundaries
 
 STATUS: Recommendations only, 2026-10-17. No implementation phase is authorized by this review.
-DETAILED PLANS: [Phase 3a1](../features/phase-03a1/README.md) now owns stage scheduling, decisions,
+DETAILED PLANS: [Phase 3a1](../archive/phase-03a1/README.md) now owns stage scheduling, decisions,
 acceptance and cleanup. The recommendations below remain the review rationale; use the phase's
-[ledger](../features/phase-03a1/STATUS.md) for current delivery state. No implementation is authorized.
+[ledger](../archive/phase-03a1/STATUS.md) for current delivery state. No implementation is authorized.
 
 Use findings A01 to A14 in [the register](FINDINGS.md) as the problem statements. Create issue-backed
 owning packets when work is selected; this review is not a second feature ledger.

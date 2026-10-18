@@ -1,7 +1,7 @@
 # Phase 3a1: agent access
 
 DATE: 2026-10-17
-STATUS: In progress. Implementation of the whole phase authorized 2026-10-18; per-stage state is in [STATUS](STATUS.md).
+STATUS: Complete 2026-10-18, archived. Every stage merged (#222 to #243); evidence in [STATUS](STATUS.md) and [the stage 16 receipt](evidence/p3a1-16-integrated-acceptance.md).
 ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 BASELINE: `main@60982fc73af6841f0c2bc5f55136dd21cad20930`
 

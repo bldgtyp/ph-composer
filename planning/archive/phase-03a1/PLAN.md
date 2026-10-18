@@ -1,7 +1,7 @@
 # Phase 3a1 delivery plan
 
 DATE: 2026-10-17
-STATUS: In progress. Implementation authorized 2026-10-18; delivered in order V1 to V9 (folded in 2026-10-17 after Ed accepted D3a1-15). Stage state lives only in [STATUS](STATUS.md).
+STATUS: Complete 2026-10-18, archived. Every stage merged (#222 to #243); evidence in [STATUS](STATUS.md) and [the stage 16 receipt](evidence/p3a1-16-integrated-acceptance.md).
 ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Delivery sequence
@@ -106,8 +106,8 @@ with 07's server hooks no-ops until 08. Later stages may share prerequisites but
 not overlap on dispatch, registry, session observers, approved locations, the export task, the
 composition root or generated docs.
 
-Coordinate with [thermal bridges](../phase-03b-thermal-bridges/PLAN.md) and
-[geometry contribution contracts](../cross-phase/geometry-contribution-contracts/PLAN.md) before
+Coordinate with [thermal bridges](../../features/phase-03b-thermal-bridges/PLAN.md) and
+[geometry contribution contracts](../../features/cross-phase/geometry-contribution-contracts/PLAN.md) before
 touching Zones traversal, generic occurrence reads, declarations or export snapshots. This phase
 does not absorb their edge tagging or export work or change their existing requirements.
 

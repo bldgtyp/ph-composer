@@ -1,7 +1,7 @@
 # Phase 3a1 acceptance register
 
 DATE: 2026-10-17
-STATUS: All cases planned, none run for this phase.
+STATUS: Run 2026-10-18. Results per case in [STATUS](STATUS.md) and the stage receipts in `evidence/`.
 ISSUE: none (local planning draft)
 
 Passing review probes from the earlier investigation are baseline reproductions, not phase passes.

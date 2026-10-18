@@ -1,7 +1,7 @@
 # Phase 3a1 proposed product behavior
 
 DATE: 2026-10-17
-STATUS: Proposed. Planning authorized; implementation and unresolved product decisions are not.
+STATUS: Delivered 2026-10-18; see [STATUS](STATUS.md). Archived as planned behavior; `docs/` and `context/` hold the shipped contract.
 ISSUE: none (local planning draft)
 
 ## Outcome

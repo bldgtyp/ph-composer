@@ -1,7 +1,7 @@
 # Phase 3a1 cleanup ledger
 
 DATE: 2026-10-17
-STATUS: Planned. No cleanup performed by this packet.
+STATUS: Closed 2026-10-18; dispositions in [the stage 16 receipt](evidence/p3a1-16-integrated-acceptance.md).
 ISSUE: none (local planning draft)
 
 The [review cleanup inventory](../../code-review/CLEANUP.md) supplies the evidence. Remove only

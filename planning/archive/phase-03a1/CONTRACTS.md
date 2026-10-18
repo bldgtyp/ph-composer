@@ -1,7 +1,7 @@
 # Phase 3a1 proposed contracts
 
 DATE: 2026-10-17
-STATUS: Design targets. Names below are provisional until their owning stage freezes them.
+STATUS: Superseded by the implemented contracts in `context/` (CONTRACTS, AGENT_INTERFACE). Kept as the design record.
 ISSUE: none (local planning draft)
 
 Existing [CONTRACTS](../../../context/CONTRACTS.md) and

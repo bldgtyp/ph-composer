@@ -1,7 +1,7 @@
 # Phase 3a1 decision register
 
 DATE: 2026-10-17
-STATUS: All fifteen decisions accepted 2026-10-17 (receipts below). Implementation authorized 2026-10-18.
+STATUS: All fifteen decisions accepted 2026-10-17 (receipts below) and implemented; phase complete 2026-10-18.
 ISSUE: none (local planning draft)
 
 Existing architecture/grant/atomicity rules retain their authority. This register identifies new
