@@ -23,7 +23,7 @@ module PhComposer
                    "unprotected protects it again (Spaces locks it). No authored value changes; SketchUp itself " \
                    "records leaving a Group as an Undo entry, and undoing it reopens the Group."
     MOVE_REFUSES = %w[target.not_found target.locked target.wrong_kind target.shared_definition
-                      target.edit_path_changed].freeze
+                      target.edit_path_changed session.inactive].freeze
     # The tools during which the edit path may move: selecting and moving the camera hold no gesture.
     IDLE_TOOLS = %w[SelectionTool CameraOrbitTool CameraPanTool CameraZoomTool CameraZoomWindowTool].freeze
     MAXIMUM_LIMIT = 200

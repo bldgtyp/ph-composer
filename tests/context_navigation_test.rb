@@ -143,6 +143,24 @@ class ContextNavigationTest < PhComposerTestCase
     refute @volume.locked?, "no boundary ran"
   end
 
+  # SketchUp ignores a return to the root on a Model it is not showing, so the move refuses before the
+  # open Volume is protected rather than reporting a change that did not happen.
+  def test_a_return_to_the_root_of_a_model_not_shown_refuses_with_nothing_locked
+    @volume.locked = false
+    @model.active_path = [@zone, @space, @volume]
+    other = Sketchup::Model.new
+    Sketchup.active_model = other
+
+    refused = [view(ROOT), view(OPEN, "path" => [])].map { |result| result["code"] }
+    deeper = moved(OPEN, "path" => [100])
+
+    assert_equal %w[session.inactive session.inactive], refused
+    assert_equal({ "path" => [100], "changed" => true }, deeper)
+    refute_equal [], @model.active_path
+  ensure
+    Sketchup.active_model = @model
+  end
+
   def test_navigation_declares_the_lock_it_may_trigger
     names = [OPEN, ROOT, "ph_composer.spaces.context.open", "ph_composer.spaces.context.close",
              "ph_composer.spaces.locate"]
