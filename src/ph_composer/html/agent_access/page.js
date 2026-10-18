@@ -16,7 +16,9 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
         "Each action is one Undo step." },
       setup: { label: "Setup", consent: "Changes this computer's libraries and settings, for every Model, not " +
         "just this one." },
-      export: { label: "Export", consent: "Writes exports to the folders you have approved." }
+      export: { label: "Export", consent: "Writes exports to the folders you have approved." },
+      capture: { label: "Capture the view", consent: "Writes an image of the current view, geometry only, to a " +
+        "temporary file the agent reads. It can show anything in the viewport." }
     };
     /* The listener's state as the status line says it. */
     function serverLine(server) {
