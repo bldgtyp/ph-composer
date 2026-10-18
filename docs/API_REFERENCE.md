@@ -2155,6 +2155,8 @@ Called with a context granted `read`.
 
 The complete assemblies inventory for the panel snapshot. Owner: `ph_composer.assemblies`.
 
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.assemblies.assemblies.list` instead.
+
 Refuses: only the `query` common set.
 
 Params:
@@ -3577,6 +3579,8 @@ Example params:
 
 The complete materials inventory for the panel snapshot. Owner: `ph_composer.assemblies`.
 
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.assemblies.materials.list` instead.
+
 Refuses: only the `query` common set.
 
 Params:
@@ -4452,6 +4456,200 @@ Example params:
 
 ```json
 {}
+```
+
+### `ph_composer.context.read`
+
+Where this Model session stands: the Model's file name and path, its revision and view generation, whether it is busy and why, the edit path from the root, and the selection in pages. Reads only. Owner: `ph_composer.context`.
+
+Refuses: `query.cursor_expired`, `query.limit_invalid`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "session",
+    "readiness",
+    "edit_path",
+    "selection"
+  ],
+  "properties": {
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "file_name",
+        "path",
+        "revision",
+        "view_generation",
+        "active"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "file_name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string",
+          "description": "The Model's file path; empty until it is saved."
+        },
+        "revision": {
+          "type": "integer"
+        },
+        "view_generation": {
+          "type": "integer",
+          "description": "Advances when the selection changes, without a revision."
+        },
+        "active": {
+          "type": "boolean"
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "busy",
+        "reason",
+        "active_tool"
+      ],
+      "properties": {
+        "busy": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "active_tool": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The SketchUp tool the user has active."
+        }
+      }
+    },
+    "edit_path": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "persistent_id",
+          "type",
+          "name"
+        ],
+        "properties": {
+          "persistent_id": {
+            "type": "integer",
+            "description": "The entity's persistent id."
+          },
+          "type": {
+            "type": "string",
+            "description": "SketchUp's type name, such as Group or Face."
+          },
+          "name": {
+            "type": "string",
+            "description": "The instance or definition name; empty if none."
+          }
+        }
+      },
+      "description": "The open Groups and Components from the root, outermost first; empty at the root."
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "entities",
+        "next_cursor"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "persistent_id",
+              "type",
+              "name"
+            ],
+            "properties": {
+              "persistent_id": {
+                "type": "integer",
+                "description": "The entity's persistent id."
+              },
+              "type": {
+                "type": "string",
+                "description": "SketchUp's type name, such as Group or Face."
+              },
+              "name": {
+                "type": "string",
+                "description": "The instance or definition name; empty if none."
+              }
+            }
+          },
+          "description": "This page, by persistent id."
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Pass back as cursor for the next page; null on the last page."
+        }
+      }
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "limit": 50
+}
 ```
 
 ### `ph_composer.library.catalog`
@@ -5625,6 +5823,8 @@ Example params:
 ### `ph_composer.spaces.all`
 
 Every Space occurrence in one complete projection, for the panel. Scripts page ph_composer.spaces.list instead. Owner: `ph_composer.spaces`.
+
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.spaces.list` instead.
 
 Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
@@ -8427,6 +8627,8 @@ Example params:
 
 The complete frames inventory for the panel snapshot. Owner: `ph_composer.windows`.
 
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.windows.frames.list` instead.
+
 Refuses: `record.unreadable`, and the `query` common set.
 
 Params:
@@ -9129,6 +9331,8 @@ Example params:
 ### `ph_composer.windows.glazings.all`
 
 The complete glazings inventory for the panel snapshot. Owner: `ph_composer.windows`.
+
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.windows.glazings.list` instead.
 
 Refuses: `record.unreadable`, and the `query` common set.
 
@@ -9896,6 +10100,8 @@ Example params:
 
 The complete psi_install_types inventory for the panel snapshot. Owner: `ph_composer.windows`.
 
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.windows.psi_install_types.list` instead.
+
 Refuses: `record.unreadable`, and the `query` common set.
 
 Params:
@@ -10523,6 +10729,8 @@ Example params:
 ### `ph_composer.windows.types.all`
 
 The complete types inventory for the panel snapshot. Owner: `ph_composer.windows`.
+
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.windows.types.list` instead.
 
 Refuses: `record.unreadable`, and the `query` common set.
 
@@ -12665,6 +12873,8 @@ Example params:
 
 All Window occurrences and native findings for the snapshot. Owner: `ph_composer.windows`.
 
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.windows.units.list` instead.
+
 Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
@@ -13229,6 +13439,8 @@ Example params:
 
 Every Zone occurrence in one complete projection, for the panel. Scripts page ph_composer.zones.list instead. Owner: `ph_composer.zones`.
 
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.zones.list` instead.
+
 Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
 Params:
@@ -13717,6 +13929,8 @@ Example params:
 ### `ph_composer.zones.faces.all`
 
 Every Face occurrence in authored Zones in one complete projection, for the panel. Scripts page ph_composer.zones.faces.list instead. Owner: `ph_composer.zones`.
+
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.zones.faces.list` instead.
 
 Refuses: `geometry.invalid`, `record.unreadable`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 
@@ -15759,6 +15973,8 @@ Example params:
 ### `ph_composer.zones.options.all`
 
 Model-owned Segment/Level choices and adoption preview. Owner: `ph_composer.zones`.
+
+Unbounded: answers the whole Model in one result. A client with a reply budget reads `ph_composer.zones.options.list` instead.
 
 Refuses: `copy.rule_missing`, `extension.invalid`, `record.unreadable`, `reference.in_use`, `reference.invalid`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `validation.failed`, `zone.option_duplicate`, `zone.option_export_conflict`, `zone.options_adoption_required`, `zone.options_conflict`, and the `query` common set.
 
@@ -47781,3 +47997,9 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `zone.options_conflict` | Recovery or shared-storage choice evidence conflicts; explicit repair is required. |
 | `zone.restore_is_limited` | Restore recovers the Zone id, Building-Segment and Level only. |
 | `zone.restore_unsafe` | The Zone cannot be restored from what remains. |
+
+## API changes
+
+| Version | Date | Change |
+| --- | --- | --- |
+| 1.1 | 2026-10-18 | describe adds capability, preview_capability, a view command's side_effects, preconditions and a query's response; discover adds schemas; ph_composer.context.read is new. |

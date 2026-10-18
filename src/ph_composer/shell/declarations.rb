@@ -68,8 +68,12 @@ module PhComposer
     # `participants` names the proposal participants the handler calls (`request.participate`); a query
     # has no proposal, so a participant it calls refuses, and the edge exists only so the declaration
     # is uniform with an action's.
+    #
+    # `response`, optional, says how large an answer can be: `{"bounded" => false, "prefer" => name}` marks
+    # a whole-Model read, such as a panel snapshot, and names the bounded query a client with a reply
+    # budget reads instead.
     Query = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :participants, :handler,
-                       keyword_init: true)
+                       :response, keyword_init: true)
 
     # A validated Model change. `handler` is `->(request, proposal) { value }`: it adds steps and record
     # writes to `proposal` (an Operations::Proposal, whose `record_changes` is the Records::ChangeSet)
@@ -78,15 +82,18 @@ module PhComposer
     # must satisfy before the operation opens; only "none" is supported.
     # `participants` names the proposal participants the handler calls through `request.participate`;
     # `transitions` names the transitions it emits through `request.contribute_transition`.
+    # `preconditions`, here and on the other commands, are sentences saying what a caller can prepare
+    # before calling (a Zone open for editing, an approved location); the handler still checks them.
     Action = Struct.new(
       :name, :owner, :description, :params, :result, :examples, :refuses, :undo_name, :side_effects, :confirmation,
-      :participants, :transitions, :handler, keyword_init: true
+      :participants, :transitions, :handler, :preconditions, keyword_init: true
     )
 
     # A change to what the host shows, and nothing else, as a contribution seam. `handler` is
     # `->(request) { value }`, the same shape a query's takes, and it may change the selection, the
-    # camera or the state of a shared viewport service. It never writes a record, opens a Model
-    # operation or leaves an Undo entry.
+    # camera or the state of a shared viewport service. It writes no authored data and leaves no Undo
+    # entry of its own. It may trigger the Model's own protection boundaries, such as a Volume locking
+    # when the edit path leaves it; such a command says so in `side_effects` (context/AGENT_INTERFACE.md).
     #
     # It is not a query, because `context/AGENT_INTERFACE.md` says a read never changes the camera or
     # the selection. It is not an action, because an action's contract is a named native operation the
@@ -94,7 +101,7 @@ module PhComposer
     # before it, such a change could be reached from a native menu and from Ruby but from no client
     # (context/EXTENSIBILITY.md, "View commands").
     ViewCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :handler,
-                             keyword_init: true)
+                             :side_effects, :preconditions, keyword_init: true)
 
     # A file or folder location only the user can choose (context/AGENT_INTERFACE.md, "User-controlled
     # local access"). A setup command or file export that declares one runs only when a native client,
@@ -120,18 +127,25 @@ module PhComposer
     # sees the validated params and the session, never the approval, so dispatch runs it before a
     # native client opens any dialog and again before the handler.
     SetupCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :approval,
-                              :precondition, :handler, keyword_init: true)
+                              :precondition, :handler, :preconditions, keyword_init: true)
 
     # A local file write under the explicit export grant. Its handler validates and writes the file;
     # dispatch opens no Model transaction and consumes no action sequence. A destination the user
     # chooses is declared as an Approval and stays private to the handler, outside its JSON result.
     # `precondition` is as a setup command's.
     FileExport = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :approval,
-                            :precondition, :handler, keyword_init: true)
+                            :precondition, :handler, :preconditions, keyword_init: true)
 
     # The kind each operation is published as, by `describe` and in Refusals::COMMON.
     OPERATION_KINDS = { Query => "query", Action => "action", ViewCommand => "view_command",
                         SetupCommand => "setup_command", FileExport => "file_export" }.freeze
+
+    # The capability a caller needs for each kind (context/CONTRACTS.md, "Public interface"). Dispatch
+    # enforces it, and `describe` and the reference publish it, from this one table. Previewing an action
+    # needs only `read`.
+    CAPABILITIES = { "query" => "read", "action" => "model_write", "view_command" => "view",
+                     "setup_command" => "setup", "file_export" => "export" }.freeze
+    PREVIEW_CAPABILITY = "read"
 
     # A panel snapshot section: the result of one registered query, under the section's name.
     SnapshotSection = Struct.new(:name, :owner, :query, :params, keyword_init: true)

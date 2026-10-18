@@ -64,6 +64,7 @@ module PhComposer
                       :result => Shapes.with(result, "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL),
                       :examples => [{}]) { |request| Units::Actions.list(request) }
         feature.query("#{prefix}.all", :description => "All Window occurrences and native findings for the snapshot.",
+                                       :response => { "bounded" => false, "prefer" => "#{prefix}.list" },
                                        :refuses => Refuses::UNIT_READ,
                                        :params => Shapes::NONE, :result => result, :examples => [{}]) do |request|
           Units::Actions.list(request, :paged => false)

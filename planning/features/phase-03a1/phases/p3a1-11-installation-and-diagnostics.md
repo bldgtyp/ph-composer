@@ -1,7 +1,7 @@
 # P3a1-11: Client configuration snippets and diagnostics
 
 DATE: 2026-10-17
-STATUS: Implemented on branch `feat/phase-03a1-p3a1-11`.
+STATUS: Merged to main (#226).
 ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership

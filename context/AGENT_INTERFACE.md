@@ -60,6 +60,15 @@ Library copy includes the local read, create, replace and assignment refusals of
 adapters; the in-file query includes their local-read refusals. The lists reflect the current
 composition, so an outside kind's declared codes are discoverable without changes to the shell.
 
+Implemented: `describe` names each operation's `capability`, read from the same table dispatch
+enforces (`Declarations::CAPABILITIES`), and an action's `preview_capability` (`read`). It adds, when
+declared, a view command's `side_effects` (a protection boundary it can trigger, such as a Volume
+locking when the edit path leaves it), `preconditions` (sentences saying what a caller can prepare;
+the handler still checks) and a query's `response`: `{"bounded": false, "prefer": <query>}` marks a
+whole-Model read the panel uses and names the bounded read a client with a reply budget calls
+instead. Registration refuses malformed terms and a `prefer` that names no query. `discover` adds
+`schemas`: the Outcome envelope and a mutation's `request`, as JSON Schema.
+
 Do not make a client infer action names or capabilities from private file paths or the current UI.
 Reject incompatible API versions explicitly and document deprecations. New features register
 their agent-visible contracts alongside their existing operations rather than editing an adapter.
@@ -95,6 +104,16 @@ and `copy_slots`, each element's slot in that copy. Every Zone row carries `face
 `unclassified_face_area_m2`, the occurrence's Face area summed through its own transform, the second
 over Faces with no recorded values. Both are recomputed on each read, never stored, and never
 accepted by a write.
+
+Implemented: the Model context read, `ph_composer.context.read` (and the agent `context` tool). It
+answers the session (id, file name, the Model's own file path, revision, view generation, whether it
+is the active Model), readiness (busy and why, and the active SketchUp tool), the edit path from the
+root as persistent id, type and name per open Group or Component, and the selection in pages by
+persistent id. The path is the user's own document, not an approved destination, so it is shown: two
+open Models with the same file name differ by it. The view generation is a second session counter
+that advances on a selection change and never with the revision; a selection page is bound to both,
+so its cursor expires (`query.cursor_expired`) when the selection changes even though the Model did
+not. The read moves neither the edit path, the selection nor the camera.
 
 Support explicit selection, reveal and camera operations for visual inspection, plus viewport
 capture where the host permits it. Captures identify their model session, revision, camera and

@@ -150,6 +150,7 @@ module PhComposer
                       :refuses => READ + Refuses::PAGE, :params => LIST_PARAMS, :result => LIST_RESULT,
                       :examples => [{}, { "fields" => ["name"], "limit" => 20 }]) { |request| Zones.list(request) }
         feature.query("#{FEATURE_ID}.all",
+                      :response => { "bounded" => false, "prefer" => "#{FEATURE_ID}.list" },
                       :description => "Every Zone occurrence in one complete projection, for the panel. Scripts " \
                                       "page #{FEATURE_ID}.list instead.",
                       :refuses => READ,

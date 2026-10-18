@@ -18,7 +18,24 @@ module PhComposer
   # never live SketchUp objects.
   module API
     MAJOR = 1
-    MINOR = 0
+    MINOR = 1
+    # One line per shape change under this major, newest last (context/CONTRACTS.md, "Public
+    # interface"); the generated reference lists them.
+    CHANGES = [
+      { "minor" => 1, "date" => "2026-10-18",
+        "change" => "describe adds capability, preview_capability, a view command's side_effects, preconditions " \
+                    "and a query's response; discover adds schemas; ph_composer.context.read is new." }
+    ].freeze
+    # A mutation's `request` envelope.
+    REQUEST_SCHEMA = {
+      "type" => "object", "additionalProperties" => false, "required" => %w[sequence expected_revision],
+      "properties" => {
+        "sequence" => { "type" => "integer", "minimum" => 1,
+                        "description" => "This caller's mutation count from 1; a retry repeats it." },
+        "expected_revision" => { "type" => "integer", "description" => "The revision the caller last read." },
+        "proposal_digest" => { "type" => "string", "description" => "From a preview of the same change." }
+      }
+    }.freeze
 
     module_function
 
@@ -30,6 +47,7 @@ module PhComposer
       registry = Registry.current
       DeepCopy.call(
         "api" => { "major" => MAJOR, "minor" => MINOR },
+        "schemas" => { "outcome" => Outcome::SCHEMA, "request" => REQUEST_SCHEMA },
         "extension" => { "id" => EXTENSION_ID, "version" => VERSION },
         "contract_versions" => [Declarations::CONTRACT_VERSION],
         "capabilities" => CallerRegistry::CAPABILITIES,
@@ -177,18 +195,32 @@ module PhComposer
     # `refuses` is the operation's effective refusal codes, its own and those of the participants it
     # calls; `common_refusal_sets` names the sets of `discover`'s `common_refusals` it answers as well.
     def operation_description(registry, operation)
+      kind = operation_kind(operation)
       {
-        "kind" => operation_kind(operation),
+        "kind" => kind, "capability" => Declarations::CAPABILITIES[kind],
         "name" => operation.name, "owner" => operation.owner, "description" => operation.description,
         "params" => operation.params, "result" => operation.result, "examples" => operation.examples,
         "refuses" => Refusals.declared(operation, registry).sort.map { |code| refusal(registry, code) },
         "common_refusal_sets" => Refusals.common_sets(operation)
       }.merge(
-        operation.is_a?(Declarations::Action) ? { "side_effects" => operation.side_effects,
+        operation.is_a?(Declarations::Action) ? { "preview_capability" => Declarations::PREVIEW_CAPABILITY,
+                                                  "side_effects" => operation.side_effects,
                                                   "confirmation" => operation.confirmation,
                                                   "transitions" => Array(operation.transitions) } : {}
       ).merge(operation.respond_to?(:approval) && operation.approval ? { "approval" => operation.approval.to_h } : {})
         .merge(operation.respond_to?(:participants) ? { "participants" => operation.participants } : {})
+        .merge(described_terms(operation))
+    end
+
+    # The optional terms a declaration publishes only when it has them.
+    def described_terms(operation)
+      terms = {}
+      view = operation.is_a?(Declarations::ViewCommand)
+      terms["side_effects"] = operation.side_effects if view && operation.side_effects
+      preconditions = operation.respond_to?(:preconditions) ? Array(operation.preconditions) : []
+      terms["preconditions"] = preconditions unless preconditions.empty?
+      terms["response"] = operation.response if operation.is_a?(Declarations::Query) && operation.response
+      terms
     end
 
     # A feature's code carries its owner and description; a foundation code is described in
@@ -205,6 +237,7 @@ module PhComposer
 
       Declarations::OPERATION_KINDS.fetch(operation.class)
     end
-    private_class_method :session_summary, :summary, :operation_description, :refusal, :operation_kind
+    private_class_method :session_summary, :summary, :operation_description, :refusal, :operation_kind,
+                         :described_terms
   end
 end

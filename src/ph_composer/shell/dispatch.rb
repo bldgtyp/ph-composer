@@ -19,7 +19,7 @@ module PhComposer
     end
 
     def query(context, name, params)
-      Refusals.report(@registry.queries[name], answer(context, "read", name, @registry.queries, params))
+      Refusals.report(@registry.queries[name], answer(context, capability("query"), name, @registry.queries, params))
     end
 
     # File export has its own grant and never enters a Model mutation. Polling and cancellation
@@ -78,7 +78,8 @@ module PhComposer
     # It refuses while the session is busy, as a read does, so it cannot move the camera or the
     # selection out from under an operation that is still running.
     def view(context, name, params)
-      Refusals.report(@registry.view_commands[name], answer(context, "view", name, @registry.view_commands, params))
+      Refusals.report(@registry.view_commands[name],
+                      answer(context, capability("view_command"), name, @registry.view_commands, params))
     end
 
     # A change to session or machine state (Declarations::SetupCommand). It runs as a view command
@@ -89,14 +90,16 @@ module PhComposer
     # declaration is refused before anything runs.
     def setup(context, name, params, approval: nil)
       Refusals.report(@registry.setup_commands[name],
-                      answer(context, "setup", name, @registry.setup_commands, params, :approval => approval))
+                      answer(context, capability("setup_command"), name, @registry.setup_commands, params,
+                             :approval => approval))
     end
 
     # Registered local-file commands share validation and session targeting with reads. Their
     # separate grant permits file writes, never a Model transaction or an action retry sequence.
     def file_export(context, name, params, approval: nil)
       Refusals.report(@registry.file_exports[name],
-                      answer(context, "export", name, @registry.file_exports, params, :approval => approval))
+                      answer(context, capability("file_export"), name, @registry.file_exports, params,
+                             :approval => approval))
     end
 
     # The refusal `setup` or `file_export` would give before its handler runs (session, grant, params,
@@ -104,11 +107,11 @@ module PhComposer
     # a dialog, so the user never chooses a location for a call that was going to be refused anyway.
     # Dispatch repeats every check after the dialog, and only that answer is reported for audit.
     def setup_refusal(context, name, params)
-      admission_refusal(context, "setup", name, @registry.setup_commands, params)
+      admission_refusal(context, capability("setup_command"), name, @registry.setup_commands, params)
     end
 
     def file_export_refusal(context, name, params)
-      admission_refusal(context, "export", name, @registry.file_exports, params)
+      admission_refusal(context, capability("file_export"), name, @registry.file_exports, params)
     end
 
     # What an operation would change, without changing anything. The result is bound to the revision
@@ -126,7 +129,7 @@ module PhComposer
 
     # The retained outcome of an earlier mutation request, without running it again.
     def outcome(context, request)
-      session, caller, = resolve(context, "model_write", nil, nil)
+      session, caller, = resolve(context, capability("action"), nil, nil)
       sequence = request.is_a?(Hash) ? request["sequence"] : nil
       raise CodedError.new("request.malformed", "The request needs an integer sequence.") unless sequence.is_a?(Integer)
 
@@ -143,7 +146,7 @@ module PhComposer
     private
 
     def proposal_preview(context, name, params)
-      session, _caller, action = resolve(context, "read", name, @registry.actions)
+      session, _caller, action = resolve(context, Declarations::PREVIEW_CAPABILITY, name, @registry.actions)
       check_params!(action, params, session)
       refuse_if_busy!(session)
       proposal = Operations::Proposal.new
@@ -163,7 +166,7 @@ module PhComposer
     end
 
     def mutation(context, name, params, request)
-      session, caller, action = resolve(context, "model_write", name, @registry.actions)
+      session, caller, action = resolve(context, capability("action"), name, @registry.actions)
       sequence, expected_revision, proposal_digest = read_request!(request, session)
       check_json!(params, session)
       retained = retained_outcome(session, caller, sequence, name, params, expected_revision, proposal_digest)
@@ -225,6 +228,11 @@ module PhComposer
       coded_outcome(error, session)
     rescue StandardError => error
       unexpected_outcome(error, session, name)
+    end
+
+    # The capability dispatch enforces for an operation kind (Declarations::CAPABILITIES).
+    def capability(kind)
+      Declarations::CAPABILITIES.fetch(kind)
     end
 
     def resolve(context, capability, name, declarations)

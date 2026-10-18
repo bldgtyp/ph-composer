@@ -85,6 +85,7 @@ module PhComposer
           read.call(request, true)
         end
         feature.query("#{prefix}.all",
+                      :response => { "bounded" => false, "prefer" => "#{prefix}.list" },
                       :description => "The complete #{collection} inventory for the panel snapshot.",
                       :refuses => %w[record.unreadable],
                       :params => Shapes::NONE, :result => result(kind, row,
