@@ -18,3 +18,7 @@
 .agent-access-capability span { display: flex; flex-direction: column; gap: 2px; }
 .agent-access-secret { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
 .agent-access-secret-value { flex: 1; min-width: 0; font-family: ui-monospace, Menlo, monospace; }
+/* A refusal or copy answer inside the open dialog, which the page notice would sit behind. */
+.agent-access-inline { margin: 8px 0 0; color: #8f2f27; }
+.agent-access-inline[role="status"] { color: var(--muted); }
+.agent-access-inline:empty { display: none; }

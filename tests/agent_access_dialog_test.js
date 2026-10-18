@@ -95,6 +95,17 @@ test("an unreadable store offers only Reset, and a failure shows as a warning an
   assert.strictEqual(o.view.pending, false);
 });
 
+test("a refusal while New token is open shows inside the form, which stays open to retry", function () {
+  var o = setup();
+  named(o.view.root, "New token").dispatchEvent({ type: "click" });
+  o.view.submitCreate();
+  o.view.receive({ type: "access.failure", payload: { message: "This machine already has 8 live agent tokens." } });
+  assert.strictEqual(o.view.createDialog.hidden, false);
+  assert.ok(o.view.createError.textContent.includes("8 live agent tokens"));
+  assert.strictEqual(o.view.notice.hidden, true);
+  assert.strictEqual(o.view.createSubmit.disabled, false);
+});
+
 test("the page lists its entry and the kit it needs, starts, and asks the host for the list", function () {
   var page = PAGE(), markup = fs.readFileSync(page.path, "utf8"), scripts = [], sent = [];
   var modules = manifest.graph(true);
@@ -119,8 +130,9 @@ test("Copy token copies the selected token within the click, or says to copy it 
   o.view.receive({ type: "access.issued", payload: { token: "cd".repeat(24), row: TOKEN } });
   named(o.view.issuedDialog, "Copy token").dispatchEvent({ type: "click" });
   assert.deepStrictEqual(commands, ["copy"]);
-  assert.ok(o.view.notice.message.textContent.includes("Command-C"));
+  assert.ok(o.view.copyStatus.textContent.includes("Command-C"));
   o.page.document.execCommand = function () { return true; };
   named(o.view.issuedDialog, "Copy token").dispatchEvent({ type: "click" });
-  assert.strictEqual(o.view.notice.getAttribute("data-tone"), "success");
+  assert.strictEqual(o.view.copyStatus.textContent, "Token copied.");
+  assert.strictEqual(o.view.notice.hidden, true);
 });

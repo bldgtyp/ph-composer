@@ -86,6 +86,36 @@ class AgentAccessTokensTest < PhComposerTestCase
     assert_equal ["readable", []], [Tokens.state, Tokens.list]
   end
 
+  def test_a_store_with_a_repeated_id_or_over_the_byte_cap_is_unreadable_and_resets
+    row = { "id" => "token_AAAAAAAAAAAA", "label" => "A", "capabilities" => ["read"], "created_at" => "t",
+            "last_used_at" => nil, "revoked_at" => nil, "token_sha256" => "a" * 64 }
+    twin = row.merge("token_sha256" => "b" * 64)
+    oversized = Array.new(300) do |index|
+      row.merge("id" => format("token_%012d", index), "label" => "x" * 80, "token_sha256" => format("%064x", index))
+    end
+    [[row, twin], oversized].each do |tokens|
+      Sketchup.write_default(Tokens::SECTION, Tokens::KEY, [JSON.generate("tokens" => tokens)].pack("m0"))
+
+      assert_equal ["unreadable", {}], [Tokens.state, Tokens.snapshot]
+      Tokens.reset
+      assert_equal "readable", Tokens.state
+    end
+  end
+
+  def test_the_most_recently_revoked_rows_are_kept
+    old = Tokens.issue(:label => "Old").fetch("row")
+    Tokens::MAX_REVOKED.times do |index|
+      Tokens.revoke(Tokens.issue(:label => "Short #{index}").dig("row", "id"))
+    end
+
+    Tokens.revoke(old.fetch("id"))
+
+    revoked = Tokens.list.reject { |row| row["revoked_at"].nil? }
+    assert_equal Tokens::MAX_REVOKED, revoked.length
+    assert_includes revoked.map { |row| row["label"] }, "Old"
+    refute_includes revoked.map { |row| row["label"] }, "Short 0"
+  end
+
   def test_nothing_about_tokens_is_reachable_through_the_api
     token = Tokens.issue(:label => "Hidden").fetch("token")
     found = PhComposer::API.discover

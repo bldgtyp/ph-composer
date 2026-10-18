@@ -64,9 +64,21 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       } else if (message.type === "access.issued") {
         this.pending = false; this.createDialog.closeModal(); this.showIssued(payload.token, payload.row);
       } else if (message.type === "access.failure") {
-        this.pending = false; this.notice.show(payload.message, { tone: "warning" }); this.paint();
+        this.pending = false; this.fail(payload.message); this.paint();
       }
     };
+
+    /* A refusal shows where the user is: inside the open dialog, whose modal backdrop would hide the page's
+       notice and make its Dismiss unreachable, or as the page's notice when no dialog is open. */
+    Page.prototype.fail = function (message) {
+      var open = [[this.createDialog, this.createError], [this.revokeDialog, this.revokeError]]
+        .filter(function (pair) { return !pair[0].hidden; })[0];
+      if (open) open[1].textContent = message;
+      else this.notice.show(message, { tone: "warning" });
+    };
+    function inlineMessage(role) {
+      var node = el("p", "cell-error agent-access-inline"); node.setAttribute("role", role); return node;
+    }
 
     Page.prototype.row = function (token) {
       var self = this, row = el("div", "agent-access-row" + (token.revoked_at ? " is-revoked" : ""));
@@ -117,6 +129,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       form.appendChild(this.capabilityList);
       form.appendChild(el("p", "muted", "The token is the only secret. Anyone holding it has this access until " +
         "you revoke it here."));
+      this.createError = inlineMessage("alert"); form.appendChild(this.createError);
       var cancel = dom.button("Cancel", function () { self.closeCreate(); });
       this.createSubmit = dom.button("Create");
       this.createSubmit.type = "submit";
@@ -128,7 +141,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
     Page.prototype.openCreate = function () {
       var self = this;
       if (this.pending || this.unreadable) return;
-      this.labelInput.value = "";
+      this.labelInput.value = ""; this.createError.textContent = "";
       this.capabilityList.querySelectorAll("label").forEach(function (node) { node.remove(); });
       this.checks = Object.keys(CAPABILITIES).filter(function (name) { return self.offered.indexOf(name) !== -1; })
         .map(function (name) {
@@ -163,6 +176,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       this.copy = icons.iconButton("Copy token", "duplicate", function () { self.copySecret(); });
       field.appendChild(this.secret); field.appendChild(this.copy);
       this.issuedDialog.appendChild(field);
+      this.copyStatus = inlineMessage("status"); this.issuedDialog.appendChild(this.copyStatus);
       var done = dom.button("I have copied it", function () { self.closeIssued(); });
       done.className = "primary";
       var actions = el("div", "phc-dialog-actions"); actions.appendChild(done);
@@ -171,14 +185,16 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
     };
     Page.prototype.showIssued = function (token, row) {
       this.issuedTitle.textContent = "Token created: " + row.label;
-      this.secret.value = token; this.issuedDialog.openModal(); this.secret.select();
+      this.secret.value = token; this.copyStatus.textContent = "";
+      this.issuedDialog.openModal(); this.secret.select();
     };
     /* Copies the selected token within the click, which a file page needs; the clipboard API is the second
-       try. Either way the token stays selected, so Command-C works when both are refused. */
+       try. Either way the token stays selected, so Command-C works when both are refused. The answer is said
+       inside the dialog, which holds the focus. */
     Page.prototype.copySecret = function () {
       var clipboard = window.navigator && window.navigator.clipboard, self = this;
-      var copied = function () { self.notice.show("Token copied.", { tone: "success" }); };
-      var manual = function () { self.notice.show("Copy the selected token with Command-C.", { tone: "info" }); };
+      var copied = function () { self.copyStatus.textContent = "Token copied."; };
+      var manual = function () { self.copyStatus.textContent = "Copy the selected token with Command-C."; };
       this.secret.select();
       if (document.execCommand && document.execCommand("copy")) copied();
       else if (clipboard && clipboard.writeText) clipboard.writeText(this.secret.value).then(copied, manual);
@@ -196,6 +212,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       this.revokeDialog.appendChild(this.revokeTitle);
       this.revokeDialog.appendChild(el("p", "", "The agent holding this token can no longer connect. Work it has " +
         "already done in your Models stays."));
+      this.revokeError = inlineMessage("alert"); this.revokeDialog.appendChild(this.revokeError);
       var cancel = dom.button("Cancel", function () { self.closeRevoke(); });
       this.revokeConfirm = dom.button("Revoke", function () {
         if (self.revoking) self.send("access.revoke", { id: self.revoking });
@@ -206,6 +223,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
     Page.prototype.openRevoke = function (token) {
       if (this.pending) return;
       this.revoking = token.id; this.revokeTitle.textContent = "Revoke " + token.label + "?";
+      this.revokeError.textContent = "";
       this.revokeDialog.openModal();
     };
     Page.prototype.closeRevoke = function () {

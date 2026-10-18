@@ -39,7 +39,8 @@ module PhComposer
         stored.fetch("state")
       end
 
-      # Every token, live and revoked, without its digest; live ones first, newest first in each.
+      # Every token, live and revoked, without its digest: live ones newest issued first, then revoked ones
+      # newest revoked first.
       def list
         live, revoked = rows.partition { |row| row["revoked_at"].nil? }
         (live.reverse + revoked.reverse).map { |row| public_row(row) }
@@ -72,7 +73,8 @@ module PhComposer
         end
         return list if row["revoked_at"]
 
-        save(current.map { |item| item.equal?(row) ? item.merge("revoked_at" => now) : item })
+        # Moved to the end, so revoked rows are stored in the order they were revoked.
+        save(current.reject { |item| item.equal?(row) } + [row.merge("revoked_at" => now)])
         list
       end
 
@@ -141,12 +143,16 @@ module PhComposer
         store.fetch("tokens")
       end
 
+      # A store over the byte cap is unreadable rather than readable-but-unsavable, so Reset can recover it.
       def stored
         raw = Sketchup.read_default(SECTION, KEY, nil)
         return { "state" => "readable", "tokens" => [] } if raw.nil?
         return unreadable unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
 
-        document = JSON.parse(raw.unpack1("m0"))
+        text = raw.unpack1("m0")
+        return unreadable if text.bytesize > MAX_STORED_BYTES
+
+        document = JSON.parse(text)
         valid?(document) ? { "state" => "readable", "tokens" => document.fetch("tokens") } : unreadable
       rescue JSON::ParserError, ArgumentError, EncodingError
         unreadable
@@ -156,17 +162,26 @@ module PhComposer
         { "state" => "unreadable", "tokens" => [] }
       end
 
+      # Every row well formed, and no id or digest twice: a duplicate could leave a digest live that no
+      # revoke reaches.
       def valid?(document)
-        document.is_a?(Hash) && document["tokens"].is_a?(Array) && document["tokens"].all? { |row| valid_row?(row) }
+        return false unless document.is_a?(Hash) && document["tokens"].is_a?(Array)
+
+        tokens = document["tokens"]
+        tokens.all? { |row| valid_row?(row) } && tokens.map { |row| row["id"] }.uniq.length == tokens.length &&
+          tokens.map { |row| row["token_sha256"] }.uniq.length == tokens.length
       end
 
       def valid_row?(row)
         row.is_a?(Hash) && (row.keys - ROW_KEYS).empty? && row["id"].is_a?(String) && row["label"].is_a?(String) &&
-          row["token_sha256"].to_s.match?(/\A\h{64}\z/) && row["capabilities"].is_a?(Array) &&
-          row["capabilities"].include?("read") && (row["capabilities"] - CallerRegistry::CAPABILITIES).empty?
+          row["label"].length.between?(1, LABEL_LENGTH) && row["token_sha256"].to_s.match?(/\A\h{64}\z/) &&
+          row["capabilities"].is_a?(Array) && row["capabilities"].include?("read") &&
+          (row["capabilities"] - CallerRegistry::CAPABILITIES).empty? &&
+          (row["revoked_at"].nil? || row["revoked_at"].is_a?(String))
       end
 
-      # Keeps every live token and the newest MAX_REVOKED revoked ones, then tells the listener.
+      # Keeps every live token and the MAX_REVOKED most recently revoked ones (revoke stores rows in the
+      # order they were revoked), then tells the listener.
       def save(current)
         live, revoked = current.partition { |row| row["revoked_at"].nil? }
         kept = live + revoked.last(MAX_REVOKED)
