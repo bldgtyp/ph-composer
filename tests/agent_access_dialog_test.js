@@ -37,7 +37,7 @@ function named(root, label) {
 
 test("tokens list by label and access, revoked ones dated and without a Revoke", function () {
   var o = setup(), text = allText(o.view.list);
-  assert.ok(text.includes("Claude Code") && text.includes("Read") && text.includes("not used yet"));
+  assert.ok(text.includes("Claude Code") && text.includes("Read") && text.includes("no calls since SketchUp started"));
   assert.ok(text.includes("Old Codex") && text.includes("revoked"));
   assert.ok(named(o.view.list, "Revoke Claude Code"));
   assert.strictEqual(named(o.view.list, "Revoke Old Codex"), undefined);
@@ -48,6 +48,34 @@ test("tokens list by label and access, revoked ones dated and without a Revoke",
   o.view.receive({ type: "access.state", payload: { state: "readable", tokens: [TOKEN], offered: ["read"],
     server: { state: "unavailable", port: 46110, message: "Port 46110 is in use by another program." } } });
   assert.ok(o.view.server.textContent.includes("in use by another program"));
+  assert.strictEqual(o.view.portRow.hidden, false);
+  assert.ok(o.view.create.disabled, "no token is issued for a port nothing listens on");
+  o.view.portInput.value = "47001";
+  o.view.portApply.dispatchEvent({ type: "click" });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent)), [{ type: "access.port", payload: { port: 47001 } }]);
+});
+
+test("a token's latest call shows its time and how it ended", function () {
+  var called = Object.assign({}, TOKEN, { last_call: { at: "2026-10-18T14:02:00Z", status: "refused" } });
+  var o = setup({ tokens: [called] });
+  assert.ok(allText(o.view.list).includes("last call") && allText(o.view.list).includes("refused"));
+});
+
+test("the created token comes with each client's setup to copy, and none of it outlives the dialog", function () {
+  var o = setup(), commands = [];
+  o.page.document.execCommand = function (name) { commands.push(name); return true; };
+  var clients = [{ client: "Claude Code",
+    forms: [{ title: "Run in a terminal", text: "claude mcp add ... " + "ab".repeat(24) }],
+    check: "claude mcp get ph-composer", remove: "claude mcp remove ph-composer" }];
+  o.view.receive({ type: "access.issued", payload: { token: "ab".repeat(24), row: TOKEN, clients: clients } });
+  var setupField = o.view.clients.querySelectorAll("textarea")[0];
+  assert.ok(setupField.value.includes("ab".repeat(24)));
+  assert.ok(allText(o.view.clients).includes("claude mcp get ph-composer"));
+  named(o.view.clients, "Copy Claude Code setup").dispatchEvent({ type: "click" });
+  assert.deepStrictEqual(commands, ["copy"]);
+  assert.strictEqual(o.view.copyStatus.textContent, "Claude Code setup copied.");
+  named(o.view.issuedDialog, "I have copied it").dispatchEvent({ type: "click" });
+  assert.ok(!allText(o.view.root).includes("ab".repeat(24)));
 });
 
 test("New token offers Read fixed and sends the label and capabilities once", function () {

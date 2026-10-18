@@ -317,6 +317,20 @@ instead of showing it, and Codex 0.163.0 kept about 10,000 tokens of a larger on
 recent calls (tool, operation name, session, status, code, time; no params, value, path or token)
 is flushed to the diagnostics log.
 
+Implemented: client configuration, `agent_access/client_config.rb`. When a token is issued the
+dialog shows, with the token in it, `claude mcp add --transport http --scope user ph-composer <url>
+--header "Authorization: Bearer <token>"` for Claude Code, and for Codex a `[mcp_servers.ph-composer]`
+block for `~/.codex/config.toml` with `bearer_token_env_var = "PH_COMPOSER_TOKEN"` plus the
+`export` line, or the same block with the token inline in `http_headers`. Claude Code also gets a
+`claude mcp add-json` form whose header reads `${PH_COMPOSER_TOKEN}`, expanded when it connects
+(2.1.300: connected with the variable set, failed without). Codex's own `codex mcp
+add` and `remove` rewrite the whole config file, dropping comments and reordering tables (0.163.0),
+so the block is pasted by hand. Both clients connected from these snippets alone and ran a
+`discover` and a `query` headless (`claude -p`, `codex exec`) on the proving host. The
+`agent_access.port` preference changes from the dialog when the port is taken, which a stopped
+listener checks as well, and New token waits for a free port; each token's latest call since launch
+is kept per token, apart from the recent-call ring, and shown beside it as calls finish.
+
 Keep a bounded operation history with caller identity, action, target references, outcome and
 revision for diagnosis. Avoid full payload or secret logging. Exact retention and user-visible
 controls remain design choices.

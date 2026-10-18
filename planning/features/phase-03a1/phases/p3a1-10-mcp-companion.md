@@ -1,7 +1,7 @@
 # P3a1-10: MCP protocol and the verb tool surface
 
 DATE: 2026-10-17
-STATUS: Read-scope slice implemented on branch `feat/phase-03a1-p3a1-08` with 08's; write-scope slice Scoped (V5).
+STATUS: Read-scope slice merged to main with 08's (#225); write-scope slice Scoped (V5).
 ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership

@@ -1,8 +1,8 @@
 # P3a1-11: Client configuration snippets and diagnostics
 
 DATE: 2026-10-17
-STATUS: Scoped. Planning only; execution requires separate implementation authorization. Rewritten 2026-10-17 to accepted D3a1-01 and D3a1-11: no installer, no companion; the RBZ is the installation and the dialog shows the client configuration.
-ISSUE: none (local planning draft)
+STATUS: Implemented on branch `feat/phase-03a1-p3a1-11`.
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership
 

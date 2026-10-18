@@ -32,6 +32,10 @@ StubAgentServer = Struct.new(:port, :tokens) do
   def stop
     true
   end
+
+  def snapshot
+    { "recent" => [] }
+  end
 end
 
 class PhComposerTestCase < Minitest::Test

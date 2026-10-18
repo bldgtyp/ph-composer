@@ -18,11 +18,12 @@ module PhComposer
         "access.ready" => [],
         "access.issue" => %w[label capabilities],
         "access.revoke" => %w[id],
-        "access.reset" => []
+        "access.reset" => [],
+        "access.port" => %w[port]
       }.freeze
       OUTBOUND = {
         "access.state" => %w[state tokens offered server],
-        "access.issued" => %w[token row],
+        "access.issued" => %w[token row clients],
         "access.failure" => %w[message]
       }.freeze
 
@@ -79,9 +80,11 @@ module PhComposer
           "PhComposerUI.get(\"agent_access/page\").receive(#{JSON.generate('type' => type, 'payload' => payload)})"
         end
 
-        # What the page shows. `server` describes the listener, which no stage runs yet.
+        # What the page shows: every token with its latest call since SketchUp started, and the listener.
         def state
-          { "state" => Tokens.state, "tokens" => Tokens.list, "offered" => Tokens::OFFERED,
+          calls = Listener.last_calls
+          tokens = Tokens.list.map { |row| row.merge("last_call" => calls[row["id"]]) }
+          { "state" => Tokens.state, "tokens" => tokens, "offered" => Tokens::OFFERED,
             "server" => AgentAccess.server_status }
         end
 
@@ -116,12 +119,30 @@ module PhComposer
         def handle(type, payload)
           case type
           when "access.ready" then refresh
-          when "access.issue"
-            issued = Tokens.issue(:label => payload["label"], :capabilities => payload.fetch("capabilities", []))
-            publish("access.issued", issued)
+          when "access.issue" then issue(payload)
           when "access.revoke" then Tokens.revoke(payload["id"])
           when "access.reset" then Tokens.reset
+          when "access.port"
+            Listener.port = payload["port"]
+            refresh
           end
+        end
+
+        # A token is shown only with setup for a port that is listening. If the port was taken in the
+        # moment between the form and the issue, the token is revoked at once and the user is told to
+        # choose another port, rather than handed setup for a port nothing listens on.
+        def issue(payload)
+          issued = Tokens.issue(:label => payload["label"], :capabilities => payload.fetch("capabilities", []))
+          status = Listener.status
+          unless status["state"] == "listening"
+            Tokens.revoke(issued.dig("row", "id"))
+            return publish("access.failure", "message" => "#{status['message'] || 'PH-Composer could not listen.'} " \
+                                                          "The token was not kept; create it again once the " \
+                                                          "connection is listening.")
+          end
+
+          clients = ClientConfig.for(:port => status["port"], :token => issued.fetch("token"))
+          publish("access.issued", issued.merge("clients" => clients))
         end
 
         def publish(type, payload)
