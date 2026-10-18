@@ -39,7 +39,7 @@ are in [PLAN](PLAN.md); case definitions in [ACCEPTANCE](ACCEPTANCE.md).
 | P3a1-09 | V5 | W3 | Scoped | 07 write, 08 write, D06 | C09 | Not run |
 | P3a1-12 | V6 | W4 | Scoped | 05, 09, 10 write, 11 | C12 | Not run |
 | P3a1-13 | V7 | W5 | Scoped | 09, 10 write, D07/D12 | C13 | Not run |
-| P3a1-14 | V8 | W5 | Scoped | 05, 08 | C14 | Not run |
+| P3a1-14 | V8 | W5 | Merged to main ([#235](https://github.com/bldgtyp/ph-composer/pull/235); two Codex gpt-6.1-sol passes, three findings fixed: the field of view's axis, two-point perspective, the evidence link); spike partly measured | 05, 08 | C14 | `ph_composer.context.read` answers the camera (eye and target in metres, up, perspective with field of view or parallel with height); a `ViewObserver` advances the view generation on a camera change with the revision unchanged. `tests/model_context_test.rb` (14), on Ruby 3.2.2 and 2.7.2. `API::MINOR` 5. Spike ([V5 run](evidence/p3a1-v5-host-run.md)): `write_image` with SketchUp frontmost wrote the current view (2028 x 963, 154 ms), camera and selection unchanged, geometry only. Not measured, so 15 must treat them as unknown and refuse: the window behind another application, hidden, minimized, and a native modal open (each needs window control, declined for this session) |
 | P3a1-15 | V8 | W5 | Scoped | 10 write, 14, D08/D12 | C15 | Not run |
 | P3a1-16 | V9 | Integration | Scoped | 01 through 15 | C16 | Not run |
 
