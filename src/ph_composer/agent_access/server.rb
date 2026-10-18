@@ -6,6 +6,31 @@ require "time"
 
 module PhComposer
   module AgentAccess
+    # What a revoke does to the calls a Server holds: those of a revoked token are answered, never run, and
+    # revoking the last live token stops the listener once those answers are written.
+    module ServerRevocation
+      # Answers every waiting call of a token no longer in `live_ids` as revoked, so none runs and each
+      # client hears why, and returns how many it answered. Main thread, inside the revoke.
+      def refuse_revoked(live_ids)
+        @lock.synchronize do
+          revoked = @queue.select { |entry| entry.state == :waiting && !live_ids.include?(entry.token.fetch("id")) }
+          revoked.each do |entry|
+            entry.result = @executor.revoked
+            entry.state = :done
+            @queue.delete(entry)
+            record(entry, entry.result, @clock.call)
+          end
+          @answered.broadcast
+          revoked.length
+        end
+      end
+
+      # Stops on the next pump tick, after the workers have written the answers just given.
+      def stop_soon
+        @lock.synchronize { @stop_requested = true }
+      end
+    end
+
     # The loopback listener agents connect to (context/AGENT_INTERFACE.md, "User-controlled local
     # access", where the bounds below are recorded). HTTP/1.1 on 127.0.0.1, one JSON-RPC message per
     # `POST /mcp`, authenticated by an agent token.
@@ -18,6 +43,8 @@ module PhComposer
     # answers `session.busy` itself; under a native modal no thread runs at all, and the client's own
     # timeout is what the caller sees.
     class Server
+      include ServerRevocation
+
       DEFAULT_PORT = 46_110
       REQUEST_TIMEOUT = 5.0
       MAX_HEADER_BYTES = 16_384
@@ -66,6 +93,7 @@ module PhComposer
         @clients = []
         @calls = CallLog.new
         @stopped = true
+        @stop_requested = false
       end
 
       # Binds the port and starts accepting. Raises SystemCallError (EADDRINUSE among them) when the port
@@ -115,8 +143,12 @@ module PhComposer
 
       # Replaces the live tokens the workers authenticate against: digest => public row, frozen. Called
       # on the main thread after every token store write.
+      # A live token cancels a stop the last revoke asked for.
       def tokens=(snapshot)
-        @lock.synchronize { @tokens = snapshot }
+        @lock.synchronize do
+          @tokens = snapshot
+          @stop_requested = false unless snapshot.empty?
+        end
       end
 
       # The main-thread tick: runs every waiting entry, drops the cancelled and the expired unrun, flushes
@@ -124,6 +156,8 @@ module PhComposer
       # Entries are taken one at a time, so those not yet run stay queued and count against their token's
       # pending limit while an earlier one runs.
       def pump
+        return stop if @lock.synchronize { @stop_requested }
+
         @lock.synchronize { @last_tick = @clock.call }
         ran = 0
         while (entry = take_next)

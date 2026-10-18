@@ -49162,3 +49162,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | 1.3 | 2026-10-18 | ph_composer.spaces.candidate_faces.list is new; spaces.update and spaces.batch_update type values and expected_values by field, with units, and refuse unknown keys at the schema. |
 | 1.4 | 2026-10-18 | ph_composer.context.open and ph_composer.context.root are new view commands; the Spaces context commands and both locate commands declare side_effects. |
 | 1.5 | 2026-10-18 | ph_composer.context.read answers the camera; the view generation also advances when the camera changes. |
+| 1.6 | 2026-10-18 | The Outcome schema gains an optional sequence, set only by the agent connection's invoke and outcome results. |

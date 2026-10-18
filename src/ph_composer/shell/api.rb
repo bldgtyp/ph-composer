@@ -18,7 +18,7 @@ module PhComposer
   # never live SketchUp objects.
   module API
     MAJOR = 1
-    MINOR = 5
+    MINOR = 6
     # One line per shape change under this major, newest last (context/CONTRACTS.md, "Public
     # interface"); the generated reference lists them.
     CHANGES = [
@@ -38,7 +38,10 @@ module PhComposer
                     "commands and both locate commands declare side_effects." },
       { "minor" => 5, "date" => "2026-10-18",
         "change" => "ph_composer.context.read answers the camera; the view generation also advances when the " \
-                    "camera changes." }
+                    "camera changes." },
+      { "minor" => 6, "date" => "2026-10-18",
+        "change" => "The Outcome schema gains an optional sequence, set only by the agent connection's invoke and " \
+                    "outcome results." }
     ].freeze
     # A mutation's `request` envelope.
     REQUEST_SCHEMA = {

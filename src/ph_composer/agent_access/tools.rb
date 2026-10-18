@@ -24,6 +24,12 @@ module PhComposer
       NAME = string("The operation's name, from discover.")
       PARAMS = { "type" => "object", "description" => "The operation's params, as describe's params schema says." }
       READ_ONLY = { "readOnlyHint" => true, "openWorldHint" => false }.freeze
+      WRITES = { "readOnlyHint" => false, "openWorldHint" => false }.freeze
+      KEY = { "type" => "string", "minLength" => 1, "maxLength" => Sequencer::MAX_KEY,
+              "description" => "Your own name for this change, up to #{Sequencer::MAX_KEY} characters. Send the same " \
+                               "key again after a lost reply: the same request answers its first outcome and is " \
+                               "never applied twice." }.freeze
+      REVISION = { "type" => "integer", "description" => "The revision of the read this change is based on." }.freeze
 
       # Without an owner, a compact index: every operation's name by kind and owner. With one, that
       # owner's full entries. The whole discovery document is larger than one tool result may be.
@@ -69,10 +75,45 @@ module PhComposer
                                                        "#{arguments.fetch('name')[0, 120].inspect}.", :revision => nil)
       end
 
-      def tool(name, description, input_schema, session:, &run)
-        Executor::Tool.new(:name => name, :description => description, :capability => "read",
-                           :input_schema => input_schema, :session => session, :annotations => READ_ONLY,
+      def tool(name, description, input_schema, session:, capability: "read", annotations: nil, &run)
+        hints = annotations || (capability == "read" ? READ_ONLY : WRITES)
+        Executor::Tool.new(:name => name, :description => description, :capability => capability,
+                           :input_schema => input_schema, :session => session, :annotations => hints,
                            :run => run).freeze
+      end
+
+      # One mutation with the sequence the binding assigns, which every invoke result carries.
+      def invoke(context, arguments, sequencer)
+        sequence = sequencer.assign(arguments["idempotency_key"])
+        request = { "sequence" => sequence, "expected_revision" => arguments.fetch("expected_revision"),
+                    "proposal_digest" => arguments["proposal_digest"] }.compact
+        API.invoke(:context => context, :name => arguments["name"], :params => arguments.fetch("params", {}),
+                   :request => request).merge("sequence" => sequence)
+      end
+
+      # The retained outcome of an invoke, by its sequence or by the key it was sent with.
+      def outcome(context, arguments, sequencer)
+        sequence = arguments["sequence"] || sequencer.lookup(arguments["idempotency_key"])
+        unless sequence
+          return Outcome.refused("request.outcome_unavailable", "This connection sent no change with that key; " \
+                                                                "inspect the Model before issuing new work.",
+                                 :revision => nil)
+        end
+
+        API.outcome(:context => context, :request => { "sequence" => sequence }).merge("sequence" => sequence)
+      end
+
+      # A task method's params with the session it runs on.
+      def task_schema(name)
+        params = Export::TaskContract::TASKS.fetch(name).fetch("params")
+        object({ "session" => SESSION }.merge(params.fetch("properties")), ["session"] + params.fetch("required", []))
+      end
+
+      # A run block for a verb that takes a name and params; a proc, so the executor's extra arguments drop.
+      def operation(&call)
+        proc do |context, arguments|
+          call.call(:context => context, :name => arguments["name"], :params => arguments.fetch("params", {}))
+        end
       end
 
       TABLE = [
@@ -108,6 +149,55 @@ module PhComposer
              object({ "session" => SESSION, "location" => string("An approved location id.") }, ["session"]),
              :session => true) do |context, arguments|
           API.export_preflight(:context => context, :location => arguments["location"])
+        end,
+        tool("invoke", "Applies one action to one Model session as one Undo step, refused with nothing written if " \
+                       "the Model changed since expected_revision. Preview first for a compound edit. The result " \
+                       "carries the sequence this connection assigned.",
+             object({ "session" => SESSION, "name" => NAME, "params" => PARAMS, "expected_revision" => REVISION,
+                      "idempotency_key" => KEY,
+                      "proposal_digest" => string("The proposal_digest a preview returned, to refuse a change " \
+                                                  "that is no longer the same.") },
+                    %w[session name expected_revision]),
+             :session => true, :capability => "model_write",
+             :annotations => WRITES.merge("idempotentHint" => true)) do |context, arguments, _token, sequencer|
+          invoke(context, arguments, sequencer)
+        end,
+        tool("outcome", "The outcome of an earlier invoke, by its sequence or idempotency_key, without running it " \
+                        "again: after a lost reply, read it here before deciding anything.",
+             object({ "session" => SESSION, "sequence" => { "type" => "integer", "minimum" => 1 },
+                      "idempotency_key" => KEY }, ["session"]),
+             :session => true, :capability => "model_write",
+             :annotations => READ_ONLY) do |context, arguments, _token, sequencer|
+          outcome(context, arguments, sequencer)
+        end,
+        tool("view", "Runs a view command: the camera, the selection or the open Group. Never changes authored " \
+                     "data; describe says what else it can trigger, as its side_effects.",
+             object({ "session" => SESSION, "name" => NAME, "params" => PARAMS }, %w[session name]),
+             :session => true, :capability => "view", &operation { |**call| API.view(**call) }),
+        tool("setup", "Runs a setup command: this computer's libraries and settings, for every Model.",
+             object({ "session" => SESSION, "name" => NAME, "params" => PARAMS }, %w[session name]),
+             :session => true, :capability => "setup", &operation { |**call| API.setup(**call) }),
+        tool("export_file", "Runs a file export to a location the user approved, named by its id.",
+             object({ "session" => SESSION, "name" => NAME, "params" => PARAMS }, %w[session name]),
+             :session => true, :capability => "export", &operation { |**call| API.export_file(**call) }),
+        tool("start_export", "Starts the HBJSON export of one Model to a destination the user approved; poll it " \
+                             "with export_status.",
+             task_schema("start_export"), :session => true, :capability => "export") do |context, arguments|
+          API.start_export(:context => context, :location => arguments.fetch("location"))
+        end,
+        tool("export_status", "One export task's progress and, once it ends, its outcome.",
+             task_schema("export_status"), :session => true, :capability => "export",
+                                           :annotations => READ_ONLY) do |context, arguments|
+          API.export_status(:context => context, :task_id => arguments.fetch("task_id"))
+        end,
+        tool("cancel_export", "Cancels an export task before it starts writing.",
+             task_schema("cancel_export"), :session => true, :capability => "export") do |context, arguments|
+          API.cancel_export(:context => context, :task_id => arguments.fetch("task_id"))
+        end,
+        tool("latest_export", "This Model's most recent export task, to find one after a lost reply.",
+             object({ "session" => SESSION }, ["session"]), :session => true, :capability => "export",
+                                                            :annotations => READ_ONLY) do |context, _arguments|
+          API.latest_export(:context => context)
         end
       ].to_h { |entry| [entry.name, entry] }.freeze
     end

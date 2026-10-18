@@ -41,6 +41,21 @@ module PhComposer
       Dialog.refresh
     end
 
+    # Each token's caller handle and sequences per Model session, kept here rather than in the Executor so
+    # they outlive a listener restart (Executor#binding_for).
+    def bindings
+      @bindings ||= {}
+    end
+
+    # Forgets the bindings of every token not in `live_ids`.
+    def drop_bindings(live_ids)
+      bindings.delete_if { |(token_id, _session), _binding| !live_ids.include?(token_id) }
+    end
+
+    def reset_bindings
+      @bindings = {}
+    end
+
     # The listener's state for the dialog.
     def server_status
       Listener.status
@@ -49,4 +64,5 @@ module PhComposer
 
   on_reset("agent_access.dialog") { AgentAccess::Dialog.reset_for_test }
   on_reset("agent_access.listener") { AgentAccess::Listener.reset }
+  on_reset("agent_access.bindings") { AgentAccess.reset_bindings }
 end

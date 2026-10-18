@@ -14,7 +14,7 @@ module PhComposer
     # sequences and retained outcomes carry across calls. Dispatch enforces the grants as for any caller.
     class Executor
       # `run` receives the caller's OperationContext (nil for a tool that names no session), the validated
-      # arguments and the token's public row, and returns the API's answer.
+      # arguments, the token's public row and that binding's Sequencer, and returns the API's answer.
       Tool = Struct.new(:name, :description, :capability, :input_schema, :session, :annotations, :run,
                         keyword_init: true)
       # Serialized `structuredContent` larger than this is refused, never truncated: both target clients
@@ -24,15 +24,22 @@ module PhComposer
       MAX_ECHO = 160
       SESSION_UNKNOWN = "That Model session is closed or was never opened. Call discover for the open ones."
 
-      def initialize(tools:)
+      Binding = Struct.new(:context, :sequencer)
+
+      # `bindings` outlives this Executor (AgentAccess.bindings), so a listener restarted on another port
+      # keeps each token's caller handle, sequences and keys.
+      def initialize(tools:, bindings: AgentAccess.bindings)
         @tools = tools
-        @bindings = {}
+        @bindings = bindings
       end
 
       # The tool result for one call by `token` (its public row from the snapshot it authenticated with).
       def call(token, name, arguments)
         live = Tokens.snapshot.values.find { |row| row.fetch("id") == token.fetch("id") }
-        return error("This token was revoked; nothing ran.") unless live
+        unless live
+          prune
+          return revoked
+        end
 
         tool = @tools[name]
         return error("There is no tool named #{name.to_s[0, MAX_ECHO].inspect}.") unless tool && granted?(live, tool)
@@ -41,18 +48,23 @@ module PhComposer
         return error("The arguments are not valid: #{findings.first.to_s[0, MAX_ECHO]}.") unless findings.empty?
 
         prune
-        context = nil
+        binding = Binding.new(nil, nil)
         if tool.session
           session = Sessions.find(arguments["session"])
           unless session && Tokens.serves?(live, session)
             return result(Outcome.refused("session.unknown", SESSION_UNKNOWN, :revision => nil))
           end
 
-          context = binding_for(live, session)
+          binding = binding_for(live, session)
         end
-        result(tool.run.call(context, arguments, live))
+        result(tool.run.call(binding.context, arguments, live, binding.sequencer), :acted => tool.capability != "read")
       rescue CodedError => error
         result(Outcome.refused(error.code, error.message, :revision => nil, :detail => error.detail))
+      end
+
+      # The answer to a call whose token was revoked before it ran.
+      def revoked
+        error("This token was revoked; nothing ran.", "access.revoked")
       end
 
       # The answer a worker gives without the main thread: no SketchUp call, only an Outcome.
@@ -71,9 +83,11 @@ module PhComposer
 
       private
 
+      # One caller handle and one Sequencer per token and session, so sequences and keys carry across calls.
       def binding_for(token, session)
         @bindings[[token.fetch("id"), session.id]] ||=
-          API.connect(:session_id => session.id, :capabilities => token.fetch("capabilities"))
+          Binding.new(API.connect(:session_id => session.id, :capabilities => token.fetch("capabilities")),
+                      Sequencer.new)
       end
 
       # Forgets the handles of closed sessions and revoked tokens.
@@ -86,8 +100,16 @@ module PhComposer
       # The MCP tool result: the answer as `structuredContent` and one line of text, not a second copy of
       # the JSON, which a client that shows both would count twice. Every result passes through here or
       # `error`, so none leaves larger than the budget.
-      def result(value)
+      # `acted` marks a tool that may have changed something (every tool but the reads): its outcome is
+      # never turned into a refusal by its size.
+      def result(value, acted: false)
         text = JSON.generate(value)
+        if text.bytesize > MAX_RESULT_BYTES && acted && outcome?(value)
+          value = trimmed(value)
+          text = JSON.generate(value)
+          value = minimal(value) if text.bytesize > MAX_RESULT_BYTES
+          text = JSON.generate(value)
+        end
         if text.bytesize > MAX_RESULT_BYTES
           return error("The result is #{text.bytesize} bytes, over the #{MAX_RESULT_BYTES}-byte limit. Ask for " \
                        "less: a smaller page, fewer fields or one owner's operations.",
@@ -96,6 +118,27 @@ module PhComposer
 
         { "content" => [{ "type" => "text", "text" => summary(value) }], "structuredContent" => value,
           "isError" => false }
+      end
+
+      def outcome?(value)
+        value.is_a?(Hash) && value.key?("status") && value.key?("effect")
+      end
+
+      # What a tool that acts did is never reported as refused because its answer was large: the outcome
+      # keeps its status, code, effect, revision and sequence, and drops the value and the lists, which the
+      # caller reads back.
+      def trimmed(outcome)
+        outcome.merge("message" => "#{outcome['message']} The full result was over the reply limit; read back " \
+                                   "what it changed.",
+                      "value" => nil, "affected" => [], "findings" => [],
+                      "detail" => { "omitted" => %w[value affected findings] })
+      end
+
+      # Only what says what happened, for an outcome still over the budget once trimmed.
+      def minimal(outcome)
+        Outcome.build(outcome["status"], outcome["code"], "The result was over the reply limit; read back what " \
+                                                          "it changed.", outcome["effect"], outcome["revision"])
+               .merge(outcome.slice("sequence"))
       end
 
       def summary(value)

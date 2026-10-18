@@ -23,7 +23,7 @@ module PhComposer
     FOUNDATION_CODES = %w[
       request.malformed request.unknown_operation request.api_version request.capability_denied
       request.response_too_large
-      access.user_required request.cancelled
+      access.user_required access.revoked request.cancelled
       location.unknown location.revoked location.used location.kind_mismatch location.unavailable
       location.setup_unreadable location.setup_unavailable
       request.pending request.sequence_conflict request.outcome_unavailable

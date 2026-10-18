@@ -92,7 +92,8 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_equal({ "resources" => [] }, result_of(post(rpc("resources/list"))))
     assert_equal({ "prompts" => [] }, result_of(post(rpc("prompts/list"))))
     tools = result_of(post(rpc("tools/list"))).fetch("tools")
-    assert_equal AgentAccess::Tools::TABLE.keys, tools.map { |tool| tool.fetch("name") }
+    read_tools = AgentAccess::Tools::TABLE.values.select { |tool| tool.capability == "read" }.map(&:name)
+    assert_equal read_tools, tools.map { |tool| tool.fetch("name") }
     assert(tools.all? { |tool| tool.dig("annotations", "readOnlyHint") })
   end
 
@@ -320,6 +321,58 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_equal "completed", result_of(targeted.value).dig("structuredContent", "status")
     assert_equal 1, @session.callers.count
     assert_equal "session.unknown", result_of(closing.value).dig("structuredContent", "code")
+  end
+
+  # A client's cancellation is accepted and changes nothing: the waiting invoke still runs whole, and
+  # its outcome is the committed one, never a rollback.
+  def test_a_cancelled_waiting_invoke_runs_whole_and_its_outcome_is_retained
+    writer = AgentAccess::Tokens.issue(:capabilities => %w[read model_write]).fetch("token")
+    @server.tokens = AgentAccess::Tokens.snapshot
+    arguments = { "session" => @session.id, "name" => "test.fixture.create", "idempotency_key" => "k",
+                  "params" => { "parts" => [] }, "expected_revision" => @session.revision }
+    pending = @server.snapshot.fetch("pending")
+    request = Thread.new { post(rpc("tools/call", "name" => "invoke", "arguments" => arguments), :token => writer) }
+    sleep 0.01 until @server.snapshot.fetch("pending") > pending
+    cancelled = post(JSON.generate("jsonrpc" => "2.0", "method" => "notifications/cancelled",
+                                   "params" => { "requestId" => 7 }), :token => writer)
+    pump_until { !request.alive? }
+
+    assert_equal "202", cancelled.code
+    assert_equal %w[completed committed],
+                 result_of(request.value).dig("structuredContent").values_at("status", "effect")
+    assert_equal 1, @session.model.operations.count { |operation| operation.last == :committed }
+  end
+
+  # Revoking a token answers its waiting call as revoked, and revoking the last stops the listener only
+  # once that answer is written.
+  def test_a_revoke_answers_the_waiting_call_and_the_last_one_stops_after_it
+    writer = AgentAccess::Tokens.issue(:capabilities => %w[read model_write])
+    @server.tokens = AgentAccess::Tokens.snapshot
+    arguments = { "session" => @session.id, "name" => "test.fixture.create", "params" => { "parts" => [] },
+                  "expected_revision" => @session.revision }
+    pending = @server.snapshot.fetch("pending")
+    request = Thread.new do
+      post(rpc("tools/call", "name" => "invoke", "arguments" => arguments), :token => writer.fetch("token"))
+    end
+    sleep 0.01 until @server.snapshot.fetch("pending") > pending
+    [@row, writer.fetch("row")].each { |row| AgentAccess::Tokens.revoke(row.fetch("id")) }
+
+    assert_equal 1, @server.refuse_revoked([])
+    @server.stop_soon
+    answer = request.value
+    @server.pump
+
+    assert_equal "access.revoked", result_of(answer).dig("structuredContent", "code")
+    assert @server.stopped?
+    assert_empty @session.model.operations
+  end
+
+  def test_a_token_issued_before_the_pending_stop_keeps_the_listener_running
+    @server.stop_soon
+    @server.tokens = AgentAccess::Tokens.snapshot
+    @server.pump
+
+    refute @server.stopped?
   end
 
   def test_the_diagnostics_hold_no_token_or_params

@@ -36,6 +36,14 @@ StubAgentServer = Struct.new(:port, :tokens) do
   def snapshot
     { "recent" => [] }
   end
+
+  def stopped?
+    false
+  end
+
+  def refuse_revoked(_live_ids)
+    0
+  end
 end
 
 class PhComposerTestCase < Minitest::Test
