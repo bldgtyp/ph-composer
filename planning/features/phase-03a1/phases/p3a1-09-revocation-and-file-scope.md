@@ -1,8 +1,8 @@
 # P3a1-09: Acknowledged revocation and task ownership
 
 DATE: 2026-10-17
-STATUS: Scoped. Planning only; execution requires separate implementation authorization. Rewritten 2026-10-17 to the token model of accepted D3a1-05; the commit-time recheck is accepted D3a1-06.
-ISSUE: none (local planning draft)
+STATUS: Implemented on branch `feat/phase-03a1-p3a1-09`; see [STATUS](../STATUS.md). Rewritten 2026-10-17 to the token model of accepted D3a1-05; the commit-time recheck is accepted D3a1-06.
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership
 
