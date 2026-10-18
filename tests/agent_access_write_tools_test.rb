@@ -115,11 +115,11 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     first = invoke("idempotency_key" => "k")
     restarted = AgentAccess::Executor.new(:tools => AgentAccess::Tools::TABLE)
     replay = restarted.call(@writer, "invoke", "session" => @session.id, "name" => CREATE, "params" => PARTS,
-                                                "expected_revision" => first["revision"] - 1,
-                                                "idempotency_key" => "k").fetch("structuredContent")
+                                               "expected_revision" => first["revision"] - 1,
+                                               "idempotency_key" => "k").fetch("structuredContent")
     AgentAccess::Tokens.revoke(@writer.fetch("id"))
     refused = restarted.call(@writer, "invoke", "session" => @session.id, "name" => CREATE, "params" => PARTS,
-                                                 "expected_revision" => @session.revision)
+                                                "expected_revision" => @session.revision)
 
     assert_equal [first["value"], 1], [replay["value"], replay["sequence"]]
     assert_equal "access.revoked", refused.dig("structuredContent", "code")

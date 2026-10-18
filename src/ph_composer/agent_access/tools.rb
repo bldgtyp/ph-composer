@@ -187,7 +187,7 @@ module PhComposer
         end,
         tool("export_status", "One export task's progress and, once it ends, its outcome.",
              task_schema("export_status"), :session => true, :capability => "export",
-             :annotations => READ_ONLY) do |context, arguments|
+                                           :annotations => READ_ONLY) do |context, arguments|
           API.export_status(:context => context, :task_id => arguments.fetch("task_id"))
         end,
         tool("cancel_export", "Cancels an export task before it starts writing.",
@@ -196,7 +196,7 @@ module PhComposer
         end,
         tool("latest_export", "This Model's most recent export task, to find one after a lost reply.",
              object({ "session" => SESSION }, ["session"]), :session => true, :capability => "export",
-             :annotations => READ_ONLY) do |context, _arguments|
+                                                            :annotations => READ_ONLY) do |context, _arguments|
           API.latest_export(:context => context)
         end
       ].to_h { |entry| [entry.name, entry] }.freeze

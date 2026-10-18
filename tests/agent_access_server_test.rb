@@ -338,7 +338,8 @@ class AgentAccessServerTest < PhComposerTestCase
     pump_until { !request.alive? }
 
     assert_equal "202", cancelled.code
-    assert_equal %w[completed committed], result_of(request.value).dig("structuredContent").values_at("status", "effect")
+    assert_equal %w[completed committed],
+                 result_of(request.value).dig("structuredContent").values_at("status", "effect")
     assert_equal 1, @session.model.operations.count { |operation| operation.last == :committed }
   end
 
