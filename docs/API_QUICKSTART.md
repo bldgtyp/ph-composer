@@ -189,7 +189,8 @@ as the caller that started it. Read the file and check its hash before parsing i
 ```ruby
 written = status["outcome"]["value"]["artifacts"]["hbjson"]
 bytes = File.binread(written["path"])
-Digest::SHA256.hexdigest(bytes) == written["sha256"]  # false if a later export replaced the file
+# A later export to the same destination replaces the file; stop rather than parse another run's model.
+raise "the export was replaced since this task" unless Digest::SHA256.hexdigest(bytes) == written["sha256"]
 model = JSON.parse(bytes)
 ```
 
