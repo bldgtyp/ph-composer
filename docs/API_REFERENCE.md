@@ -45730,6 +45730,104 @@ Example params:
 {}
 ```
 
+### `ph_composer.view.capture`
+
+Write a PNG of the current view at the current camera and answer its path, hash and what it shows. Geometry only. Owner: `ph_composer.view`.
+
+Side effects: Writes one image file to a temporary folder; deletes this session's captures older than 15 minutes or beyond the newest four. Nothing in the Model or the view changes.
+
+Needs the `capture` grant rather than `view`.
+
+Refuses: `capture.failed`, `capture.too_large`, `capture.view_changed`, and the `view_command` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "width": {
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 4096
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 4096
+    }
+  },
+  "required": []
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "sha256",
+    "bytes",
+    "width",
+    "height",
+    "captured_at",
+    "provenance",
+    "overlays"
+  ],
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "The PNG, for you to read with your own tools."
+    },
+    "sha256": {
+      "type": "string"
+    },
+    "bytes": {
+      "type": "integer"
+    },
+    "width": {
+      "type": "integer"
+    },
+    "height": {
+      "type": "integer"
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "provenance": {
+      "type": "object",
+      "description": "The session, revision, view generation, camera, edit path and a selection digest the image was taken at."
+    },
+    "overlays": {
+      "type": "string",
+      "enum": [
+        "not_included"
+      ],
+      "description": "PH-Composer's overlays, tool drawing and panels are not in the image."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{}
+```
+
+Example params:
+
+```json
+{
+  "width": 1600,
+  "height": 1000
+}
+```
+
 ### `ph_composer.windows.place_tool.choose`
 
 Choose a Type and anchor, then start Place. Owner: `ph_composer.windows`.
@@ -49331,6 +49429,14 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `space.volume_protected` | The Volume is protected; unprotect it before opening it. |
 | `space.volume_unprotected` | A closed Volume is unlocked, so its Faces can be edited from the Space. |
 
+### `ph_composer.view`
+
+| Code | Meaning |
+| --- | --- |
+| `capture.failed` | SketchUp did not write the image. |
+| `capture.too_large` | The image is larger than a capture may be; ask for fewer pixels. |
+| `capture.view_changed` | The view changed while the image was written; capture again. |
+
 ### `ph_composer.windows`
 
 | Code | Meaning |
@@ -49436,3 +49542,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | 1.5 | 2026-10-18 | ph_composer.context.read answers the camera; the view generation also advances when the camera changes. |
 | 1.6 | 2026-10-18 | The Outcome schema gains an optional sequence, set only by the agent connection's invoke and outcome results. |
 | 1.7 | 2026-10-18 | export_status and latest_export give the caller that started a task its written pair's paths, SHA-256 and sizes as outcome.value.artifacts. |
+| 1.8 | 2026-10-18 | The capture capability and ph_composer.view.capture are new; describe names the grant a view command declares when it is not view. |

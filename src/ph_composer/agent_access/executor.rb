@@ -86,8 +86,13 @@ module PhComposer
         AgentAccess.committed(token.fetch("id"), arguments["session"], answer["sequence"])
       end
 
+      # A tool names the capability it needs, or several of which any one will do.
       def granted?(token, tool)
-        token.fetch("capabilities").include?(tool.capability)
+        Executor.reaches?(token, tool)
+      end
+
+      def self.reaches?(token, tool)
+        !(Array(tool.capability) & token.fetch("capabilities")).empty?
       end
 
       private
