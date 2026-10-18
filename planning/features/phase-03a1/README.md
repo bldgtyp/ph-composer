@@ -1,7 +1,7 @@
 # Phase 3a1: agent access
 
 DATE: 2026-10-17
-STATUS: Scoped. Planning requested; no stage authorized or implemented.
+STATUS: In progress. Implementation of the whole phase authorized 2026-10-18; per-stage state is in [STATUS](STATUS.md).
 ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 BASELINE: `main@60982fc73af6841f0c2bc5f55136dd21cad20930`
 
@@ -44,9 +44,9 @@ none is marked fixed by the existence of this plan.
 Ed authorized detailed planning on 2026-10-17 and explicitly excluded implementation. The same day
 he answered every decision in the register (D3a1-01 to 15) and the packet was rewritten to the
 accepted direction; stages are
-delivered in the order V1 to V9 of [PLAN](PLAN.md). Every stage remains `Scoped`. Creating this
-packet creates no issues, authorizes no host automation, installs no server and changes no client
-configuration.
+delivered in the order V1 to V9 of [PLAN](PLAN.md). On 2026-10-18 Ed authorized implementing the
+whole phase, one branch and pull request per stage, with host automation and computer use as the
+stages need them; [STATUS](STATUS.md) records each stage's state and evidence.
 
 This is the next planned insertion after Spaces and before resuming the roadmap sequence. Thermal
 bridges remains its own packet; it has no invented agent-access dependency. Shared-file changes must

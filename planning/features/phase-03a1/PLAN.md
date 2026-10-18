@@ -1,7 +1,7 @@
 # Phase 3a1 delivery plan
 
 DATE: 2026-10-17
-STATUS: Scoped; planning only. No stage authorized. Delivery order V1 to V9 folded in on 2026-10-17 after Ed accepted D3a1-15.
+STATUS: In progress. Implementation authorized 2026-10-18; delivered in order V1 to V9 (folded in 2026-10-17 after Ed accepted D3a1-15). Stage state lives only in [STATUS](STATUS.md).
 ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Delivery sequence
@@ -134,8 +134,8 @@ assets change. Required coverage uses the repository thresholds; do not lower th
 Record a stage, or a slice, as `Implemented on branch` only after its applicable deterministic,
 review and native gates have evidence; use an explained N/A for a pure boundary fix that needs no
 host check. `Merged` and `client-supported` are separate facts. Record every meaningful phase change
-through `docs-pass`. Preserve DCO and hooks. No commit, PR, merge or host action is authorized by
-this planning packet.
+through `docs-pass`. Preserve DCO and hooks. Each stage is one branch, one pull request, one Codex
+review and a merge on green CI, under Ed's 2026-10-18 authorization.
 
 Stage 16 screens the final head and reuses unchanged exact-head evidence. It reruns integrated
 client and native paths that were not previously proved together, rather than stacking equivalent
