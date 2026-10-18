@@ -44,8 +44,9 @@ Revoking keeps the token in the list with the date it was revoked. Up to eight t
 at once.
 
 While a token is live, PH-Composer listens for agents on this computer only, on port 46110, and the
-Agent Access window says so. If another program holds that port, the window says so and offers a
-field to choose another. An agent connects over MCP with the token as a bearer header and can read:
+Agent Access window says so. If another program holds that port, the window says so, offers a field
+to choose another and holds New token until one is free, so a token's setup never names a port
+nothing listens on. An agent connects over MCP with the token as a bearer header and can read:
 list the open Models, describe and run the read operations, and preview a change without making it.
 Each token's latest call since SketchUp started shows beside it.
 
@@ -55,10 +56,14 @@ When a token is created, the window shows what to paste for each supported clien
 already in it. Checked with Claude Code 2.1.300 and Codex 0.163.0 on macOS:
 
 - Claude Code: run the `claude mcp add --transport http --scope user ph-composer ...` command it
-  shows. Check it with `claude mcp get ph-composer`, which should say Connected.
+  shows. To keep the token out of Claude Code's settings, run the `claude mcp add-json ...` command
+  instead, which reads it from `PH_COMPOSER_TOKEN`, and put the `export` line it shows in your shell
+  profile and run it in the terminal you start Claude Code from. Check it with
+  `claude mcp get ph-composer`, which should say Connected.
 - Codex: paste the `[mcp_servers.ph-composer]` block it shows into `~/.codex/config.toml`, and the
-  `export PH_COMPOSER_TOKEN=...` line into your shell profile, such as `~/.zshrc`; or paste the
-  other block, which carries the token itself, instead of both. Check it with
+  `export PH_COMPOSER_TOKEN=...` line into your shell profile, such as `~/.zshrc`, and run it in the
+  terminal you start Codex from (a profile only reaches terminals opened after it changes); or paste
+  the other block, which carries the token itself, instead of both. Check it with
   `codex mcp get ph-composer`. Edit the file by hand rather than with `codex mcp add`, which
   rewrites the whole file and drops its comments.
 

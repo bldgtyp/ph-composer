@@ -37,20 +37,42 @@ def version(command: list[str]) -> str:
     return subprocess.run(command, capture_output=True, text=True, check=False).stdout.strip()
 
 
+def masked(text: str | bytes | None, token: str) -> str:
+    if isinstance(text, bytes):
+        text = text.decode("utf-8", errors="replace")
+    return (text or "").replace(token, "<token>")
+
+
 def run(name: str, command: list[str], env: dict[str, str], token: str, timeout: int) -> dict[str, object]:
+    """One client's run. A timeout is recorded with whatever the client printed before it, not raised."""
     started = datetime.now(UTC)
-    result = subprocess.run(
-        command, capture_output=True, text=True, env=env, stdin=subprocess.DEVNULL, timeout=timeout, check=False
-    )
+    try:
+        result = subprocess.run(
+            command, capture_output=True, text=True, env=env, stdin=subprocess.DEVNULL, timeout=timeout, check=False
+        )
+        exit_code, stdout, stderr = result.returncode, result.stdout, result.stderr
+    except subprocess.TimeoutExpired as expired:
+        exit_code, stdout, stderr = "timeout", expired.stdout, expired.stderr
     return {
         "client": name,
         "command": [part.replace(token, "<token>") for part in command],
         "started": started.isoformat(timespec="seconds"),
         "seconds": round((datetime.now(UTC) - started).total_seconds(), 1),
-        "exit": result.returncode,
-        "stdout": result.stdout.replace(token, "<token>"),
-        "stderr": result.stderr.replace(token, "<token>")[-4000:],
+        "exit": exit_code,
+        "stdout": masked(stdout, token),
+        "stderr": masked(stderr, token)[-4000:],
     }
+
+
+def write(out: Path, runs: list[dict[str, object]]) -> None:
+    """The transcript so far, rewritten after every run so a later failure keeps the earlier ones."""
+    transcript = {
+        "claude_version": version(["claude", "--version"]),
+        "codex_version": version(["codex", "--version"]),
+        "prompt": PROMPT,
+        "runs": runs,
+    }
+    (out / "transcript.json").write_text(json.dumps(transcript, indent=2) + "\n")
 
 
 def main() -> None:
@@ -64,9 +86,9 @@ def main() -> None:
     token = args.token_file.expanduser().read_text().strip()
     env = dict(os.environ, **{TOKEN_VARIABLE: token})
     args.out.mkdir(parents=True, exist_ok=True)
-    runs = [
-        run("Claude Code", ["claude", "-p", PROMPT, "--allowedTools", "mcp__ph-composer"], env, token, args.timeout),
-        run(
+    clients = [
+        ("Claude Code", ["claude", "-p", PROMPT, "--allowedTools", "mcp__ph-composer"]),
+        (
             "Codex",
             [
                 "codex",
@@ -78,18 +100,12 @@ def main() -> None:
                 'model_reasoning_effort="low"',
                 PROMPT,
             ],
-            env,
-            token,
-            args.timeout,
         ),
     ]
-    transcript = {
-        "claude_version": version(["claude", "--version"]),
-        "codex_version": version(["codex", "--version"]),
-        "prompt": PROMPT,
-        "runs": runs,
-    }
-    (args.out / "transcript.json").write_text(json.dumps(transcript, indent=2) + "\n")
+    runs: list[dict[str, object]] = []
+    for name, command in clients:
+        runs.append(run(name, command, env, token, args.timeout))
+        write(args.out, runs)
     for entry in runs:
         print(f"{entry['client']}: exit {entry['exit']} in {entry['seconds']} s")
 

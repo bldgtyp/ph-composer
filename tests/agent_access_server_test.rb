@@ -332,17 +332,39 @@ class AgentAccessServerTest < PhComposerTestCase
     AgentAccess::Listener.stop
   end
 
-  def test_a_tokens_latest_call_is_reported_by_token_without_its_params
-    AgentAccess::Listener.stop
-    AgentAccess::Listener.server_factory = ->(_port) { @server }
-    AgentAccess::Listener.refresh
+  def test_a_tokens_latest_call_reaches_an_open_dialog_and_outlives_the_ring_and_a_port_change
+    @server.stop
+    @server = server(:on_calls => ->(rows) { AgentAccess::Listener.calls_made(rows) })
+    dialog = AgentAccess::Dialog.show
+    call_tool("discover")
+    discovered = AgentAccess::Listener.last_calls.fetch(@row.fetch("id"))
     call_tool("query", "session" => @session.id, "name" => "test.fixture.total_length", "params" => { "p" => "secret" })
+    other = AgentAccess::Tokens.issue(:label => "Other").fetch("row")
+    AgentAccess::Listener.calls_made(Array.new(AgentAccess::Server::RING + 1) do
+      { "token" => other.fetch("id"), "at" => "2026-10-18T12:00:00Z", "status" => "completed", "error" => false }
+    end)
+    AgentAccess::Listener.stop
 
     calls = AgentAccess::Listener.last_calls
+    shown = JSON.parse(dialog.scripts.last[/receive\((.*)\)\z/m, 1]).dig("payload", "tokens")
 
-    assert_equal [@row.fetch("id")], calls.keys
+    assert_equal "completed", discovered.fetch("status")
     assert_equal "completed", calls.dig(@row.fetch("id"), "status")
     refute_includes JSON.generate(calls), "secret"
+    assert(shown.any? { |row| row["id"] == @row.fetch("id") && row.dig("last_call", "status") == "completed" })
+  end
+
+  def test_a_taken_port_shows_before_any_token_is_issued
+    AgentAccess::Tokens.revoke(@row.fetch("id"))
+    blocker = TCPServer.new("127.0.0.1", 0)
+    Sketchup.write_default(PhComposer::Preferences::SECTION, AgentAccess::Listener::PORT_KEY, blocker.addr[1])
+
+    status = AgentAccess::Listener.status
+
+    assert_equal "unavailable", status.fetch("state")
+    assert_includes status.fetch("message"), blocker.addr[1].to_s
+  ensure
+    blocker&.close
   end
 
   def test_the_stub_refuses_host_calls_off_the_main_thread
@@ -357,9 +379,9 @@ class AgentAccessServerTest < PhComposerTestCase
 
   private
 
-  def server(starvation_seconds: AgentAccess::Server::STARVATION_SECONDS, clock: nil)
+  def server(starvation_seconds: AgentAccess::Server::STARVATION_SECONDS, clock: nil, on_calls: nil)
     options = { :port => 0, :protocol => AgentAccess::MCP, :executor => @executor, :timer_api => Timers.new(0),
-                :starvation_seconds => starvation_seconds }
+                :starvation_seconds => starvation_seconds, :on_calls => on_calls }
     options[:clock] = clock if clock
     AgentAccess::Server.new(**options).start.tap { |started| started.tokens = AgentAccess::Tokens.snapshot }
   end

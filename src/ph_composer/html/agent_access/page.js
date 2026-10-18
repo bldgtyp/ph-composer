@@ -136,7 +136,8 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       }
       this.unreadableNotice.hidden = !this.unreadable;
       this.reset.disabled = this.pending;
-      this.create.disabled = this.pending || this.unreadable;
+      // A token issued while the port is taken would carry snippets for a port nothing listens on.
+      this.create.disabled = this.pending || this.unreadable || server.state === "unavailable";
       this.createSubmit.disabled = this.pending;
     };
 

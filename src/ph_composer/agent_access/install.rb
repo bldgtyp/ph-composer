@@ -44,5 +44,5 @@ module PhComposer
   end
 
   on_reset("agent_access.dialog") { AgentAccess::Dialog.reset_for_test }
-  on_reset("agent_access.listener") { AgentAccess::Listener.stop }
+  on_reset("agent_access.listener") { AgentAccess::Listener.reset }
 end

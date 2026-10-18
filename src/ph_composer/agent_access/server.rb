@@ -49,9 +49,11 @@ module PhComposer
       # `session.busy` result a worker sends without the main thread.
       # `port` 0 binds a free port, for tests. The two bounds are parameters only so a test need not wait
       # out the real ones.
+      # `on_calls` receives, on the main thread, the diagnostic rows of the calls each pump tick finished.
       def initialize(port:, protocol:, executor:, timer_api: UI, clock: -> { LoopbackHttp.monotonic },
-                     starvation_seconds: STARVATION_SECONDS, handoff_seconds: HANDOFF_SECONDS)
+                     starvation_seconds: STARVATION_SECONDS, handoff_seconds: HANDOFF_SECONDS, on_calls: nil)
         @port = port
+        @on_calls = on_calls
         @starvation_seconds = starvation_seconds
         @handoff_seconds = handoff_seconds
         @protocol = protocol
@@ -362,7 +364,8 @@ module PhComposer
         @ring << { "token" => entry.token.fetch("id"), "tool" => entry.tool,
                    "operation" => entry.arguments["name"].is_a?(String) ? entry.arguments["name"][0, 120] : nil,
                    "session" => entry.arguments["session"].is_a?(String) ? entry.arguments["session"][0, 60] : nil,
-                   "status" => outcome["status"], "code" => outcome["code"], "error" => result["isError"] == true,
+                   "status" => outcome["status"] || "completed", "code" => outcome["code"],
+                   "error" => result["isError"] == true,
                    "ms" => ((@clock.call - started) * 1000).round, "at" => Time.now.utc.iso8601 }
         @ring.shift while @ring.length > RING
         @unflushed = (@unflushed || 0) + 1
@@ -374,6 +377,7 @@ module PhComposer
           @unflushed = 0
           @ring.last(count)
         end
+        @on_calls&.call(rows) unless rows.empty?
         rows.each do |row|
           Diagnostics.log("agent_access_call", "operation" => [row["tool"], row["operation"]].compact.join(" "),
                                                "status" => row["error"] ? "error" : row["status"],

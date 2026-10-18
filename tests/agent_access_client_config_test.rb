@@ -9,12 +9,16 @@ class AgentAccessClientConfigTest < PhComposerTestCase
   ClientConfig = PhComposer::AgentAccess::ClientConfig
   TOKEN = "0123456789abcdef0123456789abcdef0123456789abcdef"
 
-  def test_claude_code_is_one_command_with_the_token_as_a_bearer_header
+  def test_claude_code_takes_the_token_in_its_command_or_from_an_environment_variable
     claude = ClientConfig.for(:port => 46_110, :token => TOKEN).first
 
     assert_equal "Claude Code", claude.fetch("client")
     assert_equal ["claude mcp add --transport http --scope user ph-composer http://127.0.0.1:46110/mcp " \
-                  "--header \"Authorization: Bearer #{TOKEN}\""], claude.fetch("forms").map { |form| form["text"] }
+                  "--header \"Authorization: Bearer #{TOKEN}\"",
+                  "claude mcp add-json --scope user ph-composer '{\"type\":\"http\"," \
+                  "\"url\":\"http://127.0.0.1:46110/mcp\"," \
+                  "\"headers\":{\"Authorization\":\"Bearer ${PH_COMPOSER_TOKEN}\"}}'",
+                  "export PH_COMPOSER_TOKEN=#{TOKEN}"], claude.fetch("forms").map { |form| form["text"] }
     assert_equal ["claude mcp get ph-composer", "claude mcp remove --scope user ph-composer"],
                  claude.values_at("check", "remove")
   end

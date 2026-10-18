@@ -49,6 +49,7 @@ test("tokens list by label and access, revoked ones dated and without a Revoke",
     server: { state: "unavailable", port: 46110, message: "Port 46110 is in use by another program." } } });
   assert.ok(o.view.server.textContent.includes("in use by another program"));
   assert.strictEqual(o.view.portRow.hidden, false);
+  assert.ok(o.view.create.disabled, "no token is issued for a port nothing listens on");
   o.view.portInput.value = "47001";
   o.view.portApply.dispatchEvent({ type: "click" });
   assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent)), [{ type: "access.port", payload: { port: 47001 } }]);

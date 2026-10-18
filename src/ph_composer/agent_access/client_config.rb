@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "json"
+
 module PhComposer
   module AgentAccess
     # What the Agent Access dialog shows a user to paste into each supported client, generated from the
@@ -23,15 +25,30 @@ module PhComposer
         [claude_code(port, token), codex(port, token)]
       end
 
+      # The environment-variable form expands `${PH_COMPOSER_TOKEN}` when Claude Code connects, so the
+      # token stays out of ~/.claude.json (checked against 2.1.300: connected with the variable set, failed
+      # without it).
       def claude_code(port, token)
+        server = JSON.generate("type" => "http", "url" => url(port),
+                               "headers" => { "Authorization" => "Bearer ${#{TOKEN_VARIABLE}}" })
         { "client" => "Claude Code",
           "forms" => [
             { "title" => "Run in a terminal",
               "text" => "claude mcp add --transport http --scope user #{SERVER_NAME} #{url(port)} " \
-                        "--header \"Authorization: Bearer #{token}\"" }
+                        "--header \"Authorization: Bearer #{token}\"" },
+            { "title" => "Or, to keep the token out of Claude Code's settings, run this",
+              "text" => "claude mcp add-json --scope user #{SERVER_NAME} '#{server}'" },
+            export_form(token)
           ],
           "check" => "claude mcp get #{SERVER_NAME}",
           "remove" => "claude mcp remove --scope user #{SERVER_NAME}" }
+      end
+
+      # The variable both clients' environment forms read. A shell profile only reaches terminals opened
+      # after it is edited, so the line is also run once where the client will start.
+      def export_form(token)
+        { "title" => "and add this to your shell profile, such as ~/.zshrc, then run it in this terminal too",
+          "text" => "export #{TOKEN_VARIABLE}=#{token}" }
       end
 
       # Pasted into the file by hand: `codex mcp add` and `codex mcp remove` rewrite the whole of
@@ -42,7 +59,7 @@ module PhComposer
           "forms" => [
             { "title" => "Add to ~/.codex/config.toml",
               "text" => "#{block}bearer_token_env_var = \"#{TOKEN_VARIABLE}\"" },
-            { "title" => "and to your shell profile, such as ~/.zshrc", "text" => "export #{TOKEN_VARIABLE}=#{token}" },
+            export_form(token),
             { "title" => "Or instead of both, this block with the token in it",
               "text" => "#{block}http_headers = { Authorization = \"Bearer #{token}\" }" }
           ],
