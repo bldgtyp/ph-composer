@@ -62,6 +62,16 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_equal [-32_600, "200"], error_of(post(JSON.generate("id" => 1, "method" => "ping")))
     assert_equal [-32_601, "200"], error_of(post(rpc("sampling/createMessage")))
     assert_equal [-32_602, "200"], error_of(post(rpc("tools/call", "arguments" => {})))
+    [{}, [1], true, 1.5, nil].each do |id|
+      message = { "jsonrpc" => "2.0", "id" => id, "method" => "ping" }
+      assert_equal [-32_600, "200"], error_of(post(JSON.generate(message))), id.inspect
+    end
+  end
+
+  def test_the_body_must_be_json_utf8_and_the_media_type_exactly_json
+    assert_equal [-32_700, "400"], error_of(post("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"p\xFF\"}".b))
+    assert_equal "415", post(rpc("ping"), :headers => { "Content-Type" => "application/jsonp" }).code
+    assert_equal({}, result_of(post(rpc("ping"), :headers => { "Content-Type" => "Application/JSON; charset=utf-8" })))
   end
 
   # ------------------------------------------------------------------ protocol methods
@@ -120,6 +130,54 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_equal [false, "request.unknown_operation"], [unknown["isError"], unknown.dig("structuredContent", "code")]
     assert_equal [false, "session.unknown"], [closed["isError"], closed.dig("structuredContent", "code")]
     assert_equal [true, true], [stray["isError"], hidden["isError"]]
+  end
+
+  def test_preview_export_preflight_and_a_paged_query_answer_as_the_api_does
+    writer = PhComposer::API.connect(:session_id => @session.id)
+    create = { "parts" => Array.new(2) { |index| { "label" => "Sill #{index}", "length_mm" => 1200.0 } } }
+    PhComposer::API.invoke(:context => writer, :name => "test.fixture.create", :params => create,
+                           :request => { "sequence" => 1, "expected_revision" => @session.revision })
+    page = { "kind" => "test.fixture.part", "limit" => 1 }
+
+    preview = call_tool("preview", "session" => @session.id, "name" => "test.fixture.create", "params" => create)
+    preflight = call_tool("export_preflight", "session" => @session.id)
+    first = call_tool("query", "session" => @session.id, "name" => "ph_composer.records.list", "params" => page)
+    cursor = first.dig("structuredContent", "value", "next_cursor")
+    second = call_tool("query", "session" => @session.id, "name" => "ph_composer.records.list",
+                                "params" => page.merge("cursor" => cursor))
+
+    assert_equal PhComposer::API.preview(:context => writer, :name => "test.fixture.create", :params => create)
+                                .values_at("status", "proposal_digest"),
+                 preview.fetch("structuredContent").values_at("status", "proposal_digest")
+    assert_equal PhComposer::API.export_preflight(:context => writer).values_at("status", "code"),
+                 preflight.fetch("structuredContent").values_at("status", "code")
+    ids = [first, second].map { |answer| answer.dig("structuredContent", "value", "records", 0, "id") }
+    assert_equal 2, ids.compact.uniq.length
+  end
+
+  def test_every_error_stays_within_the_budget_and_a_raising_call_never_stops_the_pump
+    long = call_tool("discover", "x" * 30_000 => 1)
+    timers = Struct.new(:blocks) do
+      def start_timer(_delay, _repeat = false, &block)
+        blocks << block
+        blocks.length
+      end
+
+      def stop_timer(_timer); end
+    end.new([])
+    @server.stop
+    @server = AgentAccess::Server.new(:port => 0, :protocol => AgentAccess::MCP, :executor => @executor,
+                                      :timer_api => timers).start
+    @server.tokens = AgentAccess::Tokens.snapshot
+    @executor.define_singleton_method(:call) { |*_arguments| raise JSON::GeneratorError, "bad bytes" }
+    request = Thread.new { post(rpc("tools/call", "name" => "discover", "arguments" => {})) }
+    sleep 0.01 until @server.snapshot.fetch("pending") == 1
+    timers.blocks.last.call
+
+    assert long.fetch("isError")
+    assert_operator JSON.generate(long.fetch("structuredContent")).bytesize, :<, AgentAccess::Executor::MAX_RESULT_BYTES
+    assert_equal "failed", result_of(request.value).dig("structuredContent", "status")
+    assert_equal 2, timers.blocks.length
   end
 
   def test_one_token_keeps_one_caller_per_session

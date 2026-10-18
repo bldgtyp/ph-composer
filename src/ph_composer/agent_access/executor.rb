@@ -20,6 +20,8 @@ module PhComposer
       # Serialized `structuredContent` larger than this is refused, never truncated: both target clients
       # fail a larger result (context/AGENT_INTERFACE.md, "User-controlled local access").
       MAX_RESULT_BYTES = 24 * 1024
+      # The most of a caller's own text (a name, a schema path) an error message repeats back.
+      MAX_ECHO = 160
       SESSION_UNKNOWN = "That Model session is closed or was never opened. Call discover for the open ones."
 
       def initialize(tools:)
@@ -33,10 +35,10 @@ module PhComposer
         return error("This token was revoked; nothing ran.") unless live
 
         tool = @tools[name]
-        return error("There is no tool named #{name.to_s[0, 60].inspect}.") unless tool && granted?(live, tool)
+        return error("There is no tool named #{name.to_s[0, MAX_ECHO].inspect}.") unless tool && granted?(live, tool)
 
         findings = JsonSchema.validate(arguments, tool.input_schema)
-        return error("The arguments are not valid: #{findings.first}.") unless findings.empty?
+        return error("The arguments are not valid: #{findings.first.to_s[0, MAX_ECHO]}.") unless findings.empty?
 
         prune
         context = nil
@@ -54,6 +56,11 @@ module PhComposer
       # The answer a worker gives without the main thread: no SketchUp call, only an Outcome.
       def busy(message)
         result(Outcome.refused("session.busy", message, :status => "busy", :revision => nil))
+      end
+
+      # The answer for a call that raised unexpectedly; the cause is in the diagnostics log only.
+      def failed
+        result(Outcome.failed(:effect => "unknown", :revision => nil))
       end
 
       def granted?(token, tool)
@@ -75,7 +82,8 @@ module PhComposer
       end
 
       # The MCP tool result: the answer as `structuredContent` and one line of text, not a second copy of
-      # the JSON, which a client that shows both would count twice.
+      # the JSON, which a client that shows both would count twice. Every result passes through here or
+      # `error`, so none leaves larger than the budget.
       def result(value)
         text = JSON.generate(value)
         if text.bytesize > MAX_RESULT_BYTES
@@ -95,6 +103,7 @@ module PhComposer
       end
 
       def error(message, code = nil)
+        message = message[0, 2 * MAX_ECHO]
         outcome = { "status" => "refused", "code" => code || "request.malformed", "message" => message,
                     "effect" => "none" }
         { "content" => [{ "type" => "text", "text" => message }], "structuredContent" => outcome, "isError" => true }

@@ -165,8 +165,10 @@ module PhComposer
         return if stopped?
 
         delay = @lock.synchronize { @queue.empty? ? IDLE_INTERVAL : BUSY_INTERVAL }
+        # The next tick is scheduled whatever this one raised, so one bad call cannot stop the pump.
         timer = @timer_api.start_timer(delay, false) do
           pump
+        ensure
           schedule_pump
         end
         @lock.synchronize { @pump_timer = timer unless @stopped }
@@ -197,9 +199,14 @@ module PhComposer
 
         token = authenticate(request.headers["authorization"])
         return [401, "", ["WWW-Authenticate: Bearer"]] unless token
-        return [415, ""] unless request.headers["content-type"].to_s.start_with?("application/json")
+        return [415, ""] unless json_media_type?(request.headers["content-type"])
 
         message(request.body, token)
+      end
+
+      # `application/json`, in any case, with or without parameters such as a charset.
+      def json_media_type?(header)
+        header.to_s.split(";", 2).first.to_s.strip.casecmp?("application/json")
       end
 
       def local_host?(host)
@@ -225,10 +232,15 @@ module PhComposer
         left.bytes.zip(right.bytes).reduce(0) { |sum, (a, b)| sum | (a ^ b) }.zero?
       end
 
+      # A request id is a string or an integer (MCP allows no other); a message without one is a
+      # notification.
       def message(body, token)
+        return rpc_error(nil, -32_700, "The body is not UTF-8 JSON.", 400) unless body.valid_encoding?
+
         parsed = JSON.parse(body)
         return rpc_error(nil, -32_600, "Batches are not accepted.") if parsed.is_a?(Array)
-        unless parsed.is_a?(Hash) && parsed["jsonrpc"] == "2.0" && parsed["method"].is_a?(String)
+        unless parsed.is_a?(Hash) && parsed["jsonrpc"] == "2.0" && parsed["method"].is_a?(String) &&
+               (!parsed.key?("id") || parsed["id"].is_a?(String) || parsed["id"].is_a?(Integer))
           return rpc_error(nil, -32_600, "Not a JSON-RPC 2.0 request.")
         end
         return [202, ""] unless parsed.key?("id")
@@ -298,7 +310,12 @@ module PhComposer
         return if @lock.synchronize { entry.state != :waiting || @clock.call >= entry.deadline }
 
         started = @clock.call
-        result = @executor.call(entry.token, entry.tool, entry.arguments)
+        result = begin
+          @executor.call(entry.token, entry.tool, entry.arguments)
+        rescue StandardError => error
+          Diagnostics.exception("agent_access_call", error)
+          @executor.failed
+        end
         @lock.synchronize do
           record(entry, result, started)
           next unless entry.state == :waiting
