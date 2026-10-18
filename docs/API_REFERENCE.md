@@ -6737,6 +6737,268 @@ Example params:
 {}
 ```
 
+### `ph_composer.spaces.candidate_faces.list`
+
+One page of the Faces of one Space or one Volume that carry no record yet: Floor candidates inside a Volume (for floors.mark) and loose Faces at the Space's root (for volumes.create), each with the refusal its operation would give now. Name exactly one. Owner: `ph_composer.spaces`.
+
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "space_id",
+        "entity_path"
+      ],
+      "properties": {
+        "space_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Space whose children to read, by the reference a read returned."
+    },
+    "volume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume_id",
+        "entity_path"
+      ],
+      "properties": {
+        "volume_id": {
+          "type": "string"
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "description": "The root-to-entity persistent-id path."
+        }
+      },
+      "description": "The Volume whose children to read, by the reference a read returned."
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "plan_area_m2",
+          "normal",
+          "horizontal",
+          "loops_m"
+        ]
+      },
+      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status) and loops_m."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate_faces",
+    "next_cursor",
+    "total"
+  ],
+  "properties": {
+    "candidate_faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "entity_path",
+          "candidate",
+          "space",
+          "volume",
+          "operation",
+          "refusal",
+          "requires"
+        ],
+        "properties": {
+          "entity_path": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "The Face's path from the root."
+          },
+          "candidate": {
+            "type": "string",
+            "enum": [
+              "floor",
+              "volume"
+            ],
+            "description": "floor: in a Volume, to mark; volume: loose at a Space's root, to group into a new Volume."
+          },
+          "space": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "space_id",
+              "entity_path"
+            ],
+            "properties": {
+              "space_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "description": "The root-to-entity persistent-id path."
+              }
+            }
+          },
+          "volume": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "volume_id",
+              "entity_path"
+            ],
+            "properties": {
+              "volume_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "description": "The root-to-entity persistent-id path."
+              }
+            }
+          },
+          "operation": {
+            "type": "string"
+          },
+          "refusal": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "description": "What `operation` would refuse with now, or null when it would accept."
+          },
+          "requires": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What the operation needs first."
+          },
+          "plan_area_m2": {
+            "type": "number",
+            "x-unit": "m2",
+            "description": "Plan area, projected onto the horizontal plane."
+          },
+          "normal": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "horizontal": {
+            "type": "boolean"
+          },
+          "loops_m": {
+            "type": "array",
+            "x-unit": "m",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "description": "The Face's outer loop then its holes, each a list of [x, y, z] points in model space. Only when `fields` asks for it."
+          }
+        }
+      }
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "space": {
+    "space_id": "spc_Ab12Cd34Ef56",
+    "entity_path": [
+      1201,
+      1202
+    ]
+  }
+}
+```
+
 ### `ph_composer.spaces.create_preview`
 
 Which explicit Faces Create Space would take into a new Space, and why it leaves each other one out. Writes nothing. Owner: `ph_composer.spaces`.
@@ -25209,11 +25471,167 @@ Params:
           },
           "values": {
             "type": "object",
-            "description": "The values to change. A Space takes name, number, default_height_m and the three airflows; a Volume display_name and avg_ceiling_height_m; a Floor Segment display_name, weighting_factor and net_area_factor. null removes an optional value."
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "name (Space)"
+              },
+              "number": {
+                "type": "string",
+                "description": "number (Space)"
+              },
+              "default_height_m": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "x-unit": "m",
+                "description": "The height a new Volume takes. (Space)"
+              },
+              "v_sup_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Supply airflow. Absent is unset, distinct from 0. (Space)"
+              },
+              "v_eta_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Extract airflow. Absent is unset, distinct from 0. (Space)"
+              },
+              "v_tran_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Transfer airflow. Absent is unset, distinct from 0. (Space)"
+              },
+              "display_name": {
+                "type": "string",
+                "description": "display_name (Volume, Floor Segment)"
+              },
+              "avg_ceiling_height_m": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "exclusiveMinimum": 0,
+                "x-unit": "m",
+                "description": "Average clear ceiling height; absent until entered. (Volume)"
+              },
+              "weighting_factor": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The share of the area that counts toward the weighted floor area (iCFA, or TFA). (Floor Segment)"
+              },
+              "net_area_factor": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The share of the area that counts toward net volume. (Floor Segment)"
+              }
+            },
+            "description": "The values to change, each taken by the kinds named; null removes an optional value."
           },
           "expected_values": {
             "type": "object",
-            "description": "Each named value as last read; a key absent here expects the value absent."
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "name (Space)"
+              },
+              "number": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "number (Space)"
+              },
+              "default_height_m": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "exclusiveMinimum": 0,
+                "x-unit": "m",
+                "description": "The height a new Volume takes. (Space)"
+              },
+              "v_sup_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Supply airflow. Absent is unset, distinct from 0. (Space)"
+              },
+              "v_eta_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Extract airflow. Absent is unset, distinct from 0. (Space)"
+              },
+              "v_tran_m3h": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "x-unit": "m3/h",
+                "description": "Transfer airflow. Absent is unset, distinct from 0. (Space)"
+              },
+              "display_name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "display_name (Volume, Floor Segment)"
+              },
+              "avg_ceiling_height_m": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "exclusiveMinimum": 0,
+                "x-unit": "m",
+                "description": "Average clear ceiling height; absent until entered. (Volume)"
+              },
+              "weighting_factor": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The share of the area that counts toward the weighted floor area (iCFA, or TFA). (Floor Segment)"
+              },
+              "net_area_factor": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The share of the area that counts toward net volume. (Floor Segment)"
+              }
+            },
+            "description": "Each named value as last read; a key absent here, or null, expects the value absent."
           }
         }
       },
@@ -26017,11 +26435,167 @@ Params:
     },
     "values": {
       "type": "object",
-      "description": "The values to change. A Space takes name, number, default_height_m and the three airflows; a Volume display_name and avg_ceiling_height_m; a Floor Segment display_name, weighting_factor and net_area_factor. null removes an optional value."
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "name (Space)"
+        },
+        "number": {
+          "type": "string",
+          "description": "number (Space)"
+        },
+        "default_height_m": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-unit": "m",
+          "description": "The height a new Volume takes. (Space)"
+        },
+        "v_sup_m3h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m3/h",
+          "description": "Supply airflow. Absent is unset, distinct from 0. (Space)"
+        },
+        "v_eta_m3h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m3/h",
+          "description": "Extract airflow. Absent is unset, distinct from 0. (Space)"
+        },
+        "v_tran_m3h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m3/h",
+          "description": "Transfer airflow. Absent is unset, distinct from 0. (Space)"
+        },
+        "display_name": {
+          "type": "string",
+          "description": "display_name (Volume, Floor Segment)"
+        },
+        "avg_ceiling_height_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "x-unit": "m",
+          "description": "Average clear ceiling height; absent until entered. (Volume)"
+        },
+        "weighting_factor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The share of the area that counts toward the weighted floor area (iCFA, or TFA). (Floor Segment)"
+        },
+        "net_area_factor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The share of the area that counts toward net volume. (Floor Segment)"
+        }
+      },
+      "description": "The values to change, each taken by the kinds named; null removes an optional value."
     },
     "expected_values": {
       "type": "object",
-      "description": "Each named value as last read; a key absent here expects the value absent."
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "name (Space)"
+        },
+        "number": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "number (Space)"
+        },
+        "default_height_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "x-unit": "m",
+          "description": "The height a new Volume takes. (Space)"
+        },
+        "v_sup_m3h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m3/h",
+          "description": "Supply airflow. Absent is unset, distinct from 0. (Space)"
+        },
+        "v_eta_m3h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m3/h",
+          "description": "Extract airflow. Absent is unset, distinct from 0. (Space)"
+        },
+        "v_tran_m3h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "x-unit": "m3/h",
+          "description": "Transfer airflow. Absent is unset, distinct from 0. (Space)"
+        },
+        "display_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "display_name (Volume, Floor Segment)"
+        },
+        "avg_ceiling_height_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "x-unit": "m",
+          "description": "Average clear ceiling height; absent until entered. (Volume)"
+        },
+        "weighting_factor": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The share of the area that counts toward the weighted floor area (iCFA, or TFA). (Floor Segment)"
+        },
+        "net_area_factor": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The share of the area that counts toward net volume. (Floor Segment)"
+        }
+      },
+      "description": "Each named value as last read; a key absent here, or null, expects the value absent."
     }
   }
 }
@@ -48346,3 +48920,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | --- | --- | --- |
 | 1.1 | 2026-10-18 | describe adds capability, preview_capability, a view command's side_effects, preconditions and a query's response and while_busy; discover adds schemas; ph_composer.context.read is new. |
 | 1.2 | 2026-10-18 | ph_composer.spaces.list answers bounded summaries with fields, the Model's sums before any filter and the sums of the page's Zones and Building-Segments; spaces.volumes.list, spaces.floor_segments.list and spaces.findings.list are new, Floor Segment loops only when fields asks. |
+| 1.3 | 2026-10-18 | ph_composer.spaces.candidate_faces.list is new; spaces.update and spaces.batch_update type values and expected_values by field, with units, and refuse unknown keys at the schema. |

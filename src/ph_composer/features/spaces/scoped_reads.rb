@@ -10,6 +10,9 @@ module PhComposer
       VOLUMES = "#{FEATURE_ID}.volumes.list"
       FLOOR_SEGMENTS = "#{FEATURE_ID}.floor_segments.list"
       FINDINGS = "#{FEATURE_ID}.findings.list"
+      CANDIDATE_FACES = "#{FEATURE_ID}.candidate_faces.list"
+      CANDIDATE_FIELDS = %w[plan_area_m2 normal horizontal loops_m].freeze
+      OPEN_SPACE = "The Space open for editing (ph_composer.spaces.context.open)."
       PATH = ->(row) { row.dig("reference", "entity_path") }
 
       module_function
@@ -53,6 +56,41 @@ module PhComposer
         volumes = rows.flat_map { |row| row.fetch("volumes") }
         path = Resolve.integer_path(reference.fetch("entity_path"))
         volumes.any? { |volume| PATH.call(volume) == path } ? volumes : volumes + Reads.orphan_rows(request, path)
+      end
+
+      # Faces that have no record yet: directly inside a Volume, ready to mark as Floor Segments, or loose at
+      # a Space's root, ready to group into a new Volume; each with the operation it is for and the
+      # refusal that operation would give now. Reading stamps nothing and repairs nothing.
+      def candidate_faces(request)
+        scan = Occurrences.scan(request.model)
+        params = request.params
+        unless params.key?("space") ^ params.key?("volume")
+          raise CodedError.new("params.invalid", "Name one Space or one Volume whose candidate Faces to read.")
+        end
+
+        faces = if params.key?("space")
+                  space = Resolve.occurrence(scan, params["space"], :mutable => false)
+                  scan.unmarked_faces.select { |face| face.space.equal?(space) || space.volumes.include?(face.volume) }
+                else
+                  volume = Resolve.occurrence(scan, params["volume"], :mutable => false)
+                  scan.unmarked_faces.select { |face| face.volume.equal?(volume) }
+                end
+        rows = faces.sort_by(&:path).map { |face| candidate_row(scan, face, params["fields"]) }
+        page, next_cursor = Pages.bounded(request, CANDIDATE_FACES, rows, :key => ->(row) { row["entity_path"] })
+        { "candidate_faces" => page, "next_cursor" => next_cursor, "total" => rows.length }
+      end
+
+      def candidate_row(scan, face, fields)
+        geometry = FaceCapture.call(face.entity, face.transform)
+        operation, refusal = Eligibility.of(scan, face)
+        row = { "entity_path" => face.path.dup, "candidate" => face.volume ? "floor" : "volume",
+                "space" => face.space&.reference, "volume" => face.volume&.reference,
+                "operation" => operation, "refusal" => refusal,
+                "requires" => face.volume ? nil : OPEN_SPACE,
+                "plan_area_m2" => Metrics.projected_area_m2(geometry.loops_m), "normal" => geometry.normal,
+                "horizontal" => Metrics.horizontal?(geometry.normal), "loops_m" => geometry.loops_m }
+        fixed = %w[entity_path candidate space volume operation refusal requires]
+        row.slice(*(fixed + (fields || (CANDIDATE_FIELDS - ["loops_m"]))))
       end
 
       # Each finding with the reference of what it is about: a Space, Volume, Floor Segment or Zone, or a

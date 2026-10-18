@@ -78,7 +78,8 @@ module PhComposer
       # Loose Faces at a Space's root become its next Volume, with the Space's default height.
       def create_volume(request, proposal, space:, faces:, weighting_factor: 1.0)
         scan = Occurrences.scan(request.model)
-        occurrence = Resolve.occurrence(scan, space, :mutable => true)
+        occurrence = Resolve.occurrence(scan, space, :mutable => false)
+        Eligibility.new_volume!(scan, occurrence)
         context_open!(request.model, occurrence.path, "Open the Space's edit context to add a Volume to it.")
         face_ids = space_root_faces(request.model, occurrence, faces)
         before = occurrence.record
@@ -218,12 +219,12 @@ module PhComposer
       # The Floor Segment record already on the Face at `path`, or nil when it is not yet marked. Refuses a
       # path that is not a Face directly inside a writable Volume, or a marked Face that cannot be written.
       def marked_floor_segment(model, scan, face_path)
-        volume = scan.volumes.find { |candidate| candidate.path == face_path[0...-1] }
+        volume = (scan.volumes + scan.orphan_volumes).find { |candidate| candidate.path == face_path[0...-1] }
         unless volume
           raise CodedError.new("target.wrong_hierarchy", "Mark floor takes Faces directly inside a Volume.")
         end
 
-        Resolve.writable!(volume, scan.volumes + scan.orphan_volumes, "Volume")
+        Eligibility.floor!(scan, volume)
         face = Occurrences.entity_at(model, face_path)
         raise CodedError.new("target.wrong_kind",
                              "Only Faces become Floor Segments.") unless face.is_a?(Sketchup::Face)
@@ -363,7 +364,7 @@ module PhComposer
       def plan_edit(scan, reference, values, expected_values)
         occurrence = Resolve.occurrence(scan, reference, :mutable => true)
         kind = Resolve.kind_of(reference)
-        unknown = values.keys - EDITABLE.fetch(kind)
+        unknown = (values.keys | expected_values.keys) - EDITABLE.fetch(kind)
         unless unknown.empty?
           raise CodedError.new("params.invalid",
                                "A #{KINDS.fetch(kind).label} edit cannot change #{unknown.join(', ')}.")

@@ -18,7 +18,7 @@ module PhComposer
   # never live SketchUp objects.
   module API
     MAJOR = 1
-    MINOR = 2
+    MINOR = 3
     # One line per shape change under this major, newest last (context/CONTRACTS.md, "Public
     # interface"); the generated reference lists them.
     CHANGES = [
@@ -29,7 +29,10 @@ module PhComposer
         "change" => "ph_composer.spaces.list answers bounded summaries with fields, the Model's sums before any " \
                     "filter and the sums of the page's Zones and Building-Segments; spaces.volumes.list, " \
                     "spaces.floor_segments.list and spaces.findings.list are new, Floor Segment loops only when " \
-                    "fields asks." }
+                    "fields asks." },
+      { "minor" => 3, "date" => "2026-10-18",
+        "change" => "ph_composer.spaces.candidate_faces.list is new; spaces.update and spaces.batch_update type " \
+                    "values and expected_values by field, with units, and refuse unknown keys at the schema." }
     ].freeze
     # A mutation's `request` envelope.
     REQUEST_SCHEMA = {
