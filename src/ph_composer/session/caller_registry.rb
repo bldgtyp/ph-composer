@@ -10,7 +10,9 @@ module PhComposer
     # `view` sits between `read` and `model_write`: it changes what the host shows, the selection, the
     # camera and the active Colour-by mode, and never reaches the SKP (Declarations::ViewCommand).
     # `setup` changes session or machine state, never the SKP (Declarations::SetupCommand).
-    CAPABILITIES = %w[read view model_write setup export].freeze
+    # `capture` writes an image of the current view (ph_composer.view.capture), which can show anything in
+    # the viewport, so it is granted apart from `view`.
+    CAPABILITIES = %w[read view model_write setup export capture].freeze
 
     Caller = Struct.new(:handle, :capabilities, :highest_sequence, keyword_init: true)
 

@@ -217,7 +217,7 @@ module PhComposer
     def operation_description(registry, operation)
       kind = operation_kind(operation)
       {
-        "kind" => kind, "capability" => Declarations::CAPABILITIES[kind],
+        "kind" => kind, "capability" => kind && Declarations.capability_of(operation, kind),
         "name" => operation.name, "owner" => operation.owner, "description" => operation.description,
         "params" => operation.params, "result" => operation.result, "examples" => operation.examples,
         "refuses" => Refusals.declared(operation, registry).sort.map { |code| refusal(registry, code) },

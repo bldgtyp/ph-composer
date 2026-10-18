@@ -79,8 +79,9 @@ module PhComposer
     # It refuses while the session is busy, as a read does, so it cannot move the camera or the
     # selection out from under an operation that is still running.
     def view(context, name, params)
-      Refusals.report(@registry.view_commands[name],
-                      answer(context, capability("view_command"), name, @registry.view_commands, params))
+      declaration = @registry.view_commands[name]
+      needed = declaration ? Declarations.capability_of(declaration, "view_command") : capability("view_command")
+      Refusals.report(declaration, answer(context, needed, name, @registry.view_commands, params))
     end
 
     # A change to session or machine state (Declarations::SetupCommand). It runs as a view command

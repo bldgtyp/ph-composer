@@ -60,11 +60,11 @@ class AgentAccessTokensTest < PhComposerTestCase
   end
 
   def test_capabilities_must_hold_read_and_only_what_is_offered
-    [[], %w[model_write], %w[read capture]].each do |capabilities|
+    [[], %w[model_write], %w[read eval]].each do |capabilities|
       error = assert_raises(PhComposer::CodedError) { Tokens.issue(:capabilities => capabilities) }
       assert_equal "params.invalid", error.code
     end
-    granted = Tokens.issue(:capabilities => %w[export view read model_write setup]).dig("row", "capabilities")
+    granted = Tokens.issue(:capabilities => %w[export view read model_write setup capture]).dig("row", "capabilities")
     assert_equal PhComposer::CallerRegistry::CAPABILITIES, granted
   end
 
@@ -208,7 +208,7 @@ class AgentAccessTokensTest < PhComposerTestCase
 
   def test_a_refused_or_malformed_message_answers_a_failure_and_issues_nothing
     dialog = Dialog.show
-    dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => nil, "capabilities" => %w[read capture]))
+    dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => nil, "capabilities" => %w[read eval]))
     dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => nil, "capabilities" => ["read"], "x" => 1))
     dialog.fire(Dialog::CALLBACK, "not json")
 

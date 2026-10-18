@@ -179,6 +179,8 @@ module PhComposerTools
       elsif declaration.respond_to?(:side_effects) && declaration.side_effects
         lines << "Side effects: #{declaration.side_effects}"
       end
+      own = declaration.respond_to?(:capability) ? declaration.capability : nil
+      lines << "Needs the `#{own}` grant rather than `view`." if own && own != "view"
       preconditions = declaration.respond_to?(:preconditions) ? Array(declaration.preconditions) : []
       lines << "Before calling: #{preconditions.join(' ')}" unless preconditions.empty?
       if declaration.respond_to?(:response) && declaration.response
