@@ -8,12 +8,23 @@ module PhComposer
   module LoopbackHttp
     STATUS_TEXT = {
       200 => "OK",
+      202 => "Accepted",
       400 => "Bad Request",
+      401 => "Unauthorized",
       403 => "Forbidden",
       404 => "Not Found",
       405 => "Method Not Allowed",
+      408 => "Request Timeout",
+      411 => "Length Required",
+      413 => "Content Too Large",
+      415 => "Unsupported Media Type",
+      431 => "Request Header Fields Too Large",
       500 => "Internal Server Error"
     }.freeze
+
+    # One whole request: its line, its headers by lower-case name, and its body. `refusal` is the status
+    # a request that could not be read within its budgets is answered with, and then the rest is nil.
+    Request = Struct.new(:verb, :target, :headers, :body, :refusal, keyword_init: true)
 
     module_function
 
@@ -35,6 +46,56 @@ module PhComposer
       buffer.lines.first
     end
 
+    # Reads the request line, the headers within `max_header_bytes` and a body of exactly its
+    # `Content-Length`, at most `max_body_bytes`, all before the deadline. A request without a body
+    # declares none; one that declares a length over the budget is refused before its body is read.
+    def read_request(session, timeout:, max_header_bytes:, max_body_bytes:)
+      deadline = monotonic + timeout
+      buffer = String.new(:encoding => Encoding::BINARY)
+      until (split = buffer.index("\r\n\r\n"))
+        return Request.new(:refusal => 431) if buffer.bytesize > max_header_bytes
+        return Request.new(:refusal => 408) unless (chunk = read_chunk(session, deadline))
+
+        buffer << chunk.b
+      end
+      head = buffer[0, split]
+      return Request.new(:refusal => 431) if head.bytesize > max_header_bytes
+
+      verb, target, = head.lines.first.to_s.split(" ", 3)
+      headers = parse_headers(head.lines.drop(1))
+      length = headers["content-length"]
+      return Request.new(:refusal => 400) if length && !length.match?(/\A\d+\z/)
+      return Request.new(:refusal => 413) if length.to_i > max_body_bytes
+
+      body = buffer.byteslice(split + 4, buffer.bytesize)
+      while body.bytesize < length.to_i
+        return Request.new(:refusal => 408) unless (chunk = read_chunk(session, deadline))
+
+        body << chunk.b
+      end
+      Request.new(:verb => verb, :target => target.to_s, :headers => headers,
+                  :body => body.byteslice(0, length.to_i).force_encoding(Encoding::UTF_8))
+    end
+
+    # Lower-case header names to their values; a repeated header keeps its first value.
+    def parse_headers(lines)
+      lines.each_with_object({}) do |line, headers|
+        name, value = line.split(":", 2)
+        next unless value
+
+        headers[name.strip.downcase] ||= value.strip
+      end
+    end
+
+    # The next bytes before `deadline`, or nil when it passes or the peer closes.
+    def read_chunk(session, deadline)
+      remaining = deadline - monotonic
+      return nil if remaining <= 0 || !session.wait_readable(remaining)
+
+      chunk = session.read_nonblock(4096, :exception => false)
+      chunk.is_a?(String) ? chunk : nil
+    end
+
     def percent_decode(text)
       text.gsub(/%([0-9A-Fa-f]{2})/) { Regexp.last_match(1).hex.chr }
     end
@@ -53,6 +114,15 @@ module PhComposer
       ]
       headers << extra if extra
       session.write(headers.join("\r\n") + "\r\n\r\n")
+      session.write(body)
+    end
+
+    # A complete JSON or empty response with only the headers an API reply needs.
+    def respond_json(session, status, body, extra = [])
+      headers = ["HTTP/1.1 #{status} #{STATUS_TEXT.fetch(status)}", "Content-Length: #{body.bytesize}",
+                 "Cache-Control: no-store", "Connection: close"]
+      headers << "Content-Type: application/json" unless body.empty?
+      session.write((headers + extra).join("\r\n") + "\r\n\r\n")
       session.write(body)
     end
 

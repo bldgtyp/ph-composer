@@ -22,6 +22,7 @@ module PhComposer
     # The table stays the readable authority; tests/outcome_codes_test.rb keeps the two equal.
     FOUNDATION_CODES = %w[
       request.malformed request.unknown_operation request.api_version request.capability_denied
+      request.response_too_large
       access.user_required request.cancelled
       location.unknown location.revoked location.used location.kind_mismatch location.unavailable
       location.setup_unreadable location.setup_unavailable

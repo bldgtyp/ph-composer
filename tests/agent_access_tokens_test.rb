@@ -154,7 +154,8 @@ class AgentAccessTokensTest < PhComposerTestCase
     states = delivered(dialog, "access.state")
     assert_equal [[], [issued.fetch("row")]], states.first(2).map { |state| state.fetch("tokens") }
     refute_nil states.last.dig("tokens", 0, "revoked_at")
-    assert_equal({ "state" => "stopped" }, states.last.fetch("server"))
+    assert_equal "listening", states[1].dig("server", "state")
+    assert_equal({ "state" => "stopped", "port" => 46_110 }, states.last.fetch("server"))
     assert_equal 1, delivered(dialog, "access.issued").length
   end
 

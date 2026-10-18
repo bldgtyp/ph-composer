@@ -42,6 +42,12 @@ test("tokens list by label and access, revoked ones dated and without a Revoke",
   assert.ok(named(o.view.list, "Revoke Claude Code"));
   assert.strictEqual(named(o.view.list, "Revoke Old Codex"), undefined);
   assert.ok(o.view.server.textContent.includes("Not listening"));
+  o.view.receive({ type: "access.state", payload: { state: "readable", tokens: [TOKEN], offered: ["read"],
+    server: { state: "listening", port: 46110 } } });
+  assert.ok(o.view.server.textContent.includes("port 46110"));
+  o.view.receive({ type: "access.state", payload: { state: "readable", tokens: [TOKEN], offered: ["read"],
+    server: { state: "unavailable", port: 46110, message: "Port 46110 is in use by another program." } } });
+  assert.ok(o.view.server.textContent.includes("in use by another program"));
 });
 
 test("New token offers Read fixed and sends the label and capabilities once", function () {

@@ -126,6 +126,11 @@ passed to `connect` or a returned value changes no grant or lookup. Nothing defa
 `Sketchup.active_model` or the selection: a client that acts on the selection reads it through a
 query first and then sends explicit references.
 
+The external route is the agent listener (AGENT_INTERFACE.md, "User-controlled local access"): a
+loopback MCP server whose tools each make one of these calls on the main thread, through a caller
+handle `connect` issued with the token's capabilities. It adds no operation and no authority of its
+own; dispatch enforces the grants as for any caller.
+
 The `request` envelope holds exactly `sequence`, `expected_revision` and an optional
 `proposal_digest` from a preview. Mutations also carry explicit targets and any feature-specific
 expected values.
@@ -168,7 +173,7 @@ Codes are stable `noun.condition` strings, one per outcome:
 
 | Area | Codes |
 | --- | --- |
-| Envelope | `request.malformed`, `request.unknown_operation`, `request.api_version`, `request.capability_denied` |
+| Envelope | `request.malformed`, `request.unknown_operation`, `request.api_version`, `request.capability_denied`, `request.response_too_large` (an agent tool result over the reply budget, refused rather than cut) |
 | Access | `access.user_required` (the operation needs a location only the user can choose), `request.cancelled` (the user dismissed that dialog) |
 | Approved locations | `location.unknown`, `location.revoked`, `location.used` (a single-use location already added its library), `location.kind_mismatch`, `location.unavailable` (no longer there as approved), `location.setup_unreadable`, `location.setup_unavailable` |
 | Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |

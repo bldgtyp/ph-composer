@@ -23,11 +23,24 @@ TESTS_ROOT = __dir__
 load File.join(SOURCE_ROOT, "ph_composer.rb")
 load File.join(SOURCE_ROOT, "ph_composer", "extension.rb")
 
+# Stands in for the agent listener's loopback server: it records the token snapshot and binds nothing.
+StubAgentServer = Struct.new(:port, :tokens) do
+  def start
+    self
+  end
+
+  def stop
+    true
+  end
+end
+
 class PhComposerTestCase < Minitest::Test
   def setup
     Sketchup.reset
     PhComposer.reset_for_test
     PhComposer::Diagnostics.strict = true
+    # Issuing a token starts the agent listener; no test binds its port unless it supplies a server.
+    PhComposer::AgentAccess::Listener.server_factory = ->(port) { StubAgentServer.new(port) }
     # Hermetic: the real reader asks macOS `defaults`, which a test must not depend on.
     PhComposer::Preferences.apple_locale_reader = -> {}
     @undeclared_refusals = []
