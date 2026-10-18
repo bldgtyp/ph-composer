@@ -45,8 +45,10 @@ JSON-RPC 2.0, one message per `POST /mcp`, answered as `application/json`:
 | Anything else | JSON-RPC method not found |
 
 A tool result carries the API's answer as `structuredContent` (the Outcome envelope, or the
-`discover` and `describe` documents) and the same JSON as one `content` text item until C10
-measures which of the two each client shows the model; `isError` is true only for an unknown tool,
+`discover` and `describe` documents) and one `content` text line (status, code and message): the
+[P3a1-06 receipt](../evidence/p3a1-06-connection-design.md), M4, measured that Claude Code shows
+the model only `structuredContent` and Codex shows both, so a JSON copy in `content` doubles what
+Codex counts; `isError` is true only for an unknown tool,
 arguments outside the fixed schema, or a result over the response budget. Every Outcome, including
 `refused`, `busy` and `failed`, is a normal result: it is what the agent must read. Protocol and
 authentication failures never carry an Outcome.
@@ -55,7 +57,7 @@ authentication failures never carry an Outcome.
 
 | Tool | Capability | Arguments | Maps to |
 | --- | --- | --- | --- |
-| `discover` | `read` | none | `API.discover`, sessions filtered for a Model-only token, plus `connection: { id, label, capabilities }` |
+| `discover` | `read` | optional `owner` | Without `owner`, a compact index of `API.discover` (api, extension, capabilities, sessions, features, operation names by kind and owner), 9.7 KB today; with `owner`, that owner's full entries ([receipt](../evidence/p3a1-06-connection-design.md), M5). Sessions filtered for a Model-only token, plus `connection: { id, label, capabilities }` |
 | `describe` | `read` | `name` | `API.describe` |
 | `query` | `read` | `session`, `name`, `params` | `API.query` |
 | `preview` | `read` | `session`, `name`, `params` | `API.preview` |

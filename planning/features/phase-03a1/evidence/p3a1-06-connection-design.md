@@ -25,6 +25,7 @@ not reopened: [DECISIONS](../DECISIONS.md) D3a1-01, 02, 05, 06, 08, 09, 12, 13 a
 | Tool surface | The public API verbs (D3a1-09); operation schemas come from `describe` | [CONTRACTS](../CONTRACTS.md) section 9 |
 | Tool results | The outcome JSON goes in `structuredContent`; `content` carries one short text line (status, code and message), not a second copy of the JSON. Claude Code shows the model only `structuredContent` when both are present; Codex shows the whole result, so a JSON copy in `content` would double what Codex counts (M4) | M4 |
 | Response budget | 24 KB of serialized `structuredContent` per tool result, else explicit continuation or refusal; never truncation. Replaces the starting 80 KB, which both clients fail (M4) | M4; recorded in the D3a1-12 table |
+| Discovery over MCP | The `discover` tool answers a compact index, not the 52 KB `API.discover` document: `api`, `extension`, `capabilities`, `sessions`, `features` and each operation kind's names grouped by owner, 9.7 KB on this build. `discover` with `owner` answers that owner's full entries (largest today `ph_composer.windows`, 18.7 KB); `describe` answers one operation. Stage 10 implements it and C10 measures it | M5 |
 | Storage | Tokens as base64 JSON in `Sketchup.write_default`, bounded, with tombstones for revoked rows; nothing token-related is reachable from `PhComposer::API` | `shell/approved_locations.rb` |
 | Not selected | A companion process with its own runtime; Unix sockets (not portable to Windows); a random port with a stdio discovery shim; pairing nonces, execution principals and a diagnostic event store ([CONTRACTS](../CONTRACTS.md) section 4) | D3a1-01, 02, 05, each keeping the alternative Ed may still choose |
 
@@ -67,6 +68,17 @@ fixture (36 ms of work) and for six seconds after: 122 ticks, largest gap 87.6 m
 Model was not run: the fixture's export is blocked by preflight findings and FX3 is built in stage
 03; C03's native timing repeats this measurement on FX3.
 
+**M2b, the asset server's pump during a real export.** A second launch opened a copy of the
+integrated envelope fixture (`_private/host/envelope/p214-integrated.skp`, SHA-256 `8d23fc20…2aeb`)
+with the panel open, approved a scratch destination through the bridge (revoked afterwards), and
+ran `API.start_export` under a `read`+`export` caller, polling `export_status` every 2 s until
+`export.complete` (2 Zones, 12 Faces, 6 apertures, a 49 KB HBJSON). A 50 ms repeating timer read the
+export's own `RuntimeHost#server_snapshot` on every tick: 45 samples, largest `max_pump_ms` 7.49 ms,
+which is the time one pump callback holds the main thread. The same timer recorded the gaps between
+its own ticks over the 33 s run: 665 ticks, largest 87.8 ms, 95th percentile 52.4 ms. Both are far
+under the 10 s starvation bound. This Model is small next to FX3; C03 repeats the measurement on
+FX3 once stage 03 builds it.
+
 **M3, what each CLI sends.** `evidence/mcp_client_probe.py` (a POST-only MCP server that logs
 requests and masks the bearer value) was connected to each CLI headless; the log is
 `evidence/p3a1-06-client-probe.jsonl`.
@@ -99,8 +111,23 @@ the binding client. 24 KB of JSON, at the 3.8 characters per token Codex reporte
 is about 6,300 tokens, leaving room for the one-line `content` and the tool-call framing. The 80 KB
 starting value fails both clients.
 
+A failed connection is silent in Codex: a run whose shell lacked the `bearer_token_env_var` variable
+dropped the server, and the model only reported that the tool was unavailable. Stage 11's check
+command and guide name this case.
+
+**M5, discovery against the budget.** On the export fixture, with one open session, `API.discover`
+serialized to 52,408 bytes; every operation's name, grouped by kind, 9,660 bytes; names with the
+first sentence of each description, 28,194 bytes, still over budget. Full entries per owner:
+`ph_composer.windows` 18,723 bytes (56 operations), `zones` 9,891 (53), `spaces` 7,230 (33),
+`assemblies` 5,897 (26), the foundation owners under 2.1 KB each.
+
+Note for stage 08: the constant-time comparison cannot rely on `OpenSSL.fixed_length_secure_compare`,
+which arrived with Ruby 3.0's openssl gem; on the Ruby 2.7 floor the ingress compares the two
+SHA-256 hex digests itself, byte by byte with an accumulated XOR. The token store's snapshot is keyed
+by hex digest so that comparison is the only one.
+
 ## Done
 
-Receipt rows each name a mechanism and a precedent or measurement; M1 and M2 are recorded with host,
-build, date and command; M3 and M4 carry exact client versions and the date. The 24 KB budget and the
+Receipt rows each name a mechanism and a precedent or measurement; M1, M2 and M2b are recorded with
+host, build, date and command; M3 and M4 carry exact client versions and the date. The 24 KB budget and the
 added bounds are recorded in the D3a1-12 table.

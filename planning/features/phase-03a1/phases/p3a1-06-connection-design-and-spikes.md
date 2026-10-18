@@ -64,13 +64,14 @@ cover that. Strangers on the machine are out of scope.
 2. Take the connection bounds from the accepted "Starting bounds" table in
    [DECISIONS](../DECISIONS.md) (D3a1-12): request body 1 MB; 8 pending handoffs per token with a
    30 s lifetime, then `session.busy`; a 10 s pump-starvation bound answered off-thread; 80 KB per
-   tool result, else continuation or refusal; 8 tokens per installation, revoke only; idempotency
+   tool result, else continuation or refusal (lowered to 24 KB by the receipt's M4); 8 tokens per installation, revoke only; idempotency
    keys kept as long as the caller's outcomes. The receipt adds the values the table does not hold,
    taken from the asset server and bridge constants: headers 16 KiB, at most 8 open TCP connections,
    pump 50 ms while entries wait and 100 ms idle with the 5 ms and 0.5 ms yield slices, the port
    46110; they join the table when the stage lands. Note for C10 that `content` and
    `structuredContent` both carrying the JSON doubles the bytes against Claude Code's 25,000-token
-   cap; the 80 KB budget is per result as sent.
+   cap; the budget is per result as sent. The receipt settles both: `content` carries one line and
+   the budget is 24 KB of `structuredContent`.
 3. Measure whether the acceptor runs while a native modal is open. The bridge's acceptor is itself
    a Ruby thread: open `UI.messagebox` through `host_bridge.py eval`, then from a second terminal
    open a raw socket to the bridge port with a 3 s timeout and send a `ping`. Connect succeeds but
