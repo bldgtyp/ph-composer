@@ -17,7 +17,8 @@ module PhComposer
       "agent_access.token_unknown" => "No agent token has that id on this machine.",
       "agent_access.store_unreadable" => "The stored agent tokens cannot be read; reset them before issuing another.",
       "agent_access.store_unavailable" => "The agent tokens could not be read or saved on this machine.",
-      "agent_access.model_unsaved" => "A token can be bound only to a Model that has been saved to a file."
+      "agent_access.model_unsaved" => "A token can be bound only to a Model that has been saved to a file.",
+      "agent_access.model_changed" => "The open Model changed since the form showed it; nothing was issued."
     }.freeze
 
     module_function
@@ -27,6 +28,8 @@ module PhComposer
       CODES.each { |code, description| feature.code(code, :description => description) }
       # Kept out of the viewport's right-click menu: managing tokens has nothing to do with what is under
       # the pointer.
+      # The form shows which Model "This Model only" binds, so it follows activation and Save As.
+      %i[model_activated post_save].each { |event| feature.on_host_event(event) { |_session| Dialog.refresh } }
       feature.menu_item("#{FEATURE_ID}.open", :label => "Agent Access…", :menu => MENU,
                                               :available => ->(_read) { false }) { |_session| Dialog.show }
     end

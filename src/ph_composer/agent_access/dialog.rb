@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "digest"
 require "json"
 
 module PhComposer
@@ -88,11 +89,16 @@ module PhComposer
             "server" => AgentAccess.server_status, "model" => active_model }
         end
 
-        # The Model a token issued now would be bound to for "this Model only": its file name, or null
-        # when it has never been saved. The path itself stays in Ruby.
+        # The Model a token issued now would be bound to for "this Model only": its file name and an opaque
+        # key the page sends back, so a token is bound only to the Model the user saw; null when it has
+        # never been saved. The path itself stays in Ruby.
         def active_model
           path = Sketchup.active_model&.path.to_s
-          path.empty? ? nil : File.basename(path)
+          path.empty? ? nil : { "name" => File.basename(path), "key" => model_key(path) }
+        end
+
+        def model_key(path)
+          Digest::SHA256.hexdigest("ph_composer.agent_access.model:#{path}")[0, 24]
         end
 
         private
@@ -139,7 +145,7 @@ module PhComposer
         # moment between the form and the issue, the token is revoked at once and the user is told to
         # choose another port, rather than handed setup for a port nothing listens on.
         def issue(payload)
-          model_file = payload["model_only"] ? Sketchup.active_model&.path.to_s : nil
+          model_file = payload["model_only"] ? shown_model(payload["model_only"]) : nil
           issued = Tokens.issue(:label => payload["label"], :capabilities => payload.fetch("capabilities", []),
                                 :model_file => model_file)
           status = Listener.status
@@ -152,6 +158,16 @@ module PhComposer
 
           clients = ClientConfig.for(:port => status["port"], :token => issued.fetch("token"))
           publish("access.issued", issued.merge("clients" => clients))
+        end
+
+        # The active Model's path when it is still the one the form showed, whose key the page sent back.
+        def shown_model(key)
+          path = Sketchup.active_model&.path.to_s
+          return path if path.empty? || key == model_key(path)
+
+          refresh
+          raise CodedError.new("agent_access.model_changed", "The open Model changed since this form showed it. " \
+                                                             "Check This Model only again and create the token.")
         end
 
         def publish(type, payload)

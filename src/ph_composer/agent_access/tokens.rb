@@ -210,12 +210,25 @@ module PhComposer
       end
 
       # Keeps every live token and the MAX_REVOKED most recently revoked ones (revoke stores rows in the
-      # order they were revoked), then tells the listener.
+      # order they were revoked), fewer when the bytes need it, so a revoke always fits; then tells the
+      # listener.
       def save(current)
         live, revoked = current.partition { |row| row["revoked_at"].nil? }
-        kept = live + revoked.last(MAX_REVOKED)
+        revoked = revoked.last(MAX_REVOKED)
+        text = serialized(current, live + revoked)
+        while text.bytesize > MAX_STORED_BYTES && !revoked.empty?
+          revoked = revoked.drop(1)
+          text = serialized(current, live + revoked)
+        end
+        write(text)
+      end
+
+      def serialized(current, kept)
         rows = current.select { |row| kept.include?(row) }.map { |row| row.slice(*ROW_KEYS, MODEL_FILE) }
-        text = JSON.generate("tokens" => rows)
+        JSON.generate("tokens" => rows)
+      end
+
+      def write(text)
         if text.bytesize > MAX_STORED_BYTES
           raise CodedError.new("agent_access.store_unavailable", "Agent tokens exceed their storage limit. " \
                                                                  "Revoke some first.")

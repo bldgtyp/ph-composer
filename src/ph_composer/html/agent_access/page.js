@@ -196,7 +196,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
           return box;
         });
       this.modelOnly.checked = false; this.modelOnly.disabled = !this.model;
-      this.modelOnlyText.textContent = this.model ? "Reaches " + this.model + " and no other Model." :
+      this.modelOnlyText.textContent = this.model ? "Reaches " + this.model.name + " and no other Model." :
         "Save this Model first to limit a token to it.";
       this.createDialog.openModal(); this.labelInput.focus();
     };
@@ -206,7 +206,7 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       var capabilities = this.checks.filter(function (box) { return box.checked; })
         .map(function (box) { return box.value; });
       this.send("access.issue", { label: label || null, capabilities: capabilities,
-        model_only: this.modelOnly.checked });
+        model_only: this.modelOnly.checked && this.model ? this.model.key : false });
     };
 
     /* The token, shown once. Closing this dialog is the last time the page holds it. */

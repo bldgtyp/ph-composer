@@ -119,6 +119,21 @@ class AgentAccessTokensTest < PhComposerTestCase
     end
   end
 
+  def test_a_revoke_near_the_byte_cap_drops_older_tombstones_rather_than_failing
+    long = "/projects/#{'\u00e9' * 400}/house.skp"
+    Tokens::MAX_REVOKED.times do |index|
+      Tokens.revoke(Tokens.issue(:label => "x" * 80, :model_file => "#{long}#{index}").dig("row", "id"))
+    end
+    live = Tokens.issue(:label => "y" * 80, :model_file => long)
+
+    Tokens.revoke(live.dig("row", "id"))
+
+    refute Tokens.live?
+    assert_empty Tokens.snapshot
+    stored = Sketchup.read_default(Tokens::SECTION, Tokens::KEY).unpack1("m0")
+    assert_operator stored.bytesize, :<=, Tokens::MAX_STORED_BYTES
+  end
+
   def test_the_most_recently_revoked_rows_are_kept
     old = Tokens.issue(:label => "Old").fetch("row")
     Tokens::MAX_REVOKED.times do |index|
@@ -207,11 +222,19 @@ class AgentAccessTokensTest < PhComposerTestCase
                                                                  "model_only" => true))
     Sketchup.active_model.path = "/projects/a/house.skp"
     dialog.fire(Dialog::CALLBACK, access_message("access.ready"))
+    shown = delivered(dialog, "access.state").last.fetch("model")
+    Sketchup.active_model.path = "/projects/b/house.skp"
+    dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => "Moved", "capabilities" => ["read"],
+                                                                 "model_only" => shown.fetch("key")))
+    Sketchup.active_model.path = "/projects/a/house.skp"
     dialog.fire(Dialog::CALLBACK, access_message("access.issue", "label" => "Bound", "capabilities" => ["read"],
-                                                                 "model_only" => true))
+                                                                 "model_only" => shown.fetch("key")))
 
-    assert_includes delivered(dialog, "access.failure").first.fetch("message"), "Save this Model first"
-    assert_equal "house.skp", delivered(dialog, "access.state").last.fetch("model")
+    failures = delivered(dialog, "access.failure").map { |failure| failure.fetch("message") }
+    assert_includes failures.first, "Save this Model first"
+    assert_includes failures.last, "open Model changed"
+    assert_equal "house.skp", shown.fetch("name")
+    refute_includes JSON.generate(shown), "/projects"
     assert_equal [["Bound", "house.skp"]], Tokens.list.map { |row| row.values_at("label", "model_name") }
   end
 

@@ -103,7 +103,8 @@ test("every capability is offered unchecked beside Read, with its consent, and T
     assert.ok(form.includes("lock it again") && form.includes("every Model") && form.includes("one Undo step"));
     assert.ok(o.view.modelOnly.disabled && form.includes("Save this Model first"));
     o.view.createDialog.closeModal();
-    o.view.receive({ type: "access.state", payload: { state: "readable", offered: all, model: "house.skp",
+    o.view.receive({ type: "access.state", payload: { state: "readable", offered: all,
+      model: { name: "house.skp", key: "k1" },
       server: { state: "listening", port: 46110 },
       tokens: [Object.assign({}, TOKEN, { capabilities: ["read", "view"], model_name: "house.skp" })] } });
     assert.ok(allText(o.view.list).includes("only house.skp") && allText(o.view.list).includes("View"));
@@ -111,7 +112,7 @@ test("every capability is offered unchecked beside Read, with its consent, and T
     o.view.modelOnly.checked = true; o.view.checks[2].checked = true;
     o.view.submitCreate();
     assert.deepStrictEqual(JSON.parse(JSON.stringify(o.sent.pop())), { type: "access.issue",
-      payload: { label: null, capabilities: ["read", "model_write"], model_only: true } });
+      payload: { label: null, capabilities: ["read", "model_write"], model_only: "k1" } });
   });
 
 test("the issued token shows once and is gone after I have copied it", function () {
