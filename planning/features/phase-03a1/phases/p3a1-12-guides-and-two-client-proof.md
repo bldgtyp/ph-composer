@@ -1,8 +1,8 @@
 # P3a1-12: Shared operating guide and semantic client acceptance
 
 DATE: 2026-10-17
-STATUS: Scoped. Planning only; execution requires separate implementation authorization.
-ISSUE: none (local planning draft)
+STATUS: Partly implemented: the guide and a two-client smoke run are done; the remaining C12 client gates are open, see [STATUS](../STATUS.md).
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Entry and ownership
 
