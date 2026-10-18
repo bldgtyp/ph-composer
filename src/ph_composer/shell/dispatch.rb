@@ -274,14 +274,15 @@ module PhComposer
       [sequence, expected_revision, proposal_digest]
     end
 
-    # A sequence at or below the caller's highest accepted one is a retry, never new work.
+    # A sequence at or below the caller's highest accepted one is a retry, never new work. The payload
+    # is compared first, so a different request under a running sequence conflicts rather than reading
+    # as the one still running.
     def retained_outcome(session, caller, sequence, name, params, expected_revision, proposal_digest)
       entry = session.outcomes.lookup(caller.handle, sequence)
       if entry
-        return pending(session) if entry.pending?
-
-        same_request = entry.digest == request_digest(name, params, expected_revision, proposal_digest)
-        return session.outcomes.retained(caller.handle, sequence) if same_request
+        if entry.digest == request_digest(name, params, expected_revision, proposal_digest)
+          return entry.pending? ? pending(session) : session.outcomes.retained(caller.handle, sequence)
+        end
 
         raise CodedError.new("request.sequence_conflict", "Sequence #{sequence} was already used for a different " \
                                                           "request.")

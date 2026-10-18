@@ -2,7 +2,7 @@
 
 DATE: 2026-10-17
 STATUS: Scoped; planning only. No stage authorized. Delivery order V1 to V9 folded in on 2026-10-17 after Ed accepted D3a1-15.
-ISSUE: none (local planning draft)
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 
 ## Delivery sequence
 

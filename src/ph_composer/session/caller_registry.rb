@@ -18,12 +18,15 @@ module PhComposer
       @callers = {}
     end
 
+    # The registry keeps its own frozen copy of the capabilities and returns a frozen handle, so nothing
+    # the caller later does to its Array, its Strings or the handle changes a grant or a lookup.
     def issue(capabilities)
-      unknown = capabilities - CAPABILITIES
+      owned = DeepCopy.frozen(capabilities)
+      unknown = owned - CAPABILITIES
       raise ArgumentError, "Unknown capabilities #{unknown.inspect}." unless unknown.empty?
 
-      handle = SecureRandom.hex(16)
-      @callers[handle] = Caller.new(:handle => handle, :capabilities => capabilities.dup.freeze, :highest_sequence => 0)
+      handle = SecureRandom.hex(16).freeze
+      @callers[handle] = Caller.new(:handle => handle, :capabilities => owned, :highest_sequence => 0)
       handle
     end
 

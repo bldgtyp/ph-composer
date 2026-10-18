@@ -15,7 +15,7 @@ module PhComposer
 
     def initialize(model)
       @model = model
-      @id = SecureRandom.uuid
+      @id = SecureRandom.uuid.freeze
       @revision = 1
       @export_generation = 1
       @export_path = Array(model.active_path)

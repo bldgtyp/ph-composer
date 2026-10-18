@@ -2,7 +2,7 @@
 
 DATE: 2026-10-17
 STATUS: Scoped. Planning requested; no stage authorized or implemented.
-ISSUE: none (local planning draft)
+ISSUE: [#221](https://github.com/bldgtyp/ph-composer/issues/221)
 BASELINE: `main@60982fc73af6841f0c2bc5f55136dd21cad20930`
 
 This phase turns the [post-Spaces agent-access review](../../code-review/README.md) into five
