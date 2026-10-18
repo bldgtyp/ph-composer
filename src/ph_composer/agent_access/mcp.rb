@@ -40,7 +40,7 @@ module PhComposer
 
       # The tools the token's capabilities reach, as `tools/list` shows them.
       def tools_for(token)
-        Tools::TABLE.values.select { |tool| token.fetch("capabilities").include?(tool.capability) }.map do |tool|
+        Tools::TABLE.values.select { |tool| Executor.reaches?(token, tool) }.map do |tool|
           { "name" => tool.name, "description" => tool.description, "inputSchema" => tool.input_schema,
             "annotations" => tool.annotations }
         end

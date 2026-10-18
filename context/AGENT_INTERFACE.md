@@ -162,6 +162,20 @@ and `.close` as reference-aware conveniences, and they and both `locate` command
 in `side_effects`. [tools/examples/authoring/spaces_walkthrough.rb](../tools/examples/authoring/spaces_walkthrough.rb)
 keeps native fixture setup apart from a client segment that uses only these public calls.
 
+Implemented: `ph_composer.view.capture`, a view command under its own `capture` grant (a view
+command may declare a grant other than `view`; `describe` names it). It writes a PNG of the current
+view with SketchUp's `View#write_image`, at the viewport's size or a requested one up to 4096 pixels
+a side and 2 MB, and answers its path, SHA-256, size, the time, and provenance: session, revision,
+view generation, camera, edit path and a selection digest. The image is the Model's geometry only:
+PH-Composer's overlays, tool drawing and panels are absent, which the result says as `overlays:
+"not_included"`. It moves nothing. A view or revision change during the write refuses
+(`capture.view_changed`). Each session keeps its four newest captures for 15 minutes in its own
+temporary folder. Measured on 26.1.188 with SketchUp frontmost; its behaviour with the window hidden,
+minimized, behind another application or under a modal is not measured. SketchUp's Ruby API exposes no
+window state to refuse on, so every result says `window_state: "unverified"`. A native modal stops
+Ruby entirely, workers included, so a call made under one is never captured and the client sees its own
+timeout rather than a refusal.
+
 Support explicit selection, reveal and camera operations for visual inspection, plus viewport
 capture where the host permits it. Captures identify their model session, revision, camera and
 relevant selection so the agent knows what it saw. Report unsupported or obscured capture states

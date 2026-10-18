@@ -18,7 +18,7 @@ module PhComposer
   # never live SketchUp objects.
   module API
     MAJOR = 1
-    MINOR = 7
+    MINOR = 8
     # One line per shape change under this major, newest last (context/CONTRACTS.md, "Public
     # interface"); the generated reference lists them.
     CHANGES = [
@@ -44,7 +44,10 @@ module PhComposer
                     "outcome results." },
       { "minor" => 7, "date" => "2026-10-18",
         "change" => "export_status and latest_export give the caller that started a task its written pair's paths, " \
-                    "SHA-256 and sizes as outcome.value.artifacts." }
+                    "SHA-256 and sizes as outcome.value.artifacts." },
+      { "minor" => 8, "date" => "2026-10-18",
+        "change" => "The capture capability and ph_composer.view.capture are new; describe names the grant a view " \
+                    "command declares when it is not view." }
     ].freeze
     # A mutation's `request` envelope.
     REQUEST_SCHEMA = {
@@ -217,7 +220,7 @@ module PhComposer
     def operation_description(registry, operation)
       kind = operation_kind(operation)
       {
-        "kind" => kind, "capability" => Declarations::CAPABILITIES[kind],
+        "kind" => kind, "capability" => kind && Declarations.capability_of(operation, kind),
         "name" => operation.name, "owner" => operation.owner, "description" => operation.description,
         "params" => operation.params, "result" => operation.result, "examples" => operation.examples,
         "refuses" => Refusals.declared(operation, registry).sort.map { |code| refusal(registry, code) },

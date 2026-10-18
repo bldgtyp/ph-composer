@@ -55,6 +55,12 @@ direction on D3a1-01, 05, 07, 09, 11, 14 and 15 as recommended", D3a1-13 and D3a
 D3a1-04 as option C and D3a1-10, D3a1-06, D3a1-12 and D3a1-08 as option B in the same session. Every
 decision in this register is now answered; D02 stands as D01's engineering default. Acceptance authorizes the stage rewrite, not implementation.
 
+On 2026-10-18 Ed settled the capture admission rule D3a1-08 left to stage 14's measurements, with the
+words "Accept window_state: unverified as the rule for capture and merge #238; keep #239 open to
+measure the states later". SketchUp's Ruby API exposes no window state, so `ph_composer.view.capture`
+does not refuse when the window is hidden, minimized or behind another application; every result says
+`window_state: "unverified"`, and #239 measures those states natively.
+
 ### Starting bounds (D3a1-12)
 
 | Bound | Start | Why |

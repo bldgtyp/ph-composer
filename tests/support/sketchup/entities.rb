@@ -238,6 +238,32 @@ module Sketchup
       @model_units_per_pixel = 1.0
     end
 
+    # The viewport's size in pixels, and the images write_image wrote: a small placeholder file whose bytes
+    # name the size asked for. The host renders the Model's geometry; nothing here draws.
+    def vpwidth
+      1600
+    end
+
+    def vpheight
+      1000
+    end
+
+    # A test sets `write_image_hook` to stand in for what the host does while writing: answer false, write
+    # other bytes, or move the view.
+    attr_accessor :write_image_hook
+
+    def write_image(options)
+      (@images ||= []) << options
+      return write_image_hook.call(options) if write_image_hook
+
+      File.binwrite(options.fetch(:filename), "\x89PNG\r\n\x1A\n#{options[:width]}x#{options[:height]}".b)
+      true
+    end
+
+    def images
+      @images || []
+    end
+
     # A camera change notifies the view's observers, as the host's onViewChanged does.
     def camera=(camera)
       @camera = camera

@@ -43,10 +43,23 @@ class AgentAccessWriteToolsTest < PhComposerTestCase
     assert_equal %w[discover describe query preview context export_preflight], listed.call(reader)
     assert_equal AgentAccess::Tools::TABLE.keys, listed.call(@writer)
     assert @executor.call(reader, "invoke", "session" => @session.id)["isError"]
-    assert_equal({ "invoke" => "model_write", "outcome" => "model_write", "view" => "view", "setup" => "setup",
+    assert_equal({ "invoke" => "model_write", "outcome" => "model_write", "view" => %w[view capture],
+                   "setup" => "setup",
                    "export_file" => "export", "start_export" => "export", "latest_export" => "export" },
                  AgentAccess::Tools::TABLE.slice(*%w[invoke outcome view setup export_file start_export
                                                      latest_export]).transform_values(&:capability))
+  end
+
+  def test_a_capture_token_reaches_the_view_tool_and_capture_needs_its_grant
+    capturer = token(%w[read capture])
+    viewer = token(%w[read view])
+    captured = call("view", { "name" => "ph_composer.view.capture", "params" => {} }, capturer)
+    denied = call("view", { "name" => "ph_composer.view.capture", "params" => {} }, viewer)
+
+    assert_includes AgentAccess::MCP.tools_for(capturer).map { |tool| tool.fetch("name") }, "view"
+    assert_equal ["completed", "not_included"], [captured["status"], captured.dig("value", "overlays")]
+    assert File.file?(captured.dig("value", "path"))
+    assert_equal "request.capability_denied", denied["code"]
   end
 
   def test_invoke_assigns_the_next_sequence_and_every_result_carries_it

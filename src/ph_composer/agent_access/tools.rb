@@ -170,10 +170,13 @@ module PhComposer
              :annotations => READ_ONLY) do |context, arguments, _token, sequencer|
           outcome(context, arguments, sequencer)
         end,
-        tool("view", "Runs a view command: the camera, the selection or the open Group. Never changes authored " \
-                     "data; describe says what else it can trigger, as its side_effects.",
+        # A capture is a view command under its own grant, so either grant reaches this tool and dispatch
+        # applies the one the command declares.
+        tool("view", "Runs a view command: the camera, the selection, the open Group, or ph_composer.view.capture " \
+                     "for an image of the view. Never changes authored data; describe says what else it can " \
+                     "trigger, as its side_effects, and which grant it needs.",
              object({ "session" => SESSION, "name" => NAME, "params" => PARAMS }, %w[session name]),
-             :session => true, :capability => "view", &operation { |**call| API.view(**call) }),
+             :session => true, :capability => %w[view capture], &operation { |**call| API.view(**call) }),
         tool("setup", "Runs a setup command: this computer's libraries and settings, for every Model.",
              object({ "session" => SESSION, "name" => NAME, "params" => PARAMS }, %w[session name]),
              :session => true, :capability => "setup", &operation { |**call| API.setup(**call) }),

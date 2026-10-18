@@ -102,8 +102,9 @@ module PhComposer
     # user can undo, and there is nothing here to undo. Both halves of that are why the seam exists:
     # before it, such a change could be reached from a native menu and from Ruby but from no client
     # (context/EXTENSIBILITY.md, "View commands").
+    # `capability` is the grant it needs: `view` unless the command declares another, as a capture does.
     ViewCommand = Struct.new(:name, :owner, :description, :params, :result, :examples, :refuses, :handler,
-                             :side_effects, :preconditions, keyword_init: true)
+                             :side_effects, :preconditions, :capability, keyword_init: true)
 
     # A file or folder location only the user can choose (context/AGENT_INTERFACE.md, "User-controlled
     # local access"). A setup command or file export that declares one runs only when a native client,
@@ -148,6 +149,13 @@ module PhComposer
     CAPABILITIES = { "query" => "read", "action" => "model_write", "view_command" => "view",
                      "setup_command" => "setup", "file_export" => "export" }.freeze
     PREVIEW_CAPABILITY = "read"
+
+    # The grant `declaration` needs: its own when it declares one, else its kind's; nil for a kind no
+    # client calls (a proposal participant).
+    def self.capability_of(declaration, kind)
+      own = declaration.respond_to?(:capability) ? declaration.capability : nil
+      own || CAPABILITIES[kind]
+    end
 
     # A panel snapshot section: the result of one registered query, under the section's name.
     SnapshotSection = Struct.new(:name, :owner, :query, :params, keyword_init: true)

@@ -385,11 +385,15 @@ module PhComposer
       # One viewport-state command: it changes what the host shows and never the Model, so it takes
       # no `undo_name` and no sequence number. A handler that would write a record wants `action`.
       def view_command(name, description:, params:, result:, refuses: nil, examples: [], side_effects: nil,
-                       preconditions: [], &handler)
+                       preconditions: [], capability: "view", &handler)
+        unless CallerRegistry::CAPABILITIES.include?(capability)
+          raise ArgumentError, "#{name} names an unknown capability #{capability.inspect}."
+        end
+
         declaration = Declarations::ViewCommand.new(
           :name => name, :owner => id, :description => description, :params => params, :result => result,
           :examples => examples, :refuses => refuses, :handler => handler, :side_effects => side_effects,
-          :preconditions => preconditions
+          :preconditions => preconditions, :capability => capability
         )
         @staging.add(:declared_view_commands, id, name, declaration)
       end

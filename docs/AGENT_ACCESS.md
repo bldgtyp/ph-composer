@@ -42,7 +42,9 @@ open Models, their Zones, Spaces, Assemblies and Window Types and the values PH-
 and changes nothing. The rest start unchecked, each with what it allows: View changes what SketchUp
 shows (the camera, the selection and the open Group, never authored data; leaving a Volume can lock
 it again), Edit the Model runs PH-Composer's actions with one Undo step each, Setup changes this
-computer's libraries and settings for every Model, and Export writes to the folders you approved.
+computer's libraries and settings for every Model, Export writes to the folders you approved, and
+Capture the view writes an image of the current view, geometry only, to a temporary file the agent
+reads.
 This Model only limits the token to the Model open now, which must be saved: the agent then sees
 and reaches no other Model, not even one with the same file name in another folder. The list shows
 each token's access and, for such a token, the Model's file name. The token is shown once; copy it then, because it is not shown again. The
