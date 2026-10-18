@@ -107,7 +107,7 @@ module PhComposer
       def self.fields(allowed)
         { "type" => "array", "items" => { "type" => "string", "enum" => allowed },
           "description" => "What each row carries beside its id and reference. Absent, every field but the " \
-                           "metadata (user_data, extension_data, extension_status)." }
+                           "metadata (user_data, extension_data, extension_status) and loops_m." }
       end
 
       def self.paged(key, row, description)
@@ -146,7 +146,11 @@ module PhComposer
         "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL
       })
       VOLUME_SUMMARY = summary(VOLUME_ROW, %w[floor_segments], "floor_segment_count" => Shapes::COUNT)
-      SEGMENT_SUMMARY = summary(SEGMENT_ROW, [], {})
+      LOOPS = { "type" => "array", "x-unit" => "m",
+                "items" => { "type" => "array", "items" => { "type" => "array", "items" => { "type" => "number" } } },
+                "description" => "The Face's outer loop then its holes, each a list of [x, y, z] points in model " \
+                                 "space. Only when `fields` asks for it." }.freeze
+      SEGMENT_SUMMARY = summary(SEGMENT_ROW, [], "loops_m" => LOOPS)
       SCOPED_FINDING = Shapes.with(FINDING, "reference" => { "type" => "object",
                                                              "description" => "What the finding is about." })
       # What the Spaces walk refuses, and what the Zones read it depends on can.

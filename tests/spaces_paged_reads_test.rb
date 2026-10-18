@@ -89,6 +89,72 @@ class SpacesPagedReadsTest < PhComposerTestCase
     assert_equal [codes.first], chosen.map { |finding| finding["code"] }.uniq
   end
 
+  def test_a_projection_keeps_the_page_aggregates
+    reference_model
+    loft = read("list", { "ids" => ["spc_FFFFFFFFFFFF"], "fields" => ["metrics"] })
+
+    assert_equal ["Zone B"], loft.fetch("zones").map { |zone| zone["name"] }
+    assert_equal ["Main Building"], loft.fetch("building_segments").map { |row| row["name"] }
+  end
+
+  def test_small_pages_walk_every_finding_and_floor_segment_once
+    reference_model
+    nested = volume_group(1330, volume_record("N", :number => 3), [floor_face(1331, rectangle(0, 6, 1, 1),
+                                                                              segment_record("N"))])
+    hall = @model.entities.to_a.first.entities.to_a.last
+    hall.entities.to_a.first.entities << nested
+    hall.entities.to_a.first.entities << floor_face(1399, rectangle(1, 6, 1, 1), segment_record("O"))
+    whole = read("findings.list", {})
+    findings = walk("findings.list", { "limit" => 1 }, "findings").flat_map { |value| value["findings"] }
+    segments = walk("floor_segments.list", { "space" => HALL, "limit" => 1 }, "floor_segments")
+
+    assert_equal whole.fetch("total"), findings.length
+    assert_equal whole.fetch("findings"), findings
+    assert_equal 4, segments.first.fetch("total")
+    assert_equal 4, segments.flat_map { |value| value["floor_segments"].map { |row| row["id"] } }.uniq.length
+  end
+
+  def test_floor_segment_loops_only_when_asked
+    reference_model
+    plain = read("floor_segments.list", { "space" => HALL }).fetch("floor_segments").first
+    looped = read("floor_segments.list", { "space" => HALL, "fields" => ["loops_m"] }).fetch("floor_segments").first
+
+    refute plain.key?("loops_m")
+    assert_equal 4, looped.fetch("loops_m").first.length
+    assert_equal %w[id loops_m reference schema_version], looped.keys.sort
+  end
+
+  def test_six_hundred_floor_segments_walk_whole
+    faces = Array.new(600) { |index| floor_face(5000 + index, rectangle(index, 0, 1, 1), segment_record("S")) }
+    space = space_group(1100, space_record("S", :number => "101"), [volume_group(1110, volume_record("S"), faces)])
+    @model.entities << zone_group(1000, "A", [space])
+    scope = { "space" => { "space_id" => "spc_SSSSSSSSSSSS", "entity_path" => [1000, 1100] }, "limit" => 500 }
+
+    pages = walk("floor_segments.list", scope, "floor_segments")
+
+    assert_operator pages.length, :>=, 2
+    assert_equal 600, pages.sum { |value| value["floor_segments"].length }
+  end
+
+  def test_a_page_with_long_named_zones_fits_the_reply_limit
+    zones = Array.new(20) do |index|
+      space = space_group(100 + index, space_record("S", :number => index.to_s), [])
+      zone = zone_group(1000 + index, "Z", [space])
+      ZONES::ZONE_STORE.write(zone, { "id" => format("zon_%012d", index), "schema_version" => 1,
+                                      "name" => "Zone #{'Z' * 1500} #{index}",
+                                      "building_segment" => "Segment #{'B' * 1500} #{index}", "level" => "L1",
+                                      "ground_depth_mm" => 0.0 })
+      zone
+    end
+    zones.each { |zone| @model.entities << zone }
+    pages = walk("list", { "limit" => 500 }, "spaces")
+    largest = pages.map { |value| JSON.generate(query("list", { "limit" => 500 }).merge("value" => value)).bytesize }
+
+    assert_operator largest.max, :<=, PhComposer::AgentAccess::Executor::MAX_RESULT_BYTES
+    assert_equal 20, pages.sum { |value| value["spaces"].length }
+    assert_equal 20, pages.sum { |value| value["zones"].length }
+  end
+
   def test_many_spaces_page_within_the_byte_budget_and_walk_whole
     many_spaces(300)
     first = read("list", { "limit" => 500 })

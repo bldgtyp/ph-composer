@@ -7446,12 +7446,13 @@ Params:
           "metrics",
           "weighting_band",
           "findings",
+          "loops_m",
           "user_data",
           "extension_data",
           "extension_status"
         ]
       },
-      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status)."
+      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status) and loops_m."
     },
     "limit": {
       "type": "number",
@@ -7617,6 +7618,20 @@ Result:
           "weighting_band": {
             "type": "string",
             "description": "The weighting factor as By weighting factor's legend and a filter key it."
+          },
+          "loops_m": {
+            "type": "array",
+            "x-unit": "m",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "description": "The Face's outer loop then its holes, each a list of [x, y, z] points in model space. Only when `fields` asks for it."
           }
         }
       },
@@ -7782,7 +7797,7 @@ Params:
           "extension_status"
         ]
       },
-      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status)."
+      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status) and loops_m."
     },
     "limit": {
       "type": "number",
@@ -8559,7 +8574,7 @@ Params:
           "extension_status"
         ]
       },
-      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status)."
+      "description": "What each row carries beside its id and reference. Absent, every field but the metadata (user_data, extension_data, extension_status) and loops_m."
     },
     "limit": {
       "type": "number",
@@ -48330,4 +48345,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | Version | Date | Change |
 | --- | --- | --- |
 | 1.1 | 2026-10-18 | describe adds capability, preview_capability, a view command's side_effects, preconditions and a query's response and while_busy; discover adds schemas; ph_composer.context.read is new. |
-| 1.2 | 2026-10-18 | ph_composer.spaces.list answers bounded summaries with fields, the Model's sums before any filter and the sums of the page's Zones and Building-Segments; spaces.volumes.list, spaces.floor_segments.list and spaces.findings.list are new. |
+| 1.2 | 2026-10-18 | ph_composer.spaces.list answers bounded summaries with fields, the Model's sums before any filter and the sums of the page's Zones and Building-Segments; spaces.volumes.list, spaces.floor_segments.list and spaces.findings.list are new, Floor Segment loops only when fields asks. |

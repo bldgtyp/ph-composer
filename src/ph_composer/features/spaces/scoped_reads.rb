@@ -33,9 +33,19 @@ module PhComposer
                   else
                     [located(rows.flat_map { |row| row.fetch("volumes") }, params["volume"], "volume_id", "Volume")]
                   end
-        segments = volumes.flat_map { |volume| volume.fetch("floor_segments") }
-                          .map { |segment| Summaries.segment(segment, params["fields"]) }
-        page(request, FLOOR_SEGMENTS, "floor_segments", segments)
+        segments = volumes.flat_map { |volume| volume.fetch("floor_segments") }.sort_by(&PATH)
+        segments = with_loops(request.model, segments) if Array(params["fields"]).include?("loops_m")
+        page(request, FLOOR_SEGMENTS, "floor_segments",
+             segments.map { |segment| Summaries.segment(segment, params["fields"]) })
+      end
+
+      # Each Floor Segment's loops in metres, read again from its Face only when `fields` asks for them.
+      def with_loops(model, segments)
+        faces = Occurrences.scan(model).segments.to_h { |segment| [segment.path, segment] }
+        segments.map do |row|
+          face = faces.fetch(PATH.call(row))
+          row.merge("loops_m" => FaceCapture.call(face.entity, face.transform).loops_m)
+        end
       end
 
       # Each finding with the reference of what it is about: a Space, Volume, Floor Segment or Zone, or a
@@ -47,7 +57,7 @@ module PhComposer
         found = scope.flat_map { |row| row_findings(row) }
         found += zone_findings(zones) + strays unless params.key?("space")
         found = found.select { |finding| params["codes"].include?(finding.fetch("code")) } if params.key?("codes")
-        keyed = found.each_with_index.map { |finding, index| [finding_key(finding, index), finding] }
+        keyed = found.each_with_index.map { |finding, index| [finding_key(finding, index), finding] }.sort_by(&:first)
         page, next_cursor = Pages.bounded(request, FINDINGS, keyed, :key => ->(pair) { pair.first })
         { "findings" => page.map(&:last), "next_cursor" => next_cursor, "total" => found.length }
       end

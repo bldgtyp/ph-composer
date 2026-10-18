@@ -28,7 +28,8 @@ module PhComposer
       { "minor" => 2, "date" => "2026-10-18",
         "change" => "ph_composer.spaces.list answers bounded summaries with fields, the Model's sums before any " \
                     "filter and the sums of the page's Zones and Building-Segments; spaces.volumes.list, " \
-                    "spaces.floor_segments.list and spaces.findings.list are new." }
+                    "spaces.floor_segments.list and spaces.findings.list are new, Floor Segment loops only when " \
+                    "fields asks." }
     ].freeze
     # A mutation's `request` envelope.
     REQUEST_SCHEMA = {

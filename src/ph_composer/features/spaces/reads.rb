@@ -25,17 +25,42 @@ module PhComposer
         sums = totals(rows, zones)
         params = request.params
         chosen = params.key?("ids") ? rows.select { |row| params["ids"].include?(row.fetch("id")) } : rows
+        whole = chosen.map { |row| Summaries.space(row, zones, nil) }
+        aggregates = PageAggregates.new(sums, whole)
         summaries = chosen.map { |row| Summaries.space(row, zones, params["fields"]) }
         page, next_cursor = Pages.bounded(request, "#{FEATURE_ID}.list", summaries,
-                                          :key => ->(row) { row.dig("reference", "entity_path") })
-        zone_paths = page.filter_map { |row| row.dig("zone", "zone_path") }.uniq
-        on_page = sums.fetch("zones").select { |zone| zone_paths.include?(zone.fetch("zone_path")) }
-        segment_keys = page.filter_map { |row| row["building_segment"] }.uniq
-        { "spaces" => page, "model" => sums.fetch("model"),
-          "zones" => on_page.map { |zone| Summaries.zone(zone) },
-          "building_segments" => sums.fetch("building_segments").select { |row| segment_keys.include?(row["key"]) },
+                                          :key => PageAggregates::PATH, :size => aggregates.method(:size))
+        { "spaces" => page, "model" => sums.fetch("model"), **aggregates.of(page),
           "stray_finding_count" => strays.length, "units" => UNITS, "next_cursor" => next_cursor,
           "total" => chosen.length }
+      end
+
+      # The Zone and Building-Segment sums a page names, chosen by each Space's membership whatever
+      # `fields` projects away, and counted in the page's byte budget the first time a page names them.
+      class PageAggregates
+        PATH = ->(row) { row.dig("reference", "entity_path") }
+
+        def initialize(sums, whole)
+          @zones = sums.fetch("zones").to_h { |zone| [zone.fetch("zone_path"), Summaries.zone(zone)] }
+          @segments = sums.fetch("building_segments").to_h { |row| [row.fetch("key"), row] }
+          @membership = whole.to_h do |row|
+            [PATH.call(row), [@zones[row.dig("zone", "zone_path")], @segments[row["building_segment"]]]]
+          end
+          @counted = {}
+        end
+
+        # A row's serialized size plus that of each aggregate it brings onto the page first.
+        def size(row)
+          fresh = @membership.fetch(PATH.call(row)).compact.reject { |aggregate| @counted[aggregate.object_id] }
+          fresh.each { |aggregate| @counted[aggregate.object_id] = true }
+          ([row] + fresh).sum { |item| JSON.generate(item).bytesize + 1 }
+        end
+
+        def of(page)
+          zones, segments = page.map { |row| @membership.fetch(PATH.call(row)) }.transpose
+          { "zones" => Array(zones).compact.uniq(&:object_id),
+            "building_segments" => Array(segments).compact.uniq(&:object_id) }
+        end
       end
 
       # The Building-Segment a Zone belongs to: the key its sums group by and the name they show.
