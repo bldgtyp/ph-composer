@@ -27,6 +27,11 @@ module PhComposer
     # Remembered scopes are few; the cap stops a misbehaving client from growing the stored map without bound.
     MAX_SCOPES = 32
     MAX_STORED_BYTES = 4096
+    # The largest encoded map the readers accept: the JSON's byte cap, as base64 with headroom.
+    MAX_ENCODED_BYTES = MAX_STORED_BYTES * 2
+    # What `read_default` answers for a key never stored. The host reads a stored value it cannot return,
+    # such as a string holding a double quote, as nil, so nil means present but unreadable.
+    ABSENT = ""
 
     class << self
       def unit_system
@@ -51,7 +56,7 @@ module PhComposer
       # Every remembered scope's format per system; a scope never chosen is absent and takes the default.
       def dimension_formats
         raw = Sketchup.read_default(SECTION, "dimension_formats", nil)
-        return {} unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
+        return {} unless raw.is_a?(String) && raw.bytesize <= MAX_ENCODED_BYTES
 
         sanitize(JSON.parse(raw.unpack1("m0")))
       rescue StandardError
@@ -127,10 +132,10 @@ module PhComposer
       # The map as stored, entries this version does not recognize included, so that changing one entry
       # keeps the rest. Absent is empty; present but unreadable refuses the change.
       def stored_map(key)
-        raw = Sketchup.read_default(SECTION, key, nil)
-        return {} if raw.nil?
+        raw = Sketchup.read_default(SECTION, key, ABSENT)
+        return {} if raw == ABSENT
 
-        parsed = raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2 ? decode_map(raw) : nil
+        parsed = raw.is_a?(String) && raw.bytesize <= MAX_ENCODED_BYTES ? decode_map(raw) : nil
         return parsed if parsed.is_a?(Hash)
 
         raise UserError, "Your saved display preferences could not be read, so they were left unchanged."
@@ -144,8 +149,12 @@ module PhComposer
 
       # SketchUp 26.1 stores a string containing a double quote but reads it back as nil, so the JSON
       # is kept as strict base64 (context/SKETCHUP_HOST_BEHAVIOR.md).
+      # A map the readers would refuse for its size is not written, so one more entry never hides the rest.
       def write_map(key, map)
-        write(key, [JSON.generate(map)].pack("m0"))
+        encoded = [JSON.generate(map)].pack("m0")
+        raise UserError, "Too many display preferences are remembered." if encoded.bytesize > MAX_ENCODED_BYTES
+
+        write(key, encoded)
       end
 
       # `write_default` answers false when it did not store the value; reading it back catches the rest.
@@ -159,7 +168,7 @@ module PhComposer
       # A map stored as strict base64 JSON, keeping only the pairs `keep` accepts, at most MAX_SCOPES.
       def read_map(key, &keep)
         raw = Sketchup.read_default(SECTION, key, nil)
-        return {} unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
+        return {} unless raw.is_a?(String) && raw.bytesize <= MAX_ENCODED_BYTES
 
         parsed = JSON.parse(raw.unpack1("m0"))
         return {} unless parsed.is_a?(Hash)

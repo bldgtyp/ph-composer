@@ -312,9 +312,11 @@ module Sketchup
       value.is_a?(String) && value.include?('"') ? nil : value
     end
 
-    # The host answers false when it could not store the value; `refuse_default_writes` reproduces that.
+    # The host answers false when it could not store the value; `refuse_default_writes = true` reproduces
+    # that, and `:silently` answers true without storing, so only a read-back can tell.
     def write_default(section, key, value)
-      return false if @refuse_default_writes
+      return false if @refuse_default_writes == true
+      return true if @refuse_default_writes == :silently
 
       (@defaults ||= {})[[section, key]] = value
       (@default_writes ||= []) << [section, key, value]

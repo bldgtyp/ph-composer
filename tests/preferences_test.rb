@@ -89,16 +89,45 @@ class PreferencesTest < PhComposerTestCase
     assert_equal "SI", Preferences.unit_system
   end
 
+  def test_a_write_the_host_accepts_but_does_not_read_back_is_not_saved
+    Sketchup.refuse_default_writes = :silently
+
+    assert_raises(PhComposer::UserError) { Preferences.set("unit_system", "IP") }
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("table_view", "example.zones.faces", :scope => "example.zones")
+    end
+  end
+
   def test_a_stored_map_it_cannot_read_is_left_unchanged
-    Sketchup.write_default(SECTION, "table_views", "not base64 json")
+    # Damaged, and a string the host stores but reads back as nil.
+    { "table_views" => "not base64 json", "dimension_formats" => 'held "quoted"' }.each do |key, damaged|
+      Sketchup.write_default(SECTION, key, damaged)
+    end
     Sketchup.clear_default_writes
 
     error = assert_raises(PhComposer::UserError) do
       Preferences.set("table_view", "example.zones.faces", :scope => "example.zones")
     end
     assert_equal "Your saved display preferences could not be read, so they were left unchanged.", error.message
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("dimension_format", "cm", :scope => "example.editor", :system => "SI")
+    end
     assert_empty Sketchup.default_writes
     assert_equal "not base64 json", Sketchup.read_default(SECTION, "table_views")
+  end
+
+  # Preserved entries can fill the store; a map the readers would refuse is never written.
+  def test_a_map_too_large_to_read_back_is_refused_without_writing
+    later = (1..Preferences::MAX_SCOPES - 1).to_h { |index| ["example.scope_#{index}", "x" * 176] }
+    Sketchup.write_default(SECTION, "table_views", [JSON.generate(later)].pack("m0"))
+    assert_operator Sketchup.read_default(SECTION, "table_views").bytesize, :<=, Preferences::MAX_ENCODED_BYTES
+    Sketchup.clear_default_writes
+
+    error = assert_raises(PhComposer::UserError) do
+      Preferences.set("table_view", "example.zones.faces", :scope => "example.zones")
+    end
+    assert_equal "Too many display preferences are remembered.", error.message
+    assert_empty Sketchup.default_writes
   end
 
   # A later version's entry this one does not recognize survives a change to another scope.
