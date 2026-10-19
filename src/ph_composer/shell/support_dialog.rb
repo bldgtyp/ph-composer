@@ -35,7 +35,7 @@ module PhComposer
     class << self
       # Opens the window, or brings it forward, at `incident` when a failure notice named one.
       def show(incident: nil)
-        @incident = Diagnostics::REFERENCE.match?(incident.to_s) ? incident : nil
+        @incident = Diagnostics::INCIDENT.match?(incident.to_s) ? incident : nil
         return bring_forward if @dialog
 
         @ready = false

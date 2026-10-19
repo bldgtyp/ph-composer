@@ -181,7 +181,7 @@ class PanelTest < PhComposerTestCase
     assert_equal %w[panel_render_failed panel_uncaught_error], logged.map { |line| line.fetch("event") }
     assert_equal ["test.fixture", "TypeError", frames], logged.first.values_at("stage", "error_class", "frames"),
                  "a section is named by the registered feature that owns it"
-    assert_equal [nil, nil, nil], logged.last.values_at("stage", "error_class", "frames"), "unaccepted values drop"
+    assert_equal [nil, nil, []], logged.last.values_at("stage", "error_class", "frames"), "unaccepted values drop"
     assert_empty messages(dialog, "panel.failure")
   end
 

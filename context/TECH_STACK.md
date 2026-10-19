@@ -433,14 +433,15 @@ version, build and commit, manifest, host, supported-host verdict, log health, t
 incident, the included event range or the reason there is none, and what is never included),
 then at most 256 KiB of the newest log lines, each rebuilt by `Diagnostics.sanitized` from the
 fields and values the log accepts, each frame checked on its own. A read failure falls back to this
-session's in-memory lines and says so; while the log is not being written, this session's lines
-that never reached it are added. Lines that are not readable records are counted in the header,
+session's in-memory lines and says so; this session's lines that never reached the file are merged
+in by time whatever the log's current health, and the merged history is bounded again. Lines that are not readable records are counted in the header,
 never silently dropped. The capture is kept under its id: the page previews it, Copy copies the previewed text, and
 Save writes the same capture's bytes through a temporary file renamed into place; a capture
 replaced by Refresh is refused. Report a problem opens the public issue page only after the page
 says the issue is public. Clear diagnostic history deletes the log and its archive and keeps saved
 reports; a file it cannot delete is reported as not cleared and becomes the log's last storage
-error. Reopen panel closes and reopens the panel window; Reset display preferences writes each
+error, and clearing never reports a failing log as writing again. Any failed request whose outcome
+carries `detail.incident` gets a notice with Get help unless its answer raised one of its own. Reopen panel closes and reopens the panel window; Reset display preferences writes each
 display preference's default (`Preferences.reset_display`) and leaves libraries, approved
 locations and agent tokens alone.
 

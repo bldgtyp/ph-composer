@@ -346,6 +346,17 @@ test("a failure with an incident reference offers Get help, which opens Help & D
   assert.deepStrictEqual(p.sent[p.sent.length - 1], { type: "panel.support", payload: { incident: "PHC-3FA9C1" } });
 });
 
+test("a failed setup or export with an incident also offers Get help", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  ["setup.result", "query.result", "file_export.result", "export.result"].forEach(function (type, index) {
+    p.panel.notify("", "info"); p.panel.state.ui.notice = null;
+    p.receive(type, { request_id: "r" + index, session: "session-a", outcome: { status: "failed", effect: "none",
+      message: "That could not be done.", detail: { incident: "PHC-00000" + index } } });
+    assert.strictEqual(p.panel.state.ui.notice.action.label, "Get help", type);
+  });
+});
+
 test("a host failure is shown as an error; an unknown message type changes nothing", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 2));

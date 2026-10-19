@@ -396,9 +396,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 30791,
+      "bytes": 31512,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "f06dd3397acac3b238bd840d83451b77f57a2aa874814bec790dac3e484b17ab"
+      "sha256": "fe98755a59970ea6833726290fff1ab7f9cfa25c81332c9559fc2f062f79f5ad"
     },
     "html/record_edits.js": {
       "bytes": 17435,

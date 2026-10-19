@@ -37,17 +37,26 @@ module PhComposer
     REFERENCE = /\A[A-Za-z0-9_.:-]{1,96}\z/.freeze
     ERROR_CLASS = /\A(?=.{1,96}\z)[A-Z][A-Za-z0-9_]*(?:::[A-Z][A-Za-z0-9_]*)*\z/.freeze
     VERSION_TEXT = /\A[\w.+-]{1,32}\z/.freeze
+    # Each reference in the exact form the extension generates it, so no other text fits one.
+    SESSION = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/.freeze
+    REQUEST = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}:[a-z][a-z0-9_.]{0,47}:\d{1,9}\z/.freeze
+    RUN = /\Aexport_\h{24}\z/.freeze
+    INCIDENT = /\APHC-[0-9A-F]{6}\z/.freeze
+    BUILD = /\A(?:\h{12}|development|unavailable)\z/.freeze
+    MANIFEST = /\A(?:\h{12}|unavailable)\z/.freeze
     # Which values each field accepts. No field takes free text: a status is a name like any other.
     VALUES = {
       "event" => NAME, "operation" => NAME, "stage" => NAME, "code" => NAME, "effect" => NAME, "status" => NAME,
       "sketchup_version" => VERSION_TEXT, "extension_version" => VERSION_TEXT,
-      "severity" => /\A(?:#{SEVERITIES.join('|')})\z/, "error_class" => ERROR_CLASS, "incident" => REFERENCE,
-      "session" => REFERENCE, "request" => REFERENCE, "run_id" => REFERENCE, "build" => REFERENCE,
-      "manifest" => REFERENCE
+      "severity" => /\A(?:#{SEVERITIES.join('|')})\z/, "error_class" => ERROR_CLASS,
+      "session" => SESSION, "request" => REQUEST, "run_id" => RUN, "incident" => INCIDENT, "build" => BUILD,
+      "manifest" => MANIFEST
     }.freeze
     INVALID = "[INVALID]"
-    # A frame's method name as Ruby, JavaScript or Python reports it, without arguments or source.
-    FRAME_METHOD = /\A[\w$.:<>?!=\[\]{} #-]{1,96}\z/.freeze
+    # A frame's method name as Ruby, JavaScript or Python reports it: one identifier-like word, no spaces.
+    FRAME_METHOD = /\A[A-Za-z_$][\w$.?!=\[\]-]{0,95}\z/.freeze
+    # Names a runtime gives code outside any named method.
+    RUNTIME_MARKERS = %w[<main> <module> <anonymous> <lambda> <listcomp> <genexpr>].freeze
     FRAME_FILE = %r{\A[\w-]+(?:\.[\w-]+)*(?:/[\w-]+(?:\.[\w-]+)*)*\z}.freeze
     # Where a frame's file may be, relative to the folder holding the loader: the extension's Ruby, its panel
     # pages and its translation package. A frame anywhere else, another plugin's included, is left out.
@@ -131,11 +140,10 @@ module PhComposer
       # The fields another runtime or a page reported, keeping only values their field accepts, so what a
       # client sends can never become a refused field or an echoed string.
       def accepted(fields)
-        fields.select do |name, value|
+        fields.each_with_object({}) do |(name, value), kept|
           case name
-          when "frames" then valid_frames?(value)
-          when *VALUES.keys then value.is_a?(String) && VALUES.fetch(name).match?(value)
-          else false
+          when "frames" then kept[name] = owned_frames(value) if value.is_a?(Array)
+          when *VALUES.keys then kept[name] = value if value.is_a?(String) && VALUES.fetch(name).match?(value)
           end
         end
       end
@@ -184,7 +192,7 @@ module PhComposer
 
         kept = record.select { |name, value| reportable?(name, value) }
         # Each frame is checked on its own and at most MAX_FRAMES are copied.
-        kept["frames"] = record["frames"].select { |frame| valid_frame?(frame) }.first(MAX_FRAMES) if kept["frames"]
+        kept["frames"] = owned_frames(record["frames"]) if kept["frames"]
         JSON.generate(kept)
       rescue JSON::ParserError
         nil
@@ -201,7 +209,7 @@ module PhComposer
         end
         @tail = []
         @tail_bytes = 0
-        @last_error = nil
+        # Storage health stays as it was: only a successful write shows the log is being written again.
         true
       rescue SystemCallError => error
         @last_error = error.class.name
@@ -255,7 +263,25 @@ module PhComposer
       # a file the extension ships, a line number and a method name.
       def valid_frame?(frame)
         frame.is_a?(Hash) && frame.keys.sort == %w[file line method] && owned_file?(frame["file"]) &&
-          frame["line"].is_a?(Integer) && frame["line"] >= 0 && FRAME_METHOD.match?(frame["method"].to_s)
+          frame["line"].is_a?(Integer) && frame["line"] >= 0 && owned_method?(frame["file"], frame["method"])
+      end
+
+      # A method name that appears in its file's own source, or "?" when the runtime gave none, so a frame
+      # can carry only words the extension wrote. Ruby frames name a method by its base label.
+      def owned_method?(file, method)
+        return true if method == "?" || RUNTIME_MARKERS.include?(method)
+        return false unless method.is_a?(String) && FRAME_METHOD.match?(method)
+
+        (@sources ||= {})[file] ||= File.read(owned_path(file))
+        @sources[file].include?(method.split(".").last)
+      rescue SystemCallError
+        false
+      end
+
+      def owned_path(file)
+        return File.join(File.dirname(ROOT), file) if file == "#{EXTENSION_ID}.rb"
+
+        File.join(FRAME_ROOTS.find { |prefix, _folder| file.start_with?(prefix) }.last.call, file)
       end
 
       def owned_file?(file)
@@ -282,7 +308,7 @@ module PhComposer
       def value_for(name, value)
         case name
         when "duration_ms" then value.is_a?(Numeric) && value.finite? ? value : invalid(name)
-        when "frames" then valid_frames?(value) ? value.first(MAX_FRAMES) : invalid(name)
+        when "frames" then value.is_a?(Array) ? owned_frames(value) : invalid(name)
         when *VALUES.keys then VALUES.fetch(name).match?(value.to_s) ? value.to_s : invalid(name)
         else redact(value.to_s)
         end
@@ -299,8 +325,9 @@ module PhComposer
         end
       end
 
-      def valid_frames?(value)
-        value.is_a?(Array) && value.first(MAX_FRAMES).all? { |frame| valid_frame?(frame) }
+      # The frames that name the extension's own files and methods, at most MAX_FRAMES; the rest are left out.
+      def owned_frames(value)
+        value.select { |frame| valid_frame?(frame) }.first(MAX_FRAMES)
       end
 
       def invalid(name)
@@ -332,8 +359,9 @@ module PhComposer
         parent = File.dirname(ROOT) + "/"
         return nil unless file&.start_with?(ROOT + "/") || file == "#{parent}#{EXTENSION_ID}.rb"
 
+        label = location.base_label.to_s
         { "file" => file.delete_prefix(parent), "line" => location.lineno,
-          "method" => FRAME_METHOD.match?(location.label.to_s) ? location.label.to_s : "?" }
+          "method" => FRAME_METHOD.match?(label) ? label : "?" }
       end
 
       def recent?(line, cutoff)

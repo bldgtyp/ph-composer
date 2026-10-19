@@ -76,14 +76,35 @@ module PhComposer
 
     # Sanitized lines; how many earlier ones the size limit left out; the read error's class when the files
     # could not be read, in which case this session's in-memory lines stand in; and how many lines were not
-    # readable records. While the log is not being written, this session's lines that never reached it are
-    # added, so a failure that could not be written still shows.
+    # readable records. This session's lines that never reached the file are merged in by time, so a failure
+    # that could not be written still shows after writing recovers, and the merge is bounded again.
     def log_lines
-      lines, omitted = Diagnostics.recent_lines(MAX_LOG_BYTES)
-      lines += Diagnostics.tail.reject { |line| lines.include?(line) } unless Diagnostics.health["writing"]
-      sanitize(lines).insert(1, omitted).insert(2, nil)
+      disk, omitted = Diagnostics.recent_lines(MAX_LOG_BYTES)
+      written = disk.to_h { |line| [line, true] }
+      unwritten = Diagnostics.tail.reject { |line| written[line] }
+      merged = (disk + unwritten).each_with_index.sort_by { |line, index| [time(line), index] }.map(&:first)
+      kept, trimmed = newest(merged)
+      sanitize(kept).insert(1, omitted + trimmed).insert(2, nil)
     rescue StandardError => error
       sanitize(Diagnostics.tail).insert(1, 0).insert(2, error.class.name)
+    end
+
+    # The newest lines within MAX_LOG_BYTES, and how many older ones that left out.
+    def newest(lines)
+      kept = []
+      total = 0
+      lines.reverse_each do |line|
+        break if total + line.bytesize > MAX_LOG_BYTES
+
+        kept.unshift(line)
+        total += line.bytesize
+      end
+      [kept, lines.length - kept.length]
+    end
+
+    # A line's timestamp for ordering; a line without one sorts first and is counted as unreadable later.
+    def time(line)
+      parse(line)&.fetch("timestamp", nil).to_s
     end
 
     # [kept lines, count of lines that were not readable records].
@@ -112,7 +133,7 @@ module PhComposer
         "SketchUp: #{details.dig('host', 'sketchup')} on #{details.dig('host', 'platform')}, Ruby #{RUBY_VERSION}",
         "Supported host: #{details.dig('host', 'supported') ? 'yes' : 'no'} (#{SUPPORTED_TEXT})",
         "Log: #{log['writing'] ? 'writing' : "not writing (#{log['last_error']})"}",
-        "Incident: #{Diagnostics::REFERENCE.match?(incident.to_s) ? incident : 'none selected'}",
+        "Incident: #{Diagnostics::INCIDENT.match?(incident.to_s) ? incident : 'none selected'}",
         "Events: #{events_line(lines, left_out, unreadable)}",
         "Omitted: #{OMITTED}"
       ]

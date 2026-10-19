@@ -97,15 +97,18 @@ class SupportDialogTest < PhComposerTestCase
     seeded = { "timestamp" => Time.now.utc.iso8601, "event" => "probe", "schema" => 1,
                "status" => "Project Alpha confidential PHPP row", "operation" => "Zone North at /Users/example",
                "token" => "phc_secret_token", "params" => { "label" => "Licensed PHPP row" },
+               "request" => "phc_secret_request", "session" => "Client House",
                "error_class" => "RuntimeError",
-               "frames" => Array.new(20) { { "file" => "html/panel.js", "line" => 1, "method" => "m" } } +
+               "frames" => [{ "file" => "html/panel.js", "line" => 1, "method" => "ProjectAlphaConfidential" }] +
+                           Array.new(19) { { "file" => "html/panel.js", "line" => 1, "method" => "render" } } +
                            [{ "file" => "html/panel.js", "line" => 2, "method" => "phc_secret_token" }] }
     FileUtils.mkdir_p(File.dirname(Diagnostics.path))
     File.write(Diagnostics.path, "#{JSON.generate(seeded)}\nnot json at /Users/example\n")
 
     text = capture["text"]
 
-    ["/Users/", "Zone North", "Project Alpha", "phc_secret_token", "Licensed PHPP", "confidential"].each do |secret|
+    ["/Users/", "Zone North", "Project Alpha", "ProjectAlpha", "phc_secret", "Licensed PHPP", "confidential",
+     "Client House"].each do |secret|
       refute_includes text, secret
     end
     assert_includes text, '"error_class":"RuntimeError"'
@@ -130,6 +133,46 @@ class SupportDialogTest < PhComposerTestCase
 
     assert_equal [reference], ready_state["problems"].map { |problem| problem["incident"] }
     assert_includes capture["text"], reference
+  end
+
+  def test_a_failure_that_was_never_written_still_shows_after_writing_recovers
+    good = Diagnostics.path
+    blocked = File.join(@directory, "file")
+    File.write(blocked, "")
+    Diagnostics.path_override = File.join(blocked, "logs", "ph-composer.log")
+    reference = Diagnostics.incident("operation_failed", raised { PhComposer::Preferences.set("zone_north", "x") })
+    Diagnostics.path_override = good
+    Diagnostics.log("later")
+    SupportDialog.show
+
+    assert Diagnostics.health["writing"]
+    assert_equal [reference], ready_state["problems"].map { |problem| problem["incident"] }
+    assert_includes capture["text"], reference
+  end
+
+  def test_the_merged_history_keeps_the_reports_bound
+    line = JSON.generate("timestamp" => Time.now.utc.iso8601, "event" => "probe", "status" => "ok") + "\n"
+    count = (PhComposer::SupportReport::MAX_LOG_BYTES / line.bytesize) + 10
+    FileUtils.mkdir_p(File.dirname(Diagnostics.path))
+    File.write(Diagnostics.path, line * count)
+    Diagnostics.path_override = File.join(@directory, "file-in-the-way", "x.log")
+    File.write(File.join(@directory, "file-in-the-way"), "")
+    (count / 4).times { Diagnostics.log("unwritten") }
+    Diagnostics.path_override = File.join(@directory, "logs", "ph-composer.log")
+
+    body = capture["text"].split("--- log ---\n", 2).last
+    assert_operator body.bytesize, :<=, PhComposer::SupportReport::MAX_LOG_BYTES
+  end
+
+  def test_clearing_history_does_not_claim_the_log_is_writing_again
+    Diagnostics.path_override = File.join(@directory, "file", "x.log")
+    File.write(File.join(@directory, "file"), "")
+    Diagnostics.log("unwritten")
+    SupportDialog.show
+
+    send_message("support.clear_history", {})
+
+    refute Diagnostics.health["writing"]
   end
 
   def test_history_that_cannot_be_deleted_is_reported_as_not_cleared
