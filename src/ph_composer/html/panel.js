@@ -80,9 +80,16 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     if (payload.session !== previous.session) return previous;
     if (outcome.status !== "completed") {
       changes.notice = { message: outcomeWords(payload) || outcome.message || "The change was not applied.",
-        tone: outcome.status === "failed" ? "error" : "warning" };
+        tone: outcome.status === "failed" ? "error" : "warning", action: helpFor(outcome) };
     }
     return withUI(previous, changes);
+  }
+
+  /* An unexpected failure carries the log's incident reference; Get help opens Help & Diagnostics at it. */
+  function helpFor(outcome) {
+    var incident = outcome.detail && outcome.detail.incident;
+    if (typeof incident !== "string") return null;
+    return { label: "Get help", run: function () { send("panel.support", { incident: incident }); } };
   }
 
   /* A viewport-state command changes what the host shows and never the Model, so a refusal is a warning
@@ -95,7 +102,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     if (payload.session !== previous.session) return previous;
     if (outcome.status !== "completed") {
       changes.notice = { message: outcome.message || "The viewport did not change.",
-        tone: outcome.status === "failed" ? "error" : "warning" };
+        tone: outcome.status === "failed" ? "error" : "warning", action: helpFor(outcome) };
     }
     return withUI(previous, changes);
   }

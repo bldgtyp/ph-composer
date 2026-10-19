@@ -39,10 +39,13 @@ class PanelMessagesTest < PhComposerTestCase
 
   private
 
-  # The panel's own scripts. The runtime page (html/runtime/) speaks to RuntimeHost and the Agent Access
-  # page (html/agent_access/) to its own dialog, not the panel; agent_access_tokens_test.rb checks that one.
+  # The panel's own scripts. The runtime page (html/runtime/) speaks to RuntimeHost, and the Agent Access and
+  # Help & Diagnostics pages to their own dialogs, not the panel; agent_access_tokens_test.rb and
+  # support_dialog_test.rb check those.
   def sources
-    panel_files = Dir[File.join(HTML, "**", "*.js")].reject { |path| path.match?(%r{/html/(runtime|agent_access)/}) }
+    panel_files = Dir[File.join(HTML, "**", "*.js")].reject do |path|
+      path.match?(%r{/html/(runtime|agent_access|support)/})
+    end
     panel_files.sort.map { |path| File.read(path) }
   end
 end

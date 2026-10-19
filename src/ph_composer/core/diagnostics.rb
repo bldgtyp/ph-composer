@@ -46,6 +46,8 @@ module PhComposer
       "manifest" => REFERENCE
     }.freeze
     INVALID = "[INVALID]"
+    # A free-text value a support report copies: short, plain and never a path.
+    FREE_TEXT = /\A[\w .:+()\[\]-]{0,96}\z/.freeze
     # A frame's method name as Ruby, JavaScript or Python reports it, without arguments or source.
     FRAME_METHOD = /\A[\w$.:<>?!=\[\]{} #-]{1,96}\z/.freeze
     FRAME_FILE = %r{\A[\w-]+(?:\.[\w-]+)*(?:/[\w-]+(?:\.[\w-]+)*)*\z}.freeze
@@ -161,6 +163,43 @@ module PhComposer
         (@tail ||= []).dup
       end
 
+      # The newest log lines on disk, archive first, within `max_bytes`, and how many earlier lines were left
+      # out. Raises when the files exist but cannot be read; a log never written reads as empty.
+      def recent_lines(max_bytes)
+        lines = [path + ".1", path].select { |file| File.exist?(file) }.flat_map { |file| File.readlines(file) }
+        kept = []
+        total = 0
+        lines.reverse_each do |line|
+          break if total + line.bytesize > max_bytes
+
+          kept.unshift(line)
+          total += line.bytesize
+        end
+        [kept, lines.length - kept.length]
+      end
+
+      # One logged line rebuilt from the fields and values the log accepts, or nil when it is not a record.
+      # A support report copies only this, so a line that somehow carries anything else is reduced.
+      def sanitized(line)
+        record = JSON.parse(line)
+        return nil unless record.is_a?(Hash) && record["timestamp"].is_a?(String)
+
+        kept = record.select { |name, value| reportable?(name, value) }
+        JSON.generate(kept)
+      rescue JSON::ParserError
+        nil
+      end
+
+      # Removes the log and its archive and forgets this session's tail. Saved support reports are the
+      # user's and are not touched.
+      def clear
+        [path, path + ".1"].each { |file| FileUtils.rm_f(file) }
+        @tail = []
+        @tail_bytes = 0
+        @last_error = nil
+        true
+      end
+
       # Drops events older than RETENTION_SECONDS from the log and its archive, and an archive left empty.
       # Runs once at load; a failure leaves the files as they were.
       def prune(now = Time.now.utc)
@@ -238,6 +277,18 @@ module PhComposer
         when "frames" then valid_frames?(value) ? value.first(MAX_FRAMES) : invalid(name)
         when *VALUES.keys then VALUES.fetch(name).match?(value.to_s) ? value.to_s : invalid(name)
         else redact(value.to_s)
+        end
+      end
+
+      def reportable?(name, value)
+        case name
+        when "timestamp" then value.is_a?(String) && value.match?(/\A[\dT:.Z+-]{10,40}\z/)
+        when "schema" then value.is_a?(Integer)
+        when "duration_ms" then value.is_a?(Numeric)
+        when "frames" then valid_frames?(value)
+        when *VALUES.keys then value.is_a?(String) && VALUES.fetch(name).match?(value)
+        when *ALLOWED_FIELDS then value.is_a?(String) && FREE_TEXT.match?(value) && !absolute_path?(value)
+        else false
         end
       end
 

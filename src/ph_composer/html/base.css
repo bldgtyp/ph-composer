@@ -236,6 +236,10 @@ html { height: 100%; }
   background: #f8f9fa;
   font-size: 12px;
 }
+/* A quiet text link at the footer's end, so Help & Diagnostics is always one click away. */
+.phc-footer .phc-footer-link { width: auto; margin-left: auto; padding: 0; border: 0; background: none;
+  color: var(--muted); font: inherit; text-decoration: underline; cursor: pointer; }
+.phc-footer .phc-footer-link:hover, .phc-footer .phc-footer-link:focus-visible { color: var(--ink); }
 .phc-form { padding: 16px; border-bottom: 1px solid var(--line); background: #f5f9fa; }
 .phc-form form { display: flex; flex-wrap: wrap; gap: 12px; }
 .phc-form label { display: flex; flex-direction: column; gap: 5px; max-width: 100%; }

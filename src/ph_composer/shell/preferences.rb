@@ -33,6 +33,12 @@ module PhComposer
     # such as a string holding a double quote, as nil, so nil means present but unreadable.
     ABSENT = ""
     UNREADABLE = "Your saved display preferences could not be read, so they were left unchanged."
+    # What Reset display preferences returns to its default, in the words its confirmation lists. Libraries,
+    # approved locations and agent tokens live in their own stores and are never reset here.
+    RESETTABLE = [
+      "Display units (back to SI)", "Remembered dimension formats", "Remembered table views",
+      "The remembered Colour-by mode"
+    ].freeze
 
     class << self
       def unit_system
@@ -83,6 +89,16 @@ module PhComposer
           raise UserError, "That display preference is not recognized."
         end
         value
+      end
+
+      # Writes every display preference's default and reads each back, including a stored map this version
+      # could not read: resetting is the way out of one. Raises UserError when the host refuses a write.
+      def reset_display
+        write(:unit_system, DEFAULT_UNIT_SYSTEM)
+        write_map("dimension_formats", {})
+        write_map("table_views", {})
+        write(:colour_by_mode, "")
+        RESETTABLE
       end
 
       def snapshot

@@ -16,9 +16,9 @@
       "sha256": "5c7014a366ef7005fffc844a7b0ddc516d28a9abc4316ac9d6fbd36e224a64e7"
     },
     "html/base.css": {
-      "bytes": 12863,
+      "bytes": 13247,
       "mime": "text/css; charset=utf-8",
-      "sha256": "998c453cc21e80aef3de9ef3c562f7f548b929480144eb7ab85c10bb0ad8af20"
+      "sha256": "37438d5d0d7dda3fc6504f6ce523d951f3617e8e24ac25989d5cefaeda497468"
     },
     "html/column_menu.js": {
       "bytes": 5796,
@@ -396,9 +396,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 30379,
+      "bytes": 30791,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "65b8f3a02c9c9b907426c13bc167f4b4455ece225d6a795cb285a305422b3abe"
+      "sha256": "f06dd3397acac3b238bd840d83451b77f57a2aa874814bec790dac3e484b17ab"
     },
     "html/record_edits.js": {
       "bytes": 17435,
@@ -436,9 +436,9 @@
       "sha256": "6c49ede2b6ec3c6860e27dceb68995a049084e7820c8c44718124cb4eb16264c"
     },
     "html/sections/shell.js": {
-      "bytes": 758,
+      "bytes": 1051,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "8801e69e8143d6a8db6003fa2acd751e8a3b03d9a06c39f7292bf6156355088e"
+      "sha256": "52528e5fa52340fc2cd5a295f1849ebbbff3a458bb7fd201d44d652d6301d9ee"
     },
     "html/selection_bar.js": {
       "bytes": 2901,
@@ -459,6 +459,21 @@
       "bytes": 4482,
       "mime": "text/javascript; charset=utf-8",
       "sha256": "d753fd13b0e1fd771cd43efea04910c576b8a44eeaf7264da357c5de1c310f2e"
+    },
+    "html/support/index.html": {
+      "bytes": 835,
+      "mime": "text/html; charset=utf-8",
+      "sha256": "8a45815a6384b5452999c9941da187fac71263ada2085be074443e517ab2949d"
+    },
+    "html/support/page.js": {
+      "bytes": 12698,
+      "mime": "text/javascript; charset=utf-8",
+      "sha256": "c37de42f1a6895c0e1a9b863d660aa0b5359117bd37cca6c3c60d437176c15a6"
+    },
+    "html/support/support.css": {
+      "bytes": 1752,
+      "mime": "text/css; charset=utf-8",
+      "sha256": "2e50a4d26a80d8ed2156c14af200b6a042682edfe8cee49745364f56ecf9fc6b"
     },
     "html/table.css": {
       "bytes": 14316,

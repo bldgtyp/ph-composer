@@ -166,6 +166,22 @@ class PreferencesTest < PhComposerTestCase
     assert_equal({ "SI" => "cm", "IP" => "in" }, stored.fetch("example.builder"))
   end
 
+  def test_reset_returns_every_display_preference_to_its_default_even_when_unreadable
+    Preferences.set("unit_system", "IP")
+    Preferences.set("table_view", "example.zones.faces", :scope => "example.zones")
+    Preferences.set("colour_by_mode", "example.mode")
+    Sketchup.write_default(SECTION, "dimension_formats", "not base64 json")
+    Sketchup.write_default(PhComposer::EXTENSION_ID, "library_setup", "kept")
+
+    assert_equal Preferences::RESETTABLE, Preferences.reset_display
+
+    assert_equal({ "unit_system" => "SI", "dimension_formats" => {}, "table_views" => {} },
+                 Preferences.snapshot.slice("unit_system", "dimension_formats", "table_views"))
+    assert_nil Preferences.colour_by_mode
+    assert_equal "kept", Sketchup.read_default(PhComposer::EXTENSION_ID, "library_setup"), "other stores stay"
+    Preferences.set("dimension_format", "cm", :scope => "example.editor", :system => "SI")
+  end
+
   def test_the_regional_format_takes_the_macos_region_and_the_sketchup_decimal
     Sketchup::RegionalSettings.decimal_separator = ","
     Preferences.apple_locale_reader = proc { "de_DE" }

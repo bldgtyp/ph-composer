@@ -9,11 +9,12 @@ module PhComposer
   # with no line added below (context/EXTENSIBILITY.md).
   module Commands
     OPEN_PANEL = "Open PH-Composer"
+    HELP = "Help & Diagnostics…"
     COLOUR_BY = "Colour by"
     COLOUR_BY_OFF = "Off"
 
     class << self
-      attr_reader :open_panel, :colour_by_menu, :feature_menus
+      attr_reader :open_panel, :help, :colour_by_menu, :feature_menus
 
       def install
         return if @installed
@@ -26,6 +27,9 @@ module PhComposer
         submenu.add_item(@open_panel)
         install_colour_by(submenu)
         @feature_menus = install_feature_menus(submenu)
+        # Needs no Model and no panel, so it is reachable when either is the problem.
+        submenu.add_separator
+        @help = submenu.add_item(HELP) { SupportDialog.show }
         # The same submenus on a right-click, which is where a modal painting tool is reached from
         # in SketchUp's own grammar. A contextual build asks each item whether it applies to what is
         # there, and a submenu whose items all decline does not appear at all.

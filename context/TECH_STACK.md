@@ -419,11 +419,33 @@ turns an exception into a message or a verdict: the panel callback, the command 
 dispatcher, an observer callback, a task tick, or the Export run. Input coercion goes through
 `Coerce`, which raises a `UserError` naming the field.
 
+## Help & Diagnostics
+
+`shell/support_dialog.rb` owns a small HtmlDialog of its own (`html/support/`), opened from
+Extensions > PH-Composer > Help & Diagnostics…, from the panel footer, or from Get help on a failure
+notice that carries `detail.incident` (`panel.support`). It needs no Model, no panel and no Python.
+If its page cannot be built or does not report ready within five seconds, a native message box gives
+the version, build, log folder and help address. It reads build, manifest and log health when it
+opens and never writes the Model.
+
+`shell/support_report.rb` builds one plain-text capture: a header (report format 1, capture time,
+version, build and commit, manifest, host, supported-host verdict, log health, the selected
+incident, the included event range or the reason there is none, and what is never included),
+then at most 256 KiB of the newest log lines, each rebuilt by `Diagnostics.sanitized` from the
+fields and values the log accepts. A read failure falls back to this session's in-memory lines and
+says so. The capture is kept under its id: the page previews it, Copy copies the previewed text, and
+Save writes the same capture's bytes through a temporary file renamed into place; a capture
+replaced by Refresh is refused. Report a problem opens the public issue page only after the page
+says the issue is public. Clear diagnostic history deletes the log and its archive and keeps saved
+reports. Reopen panel closes and reopens the panel window; Reset display preferences writes each
+display preference's default (`Preferences.reset_display`) and leaves libraries, approved
+locations and agent tokens alone.
+
 ## Panel protocol
 
 Implemented in P0-E and extended in Phase 1. `shell/panel_messages.rb` declares every message
-between the page and Ruby, with the payload keys each carries: `panel.ready`, `action.invoke`,
-`action.status`, `view.invoke`, `setup.invoke`, `query.invoke`, `file_export.invoke`, `preferences.set` and the shell's Export command (`export.start`,
+between the page and Ruby, with the payload keys each carries: `panel.ready`, `panel.diagnostic`,
+`panel.support`, `action.invoke`, `action.status`, `view.invoke`, `setup.invoke`, `query.invoke`, `file_export.invoke`, `preferences.set` and the shell's Export command (`export.start`,
 `export.preflight`, `export.status`, `export.cancel`, `export.latest`) inbound; `panel.snapshot`,
 `action.result`, `view.result`, `setup.result`, `query.result`, `file_export.result`,
 `preferences.result`, `export.result`, `panel.notice` and `panel.failure` outbound. Ruby refuses an inbound type or payload key the table does not declare and answers with
