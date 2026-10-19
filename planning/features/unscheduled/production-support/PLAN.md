@@ -1,9 +1,9 @@
 # Production support: implementation sequence
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
 Five stages, revised 2026-10-19 from the accepted six (DECISIONS, PS-D10). No code has been
 started. Complete issue intake at delivery. Keep one coherent responsibility per slice; PS-02 is

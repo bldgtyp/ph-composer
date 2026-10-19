@@ -507,6 +507,11 @@ eslint. The 2023 host's CEF version is confirmed when a 2023 host is available.
   A dimension scope's formats are one base64 JSON value, because SketchUp 26.1 reads back a stored
   string containing a double quote as nil. A dimension scope is a dotted name under its feature's
   id; a scope never chosen takes the system default (mm in SI, decimal inches in IP).
+- A preference write succeeds only when `write_default` returns true and the value reads back;
+  otherwise the panel shows the refusal, never "saved". A stored map this version cannot read,
+  damaged or written by a later version, refuses the change and is left as stored. Changing one
+  scope keeps every other stored entry, recognized or not. Colour-by stays on when its choice
+  cannot be remembered; the failure is logged.
 - Ruby never formats a unit-bearing value for the panel. It sends message parts with canonical
   values and the panel formats them. The Export report captures the preference once when the run
   starts; HBJSON stays SI. Ruby report quantities include `volume` (canonical m³, displayed as

@@ -77,6 +77,42 @@ class PreferencesTest < PhComposerTestCase
     assert_equal({}, Preferences.table_views)
   end
 
+  # REVIEW F06: a stubbed write_default returning false still returned the value as saved.
+  def test_a_write_the_host_refuses_is_reported_as_not_saved
+    Sketchup.refuse_default_writes = true
+
+    error = assert_raises(PhComposer::UserError) { Preferences.set("unit_system", "IP") }
+    assert_equal "PH-Composer could not save that display preference.", error.message
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("dimension_format", "cm", :scope => "example.editor", :system => "SI")
+    end
+    assert_equal "SI", Preferences.unit_system
+  end
+
+  def test_a_stored_map_it_cannot_read_is_left_unchanged
+    Sketchup.write_default(SECTION, "table_views", "not base64 json")
+    Sketchup.clear_default_writes
+
+    error = assert_raises(PhComposer::UserError) do
+      Preferences.set("table_view", "example.zones.faces", :scope => "example.zones")
+    end
+    assert_equal "Your saved display preferences could not be read, so they were left unchanged.", error.message
+    assert_empty Sketchup.default_writes
+    assert_equal "not base64 json", Sketchup.read_default(SECTION, "table_views")
+  end
+
+  # A later version's entry this one does not recognize survives a change to another scope.
+  def test_changing_one_scope_keeps_entries_this_version_does_not_recognize
+    later = { "example.editor" => { "SI" => "dm", "IP" => "yd" } }
+    Sketchup.write_default(SECTION, "dimension_formats", [JSON.generate(later)].pack("m0"))
+
+    Preferences.set("dimension_format", "cm", :scope => "example.builder", :system => "SI")
+
+    stored = JSON.parse(Sketchup.read_default(SECTION, "dimension_formats").unpack1("m0"))
+    assert_equal({ "SI" => "dm", "IP" => "yd" }, stored.fetch("example.editor"))
+    assert_equal({ "SI" => "cm", "IP" => "in" }, stored.fetch("example.builder"))
+  end
+
   def test_the_regional_format_takes_the_macos_region_and_the_sketchup_decimal
     Sketchup::RegionalSettings.decimal_separator = ","
     Preferences.apple_locale_reader = proc { "de_DE" }
