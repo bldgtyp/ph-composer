@@ -181,7 +181,7 @@ Codes are stable `noun.condition` strings, one per outcome:
 | Envelope | `request.malformed`, `request.unknown_operation`, `request.api_version`, `request.capability_denied`, `request.response_too_large` (an agent tool result over the reply budget, refused rather than cut) |
 | Access | `access.user_required` (the operation needs a location only the user can choose), `access.revoked` (the caller's access was revoked; nothing ran), `request.cancelled` (the user dismissed that dialog) |
 | Approved locations | `location.unknown`, `location.revoked`, `location.used` (a single-use location already added its library), `location.kind_mismatch`, `location.unavailable` (no longer there as approved), `location.setup_unreadable`, `location.setup_unavailable` |
-| Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable` |
+| Retry | `request.pending`, `request.sequence_conflict`, `request.outcome_unavailable`, `request.not_received` (the panel's Check status named a request the host never received; nothing ran) |
 | Session | `session.unknown` (closed, reopened or never issued), `session.busy`, `session.closed`, `session.changed` (a native menu built for another Model), `session.inactive` (the panel's Model is no longer shown, or a return to the root was asked of a Model SketchUp is not showing) |
 | Preconditions | `revision.stale`, `proposal.changed`, `record.unreadable` |
 | Proposal contributions | `proposal.foreign_write` (a participant or library callback staged a write to a kind its owner does not own, or into another change set), `proposal.contribution_replaced` (it removed or changed what an earlier contributor proposed) |
@@ -275,7 +275,8 @@ complete. A retry of a running request with the same payload answers `pending`. 
 is `request.outcome_unavailable` and never becomes new work. The store returns detached copies, so a
 caller editing a returned outcome cannot change a later lookup. `outcome()` needs `model_write`.
 There is no exactly-once claim across a process failure: a lost handle requires fresh discovery
-and state inspection.
+and state inspection. The panel reconciles a lost reply through this same lookup under its original
+sequence and never resends the action (TECH_STACK, "Panel protocol").
 
 ## Records and extension data
 

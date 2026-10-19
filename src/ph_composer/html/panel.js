@@ -9,7 +9,8 @@
  * The panel acts only on the Model it shows: `action.invoke` carries the shown session and the revision the
  * panel last rendered, and a result or notice for another session is not painted.
  */
-PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views"], function (preferences, ui, tableViews) {
+PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "request"], function (preferences, ui,
+  tableViews, request) {
   "use strict";
 
   var sections = [];
@@ -77,6 +78,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views"], f
     var outcome = payload.outcome || {};
     var changes = { actionResult: payload };
     if (payload.session !== previous.session) return previous;
+    // The answer to a request the page had stopped expecting takes its warning away.
+    if (previous.ui.notice && previous.ui.notice.requestId === payload.request_id) changes.notice = null;
     if (outcome.status !== "completed") {
       changes.notice = { message: outcomeWords(payload) || outcome.message || "The change was not applied.",
         tone: outcome.status === "failed" ? "error" : "warning" };
@@ -424,6 +427,27 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views"], f
       window.sketchup.ph_composer_message(JSON.stringify({ type: type, payload: message }));
     }
   }
+
+  /* A request the host has not answered in time (request.js). An edit is never sent again: Check status asks
+     the host what became of it, which also brings the Model's state up to date. Any other request can only
+     stop waiting; its answer, if it still comes, is ignored, so its result is left for the user to check. */
+  function unconfirmed(channel) {
+    var action;
+    if (channel.session !== state.session) return;
+    if (channel.message === "action.invoke") {
+      action = { label: "Check status", run: function () { channel.checkStatus(); } };
+      raise("PH-Composer has not confirmed this change yet. It may have been applied, or its answer was lost.",
+        action, channel.pending);
+    } else {
+      action = { label: "Stop waiting", run: function () { channel.reset(); repaint(); } };
+      raise("PH-Composer has not answered this request yet, so its result is not known.", action, channel.pending);
+    }
+  }
+  function raise(message, action, requestId) {
+    state = withUI(state, { notice: { message: message, tone: "warning", action: action, requestId: requestId } });
+    render();
+  }
+  request.onUnconfirmed(unconfirmed);
 
   /* A notice raised by the page itself, such as a refused navigation. It never reaches the host. An
      `action` ({ label, run }) puts the way out on the notice itself, such as cancelling the held draft. */

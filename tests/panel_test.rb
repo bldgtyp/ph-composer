@@ -96,6 +96,49 @@ class PanelTest < PhComposerTestCase
     assert_equal 2, PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).ids(PART).length
   end
 
+  # REVIEW F04: a reply lost after the commit. Check status answers the retained outcome under the original
+  # request id and runs nothing again.
+  def test_check_status_answers_a_committed_change_without_running_it_again
+    dialog = open_panel
+    create(dialog, "r1")
+    revision = @session.revision
+    before = dialog.scripts.length
+
+    send_message(dialog, "action.status", "request_id" => "r1", "session" => @session.id)
+
+    published = dialog.scripts.drop(before).map { |script| decode(script).fetch("type") }
+    assert_equal %w[panel.snapshot action.result], published
+    result = messages(dialog, "action.result").last
+    assert_equal "r1", result.fetch("request_id")
+    assert_equal %w[completed committed], result.fetch("outcome").values_at("status", "effect")
+    assert_equal revision, @session.revision
+    assert_equal 1, PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).ids(PART).length
+  end
+
+  # A request lost before execution: messages arrive in order, so an id never tracked never ran.
+  def test_check_status_for_a_request_the_host_never_received_says_nothing_ran
+    dialog = open_panel
+
+    send_message(dialog, "action.status", "request_id" => "lost", "session" => @session.id)
+
+    outcome = messages(dialog, "action.result").last.fetch("outcome")
+    assert_equal %w[refused request.not_received none], outcome.values_at("status", "code", "effect")
+    assert_equal 0, PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).ids(PART).length
+  end
+
+  def test_check_status_after_the_outcome_expired_keeps_the_effect_unknown
+    dialog = open_panel
+    now = 1000.0
+    @session.outcomes.clock = -> { now }
+    create(dialog, "r1")
+    now += PhComposer::OutcomeStore::LIFETIME_SECONDS + 1
+
+    send_message(dialog, "action.status", "request_id" => "r1", "session" => @session.id)
+
+    outcome = messages(dialog, "action.result").last.fetch("outcome")
+    assert_equal %w[refused request.outcome_unavailable unknown], outcome.values_at("status", "code", "effect")
+  end
+
   # A view command carries no expected revision, because it changes no record. The snapshot still
   # follows it, so a section reading what it changed repaints.
   def test_a_query_answers_without_snapshot_or_model_operation_and_rejects_other_sessions

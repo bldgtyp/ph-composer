@@ -20,6 +20,8 @@ module PhComposer
       session_created transaction_committed transaction_undone transaction_redone active_path_changed
     ].freeze
     MAX_PENDING_NOTICES = 20
+    # Recent action request ids per session, so the page can ask what became of one whose result it lost.
+    MAX_TRACKED_REQUESTS = 64
     SESSION_CHANGED = "The panel now shows a different Model."
     EXPORT_TYPES = %w[export.start export.preflight export.status export.cancel export.latest].freeze
     # Export startup failure is reported before a task or a Model operation begins.
@@ -37,6 +39,9 @@ module PhComposer
       "failed", "operation.failed", "The panel could not read that information.", "none", nil
     ).freeze
     # The panel could not tell whether an action ran, so it does not claim the Model is unchanged.
+    # The page asked about a request id the host never received, so nothing ran.
+    NOT_RECEIVED = Outcome.refused("request.not_received", "PH-Composer did not receive that change.",
+                                   :revision => nil, :mutation => true).freeze
     UNEXPECTED = Outcome.build(
       "failed", "operation.failed",
       "The panel could not complete that request. Check the Model before continuing.", "unknown", nil
@@ -104,6 +109,7 @@ module PhComposer
         @ready = false
         @contexts = {}
         @sequences = {}
+        @requests = {}
         @pending_notices = []
         @development_scripts = []
       end
@@ -147,6 +153,7 @@ module PhComposer
         case type
         when "panel.ready" then ready
         when "action.invoke" then invoke(payload)
+        when "action.status" then status(payload)
         when "view.invoke" then view(payload)
         when "setup.invoke" then setup(payload)
         when "query.invoke" then query(payload)
@@ -157,7 +164,7 @@ module PhComposer
       rescue StandardError => error
         Diagnostics.exception("panel_message", error)
         case type
-        when "action.invoke" then publish_result(payload, UNEXPECTED)
+        when "action.invoke", "action.status" then publish_result(payload, UNEXPECTED)
         when "view.invoke" then publish_view(payload, VIEW_FAILED)
         when "setup.invoke" then publish_setup(payload, SETUP_FAILED)
         when "query.invoke" then publish_query(payload, QUERY_FAILED)
@@ -208,13 +215,35 @@ module PhComposer
                                          "tone" => "warning")
         end
 
+        sequence = next_sequence(session)
+        track_request(session, payload["request_id"], sequence)
         outcome = API.invoke(
           :context => context_for(session), :name => payload["name"].to_s, :params => payload.fetch("params", {}),
-          :request => { "sequence" => next_sequence(session), "expected_revision" => payload["expected_revision"] }
+          :request => { "sequence" => sequence, "expected_revision" => payload["expected_revision"] }
         )
         session.refresh.cancel
         publish_snapshot(session)
         publish_result(payload, outcome)
+      end
+
+      # The retained outcome of an action whose result the page lost, read under its original sequence
+      # (context/CONTRACTS.md, "Retries"); the action never runs again. Page messages arrive in order, so an
+      # id the host never tracked was never received. The snapshot is published first, so the page reads the
+      # answer against the Model as it now is.
+      def status(payload)
+        session = shown_session(payload)
+        return publish_result(payload, inactive_outcome) unless session
+
+        sequence = requests_for(session)[payload["request_id"]]
+        outcome = sequence ? retained_outcome(session, sequence) : NOT_RECEIVED.merge("revision" => session.revision)
+        publish_snapshot(session)
+        publish_result(payload, outcome)
+      end
+
+      # An expired outcome cannot say whether the change was kept, so it never reads as nothing written.
+      def retained_outcome(session, sequence)
+        outcome = API.outcome(:context => context_for(session), :request => { "sequence" => sequence })
+        outcome["code"] == "request.outcome_unavailable" ? outcome.merge("effect" => "unknown") : outcome
       end
 
       # Selection, camera and the active Colour-by mode, for the Model the panel shows. A section may read
@@ -379,6 +408,18 @@ module PhComposer
         @contexts.delete_if { |id, _context| Sessions.find(id).nil? }
         @contexts[session.id] ||= API.connect(:session_id => session.id,
                                               :capabilities => %w[read view model_write setup export])
+      end
+
+      def requests_for(session)
+        @requests ||= {}
+        @requests.delete_if { |id, _requests| Sessions.find(id).nil? }
+        @requests[session.id] ||= {}
+      end
+
+      def track_request(session, request_id, sequence)
+        requests = requests_for(session)
+        requests[request_id.to_s] = sequence
+        requests.delete(requests.keys.first) while requests.length > MAX_TRACKED_REQUESTS
       end
 
       def next_sequence(session)

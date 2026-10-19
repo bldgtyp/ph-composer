@@ -11,6 +11,9 @@ module PhComposer
       "panel.ready" => [],
       # `session` names the Model session the panel showed; `expected_revision` the revision it rendered.
       "action.invoke" => %w[request_id session name params expected_revision],
+      # What became of an earlier action.invoke whose result the page never received. It never runs the
+      # action again; the answer is that request's action.result.
+      "action.status" => %w[request_id session],
       # A viewport-state command for the Model the panel showed. It changes no record, so it carries no
       # expected revision: there is nothing for a stale one to protect.
       "view.invoke" => %w[request_id session name params],

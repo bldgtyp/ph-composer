@@ -114,6 +114,46 @@ test("a refusal stays on screen as a warning and a failure as an error, until di
   assert.strictEqual(notice.hidden, true);
 });
 
+test("an unconfirmed change warns with Check status, which asks the host and clears when answered", function () {
+  var p = page(), timers = [];
+  p.context.setTimeout = function (run) { timers.push(run); return timers.length; };
+  p.context.clearTimeout = function () {};
+  p.receive("panel.snapshot", snapshot("session-a", 4));
+  var channel = p.modules.request.channel("session-a", p.panel.send, "form");
+  var id = channel.run("example.create", {});
+
+  timers[0]();
+  var notice = p.notice();
+  assert.strictEqual(notice.hidden, false);
+  assert.match(notice.message.textContent, /not confirmed this change yet/);
+  assert.strictEqual(notice.getAttribute("data-tone"), "warning");
+  assert.strictEqual(notice.actionButton.textContent, "Check status");
+
+  notice.actionButton.listeners.click({});
+  assert.deepStrictEqual(types(p.sent), ["action.invoke", "action.status"], "the change is never resent");
+  assert.strictEqual(p.sent[1].payload.request_id, id);
+
+  p.receive("action.result", { request_id: id, session: "session-a",
+    outcome: { status: "completed", effect: "committed" } });
+  assert.strictEqual(p.panel.state.ui.notice, null, "the answer takes the warning away");
+  assert.strictEqual(channel.consume(p.panel.state).status, "completed");
+});
+
+test("an unconfirmed read offers only to stop waiting, which frees its view", function () {
+  var p = page(), timers = [];
+  p.context.setTimeout = function (run) { timers.push(run); return timers.length; };
+  p.context.clearTimeout = function () {};
+  p.receive("panel.snapshot", snapshot("session-a", 4));
+  var channel = p.modules.request.channel("session-a", p.panel.send, "catalog", "query.invoke");
+  channel.run("example.catalog", {});
+
+  timers[0]();
+  assert.strictEqual(p.notice().actionButton.textContent, "Stop waiting");
+  p.notice().actionButton.listeners.click({});
+  assert.strictEqual(channel.busy(), false);
+  assert.deepStrictEqual(types(p.sent), ["query.invoke"]);
+});
+
 test("a view result settles in its own slot and says why the viewport did not change", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 7));

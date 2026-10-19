@@ -20,10 +20,19 @@
 
    Two shapes: `run` is single flight (refuses while a request is pending, and `consume` settles it once);
    `send` never refuses and returns the id, for callers that keep several requests in flight, which match
-   with `matches(result, id)`. */
+   with `matches(result, id)`.
+
+   A `run` request still unanswered after RECOVERY_MS is unconfirmed: the channel stays pending, so the
+   work is never sent twice, and every `onUnconfirmed` listener hears of it. For an action, `checkStatus`
+   asks the host what became of that request id (`action.status`); the answer arrives as the request's own
+   result. Any other channel can only stop waiting with `reset`. */
 PhComposerUI.define("request", [], function () {
   "use strict";
   var sequence = 0;
+  /* Longer than any interactive edit should take; the host answers in order, so a long operation delays
+     this warning rather than the answer. A starting default, not a measured bound. */
+  var RECOVERY_MS = 20000;
+  var listeners = [];
   var SLOTS = { "action.invoke": { slot: "actionResult", keyed: false },
     "view.invoke": { slot: "viewResults", keyed: true }, "query.invoke": { slot: "queryResults", keyed: true },
     "setup.invoke": { slot: "setupResults", keyed: true },
@@ -35,7 +44,7 @@ PhComposerUI.define("request", [], function () {
     var carried = SLOTS[this.message];
     if (!carried) throw new Error("request channel does not carry \"" + this.message + "\"");
     this.slot = carried.slot; this.keyed = carried.keyed;
-    this.pending = null; this.action = null; this.handlers = null;
+    this.pending = null; this.action = null; this.handlers = null; this.timer = null; this.unconfirmed = false;
   }
   Channel.prototype.nextId = function (label) {
     return this.session + ":" + (label || this.label) + ":" + (++sequence);
@@ -54,7 +63,33 @@ PhComposerUI.define("request", [], function () {
     if (this.pending) return false;
     this.handlers = handlers || null; this.action = action;
     this.pending = this.nextId(handlers && handlers.label);
-    return this.dispatch(this.pending, action, params);
+    this.dispatch(this.pending, action, params);
+    this.watch();
+    return this.pending;
+  };
+  /* Starts the recovery timer for the pending request; a page without timers never warns. */
+  Channel.prototype.watch = function () {
+    var self = this, id = this.pending;
+    this.stopWatching();
+    if (!window.setTimeout) return;
+    this.timer = window.setTimeout(function () {
+      self.timer = null;
+      if (self.pending !== id) return;
+      self.unconfirmed = true;
+      listeners.slice().forEach(function (listener) { listener(self); });
+    }, RECOVERY_MS);
+  };
+  Channel.prototype.stopWatching = function () {
+    if (this.timer !== null && window.clearTimeout) window.clearTimeout(this.timer);
+    this.timer = null;
+  };
+  /* Asks the host for the pending action's outcome without sending the action again, and waits once more.
+     False when there is nothing to ask about or the channel carries no action. */
+  Channel.prototype.checkStatus = function () {
+    if (!this.pending || this.message !== "action.invoke") return false;
+    this.transport("action.status", { request_id: this.pending, session: this.session });
+    this.watch();
+    return true;
   };
   Channel.prototype.busy = function () { return Boolean(this.pending); };
   Channel.prototype.matches = function (result, id) {
@@ -75,9 +110,21 @@ PhComposerUI.define("request", [], function () {
     return outcome;
   };
   /* Forgets the pending request: its result, if it still arrives, is ignored. */
-  Channel.prototype.reset = function () { this.pending = null; this.action = null; this.handlers = null; };
+  Channel.prototype.reset = function () {
+    this.stopWatching();
+    this.pending = null; this.action = null; this.handlers = null; this.unconfirmed = false;
+  };
 
   return {
-    channel: function (session, send, label, message) { return new Channel(session, send, label, message); }
+    channel: function (session, send, label, message) { return new Channel(session, send, label, message); },
+    RECOVERY_MS: RECOVERY_MS,
+    /* `listener(channel)` hears of each unconfirmed request; the returned function removes it. */
+    onUnconfirmed: function (listener) {
+      listeners.push(listener);
+      return function () {
+        var index = listeners.indexOf(listener);
+        if (index >= 0) listeners.splice(index, 1);
+      };
+    }
   };
 });

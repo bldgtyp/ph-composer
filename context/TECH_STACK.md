@@ -416,12 +416,21 @@ dispatcher, an observer callback, a task tick, or the Export run. Input coercion
 
 Implemented in P0-E and extended in Phase 1. `shell/panel_messages.rb` declares every message
 between the page and Ruby, with the payload keys each carries: `panel.ready`, `action.invoke`,
-`view.invoke`, `setup.invoke`, `query.invoke`, `file_export.invoke`, `preferences.set` and the shell's Export command (`export.start`,
+`action.status`, `view.invoke`, `setup.invoke`, `query.invoke`, `file_export.invoke`, `preferences.set` and the shell's Export command (`export.start`,
 `export.preflight`, `export.status`, `export.cancel`, `export.latest`) inbound; `panel.snapshot`,
 `action.result`, `view.result`, `setup.result`, `query.result`, `file_export.result`,
 `preferences.result`, `export.result`, `panel.notice` and `panel.failure` outbound. Ruby refuses an inbound type or payload key the table does not declare and answers with
 `panel.failure`; it refuses to publish an undeclared outbound key. `tests/panel_messages_test.rb`
 reads the page sources and fails when the page sends or handles a type the table does not declare.
+
+A `run` request unanswered after 20 seconds (`html/request.js`, a starting default) stays pending
+and raises a warning. For an action the warning offers Check status, which sends `action.status`
+with the original request id. Ruby keeps the last 64 action request ids per session with their
+sequence, publishes a snapshot, then answers that request's own `action.result`: the retained
+outcome (CONTRACTS, "Retries"), `request.outcome_unavailable` with effect `unknown` once it has
+expired, or `request.not_received` with effect `none` for an id it never tracked. Page messages
+arrive in order, so an untracked id was never received. Nothing is sent again. Any other request
+offers only Stop waiting, which ignores its late answer.
 
 Features add no transport types. A feature's panel request is `action.invoke` naming a registered
 action, a viewport-state request is `view.invoke` naming a registered view command, a session- or
