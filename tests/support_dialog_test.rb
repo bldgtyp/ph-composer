@@ -254,10 +254,11 @@ class SupportDialogTest < PhComposerTestCase
     SupportDialog.show
     send_message("support.open_help", {})
     send_message("support.report_problem", {})
+    send_message("support.open_online_help", {})
 
     assert File.exist?(SupportDialog::HELP_PAGE)
-    assert_equal ["file://#{URI::DEFAULT_PARSER.escape(SupportDialog::HELP_PAGE)}", SupportDialog::ISSUE_URL],
-                 UI.opened_urls
+    assert_equal ["file://#{URI::DEFAULT_PARSER.escape(SupportDialog::HELP_PAGE)}", SupportDialog::ISSUE_URL,
+                  SupportDialog.help_url], UI.opened_urls
     assert File.exist?(File.join(SOURCE_ROOT, "..", ".github", "ISSUE_TEMPLATE", "bug_report.yml"))
   end
 

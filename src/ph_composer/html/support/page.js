@@ -51,6 +51,7 @@ PhComposerUI.define("support/page", ["dom", "overlay", "page_header"], function 
     var help = this.section("Get help");
     var links = el("div", "support-links");
     links.appendChild(dom.button("Open help", function () { self.send("support.open_help", {}); }));
+    links.appendChild(dom.button("Online help", function () { self.send("support.open_online_help", {}); }));
     links.appendChild(dom.button("Report a problem…", function () { self.confirmReport(); }));
     links.appendChild(dom.button("Open log folder", function () { self.send("support.open_log_folder", {}); }));
     help.appendChild(links);

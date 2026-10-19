@@ -24,7 +24,8 @@ module PhComposer
     ISSUE_URL = "https://github.com/bldgtyp/ph-composer/issues/new?template=bug_report.yml"
     INBOUND = {
       "support.ready" => [], "support.capture" => %w[purpose], "support.save" => %w[capture_id],
-      "support.open_log_folder" => [], "support.open_help" => [], "support.report_problem" => [],
+      "support.open_log_folder" => [], "support.open_help" => [], "support.open_online_help" => [],
+      "support.report_problem" => [],
       "support.clear_history" => [], "support.reopen_panel" => [], "support.reset_preferences" => []
     }.freeze
     OUTBOUND = {
@@ -146,6 +147,7 @@ module PhComposer
         when "support.save" then save(payload["capture_id"])
         when "support.open_log_folder" then open_log_folder
         when "support.open_help" then open_url(type, File.exist?(HELP_PAGE) ? file_url(HELP_PAGE) : help_url)
+        when "support.open_online_help" then open_url(type, help_url)
         when "support.report_problem" then open_url(type, ISSUE_URL)
         when "support.clear_history" then clear_history
         when "support.reopen_panel" then reopen_panel

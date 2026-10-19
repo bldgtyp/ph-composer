@@ -1,14 +1,14 @@
 # PH-Composer help
 
 This page ships inside PH-Composer and opens from Help & Diagnostics, so it works with no internet
-connection. Online, the same text is `docs/HELP.md` in https://github.com/bldgtyp/ph-composer, at the
-commit your build came from.
+connection. Online help in Help & Diagnostics opens the same text for the build you have installed.
 
 ## Supported hosts
 
-PH-Composer is built and tested on SketchUp 2026 for macOS. SketchUp 2023 for macOS is the oldest
-version it is written for. Windows is not supported yet. Help & Diagnostics shows the SketchUp
-version you are running and says when it is outside this range.
+PH-Composer is built and tested on SketchUp 2026 for macOS, and written for SketchUp 2023 and later
+on macOS. Windows is not supported yet. Help & Diagnostics shows the SketchUp version you are
+running and marks it not supported when it is older than 2023 or runs on Windows. A version newer
+than 2026 is not marked, but has not been tested.
 
 ## Installing and updating
 
@@ -16,9 +16,11 @@ PH-Composer is a single `.rbz` file. In SketchUp, open Extensions > Extension Ma
 Extension, and pick the file. To update, install the newer file the same way; it replaces the old
 one. Restart SketchUp after installing.
 
+Current release: none yet. PH-Composer is in development and every build so far is a development
+build. Releases will be listed at https://github.com/bldgtyp/ph-composer/releases.
+
 PH-Composer does not check for updates. Help & Diagnostics shows the version and build you have
-installed. Published releases are listed at https://github.com/bldgtyp/ph-composer/releases. Compare
-the two to see whether a newer one exists.
+installed; compare it with the releases page to see whether a newer one exists.
 
 ## When a change is not confirmed
 
