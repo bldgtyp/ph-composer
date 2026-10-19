@@ -13,8 +13,8 @@ Ed accepted the review's direction on 2026-10-19, with transparency and ease of 
 priorities. A second review the same day kept that direction and cut the plan to the support load
 this app will actually carry: a free RBZ maintained by two people, whose support channel is a
 GitHub issue or an email with a pasted report. The revised shape is five stages and ten acceptance
-rows; Ed's earlier acceptance covered the six-stage shape, and the revision is recorded in
-[DECISIONS](DECISIONS.md) for his confirmation. No implementation has started.
+rows, recorded in [DECISIONS](DECISIONS.md) as PS-D10 and accepted by Ed on 2026-10-19. No
+implementation has started.
 
 The packet is a prerequisite for public beta or broader distribution. Its correctness stage,
 PS-02, is also wanted before the Phase 3 internal candidate, because the defects it fixes cost

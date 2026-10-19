@@ -156,8 +156,8 @@ Ed accepted the support direction and a six-stage plan on 2026-10-19. A second r
 day cut the [production-support packet](features/unscheduled/production-support/README.md) to
 five stages, PS-01 to PS-05: failure context in the log, honest lost-reply and silent-runtime
 states with checked configuration writes, Help & Diagnostics with a previewed text report,
-shipped help with a bug template, and integrated native acceptance. That revision awaits Ed's
-confirmation. Transparency and ease of use govern the user experience.
+shipped help with a bug template, and integrated native acceptance. Ed accepted that revision
+the same day. Transparency and ease of use govern the user experience.
 
 Complete its required acceptance before public beta or broader distribution. PS-02, the three
 correctness fixes, depends on nothing and is wanted before the Phase 3 internal candidate; the

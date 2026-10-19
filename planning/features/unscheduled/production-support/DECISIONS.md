@@ -10,7 +10,7 @@ ISSUE: none (local planning draft; issue intake remains)
 Ed agreed to the production-support review on 2026-10-19 and requested a packet focused on
 transparency and ease of use. He accepted its six stages the same day and asked for separate
 developer and end-user packets. A second review later that day (PS-D10) cut the plan to five
-stages; that revision awaits his confirmation. No implementation has started.
+stages; Ed accepted that revision on 2026-10-19. No implementation has started.
 
 | ID | Direction | Consequence |
 | --- | --- | --- |

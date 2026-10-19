@@ -8,8 +8,8 @@ ISSUE: none (local planning draft; issue intake remains)
 ## Current state
 
 Ed accepted the review direction and a six-stage plan on 2026-10-19. A second review the same
-day revised the packet to five stages and ten acceptance rows (DECISIONS, PS-D10); that revision
-awaits Ed's confirmation. No stage is implemented. Completion is required before public beta or
+day revised the packet to five stages and ten acceptance rows (DECISIONS, PS-D10); Ed accepted
+the revision on 2026-10-19. No stage is implemented. Completion is required before public beta or
 broader distribution. PS-02 is wanted before the Phase 3 internal candidate. Developer tooling
 has a separate packet and ledger.
 
@@ -25,8 +25,8 @@ has a separate packet and ledger.
 
 ## Next action
 
-Ed confirms or amends the 2026-10-19 revision. Then begin PS-02 as three small PRs in an
-implementation chat and complete issue intake. Product changes outside the accepted local-support
+Begin PS-02 as three small PRs in an implementation chat when Ed authorizes it, and complete
+issue intake. Product changes outside the accepted local-support
 direction return to Ed.
 
 ## Verification
@@ -43,4 +43,5 @@ acceptance ran for this documentation-only change.
 | 2026-10-19 | Review direction accepted; local planning packet created with six stages and A01 to A16. Implementation remains unauthorized. |
 | 2026-10-19 | Added the developer-tooling companion assessment and updated roadmap/master/unscheduled indexes. Documentation checks passed; no shipping-code change. |
 | 2026-10-19 | Ed accepted all recommended steps/phases. Moved developer tooling into its own feature packet, defined shared ownership/dependencies and prepared both plans for separate implementation chats. No implementation started. |
-| 2026-10-19 | Second review (Claude): kept the direction, cut the plan to five stages and ten rows, put the correctness fixes first and deferred Run checks, incident grouping and the JSON report (PS-D10). Awaits Ed's confirmation. |
+| 2026-10-19 | Second review (Claude): kept the direction, cut the plan to five stages and ten rows, put the correctness fixes first and deferred Run checks, incident grouping and the JSON report (PS-D10). |
+| 2026-10-19 | Ed accepted the five-stage revision (PS-D10). Implementation remains unauthorized. |
