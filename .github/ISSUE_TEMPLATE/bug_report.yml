@@ -25,10 +25,21 @@ body:
       label: Support report
       description: >-
         In SketchUp, open Extensions > PH-Composer > Help & Diagnostics, choose Copy diagnostics,
-        review the preview and paste it here. You can attach a saved report instead.
-      render: text
-    validations:
-      required: true
+        review the preview and paste it here, or drag a saved report file into this box.
+  - type: input
+    id: version
+    attributes:
+      label: Version and build
+      description: >-
+        Only if Help & Diagnostics could not open: the version and build from the message box it showed
+        instead, or from Extension Manager.
+  - type: textarea
+    id: no-report
+    attributes:
+      label: If there is no support report
+      description: >-
+        For example, if PH-Composer did not load: what SketchUp showed when it started, and your SketchUp
+        version.
   - type: textarea
     id: crash
     attributes:

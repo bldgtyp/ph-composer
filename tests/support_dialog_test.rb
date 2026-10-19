@@ -271,6 +271,14 @@ class SupportDialogTest < PhComposerTestCase
     assert_includes UI.messages.first, "Help: https://github.com/bldgtyp/ph-composer"
   end
 
+  # Online help is the copy for the installed build; a development build reads main.
+  def test_online_help_is_pinned_to_the_builds_commit
+    assert_equal "https://github.com/bldgtyp/ph-composer/blob/main/docs/HELP.md", SupportDialog.help_url
+    PhComposer::BuildIdentity.stub(:commit, "a1b2c3d4e5f6-dirty") do
+      assert_equal "https://github.com/bldgtyp/ph-composer/blob/a1b2c3d4e5f6/docs/HELP.md", SupportDialog.help_url
+    end
+  end
+
   def test_a_window_that_cannot_be_built_falls_back_to_a_message_box
     UI::HtmlDialog.stub(:new, ->(*) { raise "no dialog" }) { SupportDialog.show }
 

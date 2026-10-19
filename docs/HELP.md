@@ -1,7 +1,8 @@
 # PH-Composer help
 
 This page ships inside PH-Composer and opens from Help & Diagnostics, so it works with no internet
-connection. The same text is kept at https://github.com/bldgtyp/ph-composer/blob/main/docs/HELP.md.
+connection. Online, the same text is `docs/HELP.md` in https://github.com/bldgtyp/ph-composer, at the
+commit your build came from.
 
 ## Supported hosts
 
