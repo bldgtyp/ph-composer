@@ -19,8 +19,9 @@ module PhComposer
     TITLE = "#{EXTENSION_NAME} Help & Diagnostics".freeze
     FALLBACK_SECONDS = 5
     HELP_PAGE = File.join(ROOT, "help", "index.html")
-    HELP_URL = "https://github.com/bldgtyp/ph-composer/tree/main/docs"
-    ISSUE_URL = "https://github.com/bldgtyp/ph-composer/issues/new"
+    # The online copy of the shipped help page; both come from docs/HELP.md.
+    HELP_URL = "https://github.com/bldgtyp/ph-composer/blob/main/docs/HELP.md"
+    ISSUE_URL = "https://github.com/bldgtyp/ph-composer/issues/new?template=bug_report.yml"
     INBOUND = {
       "support.ready" => [], "support.capture" => %w[purpose], "support.save" => %w[capture_id],
       "support.open_log_folder" => [], "support.open_help" => [], "support.report_problem" => [],

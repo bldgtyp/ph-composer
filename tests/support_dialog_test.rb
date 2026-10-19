@@ -249,12 +249,16 @@ class SupportDialogTest < PhComposerTestCase
     assert PhComposer::Panel.open?
   end
 
+  # The shipped help opens offline; the issue form is the public template.
   def test_help_and_report_a_problem_open_their_addresses_and_send_nothing
     SupportDialog.show
     send_message("support.open_help", {})
     send_message("support.report_problem", {})
 
-    assert_equal [SupportDialog::HELP_URL, SupportDialog::ISSUE_URL], UI.opened_urls
+    assert File.exist?(SupportDialog::HELP_PAGE)
+    assert_equal ["file://#{URI::DEFAULT_PARSER.escape(SupportDialog::HELP_PAGE)}", SupportDialog::ISSUE_URL],
+                 UI.opened_urls
+    assert File.exist?(File.join(SOURCE_ROOT, "..", ".github", "ISSUE_TEMPLATE", "bug_report.yml"))
   end
 
   def test_a_page_that_never_answers_falls_back_to_a_message_box
