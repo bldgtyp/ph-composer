@@ -249,12 +249,17 @@ class SupportDialogTest < PhComposerTestCase
     assert PhComposer::Panel.open?
   end
 
+  # The shipped help opens offline; the issue form is the public template.
   def test_help_and_report_a_problem_open_their_addresses_and_send_nothing
     SupportDialog.show
     send_message("support.open_help", {})
     send_message("support.report_problem", {})
+    send_message("support.open_online_help", {})
 
-    assert_equal [SupportDialog::HELP_URL, SupportDialog::ISSUE_URL], UI.opened_urls
+    assert File.exist?(SupportDialog::HELP_PAGE)
+    assert_equal ["file://#{URI::DEFAULT_PARSER.escape(SupportDialog::HELP_PAGE)}", SupportDialog::ISSUE_URL,
+                  SupportDialog.help_url], UI.opened_urls
+    assert File.exist?(File.join(SOURCE_ROOT, "..", ".github", "ISSUE_TEMPLATE", "bug_report.yml"))
   end
 
   def test_a_page_that_never_answers_falls_back_to_a_message_box
@@ -265,6 +270,14 @@ class SupportDialogTest < PhComposerTestCase
     assert_equal [SupportDialog.fallback_text], UI.messages
     assert_includes UI.messages.first, "Build: development"
     assert_includes UI.messages.first, "Help: https://github.com/bldgtyp/ph-composer"
+  end
+
+  # Online help is the copy for the installed build; a development build reads main.
+  def test_online_help_is_pinned_to_the_builds_commit
+    assert_equal "https://github.com/bldgtyp/ph-composer/blob/main/docs/HELP.md", SupportDialog.help_url
+    PhComposer::BuildIdentity.stub(:commit, "a1b2c3d4e5f6-dirty") do
+      assert_equal "https://github.com/bldgtyp/ph-composer/blob/a1b2c3d4e5f6/docs/HELP.md", SupportDialog.help_url
+    end
   end
 
   def test_a_window_that_cannot_be_built_falls_back_to_a_message_box

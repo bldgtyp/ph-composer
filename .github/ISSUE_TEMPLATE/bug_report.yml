@@ -1,0 +1,47 @@
+name: Report a problem
+description: Something in PH-Composer failed or did not do what you expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. Do not include project names, client details, screenshots or Model files
+        unless you are willing to make them public.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what PH-Composer did instead.
+    validations:
+      required: true
+  - type: input
+    id: incident
+    attributes:
+      label: Incident reference
+      description: The reference shown with Get help, such as PHC-3FA9C1, if there was one.
+  - type: textarea
+    id: report
+    attributes:
+      label: Support report
+      description: >-
+        In SketchUp, open Extensions > PH-Composer > Help & Diagnostics, choose Copy diagnostics,
+        review the preview and paste it here, or drag a saved report file into this box.
+  - type: input
+    id: version
+    attributes:
+      label: Version and build
+      description: >-
+        Only if Help & Diagnostics could not open: the version and build from the message box it showed
+        instead, or from Extension Manager.
+  - type: textarea
+    id: no-report
+    attributes:
+      label: If there is no support report
+      description: >-
+        For example, if PH-Composer did not load: what SketchUp showed when it started, and your SketchUp
+        version.
+  - type: textarea
+    id: crash
+    attributes:
+      label: SketchUp crash details
+      description: If SketchUp itself crashed, the details its crash reporter gave you.

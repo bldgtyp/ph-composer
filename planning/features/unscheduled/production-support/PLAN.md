@@ -5,8 +5,8 @@ STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
-Five stages, revised 2026-10-19 from the accepted six (DECISIONS, PS-D10). No code has been
-started. Complete issue intake at delivery. Keep one coherent responsibility per slice; PS-02 is
+Five stages, revised 2026-10-19 from the accepted six (DECISIONS, PS-D10). PS-01 to PS-04 are
+implemented (STATUS); PS-05 remains. Issue intake is #245. Keep one coherent responsibility per slice; PS-02 is
 three small PRs, one per defect. Routine technical choices do not reopen the accepted scope.
 
 ## Stages

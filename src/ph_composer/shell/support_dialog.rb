@@ -19,11 +19,13 @@ module PhComposer
     TITLE = "#{EXTENSION_NAME} Help & Diagnostics".freeze
     FALLBACK_SECONDS = 5
     HELP_PAGE = File.join(ROOT, "help", "index.html")
-    HELP_URL = "https://github.com/bldgtyp/ph-composer/tree/main/docs"
-    ISSUE_URL = "https://github.com/bldgtyp/ph-composer/issues/new"
+    # The online copy of the shipped help page, both from docs/HELP.md, at the commit this build came from.
+    HELP_URL = "https://github.com/bldgtyp/ph-composer/blob/%<ref>s/docs/HELP.md"
+    ISSUE_URL = "https://github.com/bldgtyp/ph-composer/issues/new?template=bug_report.yml"
     INBOUND = {
       "support.ready" => [], "support.capture" => %w[purpose], "support.save" => %w[capture_id],
-      "support.open_log_folder" => [], "support.open_help" => [], "support.report_problem" => [],
+      "support.open_log_folder" => [], "support.open_help" => [], "support.open_online_help" => [],
+      "support.report_problem" => [],
       "support.clear_history" => [], "support.reopen_panel" => [], "support.reset_preferences" => []
     }.freeze
     OUTBOUND = {
@@ -82,7 +84,12 @@ module PhComposer
       # The plain words the message box shows when the window cannot.
       def fallback_text
         "#{EXTENSION_NAME} #{VERSION}\nBuild: #{BuildIdentity.build}\n" \
-          "Log folder: #{File.dirname(Diagnostics.path)}\nHelp: #{HELP_URL}"
+          "Log folder: #{File.dirname(Diagnostics.path)}\nHelp: #{help_url}"
+      end
+
+      # The help for the installed build: its commit, or main for a development build.
+      def help_url
+        format(HELP_URL, :ref => BuildIdentity.commit.to_s.delete_suffix("-dirty")[/\A\h+\z/] || "main")
       end
 
       private
@@ -139,7 +146,8 @@ module PhComposer
         when "support.capture" then capture(payload["purpose"])
         when "support.save" then save(payload["capture_id"])
         when "support.open_log_folder" then open_log_folder
-        when "support.open_help" then open_url(type, File.exist?(HELP_PAGE) ? file_url(HELP_PAGE) : HELP_URL)
+        when "support.open_help" then open_url(type, File.exist?(HELP_PAGE) ? file_url(HELP_PAGE) : help_url)
+        when "support.open_online_help" then open_url(type, help_url)
         when "support.report_problem" then open_url(type, ISSUE_URL)
         when "support.clear_history" then clear_history
         when "support.reopen_panel" then reopen_panel

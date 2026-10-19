@@ -26,7 +26,8 @@ make ci
 ```
 
 `ci` runs, in order: `syntax` (every `.rb` under `src`, `tests` and `tools`), `lint`, `test`,
-`fixtures-check`, `panel-manifest-check`, `runtime-check` (the tree, the Pyodide pin, the gates
+`fixtures-check`, `panel-manifest-check`, `help-check` (the shipped `ph_composer/help/index.html` is
+current with `docs/HELP.md`; `make help` rewrites it), `runtime-check` (the tree, the Pyodide pin, the gates
 and the installed-size budget against `src/ph_composer/vendor/manifest.json`), `runtime-pin-check`
 (shipped wheels against `pyproject.toml`), `hostkit-test`, `python-check` (ty, Astral's type
 checker, over the translation package, the tools and their tests), `rbz` and `rbz-check`, which also refuses an
@@ -184,6 +185,40 @@ citation that must name the predecessor is admitted one exact line at a time thr
 
 Restart SketchUp after replacing the loader. For every phase gate, quit all SketchUp processes
 and relaunch after `make install`. Installation is preparation, not host validation.
+
+Every archive carries `ph_composer/build.json`: `build`, twelve hex characters of a digest over every
+shipped file, and `commit`, the source commit it was built from, marked `-dirty` when `src/` had
+uncommitted changes. Help & Diagnostics, each log line and every support report name that build. A
+source checkout has no `build.json` and reports itself as a development build.
+
+## Answering a support report
+
+A report arrives as a GitHub issue or an email with the text from Help & Diagnostics. Its header
+names the version, build and commit, runtime manifest, SketchUp version and platform, whether the
+log was being written, and the incident the user selected. Its body is the newest log lines as JSON.
+
+1. Find the failure. Search the log lines for the incident reference. Its record names the event,
+   operation or stage, code, error class and extension-relative frames, which point at the file and
+   line. `session`, `request` and `run_id` join the records for one panel request or export.
+2. Find the source that failure ran. Every log line carries its own `build`. When it matches the
+   header's `Build`, check out the header's `commit`. When it differs, the user has installed
+   another build since; find that build's commit from its release's `build.json`, or ask the user
+   which version they ran then. Until the source is known, read the frames as approximate.
+   `development` means a source checkout; ask which commit. A `-dirty` commit cannot be reproduced
+   exactly; say so in the issue.
+3. Read the effect before anything else. `effect` `none` or `rolled_back` means the Model was not
+   changed; `unknown` means the user must inspect it. Answer that first.
+4. Reproduce it with synthetic data in an offline test, or under the development bridge
+   (`tools/hostkit/`). Never ask for or commit a user's Model, and never put a report's project
+   details in a test, a fixture or the repository.
+5. Fix it with the test that reproduces it, link the issue in the pull request, and record in the
+   issue which build carries the fix and how it was verified: offline, or on which host.
+
+Publishing a release updates "Current release" in `docs/HELP.md` (then `make help`) in the same
+change, so the shipped help names it.
+
+A report says nothing about certification or energy-model validity. Answer those questions
+separately from installation and runtime faults.
 
 ## Native acceptance continuity
 

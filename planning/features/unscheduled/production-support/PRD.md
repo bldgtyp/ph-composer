@@ -1,7 +1,7 @@
 # Production support: product requirements
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 

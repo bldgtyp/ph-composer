@@ -1,11 +1,13 @@
 # Production support: planned contracts
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
-These contracts are not implemented. Existing authorities remain
+These were the planned contracts. PS-01 to PS-04 implemented them and the implemented rules now live
+in CONTRACTS "Diagnostic log" and TECH_STACK "Help & Diagnostics"; where this file and context
+differ, context governs. Existing authorities remain
 [CONTRACTS](../../../../context/CONTRACTS.md),
 [TECH_STACK](../../../../context/TECH_STACK.md) and
 [EXTENSIBILITY](../../../../context/EXTENSIBILITY.md).

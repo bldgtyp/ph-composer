@@ -466,9 +466,9 @@
       "sha256": "8a45815a6384b5452999c9941da187fac71263ada2085be074443e517ab2949d"
     },
     "html/support/page.js": {
-      "bytes": 12698,
+      "bytes": 12808,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "2f14e305627185483a5a623adb811604698ba9588f45f53e8c4ae76550215c20"
+      "sha256": "a5f4d3122d6708f629ccd7dcef8d50e66fae216e580d754aada531e48c0c522c"
     },
     "html/support/support.css": {
       "bytes": 1752,

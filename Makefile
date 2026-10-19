@@ -1,7 +1,7 @@
 .PHONY: ci syntax lint lint-ruby lint-js lint-python lint-citations test fixtures fixtures-check coverage hostkit-test python-check \
         panel-manifest panel-manifest-check ui-preview ui-deps ui-checks rbz rbz-check install clean bridge-install \
         bridge-uninstall runtime-check runtime-pin-check runtime-manifest runtime-browser-check phase-one-proof \
-        hooks hooks-auto
+        hooks hooks-auto help help-check
 
 # `.ruby-version` pins 3.2.2, the Ruby the current proving host embeds. rbenv resolves it when it
 # is installed; without rbenv this falls back to whatever `ruby` is on PATH, and the suite's own
@@ -27,8 +27,8 @@ BUNDLE := $(dir $(RUBY))bundle
 SKETCHUP_VERSION ?= 2026
 
 # Every target docs/DEVELOPMENT.md claims for the offline loop that exists today.
-ci: hooks-auto syntax lint test fixtures-check panel-manifest-check runtime-check runtime-pin-check hostkit-test \
-    python-check rbz rbz-check
+ci: hooks-auto syntax lint test fixtures-check panel-manifest-check help-check runtime-check runtime-pin-check \
+    hostkit-test python-check rbz rbz-check
 
 syntax:
 	@for file in $(RB_FILES); do $(RUBY) -c "$$file" >/dev/null || exit 1; done
@@ -134,6 +134,13 @@ panel-manifest:
 
 panel-manifest-check:
 	@node tools/panel_manifest.js
+
+# The offline help page the extension ships is generated from docs/HELP.md (tools/help/help_page.py).
+help:
+	@uv run tools/help/help_page.py
+
+help-check:
+	@uv run tools/help/help_page.py --check
 
 # The panel preview (tools/ui-preview/.index.md): the real panel, a stand-in host and the synthetic editor.
 # Serves the repository root so the page can load the panel files; ctrl-c stops it.

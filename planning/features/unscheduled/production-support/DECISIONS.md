@@ -1,7 +1,7 @@
 # Production support: decisions
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
@@ -10,7 +10,7 @@ ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 Ed agreed to the production-support review on 2026-10-19 and requested a packet focused on
 transparency and ease of use. He accepted its six stages the same day and asked for separate
 developer and end-user packets. A second review later that day (PS-D10) cut the plan to five
-stages; Ed accepted that revision on 2026-10-19. No implementation has started.
+stages; Ed accepted that revision on 2026-10-19. PS-01 to PS-04 are implemented; see STATUS.
 
 | ID | Direction | Consequence |
 | --- | --- | --- |
