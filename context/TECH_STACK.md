@@ -425,12 +425,17 @@ reads the page sources and fails when the page sends or handles a type the table
 
 A `run` request unanswered after 20 seconds (`html/request.js`, a starting default) stays pending
 and raises a warning. For an action the warning offers Check status, which sends `action.status`
-with the original request id. Ruby keeps the last 64 action request ids per session with their
-sequence, publishes a snapshot, then answers that request's own `action.result`: the retained
-outcome (CONTRACTS, "Retries"), `request.outcome_unavailable` with effect `unknown` once it has
-expired, or `request.not_received` with effect `none` for an id it never tracked. Page messages
-arrive in order, so an untracked id was never received. Nothing is sent again. Any other request
-offers only Stop waiting, which ignores its late answer.
+with the original request id (a transport may add `expected_revision`; status ignores it).
+`shell/panel_requests.rb` keeps the shown page's last 64 action request ids per session with their
+sequence and forgets them all when a page reports ready, since a new page numbers its ids from the
+start. Ruby publishes a snapshot, then answers that request's own `action.result`: the retained
+outcome (CONTRACTS, "Retries"); `request.outcome_unavailable` with effect `unknown` once it has
+expired, or for a missing id after any id was dropped to keep the map bounded; or
+`request.not_received` with effect `none` for an id this page never sent while every id is held.
+Page messages arrive in order, so such an id was never received. Nothing is sent again. Any other
+request offers only Stop waiting, which ignores its late answer. A warning acts only on the request
+that raised it, goes when any answer to that request arrives, and shows inside an open modal form,
+where the page behind cannot be reached.
 
 Features add no transport types. A feature's panel request is `action.invoke` naming a registered
 action, a viewport-state request is `view.invoke` naming a registered view command, a session- or

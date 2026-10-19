@@ -381,9 +381,9 @@
       "sha256": "884ea2b3e0312b660d13517ae33cb7cb5cf6c60fd602f7dee624543bfac9cde2"
     },
     "html/overlay.css": {
-      "bytes": 12950,
+      "bytes": 13119,
       "mime": "text/css; charset=utf-8",
-      "sha256": "966689f7c3ca5e0bac597075f00ca292c3814bc501d9402a8cca350907a5a176"
+      "sha256": "963ca693706caacfedfddc177f8712f3e8ba985b115dd49bb3193f489968d549"
     },
     "html/overlay.js": {
       "bytes": 24055,
@@ -396,9 +396,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 26462,
+      "bytes": 27215,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "db078412df85d9af98d8381085966c7f09d2929968ae098cd434c8e23cc02c4c"
+      "sha256": "905f1752f04f336c308a2bf1f40ce8e8ee7c7ca407eab19331481a08d7263989"
     },
     "html/record_edits.js": {
       "bytes": 17435,

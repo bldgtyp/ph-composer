@@ -328,3 +328,5 @@
   .phc-selection-bar-clear { order: 1; }
   .phc-selection-bar-controls { order: 2; flex: 1 1 100%; }
 }
+/* A notice shown inside an open modal (panel.js), where the page behind cannot be reached. */
+.phc-dialog > .phc-floating-notice { max-width: 100%; margin: 12px 0 0; }

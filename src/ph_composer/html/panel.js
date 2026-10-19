@@ -78,8 +78,6 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     var outcome = payload.outcome || {};
     var changes = { actionResult: payload };
     if (payload.session !== previous.session) return previous;
-    // The answer to a request the page had stopped expecting takes its warning away.
-    if (previous.ui.notice && previous.ui.notice.requestId === payload.request_id) changes.notice = null;
     if (outcome.status !== "completed") {
       changes.notice = { message: outcomeWords(payload) || outcome.message || "The change was not applied.",
         tone: outcome.status === "failed" ? "error" : "warning" };
@@ -159,10 +157,16 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     return kept;
   }
 
+  /* The answer to a request the page had stopped expecting takes that request's warning away, whatever
+     kind of request it was, unless the answer raised a notice of its own. */
   function receive(envelope) {
-    var handler = envelope && HANDLERS[envelope.type];
+    var handler = envelope && HANDLERS[envelope.type], waiting = state.ui.notice, payload;
     if (!handler) return;
-    state = handler(state, envelope.payload || {});
+    payload = envelope.payload || {};
+    state = handler(state, payload);
+    if (waiting && waiting.requestId && waiting.requestId === payload.request_id && state.ui.notice === waiting) {
+      state = withUI(state, { notice: null });
+    }
     render();
   }
 
@@ -294,15 +298,21 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     var layer = document.querySelector("[data-notice-layer]");
     var current = state.ui.notice;
     if (!layer) return;
-    if (!notice) {
-      notice = ui.floatingNotice(document.body);
-      layer.appendChild(notice);
-    }
+    if (!notice) notice = ui.floatingNotice(document.body);
+    // An open modal makes the page behind it inert, so the notice, and any way out it offers, shows in it.
+    var host = openModal() || layer;
+    if (notice.parentNode !== host) host.appendChild(notice);
     if (current === shownNotice) return;
     shownNotice = current;
     if (!current) { notice.clear(); return; }
     notice.show(current.message, { tone: current.tone, action: current.action,
       persistent: current.tone === "warning" || current.tone === "error" });
+  }
+
+  function openModal() {
+    return Array.prototype.filter.call(document.querySelectorAll("dialog"), function (node) {
+      return node.open;
+    }).pop() || null;
   }
 
   function applyTab() {
@@ -432,15 +442,17 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
      the host what became of it, which also brings the Model's state up to date. Any other request can only
      stop waiting; its answer, if it still comes, is ignored, so its result is left for the user to check. */
   function unconfirmed(channel) {
-    var action;
+    var id = channel.pending, action;
     if (channel.session !== state.session) return;
+    // Bound to the request that raised it: a later request on the same channel is never checked or dropped.
+    function still(run) { return function () { if (channel.pending === id) run(); }; }
     if (channel.message === "action.invoke") {
-      action = { label: "Check status", run: function () { channel.checkStatus(); } };
+      action = { label: "Check status", run: still(function () { channel.checkStatus(); }) };
       raise("PH-Composer has not confirmed this change yet. It may have been applied, or its answer was lost.",
-        action, channel.pending);
+        action, id);
     } else {
-      action = { label: "Stop waiting", run: function () { channel.reset(); repaint(); } };
-      raise("PH-Composer has not answered this request yet, so its result is not known.", action, channel.pending);
+      action = { label: "Stop waiting", run: still(function () { channel.reset(); repaint(); }) };
+      raise("PH-Composer has not answered this request yet, so its result is not known.", action, id);
     }
   }
   function raise(message, action, requestId) {

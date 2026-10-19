@@ -20,8 +20,12 @@ module PhComposer
       session_created transaction_committed transaction_undone transaction_redone active_path_changed
     ].freeze
     MAX_PENDING_NOTICES = 20
-    # Recent action request ids per session, so the page can ask what became of one whose result it lost.
-    MAX_TRACKED_REQUESTS = 64
+    # Once a request id has been forgotten, an id the host does not hold may have been received and run.
+    FORGOTTEN = Outcome.build(
+      "refused", "request.outcome_unavailable",
+      "PH-Composer can no longer tell whether that change was applied. Check the Model before making it again.",
+      "unknown", nil
+    ).freeze
     SESSION_CHANGED = "The panel now shows a different Model."
     EXPORT_TYPES = %w[export.start export.preflight export.status export.cancel export.latest].freeze
     # Export startup failure is reported before a task or a Model operation begins.
@@ -109,7 +113,6 @@ module PhComposer
         @ready = false
         @contexts = {}
         @sequences = {}
-        @requests = {}
         @pending_notices = []
         @development_scripts = []
       end
@@ -176,7 +179,10 @@ module PhComposer
         end
       end
 
+      # A page that has just loaded numbers its requests from the start again, so the ids an earlier page
+      # used are forgotten here rather than matched to the new page's.
       def ready
+        PanelRequests.reset
         @ready = true
         development_scripts.each { |path| run_development_script(path) }
         session = Sessions.current
@@ -216,7 +222,7 @@ module PhComposer
         end
 
         sequence = next_sequence(session)
-        track_request(session, payload["request_id"], sequence)
+        PanelRequests.track(session, payload["request_id"], sequence)
         outcome = API.invoke(
           :context => context_for(session), :name => payload["name"].to_s, :params => payload.fetch("params", {}),
           :request => { "sequence" => sequence, "expected_revision" => payload["expected_revision"] }
@@ -226,16 +232,15 @@ module PhComposer
         publish_result(payload, outcome)
       end
 
-      # The retained outcome of an action whose result the page lost, read under its original sequence
-      # (context/CONTRACTS.md, "Retries"); the action never runs again. Page messages arrive in order, so an
-      # id the host never tracked was never received. The snapshot is published first, so the page reads the
-      # answer against the Model as it now is.
+      # The retained outcome of an action whose result the page lost, under its original sequence; it never
+      # runs again (TECH_STACK, "Panel protocol"). The snapshot comes first, so the answer reads against it.
       def status(payload)
         session = shown_session(payload)
         return publish_result(payload, inactive_outcome) unless session
 
-        sequence = requests_for(session)[payload["request_id"]]
-        outcome = sequence ? retained_outcome(session, sequence) : NOT_RECEIVED.merge("revision" => session.revision)
+        sequence = PanelRequests.sequence(session, payload["request_id"])
+        unknown = PanelRequests.forgotten?(session) ? FORGOTTEN : NOT_RECEIVED
+        outcome = sequence ? retained_outcome(session, sequence) : unknown.merge("revision" => session.revision)
         publish_snapshot(session)
         publish_result(payload, outcome)
       end
@@ -408,18 +413,6 @@ module PhComposer
         @contexts.delete_if { |id, _context| Sessions.find(id).nil? }
         @contexts[session.id] ||= API.connect(:session_id => session.id,
                                               :capabilities => %w[read view model_write setup export])
-      end
-
-      def requests_for(session)
-        @requests ||= {}
-        @requests.delete_if { |id, _requests| Sessions.find(id).nil? }
-        @requests[session.id] ||= {}
-      end
-
-      def track_request(session, request_id, sequence)
-        requests = requests_for(session)
-        requests[request_id.to_s] = sequence
-        requests.delete(requests.keys.first) while requests.length > MAX_TRACKED_REQUESTS
       end
 
       def next_sequence(session)

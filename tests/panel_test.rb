@@ -126,6 +126,30 @@ class PanelTest < PhComposerTestCase
     assert_equal 0, PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).ids(PART).length
   end
 
+  # Once an id has been dropped to keep the map bounded, a missing one may have run.
+  def test_check_status_after_ids_were_dropped_does_not_claim_nothing_ran
+    dialog = open_panel
+    (PhComposer::PanelRequests::MAX_TRACKED + 1).times { |index| create(dialog, "r#{index}") }
+
+    send_message(dialog, "action.status", "request_id" => "r0", "session" => @session.id)
+
+    outcome = messages(dialog, "action.result").last.fetch("outcome")
+    assert_equal %w[refused request.outcome_unavailable unknown], outcome.values_at("status", "code", "effect")
+  end
+
+  # A reopened page numbers its ids from the start again; its first id is not the old page's.
+  def test_a_reloaded_page_never_reads_an_earlier_pages_outcome
+    dialog = open_panel
+    create(dialog, "r1")
+    send_message(dialog, "panel.ready", {})
+
+    send_message(dialog, "action.status", "request_id" => "r1", "session" => @session.id,
+                                          "expected_revision" => @session.revision)
+
+    outcome = messages(dialog, "action.result").last.fetch("outcome")
+    assert_equal %w[refused request.not_received], outcome.values_at("status", "code")
+  end
+
   def test_check_status_after_the_outcome_expired_keeps_the_effect_unknown
     dialog = open_panel
     now = 1000.0

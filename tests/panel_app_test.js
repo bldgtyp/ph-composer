@@ -139,6 +139,42 @@ test("an unconfirmed change warns with Check status, which asks the host and cle
   assert.strictEqual(channel.consume(p.panel.state).status, "completed");
 });
 
+test("a warning raised while a form is open shows inside it, where it can be reached", function () {
+  var p = page(), timers = [];
+  p.context.setTimeout = function (run) { timers.push(run); return timers.length; };
+  p.context.clearTimeout = function () {};
+  p.receive("panel.snapshot", snapshot("session-a", 4));
+  var form = p.context.document.createElement("dialog");
+  p.context.document.body.appendChild(form);
+  form.showModal();
+  var channel = p.modules.request.channel("session-a", p.panel.send, "form");
+  channel.run("example.create", {});
+
+  timers[0]();
+  assert.strictEqual(p.notice().parentNode, form);
+  form.close();
+  p.panel.repaint();
+  assert.notStrictEqual(p.notice().parentNode, form, "back above the page once the form closes");
+});
+
+test("a warning acts only on the request that raised it and goes when that request answers", function () {
+  var p = page(), timers = [];
+  p.context.setTimeout = function (run) { timers.push(run); return timers.length; };
+  p.context.clearTimeout = function () {};
+  p.receive("panel.snapshot", snapshot("session-a", 4));
+  var channel = p.modules.request.channel("session-a", p.panel.send, "catalog", "query.invoke");
+  var first = channel.run("example.catalog", {});
+  timers[0]();
+  var stale = p.panel.state.ui.notice.action;
+
+  p.receive("query.result", { request_id: first, session: "session-a", outcome: { status: "completed" } });
+  assert.strictEqual(p.panel.state.ui.notice, null, "a late answer of any kind takes its warning away");
+  channel.consume(p.panel.state);
+  channel.run("example.catalog", {});
+  stale.run();
+  assert.strictEqual(channel.busy(), true, "the old warning never drops the newer request");
+});
+
 test("an unconfirmed read offers only to stop waiting, which frees its view", function () {
   var p = page(), timers = [];
   p.context.setTimeout = function (run) { timers.push(run); return timers.length; };
