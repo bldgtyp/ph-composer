@@ -171,3 +171,18 @@ test("only an action channel can ask the host for status", function () {
   channel.run("example.catalog", {});
   assert.strictEqual(channel.checkStatus(), false);
 });
+
+test("a transport that answers at once keeps the id it returns and arms no warning", function () {
+  var timers = [], timed = { setTimeout: function () { timers.push(1); return timers.length; },
+    clearTimeout: function () {} };
+  timed.window = timed;
+  var module = panelSource.start(timed, ["request"]).request, channel;
+  channel = module.channel("session-a", function (type, payload) {
+    channel.consume(state(result(payload.request_id, "session-a", "completed")));
+  }, "form");
+
+  var id = channel.run("example.create", {});
+  assert.match(id, /^session-a:form:\d+$/);
+  assert.strictEqual(channel.busy(), false);
+  assert.strictEqual(timers.length, 0);
+});

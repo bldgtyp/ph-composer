@@ -157,16 +157,10 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     return kept;
   }
 
-  /* The answer to a request the page had stopped expecting takes that request's warning away, whatever
-     kind of request it was, unless the answer raised a notice of its own. */
   function receive(envelope) {
-    var handler = envelope && HANDLERS[envelope.type], waiting = state.ui.notice, payload;
+    var handler = envelope && HANDLERS[envelope.type];
     if (!handler) return;
-    payload = envelope.payload || {};
-    state = handler(state, payload);
-    if (waiting && waiting.requestId && waiting.requestId === payload.request_id && state.ui.notice === waiting) {
-      state = withUI(state, { notice: null });
-    }
+    state = handler(state, envelope.payload || {});
     render();
   }
 
@@ -289,6 +283,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     renderUnitToggle();
     applyTab();
     if (state.session !== null) { sections.forEach(renderSection); showInspectors(); }
+    renderRecovery();
     document.body._checkTooltip();
   }
 
@@ -438,28 +433,52 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     }
   }
 
-  /* A request the host has not answered in time (request.js). An edit is never sent again: Check status asks
-     the host what became of it, which also brings the Model's state up to date. Any other request can only
-     stop waiting; its answer, if it still comes, is ignored, so its result is left for the user to check. */
+  /* Requests the host has not answered in time (request.js), each with its way out. They are kept apart from
+     the single notice slot, so no other message, and no dismissal, can take the way out away; each goes when
+     its request settles. An edit is never sent again: Check status asks the host what became of it, which
+     also brings the Model's state up to date. Any other request can only stop waiting; its answer, if it
+     still comes, is ignored, so its result is left for the user to check. */
+  var unanswered = [], recovery = null;
   function unconfirmed(channel) {
-    var id = channel.pending, action;
     if (channel.session !== state.session) return;
-    // Bound to the request that raised it: a later request on the same channel is never checked or dropped.
-    function still(run) { return function () { if (channel.pending === id) run(); }; }
-    if (channel.message === "action.invoke") {
-      action = { label: "Check status", run: still(function () { channel.checkStatus(); }) };
-      raise("PH-Composer has not confirmed this change yet. It may have been applied, or its answer was lost.",
-        action, id);
-    } else {
-      action = { label: "Stop waiting", run: still(function () { channel.reset(); repaint(); }) };
-      raise("PH-Composer has not answered this request yet, so its result is not known.", action, id);
+    if (!unanswered.some(function (item) { return item.channel === channel && item.id === channel.pending; })) {
+      unanswered.push({ channel: channel, id: channel.pending });
     }
-  }
-  function raise(message, action, requestId) {
-    state = withUI(state, { notice: { message: message, tone: "warning", action: action, requestId: requestId } });
     render();
   }
   request.onUnconfirmed(unconfirmed);
+
+  /* After every section has rendered, since a section's render is where its request settles. The bar sits in
+     an open modal when there is one, because the page behind it cannot be reached. */
+  function renderRecovery() {
+    var layer = document.querySelector("[data-notice-layer]"), host;
+    unanswered = unanswered.filter(function (item) {
+      return item.channel.pending === item.id && item.channel.session === state.session;
+    });
+    if (!layer) return;
+    if (!recovery) {
+      recovery = ui.element("div", "phc-floating-notice phc-recovery");
+      recovery.setAttribute("data-tone", "warning");
+      recovery.setAttribute("role", "alert");
+    }
+    recovery.hidden = !unanswered.length;
+    recovery.replaceChildren.apply(recovery, unanswered.map(recoveryRow));
+    host = openModal() || layer;
+    if (recovery.parentNode !== host) host.appendChild(recovery);
+  }
+  function recoveryRow(item) {
+    var channel = item.channel, action = channel.message === "action.invoke";
+    var row = ui.element("div", "phc-recovery-row");
+    row.appendChild(ui.element("span", "phc-floating-notice-message", action ?
+      "PH-Composer has not confirmed this change yet. It may have been applied, or its answer was lost." :
+      "PH-Composer has not answered this request yet, so its result is not known."));
+    // Bound to the request that raised it: a later request on the same channel is never checked or dropped.
+    row.appendChild(ui.button(action ? "Check status" : "Stop waiting", function () {
+      if (channel.pending !== item.id) return;
+      if (action) channel.checkStatus(); else { channel.reset(); repaint(); }
+    }));
+    return row;
+  }
 
   /* A notice raised by the page itself, such as a refused navigation. It never reaches the host. An
      `action` ({ label, run }) puts the way out on the notice itself, such as cancelling the held draft. */

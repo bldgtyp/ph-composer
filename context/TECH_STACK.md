@@ -433,9 +433,10 @@ outcome (CONTRACTS, "Retries"); `request.outcome_unavailable` with effect `unkno
 expired, or for a missing id after any id was dropped to keep the map bounded; or
 `request.not_received` with effect `none` for an id this page never sent while every id is held.
 Page messages arrive in order, so such an id was never received. Nothing is sent again. Any other
-request offers only Stop waiting, which ignores its late answer. A warning acts only on the request
-that raised it, goes when any answer to that request arrives, and shows inside an open modal form,
-where the page behind cannot be reached.
+request offers only Stop waiting, which ignores its late answer. These ways out sit in their own
+bar, one row per unanswered request, apart from the single notice slot, so no other notice and no
+dismissal removes them; each acts only on the request that raised it and goes when that request
+settles. The bar shows inside an open modal form, where the page behind cannot be reached.
 
 Features add no transport types. A feature's panel request is `action.invoke` naming a registered
 action, a viewport-state request is `view.invoke` naming a registered view command, a session- or

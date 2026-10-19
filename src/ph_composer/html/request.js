@@ -23,7 +23,8 @@
    with `matches(result, id)`.
 
    A `run` request still unanswered after RECOVERY_MS is unconfirmed: the channel stays pending, so the
-   work is never sent twice, and every `onUnconfirmed` listener hears of it. For an action, `checkStatus`
+   work is never sent twice, and every `onUnconfirmed` listener hears of it. `watch` waits once more, as
+   the panel does when its warning is dismissed or replaced before the request settles. For an action, `checkStatus`
    asks the host what became of that request id (`action.status`); the answer arrives as the request's own
    result. Any other channel can only stop waiting with `reset`. */
 PhComposerUI.define("request", [], function () {
@@ -62,10 +63,12 @@ PhComposerUI.define("request", [], function () {
   Channel.prototype.run = function (action, params, handlers) {
     if (this.pending) return false;
     this.handlers = handlers || null; this.action = action;
-    this.pending = this.nextId(handlers && handlers.label);
-    this.dispatch(this.pending, action, params);
-    this.watch();
-    return this.pending;
+    var id = this.nextId(handlers && handlers.label);
+    this.pending = id;
+    this.dispatch(id, action, params);
+    // A transport that answers at once has already settled it.
+    if (this.pending === id) this.watch();
+    return id;
   };
   /* Starts the recovery timer for the pending request; a page without timers never warns. */
   Channel.prototype.watch = function () {
@@ -86,9 +89,10 @@ PhComposerUI.define("request", [], function () {
   /* Asks the host for the pending action's outcome without sending the action again, and waits once more.
      False when there is nothing to ask about or the channel carries no action. */
   Channel.prototype.checkStatus = function () {
-    if (!this.pending || this.message !== "action.invoke") return false;
-    this.transport("action.status", { request_id: this.pending, session: this.session });
-    this.watch();
+    var id = this.pending;
+    if (!id || this.message !== "action.invoke") return false;
+    this.transport("action.status", { request_id: id, session: this.session });
+    if (this.pending === id) this.watch();
     return true;
   };
   Channel.prototype.busy = function () { return Boolean(this.pending); };

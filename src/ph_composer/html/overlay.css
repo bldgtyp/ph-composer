@@ -330,3 +330,8 @@
 }
 /* A notice shown inside an open modal (panel.js), where the page behind cannot be reached. */
 .phc-dialog > .phc-floating-notice { max-width: 100%; margin: 12px 0 0; }
+/* Unanswered requests and their ways out (panel.js): kept apart from the notice slot and never dismissed. */
+.phc-recovery { display: flex; flex-direction: column; gap: 8px; padding-right: 14px; }
+.phc-recovery[hidden] { display: none; }
+.phc-recovery-row { display: flex; align-items: center; gap: 12px; }
+.phc-workspace .phc-recovery-row button { flex: none; width: auto; }

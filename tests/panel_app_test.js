@@ -114,79 +114,95 @@ test("a refusal stays on screen as a warning and a failure as an error, until di
   assert.strictEqual(notice.hidden, true);
 });
 
-test("an unconfirmed change warns with Check status, which asks the host and clears when answered", function () {
+function timedPage() {
   var p = page(), timers = [];
   p.context.setTimeout = function (run) { timers.push(run); return timers.length; };
   p.context.clearTimeout = function () {};
+  p.timers = timers;
+  p.recovery = function () { return p.query(".phc-recovery"); };
   p.receive("panel.snapshot", snapshot("session-a", 4));
+  return p;
+}
+function recoveryButton(p, index) {
+  return p.recovery().children[index || 0].children[1];
+}
+
+test("an unconfirmed change shows Check status, which asks the host and goes when answered", function () {
+  var p = timedPage();
   var channel = p.modules.request.channel("session-a", p.panel.send, "form");
   var id = channel.run("example.create", {});
 
-  timers[0]();
-  var notice = p.notice();
-  assert.strictEqual(notice.hidden, false);
-  assert.match(notice.message.textContent, /not confirmed this change yet/);
-  assert.strictEqual(notice.getAttribute("data-tone"), "warning");
-  assert.strictEqual(notice.actionButton.textContent, "Check status");
+  p.timers[0]();
+  assert.strictEqual(p.recovery().hidden, false);
+  assert.match(p.recovery().children[0].children[0].textContent, /not confirmed this change yet/);
+  assert.strictEqual(p.recovery().getAttribute("data-tone"), "warning");
+  assert.strictEqual(recoveryButton(p).textContent, "Check status");
 
-  notice.actionButton.listeners.click({});
+  recoveryButton(p).listeners.click({});
   assert.deepStrictEqual(types(p.sent), ["action.invoke", "action.status"], "the change is never resent");
   assert.strictEqual(p.sent[1].payload.request_id, id);
 
   p.receive("action.result", { request_id: id, session: "session-a",
     outcome: { status: "completed", effect: "committed" } });
-  assert.strictEqual(p.panel.state.ui.notice, null, "the answer takes the warning away");
   assert.strictEqual(channel.consume(p.panel.state).status, "completed");
+  p.panel.repaint();
+  assert.strictEqual(p.recovery().hidden, true, "the answer takes the way out away");
 });
 
-test("a warning raised while a form is open shows inside it, where it can be reached", function () {
-  var p = page(), timers = [];
-  p.context.setTimeout = function (run) { timers.push(run); return timers.length; };
-  p.context.clearTimeout = function () {};
-  p.receive("panel.snapshot", snapshot("session-a", 4));
+test("the way out survives other notices and stays one per unanswered request", function () {
+  var p = timedPage();
+  var form = p.modules.request.channel("session-a", p.panel.send, "form");
+  var catalog = p.modules.request.channel("session-a", p.panel.send, "catalog", "query.invoke");
+  form.run("example.create", {});
+  catalog.run("example.catalog", {});
+  p.timers[0](); p.timers[1]();
+
+  p.panel.notify("Something else happened.", "warning");
+  p.receive("panel.notice", { session: "session-a", message: "And another thing.", tone: "info" });
+  assert.strictEqual(p.recovery().hidden, false);
+  assert.deepStrictEqual(p.recovery().children.map(function (row) { return row.children[1].textContent; }),
+    ["Check status", "Stop waiting"]);
+});
+
+test("the way out shows inside an open form, where it can be reached", function () {
+  var p = timedPage();
   var form = p.context.document.createElement("dialog");
   p.context.document.body.appendChild(form);
   form.showModal();
   var channel = p.modules.request.channel("session-a", p.panel.send, "form");
   channel.run("example.create", {});
 
-  timers[0]();
-  assert.strictEqual(p.notice().parentNode, form);
+  p.timers[0]();
+  assert.strictEqual(p.recovery().parentNode, form);
   form.close();
   p.panel.repaint();
-  assert.notStrictEqual(p.notice().parentNode, form, "back above the page once the form closes");
+  assert.notStrictEqual(p.recovery().parentNode, form, "back above the page once the form closes");
 });
 
-test("a warning acts only on the request that raised it and goes when that request answers", function () {
-  var p = page(), timers = [];
-  p.context.setTimeout = function (run) { timers.push(run); return timers.length; };
-  p.context.clearTimeout = function () {};
-  p.receive("panel.snapshot", snapshot("session-a", 4));
+test("a way out acts only on the request that raised it", function () {
+  var p = timedPage();
   var channel = p.modules.request.channel("session-a", p.panel.send, "catalog", "query.invoke");
   var first = channel.run("example.catalog", {});
-  timers[0]();
-  var stale = p.panel.state.ui.notice.action;
+  p.timers[0]();
+  var stale = recoveryButton(p);
 
   p.receive("query.result", { request_id: first, session: "session-a", outcome: { status: "completed" } });
-  assert.strictEqual(p.panel.state.ui.notice, null, "a late answer of any kind takes its warning away");
   channel.consume(p.panel.state);
   channel.run("example.catalog", {});
-  stale.run();
-  assert.strictEqual(channel.busy(), true, "the old warning never drops the newer request");
+  stale.listeners.click({});
+  assert.strictEqual(channel.busy(), true, "the old way out never drops the newer request");
 });
 
 test("an unconfirmed read offers only to stop waiting, which frees its view", function () {
-  var p = page(), timers = [];
-  p.context.setTimeout = function (run) { timers.push(run); return timers.length; };
-  p.context.clearTimeout = function () {};
-  p.receive("panel.snapshot", snapshot("session-a", 4));
+  var p = timedPage();
   var channel = p.modules.request.channel("session-a", p.panel.send, "catalog", "query.invoke");
   channel.run("example.catalog", {});
 
-  timers[0]();
-  assert.strictEqual(p.notice().actionButton.textContent, "Stop waiting");
-  p.notice().actionButton.listeners.click({});
+  p.timers[0]();
+  assert.strictEqual(recoveryButton(p).textContent, "Stop waiting");
+  recoveryButton(p).listeners.click({});
   assert.strictEqual(channel.busy(), false);
+  assert.strictEqual(p.recovery().hidden, true);
   assert.deepStrictEqual(types(p.sent), ["query.invoke"]);
 });
 

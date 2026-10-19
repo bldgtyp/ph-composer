@@ -381,9 +381,9 @@
       "sha256": "884ea2b3e0312b660d13517ae33cb7cb5cf6c60fd602f7dee624543bfac9cde2"
     },
     "html/overlay.css": {
-      "bytes": 13119,
+      "bytes": 13496,
       "mime": "text/css; charset=utf-8",
-      "sha256": "963ca693706caacfedfddc177f8712f3e8ba985b115dd49bb3193f489968d549"
+      "sha256": "19cda60de04b9f3f7c45f3e47ff744075536b6f20aa6cbc05f7a0fbb167f5f47"
     },
     "html/overlay.js": {
       "bytes": 24055,
@@ -396,9 +396,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 27215,
+      "bytes": 28012,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "905f1752f04f336c308a2bf1f40ce8e8ee7c7ca407eab19331481a08d7263989"
+      "sha256": "9f17b960067ea3a83c162ab80fc8e1c624fcc4a20a5119cce546fc81389ed865"
     },
     "html/record_edits.js": {
       "bytes": 17435,
@@ -411,9 +411,9 @@
       "sha256": "be07093c44b64646227f1000cfcf26db0defba373beb7ecc113f047f05d46b88"
     },
     "html/request.js": {
-      "bytes": 7159,
+      "bytes": 7393,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d50a9a225eae0381f673928e17b0f6ae2bc0fd634af0dea222288a0eb8e11c6e"
+      "sha256": "094c5ec3b887612eed869904962b7369e7f6103da940e8ed4ff59d87ad740e54"
     },
     "html/runtime/index.html": {
       "bytes": 580,
