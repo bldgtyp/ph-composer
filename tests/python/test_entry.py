@@ -50,3 +50,25 @@ def test_a_conformance_failure_raises_its_own_class_for_the_runtime_page(monkeyp
     monkeypatch.setattr(conformance, "check", refuse)
     with pytest.raises(conformance.ConformanceError):
         entry.export_json("{}")
+
+
+def test_a_failure_is_reported_by_stage_class_and_package_frames_never_its_message(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from ph_composer_translation import conformance, entry
+
+    publishable = {"summary": {"publishable": True}, "canonical_model": {"hbjson": "{}"}}
+    monkeypatch.setattr(entry, "translate_json", lambda text, sections: json.dumps(publishable))
+    secret = 'Zone North File "/tmp/ph_composer_translation/client_secret.py", line 2, in private_model'
+
+    def refuse(*_args: object) -> None:
+        raise ValueError(secret + "\nsecond line")
+
+    monkeypatch.setattr(conformance, "check", refuse)
+    report = json.loads(entry.export_report_json("{}"))
+
+    failure = report["failure"]
+    assert (failure["stage"], failure["error_class"]) == ("conformance", "ConformanceError")
+    assert failure["frames"][0]["file"] == "ph_composer_translation/entry.py"
+    assert all(frame["file"].startswith("ph_composer_translation/") for frame in failure["frames"])
+    assert "Zone North" not in json.dumps(report) and "client_secret" not in json.dumps(report)

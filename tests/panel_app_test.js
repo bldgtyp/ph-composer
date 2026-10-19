@@ -305,6 +305,19 @@ test("a section that fails to render reports its class and panel frames to the h
   assert.ok(JSON.stringify(p.sent).indexOf("Zone North") < 0);
 });
 
+test("text in an error's message that looks like a frame is never reported as one", function () {
+  var p = page();
+  p.panel.section("example.broken", function () {
+    var error = new TypeError("bad\n    at secret_model (file:///Users/example/html/client_private.js:12:3)");
+    error.stack = String(error) + "\n    at render (file:///Users/example/ph_composer/html/panel.js:5:1)";
+    throw error;
+  });
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  var reported = p.sent.filter(function (message) { return message.type === "panel.diagnostic"; })[0];
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(reported.payload.frames)),
+    [{ file: "html/panel.js", line: 5, method: "render" }]);
+});
+
 test("a host failure is shown as an error; an unknown message type changes nothing", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 2));

@@ -47,6 +47,8 @@ module PhComposer
         @stage = "queued"
         @count = 0
         @units = Preferences.snapshot.fetch("unit_system")
+        # The request that started the run, carried into every later timer and runtime callback's log lines.
+        @trace = Diagnostics.current_context.merge("run_id" => @id)
       end
 
       def start
@@ -54,7 +56,7 @@ module PhComposer
         @generation = @session.export_generation
         @source_revision = @session.revision
         @builder = Collection::Builder.new(@session.model, :run_id => id)
-        @watchdog = UI.start_timer(0.2, true) { watch }
+        @watchdog = UI.start_timer(0.2, true) { traced { watch } }
         schedule
         self
       rescue StandardError => error
@@ -87,7 +89,7 @@ module PhComposer
       private
 
       def schedule
-        @timer.schedule { tick }
+        @timer.schedule { traced { tick } }
       end
 
       def tick
@@ -100,7 +102,7 @@ module PhComposer
           @builder = nil
           @stage = "translating"
           @waiting_since = now
-          @runtime = @runtime_factory.call { |type, payload| received(type, payload) }
+          @runtime = @runtime_factory.call { |type, payload| traced { received(type, payload) } }
           @runtime.start
           @runtime.translate(id, @extraction.document)
         else
@@ -140,7 +142,7 @@ module PhComposer
         end
         @result = result
         # Writing is a separate tick, so cancellation and queued host mutations are admitted after Python.
-        @timer.schedule { commit }
+        @timer.schedule { traced { commit } }
       rescue StandardError => error
         failed(error)
       end
@@ -208,6 +210,10 @@ module PhComposer
       end
 
       # The log keeps where the runtime stopped, its own code and its frames; the user reads a fixed sentence.
+      def traced(&block)
+        Diagnostics.with_context(@trace, &block)
+      end
+
       def runtime_failed!(error)
         error = error.is_a?(Hash) ? error : {}
         Diagnostics.log("export_runtime_failed", {

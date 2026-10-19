@@ -5,17 +5,19 @@ require_relative "test_helper"
 class DiagnosticsTest < PhComposerTestCase
   Diagnostics = PhComposer::Diagnostics
 
-  def test_logs_allowed_fields_and_redacts_paths
+  # No field takes free text: a path where a status belongs is refused, never written.
+  def test_logs_allowed_fields_and_refuses_a_path_as_a_status
     Dir.mktmpdir("ph-composer-log") do |directory|
       path = File.join(directory, "diagnostics.log")
       Diagnostics.path_override = path
+      Diagnostics.strict = false
       Diagnostics.log(
         "test",
         "status" => "/Users/ed/secret/model.skp",
         "sketchup_version" => "22.0.353"
       )
       payload = JSON.parse(File.read(path))
-      assert_equal "[REDACTED_PATH]", payload.fetch("status")
+      assert_equal "[INVALID]", payload.fetch("status")
       assert_equal "22.0.353", payload.fetch("sketchup_version")
     end
   end
@@ -166,16 +168,41 @@ class DiagnosticsTest < PhComposerTestCase
     assert_equal "[INVALID]", dropped.fetch("status"), "a dropped key that is not a field name is not echoed"
   end
 
-  def test_an_event_over_its_bound_loses_its_frames_first
-    frames = Array.new(20) { |index| { "file" => "ph_composer/#{'x' * 500}.rb", "line" => index, "method" => "m" } }
+  # Only files the extension ships: another plugin beside it, a traversal or a missing file is not a frame.
+  def test_a_frame_must_name_a_file_the_extension_ships
+    owned = { "file" => "html/panel.js", "line" => 3, "method" => "render" }
+    assert Diagnostics.valid_frame?(owned)
+    assert Diagnostics.valid_frame?(owned.merge("file" => "ph_composer/shell/panel.rb"))
+    assert Diagnostics.valid_frame?(owned.merge("file" => "ph_composer_translation/entry.py"))
+    ["other_plugin/client_name.rb", "html/../../Users/client/secret.js", "html/client_private.js",
+     "ph_composer_translation/client_secret.py", "/Users/example/x.rb"].each do |file|
+      refute Diagnostics.valid_frame?(owned.merge("file" => file)), file
+    end
+  end
 
-    payload = Diagnostics.log("probe", "frames" => frames, "status" => "failed")
+  def test_a_dropped_key_never_makes_a_line_over_its_bound
+    Diagnostics.strict = false
+
+    Diagnostics.log("probe", ("k" * 10_000) => 1)
+
+    dropped = Diagnostics.tail.last
+    assert_operator dropped.bytesize, :<=, Diagnostics::MAX_EVENT_BYTES
+    assert_equal "[INVALID]", JSON.parse(dropped).fetch("status")
+  end
+
+  # Every field is bounded, so even the largest event the log accepts fits in one line's bound.
+  def test_the_largest_accepted_event_stays_within_its_bound
+    frames = Array.new(Diagnostics::MAX_FRAMES) do |index|
+      { "file" => "ph_composer/shell/panel.rb", "line" => index, "method" => "m" * 96 }
+    end
+    name = Array.new(24) { "abc" }.join(".")
+
+    Diagnostics.log(name, "frames" => frames, "operation" => name, "stage" => name, "code" => name,
+                          "error_class" => "A#{'b' * 95}", "status" => name)
 
     line = Diagnostics.tail.last
     assert_operator line.bytesize, :<=, Diagnostics::MAX_EVENT_BYTES
-    refute JSON.parse(line).key?("frames")
-    assert_equal "failed", JSON.parse(line).fetch("status")
-    assert payload
+    assert_equal frames, JSON.parse(line).fetch("frames")
   end
 
   def test_a_failed_write_is_kept_as_the_logs_health_and_in_the_tail
@@ -203,12 +230,15 @@ class DiagnosticsTest < PhComposerTestCase
       old = JSON.generate("timestamp" => (now - (8 * 86_400)).iso8601, "event" => "old")
       recent = JSON.generate("timestamp" => (now - 86_400).iso8601, "event" => "recent")
       File.write(path, "#{old}\n#{recent}\nnot json\n")
-      File.write(path + ".1", "#{old}\n")
-      File.utime(now - (8 * 86_400), now - (8 * 86_400), path + ".1")
+      File.write(path + ".1", "#{old}\n#{recent}\n")
 
       Diagnostics.prune(now)
 
       assert_equal ["recent"], File.readlines(path).map { |line| JSON.parse(line).fetch("event") }
+      assert_equal ["recent"], File.readlines(path + ".1").map { |line| JSON.parse(line).fetch("event") },
+                   "an archive with recent events still loses its old ones"
+      File.write(path + ".1", "#{old}\n")
+      Diagnostics.prune(now)
       refute File.exist?(path + ".1")
     end
   end

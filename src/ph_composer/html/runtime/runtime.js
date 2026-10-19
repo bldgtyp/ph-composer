@@ -166,31 +166,29 @@
       stage = "translation";
       pyodide.globals.set("_phc_document", JSON.stringify(payload.document));
       return pyodide.runPythonAsync(
-        "from ph_composer_translation.entry import export_json\nexport_json(_phc_document)"
+        "from ph_composer_translation.entry import export_report_json\nexport_report_json(_phc_document)"
       ).then(function (text) {
-        send("runtime.translation", { request_id: payload.request_id, session: session, result: JSON.parse(text) });
+        var reply = JSON.parse(text);
+        if (reply.failure) {
+          send("runtime.translation", { request_id: payload.request_id, session: session,
+            error: pythonFailure(reply.failure) });
+        } else {
+          send("runtime.translation", { request_id: payload.request_id, session: session, result: reply.result });
+        }
       });
     }).catch(function (error) {
-      send("runtime.translation", { request_id: payload.request_id, session: session,
-        error: failureReport(error, stage) });
+      send("runtime.translation", { request_id: payload.request_id, session: session, error: {
+        code: error.code || "runtime.translation_failed", stage: stage, error_class: (error && error.name) || "Error",
+        frames: [], message: "The export runtime failed." } });
     });
   }
 
-  /* What Ruby logs about a failure: where it stopped, its code, the Python exception's class and the
-     translation package's own frames, never the message, which can name Model content. A failed
+  /* What Ruby logs about a Python failure, as the translation package described it (entry.failure_report):
+     where it stopped, the exception's class and the package's own frames, never the message. A failed
      conformance check of the canonical bytes has its own code. */
-  var PYTHON_FRAME = /File "[^"]*?\/(ph_composer_translation\/[\w\/.-]+\.py)", line (\d+), in ([\w<>.]+)/g;
-  var PYTHON_ERROR = /(?:^|\n)(?:[\w]+\.)*([A-Z]\w*):[^\n]*\s*$/;
-  function failureReport(error, stage) {
-    var text = String(error && error.message || ""), frames = [], match, named = PYTHON_ERROR.exec(text);
-    var errorClass = named ? named[1] : (error && error.name) || "Error";
-    PYTHON_FRAME.lastIndex = 0;
-    while ((match = PYTHON_FRAME.exec(text)) && frames.length < 20) {
-      frames.push({ file: match[1], line: Number(match[2]), method: match[3] });
-    }
-    if (errorClass === "ConformanceError") stage = "conformance";
-    var code = error.code || (stage === "conformance" ? "runtime.conformance_failed" : "runtime.translation_failed");
-    return { code: code, stage: stage, error_class: errorClass, frames: frames.reverse(),
+  function pythonFailure(failure) {
+    return { code: failure.stage === "conformance" ? "runtime.conformance_failed" : "runtime.translation_failed",
+      stage: failure.stage, error_class: failure.error_class, frames: failure.frames,
       message: "The export runtime failed." };
   }
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import traceback
 from collections.abc import Sequence
 from typing import Any
 
@@ -40,3 +41,32 @@ def export_json(text: str, sections: Sequence[Section[Any, Any]] = SECTIONS) -> 
     except ValueError as error:
         raise ConformanceError(str(error)) from error
     return json.dumps(result)
+
+
+PACKAGE = "/ph_composer_translation/"
+MAX_FRAMES = 20
+
+
+def export_report_json(text: str, sections: Sequence[Section[Any, Any]] = SECTIONS) -> str:
+    """What the runtime page sends on: `{"result": ...}`, or `{"failure": ...}` built from the exception's
+    class and traceback, never its message, which can carry Model content."""
+    try:
+        return json.dumps({"result": json.loads(export_json(text, sections))})
+    except Exception as error:  # noqa: BLE001 - every failure is reported, by class and frames only
+        return json.dumps({"failure": failure_report(error)})
+
+
+def failure_report(error: BaseException) -> dict[str, Any]:
+    """Where a failure stopped, its class, and this package's own frames, innermost first."""
+    from .conformance import ConformanceError
+
+    frames: list[dict[str, Any]] = []
+    chain: BaseException | None = error
+    while chain is not None and len(frames) < MAX_FRAMES:
+        for frame in reversed(traceback.extract_tb(chain.__traceback__)):
+            if PACKAGE in frame.filename:
+                relative = "ph_composer_translation/" + frame.filename.split(PACKAGE, 1)[1]
+                frames.append({"file": relative, "line": frame.lineno or 0, "method": frame.name})
+        chain = chain.__cause__
+    stage = "conformance" if isinstance(error, ConformanceError) else "translation"
+    return {"stage": stage, "error_class": type(error).__name__, "frames": frames[:MAX_FRAMES]}

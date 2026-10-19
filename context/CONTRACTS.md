@@ -155,31 +155,37 @@ code and structured detail are never replaced by it.
 ## Diagnostic log
 
 `core/diagnostics.rb` writes one JSON line per event to the extension's log folder: 512 KiB plus
-one archive, events older than seven days pruned at load. Every line carries `timestamp`,
+one archive, events older than seven days pruned from both at load by their timestamps. Every line carries `timestamp`,
 `schema` (1, raised when a field's meaning changes), `event`, `extension_version` and `build`
 (`core/build_identity.rb`: the package digest from the RBZ's `build.json`, `development` in a
 source checkout, `unavailable` when the record cannot be trusted). The load record
 `extension_loaded` adds the runtime `manifest` digest; `extension_load_failed` records a load or
-composition failure before SketchUp reports it, and composition does not continue.
+composition failure before SketchUp reports it, and composition does not continue. When the logger
+itself fails to load, `PhComposer.bootstrap_record` writes that line with the error class alone.
 
 | Field | Accepts |
 | --- | --- |
-| `event`, `operation`, `stage`, `code`, `effect` | A declared name (`a-z`, digits, `_`, dotted), never request text or a record label |
+| `event`, `operation`, `stage`, `code`, `effect`, `status` | A declared name (`a-z`, digits, `_`, dotted, at most 96 characters), never request text or a record label |
 | `severity` | `info`, `warning`, `error` |
 | `error_class` | An exception class name; never its message |
-| `frames` | At most 20 `{file, line, method}`, the file relative to the extension's parent folder (`ph_composer/shell/panel.rb`, `html/panel.js`, `ph_composer_translation/entry.py`) |
+| `frames` | At most 20 `{file, line, method}`; the file is one the extension ships, named from the folder holding the loader (`ph_composer/shell/panel.rb`, `html/panel.js`, `ph_composer_translation/entry.py`); another plugin's file or a traversal is never a frame |
 | `incident`, `session`, `request`, `run_id`, `build`, `manifest` | References of at most 96 `[A-Za-z0-9_.:-]` |
-| `status`, `sketchup_version` | Free text with paths redacted |
+| `sketchup_version`, `extension_version` | A version string of at most 32 `[A-Za-z0-9_.+-]` |
 | `duration_ms` | A finite number |
 
 An unknown key or an unaccepted value raises in strict mode (the offline suite) and is dropped or
-replaced by `[INVALID]` otherwise; a dropped key is echoed only when it looks like a field name. A
-line over 8 KiB loses its frames, then every field but its identity. Values from a page or the
-runtime pass `Diagnostics.accepted`, which keeps only accepted values. Panel messages log under the
-session and request they served (`Diagnostics.with_context`); an export logs under its `run_id`.
-The panel reports a section that failed to render, an uncaught error and a rejected promise as
-`panel.diagnostic`, at most 20 per page load. A runtime failure keeps its stage, code, Python
-exception class and package frames in `export_runtime_failed`; the outcome keeps a declared runtime
+replaced by `[INVALID]` otherwise; a dropped key is echoed only when it looks like a field name. No
+field takes free text, so every line fits in 8 KiB; a line that somehow would not loses its frames,
+then every field but its identity. Values from a page or the runtime pass `Diagnostics.accepted`,
+which keeps only accepted values; names a client supplies are kept only when declared (an agent's
+tool and operation; a panel section as the registered feature that owns it). Panel messages log
+under the session and request they served (`Diagnostics.with_context`); an export carries that
+context and its `run_id` into every later timer and runtime callback. The panel reports a section
+that failed to render, an uncaught error and a rejected promise as `panel.diagnostic`, at most 20
+per page load, with frames read only from stack lines after the error's own message. A runtime
+failure is described by the translation package from the exception's class and traceback
+(`entry.failure_report`), never its message, and keeps its stage, code, class and package frames in
+`export_runtime_failed`; the outcome keeps a declared runtime
 code and a fixed message. A write failure is kept as the log's health (`Diagnostics.health`) and
 every line also enters a 256 KiB in-memory tail (`Diagnostics.tail`); neither is logged through the
 logger. Developer tools read the same file and never the logger's instance variables.

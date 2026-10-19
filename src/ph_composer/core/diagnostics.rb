@@ -32,12 +32,15 @@ module PhComposer
       request run_id schema session severity sketchup_version stage status
     ].freeze
     SEVERITIES = %w[info warning error].freeze
-    NAME = /\A[a-z0-9_]+(?:\.[a-z0-9_]+)*\z/.freeze
+    # A declared name: lowercase, dotted, at most 96 characters.
+    NAME = /\A(?=.{1,96}\z)[a-z0-9_]+(?:\.[a-z0-9_]+)*\z/.freeze
     REFERENCE = /\A[A-Za-z0-9_.:-]{1,96}\z/.freeze
     ERROR_CLASS = /\A[A-Z][A-Za-z0-9_]*(?:::[A-Z][A-Za-z0-9_]*)*\z/.freeze
-    # Which values each checked field accepts; the rest are free text, redacted for paths.
+    VERSION_TEXT = /\A[\w.+-]{1,32}\z/.freeze
+    # Which values each field accepts. No field takes free text: a status is a name like any other.
     VALUES = {
-      "event" => NAME, "operation" => NAME, "stage" => NAME, "code" => NAME, "effect" => NAME,
+      "event" => NAME, "operation" => NAME, "stage" => NAME, "code" => NAME, "effect" => NAME, "status" => NAME,
+      "sketchup_version" => VERSION_TEXT, "extension_version" => VERSION_TEXT,
       "severity" => /\A(?:#{SEVERITIES.join('|')})\z/, "error_class" => ERROR_CLASS, "incident" => REFERENCE,
       "session" => REFERENCE, "request" => REFERENCE, "run_id" => REFERENCE, "build" => REFERENCE,
       "manifest" => REFERENCE
@@ -45,7 +48,13 @@ module PhComposer
     INVALID = "[INVALID]"
     # A frame's method name as Ruby, JavaScript or Python reports it, without arguments or source.
     FRAME_METHOD = /\A[\w$.:<>?!=\[\]{} #-]{1,96}\z/.freeze
-    FRAME_FILE = %r{\A[\w.-]+(?:/[\w.-]+)*\z}.freeze
+    FRAME_FILE = %r{\A[\w-]+(?:\.[\w-]+)*(?:/[\w-]+(?:\.[\w-]+)*)*\z}.freeze
+    # Where a frame's file may be, relative to the folder holding the loader: the extension's Ruby, its panel
+    # pages and its translation package. A frame anywhere else, another plugin's included, is left out.
+    FRAME_ROOTS = {
+      "ph_composer/" => -> { File.dirname(ROOT) }, "html/" => -> { ROOT },
+      "ph_composer_translation/" => -> { File.join(ROOT, "python") }
+    }.freeze
     # Where the slash sits decides what it is. A value that *starts* at the filesystem root is a
     # path however short, so `/tmp` and `/Users` redact. A slash that appears after whitespace is
     # user text in a record name until it carries two or more segments, so `North /Facade` survives
@@ -82,7 +91,7 @@ module PhComposer
             dropped_payload = base_payload("diagnostics_field_dropped")
             # The dropped key is shown only when it looks like a field name; its value never is.
             dropped_payload["status"] = NAME.match?(name) ? name : INVALID
-            write_line(JSON.generate(dropped_payload) + "\n")
+            write_line(bounded(dropped_payload))
           end
           payload
         rescue ArgumentError
@@ -131,6 +140,11 @@ module PhComposer
         end
       end
 
+      # The fields `with_context` holds now, for work that runs later to carry them (Export::Task).
+      def current_context
+        context.dup
+      end
+
       # Extension-relative Ruby frames, innermost first, at most MAX_FRAMES. Frames outside the extension
       # are left out rather than named by an absolute path.
       def frames(error)
@@ -147,16 +161,16 @@ module PhComposer
         (@tail ||= []).dup
       end
 
-      # Drops events older than RETENTION_SECONDS from the log and an archive that holds nothing newer.
+      # Drops events older than RETENTION_SECONDS from the log and its archive, and an archive left empty.
       # Runs once at load; a failure leaves the files as they were.
       def prune(now = Time.now.utc)
         cutoff = now - RETENTION_SECONDS
-        archive = path + ".1"
-        FileUtils.rm_f(archive) if File.exist?(archive) && File.mtime(archive) < cutoff
-        return unless File.exist?(path)
+        [path + ".1", path].each do |file|
+          next unless File.exist?(file)
 
-        kept = File.readlines(path).select { |line| recent?(line, cutoff) }
-        File.write(path, kept.join)
+          kept = File.readlines(file).select { |line| recent?(line, cutoff) }
+          kept.empty? && file != path ? File.delete(file) : File.write(file, kept.join)
+        end
       rescue StandardError => error
         @last_error = error.class.name
       end
@@ -191,10 +205,18 @@ module PhComposer
       end
 
       # One frame a caller built from another runtime's stack, accepted only in the shape `frames` makes:
-      # a relative file, a line number and a method name.
+      # a file the extension ships, a line number and a method name.
       def valid_frame?(frame)
-        frame.is_a?(Hash) && frame.keys.sort == %w[file line method] && FRAME_FILE.match?(frame["file"].to_s) &&
+        frame.is_a?(Hash) && frame.keys.sort == %w[file line method] && owned_file?(frame["file"]) &&
           frame["line"].is_a?(Integer) && frame["line"] >= 0 && FRAME_METHOD.match?(frame["method"].to_s)
+      end
+
+      def owned_file?(file)
+        return false unless file.is_a?(String) && FRAME_FILE.match?(file)
+        return File.file?(File.join(File.dirname(ROOT), file)) if file == "#{EXTENSION_ID}.rb"
+
+        root = FRAME_ROOTS.find { |prefix, _folder| file.start_with?(prefix) }
+        root ? File.file?(File.join(root.last.call, file)) : false
       end
 
       private
@@ -242,17 +264,15 @@ module PhComposer
         JSON.generate(kept.merge("status" => "event_truncated")) + "\n"
       end
 
+      # A frame in the extension folder or the loader, named from the folder holding them so it reads
+      # `ph_composer/shell/panel.rb`; anything else is left out.
       def frame(location)
         file = location.absolute_path || location.path
-        return nil unless file&.start_with?(extension_parent)
+        parent = File.dirname(ROOT) + "/"
+        return nil unless file&.start_with?(ROOT + "/") || file == "#{parent}#{EXTENSION_ID}.rb"
 
-        { "file" => file.delete_prefix(extension_parent), "line" => location.lineno,
+        { "file" => file.delete_prefix(parent), "line" => location.lineno,
           "method" => FRAME_METHOD.match?(location.label.to_s) ? location.label.to_s : "?" }
-      end
-
-      # The folder holding the loader and the extension folder, so frames read `ph_composer/shell/panel.rb`.
-      def extension_parent
-        File.dirname(ROOT) + "/"
       end
 
       def recent?(line, cutoff)

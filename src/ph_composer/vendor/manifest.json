@@ -396,9 +396,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 29482,
+      "bytes": 29860,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "2dbfbc0c7db18a0ff283bd936900023e3585d50c1340b0bc5599a82351b12875"
+      "sha256": "8aa4fd8cf09b04745492a498ae48672088e007454fd84e9191860d88587f6d17"
     },
     "html/record_edits.js": {
       "bytes": 17435,
@@ -421,9 +421,9 @@
       "sha256": "0d1f14371ea0932c0c1d0c793bed9573858c3d2c5ff0553f6867caf1d798bfd1"
     },
     "html/runtime/runtime.js": {
-      "bytes": 10422,
+      "bytes": 10205,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "373c3d701004164f303b838fd8d7895a6a3f2d5ba22ab8b774501ed6b847d68c"
+      "sha256": "bef8b9354bd1daf4b522e432597e1576ac0ea6bff880a7239083b05b3c6438a0"
     },
     "html/sections/colour_by.js": {
       "bytes": 7766,
@@ -566,9 +566,9 @@
       "sha256": "bdaaa2fa178b5a81ee8e17a51b3f1547917b045da94b977a152062fdad2f66e3"
     },
     "python/ph_composer_translation/entry.py": {
-      "bytes": 1613,
+      "bytes": 3074,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "04f7d7a3372bc66fa563703c1d4ef0af84b89f4078308077de59b6c4a7eabdfe"
+      "sha256": "f2cc1fafadad2d03f26c750bf5c5a6f1d87f78da71a500b3f9c42be65ed3d92a"
     },
     "python/ph_composer_translation/exporters.py": {
       "bytes": 1952,

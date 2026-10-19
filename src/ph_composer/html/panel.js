@@ -281,18 +281,24 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
      panel's own frames, never the message, which can carry Model content. A page caught in a failure loop
      reports its first MAX_REPORTS and then stays quiet. Reporting never throws. */
   var MAX_REPORTS = 20, reports = 0;
-  var JS_FRAME = /at (?:(\S+) \()?\S*?\/html\/([\w\/.-]+\.js):(\d+):\d+\)?/;
+  var JS_FRAME = /^\s+at (?:(\S+) \()?\S*?\/html\/([\w\/.-]+\.js):(\d+):\d+\)?$/;
   function report(event, sectionName, error) {
     if (reports >= MAX_REPORTS) return;
     reports += 1;
     try {
-      var frames = String(error && error.stack || "").split("\n").map(function (line) {
-        var match = JS_FRAME.exec(line);
-        return match && { file: "html/" + match[2], line: Number(match[3]), method: match[1] || "?" };
-      }).filter(Boolean).slice(0, 20);
       send("panel.diagnostic", { event: event, section: sectionName || null,
-        error_class: (error && error.name) || "Error", frames: frames });
+        error_class: (error && error.name) || "Error", frames: stackFrames(error) });
     } catch (ignored) { /* the report itself failed; the page carries on */ }
+  }
+  /* Chromium starts a stack with the error's own "Name: message", which may span lines or look like a frame;
+     only the lines after it are frames. A stack that does not start that way gives none. */
+  function stackFrames(error) {
+    var stack = String(error && error.stack || ""), head = String(error);
+    if (!error || !error.stack || stack.indexOf(head) !== 0) return [];
+    return stack.slice(head.length).split("\n").map(function (line) {
+      var match = JS_FRAME.exec(line);
+      return match && { file: "html/" + match[2], line: Number(match[3]), method: match[1] || "?" };
+    }).filter(Boolean).slice(0, 20);
   }
   if (window.addEventListener) {
     window.addEventListener("error", function (event) { report("panel_uncaught_error", null, event && event.error); });

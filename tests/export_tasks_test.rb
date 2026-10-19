@@ -250,6 +250,17 @@ class ExportTasksTest < PhComposerTestCase
     end
   end
 
+  # A runtime answer arrives after the panel request that started the run has returned; its log lines still
+  # name that request and the run.
+  def test_a_late_runtime_failure_is_logged_under_the_request_that_started_the_run
+    task = PhComposer::Diagnostics.with_context("session" => @session.id, "request" => "ses:export:1") { start }
+    drain
+    @runtime.failure("code" => "runtime.translation_failed", "stage" => "translation")
+
+    logged = JSON.parse(PhComposer::Diagnostics.tail.last)
+    assert_equal [@session.id, "ses:export:1", task.fetch("task_id")], logged.values_at("session", "request", "run_id")
+  end
+
   # Half a prior pair is refused whatever the consent; a whole one needs consent to replace it.
   def test_destination_replacement_and_one_active_task_are_explicit
     File.write(@destination, "prior")

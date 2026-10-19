@@ -79,4 +79,17 @@ class LoaderTest < PhComposerTestCase
 
     assert_same features, PhComposer::FEATURES
   end
+
+  # The record a failed load leaves when the logger itself could not load: the error's class and nothing else.
+  def test_a_load_failure_before_the_logger_is_recorded_by_its_class_alone
+    Dir.mktmpdir("phc-bootstrap-") do |directory|
+      log = File.join(directory, "logs", "ph-composer.log")
+
+      PhComposer.bootstrap_record(LoadError.new("cannot load /Users/example/Client Model"), log)
+
+      record = JSON.parse(File.read(log))
+      assert_equal %w[extension_load_failed LoadError failed], record.values_at("event", "error_class", "status")
+      refute_includes File.read(log), "/Users/"
+    end
+  end
 end

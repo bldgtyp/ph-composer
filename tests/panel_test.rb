@@ -168,7 +168,7 @@ class PanelTest < PhComposerTestCase
     dialog = open_panel
     frames = [{ "file" => "html/panel.js", "line" => 270, "method" => "renderSection" }]
 
-    send_message(dialog, "panel.diagnostic", "event" => "panel_render_failed", "section" => "ph_composer.overview",
+    send_message(dialog, "panel.diagnostic", "event" => "panel_render_failed", "section" => "test.fixture.list",
                                              "error_class" => "TypeError", "frames" => frames)
     send_message(dialog, "panel.diagnostic", "event" => "chosen_by_page", "section" => nil,
                                              "error_class" => "TypeError", "frames" => [])
@@ -179,7 +179,8 @@ class PanelTest < PhComposerTestCase
       line.fetch("event").start_with?("panel_")
     end
     assert_equal %w[panel_render_failed panel_uncaught_error], logged.map { |line| line.fetch("event") }
-    assert_equal ["ph_composer.overview", "TypeError", frames], logged.first.values_at("stage", "error_class", "frames")
+    assert_equal ["test.fixture", "TypeError", frames], logged.first.values_at("stage", "error_class", "frames"),
+                 "a section is named by the registered feature that owns it"
     assert_equal [nil, nil, nil], logged.last.values_at("stage", "error_class", "frames"), "unaccepted values drop"
     assert_empty messages(dialog, "panel.failure")
   end

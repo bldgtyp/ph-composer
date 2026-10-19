@@ -410,10 +410,11 @@ module PhComposer
       def flush_ring
         rows = @lock.synchronize { @calls.take_unread }
         @on_calls&.call(rows) unless rows.empty?
-        # The operation name is the agent's own text, so only a value the log accepts is kept.
+        # The tool and operation names are the agent's own text, so each is logged only when it is declared.
         rows.each do |row|
-          named = Diagnostics.accepted("operation" => [row["tool"], row["operation"]].compact.join("."),
-                                       "code" => row["code"])
+          tool = Tools::TABLE.key?(row["tool"]) ? row["tool"] : nil
+          operation = Registry.current.owner_of(row["operation"].to_s) ? row["operation"] : nil
+          named = Diagnostics.accepted("operation" => [tool, operation].compact.join("."), "code" => row["code"])
           Diagnostics.log("agent_access_call", { "status" => row["error"] ? "error" : row["status"],
                                                  "duration_ms" => row["ms"] }.merge(named))
         end
