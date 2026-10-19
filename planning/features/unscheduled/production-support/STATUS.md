@@ -47,10 +47,10 @@ Product changes outside the accepted local-support direction return to Ed.
 
 ## Verification
 
-[REVIEW](REVIEW.md) records the source audit and focused checks from the preceding review.
-These are baseline evidence, not passes for this feature. The packet's local Markdown targets
-were checked with the acceptance_run links command after the revision; no code or native
-acceptance ran for this documentation-only change.
+[REVIEW](REVIEW.md) records the baseline audit. Each stage's offline evidence is in the ledger
+above: `LANG=en_US.UTF-8 make ci` passed on every PR head, affected Ruby suites also passed on Ruby
+2.7.2 locally, and both CI jobs passed before each merge. No native acceptance has run; every
+A01 to A10 native observation is still required (PS-05).
 
 ## Ledger
 

@@ -38,7 +38,7 @@ The foundation under `src/ph_composer/core/` keeps the split visible by file:
 | --- | --- | --- |
 | Pure values and rules | `json_value`, `json_walk`, `json_schema`, `canonical_json`, `deep_copy`, `vector3`, `face_geometry`, `schema_shapes`, record kinds, fields and validation (`records/record_kind`, `records/fields`, `records/authoring_fields`) | Explicit values in and out; no SketchUp constant. `tests/support/face_geometry_pure.rb` runs in a bare Ruby process and is the way to test a rule without the host |
 | Application services | `records/engine`, `records/projected_engine`, `records/change_set`, `operations/proposal`, `operations/contributions` | Compose rules over records and proposals; reach the Model only through the adapters |
-| Native adapters | `face_capture`, `records/dictionary_store`, `records/entity_store`, `operations/entity_scope`, `pick`, `view_framing`, `model_operation`; `diagnostics` asks the host only for its log folder | Every `core/` file that reads or writes SketchUp objects. `model_settings` and the services reach the Model through these |
+| Native adapters | `face_capture`, `records/dictionary_store`, `records/entity_store`, `operations/entity_scope`, `pick`, `view_framing`, `model_operation`; `diagnostics` asks the host only for its log folder; `support_dialog` drives the Save sheet, `UI.openURL` and the fallback message box | Every `core/` file that reads or writes SketchUp objects. `model_settings` and the services reach the Model through these |
 
 The application shell supplies registration, commands and transport. Feature packages own their
 operations and optional UI. The UI kit depends only on its published contracts, with no domain
