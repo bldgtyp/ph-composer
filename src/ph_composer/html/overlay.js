@@ -319,6 +319,11 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
   /* Record forms open above a stationary page. The hidden flag mirrors the open state, so owners keep one flag;
      Escape runs the owner's cancel, which may refuse while a request is pending. */
   var dialogSequence = 0;
+  /* Callers told whenever a form dialog opens or closes, such as the panel, which keeps a way out of an
+     unanswered request inside whatever modal is open. */
+  var modalWatchers = [];
+  function onModalChange(watcher) { modalWatchers.push(watcher); }
+  function modalChanged() { modalWatchers.slice().forEach(function (watcher) { watcher(); }); }
   /* Every dialog carries the same top-right close control, and it does what Escape and the dialog's own
      Cancel (or Done) do: onCancel, which may refuse while a request is pending; an owner that disables its
      Cancel disables `closeButton` too. It is put back on every open, because an owner may replace the
@@ -341,6 +346,7 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
         node.setAttribute("aria-labelledby", heading.id);
       }
       node.hidden = false; if (!node.open && node.showModal) node.showModal();
+      modalChanged();
     };
     node.closeModal = function () {
       var wasOpen = !node.hidden;
@@ -349,6 +355,7 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
         opener.focus({ preventScroll: true });
       }
       opener = null;
+      if (wasOpen) modalChanged();
     };
     return node;
   }
@@ -430,6 +437,7 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
   }
 
   return { Bubble: Bubble, ActionMenu: ActionMenu, floatingNotice: floatingNotice, actionRow: actionRow,
-    formDialog: formDialog, helpButton: helpButton, reasonButton: reasonButton, attachTooltip: attachTooltip,
+    formDialog: formDialog, onModalChange: onModalChange,
+    helpButton: helpButton, reasonButton: reasonButton, attachTooltip: attachTooltip,
     placeNear: placeNear, BUBBLE: BUBBLE, SUCCESS_MS: SUCCESS_MS };
 });

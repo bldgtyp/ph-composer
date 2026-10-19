@@ -9,7 +9,8 @@
  * The panel acts only on the Model it shows: `action.invoke` carries the shown session and the revision the
  * panel last rendered, and a result or notice for another session is not painted.
  */
-PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views"], function (preferences, ui, tableViews) {
+PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "request"], function (preferences, ui,
+  tableViews, request) {
   "use strict";
 
   var sections = [];
@@ -282,6 +283,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views"], f
     renderUnitToggle();
     applyTab();
     if (state.session !== null) { sections.forEach(renderSection); showInspectors(); }
+    renderRecovery();
     document.body._checkTooltip();
   }
 
@@ -291,15 +293,21 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views"], f
     var layer = document.querySelector("[data-notice-layer]");
     var current = state.ui.notice;
     if (!layer) return;
-    if (!notice) {
-      notice = ui.floatingNotice(document.body);
-      layer.appendChild(notice);
-    }
+    if (!notice) notice = ui.floatingNotice(document.body);
+    // An open modal makes the page behind it inert, so the notice, and any way out it offers, shows in it.
+    var host = openModal() || layer;
+    if (notice.parentNode !== host) host.appendChild(notice);
     if (current === shownNotice) return;
     shownNotice = current;
     if (!current) { notice.clear(); return; }
     notice.show(current.message, { tone: current.tone, action: current.action,
       persistent: current.tone === "warning" || current.tone === "error" });
+  }
+
+  function openModal() {
+    return Array.prototype.filter.call(document.querySelectorAll("dialog"), function (node) {
+      return node.open;
+    }).pop() || null;
   }
 
   function applyTab() {
@@ -423,6 +431,54 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views"], f
     if (window.sketchup && window.sketchup.ph_composer_message) {
       window.sketchup.ph_composer_message(JSON.stringify({ type: type, payload: message }));
     }
+  }
+
+  /* Requests the host has not answered in time (request.js), each with its way out. They are kept apart from
+     the single notice slot, so no other message, and no dismissal, can take the way out away; each goes when
+     its request settles. An edit is never sent again: Check status asks the host what became of it, which
+     also brings the Model's state up to date. Any other request can only stop waiting; its answer, if it
+     still comes, is ignored, so its result is left for the user to check. */
+  var unanswered = [], recovery = null;
+  function unconfirmed(channel) {
+    if (channel.session !== state.session) return;
+    if (!unanswered.some(function (item) { return item.channel === channel && item.id === channel.pending; })) {
+      unanswered.push({ channel: channel, id: channel.pending });
+    }
+    render();
+  }
+  request.onUnconfirmed(unconfirmed);
+
+  /* After every section has rendered, since a section's render is where its request settles. The bar sits in
+     an open modal when there is one, because the page behind it cannot be reached. */
+  function renderRecovery() {
+    var layer = document.querySelector("[data-notice-layer]"), host;
+    unanswered = unanswered.filter(function (item) {
+      return item.channel.pending === item.id && item.channel.session === state.session;
+    });
+    if (!layer) return;
+    if (!recovery) {
+      recovery = ui.element("div", "phc-floating-notice phc-recovery");
+      recovery.setAttribute("data-tone", "warning");
+      recovery.setAttribute("role", "alert");
+    }
+    recovery.hidden = !unanswered.length;
+    recovery.replaceChildren.apply(recovery, unanswered.map(recoveryRow));
+    host = openModal() || layer;
+    if (recovery.parentNode !== host) host.appendChild(recovery);
+  }
+  ui.onModalChange(renderRecovery);
+  function recoveryRow(item) {
+    var channel = item.channel, action = channel.message === "action.invoke";
+    var row = ui.element("div", "phc-recovery-row");
+    row.appendChild(ui.element("span", "phc-floating-notice-message", action ?
+      "PH-Composer has not confirmed this change yet. It may have been applied, or its answer was lost." :
+      "PH-Composer has not answered this request yet, so its result is not known."));
+    // Bound to the request that raised it: a later request on the same channel is never checked or dropped.
+    row.appendChild(ui.button(action ? "Check status" : "Stop waiting", function () {
+      if (channel.pending !== item.id) { repaint(); return; }
+      if (action) channel.checkStatus(); else { channel.reset(); repaint(); }
+    }));
+    return row;
   }
 
   /* A notice raised by the page itself, such as a refused navigation. It never reaches the host. An

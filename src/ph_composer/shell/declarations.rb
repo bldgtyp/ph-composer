@@ -26,7 +26,7 @@ module PhComposer
       access.user_required access.revoked request.cancelled
       location.unknown location.revoked location.used location.kind_mismatch location.unavailable
       location.setup_unreadable location.setup_unavailable
-      request.pending request.sequence_conflict request.outcome_unavailable
+      request.pending request.sequence_conflict request.outcome_unavailable request.not_received
       session.unknown session.busy session.closed session.changed session.inactive
       revision.stale proposal.changed record.unreadable proposal.foreign_write proposal.contribution_replaced
       target.not_found target.changed target.ambiguous target.locked target.wrong_kind target.wrong_hierarchy

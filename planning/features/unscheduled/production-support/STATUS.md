@@ -17,8 +17,8 @@ has a separate packet and ledger.
 
 | Stage | Scope | State | Evidence still required |
 | --- | --- | --- | --- |
-| PS-02a | F06: checked preference writes; unreadable stored maps refused | Implemented on branch `fix/production-support-ps-02a` | Done offline: probe F06 as `test_a_write_the_host_refuses_is_reported_as_not_saved`, plus unreadable-map refusal, unrecognized-entry preservation and Colour-by-stays-on tests; rule in TECH_STACK "Units". Remaining: A06 native persistence/restart read-back (PS-05) |
-| PS-02b | F04: request recovery timer and Check status for a lost reply | Scoped | Probe F04 as a test, contract update, native committed/lost-reply case |
+| PS-02a | F06: checked preference writes; unreadable stored maps refused | Merged to main ([#246](https://github.com/bldgtyp/ph-composer/pull/246)); two Codex (gpt-6-astra) rounds, 5 findings fixed | Done offline: probe F06 as `test_a_write_the_host_refuses_is_reported_as_not_saved`, plus unreadable-map refusal, unrecognized-entry preservation and Colour-by-stays-on tests; rule in TECH_STACK "Units". Remaining: A06 native persistence/restart read-back (PS-05) |
+| PS-02b | F04: request recovery timer and Check status for a lost reply | Implemented on branch `fix/production-support-ps-02b` | Done offline: probe F04 as `an unanswered run warns once its recovery time passes...` (request_test.js); panel notice tests (panel_app_test.js); Ruby `action.status` for a committed reply, a never-received request and an expired outcome (panel_test.rb); rules in TECH_STACK "Panel protocol" and CONTRACTS "Retries". Remaining: A04 native committed/lost-reply case (PS-05) |
 | PS-02c | F05: Ruby-side runtime deadline before and after ready | Scoped | Probe F05 as a test, contract update, native asynchronous faults |
 | PS-01 | Failure context, correlation and build identity in the log | Scoped | Confirmed fields and privacy tests, package identity, native incident |
 | PS-03 | Help & Diagnostics and the support report | Scoped | Screen sketches, byte-equal preview/copy/save, negative privacy, native menu, fallback and keyboard evidence |
@@ -49,3 +49,4 @@ acceptance ran for this documentation-only change.
 | 2026-10-19 | Second review (Claude): kept the direction, cut the plan to five stages and ten rows, put the correctness fixes first and deferred Run checks, incident grouping and the JSON report (PS-D10). |
 | 2026-10-19 | Ed accepted the five-stage revision (PS-D10). Implementation remains unauthorized. |
 | 2026-10-19 | Ed authorized implementation through pr-loop with merge on green. Issue #245 created. PS-02a (F06) implemented on branch. |
+| 2026-10-19 | PS-02b (F04) implemented on branch: 20-second recovery warning, Check status through the retained-outcome lookup, `request.not_received`. |

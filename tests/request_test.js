@@ -132,3 +132,57 @@ test("read queries settle only their keyed query result and reset ignores a late
   channel.run("example.catalog", {}); channel.reset();
   assert.strictEqual(channel.consume({ ui: { queryResults: held } }), null);
 });
+
+/* REVIEW F04: a transport that drops the message left the channel busy forever with no recovery timer. */
+test("an unanswered run warns once its recovery time passes and asks for its status without resending", function () {
+  var timers = [], heard = [];
+  var timed = { setTimeout: function (run, ms) { timers.push({ run: run, ms: ms }); return timers.length; },
+    clearTimeout: function (id) { timers[id - 1] = null; } };
+  timed.window = timed;
+  var module = panelSource.start(timed, ["request"]).request;
+  var stop = module.onUnconfirmed(function (channel) { heard.push(channel.pending); });
+  var sent = [], channel = module.channel("session-a", function (type, payload) {
+    sent.push({ type: type, payload: payload });
+  }, "form");
+
+  var id = channel.run("example.create", {});
+  assert.strictEqual(timers.length, 1, "a recovery timer is registered");
+  assert.strictEqual(timers[0].ms, module.RECOVERY_MS);
+  timers[0].run();
+  assert.deepStrictEqual(heard, [id]);
+  assert.strictEqual(channel.unconfirmed, true);
+  assert.strictEqual(channel.busy(), true, "still pending, so the edit is not sent twice");
+  assert.strictEqual(channel.run("example.create", {}), false);
+
+  assert.strictEqual(channel.checkStatus(), true);
+  assert.deepStrictEqual(sent.map(function (one) { return one.type; }), ["action.invoke", "action.status"]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(sent[1].payload)), { request_id: id, session: "session-a" });
+  assert.strictEqual(timers.length, 2, "asking waits again");
+
+  channel.consume(state(result(id, "session-a", "refused", "PH-Composer did not receive that change.")));
+  assert.strictEqual(channel.busy(), false);
+  assert.strictEqual(timers[1], null, "settling stops the timer");
+  assert.strictEqual(channel.checkStatus(), false, "nothing left to ask about");
+  stop();
+});
+
+test("only an action channel can ask the host for status", function () {
+  var channel = request.channel("session-a", function () {}, "catalog", "query.invoke");
+  channel.run("example.catalog", {});
+  assert.strictEqual(channel.checkStatus(), false);
+});
+
+test("a transport that answers at once keeps the id it returns and arms no warning", function () {
+  var timers = [], timed = { setTimeout: function () { timers.push(1); return timers.length; },
+    clearTimeout: function () {} };
+  timed.window = timed;
+  var module = panelSource.start(timed, ["request"]).request, channel;
+  channel = module.channel("session-a", function (type, payload) {
+    channel.consume(state(result(payload.request_id, "session-a", "completed")));
+  }, "form");
+
+  var id = channel.run("example.create", {});
+  assert.match(id, /^session-a:form:\d+$/);
+  assert.strictEqual(channel.busy(), false);
+  assert.strictEqual(timers.length, 0);
+});
