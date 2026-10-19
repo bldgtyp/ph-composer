@@ -39,7 +39,8 @@ module PhComposer
     VERSION_TEXT = /\A[\w.+-]{1,32}\z/.freeze
     # Each reference in the exact form the extension generates it, so no other text fits one.
     SESSION = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/.freeze
-    REQUEST = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}:[a-z][a-z0-9_.]{0,47}:\d{1,9}\z/.freeze
+    # A request id is `<session>:<label>:<n>`; the label names the panel view that sent it, in code.
+    REQUEST = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}:[A-Za-z][A-Za-z0-9_. -]{0,47}:\d{1,9}\z/.freeze
     RUN = /\Aexport_\h{24}\z/.freeze
     INCIDENT = /\APHC-[0-9A-F]{6}\z/.freeze
     BUILD = /\A(?:\h{12}|development|unavailable)\z/.freeze
@@ -56,7 +57,7 @@ module PhComposer
     # A frame's method name as Ruby, JavaScript or Python reports it: one identifier-like word, no spaces.
     FRAME_METHOD = /\A[A-Za-z_$][\w$.?!=\[\]-]{0,95}\z/.freeze
     # Names a runtime gives code outside any named method.
-    RUNTIME_MARKERS = %w[<main> <module> <anonymous> <lambda> <listcomp> <genexpr>].freeze
+    RUNTIME_MARKERS = %w[<main> <module> <anonymous> <lambda> <listcomp> <dictcomp> <setcomp> <genexpr>].freeze
     FRAME_FILE = %r{\A[\w-]+(?:\.[\w-]+)*(?:/[\w-]+(?:\.[\w-]+)*)*\z}.freeze
     # Where a frame's file may be, relative to the folder holding the loader: the extension's Ruby, its panel
     # pages and its translation package. A frame anywhere else, another plugin's included, is left out.
@@ -266,14 +267,18 @@ module PhComposer
           frame["line"].is_a?(Integer) && frame["line"] >= 0 && owned_method?(frame["file"], frame["method"])
       end
 
-      # A method name that appears in its file's own source, or "?" when the runtime gave none, so a frame
-      # can carry only words the extension wrote. Ruby frames name a method by its base label.
+      # A method name every dotted part of which is a runtime marker or a whole word in its file's own source,
+      # or "?" when the runtime gave none, so a frame carries only words the extension wrote. Ruby frames name
+      # a method by its base label.
       def owned_method?(file, method)
         return true if method == "?" || RUNTIME_MARKERS.include?(method)
-        return false unless method.is_a?(String) && FRAME_METHOD.match?(method)
+        return false unless method.is_a?(String) && method.length <= 96
 
-        (@sources ||= {})[file] ||= File.read(owned_path(file))
-        @sources[file].include?(method.split(".").last)
+        source = (@sources ||= {})[file] ||= File.read(owned_path(file))
+        method.split(".").all? do |part|
+          RUNTIME_MARKERS.include?(part) || (part.match?(/\A[A-Za-z_$][\w$?!=]*\z/) &&
+                                              source.match?(/(?<![\w$])#{Regexp.escape(part)}(?![\w$])/))
+        end
       rescue SystemCallError
         false
       end
@@ -326,8 +331,16 @@ module PhComposer
       end
 
       # The frames that name the extension's own files and methods, at most MAX_FRAMES; the rest are left out.
+      # A frame in a file it does not own is left out; one whose method it cannot vouch for keeps its file
+      # and line, with the method as "?".
       def owned_frames(value)
-        value.select { |frame| valid_frame?(frame) }.first(MAX_FRAMES)
+        value.filter_map do |frame|
+          next frame if valid_frame?(frame)
+          next nil unless frame.is_a?(Hash) && frame["method"]
+
+          plain = frame.merge("method" => "?")
+          plain if valid_frame?(plain)
+        end.first(MAX_FRAMES)
       end
 
       def invalid(name)

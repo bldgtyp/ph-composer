@@ -178,10 +178,27 @@ class DiagnosticsTest < PhComposerTestCase
                                                 "method" => "export_json"))
     refute Diagnostics.valid_frame?(owned.merge("method" => "ProjectAlphaConfidential")), "a word the file lacks"
     refute Diagnostics.valid_frame?(owned.merge("method" => "Project Alpha")), "a method name has no spaces"
+    refute Diagnostics.valid_frame?(owned.merge("method" => "ClientHouse.render")), "every part is checked"
+    assert Diagnostics.valid_frame?(owned.merge("method" => "<anonymous>"))
     ["other_plugin/client_name.rb", "html/../../Users/client/secret.js", "html/client_private.js",
      "ph_composer_translation/client_secret.py", "/Users/example/x.rb"].each do |file|
       refute Diagnostics.valid_frame?(owned.merge("file" => file)), file
     end
+  end
+
+  # A frame whose method it cannot vouch for still gives its file and line.
+  def test_an_unvouched_method_keeps_its_frame_as_a_question_mark
+    Diagnostics.log("probe", "frames" => [{ "file" => "html/panel.js", "line" => 9,
+                                            "method" => "HTMLButtonElement.<anonymous>" }])
+
+    assert_equal [{ "file" => "html/panel.js", "line" => 9, "method" => "?" }],
+                 JSON.parse(Diagnostics.tail.last).fetch("frames")
+  end
+
+  def test_a_request_id_from_a_hyphenated_view_label_is_kept
+    session = "0f8fad5b-d9cb-469f-a165-70867728950e"
+    assert_equal({ "request" => "#{session}:library-export-preview:12" },
+                 Diagnostics.accepted("request" => "#{session}:library-export-preview:12"))
   end
 
   def test_an_error_class_too_long_to_be_one_is_refused

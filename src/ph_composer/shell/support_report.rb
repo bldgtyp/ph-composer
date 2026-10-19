@@ -104,7 +104,8 @@ module PhComposer
 
     # A line's timestamp for ordering; a line without one sorts first and is counted as unreadable later.
     def time(line)
-      parse(line)&.fetch("timestamp", nil).to_s
+      record = parse(line)
+      record.is_a?(Hash) ? record["timestamp"].to_s : ""
     end
 
     # [kept lines, count of lines that were not readable records].
