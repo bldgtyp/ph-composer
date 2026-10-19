@@ -57,7 +57,7 @@ module PhComposer
       library.setup_invalid library.setup_too_large library.setup_unavailable library.setup_unreadable
       library.update_destination_invalid library.update_destination_required
       runtime.asset_refused runtime.boot_timeout runtime.boot_failed runtime.translation_failed runtime.stopped
-      runtime.closed
+      runtime.closed runtime.unresponsive
     ].freeze
 
     # Every operation kind below declares `refuses`: the codes its handler and the dependencies it
