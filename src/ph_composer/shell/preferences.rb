@@ -32,6 +32,7 @@ module PhComposer
     # What `read_default` answers for a key never stored. The host reads a stored value it cannot return,
     # such as a string holding a double quote, as nil, so nil means present but unreadable.
     ABSENT = ""
+    UNREADABLE = "Your saved display preferences could not be read, so they were left unchanged."
 
     class << self
       def unit_system
@@ -113,7 +114,9 @@ module PhComposer
           raise UserError, "Too many dimension formats are remembered."
         end
 
-        remembered = formats[scope].is_a?(Hash) ? formats[scope] : {}
+        remembered = formats.fetch(scope, {})
+        raise UserError, UNREADABLE unless remembered.is_a?(Hash)
+
         formats[scope] = DEFAULT_DIMENSION_FORMAT.merge(remembered).merge(system => value)
         write_map("dimension_formats", formats)
       end
@@ -138,7 +141,7 @@ module PhComposer
         parsed = raw.is_a?(String) && raw.bytesize <= MAX_ENCODED_BYTES ? decode_map(raw) : nil
         return parsed if parsed.is_a?(Hash)
 
-        raise UserError, "Your saved display preferences could not be read, so they were left unchanged."
+        raise UserError, UNREADABLE
       end
 
       def decode_map(raw)
@@ -149,10 +152,12 @@ module PhComposer
 
       # SketchUp 26.1 stores a string containing a double quote but reads it back as nil, so the JSON
       # is kept as strict base64 (context/SKETCHUP_HOST_BEHAVIOR.md).
-      # A map the readers would refuse for its size is not written, so one more entry never hides the rest.
+      # A map the readers would refuse or cut short is not written, so a saved choice is always one they show.
       def write_map(key, map)
         encoded = [JSON.generate(map)].pack("m0")
-        raise UserError, "Too many display preferences are remembered." if encoded.bytesize > MAX_ENCODED_BYTES
+        if map.length > MAX_SCOPES || encoded.bytesize > MAX_ENCODED_BYTES
+          raise UserError, "Too many display preferences are remembered."
+        end
 
         write(key, encoded)
       end

@@ -116,6 +116,30 @@ class PreferencesTest < PhComposerTestCase
     assert_equal "not base64 json", Sketchup.read_default(SECTION, "table_views")
   end
 
+  def test_a_scope_entry_it_cannot_read_is_left_unchanged
+    stored = [JSON.generate("example.editor" => %w[cm ft-in])].pack("m0")
+    Sketchup.write_default(SECTION, "dimension_formats", stored)
+    Sketchup.clear_default_writes
+
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("dimension_format", "m", :scope => "example.editor", :system => "SI")
+    end
+    assert_empty Sketchup.default_writes
+    assert_equal stored, Sketchup.read_default(SECTION, "dimension_formats")
+  end
+
+  # A later version may keep more scopes than this one reads; changing one would save what is never shown.
+  def test_a_map_with_more_scopes_than_it_reads_is_refused_without_writing
+    many = (0..Preferences::MAX_SCOPES).to_h { |index| ["example.scope_#{index}", "example.view"] }
+    Sketchup.write_default(SECTION, "table_views", [JSON.generate(many)].pack("m0"))
+    Sketchup.clear_default_writes
+
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("table_view", "example.other", :scope => "example.scope_#{Preferences::MAX_SCOPES}")
+    end
+    assert_empty Sketchup.default_writes
+  end
+
   # Preserved entries can fill the store; a map the readers would refuse is never written.
   def test_a_map_too_large_to_read_back_is_refused_without_writing
     later = (1..Preferences::MAX_SCOPES - 1).to_h { |index| ["example.scope_#{index}", "x" * 176] }
