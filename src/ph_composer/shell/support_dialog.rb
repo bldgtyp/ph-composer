@@ -208,9 +208,11 @@ module PhComposer
       end
 
       def clear_history
-        Diagnostics.clear
+        cleared = Diagnostics.clear
         publish_state
-        result("support.clear_history", "completed", "Diagnostic history cleared.")
+        return result("support.clear_history", "completed", "Diagnostic history cleared.") if cleared
+
+        result("support.clear_history", "failed", "Some of the diagnostic history could not be deleted.")
       end
 
       def reopen_panel

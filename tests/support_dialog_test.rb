@@ -95,20 +95,56 @@ class SupportDialogTest < PhComposerTestCase
   # Whatever reached the log file, the report copies only fields and values the log accepts.
   def test_the_report_leaves_out_paths_names_tokens_and_payloads_at_every_boundary
     seeded = { "timestamp" => Time.now.utc.iso8601, "event" => "probe", "schema" => 1,
-               "status" => "Zone North at /Users/example/Client/model.skp", "operation" => "Project Alpha",
+               "status" => "Project Alpha confidential PHPP row", "operation" => "Zone North at /Users/example",
                "token" => "phc_secret_token", "params" => { "label" => "Licensed PHPP row" },
-               "error_class" => "RuntimeError", "frames" => [{ "file" => "/Users/example/x.rb", "line" => 1,
-                                                               "method" => "m" }] }
+               "error_class" => "RuntimeError",
+               "frames" => Array.new(20) { { "file" => "html/panel.js", "line" => 1, "method" => "m" } } +
+                           [{ "file" => "html/panel.js", "line" => 2, "method" => "phc_secret_token" }] }
     FileUtils.mkdir_p(File.dirname(Diagnostics.path))
     File.write(Diagnostics.path, "#{JSON.generate(seeded)}\nnot json at /Users/example\n")
 
     text = capture["text"]
 
-    ["/Users/", "Zone North", "Project Alpha", "phc_secret_token", "Licensed PHPP"].each do |secret|
+    ["/Users/", "Zone North", "Project Alpha", "phc_secret_token", "Licensed PHPP", "confidential"].each do |secret|
       refute_includes text, secret
     end
     assert_includes text, '"error_class":"RuntimeError"'
     assert_match(/^Omitted: Model geometry and names, file paths/, text)
+  end
+
+  def test_lines_that_are_not_records_are_counted_not_hidden
+    FileUtils.mkdir_p(File.dirname(Diagnostics.path))
+    File.write(Diagnostics.path, "not json\n{\"no\":\"timestamp\"}\n")
+
+    assert_match(/Events: none recorded; an empty log does not show that nothing failed; 2 unreadable lines left out/,
+                 capture["text"])
+  end
+
+  # A failure that could not be written still shows, in Recent problems and in the report.
+  def test_while_the_log_is_not_written_this_sessions_events_still_show
+    blocked = File.join(@directory, "file")
+    File.write(blocked, "")
+    Diagnostics.path_override = File.join(blocked, "logs", "ph-composer.log")
+    reference = Diagnostics.incident("operation_failed", raised { PhComposer::Preferences.set("zone_north", "x") })
+    SupportDialog.show
+
+    assert_equal [reference], ready_state["problems"].map { |problem| problem["incident"] }
+    assert_includes capture["text"], reference
+  end
+
+  def test_history_that_cannot_be_deleted_is_reported_as_not_cleared
+    Diagnostics.log("probe")
+    folder = File.dirname(Diagnostics.path)
+    SupportDialog.show
+    File.chmod(0o500, folder)
+
+    send_message("support.clear_history", {})
+
+    assert_equal "failed", last_result["status"]
+    assert File.exist?(Diagnostics.path)
+    refute Diagnostics.health["writing"]
+  ensure
+    File.chmod(0o700, folder) if folder
   end
 
   def test_a_long_log_is_cut_to_its_newest_lines_with_the_cut_stated

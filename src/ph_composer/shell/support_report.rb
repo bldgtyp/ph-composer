@@ -57,10 +57,11 @@ module PhComposer
 
     # A new capture, kept under its id until the next one replaces it.
     def capture(incident: nil)
-      lines, omitted, unreadable = log_lines
+      lines, omitted, unreadable, discarded = log_lines
       id = SecureRandom.hex(8)
       captured_at = Time.now.utc.iso8601
-      text = header(captured_at, incident, lines, omitted, unreadable).join("\n") + "\n--- log ---\n" + lines.join
+      text = header(captured_at, incident, lines, [omitted, discarded], unreadable).join("\n") + "\n--- log ---\n" +
+             lines.join
       @capture = { "capture_id" => id, "captured_at" => captured_at, "text" => text }.freeze
     end
 
@@ -73,17 +74,22 @@ module PhComposer
       @capture = nil
     end
 
-    # Sanitized lines, how many earlier ones were left out, and the read error's class when the files
-    # could not be read, in which case this session's in-memory lines stand in.
+    # Sanitized lines; how many earlier ones the size limit left out; the read error's class when the files
+    # could not be read, in which case this session's in-memory lines stand in; and how many lines were not
+    # readable records. While the log is not being written, this session's lines that never reached it are
+    # added, so a failure that could not be written still shows.
     def log_lines
       lines, omitted = Diagnostics.recent_lines(MAX_LOG_BYTES)
-      [sanitize(lines), omitted, nil]
+      lines += Diagnostics.tail.reject { |line| lines.include?(line) } unless Diagnostics.health["writing"]
+      sanitize(lines).insert(1, omitted).insert(2, nil)
     rescue StandardError => error
-      [sanitize(Diagnostics.tail), 0, error.class.name]
+      sanitize(Diagnostics.tail).insert(1, 0).insert(2, error.class.name)
     end
 
+    # [kept lines, count of lines that were not readable records].
     def sanitize(lines)
-      lines.filter_map { |line| Diagnostics.sanitized(line) }.map { |line| "#{line}\n" }
+      kept = lines.filter_map { |line| Diagnostics.sanitized(line) }.map { |line| "#{line}\n" }
+      [kept, lines.length - kept.length]
     end
 
     def parse(line)
@@ -96,7 +102,7 @@ module PhComposer
       PROBLEMS.find { |pattern, _label| pattern.match?(event) }&.last || OTHER_PROBLEM
     end
 
-    def header(captured_at, incident, lines, omitted, unreadable)
+    def header(captured_at, incident, lines, left_out, unreadable)
       details = about
       log = details["log"]
       [
@@ -107,18 +113,24 @@ module PhComposer
         "Supported host: #{details.dig('host', 'supported') ? 'yes' : 'no'} (#{SUPPORTED_TEXT})",
         "Log: #{log['writing'] ? 'writing' : "not writing (#{log['last_error']})"}",
         "Incident: #{Diagnostics::REFERENCE.match?(incident.to_s) ? incident : 'none selected'}",
-        "Events: #{events_line(lines, omitted, unreadable)}",
+        "Events: #{events_line(lines, left_out, unreadable)}",
         "Omitted: #{OMITTED}"
       ]
     end
 
-    def events_line(lines, omitted, unreadable)
-      return "the log could not be read (#{unreadable}); showing this session's #{lines.length} events" if unreadable
-      return "none recorded; an empty log does not show that nothing failed" if lines.empty?
-
-      first, last = [lines.first, lines.last].map { |line| parse(line)&.fetch("timestamp", nil) }
-      text = "#{lines.length} from #{first} to #{last}"
-      omitted.positive? ? "#{text}; #{omitted} earlier lines left out" : text
+    def events_line(lines, left_out, unreadable)
+      omitted, discarded = left_out
+      text = if unreadable
+               "the log could not be read (#{unreadable}); showing this session's #{lines.length} events"
+             elsif lines.empty?
+               "none recorded; an empty log does not show that nothing failed"
+             else
+               first, last = [lines.first, lines.last].map { |line| parse(line)&.fetch("timestamp", nil) }
+               "#{lines.length} from #{first} to #{last}"
+             end
+      text += "; #{omitted} earlier lines left out" if omitted.positive?
+      text += "; #{discarded} unreadable lines left out" if discarded.positive?
+      text
     end
   end
 

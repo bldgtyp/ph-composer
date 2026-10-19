@@ -84,7 +84,7 @@ PhComposerUI.define("support/page", ["dom", "overlay", "page_header"], function 
 
   Page.prototype.paint = function (state) {
     var about = state.about, host = about.host, log = about.log, self = this;
-    this.incident = state.incident;
+    this.incident = state.incident; this.resettable = state.resettable;
     this.identity.textContent = "PH-Composer " + about.version + "  ·  " +
       (about.development ? "Development build" : about.build === "unavailable" ? "Build unavailable" :
         "Build " + about.build);
@@ -92,8 +92,8 @@ PhComposerUI.define("support/page", ["dom", "overlay", "page_header"], function 
       row("SketchUp " + host.sketchup + " on " + host.platform,
         host.supported ? "Supported" : "Not supported (" + host.supported_text + ")",
         host.supported ? null : "warning"),
-      row("Diagnostic log", log.writing ? "Writing" : "Not writing: the log folder could not be written. " +
-        "Recent events from this session are still shown.", log.writing ? null : "warning")
+      row("Diagnostic log", log.writing ? "Writing" : "Not writing (" + (log.last_error || "unknown error") +
+        "). Recent events from this session are still shown.", log.writing ? null : "warning")
     );
     if (!state.problems.length) {
       this.problems.replaceChildren(el("p", "muted", "No problems were recorded in the last " +
@@ -110,7 +110,6 @@ PhComposerUI.define("support/page", ["dom", "overlay", "page_header"], function 
       list.appendChild(item);
     });
     this.problems.replaceChildren(list);
-    this.resettable = state.resettable;
   };
 
   /* The report as it will leave the window. Refresh replaces it; Copy and Save act on what is shown. */

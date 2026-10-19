@@ -432,12 +432,15 @@ opens and never writes the Model.
 version, build and commit, manifest, host, supported-host verdict, log health, the selected
 incident, the included event range or the reason there is none, and what is never included),
 then at most 256 KiB of the newest log lines, each rebuilt by `Diagnostics.sanitized` from the
-fields and values the log accepts. A read failure falls back to this session's in-memory lines and
-says so. The capture is kept under its id: the page previews it, Copy copies the previewed text, and
+fields and values the log accepts, each frame checked on its own. A read failure falls back to this
+session's in-memory lines and says so; while the log is not being written, this session's lines
+that never reached it are added. Lines that are not readable records are counted in the header,
+never silently dropped. The capture is kept under its id: the page previews it, Copy copies the previewed text, and
 Save writes the same capture's bytes through a temporary file renamed into place; a capture
 replaced by Refresh is refused. Report a problem opens the public issue page only after the page
 says the issue is public. Clear diagnostic history deletes the log and its archive and keeps saved
-reports. Reopen panel closes and reopens the panel window; Reset display preferences writes each
+reports; a file it cannot delete is reported as not cleared and becomes the log's last storage
+error. Reopen panel closes and reopens the panel window; Reset display preferences writes each
 display preference's default (`Preferences.reset_display`) and leaves libraries, approved
 locations and agent tokens alone.
 

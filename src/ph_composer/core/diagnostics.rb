@@ -46,8 +46,6 @@ module PhComposer
       "manifest" => REFERENCE
     }.freeze
     INVALID = "[INVALID]"
-    # A free-text value a support report copies: short, plain and never a path.
-    FREE_TEXT = /\A[\w .:+()\[\]-]{0,96}\z/.freeze
     # A frame's method name as Ruby, JavaScript or Python reports it, without arguments or source.
     FRAME_METHOD = /\A[\w$.:<>?!=\[\]{} #-]{1,96}\z/.freeze
     FRAME_FILE = %r{\A[\w-]+(?:\.[\w-]+)*(?:/[\w-]+(?:\.[\w-]+)*)*\z}.freeze
@@ -185,19 +183,29 @@ module PhComposer
         return nil unless record.is_a?(Hash) && record["timestamp"].is_a?(String)
 
         kept = record.select { |name, value| reportable?(name, value) }
+        # Each frame is checked on its own and at most MAX_FRAMES are copied.
+        kept["frames"] = record["frames"].select { |frame| valid_frame?(frame) }.first(MAX_FRAMES) if kept["frames"]
         JSON.generate(kept)
       rescue JSON::ParserError
         nil
       end
 
-      # Removes the log and its archive and forgets this session's tail. Saved support reports are the
-      # user's and are not touched.
+      # Removes the log and its archive and forgets this session's tail, answering whether both are gone.
+      # A file that could not be deleted keeps the tail and is the log's last storage error. Saved support
+      # reports are the user's and are not touched.
       def clear
-        [path, path + ".1"].each { |file| FileUtils.rm_f(file) }
+        [path, path + ".1"].each do |file|
+          File.delete(file)
+        rescue Errno::ENOENT
+          nil
+        end
         @tail = []
         @tail_bytes = 0
         @last_error = nil
         true
+      rescue SystemCallError => error
+        @last_error = error.class.name
+        false
       end
 
       # Drops events older than RETENTION_SECONDS from the log and its archive, and an archive left empty.
@@ -285,9 +293,8 @@ module PhComposer
         when "timestamp" then value.is_a?(String) && value.match?(/\A[\dT:.Z+-]{10,40}\z/)
         when "schema" then value.is_a?(Integer)
         when "duration_ms" then value.is_a?(Numeric)
-        when "frames" then valid_frames?(value)
+        when "frames" then value.is_a?(Array)
         when *VALUES.keys then value.is_a?(String) && VALUES.fetch(name).match?(value)
-        when *ALLOWED_FIELDS then value.is_a?(String) && FREE_TEXT.match?(value) && !absolute_path?(value)
         else false
         end
       end
