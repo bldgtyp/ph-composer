@@ -229,15 +229,22 @@ module PhComposer
         @waiting_since = now
       end
 
+      # A silent runtime cannot report itself, so the deadline that ends the run is logged here.
       def responsive!
         if @ready
           return if now - @waiting_since <= TRANSLATION_SILENCE_SECONDS
 
-          raise Blocked.new("runtime.unresponsive", UNRESPONSIVE)
+          silent!("translation", "runtime.unresponsive", UNRESPONSIVE)
         end
         return if now - @waiting_since <= (RuntimeGate.fetch("boot_deadline_ms") / 1000.0) + STARTUP_GRACE_SECONDS
 
-        raise Blocked.new("runtime.boot_timeout", NOT_STARTED)
+        silent!("boot", "runtime.boot_timeout", NOT_STARTED)
+      end
+
+      def silent!(stage, code, message)
+        Diagnostics.log("export_runtime_failed", "severity" => "error", "status" => "failed", "stage" => stage,
+                                                 "code" => code)
+        raise Blocked.new(code, message)
       end
 
       def now

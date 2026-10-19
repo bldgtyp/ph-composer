@@ -205,6 +205,9 @@ class ExportTasksTest < PhComposerTestCase
 
     outcome = @tasks.status(task.fetch("task_id"), OWNER).fetch("outcome")
     assert_equal %w[failed runtime.boot_timeout none], outcome.values_at("status", "code", "effect")
+    logged = JSON.parse(PhComposer::Diagnostics.tail.last)
+    assert_equal ["export_runtime_failed", "boot", "runtime.boot_timeout", task.fetch("task_id")],
+                 logged.values_at("event", "stage", "code", "run_id")
     assert @runtime.stopped
     @runtime.success
     assert_equal "runtime.boot_timeout", @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "code"),

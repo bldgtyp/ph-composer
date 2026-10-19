@@ -35,7 +35,7 @@ module PhComposer
     # A declared name: lowercase, dotted, at most 96 characters.
     NAME = /\A(?=.{1,96}\z)[a-z0-9_]+(?:\.[a-z0-9_]+)*\z/.freeze
     REFERENCE = /\A[A-Za-z0-9_.:-]{1,96}\z/.freeze
-    ERROR_CLASS = /\A[A-Z][A-Za-z0-9_]*(?:::[A-Z][A-Za-z0-9_]*)*\z/.freeze
+    ERROR_CLASS = /\A(?=.{1,96}\z)[A-Z][A-Za-z0-9_]*(?:::[A-Z][A-Za-z0-9_]*)*\z/.freeze
     VERSION_TEXT = /\A[\w.+-]{1,32}\z/.freeze
     # Which values each field accepts. No field takes free text: a status is a name like any other.
     VALUES = {
@@ -261,7 +261,10 @@ module PhComposer
         return line if line.bytesize <= MAX_EVENT_BYTES
 
         kept = payload.slice("timestamp", "schema", "event", "extension_version", "build", "incident", "error_class")
-        JSON.generate(kept.merge("status" => "event_truncated")) + "\n"
+        line = JSON.generate(kept.merge("status" => "event_truncated")) + "\n"
+        return line if line.bytesize <= MAX_EVENT_BYTES
+
+        JSON.generate(kept.slice("timestamp", "schema").merge("event" => "event_truncated")) + "\n"
       end
 
       # A frame in the extension folder or the loader, named from the folder holding them so it reads

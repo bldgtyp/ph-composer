@@ -178,7 +178,8 @@ replaced by `[INVALID]` otherwise; a dropped key is echoed only when it looks li
 field takes free text, so every line fits in 8 KiB; a line that somehow would not loses its frames,
 then every field but its identity. Values from a page or the runtime pass `Diagnostics.accepted`,
 which keeps only accepted values; names a client supplies are kept only when declared (an agent's
-tool and operation; a panel section as the registered feature that owns it). Panel messages log
+tool and operation; a panel section as the registered feature that owns it; a page error class only
+as one of the language's own error types, else `Error` or `NotAnError`). Panel messages log
 under the session and request they served (`Diagnostics.with_context`); an export carries that
 context and its `run_id` into every later timer and runtime callback. The panel reports a section
 that failed to render, an uncaught error and a rejected promise as `panel.diagnostic`, at most 20

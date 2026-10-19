@@ -79,3 +79,14 @@ test("the summary shows kind labels and one plain line per omitted kind and reas
   lines.forEach(function (line) { assert.ok(!/ph_composer\.|_/.test(line), line); });
   assert.ok(o.form.summary.children[3].getAttribute("data-tooltip").includes("outside.reason"));
 });
+
+test("stopping waiting for an export settles the form like a failure, with Cancel usable", function () {
+  var o = setup(); o.form.open(); answer(o, o.sent[0], projection(4)); o.form.submit();
+  assert.ok(o.form.cancel.disabled);
+
+  o.form.requests.abandon(); o.form.refresh(o.state);
+
+  assert.ok(!o.form.cancel.disabled);
+  assert.match(o.form.error.textContent, /result is not known/);
+  assert.ok(!o.form.submitButton.disabled);
+});

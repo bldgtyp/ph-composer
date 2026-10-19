@@ -180,6 +180,14 @@ class DiagnosticsTest < PhComposerTestCase
     end
   end
 
+  def test_an_error_class_too_long_to_be_one_is_refused
+    Diagnostics.strict = false
+
+    Diagnostics.log("probe", "error_class" => "A" * 10_000)
+
+    assert_equal "[INVALID]", JSON.parse(Diagnostics.tail.last).fetch("error_class")
+  end
+
   def test_a_dropped_key_never_makes_a_line_over_its_bound
     Diagnostics.strict = false
 

@@ -26,13 +26,15 @@
    work is never sent twice, and every `onUnconfirmed` listener hears of it once; the panel keeps
    that request's way out on screen until it settles. For an action, `checkStatus` asks the host what
    became of that request id (`action.status`) and waits once more; the answer arrives as the request's
-   own result. Any other channel can only stop waiting with `reset`. */
+   own result. Any other channel can only stop waiting: `abandon` gives the request a result of its own,
+   failed with effect unknown, which the owner consumes like any other, so its form settles. */
 PhComposerUI.define("request", [], function () {
   "use strict";
   var sequence = 0;
   /* Longer than any interactive edit should take; the host answers in order, so a long operation delays
      this warning rather than the answer. A starting default, not a measured bound. */
   var RECOVERY_MS = 20000;
+  var ABANDONED = "PH-Composer stopped waiting for this, so its result is not known. Check it before trying again.";
   var listeners = [];
   var SLOTS = { "action.invoke": { slot: "actionResult", keyed: false },
     "view.invoke": { slot: "viewResults", keyed: true }, "query.invoke": { slot: "queryResults", keyed: true },
@@ -104,7 +106,7 @@ PhComposerUI.define("request", [], function () {
      returns the outcome so the caller can use it for the rest of the render. Null otherwise. */
   Channel.prototype.consume = function (state) {
     var held = state && state.ui && state.ui[this.slot];
-    var result = this.keyed ? (held && this.pending && held[this.pending]) : held;
+    var result = this.abandoned || (this.keyed ? (held && this.pending && held[this.pending]) : held);
     var handlers = this.handlers, outcome;
     if (!this.matches(result)) return null;
     outcome = result.outcome;
@@ -116,7 +118,16 @@ PhComposerUI.define("request", [], function () {
   /* Forgets the pending request: its result, if it still arrives, is ignored. */
   Channel.prototype.reset = function () {
     this.stopWatching();
-    this.pending = null; this.action = null; this.handlers = null; this.unconfirmed = false;
+    this.pending = null; this.action = null; this.handlers = null; this.unconfirmed = false; this.abandoned = null;
+  };
+  /* Stops waiting for the pending request: the next `consume` answers it as failed with effect unknown,
+     and its later answer, if any, is ignored. The host is not asked to cancel anything. */
+  Channel.prototype.abandon = function () {
+    if (!this.pending) return false;
+    this.stopWatching();
+    this.abandoned = { request_id: this.pending, session: this.session, outcome: { status: "failed",
+      code: "request.abandoned", effect: "unknown", message: ABANDONED } };
+    return true;
   };
 
   return {

@@ -287,8 +287,15 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     reports += 1;
     try {
       send("panel.diagnostic", { event: event, section: sectionName || null,
-        error_class: (error && error.name) || "Error", frames: stackFrames(error) });
+        error_class: errorClass(error), frames: stackFrames(error) });
     } catch (ignored) { /* the report itself failed; the page carries on */ }
+  }
+  /* A rejection can be any value and an error's name can be set by anyone, so only the language's own error
+     types are named; any other Error is "Error" and anything else "NotAnError". */
+  var ERROR_TYPES = ["Error", "TypeError", "RangeError", "ReferenceError", "SyntaxError", "URIError", "EvalError"];
+  function errorClass(error) {
+    if (Object.prototype.toString.call(error) !== "[object Error]") return "NotAnError";
+    return ERROR_TYPES.indexOf(error.name) >= 0 ? error.name : "Error";
   }
   /* Chromium starts a stack with the error's own "Name: message", which may span lines or look like a frame;
      only the lines after it are frames. A stack that does not start that way gives none. */
@@ -484,7 +491,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
   function renderRecovery() {
     var layer = document.querySelector("[data-notice-layer]"), host;
     unanswered = unanswered.filter(function (item) {
-      return item.channel.pending === item.id && item.channel.session === state.session;
+      return item.channel.pending === item.id && !item.channel.abandoned && item.channel.session === state.session;
     });
     if (!layer) return;
     if (!recovery) {
@@ -507,7 +514,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     // Bound to the request that raised it: a later request on the same channel is never checked or dropped.
     row.appendChild(ui.button(action ? "Check status" : "Stop waiting", function () {
       if (channel.pending !== item.id) { repaint(); return; }
-      if (action) channel.checkStatus(); else { channel.reset(); repaint(); }
+      if (action) channel.checkStatus(); else { channel.abandon(); repaint(); }
     }));
     return row;
   }

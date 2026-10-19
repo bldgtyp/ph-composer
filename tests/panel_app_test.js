@@ -202,8 +202,9 @@ test("an unconfirmed read offers only to stop waiting, which frees its view", fu
   p.timers[0]();
   assert.strictEqual(recoveryButton(p).textContent, "Stop waiting");
   recoveryButton(p).listeners.click({});
-  assert.strictEqual(channel.busy(), false);
   assert.strictEqual(p.recovery().hidden, true);
+  assert.strictEqual(channel.consume(p.panel.state).code, "request.abandoned", "its owner settles it as unknown");
+  assert.strictEqual(channel.busy(), false);
   assert.deepStrictEqual(types(p.sent), ["query.invoke"]);
 });
 
@@ -303,6 +304,18 @@ test("a section that fails to render reports its class and panel frames to the h
     frames: [{ file: "html/features/x.js", line: 12, method: "render" },
       { file: "html/panel.js", line: 270, method: "renderSection" }] });
   assert.ok(JSON.stringify(p.sent).indexOf("Zone North") < 0);
+});
+
+test("a rejection's own name is never reported as an error class", function () {
+  var p = page(), named = new Error("x");
+  named.name = "SecretClientHouse";
+  var classes = [{ name: "SecretClientHouse", id: "record-1" }, named, new RangeError("y")].map(function (reason) {
+    var before = p.sent.length;
+    p.panel.section("example.broken" + before, function () { throw reason; });
+    p.receive("panel.snapshot", snapshot("session-a", before));
+    return p.sent.filter(function (message) { return message.type === "panel.diagnostic"; }).pop().payload.error_class;
+  });
+  assert.deepStrictEqual(classes, ["NotAnError", "Error", "RangeError"]);
 });
 
 test("text in an error's message that looks like a frame is never reported as one", function () {

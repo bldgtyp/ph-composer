@@ -396,9 +396,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 29860,
+      "bytes": 30379,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "8aa4fd8cf09b04745492a498ae48672088e007454fd84e9191860d88587f6d17"
+      "sha256": "65b8f3a02c9c9b907426c13bc167f4b4455ece225d6a795cb285a305422b3abe"
     },
     "html/record_edits.js": {
       "bytes": 17435,
@@ -411,9 +411,9 @@
       "sha256": "be07093c44b64646227f1000cfcf26db0defba373beb7ecc113f047f05d46b88"
     },
     "html/request.js": {
-      "bytes": 7372,
+      "bytes": 8163,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d0751dd6136dd574bb5963576c56148e05c319445196ca336b1e2aaefe9f7816"
+      "sha256": "3a9c18bf32f52108b7ce5b385c917151827b0f908b45952870c0bcf928cbf6a5"
     },
     "html/runtime/index.html": {
       "bytes": 580,

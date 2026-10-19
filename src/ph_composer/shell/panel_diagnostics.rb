@@ -7,13 +7,16 @@ module PhComposer
   # name nor put its own text in the log.
   module PanelDiagnostics
     EVENTS = %w[panel_render_failed panel_uncaught_error panel_unhandled_rejection].freeze
+    # The page names only the language's own error types (html/panel.js); any other value is not kept.
+    ERROR_CLASSES = %w[Error TypeError RangeError ReferenceError SyntaxError URIError EvalError NotAnError].freeze
 
     module_function
 
     def record(payload)
       return unless EVENTS.include?(payload["event"])
 
-      reported = Diagnostics.accepted("stage" => owner(payload["section"]), "error_class" => payload["error_class"],
+      error_class = ERROR_CLASSES.include?(payload["error_class"]) ? payload["error_class"] : nil
+      reported = Diagnostics.accepted("stage" => owner(payload["section"]), "error_class" => error_class,
                                       "frames" => payload["frames"])
       Diagnostics.log(payload["event"], { "severity" => "error", "status" => "failed" }.merge(reported))
     end
