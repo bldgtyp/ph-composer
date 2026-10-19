@@ -410,10 +410,12 @@ module PhComposer
       def flush_ring
         rows = @lock.synchronize { @calls.take_unread }
         @on_calls&.call(rows) unless rows.empty?
+        # The operation name is the agent's own text, so only a value the log accepts is kept.
         rows.each do |row|
-          Diagnostics.log("agent_access_call", "operation" => [row["tool"], row["operation"]].compact.join(" "),
-                                               "status" => row["error"] ? "error" : row["status"],
-                                               "code" => row["code"], "duration_ms" => row["ms"])
+          named = Diagnostics.accepted("operation" => [row["tool"], row["operation"]].compact.join("."),
+                                       "code" => row["code"])
+          Diagnostics.log("agent_access_call", { "status" => row["error"] ? "error" : row["status"],
+                                                 "duration_ms" => row["ms"] }.merge(named))
         end
       end
 

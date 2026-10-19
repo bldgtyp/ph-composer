@@ -42,7 +42,7 @@ class LoaderTest < PhComposerTestCase
   # `session_created` subscriber hears it: Spaces protects the Volumes a file holds unlocked.
   def test_the_active_models_session_is_created_after_the_features_compose
     root = File.read(File.join(EXTENSION_ROOT, "extension.rb"))
-    composed = root.index(/^    compose$/)
+    composed = root.index(/^ +compose$/)
     opened = root.index("Sessions.open_active")
     assert composed && opened && opened > composed, "extension.rb must call Sessions.open_active after compose"
   end

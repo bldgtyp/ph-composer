@@ -33,7 +33,10 @@ def export_json(text: str, sections: Sequence[Section[Any, Any]] = SECTIONS) -> 
     canonical = result.get("canonical_model")
     if not result["summary"]["publishable"] or canonical is None:
         return json.dumps(result)
-    from .conformance import check
+    from .conformance import ConformanceError, check
 
-    check(canonical, result, sections)
+    try:
+        check(canonical, result, sections)
+    except ValueError as error:
+        raise ConformanceError(str(error)) from error
     return json.dumps(result)

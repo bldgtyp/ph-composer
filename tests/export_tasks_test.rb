@@ -44,6 +44,10 @@ class ExportTasksTest < PhComposerTestCase
       @callback.call("runtime.ready", {})
     end
 
+    def failure(error)
+      @callback.call("runtime.translation", "request_id" => @id, "error" => error)
+    end
+
     def success
       success_with("type" => "Model", "rooms" => [])
     end
@@ -224,6 +228,26 @@ class ExportTasksTest < PhComposerTestCase
     assert_equal %w[failed runtime.unresponsive none], outcome.values_at("status", "code", "effect")
     assert @runtime.stopped
     assert_empty Dir.children(@directory)
+  end
+
+  # REVIEW F03: the task replaced every runtime code with runtime.translation_failed.
+  def test_a_runtime_failure_keeps_its_stage_and_code_in_the_log_and_a_fixed_message
+    frames = [{ "file" => "ph_composer_translation/conformance.py", "line" => 40, "method" => "check" }]
+    { "runtime.conformance_failed" => "conformance", "runtime.boot_failed" => "boot",
+      "runtime.undeclared" => "translation" }.each do |code, stage|
+      task = start
+      drain
+      @runtime.failure("code" => code, "stage" => stage, "error_class" => "ConformanceError", "frames" => frames,
+                       "message" => "Zone North /Users/example/model.skp")
+      outcome = @tasks.status(task.fetch("task_id"), OWNER).fetch("outcome")
+      logged = JSON.parse(PhComposer::Diagnostics.tail.last)
+
+      expected = code == "runtime.undeclared" ? "runtime.translation_failed" : code
+      assert_equal expected, outcome.fetch("code")
+      refute_includes outcome.fetch("message"), "Zone North"
+      assert_equal [task.fetch("task_id"), stage, code, frames], logged.values_at("run_id", "stage", "code", "frames")
+      refute_includes PhComposer::Diagnostics.tail.join, "Zone North"
+    end
   end
 
   # Half a prior pair is refused whatever the consent; a whole one needs consent to replace it.

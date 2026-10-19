@@ -286,6 +286,25 @@ test("a section registered after start mounts itself in its pane and renders fro
   assert.throws(function () { p.panel.section("x.y", function () {}, { pane: "nowhere" }); }, /names no pane/);
 });
 
+/* REVIEW F02: a render failure went only to the console. */
+test("a section that fails to render reports its class and panel frames to the host, never its message", function () {
+  var p = page();
+  p.panel.section("example.broken", function () {
+    var error = new TypeError("Zone North is undefined");
+    error.stack = "TypeError: Zone North is undefined\n    at render (file:///Users/example/ph_composer/html/features/x.js:12:3)" +
+      "\n    at renderSection (file:///Users/example/ph_composer/html/panel.js:270:13)";
+    throw error;
+  });
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  var reported = p.sent.filter(function (message) { return message.type === "panel.diagnostic"; });
+  assert.strictEqual(reported.length, 1);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(reported[0].payload)), {
+    event: "panel_render_failed", section: "example.broken", error_class: "TypeError",
+    frames: [{ file: "html/features/x.js", line: 12, method: "render" },
+      { file: "html/panel.js", line: 270, method: "renderSection" }] });
+  assert.ok(JSON.stringify(p.sent).indexOf("Zone North") < 0);
+});
+
 test("a host failure is shown as an error; an unknown message type changes nothing", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 2));

@@ -208,7 +208,11 @@ class ApiTest < PhComposerTestCase
 
     assert_equal %w[failed operation.failed rolled_back], failed.values_at("status", "code", "effect")
     assert_equal PhComposer::Outcome::ROLLED_BACK, failed.fetch("message")
-    assert_nil failed.fetch("detail"), "unexpected exceptions do not disclose their messages or details"
+    assert_equal ["incident"], failed.fetch("detail").keys,
+                 "unexpected exceptions disclose only the log's incident reference, never their messages"
+    logged = JSON.parse(PhComposer::Diagnostics.tail.last)
+    assert_equal [failed.dig("detail", "incident"), "operation_failed", "rolled_back"],
+                 logged.values_at("incident", "event", "effect")
     assert_equal [1200.0] * 3, parts.map { |id| stored(id).fetch("length_mm") }
     assert_equal [revision, undo_steps], [@session.revision, @model.instance_variable_get(:@undo_stack).length]
     assert_nil @session.busy_reason, "no mutation or suppression is left behind"

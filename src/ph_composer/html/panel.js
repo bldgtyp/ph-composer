@@ -267,13 +267,38 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
   }
 
   /* One section's failure stays in that section: the shell, the notices and every other section still
-     paint, so a refusal warning is never hidden by an unrelated error. */
+     paint, so a refusal warning is never hidden by an unrelated error. The host log records it. */
   function renderSection(entry) {
     try {
       entry.render(mount(entry), state, send);
     } catch (error) {
       if (window.console) window.console.error("panel section \"" + entry.name + "\" failed to render", error);
+      report("panel_render_failed", entry.name, error);
     }
+  }
+
+  /* A page failure the host log records: the event, the section it happened in, the error's class and the
+     panel's own frames, never the message, which can carry Model content. A page caught in a failure loop
+     reports its first MAX_REPORTS and then stays quiet. Reporting never throws. */
+  var MAX_REPORTS = 20, reports = 0;
+  var JS_FRAME = /at (?:(\S+) \()?\S*?\/html\/([\w\/.-]+\.js):(\d+):\d+\)?/;
+  function report(event, sectionName, error) {
+    if (reports >= MAX_REPORTS) return;
+    reports += 1;
+    try {
+      var frames = String(error && error.stack || "").split("\n").map(function (line) {
+        var match = JS_FRAME.exec(line);
+        return match && { file: "html/" + match[2], line: Number(match[3]), method: match[1] || "?" };
+      }).filter(Boolean).slice(0, 20);
+      send("panel.diagnostic", { event: event, section: sectionName || null,
+        error_class: (error && error.name) || "Error", frames: frames });
+    } catch (ignored) { /* the report itself failed; the page carries on */ }
+  }
+  if (window.addEventListener) {
+    window.addEventListener("error", function (event) { report("panel_uncaught_error", null, event && event.error); });
+    window.addEventListener("unhandledrejection", function (event) {
+      report("panel_unhandled_rejection", null, event && event.reason);
+    });
   }
 
   function render() {

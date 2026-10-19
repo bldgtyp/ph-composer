@@ -163,3 +163,14 @@ def test_growth_past_the_phase_baseline_needs_a_decision() -> None:
         "installed size 301 bytes grew more than 200 bytes past the 100-byte phase baseline; record a decision "
         "and raise the baseline"
     ]
+
+
+def test_two_packages_that_differ_in_any_file_have_different_build_identities() -> None:
+    one = {**LOADER, "ph_composer/extension.rb": b"module PhComposer; end\n"}
+    other = {**one, "ph_composer/extension.rb": b"module PhComposer; end # changed\n"}
+
+    identity = json.loads(build.build_identity(one, "0123456789ab"))
+    assert identity == {"build": build.package_digest(one), "commit": "0123456789ab"}
+    assert len(identity["build"]) == 12
+    assert build.package_digest(one) != build.package_digest(other)
+    assert build.package_digest({**one, build.BUILD_IDENTITY: b"{}"}) == build.package_digest(one)

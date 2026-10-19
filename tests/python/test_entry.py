@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from ph_composer_translation.composition import EXPORTERS, SECTIONS
 from ph_composer_translation.entry import translate_json
 from synthetic_sections import SectionA, SectionB, SectionC, document
@@ -34,3 +36,17 @@ def test_the_product_build_lists_authored_report_face_zone_space_sections_and_no
     empty = {"schema_version": 1, "run_id": "run-0", "sections": {}}
     result = json.loads(translate_json(json.dumps(empty)))
     assert result["state"] == "failed" and result["failure"]["code"] == "payload.contract"
+
+
+def test_a_conformance_failure_raises_its_own_class_for_the_runtime_page(monkeypatch: pytest.MonkeyPatch) -> None:
+    from ph_composer_translation import conformance, entry
+
+    publishable = {"summary": {"publishable": True}, "canonical_model": {"hbjson": "{}"}}
+    monkeypatch.setattr(entry, "translate_json", lambda text, sections: json.dumps(publishable))
+
+    def refuse(*_args: object) -> None:
+        raise ValueError("canonical identifiers repeat")
+
+    monkeypatch.setattr(conformance, "check", refuse)
+    with pytest.raises(conformance.ConformanceError):
+        entry.export_json("{}")

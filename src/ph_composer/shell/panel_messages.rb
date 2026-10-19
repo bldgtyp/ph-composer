@@ -9,6 +9,8 @@ module PhComposer
   module PanelMessages
     INBOUND = {
       "panel.ready" => [],
+      # A page failure for the log: its event, section, error class and the panel's own frames.
+      "panel.diagnostic" => %w[event section error_class frames],
       # `session` names the Model session the panel showed; `expected_revision` the revision it rendered.
       "action.invoke" => %w[request_id session name params expected_revision],
       # What became of an earlier action.invoke whose result the page never received. It never runs the

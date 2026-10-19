@@ -163,6 +163,27 @@ class PanelTest < PhComposerTestCase
     assert_equal %w[refused request.outcome_unavailable unknown], outcome.values_at("status", "code", "effect")
   end
 
+  # REVIEW F02: a page failure reaches the Ruby log as a bounded record of fixed fields.
+  def test_a_page_failure_is_logged_with_its_section_class_and_frames_and_nothing_else
+    dialog = open_panel
+    frames = [{ "file" => "html/panel.js", "line" => 270, "method" => "renderSection" }]
+
+    send_message(dialog, "panel.diagnostic", "event" => "panel_render_failed", "section" => "ph_composer.overview",
+                                             "error_class" => "TypeError", "frames" => frames)
+    send_message(dialog, "panel.diagnostic", "event" => "chosen_by_page", "section" => nil,
+                                             "error_class" => "TypeError", "frames" => [])
+    send_message(dialog, "panel.diagnostic", "event" => "panel_uncaught_error", "section" => "Zone North",
+                                             "error_class" => "Zone North", "frames" => [{ "file" => "/Users/x" }])
+
+    logged = PhComposer::Diagnostics.tail.map { |line| JSON.parse(line) }.select do |line|
+      line.fetch("event").start_with?("panel_")
+    end
+    assert_equal %w[panel_render_failed panel_uncaught_error], logged.map { |line| line.fetch("event") }
+    assert_equal ["ph_composer.overview", "TypeError", frames], logged.first.values_at("stage", "error_class", "frames")
+    assert_equal [nil, nil, nil], logged.last.values_at("stage", "error_class", "frames"), "unaccepted values drop"
+    assert_empty messages(dialog, "panel.failure")
+  end
+
   # A view command carries no expected revision, because it changes no record. The snapshot still
   # follows it, so a section reading what it changed repaints.
   def test_a_query_answers_without_snapshot_or_model_operation_and_rejects_other_sessions

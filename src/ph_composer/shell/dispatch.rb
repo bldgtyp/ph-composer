@@ -370,11 +370,12 @@ module PhComposer
     rescue UserError => error
       Outcome.refused("validation.failed", error.message, :revision => session.revision, :mutation => true)
     rescue StandardError => error
-      Diagnostics.log("operation_failed", "operation" => action.name, "code" => "operation.failed",
-                                          "error_class" => error.class.name)
+      incident = Diagnostics.incident("operation_failed", error, "operation" => action.name,
+                                                                 "code" => "operation.failed", "effect" => "none")
       Outcome.refused("operation.failed", "The change could not be prepared.", :status => "failed",
                                                                                :revision => session.revision,
-                                                                               :mutation => true)
+                                                                               :mutation => true,
+                                                                               :detail => { "incident" => incident })
       # `failed` with effect `none`: the error came before any operation opened.
     end
 
@@ -391,10 +392,10 @@ module PhComposer
                         :proposal_digest => proposal.digest, :message => "Done: #{action.undo_name}.")
     rescue StandardError => error
       effect = verified_unchanged?(session.model, engine, proposal) ? "rolled_back" : "unknown"
-      Diagnostics.log("operation_failed", "operation" => action.name, "status" => effect,
-                                          "error_class" => error.class.name)
       reason = error.is_a?(CodedError) ? error : nil
-      Outcome.failed(:effect => effect, :revision => session.revision, :reason => reason)
+      incident = Diagnostics.incident("operation_failed", error, "operation" => action.name, "effect" => effect,
+                                                                 "code" => reason&.code || "operation.failed")
+      Outcome.failed(:effect => effect, :revision => session.revision, :reason => reason, :incident => incident)
     end
 
     def verified_unchanged?(model, engine, proposal)
@@ -408,10 +409,11 @@ module PhComposer
     # operation, so `effect` is "none": the Model is unchanged. A view command may still have moved the
     # viewport part-way, which is why a client re-reads what it shows rather than assuming.
     def unexpected_outcome(error, session, name)
-      Diagnostics.log("operation_failed", "operation" => name, "code" => "operation.failed",
-                                          "error_class" => error.class.name)
+      incident = Diagnostics.incident("operation_failed", error, "operation" => name, "code" => "operation.failed",
+                                                                 "effect" => "none")
       Outcome.refused("operation.failed", "The request could not be answered.", :status => "failed",
-                                                                                :revision => session&.revision)
+                                                                                :revision => session&.revision,
+                                                                                :detail => { "incident" => incident })
     end
 
     def coded_outcome(error, session, mutation: false)

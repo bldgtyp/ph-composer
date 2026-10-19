@@ -160,8 +160,10 @@
   }
 
   function translate(payload) {
+    var stage = "boot";
     start(payload.deadline_ms).then(installWheels).then(function () {
       if (state === "stopped") return;
+      stage = "translation";
       pyodide.globals.set("_phc_document", JSON.stringify(payload.document));
       return pyodide.runPythonAsync(
         "from ph_composer_translation.entry import export_json\nexport_json(_phc_document)"
@@ -170,8 +172,26 @@
       });
     }).catch(function (error) {
       send("runtime.translation", { request_id: payload.request_id, session: session,
-        error: { code: error.code || "runtime.translation_failed", message: "The export runtime failed." } });
+        error: failureReport(error, stage) });
     });
+  }
+
+  /* What Ruby logs about a failure: where it stopped, its code, the Python exception's class and the
+     translation package's own frames, never the message, which can name Model content. A failed
+     conformance check of the canonical bytes has its own code. */
+  var PYTHON_FRAME = /File "[^"]*?\/(ph_composer_translation\/[\w\/.-]+\.py)", line (\d+), in ([\w<>.]+)/g;
+  var PYTHON_ERROR = /(?:^|\n)(?:[\w]+\.)*([A-Z]\w*):[^\n]*\s*$/;
+  function failureReport(error, stage) {
+    var text = String(error && error.message || ""), frames = [], match, named = PYTHON_ERROR.exec(text);
+    var errorClass = named ? named[1] : (error && error.name) || "Error";
+    PYTHON_FRAME.lastIndex = 0;
+    while ((match = PYTHON_FRAME.exec(text)) && frames.length < 20) {
+      frames.push({ file: match[1], line: Number(match[2]), method: match[3] });
+    }
+    if (errorClass === "ConformanceError") stage = "conformance";
+    var code = error.code || (stage === "conformance" ? "runtime.conformance_failed" : "runtime.translation_failed");
+    return { code: code, stage: stage, error_class: errorClass, frames: frames.reverse(),
+      message: "The export runtime failed." };
   }
 
   /* Install only shipped, manifest-pinned pure-Python wheels. No pip dependency resolution,

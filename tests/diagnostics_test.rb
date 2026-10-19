@@ -108,8 +108,109 @@ class DiagnosticsTest < PhComposerTestCase
     assert_equal "file / name", Diagnostics.redact("file / name")
   end
 
+  # An error raised by extension code, so its frames are the extension's.
+  def raised
+    yield
+    flunk "expected an error"
+  rescue PhComposer::Error => error
+    error
+  end
+
   def test_redacts_file_urls
     assert_equal "[REDACTED_PATH]", Diagnostics.redact("file:///x")
+  end
+
+  # REVIEW F01: two RuntimeErrors with different messages and backtraces logged equal records.
+  def test_two_failures_are_told_apart_by_their_frames_never_their_messages
+    first = raised { PhComposer::Preferences.set("unit_system", "Zone North at /Users/example/model.skp") }
+    second = raised { PhComposer::Preferences.set("zone_north", "x") }
+
+    records = [first, second].map { |error| Diagnostics.exception("probe_failed", error) }
+
+    refute_equal records.first.fetch("frames"), records.last.fetch("frames")
+    frame = records.first.fetch("frames").first
+    assert_equal "ph_composer/shell/preferences.rb", frame.fetch("file")
+    assert_kind_of Integer, frame.fetch("line")
+    text = Diagnostics.tail.join
+    refute_includes text, "Zone North"
+    refute_includes text, "/Users/"
+    assert_equal [1, "PhComposer::UserError", "error"], records.first.values_at("schema", "error_class", "severity")
+  end
+
+  def test_an_incident_reference_names_the_record_it_wrote
+    reference = Diagnostics.incident("probe_failed", raised { PhComposer::Preferences.set("x", "y") })
+
+    assert_match(/\APHC-[0-9A-F]{6}\z/, reference)
+    assert_equal reference, JSON.parse(Diagnostics.tail.last).fetch("incident")
+  end
+
+  def test_every_event_carries_the_build_and_the_context_it_was_served_in
+    Diagnostics.with_context("session" => "ses_1", "request" => "ses_1:form:3") do
+      Diagnostics.log("served", "operation" => "example.create")
+    end
+    Diagnostics.log("after")
+
+    served, after = Diagnostics.tail.last(2).map { |line| JSON.parse(line) }
+    assert_equal ["development", "ses_1", "ses_1:form:3"], served.values_at("build", "session", "request")
+    assert_nil after["session"], "the context ends with its block"
+  end
+
+  # Names come from declarations; a value that does not look like one is refused, never echoed.
+  def test_a_value_its_field_does_not_accept_is_refused_in_strict_mode_and_replaced_otherwise
+    assert_raises(ArgumentError) { Diagnostics.log("probe", "operation" => "Zone North") }
+
+    Diagnostics.strict = false
+    Diagnostics.log("probe", "operation" => "Zone North", "frames" => [{ "file" => "/Users/x.rb" }], "Bad Key" => 1)
+    logged, dropped = Diagnostics.tail.last(2).map { |line| JSON.parse(line) }
+    assert_equal %w[[INVALID] [INVALID]], logged.values_at("operation", "frames")
+    assert_equal "[INVALID]", dropped.fetch("status"), "a dropped key that is not a field name is not echoed"
+  end
+
+  def test_an_event_over_its_bound_loses_its_frames_first
+    frames = Array.new(20) { |index| { "file" => "ph_composer/#{'x' * 500}.rb", "line" => index, "method" => "m" } }
+
+    payload = Diagnostics.log("probe", "frames" => frames, "status" => "failed")
+
+    line = Diagnostics.tail.last
+    assert_operator line.bytesize, :<=, Diagnostics::MAX_EVENT_BYTES
+    refute JSON.parse(line).key?("frames")
+    assert_equal "failed", JSON.parse(line).fetch("status")
+    assert payload
+  end
+
+  def test_a_failed_write_is_kept_as_the_logs_health_and_in_the_tail
+    Dir.mktmpdir("ph-composer-log") do |directory|
+      blocked = File.join(directory, "file")
+      File.write(blocked, "")
+      Diagnostics.path_override = File.join(blocked, "logs", "ph-composer.log")
+
+      Diagnostics.log("unwritten")
+
+      refute Diagnostics.health.fetch("writing")
+      assert_match(/\AErrno::/, Diagnostics.health.fetch("last_error"))
+      assert_equal "unwritten", JSON.parse(Diagnostics.tail.last).fetch("event")
+      Diagnostics.path_override = File.join(directory, "ph-composer.log")
+      Diagnostics.log("written")
+      assert_equal({ "writing" => true, "last_error" => nil }, Diagnostics.health)
+    end
+  end
+
+  def test_prune_keeps_seven_days_and_drops_an_older_archive
+    Dir.mktmpdir("ph-composer-log") do |directory|
+      path = File.join(directory, "ph-composer.log")
+      Diagnostics.path_override = path
+      now = Time.utc(2026, 10, 19, 12)
+      old = JSON.generate("timestamp" => (now - (8 * 86_400)).iso8601, "event" => "old")
+      recent = JSON.generate("timestamp" => (now - 86_400).iso8601, "event" => "recent")
+      File.write(path, "#{old}\n#{recent}\nnot json\n")
+      File.write(path + ".1", "#{old}\n")
+      File.utime(now - (8 * 86_400), now - (8 * 86_400), path + ".1")
+
+      Diagnostics.prune(now)
+
+      assert_equal ["recent"], File.readlines(path).map { |line| JSON.parse(line).fetch("event") }
+      refute File.exist?(path + ".1")
+    end
   end
 
   def test_rotates_before_exceeding_size_cap

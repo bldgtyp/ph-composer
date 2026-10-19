@@ -13,6 +13,7 @@ predecessor are admitted line by line through `shipping_allowlist.json`, each wi
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -33,6 +34,9 @@ ARCHIVE = DIST / f"{EXTENSION_ID}.rbz"
 ALLOWLIST = Path(__file__).with_name("shipping_allowlist.json")
 ZIP_EPOCH = (1980, 1, 1, 0, 0, 0)
 RUNTIME_MANIFEST = f"{EXTENSION_ID}/vendor/manifest.json"
+# The package's identity, written into the archive only (core/build_identity.rb reads it). A source
+# checkout has none and reports itself as a development build.
+BUILD_IDENTITY = f"{EXTENSION_ID}/build.json"
 
 # What the extension ships. A new kind of asset is a packaging decision, made here.
 SHIPPED_SUFFIXES = frozenset(
@@ -160,11 +164,41 @@ def syntax_check(ruby: str) -> None:
             raise SystemExit(result.stdout + result.stderr)
 
 
+def package_digest(entries: Mapping[str, bytes]) -> str:
+    """Twelve hex characters over every shipped name and its bytes, so two packages that differ in any
+    file differ here. The identity file itself is left out."""
+    digest = hashlib.sha256()
+    for name, content in sorted(entries.items()):
+        if name == BUILD_IDENTITY:
+            continue
+        digest.update(name.encode() + b"\0" + hashlib.sha256(content).digest())
+    return digest.hexdigest()[:12]
+
+
+def build_identity(entries: Mapping[str, bytes], commit: str | None) -> bytes:
+    return (json.dumps({"build": package_digest(entries), "commit": commit}, sort_keys=True) + "\n").encode()
+
+
+def source_commit() -> str | None:
+    """The commit the source came from, marked `-dirty` when the shipped tree has uncommitted changes."""
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
+        ).stdout.strip()
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "--", "src"], cwd=ROOT, capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return f"{head}-dirty" if dirty else head
+
+
 def write_archive(ruby: str) -> None:
     syntax_check(ruby)
     entries = {archive_name(path): path.read_bytes() for path in source_files()}
     if problems := shipping_problems(entries, load_allowlist()):
         raise SystemExit("refusing to build:\n  " + "\n  ".join(problems))
+    entries[BUILD_IDENTITY] = build_identity(entries, source_commit())
     DIST.mkdir(exist_ok=True)
     with zipfile.ZipFile(ARCHIVE, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as bundle:
         for name, content in sorted(entries.items()):
@@ -179,13 +213,15 @@ def check_archive() -> None:
         raise SystemExit(f"missing {ARCHIVE.relative_to(ROOT)}; run make rbz")
     with zipfile.ZipFile(ARCHIVE) as bundle:
         entries = {name: bundle.read(name) for name in bundle.namelist()}
-    expected = {archive_name(path) for path in source_files()}
+    expected = {archive_name(path) for path in source_files()} | {BUILD_IDENTITY}
     if set(entries) != expected:
         missing = sorted(expected - set(entries))
         extra = sorted(set(entries) - expected)
         raise SystemExit(f"archive is stale; run make rbz. missing={missing}, extra={extra}")
     if problems := shipping_problems(entries, load_allowlist()) + footprint_problems(entries):
         raise SystemExit("archive may not ship:\n  " + "\n  ".join(problems))
+    if json.loads(entries[BUILD_IDENTITY]).get("build") != package_digest(entries):
+        raise SystemExit("archive build identity does not match its files; run make rbz")
     installed = sum(len(content) for content in entries.values())
     print(f"RBZ verified: {len(entries)} files, {ARCHIVE.stat().st_size} bytes, {installed} bytes installed")
 

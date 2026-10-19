@@ -150,11 +150,18 @@ module PhComposer
         handle(type, payload)
       end
 
-      # A request the page is waiting on is always answered in its own shape, so the view that asked can
-      # settle; an unexpected error is logged and answered as a failure.
+      # Every event logged while serving a message names the session and request it served.
       def handle(type, payload)
+        references = Diagnostics.accepted("session" => payload["session"], "request" => payload["request_id"])
+        Diagnostics.with_context(references) { route(type, payload) }
+      end
+
+      # A request the page is waiting on is always answered in its own shape, so the view that asked can
+      # settle; an unexpected error is logged under an incident reference the failed outcome carries.
+      def route(type, payload)
         case type
         when "panel.ready" then ready
+        when "panel.diagnostic" then PanelDiagnostics.record(payload)
         when "action.invoke" then invoke(payload)
         when "action.status" then status(payload)
         when "view.invoke" then view(payload)
@@ -165,14 +172,14 @@ module PhComposer
         when *EXPORT_TYPES then export(type, payload)
         end
       rescue StandardError => error
-        Diagnostics.exception("panel_message", error)
+        detail = { "detail" => { "incident" => Diagnostics.incident("panel_message", error) } }
         case type
-        when "action.invoke", "action.status" then publish_result(payload, UNEXPECTED)
-        when "view.invoke" then publish_view(payload, VIEW_FAILED)
-        when "setup.invoke" then publish_setup(payload, SETUP_FAILED)
-        when "query.invoke" then publish_query(payload, QUERY_FAILED)
-        when "file_export.invoke" then publish_file_export(payload, EXPORT_FAILED)
-        when *EXPORT_TYPES then publish_export(payload, EXPORT_FAILED)
+        when "action.invoke", "action.status" then publish_result(payload, UNEXPECTED.merge(detail))
+        when "view.invoke" then publish_view(payload, VIEW_FAILED.merge(detail))
+        when "setup.invoke" then publish_setup(payload, SETUP_FAILED.merge(detail))
+        when "query.invoke" then publish_query(payload, QUERY_FAILED.merge(detail))
+        when "file_export.invoke" then publish_file_export(payload, EXPORT_FAILED.merge(detail))
+        when *EXPORT_TYPES then publish_export(payload, EXPORT_FAILED.merge(detail))
         when "preferences.set"
           publish_preferences(payload, "failed", "The display preference could not be saved.")
         else publish("panel.failure", "message" => "The panel could not complete that request.")

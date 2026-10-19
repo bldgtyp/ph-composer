@@ -14,6 +14,14 @@ module PhComposer
       STARTUP_GRACE_SECONDS = 15
       TRANSLATION_SILENCE_SECONDS = 300
       NOT_STARTED = "The export runtime did not start in time, so the export was stopped. No files were written."
+      # A runtime failure keeps its own code when it is one the runtime declares; its message stays fixed.
+      RUNTIME_FAILURES = {
+        "runtime.asset_refused" => "The export runtime could not start. No files were written.",
+        "runtime.boot_failed" => "The export runtime could not start. No files were written.",
+        "runtime.boot_timeout" => "The export runtime could not start. No files were written.",
+        "runtime.conformance_failed" => "The export runtime could not check this Model's HBJSON. No files were written."
+      }.freeze
+      TRANSLATION_FAILED = "The export runtime could not translate this Model."
       UNRESPONSIVE = "The export runtime stopped responding, so the export was stopped. No files were written."
 
       attr_reader :id, :finished_at, :owner
@@ -112,9 +120,7 @@ module PhComposer
         return unless type == "runtime.translation" && payload["request_id"] == id
 
         coherent!
-        if payload["error"]
-          raise Blocked.new("runtime.translation_failed", "The export runtime could not translate this Model.")
-        end
+        runtime_failed!(payload["error"]) if payload["error"]
 
         @stage = "checking"
         result = payload.fetch("result")
@@ -199,6 +205,16 @@ module PhComposer
         responsive! if @stage == "translating"
       rescue StandardError => error
         failed(error) unless terminal?
+      end
+
+      # The log keeps where the runtime stopped, its own code and its frames; the user reads a fixed sentence.
+      def runtime_failed!(error)
+        error = error.is_a?(Hash) ? error : {}
+        Diagnostics.log("export_runtime_failed", {
+          "severity" => "error", "run_id" => id
+        }.merge(Diagnostics.accepted(error.slice("stage", "code", "error_class", "frames"))))
+        code = RUNTIME_FAILURES.key?(error["code"]) ? error["code"] : "runtime.translation_failed"
+        raise Blocked.new(code, RUNTIME_FAILURES.fetch(code, TRANSLATION_FAILED))
       end
 
       # The translation clock starts when the page is ready, not when it was asked to load.
