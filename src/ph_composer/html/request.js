@@ -23,10 +23,10 @@
    with `matches(result, id)`.
 
    A `run` request still unanswered after RECOVERY_MS is unconfirmed: the channel stays pending, so the
-   work is never sent twice, and every `onUnconfirmed` listener hears of it. `watch` waits once more, as
-   the panel does when its warning is dismissed or replaced before the request settles. For an action, `checkStatus`
-   asks the host what became of that request id (`action.status`); the answer arrives as the request's own
-   result. Any other channel can only stop waiting with `reset`. */
+   work is never sent twice, and every `onUnconfirmed` listener hears of it once; the panel keeps
+   that request's way out on screen until it settles. For an action, `checkStatus` asks the host what
+   became of that request id (`action.status`) and waits once more; the answer arrives as the request's
+   own result. Any other channel can only stop waiting with `reset`. */
 PhComposerUI.define("request", [], function () {
   "use strict";
   var sequence = 0;

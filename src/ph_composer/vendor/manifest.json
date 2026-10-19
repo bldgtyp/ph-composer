@@ -386,9 +386,9 @@
       "sha256": "19cda60de04b9f3f7c45f3e47ff744075536b6f20aa6cbc05f7a0fbb167f5f47"
     },
     "html/overlay.js": {
-      "bytes": 24055,
+      "bytes": 24498,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "5c74c7402aacc4e6cf277eaad30a0a91b95c82cbb10b02c02bf321d04a6cf9ef"
+      "sha256": "5a59e9f6cefd4c16f1ba7ff0df629bb4e8791ec39b571e913dccb49f05f2c2cf"
     },
     "html/page_header.js": {
       "bytes": 1658,
@@ -396,9 +396,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 28012,
+      "bytes": 28063,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "9f17b960067ea3a83c162ab80fc8e1c624fcc4a20a5119cce546fc81389ed865"
+      "sha256": "028f9bbde7276e59f689407faf1c34f7ac7b29105fa20d7353ef935608619c89"
     },
     "html/record_edits.js": {
       "bytes": 17435,
@@ -411,9 +411,9 @@
       "sha256": "be07093c44b64646227f1000cfcf26db0defba373beb7ecc113f047f05d46b88"
     },
     "html/request.js": {
-      "bytes": 7393,
+      "bytes": 7372,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "094c5ec3b887612eed869904962b7369e7f6103da940e8ed4ff59d87ad740e54"
+      "sha256": "d0751dd6136dd574bb5963576c56148e05c319445196ca336b1e2aaefe9f7816"
     },
     "html/runtime/index.html": {
       "bytes": 580,
@@ -511,9 +511,9 @@
       "sha256": "e18aec672de575215e7c8475726d242d3715c94b235cd1328645d9b1fb7ba63a"
     },
     "html/workspace.js": {
-      "bytes": 1500,
+      "bytes": 1542,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "667a869114936325e0fa229c66e08b739b8dd5c4cd644e906619cbeb319257ef"
+      "sha256": "cff8c2dfdbfa81f27457b4b58ca4755a0dabb64126d39aaca400faf4f9f3c293"
     },
     "python/ph_composer_translation/__init__.py": {
       "bytes": 1234,

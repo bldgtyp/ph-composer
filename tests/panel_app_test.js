@@ -166,17 +166,18 @@ test("the way out survives other notices and stays one per unanswered request", 
 
 test("the way out shows inside an open form, where it can be reached", function () {
   var p = timedPage();
-  var form = p.context.document.createElement("dialog");
+  var form = p.modules.workspace.formDialog("example-form", function () { form.closeModal(); });
   p.context.document.body.appendChild(form);
-  form.showModal();
+  form.openModal();
   var channel = p.modules.request.channel("session-a", p.panel.send, "form");
   channel.run("example.create", {});
 
   p.timers[0]();
   assert.strictEqual(p.recovery().parentNode, form);
-  form.close();
-  p.panel.repaint();
-  assert.notStrictEqual(p.recovery().parentNode, form, "back above the page once the form closes");
+  form.closeModal();
+  assert.notStrictEqual(p.recovery().parentNode, form, "back above the page as the form closes, with no render");
+  form.openModal();
+  assert.strictEqual(p.recovery().parentNode, form, "and into a form as it opens");
 });
 
 test("a way out acts only on the request that raised it", function () {

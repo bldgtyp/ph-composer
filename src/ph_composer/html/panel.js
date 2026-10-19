@@ -466,6 +466,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     host = openModal() || layer;
     if (recovery.parentNode !== host) host.appendChild(recovery);
   }
+  ui.onModalChange(renderRecovery);
   function recoveryRow(item) {
     var channel = item.channel, action = channel.message === "action.invoke";
     var row = ui.element("div", "phc-recovery-row");
@@ -474,7 +475,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
       "PH-Composer has not answered this request yet, so its result is not known."));
     // Bound to the request that raised it: a later request on the same channel is never checked or dropped.
     row.appendChild(ui.button(action ? "Check status" : "Stop waiting", function () {
-      if (channel.pending !== item.id) return;
+      if (channel.pending !== item.id) { repaint(); return; }
       if (action) channel.checkStatus(); else { channel.reset(); repaint(); }
     }));
     return row;
