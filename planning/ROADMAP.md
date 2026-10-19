@@ -1,6 +1,6 @@
 # Roadmap
 
-DATE: 2026-10-17
+DATE: 2026-10-19
 STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 merged to main through PR #15 on 2026-10-01 and archived; its eleven review refactors merged by 2026-10-02 and are archived.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
@@ -149,6 +149,27 @@ concurrent work. External-agent support and public distribution remain distinct 
 | 5.4 | Further library kinds and providers | Not drafted | Thermal Bridge Types, Pipe and Duct Types, equipment, climates |
 | 5.5 | PV and site | Not drafted | Named in the founding brief |
 | 2.5 | [Libraries: connection provider and sign-in](features/phase-05-post-mvp/phases/p2-16-connection-provider.md) | Deferred by D2-8, 2026-10-01 | PH-Navigator production endpoint still uses its older format. Scope unchanged |
+
+## Production-support release prerequisite
+
+Ed accepted the support direction and a six-stage plan on 2026-10-19. A second review the same
+day cut the [production-support packet](features/unscheduled/production-support/README.md) to
+five stages, PS-01 to PS-05: failure context in the log, honest lost-reply and silent-runtime
+states with checked configuration writes, Help & Diagnostics with a previewed text report,
+shipped help with a bug template, and integrated native acceptance. That revision awaits Ed's
+confirmation. Transparency and ease of use govern the user experience.
+
+Complete its required acceptance before public beta or broader distribution. PS-02, the three
+correctness fixes, depends on nothing and is wanted before the Phase 3 internal candidate; the
+rest is scheduled relative to feature development when Ed decides. Phase 3 closing remains the
+first internal envelope-model candidate. SketchUp 2023, Windows and certification gates remain
+separate. This adds no prerequisite to thermal-bridge development.
+
+The separate accepted [developer-observability packet](features/unscheduled/developer-observability/README.md)
+owns DV-01 to DV-04: browser failure evidence, bounded host waits, a development diagnostic reader
+and named fault controls. DV-01/DV-02 can proceed independently; DV-03 reads production PS-01's log.
+Production support acceptance does not wait for developer conveniences. Both packets have their
+own ledger and can be assigned to separate chats, with shared-file coordination.
 
 ## Dependencies
 
