@@ -1,9 +1,9 @@
 # Production support and diagnostics
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: In progress
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
 PH-Composer should explain a failure, say whether anything changed, offer a safe next step and
 let the user inspect the information they share with support. A user should never need Ruby

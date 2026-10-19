@@ -103,7 +103,7 @@ module PhComposer
         rebuild
         if active?
           attach_overlay
-          Preferences.set("colour_by_mode", name) if remember
+          remember_mode(name) if remember
         end
         self
       end
@@ -270,6 +270,13 @@ module PhComposer
         # A failure anywhere in that pipeline must not abort later host-event subscribers or leave
         # a partial drawing active. The next snapshot reports Off alongside the warning.
         failed(declaration, error)
+      end
+
+      # The mode is already showing; a choice the host could not remember only costs the next session its default.
+      def remember_mode(name)
+        Preferences.set("colour_by_mode", name)
+      rescue UserError => error
+        Diagnostics.exception("colour_by_mode_not_remembered", error)
       end
 
       # The mode is off, the overlay is gone and the user is told which mode stopped drawing.

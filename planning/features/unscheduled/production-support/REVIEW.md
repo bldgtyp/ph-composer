@@ -3,7 +3,7 @@
 DATE: 2026-10-19
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
 Read-only audit of main at 522fe8a1c8258e7556a8bb05b05a94e911b2fffd on 2026-10-19.
 Source claims below refer to that baseline; reopen affected paths before implementation.

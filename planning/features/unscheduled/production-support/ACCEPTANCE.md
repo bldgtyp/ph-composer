@@ -3,7 +3,7 @@
 DATE: 2026-10-19
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
 All rows are requirements, not passes. Record actual results only in STATUS and linked receipts.
 Use synthetic data and development-only fault injection. Never package fault switches.

@@ -3,7 +3,7 @@
 DATE: 2026-10-19
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
 These contracts are not implemented. Existing authorities remain
 [CONTRACTS](../../../../context/CONTRACTS.md),

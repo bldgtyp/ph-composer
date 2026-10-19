@@ -278,7 +278,7 @@ module Sketchup
 
   class << self
     attr_accessor :active_model, :platform_value, :version_value, :locale_value,
-                  :preserve_active_on_open, :reuse_active_model_on_open
+                  :preserve_active_on_open, :reuse_active_model_on_open, :refuse_default_writes
     attr_reader :registered_extensions, :default_writes
 
     def register_extension(extension, load_on_start)
@@ -312,7 +312,12 @@ module Sketchup
       value.is_a?(String) && value.include?('"') ? nil : value
     end
 
+    # The host answers false when it could not store the value; `refuse_default_writes = true` reproduces
+    # that, and `:silently` answers true without storing, so only a read-back can tell.
     def write_default(section, key, value)
+      return false if @refuse_default_writes == true
+      return true if @refuse_default_writes == :silently
+
       (@defaults ||= {})[[section, key]] = value
       (@default_writes ||= []) << [section, key, value]
       true
@@ -376,6 +381,7 @@ module Sketchup
       @registered_extensions ||= []
       @defaults = {}
       @default_writes = []
+      @refuse_default_writes = false
       @saved_models = {}
       @observers = []
       @platform_value = :platform_osx

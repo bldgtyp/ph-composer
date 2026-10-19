@@ -77,6 +77,95 @@ class PreferencesTest < PhComposerTestCase
     assert_equal({}, Preferences.table_views)
   end
 
+  # REVIEW F06: a stubbed write_default returning false still returned the value as saved.
+  def test_a_write_the_host_refuses_is_reported_as_not_saved
+    Sketchup.refuse_default_writes = true
+
+    error = assert_raises(PhComposer::UserError) { Preferences.set("unit_system", "IP") }
+    assert_equal "PH-Composer could not save that display preference.", error.message
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("dimension_format", "cm", :scope => "example.editor", :system => "SI")
+    end
+    assert_equal "SI", Preferences.unit_system
+  end
+
+  def test_a_write_the_host_accepts_but_does_not_read_back_is_not_saved
+    Sketchup.refuse_default_writes = :silently
+
+    assert_raises(PhComposer::UserError) { Preferences.set("unit_system", "IP") }
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("table_view", "example.zones.faces", :scope => "example.zones")
+    end
+  end
+
+  def test_a_stored_map_it_cannot_read_is_left_unchanged
+    # Damaged, and a string the host stores but reads back as nil.
+    { "table_views" => "not base64 json", "dimension_formats" => 'held "quoted"' }.each do |key, damaged|
+      Sketchup.write_default(SECTION, key, damaged)
+    end
+    Sketchup.clear_default_writes
+
+    error = assert_raises(PhComposer::UserError) do
+      Preferences.set("table_view", "example.zones.faces", :scope => "example.zones")
+    end
+    assert_equal "Your saved display preferences could not be read, so they were left unchanged.", error.message
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("dimension_format", "cm", :scope => "example.editor", :system => "SI")
+    end
+    assert_empty Sketchup.default_writes
+    assert_equal "not base64 json", Sketchup.read_default(SECTION, "table_views")
+  end
+
+  def test_a_scope_entry_it_cannot_read_is_left_unchanged
+    stored = [JSON.generate("example.editor" => %w[cm ft-in])].pack("m0")
+    Sketchup.write_default(SECTION, "dimension_formats", stored)
+    Sketchup.clear_default_writes
+
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("dimension_format", "m", :scope => "example.editor", :system => "SI")
+    end
+    assert_empty Sketchup.default_writes
+    assert_equal stored, Sketchup.read_default(SECTION, "dimension_formats")
+  end
+
+  # A later version may keep more scopes than this one reads; changing one would save what is never shown.
+  def test_a_map_with_more_scopes_than_it_reads_is_refused_without_writing
+    many = (0..Preferences::MAX_SCOPES).to_h { |index| ["example.scope_#{index}", "example.view"] }
+    Sketchup.write_default(SECTION, "table_views", [JSON.generate(many)].pack("m0"))
+    Sketchup.clear_default_writes
+
+    assert_raises(PhComposer::UserError) do
+      Preferences.set("table_view", "example.other", :scope => "example.scope_#{Preferences::MAX_SCOPES}")
+    end
+    assert_empty Sketchup.default_writes
+  end
+
+  # Preserved entries can fill the store; a map the readers would refuse is never written.
+  def test_a_map_too_large_to_read_back_is_refused_without_writing
+    later = (1..Preferences::MAX_SCOPES - 1).to_h { |index| ["example.scope_#{index}", "x" * 176] }
+    Sketchup.write_default(SECTION, "table_views", [JSON.generate(later)].pack("m0"))
+    assert_operator Sketchup.read_default(SECTION, "table_views").bytesize, :<=, Preferences::MAX_ENCODED_BYTES
+    Sketchup.clear_default_writes
+
+    error = assert_raises(PhComposer::UserError) do
+      Preferences.set("table_view", "example.zones.faces", :scope => "example.zones")
+    end
+    assert_equal "Too many display preferences are remembered.", error.message
+    assert_empty Sketchup.default_writes
+  end
+
+  # A later version's entry this one does not recognize survives a change to another scope.
+  def test_changing_one_scope_keeps_entries_this_version_does_not_recognize
+    later = { "example.editor" => { "SI" => "dm", "IP" => "yd" } }
+    Sketchup.write_default(SECTION, "dimension_formats", [JSON.generate(later)].pack("m0"))
+
+    Preferences.set("dimension_format", "cm", :scope => "example.builder", :system => "SI")
+
+    stored = JSON.parse(Sketchup.read_default(SECTION, "dimension_formats").unpack1("m0"))
+    assert_equal({ "SI" => "dm", "IP" => "yd" }, stored.fetch("example.editor"))
+    assert_equal({ "SI" => "cm", "IP" => "in" }, stored.fetch("example.builder"))
+  end
+
   def test_the_regional_format_takes_the_macos_region_and_the_sketchup_decimal
     Sketchup::RegionalSettings.decimal_separator = ","
     Preferences.apple_locale_reader = proc { "de_DE" }

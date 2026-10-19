@@ -12,6 +12,10 @@ module PhComposer
   # names the scope; a scope is a dotted name under the owning feature's id, like every declared name.
   # A table view is the view a host table last showed (html/table_views.js), keyed the same way by the
   # host's id.
+  #
+  # A write counts only when the host reports success and reads the value back. A stored map this
+  # version cannot read, whether damaged or written by a later version, is refused rather than replaced:
+  # the user's other remembered choices are not discarded to record one new one.
   module Preferences
     SECTION = EXTENSION_ID
     UNIT_SYSTEMS = %w[SI IP].freeze
@@ -23,6 +27,12 @@ module PhComposer
     # Remembered scopes are few; the cap stops a misbehaving client from growing the stored map without bound.
     MAX_SCOPES = 32
     MAX_STORED_BYTES = 4096
+    # The largest encoded map the readers accept: the JSON's byte cap, as base64 with headroom.
+    MAX_ENCODED_BYTES = MAX_STORED_BYTES * 2
+    # What `read_default` answers for a key never stored. The host reads a stored value it cannot return,
+    # such as a string holding a double quote, as nil, so nil means present but unreadable.
+    ABSENT = ""
+    UNREADABLE = "Your saved display preferences could not be read, so they were left unchanged."
 
     class << self
       def unit_system
@@ -47,7 +57,7 @@ module PhComposer
       # Every remembered scope's format per system; a scope never chosen is absent and takes the default.
       def dimension_formats
         raw = Sketchup.read_default(SECTION, "dimension_formats", nil)
-        return {} unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
+        return {} unless raw.is_a?(String) && raw.bytesize <= MAX_ENCODED_BYTES
 
         sanitize(JSON.parse(raw.unpack1("m0")))
       rescue StandardError
@@ -60,7 +70,7 @@ module PhComposer
         when "unit_system"
           raise UserError, "Display units must be SI or IP." unless UNIT_SYSTEMS.include?(value)
 
-          Sketchup.write_default(SECTION, "unit_system", value)
+          write(:unit_system, value)
         when "dimension_format"
           write_dimension_format(value, scope, system)
         when "table_view"
@@ -68,7 +78,7 @@ module PhComposer
         when "colour_by_mode"
           raise UserError, "That Colour-by mode name is not valid." unless valid_id?(value)
 
-          Sketchup.write_default(SECTION, "colour_by_mode", value)
+          write(:colour_by_mode, value)
         else
           raise UserError, "That display preference is not recognized."
         end
@@ -99,32 +109,71 @@ module PhComposer
         raise UserError, "The dimension scope name is not valid." unless valid_id?(scope)
         raise UserError, "Choose a valid #{system} dimension format." unless DIMENSION_FORMATS[system].include?(value)
 
-        formats = dimension_formats
+        formats = stored_map("dimension_formats")
         if !formats.key?(scope) && formats.length >= MAX_SCOPES
           raise UserError, "Too many dimension formats are remembered."
         end
 
-        formats[scope] = DEFAULT_DIMENSION_FORMAT.merge(formats.fetch(scope, {})).merge(system => value)
-        # SketchUp 26.1 stores a string containing a double quote but reads it back as nil, so the JSON
-        # is kept as strict base64 (context/SKETCHUP_HOST_BEHAVIOR.md).
-        Sketchup.write_default(SECTION, "dimension_formats", [JSON.generate(formats)].pack("m0"))
+        remembered = formats.fetch(scope, {})
+        raise UserError, UNREADABLE unless remembered.is_a?(Hash)
+
+        formats[scope] = DEFAULT_DIMENSION_FORMAT.merge(remembered).merge(system => value)
+        write_map("dimension_formats", formats)
       end
 
       def write_table_view(value, scope)
         raise UserError, "The table name is not valid." unless valid_id?(scope)
         raise UserError, "The view name is not valid." unless valid_id?(value)
 
-        views = table_views
+        views = stored_map("table_views")
         raise UserError, "Too many table views are remembered." if !views.key?(scope) && views.length >= MAX_SCOPES
 
         views[scope] = value
-        Sketchup.write_default(SECTION, "table_views", [JSON.generate(views)].pack("m0"))
+        write_map("table_views", views)
+      end
+
+      # The map as stored, entries this version does not recognize included, so that changing one entry
+      # keeps the rest. Absent is empty; present but unreadable refuses the change.
+      def stored_map(key)
+        raw = Sketchup.read_default(SECTION, key, ABSENT)
+        return {} if raw == ABSENT
+
+        parsed = raw.is_a?(String) && raw.bytesize <= MAX_ENCODED_BYTES ? decode_map(raw) : nil
+        return parsed if parsed.is_a?(Hash)
+
+        raise UserError, UNREADABLE
+      end
+
+      def decode_map(raw)
+        JSON.parse(raw.unpack1("m0"))
+      rescue StandardError
+        nil
+      end
+
+      # SketchUp 26.1 stores a string containing a double quote but reads it back as nil, so the JSON
+      # is kept as strict base64 (context/SKETCHUP_HOST_BEHAVIOR.md).
+      # A map the readers would refuse or cut short is not written, so a saved choice is always one they show.
+      def write_map(key, map)
+        encoded = [JSON.generate(map)].pack("m0")
+        if map.length > MAX_SCOPES || encoded.bytesize > MAX_ENCODED_BYTES
+          raise UserError, "Too many display preferences are remembered."
+        end
+
+        write(key, encoded)
+      end
+
+      # `write_default` answers false when it did not store the value; reading it back catches the rest.
+      def write(key, value)
+        key = key.to_s
+        return if Sketchup.write_default(SECTION, key, value) && Sketchup.read_default(SECTION, key, nil) == value
+
+        raise UserError, "PH-Composer could not save that display preference."
       end
 
       # A map stored as strict base64 JSON, keeping only the pairs `keep` accepts, at most MAX_SCOPES.
       def read_map(key, &keep)
         raw = Sketchup.read_default(SECTION, key, nil)
-        return {} unless raw.is_a?(String) && raw.bytesize <= MAX_STORED_BYTES * 2
+        return {} unless raw.is_a?(String) && raw.bytesize <= MAX_ENCODED_BYTES
 
         parsed = JSON.parse(raw.unpack1("m0"))
         return {} unless parsed.is_a?(Hash)

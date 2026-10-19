@@ -907,6 +907,16 @@ class ColourByTest < PhComposerTestCase
     assert_equal "ph_composer.zones.by_zone", ColourBy.remembered_mode
   end
 
+  def test_a_mode_the_host_cannot_remember_still_turns_on
+    zone_group(1650, ["Wall"])
+    Sketchup.refuse_default_writes = true
+
+    service = activate("ph_composer.zones.by_zone")
+
+    assert service.active?
+    assert_nil ColourBy.remembered_mode
+  end
+
   def test_the_menu_turns_a_mode_on_and_off_and_checks_the_active_one
     zone_group(1700, ["Wall"])
     PhComposer::Commands.install
