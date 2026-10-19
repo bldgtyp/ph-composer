@@ -186,3 +186,15 @@ test("a transport that answers at once keeps the id it returns and arms no warni
   assert.strictEqual(channel.busy(), false);
   assert.strictEqual(timers.length, 0);
 });
+
+test("abandoning a request answers it as failed with an unknown effect, through consume", function () {
+  var h = harness(), failed = [];
+  var id = h.channel.run("example.create", {}, { onFail: function (outcome) { failed.push(outcome.code); } });
+
+  assert.strictEqual(h.channel.abandon(), true);
+  var outcome = h.channel.consume(state(null));
+  assert.deepStrictEqual([outcome.status, outcome.code, outcome.effect], ["failed", "request.abandoned", "unknown"]);
+  assert.deepStrictEqual(failed, ["request.abandoned"]);
+  assert.strictEqual(h.channel.busy(), false);
+  assert.strictEqual(h.channel.consume(state(result(id, "session-a", "completed"))), null, "a late answer is ignored");
+});

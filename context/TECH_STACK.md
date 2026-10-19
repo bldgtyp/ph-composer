@@ -440,7 +440,9 @@ outcome (CONTRACTS, "Retries"); `request.outcome_unavailable` with effect `unkno
 expired, or for a missing id after any id was dropped to keep the map bounded; or
 `request.not_received` with effect `none` for an id this page never sent while every id is held.
 Page messages arrive in order, so such an id was never received. Nothing is sent again. Any other
-request offers only Stop waiting, which ignores its late answer. These ways out sit in their own
+request offers only Stop waiting: the channel answers it itself as failed with effect `unknown`
+(`request.abandoned`, a page-only code), which its owner consumes like any result, so a form
+settles; the host's late answer is ignored. These ways out sit in their own
 bar, one row per unanswered request, apart from the single notice slot, so no other notice and no
 dismissal removes them; each acts only on the request that raised it and goes when that request
 settles. The bar shows inside an open modal form, where the page behind cannot be reached.

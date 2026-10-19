@@ -267,9 +267,17 @@ module PhComposer
       @lock.synchronize { @log << line }
     end
 
+    # The log takes no free text, so the activity is summarized by what it came to; each request stays in
+    # the snapshot's request ledger for development probes.
     def flush_log
       lines = @lock.synchronize { @log.slice!(0, @log.length) }
-      Diagnostics.log("asset_server_activity", "status" => lines.join(" | ")) unless lines.empty?
+      return if lines.empty?
+
+      status = if lines.any? { |line| line.start_with?("acceptor failed") } then "failed"
+               elsif lines.any? { |line| line.include?("refused") } then "refused"
+               else "ok"
+               end
+      Diagnostics.log("asset_server_activity", "status" => status)
     end
 
     def close_socket(value)

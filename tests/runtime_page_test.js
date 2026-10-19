@@ -23,7 +23,11 @@ function fakePyodide(log) {
     },
     runPythonAsync: function (code) {
       log.push(["async", code]);
-      return Promise.resolve(code.indexOf("export_json") >= 0 ? JSON.stringify({ state: "complete" }) : null);
+      if (code.indexOf("export_report_json") >= 0) {
+        return Promise.resolve(JSON.stringify(log.exportFails ? { failure: log.exportFails } :
+          { result: { state: "complete" } }));
+      }
+      return Promise.resolve(null);
     },
     runPython: function (code) {
       log.push(["run", code]);
@@ -40,6 +44,7 @@ function page(options) {
   var settings = options || {};
   var sent = [], log = [], boots = 0, fetched = [], timers = [];
   log.translationFails = Boolean(settings.translationFails);
+  log.exportFails = settings.exportFails || null;
   var pyodide = fakePyodide(log);
   pyodide.FS.owner = pyodide;
   var context = {
@@ -218,4 +223,18 @@ test("stopping during translation boot suppresses replies and wheel writes", asy
   assert.strictEqual(p.context.PhComposerRuntime.state(), "stopped");
   assert.strictEqual(p.sent.filter(function (message) { return message.type === "runtime.translation"; }).length, 0);
   assert.ok(!p.pyodide.files["/wheel-downloads/fixture.whl"]);
+});
+
+/* REVIEW F03: the page reduced every translation failure to one code. It now passes on the package's own
+   description of a failure (entry.failure_report): stage, class and frames, never the message. */
+test("a failed conformance check is reported by its stage, class and package frames", async function () {
+  var frames = [{ file: "ph_composer_translation/conformance.py", line: 30, method: "check" }];
+  var p = page({ exportFails: { stage: "conformance", error_class: "ConformanceError", frames: frames } });
+  p.context.PhComposerRuntime.receive({ type: "runtime.translate", payload: {
+    request_id: "failed", deadline_ms: 15000, document: {}
+  } });
+  await settle();
+  var error = p.sent.filter(function (message) { return message.type === "runtime.translation"; })[0].payload.error;
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(error)), { code: "runtime.conformance_failed",
+    stage: "conformance", error_class: "ConformanceError", frames: frames, message: "The export runtime failed." });
 });

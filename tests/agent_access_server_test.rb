@@ -396,6 +396,17 @@ class AgentAccessServerTest < PhComposerTestCase
     assert_includes recent, "test.fixture.total_length"
   end
 
+  # An operation name the agent made up is its own text; the log names only declared operations.
+  def test_the_log_names_only_declared_operations
+    call_tool("query", "session" => @session.id, "name" => "secret_client_model", "params" => {})
+    call_tool("query", "session" => @session.id, "name" => "test.fixture.total_length", "params" => {})
+    @server.snapshot
+
+    logged = PhComposer::Diagnostics.tail.join
+    refute_includes logged, "secret_client_model"
+    assert_includes logged, '"operation":"query.test.fixture.total_length"'
+  end
+
   # ------------------------------------------------------------------ lifecycle
 
   def test_the_listener_runs_while_a_token_is_live_and_reports_a_taken_port

@@ -202,8 +202,9 @@ test("an unconfirmed read offers only to stop waiting, which frees its view", fu
   p.timers[0]();
   assert.strictEqual(recoveryButton(p).textContent, "Stop waiting");
   recoveryButton(p).listeners.click({});
-  assert.strictEqual(channel.busy(), false);
   assert.strictEqual(p.recovery().hidden, true);
+  assert.strictEqual(channel.consume(p.panel.state).code, "request.abandoned", "its owner settles it as unknown");
+  assert.strictEqual(channel.busy(), false);
   assert.deepStrictEqual(types(p.sent), ["query.invoke"]);
 });
 
@@ -284,6 +285,50 @@ test("a section registered after start mounts itself in its pane and renders fro
   p.receive("panel.snapshot", snapshot("session-a", 3));
   assert.deepStrictEqual(renders[1], ["example.editor", 3]);
   assert.throws(function () { p.panel.section("x.y", function () {}, { pane: "nowhere" }); }, /names no pane/);
+});
+
+/* REVIEW F02: a render failure went only to the console. */
+test("a section that fails to render reports its class and panel frames to the host, never its message", function () {
+  var p = page();
+  p.panel.section("example.broken", function () {
+    var error = new TypeError("Zone North is undefined");
+    error.stack = "TypeError: Zone North is undefined\n    at render (file:///Users/example/ph_composer/html/features/x.js:12:3)" +
+      "\n    at renderSection (file:///Users/example/ph_composer/html/panel.js:270:13)";
+    throw error;
+  });
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  var reported = p.sent.filter(function (message) { return message.type === "panel.diagnostic"; });
+  assert.strictEqual(reported.length, 1);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(reported[0].payload)), {
+    event: "panel_render_failed", section: "example.broken", error_class: "TypeError",
+    frames: [{ file: "html/features/x.js", line: 12, method: "render" },
+      { file: "html/panel.js", line: 270, method: "renderSection" }] });
+  assert.ok(JSON.stringify(p.sent).indexOf("Zone North") < 0);
+});
+
+test("a rejection's own name is never reported as an error class", function () {
+  var p = page(), named = new Error("x");
+  named.name = "SecretClientHouse";
+  var classes = [{ name: "SecretClientHouse", id: "record-1" }, named, new RangeError("y")].map(function (reason) {
+    var before = p.sent.length;
+    p.panel.section("example.broken" + before, function () { throw reason; });
+    p.receive("panel.snapshot", snapshot("session-a", before));
+    return p.sent.filter(function (message) { return message.type === "panel.diagnostic"; }).pop().payload.error_class;
+  });
+  assert.deepStrictEqual(classes, ["NotAnError", "Error", "RangeError"]);
+});
+
+test("text in an error's message that looks like a frame is never reported as one", function () {
+  var p = page();
+  p.panel.section("example.broken", function () {
+    var error = new TypeError("bad\n    at secret_model (file:///Users/example/html/client_private.js:12:3)");
+    error.stack = String(error) + "\n    at render (file:///Users/example/ph_composer/html/panel.js:5:1)";
+    throw error;
+  });
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  var reported = p.sent.filter(function (message) { return message.type === "panel.diagnostic"; })[0];
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(reported.payload.frames)),
+    [{ file: "html/panel.js", line: 5, method: "render" }]);
 });
 
 test("a host failure is shown as an error; an unknown message type changes nothing", function () {

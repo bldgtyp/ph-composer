@@ -14,6 +14,14 @@ module PhComposer
       STARTUP_GRACE_SECONDS = 15
       TRANSLATION_SILENCE_SECONDS = 300
       NOT_STARTED = "The export runtime did not start in time, so the export was stopped. No files were written."
+      # A runtime failure keeps its own code when it is one the runtime declares; its message stays fixed.
+      RUNTIME_FAILURES = {
+        "runtime.asset_refused" => "The export runtime could not start. No files were written.",
+        "runtime.boot_failed" => "The export runtime could not start. No files were written.",
+        "runtime.boot_timeout" => "The export runtime could not start. No files were written.",
+        "runtime.conformance_failed" => "The export runtime could not check this Model's HBJSON. No files were written."
+      }.freeze
+      TRANSLATION_FAILED = "The export runtime could not translate this Model."
       UNRESPONSIVE = "The export runtime stopped responding, so the export was stopped. No files were written."
 
       attr_reader :id, :finished_at, :owner
@@ -39,6 +47,8 @@ module PhComposer
         @stage = "queued"
         @count = 0
         @units = Preferences.snapshot.fetch("unit_system")
+        # The request that started the run, carried into every later timer and runtime callback's log lines.
+        @trace = Diagnostics.current_context.merge("run_id" => @id)
       end
 
       def start
@@ -46,7 +56,7 @@ module PhComposer
         @generation = @session.export_generation
         @source_revision = @session.revision
         @builder = Collection::Builder.new(@session.model, :run_id => id)
-        @watchdog = UI.start_timer(0.2, true) { watch }
+        @watchdog = UI.start_timer(0.2, true) { traced { watch } }
         schedule
         self
       rescue StandardError => error
@@ -79,7 +89,7 @@ module PhComposer
       private
 
       def schedule
-        @timer.schedule { tick }
+        @timer.schedule { traced { tick } }
       end
 
       def tick
@@ -92,7 +102,7 @@ module PhComposer
           @builder = nil
           @stage = "translating"
           @waiting_since = now
-          @runtime = @runtime_factory.call { |type, payload| received(type, payload) }
+          @runtime = @runtime_factory.call { |type, payload| traced { received(type, payload) } }
           @runtime.start
           @runtime.translate(id, @extraction.document)
         else
@@ -112,9 +122,7 @@ module PhComposer
         return unless type == "runtime.translation" && payload["request_id"] == id
 
         coherent!
-        if payload["error"]
-          raise Blocked.new("runtime.translation_failed", "The export runtime could not translate this Model.")
-        end
+        runtime_failed!(payload["error"]) if payload["error"]
 
         @stage = "checking"
         result = payload.fetch("result")
@@ -134,7 +142,7 @@ module PhComposer
         end
         @result = result
         # Writing is a separate tick, so cancellation and queued host mutations are admitted after Python.
-        @timer.schedule { commit }
+        @timer.schedule { traced { commit } }
       rescue StandardError => error
         failed(error)
       end
@@ -201,21 +209,42 @@ module PhComposer
         failed(error) unless terminal?
       end
 
+      # The log keeps where the runtime stopped, its own code and its frames; the user reads a fixed sentence.
+      def traced(&block)
+        Diagnostics.with_context(@trace, &block)
+      end
+
+      def runtime_failed!(error)
+        error = error.is_a?(Hash) ? error : {}
+        Diagnostics.log("export_runtime_failed", {
+          "severity" => "error", "run_id" => id
+        }.merge(Diagnostics.accepted(error.slice("stage", "code", "error_class", "frames"))))
+        code = RUNTIME_FAILURES.key?(error["code"]) ? error["code"] : "runtime.translation_failed"
+        raise Blocked.new(code, RUNTIME_FAILURES.fetch(code, TRANSLATION_FAILED))
+      end
+
       # The translation clock starts when the page is ready, not when it was asked to load.
       def ready
         @ready = true
         @waiting_since = now
       end
 
+      # A silent runtime cannot report itself, so the deadline that ends the run is logged here.
       def responsive!
         if @ready
           return if now - @waiting_since <= TRANSLATION_SILENCE_SECONDS
 
-          raise Blocked.new("runtime.unresponsive", UNRESPONSIVE)
+          silent!("translation", "runtime.unresponsive", UNRESPONSIVE)
         end
         return if now - @waiting_since <= (RuntimeGate.fetch("boot_deadline_ms") / 1000.0) + STARTUP_GRACE_SECONDS
 
-        raise Blocked.new("runtime.boot_timeout", NOT_STARTED)
+        silent!("boot", "runtime.boot_timeout", NOT_STARTED)
+      end
+
+      def silent!(stage, code, message)
+        Diagnostics.log("export_runtime_failed", "severity" => "error", "status" => "failed", "stage" => stage,
+                                                 "code" => code)
+        raise Blocked.new(code, message)
       end
 
       def now

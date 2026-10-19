@@ -396,9 +396,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 28063,
+      "bytes": 30379,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "028f9bbde7276e59f689407faf1c34f7ac7b29105fa20d7353ef935608619c89"
+      "sha256": "65b8f3a02c9c9b907426c13bc167f4b4455ece225d6a795cb285a305422b3abe"
     },
     "html/record_edits.js": {
       "bytes": 17435,
@@ -411,9 +411,9 @@
       "sha256": "be07093c44b64646227f1000cfcf26db0defba373beb7ecc113f047f05d46b88"
     },
     "html/request.js": {
-      "bytes": 7372,
+      "bytes": 8163,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d0751dd6136dd574bb5963576c56148e05c319445196ca336b1e2aaefe9f7816"
+      "sha256": "3a9c18bf32f52108b7ce5b385c917151827b0f908b45952870c0bcf928cbf6a5"
     },
     "html/runtime/index.html": {
       "bytes": 580,
@@ -421,9 +421,9 @@
       "sha256": "0d1f14371ea0932c0c1d0c793bed9573858c3d2c5ff0553f6867caf1d798bfd1"
     },
     "html/runtime/runtime.js": {
-      "bytes": 9257,
+      "bytes": 10205,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d0ecc88e9f68278dcc73a66652093c4e218b6f860e008dde53d117c680f95b4f"
+      "sha256": "bef8b9354bd1daf4b522e432597e1576ac0ea6bff880a7239083b05b3c6438a0"
     },
     "html/sections/colour_by.js": {
       "bytes": 7766,
@@ -531,9 +531,9 @@
       "sha256": "afffd6cc8bcc61bfeb4769ed81425f7030eb830a23d27ab94282d4cc64d08ce7"
     },
     "python/ph_composer_translation/conformance.py": {
-      "bytes": 2432,
+      "bytes": 2658,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "aba52de9721b43927f7df6083ab69b255f89b1213806a95b655556f20e72edab"
+      "sha256": "75c0da2af7b3a437ef349eb7ca4c3162ff109e74e71de3b73718e326ee190330"
     },
     "python/ph_composer_translation/constructions.py": {
       "bytes": 7232,
@@ -566,9 +566,9 @@
       "sha256": "bdaaa2fa178b5a81ee8e17a51b3f1547917b045da94b977a152062fdad2f66e3"
     },
     "python/ph_composer_translation/entry.py": {
-      "bytes": 1496,
+      "bytes": 3074,
       "mime": "text/plain; charset=utf-8",
-      "sha256": "59a75b7ddfffc634f94ca721818270683893e29228b00c42398021107f4c3416"
+      "sha256": "f2cc1fafadad2d03f26c750bf5c5a6f1d87f78da71a500b3f9c42be65ed3d92a"
     },
     "python/ph_composer_translation/exporters.py": {
       "bytes": 1952,

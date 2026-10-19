@@ -11,6 +11,11 @@ from . import stack
 from .sections import Section
 
 
+class ConformanceError(ValueError):
+    """The canonical bytes did not reconcile with the result. Its class name, not its message, tells the
+    runtime page and the log that conformance, rather than translation, failed."""
+
+
 def check(
     canonical: Mapping[str, Any], result: Mapping[str, Any] | None = None, sections: Sequence[Section[Any, Any]] = ()
 ) -> None:

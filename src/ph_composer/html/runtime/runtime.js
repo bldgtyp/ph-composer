@@ -160,18 +160,36 @@
   }
 
   function translate(payload) {
+    var stage = "boot";
     start(payload.deadline_ms).then(installWheels).then(function () {
       if (state === "stopped") return;
+      stage = "translation";
       pyodide.globals.set("_phc_document", JSON.stringify(payload.document));
       return pyodide.runPythonAsync(
-        "from ph_composer_translation.entry import export_json\nexport_json(_phc_document)"
+        "from ph_composer_translation.entry import export_report_json\nexport_report_json(_phc_document)"
       ).then(function (text) {
-        send("runtime.translation", { request_id: payload.request_id, session: session, result: JSON.parse(text) });
+        var reply = JSON.parse(text);
+        if (reply.failure) {
+          send("runtime.translation", { request_id: payload.request_id, session: session,
+            error: pythonFailure(reply.failure) });
+        } else {
+          send("runtime.translation", { request_id: payload.request_id, session: session, result: reply.result });
+        }
       });
     }).catch(function (error) {
-      send("runtime.translation", { request_id: payload.request_id, session: session,
-        error: { code: error.code || "runtime.translation_failed", message: "The export runtime failed." } });
+      send("runtime.translation", { request_id: payload.request_id, session: session, error: {
+        code: error.code || "runtime.translation_failed", stage: stage, error_class: (error && error.name) || "Error",
+        frames: [], message: "The export runtime failed." } });
     });
+  }
+
+  /* What Ruby logs about a Python failure, as the translation package described it (entry.failure_report):
+     where it stopped, the exception's class and the package's own frames, never the message. A failed
+     conformance check of the canonical bytes has its own code. */
+  function pythonFailure(failure) {
+    return { code: failure.stage === "conformance" ? "runtime.conformance_failed" : "runtime.translation_failed",
+      stage: failure.stage, error_class: failure.error_class, frames: failure.frames,
+      message: "The export runtime failed." };
   }
 
   /* Install only shipped, manifest-pinned pure-Python wheels. No pip dependency resolution,
