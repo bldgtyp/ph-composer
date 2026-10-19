@@ -27,9 +27,9 @@ class DiagnosticsTest < PhComposerTestCase
       path = File.join(directory, "diagnostics.log")
       Diagnostics.path_override = path
 
-      Diagnostics.log("test", "run_id" => "run-123")
+      Diagnostics.log("test", "run_id" => "export_0123456789abcdef01234567")
 
-      assert_equal "run-123", JSON.parse(File.read(path)).fetch("run_id")
+      assert_equal "export_0123456789abcdef01234567", JSON.parse(File.read(path)).fetch("run_id")
     end
   end
 
@@ -147,13 +147,14 @@ class DiagnosticsTest < PhComposerTestCase
   end
 
   def test_every_event_carries_the_build_and_the_context_it_was_served_in
-    Diagnostics.with_context("session" => "ses_1", "request" => "ses_1:form:3") do
+    session = "0f8fad5b-d9cb-469f-a165-70867728950e"
+    Diagnostics.with_context("session" => session, "request" => "#{session}:form:3") do
       Diagnostics.log("served", "operation" => "example.create")
     end
     Diagnostics.log("after")
 
     served, after = Diagnostics.tail.last(2).map { |line| JSON.parse(line) }
-    assert_equal ["development", "ses_1", "ses_1:form:3"], served.values_at("build", "session", "request")
+    assert_equal ["development", session, "#{session}:form:3"], served.values_at("build", "session", "request")
     assert_nil after["session"], "the context ends with its block"
   end
 
@@ -164,7 +165,7 @@ class DiagnosticsTest < PhComposerTestCase
     Diagnostics.strict = false
     Diagnostics.log("probe", "operation" => "Zone North", "frames" => [{ "file" => "/Users/x.rb" }], "Bad Key" => 1)
     logged, dropped = Diagnostics.tail.last(2).map { |line| JSON.parse(line) }
-    assert_equal %w[[INVALID] [INVALID]], logged.values_at("operation", "frames")
+    assert_equal ["[INVALID]", []], logged.values_at("operation", "frames"), "a frame it does not own is left out"
     assert_equal "[INVALID]", dropped.fetch("status"), "a dropped key that is not a field name is not echoed"
   end
 
@@ -172,12 +173,32 @@ class DiagnosticsTest < PhComposerTestCase
   def test_a_frame_must_name_a_file_the_extension_ships
     owned = { "file" => "html/panel.js", "line" => 3, "method" => "render" }
     assert Diagnostics.valid_frame?(owned)
-    assert Diagnostics.valid_frame?(owned.merge("file" => "ph_composer/shell/panel.rb"))
-    assert Diagnostics.valid_frame?(owned.merge("file" => "ph_composer_translation/entry.py"))
+    assert Diagnostics.valid_frame?(owned.merge("file" => "ph_composer/shell/panel.rb", "method" => "publish"))
+    assert Diagnostics.valid_frame?(owned.merge("file" => "ph_composer_translation/entry.py",
+                                                "method" => "export_json"))
+    refute Diagnostics.valid_frame?(owned.merge("method" => "ProjectAlphaConfidential")), "a word the file lacks"
+    refute Diagnostics.valid_frame?(owned.merge("method" => "Project Alpha")), "a method name has no spaces"
+    refute Diagnostics.valid_frame?(owned.merge("method" => "ClientHouse.render")), "every part is checked"
+    assert Diagnostics.valid_frame?(owned.merge("method" => "<anonymous>"))
     ["other_plugin/client_name.rb", "html/../../Users/client/secret.js", "html/client_private.js",
      "ph_composer_translation/client_secret.py", "/Users/example/x.rb"].each do |file|
       refute Diagnostics.valid_frame?(owned.merge("file" => file)), file
     end
+  end
+
+  # A frame whose method it cannot vouch for still gives its file and line.
+  def test_an_unvouched_method_keeps_its_frame_as_a_question_mark
+    Diagnostics.log("probe", "frames" => [{ "file" => "html/panel.js", "line" => 9,
+                                            "method" => "HTMLButtonElement.<anonymous>" }])
+
+    assert_equal [{ "file" => "html/panel.js", "line" => 9, "method" => "?" }],
+                 JSON.parse(Diagnostics.tail.last).fetch("frames")
+  end
+
+  def test_a_request_id_from_a_hyphenated_view_label_is_kept
+    session = "0f8fad5b-d9cb-469f-a165-70867728950e"
+    assert_equal({ "request" => "#{session}:library-export-preview:12" },
+                 Diagnostics.accepted("request" => "#{session}:library-export-preview:12"))
   end
 
   def test_an_error_class_too_long_to_be_one_is_refused
@@ -201,7 +222,7 @@ class DiagnosticsTest < PhComposerTestCase
   # Every field is bounded, so even the largest event the log accepts fits in one line's bound.
   def test_the_largest_accepted_event_stays_within_its_bound
     frames = Array.new(Diagnostics::MAX_FRAMES) do |index|
-      { "file" => "ph_composer/shell/panel.rb", "line" => index, "method" => "m" * 96 }
+      { "file" => "ph_composer/shell/panel.rb", "line" => index, "method" => "publish_snapshot" }
     end
     name = Array.new(24) { "abc" }.join(".")
 

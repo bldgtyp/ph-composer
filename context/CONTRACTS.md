@@ -168,8 +168,8 @@ itself fails to load, `PhComposer.bootstrap_record` writes that line with the er
 | `event`, `operation`, `stage`, `code`, `effect`, `status` | A declared name (`a-z`, digits, `_`, dotted, at most 96 characters), never request text or a record label |
 | `severity` | `info`, `warning`, `error` |
 | `error_class` | An exception class name; never its message |
-| `frames` | At most 20 `{file, line, method}`; the file is one the extension ships, named from the folder holding the loader (`ph_composer/shell/panel.rb`, `html/panel.js`, `ph_composer_translation/entry.py`); another plugin's file or a traversal is never a frame |
-| `incident`, `session`, `request`, `run_id`, `build`, `manifest` | References of at most 96 `[A-Za-z0-9_.:-]` |
+| `frames` | At most 20 `{file, line, method}`; the file is one the extension ships, named from the folder holding the loader (`ph_composer/shell/panel.rb`, `html/panel.js`, `ph_composer_translation/entry.py`); another plugin's file or a traversal is never a frame; every dotted part of the method is a whole word in that file or a runtime marker such as `<anonymous>`, else the method is `?`; a frame in a file it does not own is left out |
+| `incident`, `session`, `request`, `run_id`, `build`, `manifest` | Each in the exact form the extension generates: `PHC-` and six hex digits, a session UUID, `<session>:<label>:<n>` with the panel view's code label, `export_` and 24 hex digits, 12 hex digits (or `development`, `unavailable`) |
 | `sketchup_version`, `extension_version` | A version string of at most 32 `[A-Za-z0-9_.+-]` |
 | `duration_ms` | A finite number |
 

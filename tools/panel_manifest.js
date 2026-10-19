@@ -37,7 +37,9 @@ var DEVELOPMENT_PAGES = [
    its entry and what that needs from the shared kit; the panel never loads a page's own modules. */
 var PAGES = [
   { path: path.join(panelFiles.html, "agent_access", "index.html"), folder: "agent_access/",
-    entry: "agent_access/page", prefix: "../" }
+    entry: "agent_access/page", prefix: "../" },
+  { path: path.join(panelFiles.html, "support", "index.html"), folder: "support/",
+    entry: "support/page", prefix: "../" }
 ];
 
 function moduleName(file) {

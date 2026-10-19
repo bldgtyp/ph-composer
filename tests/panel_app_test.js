@@ -67,8 +67,11 @@ test("ready asks for the first snapshot, which fills the status bar", function (
 
   p.receive("panel.snapshot", snapshot("session-a", 3, { edit_path: ["Level 1", ""] }));
 
-  var footer = p.query("[data-section='footer']").children.map(function (node) { return node.textContent; });
-  assert.deepStrictEqual(footer, ["PH-Composer 0.1.0-dev", "Editing: Level 1 / Unnamed group"]);
+  var footer = p.query("[data-section='footer']").children;
+  assert.deepStrictEqual(footer.map(function (node) { return node.textContent; }),
+    ["PH-Composer 0.1.0-dev", "Editing: Level 1 / Unnamed group", "Help & Diagnostics"]);
+  footer[2].listeners.click({});
+  assert.deepStrictEqual(p.sent[p.sent.length - 1], { type: "panel.support", payload: { incident: null } });
 });
 
 test("opening Export reads preflight and retained tasks without starting a write", function () {
@@ -329,6 +332,29 @@ test("text in an error's message that looks like a frame is never reported as on
   var reported = p.sent.filter(function (message) { return message.type === "panel.diagnostic"; })[0];
   assert.deepStrictEqual(JSON.parse(JSON.stringify(reported.payload.frames)),
     [{ file: "html/panel.js", line: 5, method: "render" }]);
+});
+
+test("a failure with an incident reference offers Get help, which opens Help & Diagnostics at it", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  p.receive("action.result", { request_id: "r1", session: "session-a", outcome: { status: "failed",
+    effect: "none", message: "The change could not be prepared. Nothing was written.",
+    detail: { incident: "PHC-3FA9C1" } } });
+
+  assert.strictEqual(p.notice().actionButton.textContent, "Get help");
+  p.notice().actionButton.listeners.click({});
+  assert.deepStrictEqual(p.sent[p.sent.length - 1], { type: "panel.support", payload: { incident: "PHC-3FA9C1" } });
+});
+
+test("a failed setup or export with an incident also offers Get help", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 1));
+  ["setup.result", "query.result", "file_export.result", "export.result"].forEach(function (type, index) {
+    p.panel.notify("", "info"); p.panel.state.ui.notice = null;
+    p.receive(type, { request_id: "r" + index, session: "session-a", outcome: { status: "failed", effect: "none",
+      message: "That could not be done.", detail: { incident: "PHC-00000" + index } } });
+    assert.strictEqual(p.panel.state.ui.notice.action.label, "Get help", type);
+  });
 });
 
 test("a host failure is shown as an error; an unknown message type changes nothing", function () {

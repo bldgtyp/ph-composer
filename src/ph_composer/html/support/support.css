@@ -1,0 +1,28 @@
+/* Help & Diagnostics (page.js). Built on base.css and overlay.css; only its own regions here. */
+.support { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 16px; }
+.support-identity { margin: 0 0 16px; }
+.support-section { margin: 0 0 16px; }
+.support-section h2 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+.support-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0;
+  border-bottom: 1px solid var(--line); }
+.support-row-label { flex: none; }
+.support-row-value { text-align: right; }
+.support-row-value[data-tone="warning"] { color: var(--warning-ink); }
+.support-problems { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.support-problem { display: grid; grid-template-columns: max-content 1fr max-content; gap: 12px; padding: 6px 0;
+  border-bottom: 1px solid var(--line); }
+.support-problem.is-selected { background: var(--interaction-highlight-tint); }
+.support-problem-time, .support-problem-incident { color: var(--muted); font-variant-numeric: tabular-nums; }
+.support-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.support-details { margin: 8px 0 0; }
+.support-details summary { cursor: pointer; }
+.support-preview-text { width: 100%; min-height: 220px; max-height: 50vh; font-family: ui-monospace, Menlo, monospace;
+  font-size: 11px; white-space: pre; }
+.support-inline { margin: 8px 0 0; color: var(--warning-ink); }
+.support-inline:empty { display: none; }
+.support-confirm-body ul { margin: 0 0 8px; }
+/* base.css sizes a bare button to its container; buttons here size to their label, as in the panel. */
+.support button { width: auto; font-weight: 400; }
+@media (max-width: 420px) {
+  .support-problem { grid-template-columns: 1fr; gap: 2px; }
+}

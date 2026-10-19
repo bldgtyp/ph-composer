@@ -78,6 +78,14 @@ module PhComposer
         !@dialog.nil?
       end
 
+      # Closes the panel's window and opens a new one, for a page that stopped rendering. An unsaved edit in
+      # the old page goes with it; what was applied to the Model stays.
+      def reopen
+        @dialog&.close
+        @dialog = nil
+        show
+      end
+
       # Development only: a development composition entry (tools/examples/) adds a script that runs in the
       # page each time it opens, after the kit has started. Shipping features declare their modules in
       # html/ instead; nothing in the shipping build calls this.
@@ -162,6 +170,7 @@ module PhComposer
         case type
         when "panel.ready" then ready
         when "panel.diagnostic" then PanelDiagnostics.record(payload)
+        when "panel.support" then SupportDialog.show(:incident => payload["incident"])
         when "action.invoke" then invoke(payload)
         when "action.status" then status(payload)
         when "view.invoke" then view(payload)

@@ -80,9 +80,16 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     if (payload.session !== previous.session) return previous;
     if (outcome.status !== "completed") {
       changes.notice = { message: outcomeWords(payload) || outcome.message || "The change was not applied.",
-        tone: outcome.status === "failed" ? "error" : "warning" };
+        tone: outcome.status === "failed" ? "error" : "warning", action: helpFor(outcome) };
     }
     return withUI(previous, changes);
+  }
+
+  /* An unexpected failure carries the log's incident reference; Get help opens Help & Diagnostics at it. */
+  function helpFor(outcome) {
+    var incident = outcome.detail && outcome.detail.incident;
+    if (typeof incident !== "string") return null;
+    return { label: "Get help", run: function () { send("panel.support", { incident: incident }); } };
   }
 
   /* A viewport-state command changes what the host shows and never the Model, so a refusal is a warning
@@ -95,7 +102,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     if (payload.session !== previous.session) return previous;
     if (outcome.status !== "completed") {
       changes.notice = { message: outcome.message || "The viewport did not change.",
-        tone: outcome.status === "failed" ? "error" : "warning" };
+        tone: outcome.status === "failed" ? "error" : "warning", action: helpFor(outcome) };
     }
     return withUI(previous, changes);
   }
@@ -158,10 +165,22 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
   }
 
   function receive(envelope) {
-    var handler = envelope && HANDLERS[envelope.type];
+    var handler = envelope && HANDLERS[envelope.type], payload = (envelope && envelope.payload) || {};
+    var before = state;
     if (!handler) return;
-    state = handler(state, envelope.payload || {});
+    state = handler(state, payload);
+    offerHelp(before, payload);
     render();
+  }
+
+  /* An unexpected failure from any request carries its incident reference. Views show their own refusals,
+     so where the answer raised no notice of its own, one with Get help is added for the failure. */
+  function offerHelp(before, payload) {
+    var outcome = payload.outcome, action;
+    if (!outcome || outcome.status !== "failed" || payload.session !== state.session) return;
+    if (state.ui.notice !== before.ui.notice || !(action = helpFor(outcome))) return;
+    state = withUI(state, { notice: { message: outcome.message || "PH-Composer could not complete that request.",
+      tone: "error", action: action } });
   }
 
   /* A pane's regions. `main` is the work surface and every section that names no region. `inspector` is
