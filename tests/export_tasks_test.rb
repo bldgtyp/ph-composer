@@ -40,6 +40,10 @@ class ExportTasksTest < PhComposerTestCase
       @callback.call("runtime.closed", {})
     end
 
+    def ready
+      @callback.call("runtime.ready", {})
+    end
+
     def success
       success_with("type" => "Model", "rooms" => [])
     end
@@ -181,6 +185,44 @@ class ExportTasksTest < PhComposerTestCase
     drain
     assert @runtime.stopped
     assert_nil @tasks.latest(OWNER)
+    assert_empty Dir.children(@directory)
+  end
+
+  # REVIEW F05: a runtime that never answered stayed translating, cancellable, with no outcome, after an hour.
+  def test_a_runtime_that_never_starts_ends_the_run_after_its_boot_deadline
+    task = start
+    drain
+    deadline = (PhComposer::RuntimeGate.fetch("boot_deadline_ms") / 1000.0) +
+               PhComposer::Export::Task::STARTUP_GRACE_SECONDS
+
+    watch_after(deadline - 1)
+    assert_equal "translating", @tasks.status(task.fetch("task_id"), OWNER).fetch("stage")
+    watch_after(deadline + 1)
+
+    outcome = @tasks.status(task.fetch("task_id"), OWNER).fetch("outcome")
+    assert_equal %w[failed runtime.boot_timeout none], outcome.values_at("status", "code", "effect")
+    assert @runtime.stopped
+    @runtime.success
+    assert_equal "runtime.boot_timeout", @tasks.status(task.fetch("task_id"), OWNER).dig("outcome", "code"),
+                 "a late answer applies nothing"
+    assert_empty Dir.children(@directory)
+  end
+
+  def test_a_ready_runtime_that_stops_answering_ends_the_run_after_its_silence_deadline
+    task = start
+    drain
+    watch_after(10)
+    Process.stub(:clock_gettime, ->(*) { @clock_origin + 10 }) { @runtime.ready }
+    silence = PhComposer::Export::Task::TRANSLATION_SILENCE_SECONDS
+
+    watch_after(10 + silence - 1)
+    assert_equal "translating", @tasks.status(task.fetch("task_id"), OWNER).fetch("stage"),
+                 "the translation clock starts when the page is ready"
+    watch_after(10 + silence + 1)
+
+    outcome = @tasks.status(task.fetch("task_id"), OWNER).fetch("outcome")
+    assert_equal %w[failed runtime.unresponsive none], outcome.values_at("status", "code", "effect")
+    assert @runtime.stopped
     assert_empty Dir.children(@directory)
   end
 
@@ -474,6 +516,16 @@ class ExportTasksTest < PhComposerTestCase
   end
 
   private
+
+  # Runs the repeating task watchdog, leaving it scheduled, as if `seconds` had passed since the first call.
+  def watch_after(seconds)
+    @clock_origin ||= Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    id = UI.timer_intervals.find { |_id, interval| interval == 0.2 }&.first
+    watchdog = UI.instance_variable_get(:@timers).find { |timer| timer.id == id }
+    return unless watchdog
+
+    Process.stub(:clock_gettime, ->(*) { @clock_origin + seconds }) { watchdog.block.call }
+  end
 
   def drain
     100.times do

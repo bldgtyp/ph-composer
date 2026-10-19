@@ -8,6 +8,13 @@ module PhComposer
     # Timer boundaries admit cancellation and recheck content generation; Python returns asynchronously.
     class Task
       PAIR_FAILED = "The HBJSON and Export report could not be written. The destination was left as it was."
+      # Ruby's own bound on a silent runtime, so a page that never answers still ends the run (REVIEW F05).
+      # Startup waits out the page's own boot deadline plus this grace; once the page is ready, a translation
+      # waits TRANSLATION_SILENCE_SECONDS. Starting defaults, to be measured on the proving host.
+      STARTUP_GRACE_SECONDS = 15
+      TRANSLATION_SILENCE_SECONDS = 300
+      NOT_STARTED = "The export runtime did not start in time, so the export was stopped. No files were written."
+      UNRESPONSIVE = "The export runtime stopped responding, so the export was stopped. No files were written."
 
       attr_reader :id, :finished_at, :owner
 
@@ -84,6 +91,7 @@ module PhComposer
           @extraction = @builder.extraction
           @builder = nil
           @stage = "translating"
+          @waiting_since = now
           @runtime = @runtime_factory.call { |type, payload| received(type, payload) }
           @runtime.start
           @runtime.translate(id, @extraction.document)
@@ -100,6 +108,7 @@ module PhComposer
         if type == "runtime.closed"
           return failed(Blocked.new("runtime.closed", "The export runtime closed before the run finished."))
         end
+        return ready if type == "runtime.ready"
         return unless type == "runtime.translation" && payload["request_id"] == id
 
         coherent!
@@ -184,9 +193,33 @@ module PhComposer
       def watch
         # Reading the sessions detaches a closed Model's session, and detaching cancels this task.
         Sessions.find(@session.id)
-        coherent! unless terminal?
+        return if terminal?
+
+        coherent!
+        responsive! if @stage == "translating"
       rescue StandardError => error
         failed(error) unless terminal?
+      end
+
+      # The translation clock starts when the page is ready, not when it was asked to load.
+      def ready
+        @ready = true
+        @waiting_since = now
+      end
+
+      def responsive!
+        if @ready
+          return if now - @waiting_since <= TRANSLATION_SILENCE_SECONDS
+
+          raise Blocked.new("runtime.unresponsive", UNRESPONSIVE)
+        end
+        return if now - @waiting_since <= (RuntimeGate.fetch("boot_deadline_ms") / 1000.0) + STARTUP_GRACE_SECONDS
+
+        raise Blocked.new("runtime.boot_timeout", NOT_STARTED)
+      end
+
+      def now
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
       end
 
       # A pair error can carry the filesystem's own message, which names the destination; the outcome

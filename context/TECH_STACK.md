@@ -328,6 +328,13 @@ make ci
 The HBJSON artifact is carried unchanged into every downstream gate. SketchUp produces the
 artifact; it does not decide where the artifact goes afterward.
 
+The export task's watchdog bounds a silent runtime from Ruby, because a page that never answers
+cannot report its own timeout (`export/task.rb`). Before `runtime.ready` it waits the manifest's
+`boot_deadline_ms` plus 15 seconds, then fails with `runtime.boot_timeout`; once ready, a
+translation that sends nothing for 300 seconds fails with `runtime.unresponsive`. Both stop the
+runtime, write nothing and report effect `none`; a later answer applies nothing. Cancel stays
+available while translating. These are starting defaults until the proving host measures them.
+
 ## The exporter seam
 
 HBJSON is the canonical interchange. An exporter is a second consumer of it that writes another
