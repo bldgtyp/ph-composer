@@ -122,6 +122,26 @@ class SpacesHeightFromSolidTest < PhComposerTestCase
     assert_in_delta 4.0, loft_height, 1e-9
   end
 
+  def test_the_menu_says_what_to_select_when_the_selection_is_not_a_volume_and_a_solid
+    menu = PhComposer::Spaces::HeightFromSolidMenu
+    solid(48.0)
+    @model.active_path = [@model.entities.to_a.last, loft]
+    operations = @model.operations.length
+    empty = menu::Client.new(@session).run
+    assert_equal "selection.invalid", empty.fetch("code")
+    assert_equal empty.fetch("message"), UI.messages.last, "the panel route's own words"
+    @model.selection.add(loft.entities.to_a.last)
+    alone = menu::Client.new(@session).run
+    assert_equal "selection.invalid", alone.fetch("code")
+    assert_equal menu::NO_VOLUME, UI.messages.last
+    stray = Sketchup::Face.new(2600)
+    loft.entities << stray
+    @model.selection.add([loft.entities.to_a.first, stray])
+    menu::Client.new(@session).run
+    assert_equal menu::ONLY_PAIR, UI.messages.last, "a Volume and a solid with a Face selected too"
+    assert_equal operations, @model.operations.length
+  end
+
   def test_the_selected_solid_is_the_one_container_that_is_not_a_space_or_volume
     path = solid(36.0)
     @model.active_path = [@model.entities.to_a.last, loft]
