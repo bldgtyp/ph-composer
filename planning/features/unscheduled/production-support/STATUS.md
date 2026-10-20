@@ -24,13 +24,14 @@ has a separate packet and ledger.
 | PS-01 | Failure context, correlation and build identity in the log | Merged to main ([#249](https://github.com/bldgtyp/ph-composer/pull/249)); two Codex (gpt-6-astra) rounds, 12 findings fixed, final fix read by a Sonnet reviewer with no correctness findings | Done offline: probe F01 as `test_two_failures_are_told_apart_by_their_frames_never_their_messages`; value validation, bound, health/tail, retention and incident tests (diagnostics_test.rb); incident matches the log (api_test.rb); panel render/uncaught/rejection capture (panel_app_test.js, panel_test.rb); runtime stage/code/frames kept (runtime_page_test.js, export_tasks_test.rb, test_entry.py); RBZ `build.json` digest (test_rbz_build.py, build_identity_test.rb); contract in CONTRACTS "Diagnostic log". Remaining: A01 to A03 native incident and shipped-runtime fault, write-overhead measurement, bootstrap record on a real load failure (PS-05) |
 | PS-03 | Help & Diagnostics and the support report | Merged to main ([#250](https://github.com/bldgtyp/ph-composer/pull/250)). Two Codex (gpt-6-astra) rounds, 12 findings fixed; final fix read by a Sonnet reviewer, 5 more fixed | Done offline: sketches in [phases/ps-03](phases/ps-03-help-and-diagnostics.md); support_dialog_test.rb (menu with no Model, problems and incident, byte-equal save, cancel, unwritable destination, stale capture, negative privacy at every field, truncation, unreadable log, clear, reset, reopen, help and issue links, both fallbacks, panel entry); support_page_test.js (paint, preview equals capture, copy failure to Save, public-issue confirmation, confirmations); panel_app_test.js (footer link, Get help); browser-pane check at 560 x 640 and 360 x 520. Remaining: A07 to A09 native menu, Save sheet, clipboard and fallback evidence (PS-05) |
 | PS-04 | Shipped help, bug template, maintainer procedure | Implemented; [#251](https://github.com/bldgtyp/ph-composer/pull/251) merges on green CI. Two Codex (gpt-6-astra) rounds, 7 findings fixed | Done offline: `docs/HELP.md` generated into the shipped `ph_composer/help/index.html` (`make help`, `help-check` in `make ci`, test_help_build.py); Help & Diagnostics opens it offline and links the online copy; public destination verified (bldgtyp/ph-composer is public with issues on; no releases published yet, so help points at the releases page); `.github/ISSUE_TEMPLATE/bug_report.yml` with the public warning; "Answering a support report" and the `build.json` note in docs/DEVELOPMENT.md. Remaining: A10 walkthrough on the installed RBZ (PS-05) |
-| PS-05 | Integrated acceptance | Ready for host run: [run sheet](phases/ps-05-integrated-acceptance.md) | Installed-build native receipt for A01 to A10, deadline measurements, normal-build restoration, full gates |
+| PS-05 | Integrated acceptance | Host run 2026-10-19 on the installed RBZ from main ([evidence](../../../native-acceptance/evidence/production-support-ps05-2026-10-19.md)): PS1 to PS6 and PS9 pass; PS7 and PS8 unknown | One real click on Copy compared with the clipboard (A09), and a keyboard-only pass through Help & Diagnostics (A08). Both need a native controller grant or Ed at the machine |
 
 ## Next action
 
-Run PS-05 on SketchUp from the installed RBZ built from `main` once #251 merges, following the
-[run sheet](phases/ps-05-integrated-acceptance.md). It needs the development bridge and native
-controls, and Ed's go to take control of SketchUp. When it passes, close the packet and archive it.
+PS-05 ran on 2026-10-19. Two observations remain, both needing a real pointer or keyboard: Copy in
+the report preview compared with the clipboard, and keyboard-only use of Help & Diagnostics. When
+they pass, close the packet and archive it. The run also fixed the native menu label ("Help and
+Diagnostics…") and the help text about menus with no document open.
 Product changes outside the accepted local-support direction return to Ed.
 
 ## Follow-ups noticed, not in scope
@@ -44,6 +45,9 @@ Product changes outside the accepted local-support direction return to Ed.
 - The 20-second recovery warning, the 15-second boot grace and the 300-second silence deadline are
   starting defaults; PS-05 measures them.
 - `Panel` sits at the RuboCop class-length limit; the next addition should extract a module.
+- In this host a Copy without a user gesture leaves `navigator.clipboard.writeText` unsettled, so the
+  preview shows nothing; a timeout that offers Save would cover a host that does the same on a real
+  click.
 
 ## Verification
 
@@ -67,4 +71,5 @@ A01 to A10 native observation is still required (PS-05).
 | 2026-10-19 | PS-01 implemented on branch: schema 1 log with validated values, frames, incidents, correlation, health and tail, seven-day retention, page and runtime failure capture, RBZ build identity. |
 | 2026-10-19 | PS-03 implemented on branch: Help & Diagnostics window, previewed plain-text report, Copy and Save, log folder, help and issue links, Clear history, Reopen panel, Reset display preferences, message-box fallback, panel footer and Get help. |
 | 2026-10-19 | PS-04 implemented on branch: shipped offline help from docs/HELP.md, public issue form, maintainer procedure. |
+| 2026-10-19 | PS-05 host run: PS1 to PS6 and PS9 pass, PS7 and PS8 unknown (clipboard click, keyboard route). Menu label and help text fixed. |
 | 2026-10-19 | PS-02a to PS-02c (#246 to #248) and PS-01 (#249) merged; PS-03 (#250) and PS-04 (#251) reviewed and set to merge on green. PS-05 run sheet written. |

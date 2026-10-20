@@ -70,8 +70,9 @@ Library setup that cannot be read keeps its own reset, on the Libraries screen.
 
 ## Getting help
 
-Open Extensions > PH-Composer > Help & Diagnostics. It works without an open Model and when the
-panel is not drawing.
+Open Extensions > PH-Composer > Help and Diagnostics. It works when the panel is not drawing and
+needs no particular Model, but SketchUp turns extension menus off while no document is open: open
+or start any document first, or use the Help & Diagnostics link at the foot of the panel.
 
 1. Choose Copy diagnostics or Save support report. A preview shows exactly what will be copied or
    saved. It holds the version, build, SketchUp version and recent log lines. It never holds Model
