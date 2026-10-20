@@ -225,8 +225,10 @@ module PhComposer
                       :description => "A writable Zone Face's outline and bounding width and height in the frame " \
                                       "units.place offsets use, with the holes and Window outlines on its plane " \
                                       "to keep clear of.",
-                      :refuses => Refuses::HOST_EXTENT,
-                      :params => Shapes.object({ "host" => host(face, "The Zone Face a Window would be placed on.") }),
+                      :refuses => Refuses::HOST_EXTENT + Refuses::PAGE,
+                      :params => Shapes.object({ "host" => host(face, "The Zone Face a Window would be placed on."),
+                                                 "limit" => Pages::LIMIT, "cursor" => Pages::CURSOR },
+                                               :optional => %w[limit cursor]),
                       :result => Shapes.object({
                         "width_m" => number, "height_m" => number,
                         "outline_m" => Shapes.list({ "type" => "array", "items" => number, "minItems" => 2,
@@ -237,9 +239,10 @@ module PhComposer
                         "holes" => Shapes.list(Shapes.object(rectangle),
                                                :description => "Each hole's bounding rectangle, in offsets."),
                         "units" => Shapes.list(Shapes.object({ "reference" => reference }.merge(rectangle)),
-                                               :description => "Each Window outline on the Face's plane, this Face " \
-                                                               "or another in the same plane, as a bounding " \
-                                                               "rectangle in offsets.")
+                                               :description => "One page of the Window outlines on the Face's plane " \
+                                                               "that meet its bounding box, each as a bounding " \
+                                                               "rectangle in offsets."),
+                        "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL
                       }),
                       :examples => [{ "host" => { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201],
                                                   "entity_path" => [1202], "entity_id" => nil } }]) do |request|

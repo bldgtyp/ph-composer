@@ -13896,7 +13896,7 @@ Example params:
 
 A writable Zone Face's outline and bounding width and height in the frame units.place offsets use, with the holes and Window outlines on its plane to keep clear of. Owner: `ph_composer.windows`.
 
-Refuses: `geometry.invalid`, `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.surface_host`, and the `query` common set.
+Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.surface_host`, and the `query` common set.
 
 Params:
 
@@ -13941,6 +13941,14 @@ Params:
         }
       },
       "description": "The Zone Face a Window would be placed on."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1 to 500; 100 when absent."
+    },
+    "cursor": {
+      "type": "string",
+      "description": "next_cursor from the previous page of the same query and filter."
     }
   }
 }
@@ -13957,7 +13965,9 @@ Result:
     "height_m",
     "outline_m",
     "holes",
-    "units"
+    "units",
+    "next_cursor",
+    "total"
   ],
   "properties": {
     "width_m": {
@@ -14064,7 +14074,19 @@ Result:
           }
         }
       },
-      "description": "Each Window outline on the Face's plane, this Face or another in the same plane, as a bounding rectangle in offsets."
+      "description": "One page of the Window outlines on the Face's plane that meet its bounding box, each as a bounding rectangle in offsets."
+    },
+    "next_cursor": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Pass back as cursor for the next page; null on the last page."
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rows matching the filter, on every page."
     }
   }
 }
