@@ -41,6 +41,16 @@ accepted decisions, the existing independent reviewer and unchanged evidence wit
    decision, inaccessible native action or real scope frontier. Use focused checks during fixes;
    recheck affected cases against the new build and preserve required final suite/review gates.
 
+An agent client run (Claude Code, Codex) measures the product, so the client runs without the
+operator's personal setup: no user skills, memory, advisor, plugins or reference notes. Claude Code:
+`claude -p --restricted --strict-mcp-config --mcp-config <file> --tools Read` from a scratch folder
+(`--bare` would need an API key, a paid provider). Codex: a scratch `CODEX_HOME` holding only a
+symlink to the real `auth.json`, so neither `config.toml` nor the operator's `AGENTS.md` loads
+(`--ignore-user-config` alone still loads `AGENTS.md`), with the server passed by `-c`. Confirm the isolation from the transcript before
+recording cost or tool-choice results; a run that read the operator's own notes or called an advisor
+is recorded as contaminated. In the 03a1 C16 run, Claude Code called an advisor three times and Codex
+read the operator's own workflow notes in every run.
+
 Restore normal composition after private fault/provider overrides: fresh process with the normal
 installed RBZ, no development monkeypatches or live runtimes, clean saved synthetic Model and
 expected normal refusal/success. Check open documents before `launch`, which can quit/kill the host.
