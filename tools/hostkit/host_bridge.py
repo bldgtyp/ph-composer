@@ -162,12 +162,14 @@ def frontmost_app() -> str | None:
 
 
 def activate_app(bundle_id: str) -> None:
-    subprocess.run(
-        ["osascript", "-e", f'tell application id "{bundle_id}" to activate'],
-        capture_output=True,
-        check=False,
-        timeout=15,
-    )
+    """Best effort: a focus change that fails or times out must not abort a launch or a quit."""
+    with contextlib.suppress(subprocess.SubprocessError, OSError):
+        subprocess.run(
+            ["osascript", "-e", f'tell application id "{bundle_id}" to activate'],
+            capture_output=True,
+            check=False,
+            timeout=15,
+        )
 
 
 def restore_focus(version: str, previous: str | None) -> None:
@@ -180,9 +182,11 @@ def activate_sketchup_once(version: str) -> None:
     SketchUp 2026 opened by `open -a` in the background can load no Ruby extension, the bridge
     included, until it is activated once."""
     previous = frontmost_app()
-    activate_app(sketchup_bundle(version))
-    time.sleep(1.0)
-    restore_focus(version, previous)
+    try:
+        activate_app(sketchup_bundle(version))
+        time.sleep(1.0)
+    finally:
+        restore_focus(version, previous)
 
 
 # Raises the named document window and presses its close button. `performClose:` does nothing while
@@ -344,19 +348,23 @@ ACTIVATE_AFTER = 25.0
 
 def wait_for_launch(version: str, timeout: float) -> dict[str, Any]:
     """Wait for the bridge of a SketchUp just opened. If it has written no state file `ACTIVATE_AFTER`
-    seconds in while SketchUp runs, startup is stalled in the background: activate SketchUp once."""
+    seconds in while SketchUp runs, startup is stalled in the background: activate SketchUp once.
+    Either way the wait runs to the full `timeout`."""
     first = min(ACTIVATE_AFTER, timeout)
     try:
         return wait(version, first)
     except TimeoutError:
-        if timeout <= first or state_path(version).is_file() or not sketchup_running():
+        if timeout <= first:
             raise
-    print(f"no bridge state file {first:.0f}s into the launch; activating SketchUp once")
-    activate_sketchup_once(version)
+    activated = not state_path(version).is_file() and sketchup_running()
+    if activated:
+        print(f"no bridge state file {first:.0f}s into the launch; activating SketchUp once")
+        activate_sketchup_once(version)
     try:
         return wait(version, timeout - first)
     except TimeoutError:
-        raise TimeoutError(f"no host bridge within {timeout:.0f}s (SketchUp activated once at {first:.0f}s)") from None
+        note = f" (SketchUp activated once at {first:.0f}s)" if activated else ""
+        raise TimeoutError(f"no host bridge within {timeout:.0f}s{note}") from None
 
 
 def launch(version: str, model: Path, fresh_from: Path | None, timeout: float) -> dict[str, Any]:

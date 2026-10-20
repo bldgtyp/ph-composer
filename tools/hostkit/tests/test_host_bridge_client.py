@@ -328,10 +328,11 @@ class StalledLaunchTest(unittest.TestCase):
         self.assertEqual(self.wait_for_launch([TimeoutError("no host bridge"), {"port": 1}]), ["2026"])
         self.assertEqual(self.state, {"port": 1})
 
-    def test_a_written_state_file_or_a_sketchup_not_running_is_not_the_stall_and_stays_a_timeout(self) -> None:
+    def test_a_written_state_file_or_a_sketchup_not_running_is_not_the_stall_and_the_wait_runs_on(self) -> None:
+        # The bridge writes its state before its main-thread pump answers, so a slow start is not a stall.
         for options in ({"state_file": True}, {"running": False}):
-            with self.assertRaises(TimeoutError):
-                self.wait_for_launch([TimeoutError("no host bridge"), {"port": 1}], **options)
+            self.assertEqual(self.wait_for_launch([TimeoutError("no host bridge"), {"port": 1}], **options), [])
+            self.assertEqual(self.state, {"port": 1})
 
     def test_activation_hands_focus_back_to_the_app_that_had_it(self) -> None:
         for previous, expected in (
@@ -346,6 +347,12 @@ class StalledLaunchTest(unittest.TestCase):
             ):
                 hb.activate_sketchup_once("2026")
             self.assertEqual(activated, expected, previous)
+
+    def test_a_focus_change_that_times_out_never_aborts_the_launch_or_quit(self) -> None:
+        timeout = subprocess.TimeoutExpired(["osascript"], 15)
+        with patch.object(hb.subprocess, "run", side_effect=timeout), patch.object(hb.time, "sleep"):
+            hb.activate_sketchup_once("2026")
+            self.assertEqual(hb.press_close_button("2026", "ph_composer_discard_0"), str(timeout))
 
 
 class RecoveryCopyTest(unittest.TestCase):
