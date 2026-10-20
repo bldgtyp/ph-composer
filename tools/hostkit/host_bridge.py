@@ -73,12 +73,26 @@ def read_state(version: str) -> dict[str, Any] | None:
     return state
 
 
-def request(state: dict[str, Any], payload: dict[str, Any], timeout: float) -> dict[str, Any]:
+def request(state: dict[str, Any], payload: dict[str, Any], timeout: float, *, whole: bool = False) -> dict[str, Any]:
+    """One request and its reply. `timeout` bounds each socket operation; with `whole`, it bounds the request
+    as a whole: every operation gets only what is left, and TimeoutError is raised once nothing is."""
     payload = dict(payload, token=state["token"])
+    deadline = time.monotonic() + timeout
+
+    def remaining() -> float:
+        left = deadline - time.monotonic()
+        if left <= 0:
+            raise TimeoutError("the reply did not arrive within the remaining budget")
+        return left
+
     with socket.create_connection(("127.0.0.1", int(state["port"])), timeout=timeout) as sock:
+        if whole:
+            sock.settimeout(remaining())
         sock.sendall((json.dumps(payload) + "\n").encode("utf-8"))
         chunks: list[bytes] = []
         while True:
+            if whole:
+                sock.settimeout(remaining())
             chunk = sock.recv(65536)
             if not chunk:
                 break
@@ -427,13 +441,19 @@ def configure_wait_for(parser: argparse.ArgumentParser) -> None:
 
 
 def bridge_read(version: str) -> Callable[[str, float], Any]:
-    """One wait poll: a single eval whose socket timeout is the wait's remaining budget."""
+    """One wait poll: a single eval that must finish, connection to last byte, within the wait's remaining
+    budget. Malformed bridge data is a lost bridge, not a crash."""
 
     def read(code: str, timeout: float) -> Any:
-        state = read_state(version)
-        if state is None:
-            raise ConnectionError("host bridge is not running (no live state file)")
-        answer = request(state, {"code": code}, timeout=timeout)
+        try:
+            state = read_state(version)
+            if state is None:
+                raise ConnectionError("host bridge is not running (no live state file)")
+            answer = request(state, {"code": code}, timeout=timeout, whole=True)
+        except (json.JSONDecodeError, UnicodeDecodeError, KeyError) as error:
+            raise ConnectionError(f"the bridge's state file or reply was malformed: {error}") from error
+        if not isinstance(answer, dict):
+            raise ConnectionError("the bridge's reply was not a result document")
         if not answer.get("ok"):
             raise host_wait.ReadError(str(answer.get("error")))
         return answer.get("value")

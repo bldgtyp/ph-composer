@@ -6,6 +6,7 @@ distinct ending for each way a wait can stop, each carrying the last state it ob
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -19,6 +20,7 @@ SESSION = "0f8a6c2e-1b3d-4e5f-8a9b-0c1d2e3f4a5b"
 OTHER = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
 CALLER = "0123456789abcdef0123456789abcdef"
 TASK = "export_0123456789abcdef01234567"
+RUN = "0123456789ab"
 
 
 class FakeClock:
@@ -100,6 +102,15 @@ class EndingsTest(unittest.TestCase):
 
         self.assertEqual([timeout for _code, timeout in host.calls], [3.0, 1.5])
 
+    def test_a_short_deadline_is_never_widened_and_a_late_answer_is_not_success(self) -> None:
+        result, host, _clock = run(
+            "session_settled", {"session": SESSION}, [session()], deadline_s=0.05, read_cost=0.15
+        )
+
+        self.assertEqual(host.calls[0][1], 0.05, "the read gets the real remaining budget, with no floor")
+        self.assertEqual(result.ending, "timed_out")
+        self.assertEqual(result.last_observed, session(), "the late observation is still reported")
+
     def test_a_read_that_outlasts_the_budget_is_a_timeout_not_a_lost_bridge(self) -> None:
         result, _host, _clock = run("session_settled", {"session": SESSION}, [TimeoutError("timed out")])
 
@@ -137,13 +148,23 @@ class EndingsTest(unittest.TestCase):
         self.assertEqual(finished.polls, 2)
         self.assertEqual(absent.ending, "target_missing")
 
-    def test_a_probe_condition_needs_no_session_and_reports_an_unloaded_probe(self) -> None:
-        pending = {"state": "running", "verdict": "pending"}
-        met, _host, _clock = run("runtime_probe_finished", {}, [pending, {"state": "running", "verdict": "PASS"}])
-        unloaded, _host, _clock = run("runtime_probe_finished", {}, [{"probe": "not_loaded"}])
+    def test_a_probe_wait_is_bound_to_its_session_and_run(self) -> None:
+        params = {"session": SESSION, "probe_run": RUN}
+        pending = session(probe={"state": "ready", "run": RUN, "verdict": "pending"})
+        passed = session(probe={"state": "ready", "run": RUN, "verdict": "PASS"})
+        met, host, _clock = run("runtime_probe_finished", params, [pending, passed])
+        replaced, _host, _clock = run(
+            "runtime_probe_finished", params, [pending, session(probe=None, probe_state="another_run")]
+        )
+        unloaded, _host, _clock = run("runtime_probe_finished", params, [session(probe=None, probe_state="not_loaded")])
+        switched, _host, _clock = run("runtime_probe_finished", params, [session(active=False, probe=None)])
 
         self.assertEqual(met.ending, "met")
-        self.assertEqual(unloaded.ending, "target_missing")
+        self.assertIn(RUN, host.calls[0][0])
+        self.assertEqual((replaced.ending, replaced.error), ("target_missing", "another_run"))
+        self.assertEqual((unloaded.ending, unloaded.error), ("target_missing", "not_loaded"))
+        self.assertEqual(switched.ending, "session_switched")
+        self.assertEqual(run("runtime_probe_finished", {"session": SESSION}, [passed])[0].ending, "invalid_condition")
 
     def test_a_host_error_and_a_lost_bridge_are_distinct_endings(self) -> None:
         failed, _host, _clock = run("session_settled", {"session": SESSION}, [hw.ReadError("NameError: PhComposer")])
@@ -176,6 +197,15 @@ class EndingsTest(unittest.TestCase):
         extra, _host, _clock = run("session_settled", {"session": SESSION, "task": TASK}, [session()])
         self.assertEqual(extra.error, "session_settled does not take task")
 
+    def test_timings_that_are_not_finite_positive_and_bounded_are_refused(self) -> None:
+        for deadline, interval in ((float("nan"), 0.5), (float("inf"), 0.5), (0.0, 0.5), (10.0, -1.0), (10.0, 0.0)):
+            with self.subTest(deadline=deadline, interval=interval):
+                result, host, _clock = run(
+                    "session_settled", {"session": SESSION}, [session()], deadline_s=deadline, interval_s=interval
+                )
+                self.assertEqual(result.ending, "invalid_condition")
+                self.assertEqual(host.calls, [])
+
 
 class DocumentTest(unittest.TestCase):
     def test_the_document_is_versioned_bounded_and_says_it_is_an_observation(self) -> None:
@@ -193,11 +223,23 @@ class DocumentTest(unittest.TestCase):
         self.assertIn("observation only", document["note"])
         self.assertIn("session_settled: met after 0 ms and 1 poll(s)", result.summary())
 
+    def test_names_parameters_and_errors_from_outside_are_bounded_too(self) -> None:
+        params: dict[str, str] = {f"k{index}{'x' * 5000}": str("v" * 100_000) for index in range(20)}
+        result, _host, _clock = run("n" * 100_000, params, [session()])
+        document = result.document()
+        failed, _host, _clock = run("session_settled", {"session": SESSION}, [hw.ReadError("E" * 100_000)])
+
+        self.assertLess(len(json.dumps(document)), 6000)
+        self.assertIn("characters omitted", document["condition"])
+        self.assertIn("more parameters omitted", document["params"]["…"])
+        self.assertLess(len(json.dumps(failed.document())), 6000)
+        self.assertLess(len(failed.summary()), 2000)
+
 
 @unittest.skipUnless(shutil.which(os.environ.get("RUBY", "ruby")), "needs Ruby to parse the reads")
 class ReadSyntaxTest(unittest.TestCase):
     def test_every_condition_read_is_valid_ruby(self) -> None:
-        params = {"session": SESSION, "revision": "3", "caller": CALLER, "task": TASK}
+        params = {"session": SESSION, "revision": "3", "caller": CALLER, "task": TASK, "probe_run": RUN}
         for name, condition in hw.CONDITIONS.items():
             with self.subTest(name=name):
                 code = condition.read({key: params[key] for key in condition.params})

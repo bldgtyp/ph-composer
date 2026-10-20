@@ -6,12 +6,16 @@
 #
 #   load "<repo>/tools/hostkit/runtime_probe.rb"
 #   PhComposerRuntimeProbe.start          # opens the runtime window and asks for two probes at once
-#   PhComposerRuntimeProbe.status         # results so far, server activity and held resources
+#   PhComposerRuntimeProbe.status         # results so far, server activity and held resources, and the run id
 #   PhComposerRuntimeProbe.teardown       # stops everything and reports what stopped
 #   PhComposerRuntimeProbe.cancel         # the same stop, named for use while the boot is in flight
 #   PhComposerRuntimeProbe.panel_ready    # opens the panel and times it until the page says ready
 #
-# Every verdict comes from the runtime's own report of what it holds, never from a timeout.
+# Every verdict comes from the runtime's own report of what it holds, never from a timeout. Each `start` has its
+# own `run` id, so a wait on one probe run (`host_bridge.py wait-for runtime_probe_finished`) cannot be met by
+# the next.
+require "securerandom"
+
 module PhComposerRuntimeProbe
   REQUESTS = %w[probe-one probe-two].freeze
 
@@ -23,6 +27,7 @@ module PhComposerRuntimeProbe
       raise ArgumentError, "A probe is already running; tear it down first." if @runtime && !@runtime.stopped?
 
       @started_at = clock
+      @run_id = SecureRandom.hex(6)
       @runtime = PhComposer::RuntimeHost.new(:session_id => session_id).start
       REQUESTS.each { |id| @runtime.probe(id) }
       status
@@ -33,7 +38,7 @@ module PhComposerRuntimeProbe
 
       server = @runtime.server_snapshot
       {
-        "state" => @runtime.state, "session" => @runtime.session_id, "results" => @runtime.results,
+        "state" => @runtime.state, "session" => @runtime.session_id, "run" => @run_id, "results" => @runtime.results,
         "elapsed_ms" => ((clock - @started_at) * 1000).round, "resources" => @runtime.resources,
         "requests" => server.fetch("request_count"), "max_pump_ms" => server.fetch("max_pump_ms"),
         "refused" => server.fetch("request_ledger").reject { |row| row.fetch("status") == 200 }

@@ -57,11 +57,14 @@ class RuntimeProbeTest < PhComposerTestCase
   end
 
   def test_a_second_probe_waits_for_the_first_to_be_torn_down
-    Probe.start
+    first = Probe.start.fetch("run")
 
     assert_raises(ArgumentError) { Probe.start }
     Probe.teardown
-    assert_equal "loading", Probe.start.fetch("state")
+    second = Probe.start
+    assert_equal "loading", second.fetch("state")
+    assert_match(/\A\h{12}\z/, first)
+    refute_equal first, second.fetch("run"), "each run has its own id, so a wait on one cannot be met by the next"
   end
 
   def test_panel_ready_times_the_open_until_the_page_reports_ready

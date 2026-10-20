@@ -7,10 +7,14 @@ the client's own decisions, not the machine it usually talks to.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import shutil
+import socket
 import subprocess
+import threading
+import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -35,6 +39,9 @@ class FakeSocket:
 
     def sendall(self, payload: bytes) -> None:
         self.sent += payload
+
+    def settimeout(self, _seconds: float) -> None:
+        pass
 
     def recv(self, _size: int) -> bytes:
         return self.chunks.pop(0) if self.chunks else b""
@@ -168,6 +175,46 @@ class WaitReadTest(unittest.TestCase):
     def test_no_live_bridge_is_a_connection_error(self) -> None:
         with patch.object(hb, "read_state", return_value=None), self.assertRaises(ConnectionError):
             hb.bridge_read("2026")(":x", 1.0)
+
+    def test_a_malformed_state_file_or_truncated_reply_is_a_lost_bridge_not_a_crash(self) -> None:
+        read = hb.bridge_read("2026")
+        with (
+            patch.object(hb, "read_state", side_effect=json.JSONDecodeError("partial", "{", 1)),
+            self.assertRaises(ConnectionError),
+        ):
+            read(":x", 1.0)
+        with (
+            patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}),
+            patch.object(hb.socket, "create_connection", return_value=FakeSocket([b'{"ok":tr'])),
+            self.assertRaises(ConnectionError),
+        ):
+            read(":x", 1.0)
+
+    def test_a_whole_request_deadline_bounds_a_slow_multipart_reply(self) -> None:
+        # A real loopback socket: the reply arrives in three parts 200 ms apart, so each recv alone would
+        # fit a 300 ms per-operation timeout while the request as a whole does not.
+        server = socket.socket()
+        server.bind(("127.0.0.1", 0))
+        server.listen(1)
+
+        def answer() -> None:
+            connection, _address = server.accept()
+            with connection:
+                connection.recv(65536)
+                for part in (b'{"ok":true,', b'"value":1', b"}\n"):
+                    time.sleep(0.2)
+                    with contextlib.suppress(OSError):  # the client has given up by the last part
+                        connection.sendall(part)
+
+        thread = threading.Thread(target=answer, daemon=True)
+        thread.start()
+        state = {"port": server.getsockname()[1], "token": "t"}
+        started = time.monotonic()
+        with self.assertRaises(TimeoutError):
+            hb.request(state, {"code": ":x"}, timeout=0.3, whole=True)
+        self.assertLess(time.monotonic() - started, 0.45)
+        thread.join(2)
+        server.close()
 
 
 class DialogGuardTest(unittest.TestCase):

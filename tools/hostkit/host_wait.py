@@ -23,12 +23,14 @@ An observed condition is evidence for that condition alone.
     uv run tools/hostkit/host_bridge.py wait-for revision_changed --param session=<uuid> --param revision=4
     uv run tools/hostkit/host_bridge.py wait-for export_finished --param session=<uuid> \\
         --param caller=<handle> --param task=export_<24 hex>
-    uv run tools/hostkit/host_bridge.py wait-for runtime_probe_finished --deadline 120
+    uv run tools/hostkit/host_bridge.py wait-for runtime_probe_finished --param session=<uuid> \\
+        --param probe_run=<12 hex from PhComposerRuntimeProbe.start> --deadline 120
 """
 
 from __future__ import annotations
 
 import json
+import math
 import re
 import time
 from collections.abc import Callable
@@ -39,9 +41,12 @@ from typing import Any
 SCHEMA = 1
 KIND = "ph-composer.host-wait"
 MAX_OBSERVED_CHARS = 4000
+MAX_TEXT_CHARS = 300
+MAX_PARAMS = 8
 DEFAULT_DEADLINE_S = 60.0
 DEFAULT_INTERVAL_S = 0.5
-MIN_CALL_TIMEOUT_S = 0.2
+MAX_DEADLINE_S = 3600.0
+MAX_INTERVAL_S = 60.0
 
 ENDINGS = (
     "met",
@@ -62,6 +67,7 @@ PARAMETERS: dict[str, re.Pattern[str]] = {
     "revision": re.compile(r"\A[1-9][0-9]{0,9}\Z"),
     "caller": re.compile(r"\A[0-9a-f]{32}\Z"),
     "task": re.compile(r"\Aexport_[0-9a-f]{24}\Z"),
+    "probe_run": re.compile(r"\A[0-9a-f]{12}\Z"),
 }
 
 # The session part every session condition shares: the session by its id, never the active Model's, and
@@ -105,6 +111,18 @@ def export_task_read() -> Callable[[dict[str, str]], str]:
     )
 
 
+def probe_read() -> Callable[[dict[str, str]], str]:
+    # The probe is one global; it counts only while it is the named run in the named session. Another run, or
+    # a probe for another session, is not this wait's target.
+    return session_read(
+        "begin; p = defined?(PhComposerRuntimeProbe) ? PhComposerRuntimeProbe.status : nil; "
+        "if p.nil? then {{'probe' => nil, 'probe_state' => 'not_loaded'}} "
+        "elsif p['run'] != '{probe_run}' || p['session'] != s.id then "
+        "{{'probe' => nil, 'probe_state' => 'another_run'}} "
+        "else {{'probe' => p.slice('state', 'run', 'verdict', 'elapsed_ms', 'requests')}} end; end"
+    )
+
+
 CONDITIONS: dict[str, Condition] = {
     condition.name: condition
     for condition in (
@@ -131,16 +149,12 @@ CONDITIONS: dict[str, Condition] = {
         ),
         Condition(
             "runtime_probe_finished",
-            (),
-            "the development runtime probe (tools/hostkit/runtime_probe.rb) has both results or has stopped",
-            lambda _params: (
-                "defined?(PhComposerRuntimeProbe) ? PhComposerRuntimeProbe.status.slice("
-                "'state', 'session', 'verdict', 'elapsed_ms', 'requests') : {'probe' => 'not_loaded'}"
-            ),
+            ("session", "probe_run"),
+            "the development runtime probe run (tools/hostkit/runtime_probe.rb) has both results or has stopped",
+            probe_read(),
             lambda observed, _params: (
-                observed.get("verdict") not in (None, "pending") or observed.get("state") == "stopped"
+                observed["probe"].get("verdict") not in (None, "pending") or observed["probe"].get("state") == "stopped"
             ),
-            session=False,
         ),
     )
 }
@@ -164,8 +178,8 @@ class WaitResult:
         return {
             "schema": SCHEMA,
             "kind": KIND,
-            "condition": self.condition,
-            "params": self.params,
+            "condition": clip(self.condition),
+            "params": bounded_params(self.params),
             "ending": self.ending,
             "met": self.ending == "met",
             "started_at": self.started_at,
@@ -175,17 +189,29 @@ class WaitResult:
             "interval_s": self.interval_s,
             "last_observed": bounded(self.last_observed),
             "observed_at": self.observed_at,
-            "error": self.error,
+            "error": clip(self.error) if self.error is not None else None,
             "note": "An observation only: it applied, retried and cancelled nothing.",
         }
 
     def summary(self) -> str:
-        line = f"{self.condition}: {self.ending} after {self.elapsed_ms} ms and {self.polls} poll(s)"
+        line = f"{clip(self.condition)}: {self.ending} after {self.elapsed_ms} ms and {self.polls} poll(s)"
         if self.error:
-            line += f"; {self.error}"
+            line += f"; {clip(self.error)}"
         if self.last_observed is not None:
             line += f"; last observed {json.dumps(bounded(self.last_observed))}"
         return line
+
+
+def clip(text: str, limit: int = MAX_TEXT_CHARS) -> str:
+    """Text supplied from outside (a condition name, a parameter, a host error), cut with a marker."""
+    return text if len(text) <= limit else f"{text[:limit]}… [{len(text) - limit} characters omitted]"
+
+
+def bounded_params(params: dict[str, str]) -> dict[str, str]:
+    kept = {clip(key, 64): clip(value) for key, value in list(params.items())[:MAX_PARAMS]}
+    if len(params) > MAX_PARAMS:
+        kept["…"] = f"{len(params) - MAX_PARAMS} more parameters omitted"
+    return kept
 
 
 def bounded(value: Any) -> Any:
@@ -200,14 +226,23 @@ def validate(name: str, params: dict[str, str]) -> str | None:
     """Why this condition and these parameters are refused, or None when they are accepted."""
     condition = CONDITIONS.get(name)
     if condition is None:
-        return f"unknown condition {name}; known: {', '.join(sorted(CONDITIONS))}"
+        return f"unknown condition {clip(name, 64)}; known: {', '.join(sorted(CONDITIONS))}"
     if missing := [key for key in condition.params if key not in params]:
         return f"{name} needs {', '.join(missing)}"
     if extra := sorted(set(params) - set(condition.params)):
-        return f"{name} does not take {', '.join(extra)}"
+        return clip(f"{name} does not take {', '.join(clip(key, 64) for key in extra)}")
     for key, value in params.items():
         if not PARAMETERS[key].match(value):
             return f"{key} is not in the form the extension generates"
+    return None
+
+
+def timing_problem(deadline_s: float, interval_s: float) -> str | None:
+    """Why these timings are refused: each must be finite and positive, within its upper bound."""
+    if not (math.isfinite(deadline_s) and 0 < deadline_s <= MAX_DEADLINE_S):
+        return f"the deadline must be a number of seconds above 0 and at most {MAX_DEADLINE_S:.0f}"
+    if not (math.isfinite(interval_s) and 0 < interval_s <= MAX_INTERVAL_S):
+        return f"the interval must be a number of seconds above 0 and at most {MAX_INTERVAL_S:.0f}"
     return None
 
 
@@ -237,7 +272,7 @@ def wait_for(
         result.elapsed_ms = round((clock() - started) * 1000)
         return result
 
-    if problem := validate(name, params):
+    if problem := validate(name, params) or timing_problem(deadline_s, interval_s):
         return end("invalid_condition", problem)
     condition = CONDITIONS[name]
     code = condition.read(params)
@@ -248,7 +283,7 @@ def wait_for(
                 return end("timed_out")
             result.polls += 1
             try:
-                observed = read(code, max(remaining, MIN_CALL_TIMEOUT_S))
+                observed = read(code, remaining)
             except ReadError as error:
                 return end("read_failed", str(error))
             except TimeoutError:
@@ -257,14 +292,16 @@ def wait_for(
                 return end("bridge_unavailable", str(error))
             result.last_observed = observed
             result.observed_at = now().isoformat()
+            if clock() - started > deadline_s:
+                return end("timed_out", "the last read answered after the deadline")
             if not isinstance(observed, dict):
                 return end("read_failed", "the read did not return a projection")
             if condition.session and observed.get("session") == "missing":
                 return end("session_missing", "the session is not open; the wait does not follow another Model")
             if condition.session and observed.get("active") is False:
                 return end("session_switched", "another Model is active; the wait does not follow it")
-            if observed.get("task", True) is None or observed.get("probe") == "not_loaded":
-                return end("target_missing")
+            if observed.get("task", True) is None or observed.get("probe", True) is None:
+                return end("target_missing", observed.get("probe_state"))
             if condition.met(observed, params):
                 return end("met")
             remaining = deadline_s - (clock() - started)
