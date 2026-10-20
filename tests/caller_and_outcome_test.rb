@@ -14,6 +14,15 @@ class CallerAndOutcomeTest < PhComposerTestCase
     assert_raises(ArgumentError) { registry.issue(%w[read admin]) }
   end
 
+  def test_a_refused_mutation_says_nothing_was_written_once
+    outcome = PhComposer::Outcome
+    plain = outcome.refused("target.changed", "The Model changed.", :revision => 1, :mutation => true)
+    assert_equal "The Model changed. Nothing was written.", plain.fetch("message")
+    message = "The Model changed. Nothing was written."
+    said = outcome.refused("target.changed", message, :revision => 1, :mutation => true)
+    assert_equal message, said.fetch("message")
+  end
+
   def test_a_retained_outcome_expires_after_its_lifetime
     now = 0.0
     store = PhComposer::OutcomeStore.new(:clock => -> { now })
