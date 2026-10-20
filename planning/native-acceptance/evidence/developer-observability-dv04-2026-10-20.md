@@ -2,9 +2,9 @@
 
 DATE: 2026-10-20
 CASES: DV5 and DV4 (owning acceptance: `planning/features/unscheduled/developer-observability/ACCEPTANCE.md`, rows D07, D08 and D09)
-BUILD: branch `feat/developer-observability-dv-04`. Run 1 (`_private/host/dv04b/`, d564a1e9), run 2 (`dv04c/`, 80a1e89b, after the first review: a failed restore holds its baseline, leaky stopped runtimes count, failed_write confined to its active Model, lost_reply reads back the panel) and run 3 (`dv04d/`, 4ef9fce4, after the second review: a restore without this process's baseline is not certified, unreadable preferences never match, receipts detached and whole). Installed RBZ `dist/ph_composer.rbz` from each tree, compared with the installed extension by `acceptance_case.py begin`. No shipping file changed in this stage.
+BUILD: branch `feat/developer-observability-dv-04`. Run 1 (`_private/host/dv04b/`, d564a1e9), run 2 (`dv04c/`, 80a1e89b, after the first review: a failed restore holds its baseline, leaky stopped runtimes count, failed_write confined to its active Model, lost_reply reads back the panel) run 3 (`dv04d/`, 4ef9fce4, after the second review: a restore without this process's baseline is not certified, unreadable preferences never match, receipts detached and whole) and run 4 (`dv04e/`, 00d0508f, after a read-through: a stale loaded revision is refused, fixtures limited to `_private/host/` or a temporary folder, only messages the runtime would act on are counted). Installed RBZ `dist/ph_composer.rbz` from each tree, compared with the installed extension by `acceptance_case.py begin`. No shipping file changed in this stage.
 HOST: SketchUp 2026 (26.1.188, Ruby 3.2.2) on macOS 26.7.1, fresh processes launched by `host_bridge.py launch`, synthetic copies of `blank-template.skp`.
-CONTROL: development bridge only (`host_bridge.py fault`, `wait-for`, `diagnostics`), driven by `_private/host/dv04-run.sh`. Raw JSON stays in `_private/host/dv04b/` to `dv04d/`. Every run passed every assertion; the tables give run 3.
+CONTROL: development bridge only (`host_bridge.py fault`, `wait-for`, `diagnostics`), driven by `_private/host/dv04-run.sh`. Raw JSON stays in `_private/host/dv04b/` to `dv04e/`. Every run passed every assertion; the tables give run 4.
 
 An earlier attempt the same day (`_private/host/dv04/`) ran the same script on the first DV-04 commit and
 passed every step, but its wait enrichment came back empty: an export's runtime records carry the run id
@@ -38,7 +38,7 @@ it on demand and leave the host as it was.
 
 ## Host note
 
-In run 2 the relaunch for the normal-build step timed out (run 3's script activates SketchUp once if the bridge has not started 25 s into a launch; it was not needed): that SketchUp process loaded no Ruby extension
+In run 2 the relaunch for the normal-build step timed out (runs 3 and 4's script activates SketchUp once if the bridge has not started 25 s into a launch; it was not needed): that SketchUp process loaded no Ruby extension
 until the app was activated once, which `open -a` had not done. Activating it let startup finish and the step
 ran in that fresh process. The same stall cost an attempt in the DV-03 runs. A follow-up for the bridge's
 `launch`, not for these controls.
