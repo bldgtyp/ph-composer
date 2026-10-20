@@ -181,10 +181,16 @@ ui-checks:
 	done; \
 	exit $$status
 
-# The development host bridge and helpers: Ruby tests against the stub, then the Python client.
+# The development host bridge and helpers: Ruby tests against the stub, then the Python client. Some Python
+# tests run Ruby they generate; when the floor's Ruby (2.7) is installed they run again under it, so syntax
+# newer than the floor fails here and not first on CI's 2.7 job.
+RUBY_FLOOR ?= $(shell rbenv prefix 2.7.2 2>/dev/null)
 hostkit-test:
 	@$(RUBY) -Itests -Itools/hostkit/tests tools/hostkit/tests/all.rb
 	@uv run pytest -q tools/hostkit/tests
+	@if [ -n "$(RUBY_FLOOR)" ] && [ -x "$(RUBY_FLOOR)/bin/ruby" ] && [ "$(RUBY_FLOOR)/bin/ruby" != "$(RUBY)" ]; then \
+	  RUBY="$(RUBY_FLOOR)/bin/ruby" uv run pytest -q tools/hostkit/tests -k "ReadSyntax or ReadBinding"; \
+	else echo "hostkit-test: Ruby 2.7 not installed here; generated Ruby checked on $(RUBY) only"; fi
 
 # ty over the set `[tool.ty.src]` in pyproject.toml includes; ruff's ANN rules require the annotations it reads.
 python-check:
