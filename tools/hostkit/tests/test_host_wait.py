@@ -253,6 +253,9 @@ class DocumentTest(unittest.TestCase):
         self.assertEqual(document["observed_at"], "2026-10-20T00:00:00+00:00")
         self.assertIn("observation only", document["note"])
         self.assertIn("session_settled: met after 0 ms and 1 poll(s)", result.summary())
+        self.assertNotIn("diagnostics", document, "no diagnostics key unless they were asked for")
+        result.diagnostics = {"status": "unavailable", "error": "gone"}
+        self.assertEqual(result.document()["diagnostics"]["status"], "unavailable")
 
     def test_names_parameters_and_errors_from_outside_are_bounded_too(self) -> None:
         params: dict[str, str] = {f"k{index}{'x' * 5000}": str("v" * 100_000) for index in range(20)}

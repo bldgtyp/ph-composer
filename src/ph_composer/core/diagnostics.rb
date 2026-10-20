@@ -170,6 +170,14 @@ module PhComposer
         (@tail ||= []).dup
       end
 
+      # The tail with the position of its first line. Lines remembered in this process are numbered from 0 and
+      # never renumbered, so a developer reader can resume after the last line it saw and tell when lines it
+      # never saw were evicted or cleared. The numbering restarts with the process.
+      def tail_window
+        lines = tail
+        { "first" => remembered - lines.length, "lines" => lines }
+      end
+
       # The newest log lines on disk, archive first, within `max_bytes`, and how many earlier lines were left
       # out. Raises when the files exist but cannot be read; a log never written reads as empty.
       def recent_lines(max_bytes)
@@ -243,6 +251,7 @@ module PhComposer
         @last_error = nil
         @tail = []
         @tail_bytes = 0
+        @remembered = 0
         Thread.current[:ph_composer_diagnostics] = nil
       end
 
@@ -402,7 +411,12 @@ module PhComposer
         @last_error = error.class.name
       end
 
+      def remembered
+        @remembered || 0
+      end
+
       def remember(line)
+        @remembered = remembered + 1
         @tail ||= []
         @tail_bytes = (@tail_bytes || 0) + line.bytesize
         @tail << line

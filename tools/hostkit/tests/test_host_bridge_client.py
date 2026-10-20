@@ -413,7 +413,21 @@ class CommandRegistryTest(unittest.TestCase):
         # usage block still promises.
         self.assertEqual(
             set(hb.COMMANDS),
-            {"wait", "ping", "quit", "launch", "eval", "state", "save", "shot", "key", "console", "wait-for"},
+            {
+                "wait",
+                "ping",
+                "quit",
+                "launch",
+                "eval",
+                "state",
+                "save",
+                "shot",
+                "key",
+                "console",
+                "wait-for",
+                "diagnostics",
+                "fault",
+            },
         )
         for name, (configure, run) in hb.COMMANDS.items():
             self.assertTrue(callable(configure), name)

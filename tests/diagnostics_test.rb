@@ -234,6 +234,22 @@ class DiagnosticsTest < PhComposerTestCase
     assert_equal frames, JSON.parse(line).fetch("frames")
   end
 
+  def test_the_tail_window_numbers_lines_across_eviction_and_clear
+    Dir.mktmpdir("ph-composer-log") do |directory|
+      Diagnostics.path_override = File.join(directory, "ph-composer.log")
+      3.times { Diagnostics.log("numbered") }
+      assert_equal 0, Diagnostics.tail_window.fetch("first")
+      assert_equal 3, Diagnostics.tail_window.fetch("lines").length
+
+      Diagnostics.clear
+      Diagnostics.log("after_clear")
+
+      window = Diagnostics.tail_window
+      assert_equal 3, window.fetch("first"), "a cleared line keeps its number, so a reader sees the gap"
+      assert_equal ["after_clear"], window.fetch("lines").map { |line| JSON.parse(line).fetch("event") }
+    end
+  end
+
   def test_a_failed_write_is_kept_as_the_logs_health_and_in_the_tail
     Dir.mktmpdir("ph-composer-log") do |directory|
       blocked = File.join(directory, "file")
