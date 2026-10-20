@@ -42,11 +42,14 @@ PhComposerUI.define("subtabs", ["dom"], function (ui) {
     this.paint();
   }
 
+  /* A field that a blur would commit or lose, inside the shown surface. A search field, checkbox or radio holds
+     no draft: its value already applies, so it never holds a switch. */
   Subtabs.prototype.focusedInput = function () {
     var focused = document.activeElement;
     var active = this.tabs.filter(function (tab) { return tab.id === this.active; }, this)[0];
-    return Boolean(focused && active && active.surface.contains(focused) &&
-      (/^(input|select|textarea)$/i.test(focused.tagName) || focused.isContentEditable));
+    if (!focused || !active || !active.surface.contains(focused)) return false;
+    if (/^input$/i.test(focused.tagName) && /^(search|checkbox|radio)$/i.test(focused.type || "")) return false;
+    return /^(input|select|textarea)$/i.test(focused.tagName) || Boolean(focused.isContentEditable);
   };
   Subtabs.prototype.select = function (id) {
     if (this.disposed || !this.buttons[id]) return false;
