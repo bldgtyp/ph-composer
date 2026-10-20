@@ -350,6 +350,7 @@ def wait_for_launch(version: str, timeout: float) -> dict[str, Any]:
     """Wait for the bridge of a SketchUp just opened. If it has written no state file `ACTIVATE_AFTER`
     seconds in while SketchUp runs, startup is stalled in the background: activate SketchUp once.
     Either way the wait runs to the full `timeout`."""
+    deadline = time.monotonic() + timeout
     first = min(ACTIVATE_AFTER, timeout)
     try:
         return wait(version, first)
@@ -361,7 +362,7 @@ def wait_for_launch(version: str, timeout: float) -> dict[str, Any]:
         print(f"no bridge state file {first:.0f}s into the launch; activating SketchUp once")
         activate_sketchup_once(version)
     try:
-        return wait(version, timeout - first)
+        return wait(version, deadline - time.monotonic())
     except TimeoutError:
         note = f" (SketchUp activated once at {first:.0f}s)" if activated else ""
         raise TimeoutError(f"no host bridge within {timeout:.0f}s{note}") from None

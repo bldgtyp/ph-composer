@@ -328,6 +328,29 @@ class StalledLaunchTest(unittest.TestCase):
         self.assertEqual(self.wait_for_launch([TimeoutError("no host bridge"), {"port": 1}]), ["2026"])
         self.assertEqual(self.state, {"port": 1})
 
+    def test_time_spent_activating_comes_out_of_the_launch_timeout(self) -> None:
+        clock = FakeClock()
+        budgets: list[float] = []
+
+        def waited(_version: str, budget: float) -> dict[str, int]:
+            budgets.append(budget)
+            clock.sleep(budget)
+            if len(budgets) == 1:
+                raise TimeoutError("no host bridge")
+            return {"port": 1}
+
+        with (
+            TemporaryDirectory() as folder,
+            patch.object(hb, "SUPPORT", Path(folder)),
+            patch.object(hb.time, "monotonic", clock.monotonic),
+            patch.object(hb, "activate_sketchup_once", side_effect=lambda _version: clock.sleep(10.0)),
+            patch.object(hb, "sketchup_running", return_value=True),
+            patch.object(hb, "wait", side_effect=waited),
+            patch("builtins.print"),
+        ):
+            hb.wait_for_launch("2026", 180.0)
+        self.assertEqual(budgets, [hb.ACTIVATE_AFTER, 180.0 - hb.ACTIVATE_AFTER - 10.0])
+
     def test_a_written_state_file_or_a_sketchup_not_running_is_not_the_stall_and_the_wait_runs_on(self) -> None:
         # The bridge writes its state before its main-thread pump answers, so a slow start is not a stall.
         for options in ({"state_file": True}, {"running": False}):
