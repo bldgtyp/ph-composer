@@ -5,7 +5,13 @@ STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#254](https://github.com/bldgtyp/ph-composer/issues/254)
 
-All rows are requirements. There are no implementation passes yet.
+All rows are requirements. On 2026-10-20 every row was met on the stacked branches, before merge:
+D01, D02 and D08's browser part by `make ui-checks` (22/22) and `tests/browser_evidence_test.js`; D03 and D04
+by native cases DV1 and DV2; D05 and D06 by DV3; D07 by DV5; D09 by DV4. Native evidence:
+[DV-02](../../../native-acceptance/evidence/developer-observability-dv02-2026-10-20.md),
+[DV-03](../../../native-acceptance/evidence/developer-observability-dv03-2026-10-20.md),
+[DV-04](../../../native-acceptance/evidence/developer-observability-dv04-2026-10-20.md). `make ci` (which
+checks the RBZ holds no development tool) passed on each branch head. The ledger is in [STATUS.md](STATUS.md).
 
 | ID | Required observation | Evidence |
 | --- | --- | --- |

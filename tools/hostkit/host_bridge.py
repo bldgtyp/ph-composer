@@ -17,10 +17,16 @@ and waiting for deferred work.
     uv run tools/hostkit/host_bridge.py shot <name> --dir <evidence-dir>
     uv run tools/hostkit/host_bridge.py key 53            # Escape, through System Events
     uv run tools/hostkit/host_bridge.py console --tail 40  # what the Ruby Console showed
+    uv run tools/hostkit/host_bridge.py wait-for session_settled --param session=<uuid> --deadline 30 --json
+    uv run tools/hostkit/host_bridge.py diagnostics --session <uuid> --severity warning --json
+    uv run tools/hostkit/host_bridge.py fault arm failed_write --session <uuid> --key unit_system --json
     uv run tools/hostkit/host_bridge.py quit
 
 `eval` prints captured stdout, then the result (JSON when the value serializes, else `inspect`).
-Exit status 1 on a Ruby error, 2 when the bridge is unreachable.
+Exit status 1 on a Ruby error, 2 when the bridge is unreachable. `wait-for` polls a named read-only
+condition in separate host calls (tools/hostkit/host_wait.py) and exits 0 only when it was met. `fault`
+arms, observes and restores a named development fault (tools/hostkit/host_faults.py) and exits 0 only when
+the operation held.
 """
 
 from __future__ import annotations
@@ -38,10 +44,18 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+# ty checks a PEP 723 script in its own environment, without the script's directory that Python puts on
+# sys.path at run time, so this sibling import resolves when run and not for ty.
+import host_diagnostics  # ty: ignore[unresolved-import]
+import host_faults  # ty: ignore[unresolved-import]
+import host_wait  # ty: ignore[unresolved-import]
+
 SUPPORT = Path.home() / "Library" / "Application Support"
 APP = Path("/Applications/SketchUp {version}/SketchUp.app")
 HELPERS = Path(__file__).resolve().parent / "host_helpers.rb"
 ESCAPE_KEY_CODE = 53
+# A wait poll's reply is a small projection; anything larger is not one, and parsing it could outlast the budget.
+MAX_WHOLE_REPLY_BYTES = 1024 * 1024
 
 
 class BridgeError(RuntimeError):
@@ -61,22 +75,43 @@ def read_state(version: str) -> dict[str, Any] | None:
         return None
     state = json.loads(path.read_text())
     try:
-        os.kill(int(state["pid"]), 0)
-    except (OSError, ValueError):
+        pid = int(state["pid"])
+        if pid <= 0:  # 0 and negative pids signal process groups, and would look alive
+            return None
+        os.kill(pid, 0)
+    except (OSError, ValueError, OverflowError):
         return None
     return state
 
 
-def request(state: dict[str, Any], payload: dict[str, Any], timeout: float) -> dict[str, Any]:
+def request(state: dict[str, Any], payload: dict[str, Any], timeout: float, *, whole: bool = False) -> dict[str, Any]:
+    """One request and its reply. `timeout` bounds each socket operation; with `whole`, it bounds the request
+    as a whole: every operation gets only what is left, and TimeoutError is raised once nothing is."""
     payload = dict(payload, token=state["token"])
+    deadline = time.monotonic() + timeout
+
+    def remaining() -> float:
+        left = deadline - time.monotonic()
+        if left <= 0:
+            raise TimeoutError("the reply did not arrive within the remaining budget")
+        return left
+
     with socket.create_connection(("127.0.0.1", int(state["port"])), timeout=timeout) as sock:
+        if whole:
+            sock.settimeout(remaining())
         sock.sendall((json.dumps(payload) + "\n").encode("utf-8"))
         chunks: list[bytes] = []
+        received = 0
         while True:
+            if whole:
+                sock.settimeout(remaining())
             chunk = sock.recv(65536)
             if not chunk:
                 break
             chunks.append(chunk)
+            received += len(chunk)
+            if whole and received > MAX_WHOLE_REPLY_BYTES:
+                raise ValueError(f"the reply exceeded {MAX_WHOLE_REPLY_BYTES} bytes")
     line = b"".join(chunks).decode("utf-8").strip()
     if not line:
         raise ConnectionError("empty reply from the bridge")
@@ -412,6 +447,114 @@ def run_console(args: argparse.Namespace, version: str) -> None:
     print(tail(path, args.tail))
 
 
+def configure_wait_for(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("condition", help=f"one of {', '.join(sorted(host_wait.CONDITIONS))}")
+    parser.add_argument("--param", action="append", default=[], metavar="NAME=VALUE")
+    parser.add_argument("--deadline", type=float, default=host_wait.DEFAULT_DEADLINE_S, help="overall seconds")
+    parser.add_argument("--interval", type=float, default=host_wait.DEFAULT_INTERVAL_S, help="seconds between polls")
+    parser.add_argument("--json", action="store_true", help="print the versioned result document")
+    parser.add_argument(
+        "--diagnostics", action="store_true", help="add the session's recent warnings and errors from the log"
+    )
+
+
+def bridge_read(version: str) -> Callable[[str, float], Any]:
+    """One wait poll: a single eval that must finish, connection to last byte, within the wait's remaining
+    budget. Malformed bridge data is a lost bridge, not a crash."""
+
+    def read(code: str, timeout: float) -> Any:
+        deadline = time.monotonic() + timeout
+        try:
+            state = read_state(version)
+            if state is None:
+                raise ConnectionError("host bridge is not running (no live state file)")
+            if not (isinstance(state, dict) and isinstance(state.get("token"), str)):
+                raise ConnectionError("the bridge's state file is not a state document")
+            left = deadline - time.monotonic()
+            if left <= 0:
+                raise TimeoutError("finding the bridge used the whole remaining budget")
+            answer = request(state, {"code": code}, timeout=left, whole=True)
+        except (ValueError, TypeError, KeyError, OverflowError, UnicodeDecodeError) as error:
+            # Includes JSONDecodeError: a partial state file or reply, or one of the wrong shape.
+            raise ConnectionError(f"the bridge's state file or reply was malformed: {error}") from error
+        if not isinstance(answer, dict):
+            raise ConnectionError("the bridge's reply was not a result document")
+        if not answer.get("ok"):
+            raise host_wait.ReadError(str(answer.get("error")))
+        return answer.get("value")
+
+    return read
+
+
+def run_wait_for(args: argparse.Namespace, version: str) -> int:
+    params, refused = host_wait.parse_params(args.param)
+    read = bridge_read(version)
+    result = host_wait.wait_for(
+        args.condition, params, read, refused=refused, deadline_s=args.deadline, interval_s=args.interval
+    )
+    # Read within what is left of the deadline; never after a cancel, a refusal or a lost bridge.
+    if args.diagnostics and result.ending not in ("invalid_condition", "bridge_unavailable", "cancelled"):
+        budget = args.deadline - result.elapsed_ms / 1000
+        result.diagnostics = host_diagnostics.for_wait(read, params, budget)
+    if args.json:
+        print(json.dumps(result.document(), indent=2, allow_nan=False))
+    else:
+        print(result.summary())
+        if result.diagnostics is not None:
+            print(host_diagnostics.summary(result.diagnostics))
+    if result.ending == "met":
+        return 0
+    return 2 if result.ending == "bridge_unavailable" else 1
+
+
+def configure_diagnostics(parser: argparse.ArgumentParser) -> None:
+    for name in ("session", "incident", "run-id", "severity", "cursor"):
+        parser.add_argument(f"--{name}")
+    parser.add_argument("--limit", type=int)
+    parser.add_argument("--newest", action="store_true", help="the most recent matches instead of a page")
+    parser.add_argument("--json", action="store_true", help="print the versioned read document")
+
+
+def run_diagnostics(args: argparse.Namespace, version: str) -> int:
+    names = {"session": "session", "incident": "incident", "run_id": "run_id", "severity": "severity"}
+    filters: dict[str, Any] = {key: getattr(args, attr) for key, attr in names.items() if getattr(args, attr)}
+    if args.cursor:
+        filters["cursor"] = args.cursor
+    if args.limit is not None:
+        filters["limit"] = args.limit
+    if args.newest:
+        filters["newest"] = True
+    try:
+        document = host_diagnostics.read(bridge_read(version), filters, timeout=args.timeout)
+    except host_wait.ReadError as error:
+        raise BridgeError(str(error)) from error
+    print(json.dumps(document, indent=2, allow_nan=False) if args.json else host_diagnostics.summary(document))
+    return 0 if document.get("status") == "read" else 1
+
+
+def configure_fault(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("operation", choices=host_faults.OPERATIONS)
+    parser.add_argument("fault", choices=host_faults.NAMES)
+    parser.add_argument("--session")
+    parser.add_argument("--request", help="lost_reply: the request id whose result is dropped")
+    parser.add_argument("--drop", action="append", help="silent_runtime: a runtime message type to drop")
+    parser.add_argument("--key", help="failed_write: the display-preference key whose writes fail")
+    parser.add_argument("--json", action="store_true", help="print the versioned control document")
+
+
+def run_fault(args: argparse.Namespace, version: str) -> int:
+    target = {name: value for name in ("session", "request", "drop", "key") if (value := getattr(args, name))}
+    try:
+        document = host_faults.run(bridge_read(version), args.operation, args.fault, target)
+    except host_wait.ReadError as error:
+        raise BridgeError(str(error)) from error
+    output = (
+        json.dumps(document, indent=2, allow_nan=False) if args.json else host_faults.summary(args.operation, document)
+    )
+    print(output)
+    return 0 if host_faults.succeeded(args.operation, document) else 1
+
+
 COMMANDS: dict[str, tuple[Callable[[argparse.ArgumentParser], None], Callable[..., Any]]] = {
     "wait": (takes_nothing, run_wait),
     "ping": (takes_nothing, run_ping),
@@ -423,6 +566,9 @@ COMMANDS: dict[str, tuple[Callable[[argparse.ArgumentParser], None], Callable[..
     "shot": (configure_shot, run_shot),
     "key": (configure_key, run_key),
     "console": (configure_tail(40), run_console),
+    "wait-for": (configure_wait_for, run_wait_for),
+    "diagnostics": (configure_diagnostics, run_diagnostics),
+    "fault": (configure_fault, run_fault),
 }
 
 

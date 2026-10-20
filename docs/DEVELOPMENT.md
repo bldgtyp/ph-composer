@@ -258,7 +258,11 @@ waiting on another display. `quit` saves every open document to a scratch path a
 documents opened after the first, so terminating meets no save prompt. A host the bridge cannot reach, or
 one still on a prompt after 30 seconds, is killed, and `quit` says so.
 From there `eval`, `state`, `save`, `shot`, `key`, `console` and `quit` cover the fresh-process
-loop. `tools/hostkit/.index.md` lists what each does. Every `eval` runs in one shared binding, so
+loop, and `wait-for` waits for a named host condition (a session settling, a revision changing, an
+export finishing) through separate polls under one deadline, printing a versioned JSON result with
+`--json`, and `diagnostics` reads the extension's recent log records filtered by session, incident, run
+and severity, paged by a cursor that says when history is missing. `tools/hostkit/.index.md` lists what
+each does. Every `eval` runs in one shared binding, so
 a local variable assigned in one call survives into the next and keeps its object alive. Set such
 locals to nil before checking that a closed Model's session was collected. The measured host facts
 the bridge depends on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).

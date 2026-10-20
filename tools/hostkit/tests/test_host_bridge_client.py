@@ -7,10 +7,14 @@ the client's own decisions, not the machine it usually talks to.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import shutil
+import socket
 import subprocess
+import threading
+import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -35,6 +39,9 @@ class FakeSocket:
 
     def sendall(self, payload: bytes) -> None:
         self.sent += payload
+
+    def settimeout(self, _seconds: float) -> None:
+        pass
 
     def recv(self, _size: int) -> bytes:
         return self.chunks.pop(0) if self.chunks else b""
@@ -98,6 +105,12 @@ class ReadStateTest(unittest.TestCase):
         self.write_state(2_000_000_000)
         self.assertIsNone(hb.read_state("2026"))
 
+    def test_a_state_file_naming_a_process_group_or_an_impossible_pid_is_not_a_live_bridge(self) -> None:
+        for pid in (0, -1, 99_999_999_999_999_999_999):
+            with self.subTest(pid=pid):
+                self.write_state(pid)
+                self.assertIsNone(hb.read_state("2026"))
+
     def test_a_state_file_for_a_live_process_is_returned(self) -> None:
         self.write_state(os.getpid())  # this process: alive, and signalable without privileges
         state = hb.read_state("2026")
@@ -148,6 +161,99 @@ class EvaluateTest(unittest.TestCase):
     def test_inspect_text_is_returned_when_the_value_did_not_serialize(self) -> None:
         with patch.object(hb, "reply", return_value={"ok": True, "result": "#<Sketchup::Model>"}):
             self.assertEqual(hb.evaluate("2026", "m"), "#<Sketchup::Model>")
+
+
+class WaitReadTest(unittest.TestCase):
+    """A wait poll is one eval: a host error is a read failure, a missing bridge is a lost connection."""
+
+    def test_a_ruby_error_reply_is_a_read_error_and_a_value_is_returned(self) -> None:
+        read = hb.bridge_read("2026")
+        with patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}):
+            with (
+                patch.object(hb, "request", return_value={"ok": False, "error": "NameError"}),
+                self.assertRaises(hb.host_wait.ReadError),
+            ):
+                read(":x", 1.0)
+            with patch.object(hb, "request", return_value={"ok": True, "value": {"busy": None}}) as sent:
+                self.assertEqual(read(":x", 2.5), {"busy": None})
+        self.assertAlmostEqual(sent.call_args.kwargs["timeout"], 2.5, delta=0.1, msg="the request gets what is left")
+        self.assertLessEqual(sent.call_args.kwargs["timeout"], 2.5)
+
+    def test_no_live_bridge_is_a_connection_error(self) -> None:
+        with patch.object(hb, "read_state", return_value=None), self.assertRaises(ConnectionError):
+            hb.bridge_read("2026")(":x", 1.0)
+
+    def test_a_malformed_state_file_or_truncated_reply_is_a_lost_bridge_not_a_crash(self) -> None:
+        read = hb.bridge_read("2026")
+        with (
+            patch.object(hb, "read_state", side_effect=json.JSONDecodeError("partial", "{", 1)),
+            self.assertRaises(ConnectionError),
+        ):
+            read(":x", 1.0)
+        with (
+            patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}),
+            patch.object(hb.socket, "create_connection", return_value=FakeSocket([b'{"ok":tr'])),
+            self.assertRaises(ConnectionError),
+        ):
+            read(":x", 1.0)
+
+    def test_a_state_document_of_the_wrong_shape_is_a_lost_bridge(self) -> None:
+        read = hb.bridge_read("2026")
+        for state in ([], {"port": "invalid", "token": "t"}, {"port": 1}):
+            with (
+                self.subTest(state=state),
+                patch.object(hb, "read_state", return_value=state),
+                self.assertRaises(ConnectionError),
+            ):
+                read(":x", 1.0)
+
+    def test_an_oversized_poll_reply_is_malformed_not_parsed(self) -> None:
+        big = [b'{"ok":true,"value":"', b"x" * (hb.MAX_WHOLE_REPLY_BYTES + 1), b'"}\n']
+        with (
+            patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}),
+            patch.object(hb.socket, "create_connection", return_value=FakeSocket(big)),
+            self.assertRaises(ConnectionError),
+        ):
+            hb.bridge_read("2026")(":x", 1.0)
+
+    def test_finding_the_bridge_counts_against_the_budget(self) -> None:
+        def slow_state(_version: str) -> dict[str, object]:
+            time.sleep(0.15)
+            return {"port": 1, "token": "t"}
+
+        with (
+            patch.object(hb, "read_state", side_effect=slow_state),
+            patch.object(hb, "request") as sent,
+            self.assertRaises(TimeoutError),
+        ):
+            hb.bridge_read("2026")(":x", 0.1)
+        sent.assert_not_called()
+
+    def test_a_whole_request_deadline_bounds_a_slow_multipart_reply(self) -> None:
+        # A real loopback socket: the reply arrives in three parts 200 ms apart, so each recv alone would
+        # fit a 300 ms per-operation timeout while the request as a whole does not.
+        server = socket.socket()
+        server.bind(("127.0.0.1", 0))
+        server.listen(1)
+
+        def answer() -> None:
+            connection, _address = server.accept()
+            with connection:
+                connection.recv(65536)
+                for part in (b'{"ok":true,', b'"value":1', b"}\n"):
+                    time.sleep(0.2)
+                    with contextlib.suppress(OSError):  # the client has given up by the last part
+                        connection.sendall(part)
+
+        thread = threading.Thread(target=answer, daemon=True)
+        thread.start()
+        state = {"port": server.getsockname()[1], "token": "t"}
+        started = time.monotonic()
+        with self.assertRaises(TimeoutError):
+            hb.request(state, {"code": ":x"}, timeout=0.3, whole=True)
+        self.assertLess(time.monotonic() - started, 0.45)
+        thread.join(2)
+        server.close()
 
 
 class DialogGuardTest(unittest.TestCase):
@@ -307,7 +413,21 @@ class CommandRegistryTest(unittest.TestCase):
         # usage block still promises.
         self.assertEqual(
             set(hb.COMMANDS),
-            {"wait", "ping", "quit", "launch", "eval", "state", "save", "shot", "key", "console"},
+            {
+                "wait",
+                "ping",
+                "quit",
+                "launch",
+                "eval",
+                "state",
+                "save",
+                "shot",
+                "key",
+                "console",
+                "wait-for",
+                "diagnostics",
+                "fault",
+            },
         )
         for name, (configure, run) in hb.COMMANDS.items():
             self.assertTrue(callable(configure), name)
