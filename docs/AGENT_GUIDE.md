@@ -80,7 +80,10 @@ references. Never assign to "whatever is selected" without reading the selection
 ### Windows
 
 Place Units with `ph_composer.windows.units.place` at explicit Faces and positions you have read;
-read `ph_composer.windows.units.list` back.
+read `ph_composer.windows.units.list` back. `ph_composer.windows.units.host_extent` gives a Face's
+outline and its bounding width and height in the frame `offsets` use, with the holes and Window
+outlines on its plane as rectangles in that frame. Keep an opening inside the outline, not only the
+bounding box, and clear of those rectangles.
 
 ### Library records
 

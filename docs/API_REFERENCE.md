@@ -13892,6 +13892,201 @@ Example params:
 {}
 ```
 
+### `ph_composer.windows.units.host_extent`
+
+A writable Zone Face's outline and bounding width and height in the frame units.place offsets use, with the holes and Window outlines on its plane to keep clear of. Owner: `ph_composer.windows`.
+
+Refuses: `geometry.invalid`, `record.unreadable`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `target.wrong_hierarchy`, `target.wrong_kind`, `target.wrong_zone`, `validation.failed`, `window.surface_host`, and the `query` common set.
+
+Params:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host"
+  ],
+  "properties": {
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "zone_path",
+        "entity_path",
+        "entity_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "string"
+        },
+        "zone_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "description": "The Zone Face a Window would be placed on."
+    }
+  }
+}
+```
+
+Result:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "width_m",
+    "height_m",
+    "outline_m",
+    "holes",
+    "units"
+  ],
+  "properties": {
+    "width_m": {
+      "type": "number",
+      "x-unit": "m"
+    },
+    "height_m": {
+      "type": "number",
+      "x-unit": "m"
+    },
+    "outline_m": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "x-unit": "m"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "description": "The Face's outer loop as [x_m, y_m] offsets; a Face that is not a rectangle is narrower than width_m by height_m in places."
+    },
+    "holes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "x_m",
+          "y_m",
+          "width_m",
+          "height_m"
+        ],
+        "properties": {
+          "x_m": {
+            "type": "number",
+            "x-unit": "m"
+          },
+          "y_m": {
+            "type": "number",
+            "x-unit": "m"
+          },
+          "width_m": {
+            "type": "number",
+            "x-unit": "m"
+          },
+          "height_m": {
+            "type": "number",
+            "x-unit": "m"
+          }
+        }
+      },
+      "description": "Each hole's bounding rectangle, in offsets."
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "x_m",
+          "y_m",
+          "width_m",
+          "height_m"
+        ],
+        "properties": {
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "unit_id",
+              "entity_path"
+            ],
+            "properties": {
+              "unit_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "x_m": {
+            "type": "number",
+            "x-unit": "m"
+          },
+          "y_m": {
+            "type": "number",
+            "x-unit": "m"
+          },
+          "width_m": {
+            "type": "number",
+            "x-unit": "m"
+          },
+          "height_m": {
+            "type": "number",
+            "x-unit": "m"
+          }
+        }
+      },
+      "description": "Each Window outline on the Face's plane, this Face or another in the same plane, as a bounding rectangle in offsets."
+    }
+  }
+}
+```
+
+Example params:
+
+```json
+{
+  "host": {
+    "zone_id": "zon_Ab12Cd34Ef56",
+    "zone_path": [
+      1201
+    ],
+    "entity_path": [
+      1202
+    ],
+    "entity_id": null
+  }
+}
+```
+
 ### `ph_composer.windows.units.list`
 
 Window occurrences and native findings, without writes. Owner: `ph_composer.windows`.

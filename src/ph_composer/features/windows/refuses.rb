@@ -32,6 +32,8 @@ module PhComposer
       PLACE_TOOL_CHOOSE = %w[record.unreadable target.ambiguous target.changed target.locked target.not_found
                              target.shared_definition target.wrong_hierarchy target.wrong_kind target.wrong_zone
                              validation.failed window.surface_host].freeze
+      # Reading a host Face's placement extent locates it as a placement would.
+      HOST_EXTENT = (PLACE_TOOL_CHOOSE + %w[geometry.invalid]).freeze
       # Copying library rows into the Model through the library's copy participant.
       # The library copy participant's own codes reach the Installs save through its `participants`
       # edge; this is the one a staged import raises itself.
