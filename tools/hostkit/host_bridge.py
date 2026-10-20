@@ -147,6 +147,74 @@ def send_key(key_code: int) -> None:
     )
 
 
+def sketchup_bundle(version: str) -> str:
+    return f"com.sketchup.SketchUp.{version}"
+
+
+def frontmost_app() -> str | None:
+    """The bundle id of the frontmost app, to hand focus back to (needs Accessibility)."""
+    script = 'tell application "System Events" to get bundle identifier of first process whose frontmost is true'
+    try:
+        done = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, check=False, timeout=15)
+    except (subprocess.SubprocessError, OSError):
+        return None
+    return (done.stdout or "").strip() or None
+
+
+def activate_app(bundle_id: str) -> None:
+    subprocess.run(
+        ["osascript", "-e", f'tell application id "{bundle_id}" to activate'],
+        capture_output=True,
+        check=False,
+        timeout=15,
+    )
+
+
+def restore_focus(version: str, previous: str | None) -> None:
+    if previous is not None and previous != sketchup_bundle(version):
+        activate_app(previous)
+
+
+def activate_sketchup_once(version: str) -> None:
+    """Bring SketchUp to the front for a moment, then hand focus back to the app that had it.
+    SketchUp 2026 opened by `open -a` in the background can load no Ruby extension, the bridge
+    included, until it is activated once."""
+    previous = frontmost_app()
+    activate_app(sketchup_bundle(version))
+    time.sleep(1.0)
+    restore_focus(version, previous)
+
+
+# Raises the named document window and presses its close button. `performClose:` does nothing while
+# SketchUp is in the background or its windows are on another Space; this route closes the window there.
+RAISE_AND_CLOSE = (
+    'tell application "System Events" to tell process "SketchUp"\n'
+    "set frontmost to true\n"
+    'set target to first window whose name contains "{name}"\n'
+    'perform action "AXRaise" of target\n'
+    'click (first button of target whose subrole is "AXCloseButton")\n'
+    "end tell"
+)
+
+
+def press_close_button(version: str, window_name: str) -> str | None:
+    """Close a document window through System Events, then hand focus back. None, or why it failed."""
+    previous = frontmost_app()
+    try:
+        done = subprocess.run(
+            ["osascript", "-e", RAISE_AND_CLOSE.replace("{name}", window_name)],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=15,
+        )
+    except (subprocess.SubprocessError, OSError) as error:
+        return str(error)
+    finally:
+        restore_focus(version, previous)
+    return None if done.returncode == 0 else (done.stderr or "").strip() or f"osascript exited {done.returncode}"
+
+
 def run_with_dialog_guard(version: str, code: str, timeout: float = 120.0, escape_after: float = 3.0) -> str:
     """Run `code`; if the reply has not returned after `escape_after` seconds, send Escape to
     dismiss a modal dialog (the SketchUp 2026 Purge Unused prompt on save) and keep waiting."""
@@ -186,25 +254,37 @@ def last_value(output: str) -> str:
     return lines[-1].strip().strip('"') if lines else ""
 
 
+def document_left(version: str, guid: str) -> bool:
+    """Whether the document `guid` stopped being the active one within five seconds. The last check
+    raises rather than reading a bridge error as "still open"."""
+    for _ in range(9):
+        time.sleep(0.5)
+        with contextlib.suppress(BridgeError, OSError, TimeoutError):
+            if evaluate(version, ACTIVE_GUID, timeout=10.0) != guid:
+                return True
+    time.sleep(0.5)
+    return evaluate(version, ACTIVE_GUID, timeout=10.0) != guid
+
+
 def close_documents(version: str) -> str:
     """Close every open document clean, one active document at a time; say how far it got."""
     closed = 0
     for index in range(MAX_DOCUMENTS):
-        code = CLOSE_ACTIVE.replace("{path}", DISCARD_PATH.format(index=index))
+        discard = DISCARD_PATH.format(index=index)
         try:
-            answer = last_value(run_with_dialog_guard(version, code, timeout=60.0))
+            answer = last_value(run_with_dialog_guard(version, CLOSE_ACTIVE.replace("{path}", discard), timeout=60.0))
+            if answer == "phc_no_document":
+                return f"closed {closed} documents"
+            if not answer.startswith("phc_closed:"):
+                return f"closed {closed} documents; stopped: the active document is still modified after its save"
+            guid = answer.removeprefix("phc_closed:")
+            if not document_left(version, guid):
+                if (failure := press_close_button(version, Path(discard).stem)) is not None:
+                    return f"closed {closed} documents; stopped: performClose: did nothing; its close button: {failure}"
+                if not document_left(version, guid):
+                    return f"closed {closed} documents; stopped: the active document stayed open after its close button"
         except (BridgeError, OSError, TimeoutError) as error:
             return f"closed {closed} documents; the close step failed: {error}"
-        if answer == "phc_no_document":
-            return f"closed {closed} documents"
-        if not answer.startswith("phc_closed:"):
-            return f"closed {closed} documents; stopped: the active document is still modified after its save"
-        guid = answer.removeprefix("phc_closed:")
-        for _ in range(10):
-            time.sleep(0.5)
-            with contextlib.suppress(BridgeError, OSError, TimeoutError):
-                if evaluate(version, ACTIVE_GUID, timeout=10.0) != guid:
-                    break
         closed += 1
     return f"closed {closed} documents; stopped at the limit of {MAX_DOCUMENTS}"
 
@@ -259,6 +339,26 @@ def open_windows() -> str:
     return done.stdout.strip() or done.stderr.strip() or "(none readable)"
 
 
+ACTIVATE_AFTER = 25.0
+
+
+def wait_for_launch(version: str, timeout: float) -> dict[str, Any]:
+    """Wait for the bridge of a SketchUp just opened. If it has written no state file `ACTIVATE_AFTER`
+    seconds in while SketchUp runs, startup is stalled in the background: activate SketchUp once."""
+    first = min(ACTIVATE_AFTER, timeout)
+    try:
+        return wait(version, first)
+    except TimeoutError:
+        if timeout <= first or state_path(version).is_file() or not sketchup_running():
+            raise
+    print(f"no bridge state file {first:.0f}s into the launch; activating SketchUp once")
+    activate_sketchup_once(version)
+    try:
+        return wait(version, timeout - first)
+    except TimeoutError:
+        raise TimeoutError(f"no host bridge within {timeout:.0f}s (SketchUp activated once at {first:.0f}s)") from None
+
+
 def launch(version: str, model: Path, fresh_from: Path | None, timeout: float) -> dict[str, Any]:
     """Quit any running SketchUp, open `model` as the only document, wait for the bridge, load helpers."""
     if fresh_from is not None:
@@ -280,7 +380,7 @@ def launch(version: str, model: Path, fresh_from: Path | None, timeout: float) -
     else:
         raise BridgeError(f"could not open {model} with {app}")
     try:
-        state = wait(version, timeout)
+        state = wait_for_launch(version, timeout)
     except TimeoutError as error:
         raise TimeoutError(
             f"{error}; a SketchUp prompt may be waiting, possibly on another display. Open windows: {open_windows()}"

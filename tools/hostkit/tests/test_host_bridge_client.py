@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import unittest
+from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import ClassVar, Self
@@ -194,7 +195,10 @@ class DialogGuardTest(unittest.TestCase):
 class QuitTest(unittest.TestCase):
     """Every open document is closed clean before terminate, and no document still means a clean quit."""
 
-    def quit_with(self, replies: list[object]) -> tuple[str, list[str]]:
+    def quit_with(
+        self, replies: list[object], active: Callable[[list[str]], str] = lambda _calls: "another-document"
+    ) -> tuple[str, list[str]]:
+        """`active` answers the active-document check, given the calls so far."""
         calls: list[str] = []
         answers = iter(replies)
 
@@ -210,7 +214,8 @@ class QuitTest(unittest.TestCase):
             patch.object(hb, "sketchup_running", side_effect=lambda: next(running)),
             patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}),
             patch.object(hb, "run_with_dialog_guard", side_effect=guard),
-            patch.object(hb, "evaluate", return_value="another-document"),
+            patch.object(hb, "evaluate", side_effect=lambda *_args, **_kw: active(calls)),
+            patch.object(hb, "press_close_button", side_effect=lambda _version, name: calls.append(f"press {name}")),
             patch.object(hb, "request", side_effect=lambda _state, payload, **_kw: calls.append(payload["code"])),
             patch.object(hb.time, "sleep"),
         ):
@@ -230,6 +235,25 @@ class QuitTest(unittest.TestCase):
         self.assertEqual(calls[-1], 'Sketchup.send_action("terminate:")')
         outcome, _calls = self.quit_with(['"phc_still_dirty"'])
         self.assertIn("still modified after its save", outcome)
+
+    def test_a_document_that_stays_active_gets_its_close_button_then_is_reported_open_not_closed(self) -> None:
+        # In the background or on another Space, performClose: does nothing; counting that document
+        # as closed on every pass reported "closed 8 documents" for one.
+        outcome, calls = self.quit_with(['"phc_closed:g1"'], active=lambda _calls: "g1")
+        self.assertEqual(
+            outcome,
+            "SketchUp quit cleanly (closed 0 documents; "
+            "stopped: the active document stayed open after its close button)",
+        )
+        self.assertEqual(calls[1:], ["press ph_composer_discard_0", 'Sketchup.send_action("terminate:")'])
+
+    def test_a_document_its_close_button_closed_counts_as_closed(self) -> None:
+        outcome, calls = self.quit_with(
+            ['"phc_closed:g1"', '"phc_no_document"'],
+            active=lambda calls: "phc_no_document" if "press ph_composer_discard_0" in calls else "g1",
+        )
+        self.assertEqual(outcome, "SketchUp quit cleanly (closed 1 documents)")
+        self.assertEqual(calls.count("press ph_composer_discard_0"), 1)
 
     @unittest.skipUnless(shutil.which("ruby"), "needs a ruby to run the close step")
     def test_the_close_step_saves_closes_a_clean_model_refuses_a_dirty_one_and_tolerates_none(self) -> None:
@@ -277,6 +301,51 @@ class LaunchTest(unittest.TestCase):
         with patch.object(hb, "recovery_copy", return_value=None), self.assertRaises(TimeoutError) as raised:
             self.launch(Path("/repo/_private/run/a09.skp"), TimeoutError("no host bridge within 5s"))
         self.assertIn("Open windows: Open File", str(raised.exception))
+
+
+class StalledLaunchTest(unittest.TestCase):
+    """SketchUp opened in the background can load no extension, the bridge included, until activated once."""
+
+    def wait_for_launch(self, waits: list[object], running: bool = True, state_file: bool = False) -> list[str]:
+        activated: list[str] = []
+        with TemporaryDirectory() as folder, patch.object(hb, "SUPPORT", Path(folder)):
+            if state_file:
+                hb.state_path("2026").parent.mkdir(parents=True)
+                hb.state_path("2026").write_text("{}")
+            with (
+                patch.object(hb, "wait", side_effect=waits),
+                patch.object(hb, "sketchup_running", return_value=running),
+                patch.object(hb, "activate_sketchup_once", side_effect=activated.append),
+                patch("builtins.print"),
+            ):
+                self.state = hb.wait_for_launch("2026", 180.0)
+        return activated
+
+    def test_a_bridge_that_starts_on_its_own_is_never_activated(self) -> None:
+        self.assertEqual(self.wait_for_launch([{"port": 1}]), [])
+
+    def test_no_state_file_after_the_threshold_activates_sketchup_once_and_keeps_waiting(self) -> None:
+        self.assertEqual(self.wait_for_launch([TimeoutError("no host bridge"), {"port": 1}]), ["2026"])
+        self.assertEqual(self.state, {"port": 1})
+
+    def test_a_written_state_file_or_a_sketchup_not_running_is_not_the_stall_and_stays_a_timeout(self) -> None:
+        for options in ({"state_file": True}, {"running": False}):
+            with self.assertRaises(TimeoutError):
+                self.wait_for_launch([TimeoutError("no host bridge"), {"port": 1}], **options)
+
+    def test_activation_hands_focus_back_to_the_app_that_had_it(self) -> None:
+        for previous, expected in (
+            ("com.apple.Terminal", ["com.sketchup.SketchUp.2026", "com.apple.Terminal"]),
+            (None, ["com.sketchup.SketchUp.2026"]),
+        ):
+            activated: list[str] = []
+            with (
+                patch.object(hb, "frontmost_app", return_value=previous),
+                patch.object(hb, "activate_app", side_effect=activated.append),
+                patch.object(hb.time, "sleep"),
+            ):
+                hb.activate_sketchup_once("2026")
+            self.assertEqual(activated, expected, previous)
 
 
 class RecoveryCopyTest(unittest.TestCase):
