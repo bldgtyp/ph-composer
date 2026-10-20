@@ -1408,7 +1408,9 @@
         "src/ph_composer/html/request.js",
         "src/ph_composer/html/panel.js",
         "src/ph_composer/shell/panel.rb",
-        "src/ph_composer/shell/panel_requests.rb"
+        "src/ph_composer/shell/panel_requests.rb",
+        "src/ph_composer/shell/dispatch.rb",
+        "src/ph_composer/session/outcome_store.rb"
       ]
     },
     {

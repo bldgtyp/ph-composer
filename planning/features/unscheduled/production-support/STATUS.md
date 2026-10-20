@@ -30,8 +30,9 @@ has a separate packet and ledger.
 
 PS-05 ran on 2026-10-19. Four observations remain, all needing a real pointer or keyboard: native
 Undo after Check status, Copy compared with the clipboard, keyboard-only use of Help &
-Diagnostics, and the help and issue links opening in the browser. When
-they pass, close the packet and archive it. The run also fixed the native menu label ("Help and
+Diagnostics, and the help and issue links opening in the browser. Close
+and archive the packet only when they pass and Ed has decided the proposed PS6 deviation in
+ACCEPTANCE (the native menu route with no document open, which SketchUp disables). The run also fixed the native menu label ("Help and
 Diagnostics…") and the help text about menus with no document open.
 Product changes outside the accepted local-support direction return to Ed.
 
