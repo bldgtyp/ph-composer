@@ -153,15 +153,14 @@ concurrent work. External-agent support and public distribution remain distinct 
 ## Production-support release prerequisite
 
 Ed accepted the support direction and a six-stage plan on 2026-10-19. A second review the same
-day cut the [production-support packet](features/unscheduled/production-support/README.md) to
+day cut the [production-support packet](archive/production-support/README.md) to
 five stages, PS-01 to PS-05: failure context in the log, honest lost-reply and silent-runtime
 states with checked configuration writes, Help & Diagnostics with a previewed text report,
 shipped help with a bug template, and integrated native acceptance. Ed accepted that revision
 the same day. Transparency and ease of use govern the user experience.
 
-Complete its required acceptance before public beta or broader distribution. PS-02, the three
-correctness fixes, depends on nothing and is wanted before the Phase 3 internal candidate; the
-rest is scheduled relative to feature development when Ed decides. Phase 3 closing remains the
+All five stages merged (#246 to #253) and PS-05's native acceptance passed on 2026-10-20, with
+one accepted host deviation (PS-D11); the packet is archived. Phase 3 closing remains the
 first internal envelope-model candidate. SketchUp 2023, Windows and certification gates remain
 separate. This adds no prerequisite to thermal-bridge development.
 

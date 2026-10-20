@@ -1,14 +1,14 @@
 # PS-05: integrated native acceptance
 
 DATE: 2026-10-19
-STATUS: Ready for host run
+STATUS: Complete 2026-10-20; every case passes, PS6 with the accepted deviation PS-D11
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
 PS-01 to PS-04 are implemented and tested offline. This stage runs [ACCEPTANCE](../ACCEPTANCE.md)
 A01 to A10 on a fresh process with the installed RBZ built from `main` after PS-04 merges, using the
-[native acceptance skill](../../../../../.agents/skills/ph-composer-native-acceptance/SKILL.md) and
-[ACCEPTANCE_RUN](../../../../../tools/hostkit/ACCEPTANCE_RUN.md). Faults are development-only bridge
+[native acceptance skill](../../../../.agents/skills/ph-composer-native-acceptance/SKILL.md) and
+[ACCEPTANCE_RUN](../../../../tools/hostkit/ACCEPTANCE_RUN.md). Faults are development-only bridge
 arrangements, labelled as such, and are removed before closure. Nothing here ships a fault switch.
 
 ## Preconditions

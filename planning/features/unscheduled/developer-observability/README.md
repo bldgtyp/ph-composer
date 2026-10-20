@@ -32,7 +32,7 @@ started. Its ledger is independent of end-user production support.
 | DV-04 | Named fault helpers, restoration receipts and integrated tooling checks | Relevant PS-01/PS-02 fixes for product-failure scenarios |
 
 DV-01 and DV-02 can proceed before production support. DV-03 consumes
-[PS-01's diagnostic projection](../production-support/CONTRACTS.md). DV-04 supplies reusable
+[PS-01's diagnostic projection](../../../archive/production-support/CONTRACTS.md). DV-04 supplies reusable
 development controls; product-behavior assertions remain in the production-support packet.
 End-user PS-05 acceptance can use existing tools and does not wait for this packet.
 

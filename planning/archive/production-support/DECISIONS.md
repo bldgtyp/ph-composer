@@ -1,7 +1,7 @@
 # Production support: decisions
 
 DATE: 2026-10-19
-STATUS: In progress
+STATUS: Complete 2026-10-20, archived
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
@@ -62,5 +62,5 @@ account or support service.
 
 Stop for Ed only if a proposal introduces background transmission, broader data collection,
 paid services, a different public support destination or a change to authoring/retry semantics.
-The accepted [developer-observability plan](../developer-observability/PLAN.md) has its own
+The accepted [developer-observability plan](../../features/unscheduled/developer-observability/PLAN.md) has its own
 implementation sequence. It does not add a prerequisite to end-user support acceptance.

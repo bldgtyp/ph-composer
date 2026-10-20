@@ -1,6 +1,6 @@
 # Planning archive
 
-DATE: 2026-10-18
+DATE: 2026-10-20
 STATUS: Index of completed and superseded planning work, newest first.
 AUTHOR: Ed May, BLDGTYP
 
@@ -9,6 +9,7 @@ reached.
 
 | Slug | Date | Outcome | Issue or PR |
 | --- | --- | --- | --- |
+| [production-support](production-support/README.md) | 2026-10-20 | Production support: failure context, correlation and build identity in a bounded local log; honest lost-reply (Check status) and silent-runtime endings; checked preference writes; Help & Diagnostics with a previewed plain-text support report, Copy, Save, Clear history, Reopen panel and Reset display preferences; shipped offline help and a public issue form. Five stages through PRs #246 to #253, each reviewed by gpt-6-astra. PS1 to PS9 pass natively on SketchUp 26.1.188, with one accepted host deviation (PS-D11: the native menu needs a document open). Follow-ups listed in its STATUS | [#245](https://github.com/bldgtyp/ph-composer/issues/245); PRs [#246](https://github.com/bldgtyp/ph-composer/pull/246) to [#253](https://github.com/bldgtyp/ph-composer/pull/253) |
 | [phase-03a1](phase-03a1/README.md) | 2026-10-18 | Agent access after Spaces: an MCP connection served from Ruby over loopback HTTP, tokens with capabilities and revoke, the API verbs as tools, bounded Spaces reads, foundation edit-path commands, artifact paths and hashes, camera context and geometry-only capture. Both Claude Code 2.1.300 and Codex 0.163.0 ran the integrated scenario; 14 review findings closed; follow-ups #239, #244 | [#221](https://github.com/bldgtyp/ph-composer/issues/221), #222 to #243 |
 | [agent-access-review](agent-access-review/README.md) | 2026-10-18 | The agent access architecture review after Spaces against `60982fc`: 14 findings, workflow coverage, client integration and baseline probes. Every finding closed by [phase-03a1](phase-03a1/README.md) | [#221](https://github.com/bldgtyp/ph-composer/issues/221) |
 | [ruby-readability](ruby-readability/README.md) | 2026-10-18 | Repository-wide Ruby contributor readability: 36 responsibility groups covering 552 files of shipping source, tests and tools; 31 refactored and 5 reviewed with no change, in 21 PRs (#199 to #219), each through `make ci` and a Codex review with its findings fixed. Named values replace positional tuples, one rule replaces each repeated condition, guards read as statements, stale comments and dead helpers are gone; interfaces, persistence, ids, units, refusals and Undo behaviour unchanged. Native batch on the final head: 18 cases, 17 pass, ZO-O7 still fails only on open #181. Follow-ups listed in its ledger | [#198](https://github.com/bldgtyp/ph-composer/issues/198); PRs [#199](https://github.com/bldgtyp/ph-composer/pull/199) to [#219](https://github.com/bldgtyp/ph-composer/pull/219) |

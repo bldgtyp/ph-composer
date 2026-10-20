@@ -1,16 +1,16 @@
 # Production support: planned contracts
 
 DATE: 2026-10-19
-STATUS: In progress
+STATUS: Complete 2026-10-20, archived
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
 These were the planned contracts. PS-01 to PS-04 implemented them and the implemented rules now live
 in CONTRACTS "Diagnostic log" and TECH_STACK "Help & Diagnostics"; where this file and context
 differ, context governs. Existing authorities remain
-[CONTRACTS](../../../../context/CONTRACTS.md),
-[TECH_STACK](../../../../context/TECH_STACK.md) and
-[EXTENSIBILITY](../../../../context/EXTENSIBILITY.md).
+[CONTRACTS](../../../context/CONTRACTS.md),
+[TECH_STACK](../../../context/TECH_STACK.md) and
+[EXTENSIBILITY](../../../context/EXTENSIBILITY.md).
 PS-01 confirms concrete fields and folds implemented rules into context. The log it writes is the
 one source for the support report and the separate developer reader. Public clients must not
 infer that a new diagnostics API exists from this plan.

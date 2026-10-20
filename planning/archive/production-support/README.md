@@ -1,7 +1,7 @@
 # Production support and diagnostics
 
 DATE: 2026-10-19
-STATUS: In progress
+STATUS: Complete 2026-10-20, archived. Every stage merged (#246 to #253); native acceptance in [the PS-05 evidence](../../native-acceptance/evidence/production-support-ps05-2026-10-19.md)
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
@@ -30,7 +30,7 @@ the internal users time first.
 6. [PLAN.md](PLAN.md): five stages and their dependencies.
 7. [ACCEPTANCE.md](ACCEPTANCE.md): offline and native checks, including unsuccessful endings.
 
-Developer tooling has its own [developer-observability packet](../developer-observability/README.md)
+Developer tooling has its own [developer-observability packet](../../features/unscheduled/developer-observability/README.md)
 and stage ledger. It reads PS-01's log and can otherwise proceed independently.
 
 ## Scope
@@ -59,6 +59,6 @@ Reopen panel and Reset display preferences.
 | PS-04 | Shipped help, bug template and maintainer procedure |
 | PS-05 | Integrated native acceptance and release handoff |
 
-The [roadmap](../../../ROADMAP.md) owns release ordering. This packet does not satisfy the
-[SketchUp 2023](../sketchup-2023-floor/README.md) or
-[Windows](../windows-support/README.md) host gates.
+The [roadmap](../../ROADMAP.md) owns release ordering. This packet does not satisfy the
+[SketchUp 2023](../../features/unscheduled/sketchup-2023-floor/README.md) or
+[Windows](../../features/unscheduled/windows-support/README.md) host gates.
