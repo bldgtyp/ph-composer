@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "digest"
+
 module PhComposer
   module ColourBy
     # The colours the shared service owns: the two states every mode has, and the two helpers a mode
@@ -32,10 +34,31 @@ module PhComposer
         ->(value) { frozen[value] }
       end
 
-      # A colour function over the categorical ramp, stable for a given value.
+      # A colour function over the categorical ramp, stable for a given value. Values are coloured one at a
+      # time, so two can share a hue; a projection that sees every value uses `spread` instead.
       def ramp
-        ->(value) { value.nil? ? nil : RAMP[value.to_s.sum % RAMP.length] }
+        ->(value) { value.nil? ? nil : RAMP[slot(value)] }
       end
+
+      # A ramp colour for each of `values`, distinct up to the ramp's length, for an entry's own `colour`.
+      # Each value prefers the slot `ramp` gives it; when two prefer one slot, the later in sorted order
+      # takes the next free one. A value usually keeps its colour as others come and go; one that arrives
+      # or leaves can move a value it clashes with, directly or along a run of occupied slots.
+      def spread(values)
+        taken = {}
+        values.compact.uniq.sort_by(&:to_s).each_with_object({}) do |value, colours|
+          index = slot(value)
+          index = (index + 1) % RAMP.length while taken.key?(index) && taken.length < RAMP.length
+          taken[index] = true
+          colours[value] = RAMP[index]
+        end.freeze
+      end
+
+      # A byte sum collides for ids that differ only in order; a digest spreads them.
+      def slot(value)
+        Digest::SHA256.digest(value.to_s).unpack1("N") % RAMP.length
+      end
+      private_class_method :slot
     end
   end
 end

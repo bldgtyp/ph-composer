@@ -490,7 +490,9 @@ An entry's `value` is the legend's key, a string, and the legend's select and is
 it back unchanged. When the colour is a property of the record a value names rather than a function
 of the value (an Assembly's own colour), the entry supplies `colour: [r, g, b]` and the service uses
 it ahead of the mode's colour function; Zones' Assembly mode does this, with a colour function that
-answers nil.
+answers nil. The ramp colours one value at a time, so two values can share a hue; a projection that
+must tell every value apart supplies each entry's `colour` from `ColourBy::Palette.spread(values)`,
+distinct up to the ramp's length, as Spaces' By Space mode does.
 An entry's `label` may be a list of parts, as a readout line is (plain text or `[quantity, si_value]`), so
 a unit-bearing label ("2.5 m") follows the display units; and an entry may supply `figure`, one
 `[quantity, si_value]` the legend sums per row and shows beside the count, or a list of them summed

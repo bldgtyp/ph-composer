@@ -125,6 +125,13 @@ class SpacesColourModesTest < PhComposerTestCase
     assert_equal before, colour_of("spc_LLLLLLLLLLLL")
   end
 
+  def test_every_space_in_the_reference_model_has_its_own_colour
+    reference_model
+    rows = activate("by_space").rows
+    assert_equal 4, rows.length
+    assert_equal 4, rows.map(&:colour).uniq.length, "three of four Spaces shared one colour (#183)"
+  end
+
   def test_switching_through_every_mode_writes_nothing
     reference_model
     operations = @model.operations.length

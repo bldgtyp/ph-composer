@@ -28,6 +28,24 @@ class ColourByTest < PhComposerTestCase
     assert_equal "side", Registry.current.colour_modes.fetch("outside.probe.by_side").entity_kind
   end
 
+  def test_spread_gives_every_value_its_own_ramp_colour_up_to_the_ramp_length
+    palette = PhComposer::ColourBy::Palette
+    ids = (1..palette::RAMP.length).map { |n| format("spc_%012d", n) }
+    assert_equal ids.length, palette.spread(ids).values.uniq.length
+    assert_equal palette.ramp.call(ids.first), palette.spread([ids.first]).fetch(ids.first),
+                 "alone, a value keeps the colour the ramp gives it"
+    assert_equal palette::RAMP.length, palette.spread(ids + ["spc_extra"]).values.uniq.length,
+                 "past the ramp's length colours repeat"
+  end
+
+  def test_spread_moves_the_later_of_two_clashing_values_to_the_next_free_slot
+    palette = PhComposer::ColourBy::Palette
+    # Both digests pick slot 8 of the ramp.
+    colours = palette.spread(%w[spc_000000000003 spc_000000000001])
+    assert_equal palette::RAMP[8], colours.fetch("spc_000000000001")
+    assert_equal palette::RAMP[9], colours.fetch("spc_000000000003")
+  end
+
   # The write channel for viewport state: a client turns a mode on and off through the view seam and
   # reads the legend back from the same answer. Nothing it does reaches the Model.
   def test_a_client_turns_a_mode_on_and_off_without_writing_to_the_model
@@ -524,11 +542,11 @@ class ColourByTest < PhComposerTestCase
   end
 
   def test_isolating_a_real_grey_value_keeps_its_fill_distinct_from_the_wash_without_painting_edges
-    # Level "a" selects the real grey in the categorical ramp: 97 modulo 10 is 7.
-    zone_group(720, ["Wall"], :level => "a")
+    # Level "g" selects the real grey in the categorical ramp: its digest's slot is 7.
+    zone_group(720, ["Wall"], :level => "g")
     zone_group(730, ["Wall"], :level => nil)
     service = activate("ph_composer.zones.by_level")
-    service.isolate(["a", "classified"])
+    service.isolate(["g", "classified"])
 
     @model.overlays.to_a.first.draw(@model.active_view)
 
