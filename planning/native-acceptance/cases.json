@@ -1389,9 +1389,9 @@
     {
       "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
       "id": "PS3",
-      "label": "Runtime deadlines: a runtime that never readies and one that goes silent end the export with their codes, Cancel usable, resources released",
+      "label": "Runtime deadlines: a runtime that never readies and one that goes silent end the export with their codes, Cancel usable, resources released (lifecycle and API assertions; bridge control suffices)",
       "mode": "mixed",
-      "native_control_required": true,
+      "native_control_required": false,
       "paths": [
         "src/ph_composer/export/task.rb",
         "src/ph_composer/runtime/*",
@@ -1425,13 +1425,15 @@
     {
       "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
       "id": "PS6",
-      "label": "Help & Diagnostics window: opens from the menu with no Model or panel, message-box fallback, degraded log shown",
+      "label": "Help & Diagnostics window: opens from the menu with a document open and the panel closed (SketchUp disables extension menus with no document), message-box fallback, degraded log shown",
       "mode": "mixed",
       "native_control_required": true,
       "paths": [
         "src/ph_composer/shell/support_dialog.rb",
         "src/ph_composer/shell/commands.rb",
-        "src/ph_composer/html/support/*"
+        "src/ph_composer/html/support/*",
+        "src/ph_composer/shell/support_report.rb",
+        "src/ph_composer/core/diagnostics.rb"
       ]
     },
     {
@@ -1468,7 +1470,10 @@
       "paths": [
         "src/ph_composer/help/*",
         "docs/HELP.md",
-        "src/ph_composer/shell/support_dialog.rb"
+        "src/ph_composer/shell/support_dialog.rb",
+        "src/ph_composer/shell/support_report.rb",
+        "src/ph_composer/core/build_identity.rb",
+        "tools/rbz/build.py"
       ]
     }
   ]
