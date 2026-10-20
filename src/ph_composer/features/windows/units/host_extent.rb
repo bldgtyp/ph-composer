@@ -15,6 +15,9 @@ module PhComposer
       # answers within an agent's reply budget; the Face's own extent comes on every page.
       module HostExtent
         QUERY = "#{FEATURE_ID}.units.host_extent"
+        # Offsets to a tenth of a millimetre: finer than any opening is set out, and short enough that a Face
+        # tessellated into hundreds of vertices still fits a reply. `units.place` checks the real geometry.
+        DIGITS = 4
 
         module_function
 
@@ -26,13 +29,17 @@ module PhComposer
           origin = [outer.map(&:first).min, outer.map(&:last).min]
           width = outer.map(&:first).max - origin[0]
           height = outer.map(&:last).max - origin[1]
+          face = { "width_m" => round(width), "height_m" => round(height),
+                   "outline_m" => outer.map { |x, y| [round(x - origin[0]), round(y - origin[1])] },
+                   "holes" => host.geometry.holes.map do |loop|
+                     rectangle(loop.map { |point| plane.project(point) }, origin)
+                   end }
           rows = units(reads, plane, origin, width, height)
+          # The Face's geometry rides on every page, so the rows get what of the page budget it leaves.
+          budget = [Pages::MAX_PAGE_BYTES - JSON.generate(face).bytesize, 1].max
           key = ->(row) { row.dig("reference", "entity_path") }
-          page, next_cursor = Pages.bounded(request, QUERY, rows, :key => key)
-          { "width_m" => width, "height_m" => height,
-            "outline_m" => outer.map { |x, y| [x - origin[0], y - origin[1]] },
-            "holes" => host.geometry.holes.map { |loop| rectangle(loop.map { |point| plane.project(point) }, origin) },
-            "units" => page, "next_cursor" => next_cursor, "total" => rows.length }
+          page, next_cursor = Pages.bounded(request, QUERY, rows, :key => key, :max_bytes => budget)
+          face.merge("units" => page, "next_cursor" => next_cursor, "total" => rows.length)
         end
 
         # Each Unit outline on the host's plane, glued or not, that meets the Face's bounding box: one anywhere
@@ -54,10 +61,14 @@ module PhComposer
         def rectangle(points, origin)
           xs = points.map(&:first)
           ys = points.map(&:last)
-          { "x_m" => xs.min - origin[0], "y_m" => ys.min - origin[1], "width_m" => xs.max - xs.min,
-            "height_m" => ys.max - ys.min }
+          { "x_m" => round(xs.min - origin[0]), "y_m" => round(ys.min - origin[1]),
+            "width_m" => round(xs.max - xs.min), "height_m" => round(ys.max - ys.min) }
         end
-        private_class_method :units, :rectangle
+
+        def round(value)
+          value.round(DIGITS)
+        end
+        private_class_method :units, :rectangle, :round
       end
     end
   end
