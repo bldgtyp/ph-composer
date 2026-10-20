@@ -18,18 +18,25 @@
 # Loading this file defines the module and changes nothing. The interceptors are prepended on the first arm
 # and stay in the process, inert, after restore: Ruby cannot remove a prepended module, so normal-build
 # restoration remains a fresh process with the installed RBZ, which `restore` says. A target must be a
-# synthetic fixture (a Model under a `_private/` folder or the temporary folder), never a user's working
+# synthetic fixture (a Model under `_private/host/` or a temporary folder), never a user's working
 # Model. Product behavior under these faults is asserted by the owning production cases, not here.
 module PhComposerFaults
   SCHEMA = 1
   KIND = "ph-composer.fault-control"
+  # Raised with any change to these controls. The client refuses to drive a process holding another revision,
+  # because `load` runs once per process and an earlier one would keep running.
+  REVISION = 3
   NAMES = %w[lost_reply silent_runtime failed_write].freeze
   RUNTIME_MESSAGES = %w[runtime.ready runtime.translation].freeze
   PREFERENCE_KEYS = %w[unit_system colour_by_mode table_views dimension_formats].freeze
-  SYNTHETIC = %r{/_private/|\A/private/tmp/|\A/tmp/}.freeze
+  # Host-run fixtures: the private corpus's host folder (never the client Models elsewhere in `_private/`) or
+  # a temporary folder.
+  SYNTHETIC = %r{/_private/host/|\A/private/tmp/|\A/tmp/|\A/private/var/folders/|\A/var/folders/}.freeze
+  TARGET_KEYS = { "lost_reply" => %w[session request], "silent_runtime" => %w[session drop],
+                  "failed_write" => %w[session key] }.freeze
   MAX_HITS = 20
   # What the preference read answers for a key never stored; nil is reserved for a value the host cannot read.
-  ABSENT = "(absent)"
+  ABSENT = "\u0000ph_composer_faults.absent\u0000"
 
   # The interceptors. Each asks whether its fault is live for this call and, if so, records the hit and
   # answers the fault's result instead of the normal one.
@@ -44,12 +51,19 @@ module PhComposerFaults
 
   module SilentRuntime
     def receive(raw)
-      type = begin
-        JSON.parse(raw.to_s)["type"]
+      # Only a message the runtime would act on counts: a stopped host, another session's payload or a
+      # malformed one is passed through, as the product would ignore it.
+      return super if stopped? || !PhComposerFaults.live?("silent_runtime")
+
+      message = begin
+        JSON.parse(raw.to_s)
       rescue StandardError
         nil
       end
-      return super unless PhComposerFaults.intercept("silent_runtime", "session" => session_id, "type" => type)
+      payload = message.is_a?(Hash) ? message["payload"] : nil
+      return super unless payload.is_a?(Hash) && payload["session"] == session_id &&
+                          PhComposerFaults.intercept("silent_runtime", "session" => session_id,
+                                                                       "type" => message["type"])
 
       nil
     end
@@ -71,8 +85,9 @@ module PhComposerFaults
       problem = refusal(name, target) || baseline_problem(name, target)
       return document(name, "refused", :error => problem) if problem
 
+      recorded = baseline(name, target)
       install(name)
-      armed[name] = { "target" => detached(target), "baseline" => baseline(name, target), "hits" => [], "count" => 0,
+      armed[name] = { "target" => detached(target), "baseline" => recorded, "hits" => [], "count" => 0,
                       "spent" => false, "live" => true }
       document(name, "armed")
     end
@@ -96,13 +111,23 @@ module PhComposerFaults
       end
 
       state["live"] = false
-      problems = residual(name, state)
+      problems = begin
+        residual(name, state)
+      rescue StandardError => error
+        ["the read-back raised #{error.class}"]
+      end
       outcome = { "restored" => problems.empty?, "was_armed" => true, "problems" => problems,
                   "interceptions" => state["count"] }
       # The receipt is built from the completed state before a passing restore lets it go.
-      receipt = document(name, problems.empty? ? "inert" : "restore_failed", :restore => outcome)
+      receipt = document(name, problems.empty? ? "inert" : "restore_failed", :restore => outcome,
+                                                                             :settled => problems.empty?)
       armed.delete(name) if problems.empty?
       receipt
+    end
+
+    def live?(name)
+      state = armed[name]
+      state ? state["live"] : false
     end
 
     # Called by an interceptor: true when `name` is armed for this call, after recording the hit.
@@ -137,6 +162,9 @@ module PhComposerFaults
 
     def refusal(name, target)
       return "unknown fault #{name.to_s[0, 32]}" unless NAMES.include?(name)
+
+      unknown = target.keys - TARGET_KEYS.fetch(name)
+      return "#{name} does not take #{unknown.first.to_s[0, 32]}" unless unknown.empty?
       if armed.key?(name)
         return "#{name} is #{status_of(name).tr('_', ' ')}; restore it until it reads back as its baseline first"
       end
@@ -251,11 +279,12 @@ module PhComposerFaults
       installed[name] = true
     end
 
-    def document(name, status, error: nil, restore: nil)
+    def document(name, status, error: nil, restore: nil, settled: false)
       state = armed[name]
       detached({
-        "schema" => SCHEMA, "kind" => KIND, "fault" => name.to_s[0, 32], "status" => status, "error" => error,
-        "armed" => state ? state["live"] : false, "pending_restore" => state ? !state["live"] : false,
+        "schema" => SCHEMA, "kind" => KIND, "revision" => REVISION, "fault" => name.to_s[0, 32], "status" => status,
+        "error" => error, "armed" => state ? state["live"] : false,
+        "pending_restore" => state && !settled ? !state["live"] : false,
         "target" => state && state["target"], "baseline" => state && state["baseline"],
         "hits" => state ? state["hits"].dup : [], "interceptions" => state ? state["count"] : 0,
         "omitted_hits" => state ? state["count"] - state["hits"].length : 0,

@@ -24,6 +24,9 @@ from typing import Any
 import host_diagnostics
 
 CONTROLS = Path(__file__).resolve().parent / "fault_controls.rb"
+# PhComposerFaults::REVISION this client drives; `load` runs once per process, so another is refused.
+REVISION = 3
+KIND = "ph-composer.fault-control"
 NAMES = ("lost_reply", "silent_runtime", "failed_write")
 OPERATIONS = ("arm", "observe", "restore")
 RUNTIME_MESSAGES = ("runtime.ready", "runtime.translation")
@@ -74,16 +77,23 @@ def ruby_call(operation: str, name: str, target: dict[str, Any]) -> str:
     )
 
 
+def refused(name: str, problem: str) -> dict[str, Any]:
+    return {"schema": 1, "kind": KIND, "fault": name[:32], "status": "refused", "error": problem}
+
+
 def run(evaluate: Callable[[str, float], Any], operation: str, name: str, target: dict[str, Any]) -> dict[str, Any]:
     if problem := refusal(operation, name, target):
-        return {
-            "schema": 1,
-            "kind": "ph-composer.fault-control",
-            "fault": name[:32],
-            "status": "refused",
-            "error": problem,
-        }
-    return evaluate(ruby_call(operation, name, target), 30.0)
+        return refused(name, problem)
+    document = evaluate(ruby_call(operation, name, target), 30.0)
+    if not (isinstance(document, dict) and document.get("kind") == KIND and document.get("schema") == 1):
+        return refused(name, "the host's answer was not a fault-control document")
+    if document.get("revision") != REVISION:
+        return refused(
+            name,
+            f"this process holds fault controls revision {document.get('revision')}, not {REVISION}; "
+            "restart SketchUp so the current controls load",
+        )
+    return document
 
 
 def succeeded(operation: str, document: dict[str, Any]) -> bool:
@@ -100,11 +110,11 @@ def succeeded(operation: str, document: dict[str, Any]) -> bool:
 def summary(operation: str, document: dict[str, Any]) -> str:
     if document.get("status") == "refused":
         return f"{document.get('fault')}: {operation} refused: {document.get('error')}"
-    line = f"{document['fault']}: {document['status']}; {document.get('interceptions', 0)} interception(s)"
+    line = f"{document.get('fault')}: {document.get('status')}; {document.get('interceptions', 0)} interception(s)"
     if document.get("omitted_hits"):
         line += f" ({document['omitted_hits']} not kept in the hit log)"
     if restore := document.get("restore"):
-        line += f"; restored {restore['restored']}"
+        line += f"; restored {restore.get('restored')}"
         if restore.get("problems"):
             line += f" ({'; '.join(restore['problems'])})"
     if document.get("fresh_process_required"):

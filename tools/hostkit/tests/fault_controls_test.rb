@@ -154,9 +154,56 @@ class FaultControlsTest < PhComposerTestCase
 
     receipt = Faults.restore("failed_write")
     assert_equal "IP", receipt.dig("baseline", "stored"), "a changed receipt did not change the baseline"
-    assert_equal [1, false, true],
+    assert_equal [1, false, false],
                  [receipt.fetch("interceptions"), receipt.fetch("armed"), receipt.fetch("pending_restore")]
     assert_equal({ "session" => @session.id, "key" => "unit_system" }, receipt.fetch("target"))
+  end
+
+  def test_each_fault_leaves_other_targets_alone
+    Faults.arm("failed_write", "session" => @session.id, "key" => "unit_system")
+    Sketchup.write_default(PhComposer::Preferences::SECTION, "table_views", "x")
+    Faults.arm("lost_reply", "session" => @session.id, "request" => "#{@session.id}:panel:1")
+    PhComposer::Panel.send(:publish_result, { "request_id" => "#{@session.id}:panel:2" }, {})
+    Faults.arm("silent_runtime", "session" => @session.id, "drop" => ["runtime.ready"])
+    other = PhComposer::Sessions.for(Sketchup::Model.new)
+    @runtime = PhComposer::RuntimeHost.new(:session_id => other.id).start
+    @runtime.instance_variable_get(:@dialog).fire(PhComposer::RuntimeHost::CALLBACK,
+                                                  JSON.generate("type" => "runtime.ready",
+                                                                "payload" => { "session" => other.id }))
+
+    assert_equal [0, 0, 0], Faults::NAMES.map { |name| Faults.observe(name).fetch("interceptions") }
+    refute_equal "loading", @runtime.state, "another session's runtime still hears ready"
+  end
+
+  def test_a_passing_restore_owes_nothing_and_its_receipt_keeps_the_evidence
+    Faults.arm("failed_write", "session" => @session.id, "key" => "unit_system")
+    Sketchup.write_default(PhComposer::Preferences::SECTION, "unit_system", "SI")
+    receipt = Faults.restore("failed_write")
+
+    assert receipt.dig("restore", "restored")
+    assert_equal ["inert", false, false, 1],
+                 [receipt.fetch("status"), receipt.fetch("armed"), receipt.fetch("pending_restore"),
+                  receipt.fetch("interceptions")]
+    assert_equal Faults::REVISION, receipt.fetch("revision")
+  end
+
+  def test_a_read_back_that_raises_is_a_failed_restore
+    Faults.arm("failed_write", "session" => @session.id, "key" => "unit_system")
+    Faults.stub(:residual, ->(*) { raise IOError }) do
+      restore = Faults.restore("failed_write").fetch("restore")
+      refute restore.fetch("restored")
+      assert_equal ["the read-back raised IOError"], restore.fetch("problems")
+    end
+  end
+
+  def test_only_host_run_fixtures_and_known_target_keys_are_accepted
+    @model.path = "/Users/someone/Dropbox/ph-composer/_private/clients/House.skp"
+    assert_match(/not a synthetic fixture/, Faults.arm("failed_write", "session" => @session.id, "key" => "unit_system")
+                                                  .fetch("error"))
+    @model.path = "/Users/someone/Dropbox/ph-composer/_private/host/run/fixture.skp"
+    assert_match(/does not take extra/,
+                 Faults.arm("failed_write", "session" => @session.id, "key" => "unit_system", "extra" => 1)
+                       .fetch("error"))
   end
 
   def test_failed_write_leaves_another_models_writes_alone

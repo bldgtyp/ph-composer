@@ -42,7 +42,9 @@ class FaultClientTest(unittest.TestCase):
                 self.assertEqual(host.calls, [])
 
     def test_an_accepted_arm_loads_the_controls_and_passes_the_target_as_literals(self) -> None:
-        host = Host({"status": "armed", "fault": "silent_runtime"})
+        host = Host(
+            {"schema": 1, "kind": hf.KIND, "revision": hf.REVISION, "status": "armed", "fault": "silent_runtime"}
+        )
         document = hf.run(host.read, "arm", "silent_runtime", {"session": SESSION, "drop": ["runtime.ready"]})
 
         self.assertTrue(hf.succeeded("arm", document))
@@ -60,6 +62,29 @@ class FaultClientTest(unittest.TestCase):
         self.assertFalse(hf.succeeded("restore", dirty))
         self.assertFalse(hf.succeeded("arm", {"status": "refused"}))
         self.assertIn("restored False (differs)", hf.summary("restore", dirty))
+
+    def test_an_answer_that_is_not_a_current_control_document_is_refused(self) -> None:
+        current = {"schema": 1, "kind": hf.KIND, "status": "inert", "fault": "lost_reply"}
+        for answer in ("text", {}, current, current | {"revision": hf.REVISION - 1}):
+            with self.subTest(answer=answer):
+                document = hf.run(Host(answer).read, "restore", "lost_reply", {})
+                self.assertEqual(document["status"], "refused")
+                self.assertFalse(hf.succeeded("restore", document))
+                self.assertIn("refused", hf.summary("restore", document))
+
+    def test_the_client_drives_the_revision_the_controls_declare(self) -> None:
+        source = hf.CONTROLS.read_text()
+
+        self.assertIn(f"REVISION = {hf.REVISION}", source)
+
+    def test_an_uncertified_restore_fails_and_omitted_hits_are_reported(self) -> None:
+        uncertified = {"status": "inert", "fault": "lost_reply", "restore": {"restored": False, "was_armed": False}}
+
+        self.assertFalse(hf.succeeded("restore", uncertified))
+        self.assertIn(
+            "(5 not kept",
+            hf.summary("observe", {"status": "armed", "fault": "x", "interceptions": 25, "omitted_hits": 5}),
+        )
 
 
 if __name__ == "__main__":
