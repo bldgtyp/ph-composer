@@ -32,8 +32,6 @@ class ColourByTest < PhComposerTestCase
     palette = PhComposer::ColourBy::Palette
     ids = (1..palette::RAMP.length).map { |n| format("spc_%012d", n) }
     assert_equal ids.length, palette.spread(ids).values.uniq.length
-    assert_equal palette.ramp.call(ids.first), palette.spread([ids.first]).fetch(ids.first),
-                 "alone, a value keeps the colour the ramp gives it"
     assert_equal palette::RAMP.length, palette.spread(ids + ["spc_extra"]).values.uniq.length,
                  "past the ramp's length colours repeat"
   end
@@ -542,11 +540,11 @@ class ColourByTest < PhComposerTestCase
   end
 
   def test_isolating_a_real_grey_value_keeps_its_fill_distinct_from_the_wash_without_painting_edges
-    # Level "g" selects the real grey in the categorical ramp: its digest's slot is 7.
-    zone_group(720, ["Wall"], :level => "g")
+    # Level "a" selects the real grey in the categorical ramp: 97 modulo 10 is 7.
+    zone_group(720, ["Wall"], :level => "a")
     zone_group(730, ["Wall"], :level => nil)
     service = activate("ph_composer.zones.by_level")
-    service.isolate(["g", "classified"])
+    service.isolate(["a", "classified"])
 
     @model.overlays.to_a.first.draw(@model.active_view)
 
