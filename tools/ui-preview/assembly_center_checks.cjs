@@ -1,19 +1,16 @@
 /* Real panel layout: geometry centered independently of its dimension gutter, with reachable overflow. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "ph-composer-assembly-center-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+check({ name: "assembly_center", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1600, height: 900 } });
+    step("open the builder fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=builder`);
     await page.locator("[data-tab='assemblies']").click();
     await page.getByRole("button", { name: "Open Wall", exact: true }).click();
@@ -50,6 +47,7 @@ fs.mkdirSync(output, { recursive: true });
     const right = await drawing.boundingBox(), viewport = await scroll.boundingBox();
     assert(right.x + right.width <= viewport.x + viewport.width, "the right edge is reachable");
     await width(600);
+    step("centering at panel widths");
     for (const panelWidth of [1600, 1280, 900, 420, 280]) {
       await page.setViewportSize({ width: panelWidth, height: 900 });
       await editor.getByRole("button", { name: "Fit drawing", exact: true }).click();
@@ -60,7 +58,5 @@ fs.mkdirSync(output, { recursive: true });
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         `overflow stays within the canvas at ${panelWidth}px`);
     }
-    assert.deepEqual(errors, []);
-    console.log(`Assembly centering checks passed; screenshots: ${output}`);
-  } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Assembly centering checks passed; screenshots: ${output}`;
+});

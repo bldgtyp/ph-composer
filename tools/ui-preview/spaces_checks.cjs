@@ -3,12 +3,12 @@
    Spaces modes' header toggles and the readouts in Table options; an empty
    Model; and the unit-switch cost on 300 Spaces (units U1-F1), whose median it prints. SketchUp pixels and
    Chromium 88 remain host checks. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { PANEL_SIZES, settle, setPanelSize, paneFacts, assertPaneFits } = require("./support/pane_fit.cjs");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "phc-spaces-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
@@ -25,14 +25,11 @@ function visibleRows(page) {
   return page.locator(".phc-zone-view:not([hidden]) tr[data-row-key]:not([hidden])");
 }
 
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+check({ name: "spaces", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1280, height: 900 } });
     page.setDefaultTimeout(5000);
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
 
+    step("reference model");
     // The reference model: Zone rows with sums, Spaces beneath, the imbalance marker on Living Zone.
     await open(page, "spaces");
     assert.equal(await page.locator(".phc-overview .phc-view-count").textContent(), "2 Zones · 4 Spaces");
@@ -42,6 +39,7 @@ function visibleRows(page) {
     assert.equal(await living.locator(".phc-row-marker:not([hidden])").count(), 1, "the imbalance marker");
     const loft = page.getByRole("textbox", { name: "Loft supply" });
     assert.equal(await loft.getAttribute("placeholder"), "Zone", "an inheriting Space reads Zone");
+    step("Spaces at panel widths");
     for (const width of [1280, 900, 420, 365]) {
       await page.setViewportSize({ width, height: 900 });
       await settle(page);
@@ -64,6 +62,7 @@ function visibleRows(page) {
     assert.equal(await page.getByRole("textbox", { name: "Weighting factor for checked Floor Segments" })
       .getAttribute("placeholder"), "Mixed");
     await page.screenshot({ path: path.join(output, "spaces-checked.png") });
+    step("shared bar at real panel sizes");
     // The shared bar at real panel sizes (#188): never over the table's header, always within reach of the
     // pane's scroll, docked beneath the table at the panel minimum.
     for (const [width, height] of PANEL_SIZES) {
@@ -75,6 +74,7 @@ function visibleRows(page) {
     }
     await page.setViewportSize({ width: 1280, height: 900 });
 
+    step("Weighting factor paint");
     // The Weighting factor column's paint: an icon beside 0, 1 and each factor in use starts Mark floor, and
     // while it runs the header shows a pressed glyph that stops it.
     await page.getByRole("checkbox", { name: "Check Hall" }).uncheck();
@@ -101,6 +101,7 @@ function visibleRows(page) {
     await glyph.click();
     await glyph.waitFor({ state: "hidden" });
 
+    step("Spaces modes and Table options");
     // The Spaces modes from their column headers, and the readouts and label lines in Table options.
     await open(page, "spaces");
     assert.equal(await page.getByRole("button", { name: "Colour by Ventilation" }).count(), 3);
@@ -120,6 +121,7 @@ function visibleRows(page) {
     await page.screenshot({ path: path.join(output, "spaces-table-options.png") });
     await page.keyboard.press("Escape");
 
+    step("Height from solid");
     // Height from solid from a Volume row: the confirmation shows the solid's volume, the floor area and the height.
     await open(page, "spaces");
     await page.getByRole("button", { name: "Expand all" }).click();
@@ -130,6 +132,7 @@ function visibleRows(page) {
     await page.screenshot({ path: path.join(output, "spaces-height-from-solid.png") });
     await height.getByRole("button", { name: "Cancel" }).click();
 
+    step("Create Space review");
     // Create Space's review from SketchUp's context menu: it shows the Spaces view under the shared dialog,
     // says what is accepted and why the rest is left out, and Create closes it.
     for (const width of [1280, 420]) {
@@ -148,15 +151,18 @@ function visibleRows(page) {
     await name.press("Enter");
     await page.locator("dialog.phc-create-space").waitFor({ state: "hidden" });
 
+    step("Zones without Spaces");
     // Zones with no Spaces yet: the Zones and nothing beneath them.
     await open(page, "spacesnone");
     assert.equal(await page.locator(".phc-overview .phc-view-count").textContent(), "2 Zones · 0 Spaces");
     assert.equal(await visibleRows(page).count(), 2);
+    step("empty Model");
     // An empty Model: no rows, and the empty table says what to do first.
     await open(page, "spacesempty");
     assert.equal(await visibleRows(page).count(), 0);
     assert.match(await page.locator(".phc-zone-view:not([hidden]) .phc-empty").textContent(), /^No Zones yet\./);
 
+    step("300 Spaces unit switch");
     // 300 Spaces: the median of five unit switches, each from the press to the repainted header, with the
     // Zones open (the default) and with every row open.
     await open(page, "spaceslarge");
@@ -188,9 +194,5 @@ function visibleRows(page) {
     await measure("Zones open");
     await page.getByRole("button", { name: "Expand all" }).click();
     await measure("every row open");
-    assert.deepEqual(errors, []);
-    console.log(`Spaces browser checks passed; evidence in ${output}`);
-  } finally {
-    await browser.close();
-  }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Spaces browser checks passed; evidence in ${output}`;
+});

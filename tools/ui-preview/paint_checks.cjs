@@ -1,19 +1,16 @@
 /* Column Show and paint actions share rows on the real panel; SketchUp gestures remain host gates. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE || fs.mkdtempSync(path.join(os.tmpdir(), "phc-paint-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+check({ name: "paint", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1280, height: 900 } });
     page.setDefaultTimeout(5000);
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+    step("open the assignment fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=assignment`);
     const menu = label => page.getByRole("button", { name: label + " column menu", exact: true });
     const open = async label => {
@@ -119,11 +116,13 @@ fs.mkdirSync(output, { recursive: true });
     await page.evaluate(() => { window.previewHost.palette = { ...window.previewHost.palette,
       active: true, palette: { face_type: "Wall", boundary_condition: "Ground", assembly_id: "asm_unused" } };
     window.previewHost.snapshot(); });
+    step("paint choices");
     for (const label of ["Type: Wall", "Boundary: Ground", "Assembly: Unused local Assembly"]) {
       assert.equal(await page.getByRole("button", { name: "Paint " + label + ". Click to stop painting",
         exact: true }).isVisible(), true, "external multi-field intent stays visible");
     }
     await page.keyboard.press("Escape");
+    step("paint menus at panel widths");
     for (const width of [1280, 900, 420, 280]) {
       await page.setViewportSize({ width, height: 900 });
       for (const label of ["Type", "Boundary", "Assembly"]) {
@@ -143,7 +142,5 @@ fs.mkdirSync(output, { recursive: true });
         await page.keyboard.press("Escape"); assert.equal(await popup.isVisible(), false);
       }
     }
-    assert.deepEqual(errors, []);
-    console.log(`Column Show and paint checks passed; evidence in ${output}`);
-  } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Column Show and paint checks passed; evidence in ${output}`;
+});

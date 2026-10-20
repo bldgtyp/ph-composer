@@ -3,7 +3,7 @@
 DATE: 2026-10-19
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Codex
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: [#254](https://github.com/bldgtyp/ph-composer/issues/254)
 
 Ed accepted all recommended steps/phases on 2026-10-19. Execute this packet in its own assigned
 implementation chat. No implementation has started here. Complete issue intake at delivery and

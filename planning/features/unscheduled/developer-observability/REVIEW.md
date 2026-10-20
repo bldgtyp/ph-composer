@@ -3,7 +3,7 @@
 DATE: 2026-10-19
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Codex
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: [#254](https://github.com/bldgtyp/ph-composer/issues/254)
 
 Assessment split from the production-support packet at Ed's request on 2026-10-19. Ed accepted
 all recommended work and its phase sequence. [PLAN.md](PLAN.md) and [STATUS.md](STATUS.md) now

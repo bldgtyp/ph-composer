@@ -3,7 +3,7 @@
 DATE: 2026-10-19
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Codex
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: [#254](https://github.com/bldgtyp/ph-composer/issues/254)
 
 All rows are requirements. There are no implementation passes yet.
 

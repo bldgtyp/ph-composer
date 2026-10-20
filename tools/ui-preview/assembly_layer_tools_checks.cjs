@@ -1,17 +1,15 @@
 /* Contextual Layer tools stay reachable from drawing hover without changing segment selection. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE || fs.mkdtempSync(path.join(os.tmpdir(), "phc-layer-tools-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
-    const errors = []; page.on("pageerror", error => errors.push(error.message));
+check({ name: "assembly_layer_tools", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1600, height: 900 } });
+    step("open the builder fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=builder`);
     await page.locator("[data-tab='assemblies']").click();
     await page.getByRole("button", { name: "Open Wall", exact: true }).click();
@@ -61,6 +59,7 @@ fs.mkdirSync(output, { recursive: true });
     await gear.focus(); assert.equal(await gear.evaluate(node => getComputedStyle(node).opacity), "1");
     await gear.press("Enter"); await menu.waitFor(); await page.keyboard.press("Escape");
     assert.equal(await gear.evaluate(node => document.activeElement === node), true);
+    step("layer tools at panel widths");
     for (const width of [1600, 900, 420, 280]) {
       await page.setViewportSize({ width, height: 900 });
       await label.hover(); await gear.click();
@@ -72,7 +71,5 @@ fs.mkdirSync(output, { recursive: true });
       await page.screenshot({ path: path.join(output, `assembly-layer-tools-${width}.png`) });
       await page.mouse.click(closeBox.x + closeBox.width / 2, closeBox.y + closeBox.height / 2);
     }
-    assert.deepEqual(errors, []);
-    console.log(`Assembly Layer tools checks passed; screenshots: ${output}`);
-  } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Assembly Layer tools checks passed; screenshots: ${output}`;
+});

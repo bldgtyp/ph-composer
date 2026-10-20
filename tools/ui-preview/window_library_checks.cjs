@@ -1,14 +1,13 @@
 "use strict";
 const assert = require("assert"), fs = require("fs"), os = require("os"), path = require("path");
-const { chromium } = require("playwright");
+const { check } = require("./support/browser_evidence.cjs");
 const port = process.env.UI_PREVIEW_PORT || "8765";
-(async function () {
-  const browser = await chromium.launch({ channel: "chrome", headless: true });
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "phc-window-libraries-"));
-  console.log("Evidence: " + directory);
+const directory = fs.mkdtempSync(path.join(os.tmpdir(), "phc-window-libraries-"));
+console.log("Evidence: " + directory);
+check({ name: "window_library", output: directory }, async ({ newPage, step }) => {
   for (const width of [1280, 900, 420, 280]) {
-    const page = await browser.newPage({ viewport: { width, height: 900 } }), errors = [];
-    page.on("pageerror", error => errors.push(error.stack));
+    const page = await newPage({ viewport: { width, height: 900 } });
+    step(`window library: ${width}px`);
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=windows`);
     await page.getByRole("button", { name: "Window Types", exact: true }).click();
     const pane = page.locator("[data-pane=windows]");
@@ -101,7 +100,6 @@ const port = process.env.UI_PREVIEW_PORT || "8765";
     await page.keyboard.press("Escape"); await depthBubble.waitFor({ state: "hidden" });
     assert.strictEqual(await writes(), before + 3);
     assert.strictEqual(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-    assert.deepStrictEqual(errors, []); await page.close(); console.log("Window library screens " + width + "px: pass");
+    await page.close(); console.log("Window library screens " + width + "px: pass");
   }
-  await browser.close();
-})().catch(error => { console.error(error); process.exit(1); });
+});

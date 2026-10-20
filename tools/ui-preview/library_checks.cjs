@@ -1,9 +1,9 @@
 /* Provider UI acceptance uses public synthetic rows; host Undo and native pickers remain separate gates. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE || fs.mkdtempSync(path.join(os.tmpdir(), "phc-library-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
@@ -16,13 +16,11 @@ async function openRow(page, row) {
 async function writes(page) {
   return page.evaluate(() => previewHost.sent.filter(item => item.type === "action.invoke").length);
 }
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
+check({ name: "library", output }, async ({ newPage, step }) => {
     for (const width of (process.env.LIBRARY_WIDTHS || "1280,900,420,280").split(",").map(Number)) {
+      step(`library ${width}px`);
       console.log(`Checking library ${width}`);
-      const page = await browser.newPage({ viewport: { width, height: 900 } });
-      const errors = []; page.on("pageerror", error => errors.push(error.message));
+      const page = await newPage({ viewport: { width, height: 900 } });
       await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=libraries`);
       await page.locator("[data-tab='library']").click();
       const library = page.locator("[data-section='library']");
@@ -76,10 +74,10 @@ async function writes(page) {
       await page.screenshot({ path: path.join(output, `library-${width}.png`), fullPage: true });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true,
         `no sideways page scroll at ${width}`);
-      assert.deepEqual(errors, []);
       await page.close();
     }
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    step("Library sidebar in the Assembly editor");
+    const page = await newPage({ viewport: { width: 1280, height: 900 } });
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=libraries`);
     await page.locator("[data-tab='assemblies']").click();
     await page.getByRole("button", { name: "Open Wall", exact: true }).click();
@@ -97,12 +95,14 @@ async function writes(page) {
     assert.equal(action[0].payload.params.assignment.layer_id, "lyr_studs_0");
     assert.equal(action[0].payload.params.assignment.segment_id, "seg_stud_0");
     assert.ok(action[0].payload.params.assignment.expected_values.layers);
+    step("disabled dialog actions");
     // A disabled primary or destructive dialog action reads as disabled, not as its enabled fill.
     await page.locator("[data-tab='library']").click();
     await page.evaluate(() => { previewHost.librarySetupState = "unreadable"; previewHost.snapshot(); });
     const materials = page.locator("[data-section='library']").getByRole("tabpanel", { name: "Materials", exact: true });
     await materials.getByRole("button", { name: "Library setup…", exact: true }).click();
     const setup = materials.getByRole("dialog", { name: "Libraries", exact: true });
+    step("unreadable setup");
     // An unreadable setup offers only Reset: the ways to add a library stay out of sight.
     assert.equal(await setup.locator(".library-setup-routes").isVisible(), false);
     assert.equal(await setup.getByRole("button", { name: "Add a library…", exact: true }).isVisible(), false);
@@ -120,6 +120,7 @@ async function writes(page) {
     assert.equal(destructive.disabled, apply.disabled, "a disabled destructive action loses its red fill");
     await file.evaluate(node => node.classList.replace("phc-action-delete", "phc-action-apply"));
     await page.screenshot({ path: path.join(output, "library-setup-unreadable.png"), fullPage: true });
+    step("snapshot refresh during rename");
     // A snapshot refresh while an approved location is renamed keeps the draft, its focus and caret, and
     // sends nothing: the browser blurs the field while the list is rebuilt.
     await setup.getByText("Agent access", { exact: true }).click();
@@ -136,6 +137,5 @@ async function writes(page) {
     assert.equal(await renames(), 1);
     await setup.getByText("Half typed name", { exact: true }).waitFor();
     await page.close();
-    console.log(`Library checks passed at 1280/900/420/280; evidence: ${output}`);
-  } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Library checks passed at 1280/900/420/280; evidence: ${output}`;
+});

@@ -2,11 +2,11 @@
    what the offline DOM double cannot: layout at four panel sizes with no sideways page scroll, focus staying
    in a field through a unit switch, the modal form's focus and Escape, and no script errors. Screenshots go
    to PH_COMPOSER_PREVIEW_EVIDENCE. Run through `make ui-checks`. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 
 const PORT = process.env.UI_PREVIEW_PORT || "8765";
 const BASE = `http://127.0.0.1:${PORT}/tools/ui-preview/`;
@@ -14,13 +14,11 @@ const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "ph-composer-preview-"));
 fs.mkdirSync(output, { recursive: true });
 
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  const errors = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+check({ name: "preview", output }, async ({ newPage, step }) => {
+  const page = await newPage({ viewport: { width: 1280, height: 800 } });
   const shot = (name) => page.screenshot({ path: path.join(output, `${name}.png`) });
 
+  step("open the parts fixture");
   await page.goto(`${BASE}?fixture=parts`);
   await page.getByRole("heading", { name: "Example parts" }).waitFor();
   assert.equal(await page.title(), "PH-Composer UI preview");
@@ -37,6 +35,7 @@ fs.mkdirSync(output, { recursive: true });
   }
   await page.setViewportSize({ width: 1280, height: 800 });
 
+  step("draft through a unit switch");
   // A draft keeps focus, text and its starting unit through a display switch made from the keyboard route.
   const head = page.getByRole("textbox", { name: "Head length", exact: true });
   await head.click();
@@ -48,6 +47,7 @@ fs.mkdirSync(output, { recursive: true });
   assert.equal(await page.evaluate(() => window.previewHost.parts[1].length_mm), 1300);
   assert.equal(await head.inputValue(), "51.181102");
 
+  step("invalid entry");
   // Invalid input: the message sits beside the field and the text stays.
   const sill = page.getByRole("textbox", { name: "Sill length", exact: true });
   await sill.fill("2 kg");
@@ -58,6 +58,7 @@ fs.mkdirSync(output, { recursive: true });
   await sill.press("Escape");
   assert.equal(await sill.getAttribute("aria-invalid"), "false");
 
+  step("New part form");
   // The New part form: modal, focus inside, Escape cancels and nothing is sent.
   const invokes = () => page.evaluate(() => window.previewHost.sent.filter((m) => m.type === "action.invoke")
     .length);
@@ -71,11 +72,12 @@ fs.mkdirSync(output, { recursive: true });
   await dialog.waitFor({ state: "hidden" });
   assert.equal(await invokes(), before);
 
+  step("refused edit");
   // A refused edit leaves a persistent warning and the Model's value.
   await page.evaluate(() => { window.previewHost.parts[0].length_mm = 1500; });
   await sill.fill("1300");
   await sill.press("Enter");
-  const notice = page.locator("[data-notice-layer] .phc-floating-notice");
+  const notice = page.locator("[data-notice-layer] .phc-floating-notice:not(.phc-recovery)");
   assert.equal(await notice.getAttribute("data-tone"), "warning");
   await shot("refused-edit");
   await page.mouse.click(5, 5);
@@ -83,6 +85,7 @@ fs.mkdirSync(output, { recursive: true });
   await page.getByRole("button", { name: "Dismiss message" }).click();
   assert(!(await notice.isVisible()));
 
+  step("empty and Export panes");
   await page.goto(`${BASE}?fixture=empty`);
   await page.getByText("No example parts yet.").waitFor();
   await page.setViewportSize({ width: 360, height: 520 });
@@ -92,6 +95,7 @@ fs.mkdirSync(output, { recursive: true });
   assert(await page.getByRole("button", { name: "Choose destination…" }).isDisabled());
   await shot("export-narrow");
 
+  step("authoring pane");
   await page.goto(`${BASE}?fixture=authoring`);
   await page.getByRole("heading", { name: "Zones" }).waitFor();
   await page.getByRole("cell", { name: "Living Zone", exact: true }).waitFor();
@@ -108,6 +112,7 @@ fs.mkdirSync(output, { recursive: true });
   await shot("zone-settings-narrow");
   await page.keyboard.press("Escape");
 
+  step("column paint menus");
   // Column paint choices float over the table without narrowing or shifting it.
   // At narrow widths the table scrolls inside its mount with identity columns held.
   await page.goto(`${BASE}?fixture=authoring`);
@@ -137,11 +142,6 @@ fs.mkdirSync(output, { recursive: true });
     await page.keyboard.press("Escape");
   }
 
-  assert.deepEqual(errors, []);
-  console.log(`PASS: preview on the real panel: 4 viewports, draft through a unit switch, invalid entry, ` +
-    `form Escape, refused edit warning, empty, Export and authoring panes; evidence in ${output}`);
-  await browser.close();
-})().catch((error) => {
-  console.error(error);
-  process.exit(1);
+  return `PASS: preview on the real panel: 4 viewports, draft through a unit switch, invalid entry, ` +
+    `form Escape, refused edit warning, empty, Export and authoring panes; evidence in ${output}`;
 });
