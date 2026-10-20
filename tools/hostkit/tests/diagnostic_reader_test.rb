@@ -125,8 +125,7 @@ class DiagnosticReaderTest < PhComposerTestCase
 
   def test_unsupported_lines_are_counted_and_an_unsupported_log_schema_is_refused
     log("current")
-    PhComposer::Diagnostics.send(:remember, JSON.generate("timestamp" => Time.now.utc.iso8601, "schema" => 2,
-                                                          "event" => "future"))
+    remember(JSON.generate("timestamp" => Time.now.utc.iso8601, "schema" => 2, "event" => "future"))
     read = Reader.read
     assert_equal %w[current], events(read)
     assert_equal 1, read.fetch("unsupported_schema")
@@ -137,6 +136,36 @@ class DiagnosticReaderTest < PhComposerTestCase
       assert_match(/schema 2/, refused.fetch("error"))
       refute refused.key?("events")
     end
+  end
+
+  def test_a_cursor_moves_past_trailing_lines_it_cannot_return
+    log("kept")
+    remember(JSON.generate("timestamp" => Time.now.utc.iso8601, "schema" => 2, "event" => "future"))
+    remember(JSON.generate("timestamp" => Time.now.utc.iso8601, "schema" => 1, "event" => "[INVALID]"))
+    first = Reader.read
+    second = Reader.read("cursor" => first.fetch("next_cursor"))
+
+    assert_equal %w[kept], events(first)
+    assert_equal [1, 1], [first.fetch("unsupported_schema"), first.fetch("unreadable")]
+    assert_equal [0, 0, []], [second.fetch("unsupported_schema"), second.fetch("unreadable"), events(second)]
+  end
+
+  def test_returned_events_fit_the_byte_bound_as_serialized
+    150.times { |index| log("event_#{index}", "severity" => "error", "session" => SESSION, "code" => "c.#{'x' * 80}") }
+    [Reader.read("limit" => 100), Reader.read("limit" => 100, "newest" => true)].each do |read|
+      assert_operator JSON.generate(read.fetch("events")).bytesize, :<=, Reader::MAX_EVENTS_BYTES
+    end
+  end
+
+  def test_a_result_shares_nothing_with_the_reader_or_the_build
+    first = Reader.read
+    first.fetch("build")["manifest"] = "changed"
+    first.fetch("history")["process"] = "changed"
+
+    second = Reader.read
+    assert_equal PhComposer::BuildIdentity.manifest, second.dig("build", "manifest")
+    assert_equal Reader.process, second.dig("history", "process")
+    refute_equal "changed", Reader.process
   end
 
   def test_malformed_filters_are_refused_before_any_read
@@ -156,6 +185,10 @@ class DiagnosticReaderTest < PhComposerTestCase
   end
 
   private
+
+  def remember(line)
+    PhComposer::Diagnostics.send(:remember, line)
+  end
 
   def events(read)
     read.fetch("events").map { |record| record.fetch("event") }

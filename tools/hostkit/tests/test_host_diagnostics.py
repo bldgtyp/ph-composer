@@ -70,6 +70,30 @@ class WaitEnrichmentTest(unittest.TestCase):
         self.assertIn('"severity" => "warning"', code)
         self.assertIn('"newest" => true', code)
 
+    def test_an_export_wait_reads_its_run_rather_than_its_session(self) -> None:
+        host = Host({"status": "read", "events": []})
+        hd.for_wait(host.read, {"session": SESSION, "caller": "0" * 32, "task": "export_" + "a" * 24}, budget=1.0)
+
+        self.assertIn('"run_id" => "export_' + "a" * 24 + '"', host.calls[0][0])
+        self.assertNotIn('"session"', host.calls[0][0])
+
+    def test_an_interrupt_while_reading_is_reported_and_keeps_the_wait(self) -> None:
+        document = hd.for_wait(Host(KeyboardInterrupt()).read, {"session": SESSION}, budget=1.0)
+
+        self.assertEqual(document["status"], "interrupted")
+
+    def test_a_record_without_an_event_name_still_prints(self) -> None:
+        document = {
+            "status": "read",
+            "events": [{"line": 3, "severity": "error"}],
+            "matched": 1,
+            "cursor_state": "start",
+            "health": {"writing": True},
+            "next_cursor": "0123abcd:4",
+        }
+
+        self.assertIn("  3 ? ? severity=error", hd.summary(document))
+
     def test_no_budget_left_means_no_read(self) -> None:
         host = Host({"status": "read"})
         document = hd.for_wait(host.read, {"session": SESSION}, budget=0.0)

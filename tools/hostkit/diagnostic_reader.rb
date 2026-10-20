@@ -42,7 +42,7 @@ module PhComposerDiagnosticReader
                  "error" => "the extension's diagnostic log is not loaded in this process" }
       end
       problem = refusal(filters)
-      return document(filters, "refused", problem) if problem
+      return detached(document(filters, "refused", problem)) if problem
 
       window = PhComposer::Diagnostics.tail_window
       selected = if filters["newest"]
@@ -53,10 +53,16 @@ module PhComposerDiagnosticReader
                    collect(filters, window.fetch("lines"), start, window.fetch("first"))
                      .merge("cursor_state" => position.fetch("state"), "gap" => position["gap"])
                  end
-      document(filters, "read", nil).merge(selected).merge("history" => history(window))
+      detached(document(filters, "read", nil).merge(selected).merge("history" => history(window)))
     end
 
     private
+
+    # A copy sharing no object with the log, the build identity or this reader, so a caller that changes the
+    # result changes nothing else.
+    def detached(value)
+      JSON.parse(JSON.generate(value))
+    end
 
     def filters_accepted
       { "session" => PhComposer::Diagnostics::SESSION, "incident" => PhComposer::Diagnostics::INCIDENT,
@@ -104,19 +110,22 @@ module PhComposerDiagnosticReader
       counts = { "matched" => 0, "unsupported_schema" => 0, "unreadable" => 0 }
       following = first + [start, lines.length].min
       truncated = false
-      each_record(lines, start, first, counts) do |record, text, number|
-        following = number + 1
+      each_record(lines, start, first, counts) do |record, number|
         next unless selected?(record, filters, minimum)
 
         counts["matched"] += 1
-        if events.length >= limit || bytes + text.bytesize > MAX_EVENTS_BYTES
+        event = record.merge("line" => number)
+        size = returned_bytes(event)
+        if events.length >= limit || bytes + size > MAX_EVENTS_BYTES
           truncated = true
           following = number
           break
         end
-        events << record.merge("line" => number)
-        bytes += text.bytesize
+        events << event
+        bytes += size
       end
+      # Past every line scanned, unsupported and unreadable ones included, unless a match was left for later.
+      following = first + lines.length unless truncated
       counts.merge("events" => events, "truncated" => truncated, "next_cursor" => "#{process}:#{following}")
     end
 
@@ -125,11 +134,12 @@ module PhComposerDiagnosticReader
       minimum = SEVERITIES.index(filters.fetch("severity", "info"))
       counts = { "matched" => 0, "unsupported_schema" => 0, "unreadable" => 0 }
       matched = []
-      each_record(window.fetch("lines"), 0, window.fetch("first"), counts) do |record, text, number|
+      each_record(window.fetch("lines"), 0, window.fetch("first"), counts) do |record, number|
         next unless selected?(record, filters, minimum)
 
         counts["matched"] += 1
-        matched << [record.merge("line" => number), text.bytesize]
+        event = record.merge("line" => number)
+        matched << [event, returned_bytes(event)]
       end
       kept = []
       bytes = 0
@@ -142,15 +152,22 @@ module PhComposerDiagnosticReader
       counts.merge("events" => kept, "truncated" => kept.length < matched.length, "cursor_state" => "newest")
     end
 
-    # Each readable line of a supported schema from `start`, with its sanitized text and line number.
+    # Each readable line of a supported schema from `start`, reduced by the log's own sanitizer, with its line
+    # number. A line the sanitizer left without an event name (the logger keeps an invalid one as
+    # `[INVALID]`, which the reduction drops) is counted as unreadable, not returned half-formed.
     def each_record(lines, start, first, counts)
       lines.each_with_index.drop(start).each do |line, index|
         record = (text = PhComposer::Diagnostics.sanitized(line)) && JSON.parse(text)
-        next counts["unreadable"] += 1 unless record
+        next counts["unreadable"] += 1 unless record.is_a?(Hash) && record["event"].is_a?(String)
         next counts["unsupported_schema"] += 1 unless SUPPORTED_LOG_SCHEMAS.include?(record["schema"])
 
-        yield record, text, first + index
+        yield record, first + index
       end
+    end
+
+    # What one returned event adds to the events array as JSON, its separator included.
+    def returned_bytes(event)
+      JSON.generate(event).bytesize + 1
     end
 
     def selected?(record, filters, minimum)

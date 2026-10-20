@@ -63,16 +63,21 @@ def read(evaluate: Callable[[str, float], Any], filters: dict[str, Any], timeout
 
 
 def for_wait(evaluate: Callable[[str, float], Any], params: dict[str, str], budget: float) -> dict[str, Any]:
-    """The newest warnings and errors for a wait's session, to sit beside its ending, within what is left of
-    the wait's deadline. A wait's ending never depends on this: no budget, or an unavailable reader, is
+    """The newest warnings and errors for what a wait watched, to sit beside its ending, within what is left of
+    the wait's deadline: an export task's run (its records carry the run id, not always the session), else the
+    session. A wait's ending never depends on this: no budget, an interrupt or an unavailable reader is
     reported as such."""
     if budget <= 0:
         return {"status": "skipped", "error": "the wait's deadline left no time to read the log"}
     filters: dict[str, Any] = {"severity": "warning", "limit": WAIT_LIMIT, "newest": True}
-    if FILTERS["session"].match(params.get("session", "")):
+    if FILTERS["run_id"].match(params.get("task", "")):
+        filters["run_id"] = params["task"]
+    elif FILTERS["session"].match(params.get("session", "")):
         filters["session"] = params["session"]
     try:
         return read(evaluate, filters, timeout=budget)
+    except KeyboardInterrupt:
+        return {"status": "interrupted", "error": "interrupted by the developer while reading the log"}
     except Exception as error:  # noqa: BLE001 - any failure here is reported, never raised into the wait
         return {"status": "unavailable", "error": str(error)[:300]}
 
@@ -92,5 +97,6 @@ def summary(document: dict[str, Any]) -> str:
     for record in document["events"]:
         keys = ("severity", "session", "incident", "run_id", "code")
         fields = " ".join(f"{key}={record[key]}" for key in keys if key in record)
-        lines.append(f"  {record['line']} {record['timestamp']} {record['event']} {fields}".rstrip())
+        head = " ".join(str(record.get(key, "?")) for key in ("line", "timestamp", "event"))
+        lines.append(f"  {head} {fields}".rstrip())
     return "\n".join(lines)
