@@ -1,7 +1,7 @@
 # Developer observability: decisions
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#254](https://github.com/bldgtyp/ph-composer/issues/254)
 

@@ -1,13 +1,13 @@
 # Developer observability: planned contracts
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#254](https://github.com/bldgtyp/ph-composer/issues/254)
 
 Accepted scope, not implemented APIs. Existing
-[host rules](../../../../context/TECH_STACK.md) and
-[native acceptance procedure](../../../../tools/hostkit/ACCEPTANCE_RUN.md) remain authoritative.
+[host rules](../../../context/TECH_STACK.md) and
+[native acceptance procedure](../../../tools/hostkit/ACCEPTANCE_RUN.md) remain authoritative.
 
 ## Ownership and parallel work
 
@@ -54,7 +54,7 @@ mutation failure, automatic retry, Model repair or cancellation of the underlyin
 
 ## Diagnostics and privacy
 
-Use [PS-01's schema](../../../archive/production-support/CONTRACTS.md) and bounded read projection. Cursors are
+Use [PS-01's schema](../production-support/CONTRACTS.md) and bounded read projection. Cursors are
 process/history-specific and cannot imply complete history after eviction or restart.
 Report capture degradation, missing intervals and an unavailable store.
 

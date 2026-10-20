@@ -1,7 +1,7 @@
 # Developer observability DV-03: diagnostic reads
 
 DATE: 2026-10-20
-CASE: DV3 (owning acceptance: `planning/features/unscheduled/developer-observability/ACCEPTANCE.md`, rows D05, D06 and D08)
+CASE: DV3 (owning acceptance: `planning/archive/developer-observability/ACCEPTANCE.md`, rows D05, D06 and D08)
 BUILD: branch `feat/developer-observability-dv-03`. Run 1 (`_private/host/dv03/`) observed the first implementation before its commit; run 2 (`dv03b/`, 649f6edb) the first review fixes; run 3 (`dv03d/`, 0dd8b102) the final reader after the second review and a read-through. An attempt between runs 2 and 3 (`dv03c/`) stopped when the relaunched SketchUp's bridge did not answer within 180 s; it recorded nothing. The installed RBZ was `dist/ph_composer.rbz` from each tree; it adds `Diagnostics.tail_window` to the shipped log.
 HOST: SketchUp 2026 on macOS, fresh processes launched by `host_bridge.py launch`, synthetic copies of `blank-template.skp`.
 CONTROL: development bridge only (`host_bridge.py diagnostics`, `wait-for --diagnostics`). Raw JSON stays in `_private/host/dv03/`.

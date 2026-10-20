@@ -164,9 +164,9 @@ one accepted host deviation (PS-D11); the packet is archived. Phase 3 closing re
 first internal envelope-model candidate. SketchUp 2023, Windows and certification gates remain
 separate. This adds no prerequisite to thermal-bridge development.
 
-The separate accepted [developer-observability packet](features/unscheduled/developer-observability/README.md)
-owns DV-01 to DV-04: browser failure evidence, bounded host waits, a development diagnostic reader
-and named fault controls. DV-01/DV-02 can proceed independently; DV-03 reads production PS-01's log.
+The separate [developer-observability packet](archive/developer-observability/README.md), complete and
+archived 2026-10-20, delivered DV-01 to DV-04: browser failure evidence, bounded host waits, a development
+diagnostic reader and named fault controls. DV-03 reads production PS-01's log.
 Production support acceptance does not wait for developer conveniences. Both packets have their
 own ledger and can be assigned to separate chats, with shared-file coordination.
 

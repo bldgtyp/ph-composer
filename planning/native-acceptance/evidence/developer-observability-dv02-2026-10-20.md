@@ -1,7 +1,7 @@
 # Developer observability DV-02: bounded host waits
 
 DATE: 2026-10-20
-CASES: DV1, DV2 (owning acceptance: `planning/features/unscheduled/developer-observability/ACCEPTANCE.md`, rows D03 and D04)
+CASES: DV1, DV2 (owning acceptance: `planning/archive/developer-observability/ACCEPTANCE.md`, rows D03 and D04)
 BUILD: branch `feat/developer-observability-dv-02`. Three runs, each on the code of its day: run 1 (`_private/host/dv02/`) the first implementation, run 2 (`dv02b/`) the first review fixes, run 3 (`dv02c/`, commit de2f99f5) the final code after the second review and a read-through (block-local reads in the bridge's shared binding, export outcome status, wrong-shape projections refused). Runs 1 and 2 observed uncommitted working trees whose fingerprints match their commits. The installed RBZ was `dist/ph_composer.rbz` each time; no shipping file changed.
 HOST: SketchUp 2026 on macOS, fresh processes launched by `host_bridge.py launch`, synthetic copies of `blank-template.skp`.
 CONTROL: development bridge (`host_bridge.py wait-for`); one background accessibility press of a window close button. Raw JSON stays in `_private/host/dv02/`.

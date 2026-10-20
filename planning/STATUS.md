@@ -10,7 +10,7 @@ Master index. Every active item gets a row; archived items move to
 The order the work is planned in is in [ROADMAP.md](ROADMAP.md).
 
 Phase 0, its four completed investigations, Phase 1, Phase 2, Phase 3a (Spaces), the Ruby readability
-program and production support are in [the archive](archive/README.md).
+program, production support and developer observability are in [the archive](archive/README.md).
 Feature packets are grouped in phase directories under `features/`; the Phase column below is
 the roadmap phase, `cross` spans phases, `none` is unscheduled and `n/a` is not a feature packet.
 The remote exists. Historical `none (no remote)` issue cells below mean no issue was recorded;
@@ -20,7 +20,6 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
-| none | Developer observability and agent feedback | feature, developer tools | In review; DV-01 to DV-04 implemented on stacked branches (#255 to #258), DV-02 to DV-04 host-observed | [#254](https://github.com/bldgtyp/ph-composer/issues/254) | [features/unscheduled/developer-observability/](features/unscheduled/developer-observability/README.md); browser evidence, bounded host waits, diagnostic reads and fault helpers; DV-03 depends on production PS-01 |
 | 3b | Thermal bridges | feature | Scoped, interviewed 2026-10-03; planned as P3b-01 to P3b-09, none authorized | none (local planning draft) | [features/phase-03b-thermal-bridges/](features/phase-03b-thermal-bridges/README.md); tracked in its [ledger](features/phase-03b-thermal-bridges/STATUS.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
 | 4 | ERV ducting | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/erv-ducting/](features/phase-04-mechanical/erv-ducting/README.md) |

@@ -10,7 +10,6 @@ requests. A packet moves into a phase directory when it is scheduled.
 
 | Packet | Kind | State |
 | --- | --- | --- |
-| [developer-observability](developer-observability/README.md) | feature, developer tools | Scoped; DV-01 to DV-04 accepted; first two stages independent, DV-03 depends on production PS-01 ([archived](../../archive/production-support/README.md)) |
 | [metr-export](metr-export/README.md) | feature | Deferred by D12; return milestone unscheduled. Holds every "Through PHX" acceptance step |
 | [sketchup-2023-floor](sketchup-2023-floor/README.md) | host gate | Requested |
 | [windows-support](windows-support/README.md) | host gate | Requested |

@@ -1,7 +1,7 @@
 # Developer observability DV-04: fault controls and the integrated case
 
 DATE: 2026-10-20
-CASES: DV5 and DV4 (owning acceptance: `planning/features/unscheduled/developer-observability/ACCEPTANCE.md`, rows D07, D08 and D09)
+CASES: DV5 and DV4 (owning acceptance: `planning/archive/developer-observability/ACCEPTANCE.md`, rows D07, D08 and D09)
 BUILD: branch `feat/developer-observability-dv-04`. Run 1 (`_private/host/dv04b/`, d564a1e9), run 2 (`dv04c/`, 80a1e89b, after the first review: a failed restore holds its baseline, leaky stopped runtimes count, failed_write confined to its active Model, lost_reply reads back the panel) run 3 (`dv04d/`, 4ef9fce4, after the second review: a restore without this process's baseline is not certified, unreadable preferences never match, receipts detached and whole) and run 4 (`dv04e/`, 00d0508f, after a read-through: a stale loaded revision is refused, fixtures limited to `_private/host/` or a temporary folder, only messages the runtime would act on are counted). Installed RBZ `dist/ph_composer.rbz` from each tree, compared with the installed extension by `acceptance_case.py begin`. No shipping file changed in this stage.
 HOST: SketchUp 2026 (26.1.188, Ruby 3.2.2) on macOS 26.7.1, fresh processes launched by `host_bridge.py launch`, synthetic copies of `blank-template.skp`.
 CONTROL: development bridge only (`host_bridge.py fault`, `wait-for`, `diagnostics`), driven by `_private/host/dv04-run.sh`. Raw JSON stays in `_private/host/dv04b/` to `dv04e/`. Every run passed every assertion; the tables give run 4.

@@ -1,7 +1,7 @@
 # Developer observability and agent feedback
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Codex
 ISSUE: [#254](https://github.com/bldgtyp/ph-composer/issues/254)
 
@@ -9,8 +9,8 @@ Give development agents a compact account of what ran, what failed and what stat
 actually reached. Build on the existing bridge, browser checks and acceptance receipts.
 
 Ed accepted all recommended steps and phases on 2026-10-19 and requested this separate feature
-packet so it can be implemented in its own chat. The plan is accepted; implementation has not
-started. Its ledger is independent of end-user production support.
+packet so it can be implemented in its own chat. The packet is complete and archived:
+all four stages merged to main on 2026-10-20 (#255 to #258); the ledger is [STATUS.md](STATUS.md). Its ledger is independent of end-user production support.
 
 ## Read order
 
@@ -32,7 +32,7 @@ started. Its ledger is independent of end-user production support.
 | DV-04 | Named fault helpers, restoration receipts and integrated tooling checks | Relevant PS-01/PS-02 fixes for product-failure scenarios |
 
 DV-01 and DV-02 can proceed before production support. DV-03 consumes
-[PS-01's diagnostic projection](../../../archive/production-support/CONTRACTS.md). DV-04 supplies reusable
+[PS-01's diagnostic projection](../production-support/CONTRACTS.md). DV-04 supplies reusable
 development controls; product-behavior assertions remain in the production-support packet.
 End-user PS-05 acceptance can use existing tools and does not wait for this packet.
 
