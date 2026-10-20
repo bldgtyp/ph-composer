@@ -345,3 +345,92 @@ test("an error whose stack cannot be read still fails the run and every resource
   assert.strictEqual(result.report.failure.message, "the original failure");
   assert.deepStrictEqual(log.slice(-2), ["close context", "close browser"]);
 });
+
+test("a listener that cannot read its event still records one, so the run fails", function () {
+  var collector = collect();
+  var page = fakePage("about:blank");
+  collector.attach(page);
+  page.emit("requestfailed", { url: function () { return "http://x/"; }, method: function () { return "GET"; },
+    failure: function () { throw new Error("detached request"); } });
+  var report = collector.finish();
+  assert.strictEqual(report.status, "failed");
+  assert.match(report.events[0].message, /could not read this requestfailed event: detached request/);
+});
+
+test("an expectation must name something: empty, missing and object patterns are refused, as is a flood", function () {
+  var collector = collect();
+  [undefined, "", Object.create(null), 7].forEach(function (pattern) {
+    assert.throws(function () { collector.expect("console", pattern); }, /RegExp or a non-empty string/);
+  });
+  for (var index = 0; index < evidence.LIMITS.expectations; index += 1) collector.expect("console", "x" + index);
+  assert.throws(function () { collector.expect("console", "one more"); }, /at most 100 expectations/);
+});
+
+test("events that arrive while contexts close are not judged", function () {
+  var collector = collect();
+  var page = fakePage("about:blank");
+  collector.attach(page);
+  collector.close();
+  page.emit("requestfailed", request("http://x/", "net::ERR_ABORTED"));
+  assert.strictEqual(collector.finish().status, "passed");
+});
+
+test("trimming keeps the unexpected events that failed the run", function () {
+  var collector = collect();
+  var page = fakePage("about:blank");
+  collector.attach(page);
+  collector.expect("console", "planned");
+  var long = new Array(evidence.LIMITS.message).join("p");
+  for (var index = 0; index < evidence.LIMITS.events - 1; index += 1) {
+    page.emit("console", { type: function () { return "error"; }, text: function () { return "planned " + long; },
+      location: function () { return { url: "http://127.0.0.1/" + long, lineNumber: 1 }; } });
+  }
+  page.emit("console", consoleMessage("error", "the stray one"));
+  var output = fs.mkdtempSync(path.join(os.tmpdir(), "phc-browser-evidence-keep-"));
+  var report = evidence.writeEvidence(collector.finish(), output).report;
+  assert.ok(report.trimmed_events > 0);
+  assert.ok(report.events.some(function (event) { return event.unexpected && event.message === "the stray one"; }));
+});
+
+test("oversized cleanup errors and an unreadable thrown value stay bounded and still close everything",
+  async function () {
+    var log = [];
+    var output = fs.mkdtempSync(path.join(os.tmpdir(), "phc-browser-evidence-cleanup-"));
+    var hostile = {
+      toJSON: function () { throw new Error("no JSON"); },
+      toString: function () { throw new Error("no text"); }
+    };
+    var browserType = fakeBrowserType(log, { contextCloseFails: true });
+    var huge = new Error(new Array(2000001).join("c"));
+    var launch = browserType.launch;
+    browserType.launch = function () {
+      return launch().then(function (browser) {
+        var newContext = browser.newContext;
+        browser.newContext = function () {
+          return newContext().then(function (context) {
+            context.close = function () { log.push("close context"); return Promise.reject(huge); };
+            return context;
+          });
+        };
+        return browser;
+      });
+    };
+    var result = await evidence.runCheck({ name: "cleanup", output: output, browserType: browserType },
+      async function (tools) {
+        for (var index = 0; index < 30; index += 1) await tools.newPage();
+        throw hostile;
+      });
+    assert.strictEqual(result.ok, false);
+    assert.match(result.report.failure.message, /non-Error value: \[object Object\]/);
+    assert.strictEqual(log.filter(function (entry) { return entry === "close context"; }).length, 30);
+    assert.strictEqual(log[log.length - 1], "close browser");
+    assert.strictEqual(result.report.artifacts.cleanup_errors.length, evidence.LIMITS.cleanupErrors);
+    assert.ok(fs.statSync(result.evidence.written[0]).size <= evidence.LIMITS.reportBytes);
+  });
+
+test("a check name is one plain path segment", async function () {
+  for (var name of ["../escape", "a/b", "", ".hidden"]) {
+    await assert.rejects(evidence.runCheck({ name: name, output: os.tmpdir(), browserType: fakeBrowserType([]) },
+      async function () {}), /plain name/);
+  }
+});
