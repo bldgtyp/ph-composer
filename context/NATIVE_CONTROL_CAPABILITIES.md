@@ -10,7 +10,7 @@ these are observed limitations of this run, not permanent limits of SketchUp or 
 
 | Claim/action | Preferred control and evidence | Limit or fallback |
 | --- | --- | --- |
-| Model/session, edit path, records and actual references | Development bridge readback; product mutations through public operations | Read after action in a separate call. An eval sleep prevents host timers from running. |
+| Model/session, edit path, records and actual references | Development bridge readback; product mutations through public operations | Read after action in a separate call. An eval sleep prevents host timers from running; wait with `host_bridge.py wait-for`, which polls a named read in separate calls under one deadline. `host_bridge.py diagnostics` reads the log for the same session or run. |
 | Native Undo/Redo, menus, keyboard and dialog behavior | Available native controller; compare records before/after through bridge | Bridge-triggered menu actions are asynchronous; callbacks called directly are offline simulation. |
 | Overlay/HUD, occlusion, hatch, hover and visual layout | Real window capture and native interaction | Bridge `shot` uses `View#write_image`, which omits overlay/tool/HUD drawing. |
 | Floating Overlays inspector | Fresh native snapshot, target the actual inspector and verify overlay enabled state | This inspector was inconsistently exposed/clickable. After one refreshed targeting attempt still fails, ask for one checkbox action, then machine readback. No repeated coordinate guessing. |
@@ -40,7 +40,9 @@ reported observation; bridge readback supplies the corresponding Model/task asse
 If a new controller can hold a button across calls or reliably address floating windows, verify it
 with a harmless synthetic case and update this reference. Do not require human help by habit.
 After development provider/fault overrides, restart the normal installed extension, verify no
-helper override/live runtime remains, and record the normal build's expected behavior.
+helper override/live runtime remains, and record the normal build's expected behavior. Arm a
+repeatable fault with `host_bridge.py fault arm` rather than a one-off prepend: its `restore` reads the
+target back against the arm baseline and must report `restored: true` before the fresh process.
 
 Sources: [Phase 2 groundwork observations](../planning/archive/phase-02-envelope/evidence/p2-01-groundwork.md),
 [Colour-by toggle continuation](../planning/archive/phase-01-faces-and-zones/evidence/p1-d-colour-by-continuation.md),

@@ -28,6 +28,7 @@ not a dependency. Its designPH integration is retired and is never reintroduced 
 | Contributor architecture, scripting and extension contracts | [`context/EXTENSIBILITY.md`](context/EXTENSIBILITY.md) |
 | External agent access, discovery, model reads and writes | [`context/AGENT_INTERFACE.md`](context/AGENT_INTERFACE.md) |
 | Build, install, test and host procedures | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md), implemented commands and remaining host gates |
+| Development host and browser tooling: bridge, bounded waits, diagnostic reads, fault controls, browser failure evidence | [`tools/hostkit/.index.md`](tools/hostkit/.index.md) and [`tools/ui-preview/.index.md`](tools/ui-preview/.index.md) |
 | Native acceptance and resuming host gates | [`.agents/skills/ph-composer-native-acceptance/SKILL.md`](.agents/skills/ph-composer-native-acceptance/SKILL.md), then the owning packet and case ledger |
 | Current delivery state or next authorized work | [`planning/STATUS.md`](planning/STATUS.md), then the owning packet |
 | Planning documents or status changes | [`planning/.instructions.md`](planning/.instructions.md) |
@@ -88,6 +89,13 @@ the owning packet.
   against the specified model and host state, often from a fresh process. Offline tests, an
   installed RBZ or a bridge command alone do not satisfy it. Ask Ed to operate the host only when
   the bridge and native controls cannot reach the necessary step.
+- Observe the host with the development tooling rather than ad hoc evals: wait for deferred work with
+  `host_bridge.py wait-for` (never a sleep inside an eval), read what happened with
+  `host_bridge.py diagnostics`, and reproduce a failure with `host_bridge.py fault`, whose `restore` must
+  report `restored: true` before a fresh normal process closes the case. Their JSON results are
+  evidence files for a case. Browser checks run through the shared collector in
+  `tools/ui-preview/support/browser_evidence.cjs`; a new check uses it and declares any error it
+  provokes with `expect`.
 - Keep context, planning and status documents synchronized with verified work. Distinguish
   implemented, host-verified, merged, released and publicly supported.
 

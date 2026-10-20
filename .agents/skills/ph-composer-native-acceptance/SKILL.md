@@ -32,6 +32,8 @@ accepted decisions, the existing independent reviewer and unchanged evidence wit
    refusal, rollback, Undo/Redo and reopen checks; do not infer them from aggregate object counts.
    Distinguish queued, translating and completed states before a lifecycle action. An explicit
    tools-only delay can make a pending state reachable but must not become shipping behavior.
+   Wait for deferred work with `host_bridge.py wait-for` and read the log with
+   `host_bridge.py diagnostics` (`--run-id` for an export); keep their `--json` results as evidence.
 5. Record assertion-level observations, outcome and evidence in a ledger result
    (`acceptance_case.py finish <case>` reads `<case>/observations.json`). Keep raw Models,
    screenshots, full traces and real data in gitignored `_private/`; commit synthetic summary
@@ -51,7 +53,9 @@ recording cost or tool-choice results; a run that read the operator's own notes 
 is recorded as contaminated. In the 03a1 C16 run, Claude Code called an advisor three times and Codex
 read the operator's own workflow notes in every run.
 
-Restore normal composition after private fault/provider overrides: fresh process with the normal
+Reproduce a failure with `host_bridge.py fault arm|observe|restore` on a fixture under
+`_private/host/`; a `restore` that does not report `restored: true` stops the case. Then restore normal
+composition after private fault/provider overrides: fresh process with the normal
 installed RBZ, no development monkeypatches or live runtimes, clean saved synthetic Model and
 expected normal refusal/success. Check open documents before `launch`, which can quit/kill the host.
 Never discard other work. Restoration is a separate observed result, not an assumed teardown.
