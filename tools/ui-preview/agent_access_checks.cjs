@@ -1,0 +1,42 @@
+/* The Agent Access New token form's layout in Chromium, on the dialog's own page with synthetic state. Each
+   checkbox must sit on its label's row, left of the label, so it cannot read as the previous row's (#242).
+   This does not prove token issue or the listener; those are tests/agent_access_*_test.rb and host gates. */
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
+const BASE = `http://127.0.0.1:${process.env.UI_PREVIEW_PORT || "8765"}/src/ph_composer/html/agent_access/`;
+const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE || fs.mkdtempSync(path.join(os.tmpdir(), "phc-agent-access-"));
+fs.mkdirSync(output, { recursive: true });
+const STATE = { type: "access.state", payload: { state: "readable", tokens: [],
+  offered: ["read", "view", "model_write", "setup", "export", "capture"], server: { state: "stopped" },
+  model: { key: "model_1", name: "Reference.skp" } } };
+check({ name: "agent_access", output }, async ({ newPage, step }) => {
+  const page = await newPage({ viewport: { width: 560, height: 700 } });
+  step("open the Agent Access page with every capability offered");
+  // The shipped page names no icon, so Chrome asks for /favicon.ico; answer it here rather than ship a data: icon.
+  await page.route("**/favicon.ico", route => route.fulfill({ status: 204 }));
+  await page.goto(`${BASE}index.html`);
+  await page.evaluate(state => PhComposerUI.get("agent_access/page").receive(state), STATE);
+  await page.getByRole("button", { name: "New token", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("heading", { name: "New agent token" }).waitFor();
+  for (const width of [560, 360]) {
+    step(`checkbox rows at ${width} px`);
+    await page.setViewportSize({ width, height: 700 });
+    const rows = await dialog.locator(".agent-access-capability").evaluateAll(nodes => nodes.map(row => {
+      const box = row.querySelector("input").getBoundingClientRect();
+      const label = row.querySelector("strong").getBoundingClientRect();
+      return { name: row.querySelector("strong").textContent, boxTop: box.top, boxBottom: box.bottom,
+        boxRight: box.right, labelLeft: label.left, labelTop: label.top, labelBottom: label.bottom };
+    }));
+    assert.equal(rows.length, 7, "six capabilities and This Model only");
+    for (const row of rows) {
+      assert(row.boxRight <= row.labelLeft, `${row.name}: box left of its label at ${width}`);
+      assert(row.boxBottom > row.labelTop && row.boxTop < row.labelBottom, `${row.name}: box on its label's line at ${width}`);
+    }
+    await page.screenshot({ path: path.join(output, `new-token-${width}.png`) });
+  }
+  return `Agent Access browser checks passed; evidence: ${output}`;
+});
