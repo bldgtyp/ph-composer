@@ -1459,6 +1459,7 @@
       "native_control_required": true,
       "paths": [
         "src/ph_composer/html/support/*",
+        "src/ph_composer/html/overlay.js",
         "src/ph_composer/html/panel.js",
         "src/ph_composer/shell/panel.rb"
       ]

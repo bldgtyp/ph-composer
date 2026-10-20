@@ -261,6 +261,19 @@ test("an action menu runs its item once, closes, and marks destructive items", f
   assert.strictEqual(menu.trigger.getAttribute("aria-label"), "Part actions");
 });
 
+test("a dialog opened from an action menu item returns focus to the menu's trigger", function () {
+  var dialog = ui.formDialog("", function () { dialog.closeModal(); });
+  var menu = new ui.ActionMenu("More actions");
+  context.document.body.appendChild(menu.root); context.document.body.appendChild(dialog);
+  var item = menu.add("Reset display preferences…", function () { dialog.openModal(); });
+  menu.trigger.listeners.click({});
+  item.focus();
+  item.listeners.click({});
+  assert.strictEqual(menu.bubble.panel.hidden, true);
+  dialog.closeModal();
+  assert.ok(context.document.activeElement === menu.trigger, "the hidden item is never the dialog's opener");
+});
+
 test("Escape closes a bubble and returns focus; a press outside closes it without moving focus", function () {
   var trigger = dom.element("button");
   context.document.body.appendChild(trigger);
