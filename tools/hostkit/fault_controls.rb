@@ -28,6 +28,8 @@ module PhComposerFaults
   PREFERENCE_KEYS = %w[unit_system colour_by_mode table_views dimension_formats].freeze
   SYNTHETIC = %r{/_private/|\A/private/tmp/|\A/tmp/}.freeze
   MAX_HITS = 20
+  # What the preference read answers for a key never stored; nil is reserved for a value the host cannot read.
+  ABSENT = "(absent)"
 
   # The interceptors. Each asks whether its fault is live for this call and, if so, records the hit and
   # answers the fault's result instead of the normal one.
@@ -70,7 +72,7 @@ module PhComposerFaults
       return document(name, "refused", :error => problem) if problem
 
       install(name)
-      armed[name] = { "target" => target, "baseline" => baseline(name, target), "hits" => [], "count" => 0,
+      armed[name] = { "target" => detached(target), "baseline" => baseline(name, target), "hits" => [], "count" => 0,
                       "spent" => false, "live" => true }
       document(name, "armed")
     end
@@ -85,14 +87,22 @@ module PhComposerFaults
       return document(name, "refused", :error => "unknown fault") unless NAMES.include?(name)
 
       state = armed[name]
-      return document(name, "inert", :restore => { "restored" => true, "was_armed" => false }) unless state
+      # Without this process's arm baseline (SketchUp restarted, or the fault was never armed here) nothing can
+      # be read back, so restoration is not certified.
+      unless state
+        unverified = { "restored" => false, "was_armed" => false,
+                       "problems" => ["no arm baseline in this process, so restoration cannot be read back"] }
+        return document(name, "inert", :restore => unverified)
+      end
 
       state["live"] = false
       problems = residual(name, state)
       outcome = { "restored" => problems.empty?, "was_armed" => true, "problems" => problems,
                   "interceptions" => state["count"] }
+      # The receipt is built from the completed state before a passing restore lets it go.
+      receipt = document(name, problems.empty? ? "inert" : "restore_failed", :restore => outcome)
       armed.delete(name) if problems.empty?
-      document(name, status_of(name), :restore => outcome)
+      receipt
     end
 
     # Called by an interceptor: true when `name` is armed for this call, after recording the hit.
@@ -159,9 +169,12 @@ module PhComposerFaults
 
     # A fault is armed only on a clean target: no live runtime for the session, nothing intercepted yet.
     def baseline_problem(name, target)
-      return unless name == "silent_runtime" && live_runtimes(target["session"]).positive?
+      if name == "silent_runtime" && live_runtimes(target["session"]).positive?
+        return "a runtime is already live for this session; the baseline is not clean"
+      end
+      return unless name == "failed_write" && stored_preference(target["key"]).nil?
 
-      "a runtime is already live for this session; the baseline is not clean"
+      "the stored #{target['key']} cannot be read back, so it cannot be a baseline"
     end
 
     def baseline(name, target)
@@ -184,7 +197,8 @@ module PhComposerFaults
         live = live_runtimes(target["session"])
         live.zero? ? [] : ["#{live} runtime(s) still live for the session"]
       when "failed_write"
-        if stored_preference(target["key"]) == state.dig("baseline", "stored")
+        stored = stored_preference(target["key"])
+        if !stored.nil? && stored == state.dig("baseline", "stored")
           []
         else
           ["the stored #{target['key']} differs from its baseline"]
@@ -194,8 +208,14 @@ module PhComposerFaults
       end
     end
 
+    # The stored value, ABSENT when never stored, or nil when the host cannot return it (it reads a string
+    # holding a double quote as nil): two different unreadable values must not compare equal.
     def stored_preference(key)
-      Sketchup.read_default(PhComposer::Preferences::SECTION, key, nil)
+      Sketchup.read_default(PhComposer::Preferences::SECTION, key, ABSENT)
+    end
+
+    def detached(value)
+      Marshal.load(Marshal.dump(value))
     end
 
     def matches?(name, target, call)
@@ -233,15 +253,16 @@ module PhComposerFaults
 
     def document(name, status, error: nil, restore: nil)
       state = armed[name]
-      {
+      detached({
         "schema" => SCHEMA, "kind" => KIND, "fault" => name.to_s[0, 32], "status" => status, "error" => error,
-        "armed" => !state.nil?, "target" => state && state["target"], "baseline" => state && state["baseline"],
+        "armed" => state ? state["live"] : false, "pending_restore" => state ? !state["live"] : false,
+        "target" => state && state["target"], "baseline" => state && state["baseline"],
         "hits" => state ? state["hits"].dup : [], "interceptions" => state ? state["count"] : 0,
         "omitted_hits" => state ? state["count"] - state["hits"].length : 0,
         "spent" => state ? state["spent"] : nil,
         "interceptor_installed" => installed.fetch(name, false), "restore" => restore,
         "fresh_process_required" => installed.fetch(name, false)
-      }.compact
+      }.compact)
     end
   end
 end

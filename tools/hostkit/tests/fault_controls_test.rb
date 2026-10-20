@@ -133,6 +133,32 @@ class FaultControlsTest < PhComposerTestCase
     assert_equal "inert", repaired.fetch("status")
   end
 
+  def test_an_unreadable_preference_is_neither_a_baseline_nor_a_read_back
+    defaults = Sketchup.instance_variable_get(:@defaults) || Sketchup.instance_variable_set(:@defaults, {})
+    defaults[[PhComposer::Preferences::SECTION, "table_views"]] = 'one "quoted"'
+    assert_match(/cannot be read back/, Faults.arm("failed_write", "session" => @session.id, "key" => "table_views")
+                                              .fetch("error"))
+
+    defaults.delete([PhComposer::Preferences::SECTION, "table_views"])
+    Faults.arm("failed_write", "session" => @session.id, "key" => "table_views")
+    defaults[[PhComposer::Preferences::SECTION, "table_views"]] = 'another "quoted"'
+    refute Faults.restore("failed_write").dig("restore", "restored")
+  end
+
+  def test_receipts_keep_the_evidence_and_share_nothing_with_the_controls
+    Sketchup.write_default(PhComposer::Preferences::SECTION, "unit_system", "IP")
+    armed = Faults.arm("failed_write", "session" => @session.id, "key" => "unit_system")
+    armed.fetch("baseline")["stored"] = "SI"
+    Faults.observe("failed_write").fetch("baseline")["stored"] = "SI"
+    Sketchup.write_default(PhComposer::Preferences::SECTION, "unit_system", "SI")
+
+    receipt = Faults.restore("failed_write")
+    assert_equal "IP", receipt.dig("baseline", "stored"), "a changed receipt did not change the baseline"
+    assert_equal [1, false, true],
+                 [receipt.fetch("interceptions"), receipt.fetch("armed"), receipt.fetch("pending_restore")]
+    assert_equal({ "session" => @session.id, "key" => "unit_system" }, receipt.fetch("target"))
+  end
+
   def test_failed_write_leaves_another_models_writes_alone
     Faults.arm("failed_write", "session" => @session.id, "key" => "unit_system")
     Sketchup.active_model = Sketchup::Model.new
@@ -191,7 +217,9 @@ class FaultControlsTest < PhComposerTestCase
   end
 
   def test_restore_of_a_fault_never_armed_says_so
-    assert_equal({ "restored" => true, "was_armed" => false }, Faults.restore("lost_reply").fetch("restore"))
+    restore = Faults.restore("lost_reply").fetch("restore")
+    refute restore.fetch("restored"), "with no arm baseline here, nothing can be read back"
+    assert_match(/no arm baseline in this process/, restore.fetch("problems").first)
     assert_equal "refused", Faults.restore("unknown").fetch("status")
   end
 
