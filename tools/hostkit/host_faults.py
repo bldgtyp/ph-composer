@@ -21,6 +21,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import host_diagnostics
+
 CONTROLS = Path(__file__).resolve().parent / "fault_controls.rb"
 NAMES = ("lost_reply", "silent_runtime", "failed_write")
 OPERATIONS = ("arm", "observe", "restore")
@@ -67,7 +69,8 @@ def ruby_call(operation: str, name: str, target: dict[str, Any]) -> str:
         pairs = ", ".join(f"{json.dumps(key)} => {json.dumps(value)}" for key, value in target.items())
         arguments += f", {{{pairs}}}"
     return (
-        f"load {json.dumps(str(CONTROLS))} unless defined?(PhComposerFaults); PhComposerFaults.{operation}({arguments})"
+        f"load {host_diagnostics.ruby_string(str(CONTROLS))} unless defined?(PhComposerFaults); "
+        f"PhComposerFaults.{operation}({arguments})"
     )
 
 
