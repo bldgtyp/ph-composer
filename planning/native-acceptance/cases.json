@@ -1360,6 +1360,123 @@
         "tests/spaces_height_from_solid*"
       ],
       "native_control_required": true
+    },
+    {
+      "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
+      "id": "PS1",
+      "label": "Incident: an unexpected action failure shows Get help, its reference matches the log record, frames are extension-relative, no message text",
+      "mode": "mixed",
+      "native_control_required": true,
+      "paths": [
+        "src/ph_composer/core/diagnostics.rb",
+        "src/ph_composer/shell/dispatch.rb",
+        "src/ph_composer/shell/panel.rb",
+        "src/ph_composer/html/panel.js"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
+      "id": "PS2",
+      "label": "Page faults: a render failure, an uncaught error and a rejected promise each reach the log; other sections and the footer link keep working",
+      "mode": "mixed",
+      "native_control_required": true,
+      "paths": [
+        "src/ph_composer/html/panel.js",
+        "src/ph_composer/shell/panel_diagnostics.rb",
+        "src/ph_composer/core/diagnostics.rb"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
+      "id": "PS3",
+      "label": "Runtime deadlines: a runtime that never readies and one that goes silent end the export with their codes, Cancel usable, resources released (lifecycle and API assertions; bridge control suffices)",
+      "mode": "mixed",
+      "native_control_required": false,
+      "paths": [
+        "src/ph_composer/export/task.rb",
+        "src/ph_composer/runtime/*",
+        "src/ph_composer/html/runtime/*"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
+      "id": "PS4",
+      "label": "Lost reply: Check status answers a committed change once with no second Undo step; a request never received answers not received",
+      "mode": "mixed",
+      "native_control_required": true,
+      "paths": [
+        "src/ph_composer/html/request.js",
+        "src/ph_composer/html/panel.js",
+        "src/ph_composer/shell/panel.rb",
+        "src/ph_composer/shell/panel_requests.rb",
+        "src/ph_composer/shell/dispatch.rb",
+        "src/ph_composer/session/outcome_store.rb"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
+      "id": "PS5",
+      "label": "Preferences: a refused write is shown as not saved; Reset display preferences survives restart and leaves other stores",
+      "mode": "mixed",
+      "native_control_required": true,
+      "paths": [
+        "src/ph_composer/shell/preferences.rb",
+        "src/ph_composer/shell/support_dialog.rb"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
+      "id": "PS6",
+      "label": "Help & Diagnostics window: opens from the menu with a document open and the panel closed (SketchUp disables extension menus with no document), message-box fallback, degraded log shown",
+      "mode": "mixed",
+      "native_control_required": true,
+      "paths": [
+        "src/ph_composer/shell/support_dialog.rb",
+        "src/ph_composer/shell/commands.rb",
+        "src/ph_composer/html/support/*",
+        "src/ph_composer/shell/support_report.rb",
+        "src/ph_composer/core/diagnostics.rb"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
+      "id": "PS7",
+      "label": "Support report: preview, clipboard and saved file byte-equal; Save sheet cancel writes nothing; Clear history keeps a saved report",
+      "mode": "mixed",
+      "native_control_required": true,
+      "paths": [
+        "src/ph_composer/shell/support_report.rb",
+        "src/ph_composer/shell/support_dialog.rb",
+        "src/ph_composer/html/support/*",
+        "src/ph_composer/core/diagnostics.rb"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
+      "id": "PS8",
+      "label": "Failure views and keyboard: messages say what changed and the next step; keyboard route and 360x520 window; Reopen panel explains loss",
+      "mode": "mixed",
+      "native_control_required": true,
+      "paths": [
+        "src/ph_composer/html/support/*",
+        "src/ph_composer/html/panel.js",
+        "src/ph_composer/shell/panel.rb"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/production-support/ACCEPTANCE.md",
+      "id": "PS9",
+      "label": "Help: offline help opens, Online help and Report a problem open their addresses after the public warning",
+      "mode": "mixed",
+      "native_control_required": true,
+      "paths": [
+        "src/ph_composer/help/*",
+        "docs/HELP.md",
+        "src/ph_composer/shell/support_dialog.rb",
+        "src/ph_composer/shell/support_report.rb",
+        "src/ph_composer/core/build_identity.rb",
+        "tools/rbz/build.py"
+      ]
     }
   ]
 }

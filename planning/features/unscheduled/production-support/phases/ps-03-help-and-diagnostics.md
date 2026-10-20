@@ -12,7 +12,7 @@ them in the PR. The [PRD](../PRD.md) owns behavior; this file records the screen
 
 1. A failure notice in the panel carries its incident reference in Details. Its action, Get help,
    opens this window at that incident. A lost reply keeps its own Check status action (PS-02b).
-2. Extensions > PH-Composer > Help & Diagnostics… opens the same window with no Model, no panel
+2. Extensions > PH-Composer > Help and Diagnostics… opens the same window with no Model, no panel
    and no Python. The panel footer has a quiet Help & Diagnostics link to it.
 3. The window reads build, manifest and log health when it opens. Nothing here writes the Model.
 4. Copy diagnostics and Save support report open one preview. Copy and Save act on that preview.

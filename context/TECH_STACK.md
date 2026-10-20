@@ -422,7 +422,8 @@ dispatcher, an observer callback, a task tick, or the Export run. Input coercion
 ## Help & Diagnostics
 
 `shell/support_dialog.rb` owns a small HtmlDialog of its own (`html/support/`), opened from
-Extensions > PH-Composer > Help & Diagnostics…, from the panel footer, or from Get help on a failure
+Extensions > PH-Composer > Help and Diagnostics… (SketchUp strips `&` from menu titles), from the
+panel footer, or from Get help on a failure
 notice that carries `detail.incident` (`panel.support`). It needs no Model, no panel and no Python.
 If its page cannot be built or does not report ready within five seconds, a native message box gives
 the version, build, log folder and help address. It reads build, manifest and log health when it

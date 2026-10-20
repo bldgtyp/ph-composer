@@ -24,7 +24,7 @@ body:
     attributes:
       label: Support report
       description: >-
-        In SketchUp, open Extensions > PH-Composer > Help & Diagnostics, choose Copy diagnostics,
+        In SketchUp, open Extensions > PH-Composer > Help and Diagnostics, choose Copy diagnostics,
         review the preview and paste it here, or drag a saved report file into this box.
   - type: input
     id: version

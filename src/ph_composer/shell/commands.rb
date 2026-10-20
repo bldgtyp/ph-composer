@@ -9,7 +9,8 @@ module PhComposer
   # with no line added below (context/EXTENSIBILITY.md).
   module Commands
     OPEN_PANEL = "Open PH-Composer"
-    HELP = "Help & Diagnostics…"
+    # SketchUp drops "&" (and "&&") from menu titles, so the menu spells the window's name out.
+    HELP = "Help and Diagnostics…"
     COLOUR_BY = "Colour by"
     COLOUR_BY_OFF = "Off"
 

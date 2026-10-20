@@ -27,6 +27,13 @@ PS-05 runs A01 to A10 as applicable on a fresh installed RBZ, with the release r
 Logging, support reads and report actions create no SKP writes, revision advance, Undo entry or
 implicit save; all development helpers are absent afterward.
 
+## Proposed host deviation (pending Ed)
+
+A07's "without requiring a Model" holds for the window, not for the native menu: SketchUp for
+macOS disables every extension menu item while no document is open (measured 2026-10-19, PS-05
+run). Proposed: accept the menu route with a document open and the panel closed; with no document, the
+panel footer link and opening any document are the routes, as the shipped help says.
+
 ## Explicit unsuccessful endings
 
 Exercise no recent events, unreadable history, logging unavailable, unsupported host, unavailable

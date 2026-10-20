@@ -23,6 +23,7 @@ class SupportDialogTest < PhComposerTestCase
     PhComposer::Commands.install
     Sketchup.active_model = nil
 
+    refute_includes PhComposer::Commands::HELP, "&", "SketchUp drops an ampersand from a menu title"
     item = submenu_item(PhComposer::Commands::HELP)
     item.last.call
 
