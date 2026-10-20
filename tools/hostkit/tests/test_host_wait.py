@@ -1,0 +1,211 @@
+"""The bounded host wait without SketchUp: a fake read and a fake clock stand in for the bridge and time.
+
+What is under test is the wait's own decisions: separate polls, the deadline and per-call budget, and one
+distinct ending for each way a wait can stop, each carrying the last state it observed.
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import unittest
+from datetime import UTC, datetime
+from typing import Any
+
+import host_wait as hw
+
+SESSION = "0f8a6c2e-1b3d-4e5f-8a9b-0c1d2e3f4a5b"
+OTHER = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
+CALLER = "0123456789abcdef0123456789abcdef"
+TASK = "export_0123456789abcdef01234567"
+
+
+class FakeClock:
+    """Advances only when the wait sleeps, or when a read takes time."""
+
+    def __init__(self) -> None:
+        self.now = 500.0
+        self.sleeps: list[float] = []
+
+    def monotonic(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+        self.now += seconds
+
+
+class Host:
+    """A scripted host: each read returns the next answer (or raises it), after `read_cost` seconds."""
+
+    def __init__(self, clock: FakeClock, answers: list[Any], read_cost: float = 0.0) -> None:
+        self.clock = clock
+        self.answers = list(answers)
+        self.read_cost = read_cost
+        self.calls: list[tuple[str, float]] = []
+
+    def read(self, code: str, timeout: float) -> Any:
+        self.calls.append((code, timeout))
+        self.clock.now += self.read_cost
+        answer = self.answers.pop(0) if len(self.answers) > 1 else self.answers[0]
+        if isinstance(answer, BaseException):
+            raise answer
+        return answer
+
+
+def run(name: str, params: dict[str, str], answers: list[Any], **options: Any) -> tuple[hw.WaitResult, Host, FakeClock]:
+    clock = FakeClock()
+    host = Host(clock, answers, options.pop("read_cost", 0.0))
+    result = hw.wait_for(
+        name,
+        params,
+        host.read,
+        clock=clock.monotonic,
+        sleep=clock.sleep,
+        now=lambda: datetime(2026, 10, 20, tzinfo=UTC),
+        **options,
+    )
+    return result, host, clock
+
+
+def session(busy: str | None = None, revision: int = 3, active: bool = True, **extra: Any) -> dict[str, Any]:
+    return {"session": "open", "active": active, "revision": revision, "busy": busy, **extra}
+
+
+class EndingsTest(unittest.TestCase):
+    def test_a_condition_met_after_separate_polls_reports_the_polls_and_the_state_it_met(self) -> None:
+        busy = "This Model has deferred work that has not finished."
+        result, host, clock = run("session_settled", {"session": SESSION}, [session(busy), session(busy), session()])
+
+        self.assertEqual(result.ending, "met")
+        self.assertEqual(result.polls, 3)
+        self.assertEqual(len(host.calls), 3, "each poll is its own host call, so host timers run between them")
+        self.assertEqual(clock.sleeps, [0.5, 0.5])
+        self.assertEqual(result.last_observed, session())
+        self.assertIn(SESSION, host.calls[0][0])
+
+    def test_the_deadline_bounds_the_wait_and_the_timeout_keeps_the_last_observed_state(self) -> None:
+        busy = session("Another change to this Model is still running.")
+        result, _host, clock = run("session_settled", {"session": SESSION}, [busy], deadline_s=2.0, interval_s=0.75)
+
+        self.assertEqual(result.ending, "timed_out")
+        self.assertEqual(result.elapsed_ms, 2000)
+        self.assertEqual(clock.sleeps, [0.75, 0.75, 0.5], "the last sleep is cut to what remains")
+        self.assertEqual(result.last_observed, busy)
+
+    def test_every_read_is_given_only_the_remaining_budget(self) -> None:
+        busy = session("busy")
+        _result, host, _clock = run("session_settled", {"session": SESSION}, [busy], deadline_s=3.0, read_cost=1.0)
+
+        self.assertEqual([timeout for _code, timeout in host.calls], [3.0, 1.5])
+
+    def test_a_read_that_outlasts_the_budget_is_a_timeout_not_a_lost_bridge(self) -> None:
+        result, _host, _clock = run("session_settled", {"session": SESSION}, [TimeoutError("timed out")])
+
+        self.assertEqual(result.ending, "timed_out")
+
+    def test_a_revision_compares_for_equality_only(self) -> None:
+        unchanged, _host, _clock = run(
+            "revision_changed", {"session": SESSION, "revision": "3"}, [session(revision=3)], deadline_s=1.0
+        )
+        changed, _host, _clock = run("revision_changed", {"session": SESSION, "revision": "3"}, [session(revision=2)])
+
+        self.assertEqual(unchanged.ending, "timed_out")
+        self.assertEqual(changed.ending, "met")
+
+    def test_a_closed_session_and_a_switched_model_are_distinct_endings_and_neither_is_followed(self) -> None:
+        missing, missing_host, _clock = run(
+            "session_settled", {"session": SESSION}, [session("x"), {"session": "missing"}]
+        )
+        switched, switched_host, _clock = run("session_settled", {"session": SESSION}, [session(active=False)])
+
+        self.assertEqual(missing.ending, "session_missing")
+        self.assertEqual(missing.last_observed, {"session": "missing"})
+        self.assertEqual(switched.ending, "session_switched")
+        self.assertEqual(len(missing_host.calls), 2)
+        self.assertEqual(len(switched_host.calls), 1, "no further read targets the newly active Model")
+
+    def test_an_export_task_ends_when_it_has_an_outcome_and_a_missing_task_is_named(self) -> None:
+        params = {"session": SESSION, "caller": CALLER, "task": TASK}
+        running = session(task={"stage": "translating", "count": 2, "cancellable": True, "state": None})
+        done = session(task={"stage": "complete", "count": 2, "cancellable": False, "state": "complete"})
+        finished, _host, _clock = run("export_finished", params, [running, done])
+        absent, _host, _clock = run("export_finished", params, [session(task=None)])
+
+        self.assertEqual(finished.ending, "met")
+        self.assertEqual(finished.polls, 2)
+        self.assertEqual(absent.ending, "target_missing")
+
+    def test_a_probe_condition_needs_no_session_and_reports_an_unloaded_probe(self) -> None:
+        pending = {"state": "running", "verdict": "pending"}
+        met, _host, _clock = run("runtime_probe_finished", {}, [pending, {"state": "running", "verdict": "PASS"}])
+        unloaded, _host, _clock = run("runtime_probe_finished", {}, [{"probe": "not_loaded"}])
+
+        self.assertEqual(met.ending, "met")
+        self.assertEqual(unloaded.ending, "target_missing")
+
+    def test_a_host_error_and_a_lost_bridge_are_distinct_endings(self) -> None:
+        failed, _host, _clock = run("session_settled", {"session": SESSION}, [hw.ReadError("NameError: PhComposer")])
+        lost, _host, _clock = run(
+            "session_settled", {"session": SESSION}, [session("x"), ConnectionRefusedError("refused")]
+        )
+
+        self.assertEqual(failed.ending, "read_failed")
+        self.assertIn("NameError", failed.error or "")
+        self.assertEqual(lost.ending, "bridge_unavailable")
+        self.assertEqual(lost.last_observed, session("x"), "the last observed state survives the lost bridge")
+
+    def test_an_interrupt_cancels_the_observation_only(self) -> None:
+        result, _host, _clock = run("session_settled", {"session": SESSION}, [session("x"), KeyboardInterrupt()])
+
+        self.assertEqual(result.ending, "cancelled")
+        self.assertEqual(result.polls, 2)
+
+    def test_an_unknown_condition_or_malformed_parameter_is_refused_before_any_host_call(self) -> None:
+        cases = {
+            "no_such_condition": {"session": SESSION},
+            "session_settled": {"session": "'; Sketchup.active_model.entities.clear!; '"},
+            "revision_changed": {"session": SESSION},
+        }
+        for name, params in cases.items():
+            with self.subTest(name=name):
+                result, host, _clock = run(name, params, [session()])
+                self.assertEqual(result.ending, "invalid_condition")
+                self.assertEqual(host.calls, [])
+        extra, _host, _clock = run("session_settled", {"session": SESSION, "task": TASK}, [session()])
+        self.assertEqual(extra.error, "session_settled does not take task")
+
+
+class DocumentTest(unittest.TestCase):
+    def test_the_document_is_versioned_bounded_and_says_it_is_an_observation(self) -> None:
+        huge = session(note="x" * (hw.MAX_OBSERVED_CHARS + 50))
+        result, _host, _clock = run("session_settled", {"session": SESSION}, [huge], deadline_s=0.5)
+        document = result.document()
+
+        self.assertEqual(document["schema"], hw.SCHEMA)
+        self.assertEqual(document["kind"], hw.KIND)
+        self.assertEqual(document["ending"], "met")
+        self.assertTrue(document["met"])
+        self.assertTrue(document["last_observed"]["truncated"])
+        self.assertEqual(len(document["last_observed"]["prefix"]), hw.MAX_OBSERVED_CHARS)
+        self.assertEqual(document["observed_at"], "2026-10-20T00:00:00+00:00")
+        self.assertIn("observation only", document["note"])
+        self.assertIn("session_settled: met after 0 ms and 1 poll(s)", result.summary())
+
+
+@unittest.skipUnless(shutil.which(os.environ.get("RUBY", "ruby")), "needs Ruby to parse the reads")
+class ReadSyntaxTest(unittest.TestCase):
+    def test_every_condition_read_is_valid_ruby(self) -> None:
+        params = {"session": SESSION, "revision": "3", "caller": CALLER, "task": TASK}
+        for name, condition in hw.CONDITIONS.items():
+            with self.subTest(name=name):
+                code = condition.read({key: params[key] for key in condition.params})
+                done = subprocess.run(
+                    [os.environ.get("RUBY", "ruby"), "-c", "-e", code], capture_output=True, text=True, check=False
+                )
+                self.assertEqual(done.returncode, 0, done.stderr)
+
+
+if __name__ == "__main__":
+    unittest.main()

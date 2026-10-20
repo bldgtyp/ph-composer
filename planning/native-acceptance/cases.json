@@ -1478,6 +1478,29 @@
         "src/ph_composer/core/build_identity.rb",
         "tools/rbz/build.py"
       ]
+    },
+    {
+      "authority": "planning/features/unscheduled/developer-observability/ACCEPTANCE.md",
+      "id": "DV1",
+      "label": "Bounded wait: a named condition observes timer-driven host work through separate polls, targets the original session and mutates nothing",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "tools/hostkit/host_wait.py",
+        "tools/hostkit/host_bridge.py",
+        "tools/hostkit/runtime_probe.rb"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/developer-observability/ACCEPTANCE.md",
+      "id": "DV2",
+      "label": "Wait endings: timeout, invalid condition, Model switch and session disposal end distinctly with the last observed state",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "tools/hostkit/host_wait.py",
+        "tools/hostkit/host_bridge.py"
+      ]
     }
   ]
 }

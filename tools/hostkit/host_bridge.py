@@ -17,10 +17,12 @@ and waiting for deferred work.
     uv run tools/hostkit/host_bridge.py shot <name> --dir <evidence-dir>
     uv run tools/hostkit/host_bridge.py key 53            # Escape, through System Events
     uv run tools/hostkit/host_bridge.py console --tail 40  # what the Ruby Console showed
+    uv run tools/hostkit/host_bridge.py wait-for session_settled --param session=<uuid> --deadline 30 --json
     uv run tools/hostkit/host_bridge.py quit
 
 `eval` prints captured stdout, then the result (JSON when the value serializes, else `inspect`).
-Exit status 1 on a Ruby error, 2 when the bridge is unreachable.
+Exit status 1 on a Ruby error, 2 when the bridge is unreachable. `wait-for` polls a named read-only
+condition in separate host calls (tools/hostkit/host_wait.py) and exits 0 only when it was met.
 """
 
 from __future__ import annotations
@@ -37,6 +39,10 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+
+# ty checks a PEP 723 script in its own environment, without the script's directory that Python puts on
+# sys.path at run time, so this sibling import resolves when run and not for ty.
+import host_wait  # ty: ignore[unresolved-import]
 
 SUPPORT = Path.home() / "Library" / "Application Support"
 APP = Path("/Applications/SketchUp {version}/SketchUp.app")
@@ -412,6 +418,40 @@ def run_console(args: argparse.Namespace, version: str) -> None:
     print(tail(path, args.tail))
 
 
+def configure_wait_for(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("condition", help=f"one of {', '.join(sorted(host_wait.CONDITIONS))}")
+    parser.add_argument("--param", action="append", default=[], metavar="NAME=VALUE")
+    parser.add_argument("--deadline", type=float, default=host_wait.DEFAULT_DEADLINE_S, help="overall seconds")
+    parser.add_argument("--interval", type=float, default=host_wait.DEFAULT_INTERVAL_S, help="seconds between polls")
+    parser.add_argument("--json", action="store_true", help="print the versioned result document")
+
+
+def bridge_read(version: str) -> Callable[[str, float], Any]:
+    """One wait poll: a single eval whose socket timeout is the wait's remaining budget."""
+
+    def read(code: str, timeout: float) -> Any:
+        state = read_state(version)
+        if state is None:
+            raise ConnectionError("host bridge is not running (no live state file)")
+        answer = request(state, {"code": code}, timeout=timeout)
+        if not answer.get("ok"):
+            raise host_wait.ReadError(str(answer.get("error")))
+        return answer.get("value")
+
+    return read
+
+
+def run_wait_for(args: argparse.Namespace, version: str) -> int:
+    params = dict(item.partition("=")[::2] for item in args.param)
+    result = host_wait.wait_for(
+        args.condition, params, bridge_read(version), deadline_s=args.deadline, interval_s=args.interval
+    )
+    print(json.dumps(result.document(), indent=2) if args.json else result.summary())
+    if result.ending == "met":
+        return 0
+    return 2 if result.ending == "bridge_unavailable" else 1
+
+
 COMMANDS: dict[str, tuple[Callable[[argparse.ArgumentParser], None], Callable[..., Any]]] = {
     "wait": (takes_nothing, run_wait),
     "ping": (takes_nothing, run_ping),
@@ -423,6 +463,7 @@ COMMANDS: dict[str, tuple[Callable[[argparse.ArgumentParser], None], Callable[..
     "shot": (configure_shot, run_shot),
     "key": (configure_key, run_key),
     "console": (configure_tail(40), run_console),
+    "wait-for": (configure_wait_for, run_wait_for),
 }
 
 

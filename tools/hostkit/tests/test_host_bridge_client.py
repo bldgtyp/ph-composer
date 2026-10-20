@@ -150,6 +150,26 @@ class EvaluateTest(unittest.TestCase):
             self.assertEqual(hb.evaluate("2026", "m"), "#<Sketchup::Model>")
 
 
+class WaitReadTest(unittest.TestCase):
+    """A wait poll is one eval: a host error is a read failure, a missing bridge is a lost connection."""
+
+    def test_a_ruby_error_reply_is_a_read_error_and_a_value_is_returned(self) -> None:
+        read = hb.bridge_read("2026")
+        with patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}):
+            with (
+                patch.object(hb, "request", return_value={"ok": False, "error": "NameError"}),
+                self.assertRaises(hb.host_wait.ReadError),
+            ):
+                read(":x", 1.0)
+            with patch.object(hb, "request", return_value={"ok": True, "value": {"busy": None}}) as sent:
+                self.assertEqual(read(":x", 2.5), {"busy": None})
+        self.assertEqual(sent.call_args.kwargs["timeout"], 2.5, "the socket gets the wait's remaining budget")
+
+    def test_no_live_bridge_is_a_connection_error(self) -> None:
+        with patch.object(hb, "read_state", return_value=None), self.assertRaises(ConnectionError):
+            hb.bridge_read("2026")(":x", 1.0)
+
+
 class DialogGuardTest(unittest.TestCase):
     """The guard exists because SketchUp's Purge Unused prompt blocks the save it was asked for."""
 
@@ -307,7 +327,7 @@ class CommandRegistryTest(unittest.TestCase):
         # usage block still promises.
         self.assertEqual(
             set(hb.COMMANDS),
-            {"wait", "ping", "quit", "launch", "eval", "state", "save", "shot", "key", "console"},
+            {"wait", "ping", "quit", "launch", "eval", "state", "save", "shot", "key", "console", "wait-for"},
         )
         for name, (configure, run) in hb.COMMANDS.items():
             self.assertTrue(callable(configure), name)

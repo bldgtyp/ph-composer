@@ -20,7 +20,7 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 
 | Phase | Item | Kind | State | Issue | Pointer |
 | ----- | ---- | ---- | ----- | ----- | ------- |
-| none | Developer observability and agent feedback | feature, developer tools | In progress; DV-01 implemented on branch, DV-02 to DV-04 scoped | [#254](https://github.com/bldgtyp/ph-composer/issues/254) | [features/unscheduled/developer-observability/](features/unscheduled/developer-observability/README.md); browser evidence, bounded host waits, diagnostic reads and fault helpers; DV-03 depends on production PS-01 |
+| none | Developer observability and agent feedback | feature, developer tools | In progress; DV-01 and DV-02 implemented on branch (DV-02 host-observed), DV-03 and DV-04 scoped | [#254](https://github.com/bldgtyp/ph-composer/issues/254) | [features/unscheduled/developer-observability/](features/unscheduled/developer-observability/README.md); browser evidence, bounded host waits, diagnostic reads and fault helpers; DV-03 depends on production PS-01 |
 | 3b | Thermal bridges | feature | Scoped, interviewed 2026-10-03; planned as P3b-01 to P3b-09, none authorized | none (local planning draft) | [features/phase-03b-thermal-bridges/](features/phase-03b-thermal-bridges/README.md); tracked in its [ledger](features/phase-03b-thermal-bridges/STATUS.md); owns the edge tagging rules |
 | 4 | Hot water piping | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/hot-water-piping/](features/phase-04-mechanical/hot-water-piping/README.md) |
 | 4 | ERV ducting | feature | Requested, PRD drafted | none (no remote) | [features/phase-04-mechanical/erv-ducting/](features/phase-04-mechanical/erv-ducting/README.md) |
