@@ -256,9 +256,9 @@
       "sha256": "d29df66f89aa13ccfabf7e501c2746015af715aeb0cb29612c12c986a38ee2ba"
     },
     "html/features/zones/overview.js": {
-      "bytes": 50927,
+      "bytes": 51146,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "1122b9d2cd7ff296925ddd9e45df3c7c646df5506ef265580b35ac5961417979"
+      "sha256": "134d316255a4b2bb301dfa1ba6e5ee91c6ea3ca463760536e4b209306affa4dd"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 3325,
@@ -396,9 +396,9 @@
       "sha256": "c127b8d86661595218f8955d57c1b52ee103ab21452aa9621d08c6bf840d812b"
     },
     "html/panel.js": {
-      "bytes": 31512,
+      "bytes": 31912,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "fe98755a59970ea6833726290fff1ab7f9cfa25c81332c9559fc2f062f79f5ad"
+      "sha256": "a99171c34a2696e160e739ddc27708d9b957ea2707d22e6bf3b6579780b6efc2"
     },
     "html/record_edits.js": {
       "bytes": 17435,
@@ -456,9 +456,9 @@
       "sha256": "ebd42866e75a1c4ba916861e9dfef089f80463ad8ce7ef7184ba459cd3da4fd7"
     },
     "html/subtabs.js": {
-      "bytes": 4482,
+      "bytes": 4796,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "d753fd13b0e1fd771cd43efea04910c576b8a44eeaf7264da357c5de1c310f2e"
+      "sha256": "300c3a4e62581e06c73e8356926f671a280cb5b89bfb174e0cba28718eadf18e"
     },
     "html/support/index.html": {
       "bytes": 835,

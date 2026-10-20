@@ -227,7 +227,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
           return { id: view.id, label: view.label, surface: slot(state, view).surface };
         }),
         guard: function () { return draftReason(state) || call(active(state), "leaveReason", [], null); },
-        refused: function (reason) { refuse(reason); },
+        refused: function (reason) { state.refusedSwitch = reason; refuse(reason); },
         changed: function (id) { switched(state, id); } });
       root.querySelector(".phc-view-tabs").replaceChildren(state.tabs.root);
     }
@@ -254,6 +254,9 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     // Only Zones that are checked are handed over; the view switched to keeps its own checks otherwise.
     if (zones && zones.length) call(state.slots[id], "checkZones", [zones]);
     if (id) panel.setPreference("table_view", id, { scope: HOST });
+    // A refusal of an earlier try at a switch no longer holds once a switch goes through.
+    if (state.refusedSwitch) panel.withdraw(state.refusedSwitch);
+    state.refusedSwitch = null;
     panel.repaint();
   }
 

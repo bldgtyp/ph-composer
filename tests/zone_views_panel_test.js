@@ -394,6 +394,34 @@ test("an invalid Faces settings entry holds the switch", function () {
   assert.strictEqual(tab(p, "Areas").getAttribute("aria-selected"), "true", "Escape restores and releases it");
 });
 
+test("a focused row checkbox does not hold a switch: its value already applies", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  var shown = p.section().querySelectorAll(".phc-zone-view").filter(function (node) { return !node.hidden; })[0];
+  var box = shown.querySelectorAll("input").filter(function (node) { return node.type === "checkbox"; })[0];
+  box.focus();
+  click(tab(p, "Areas"));
+  assert.strictEqual(tab(p, "Areas").getAttribute("aria-selected"), "true");
+});
+
+test("a refused switch's notice goes once a switch goes through", function () {
+  var p = page(), state = snapshot();
+  state.sections["ph_composer.zones.settings"] = { status: "completed", value: {
+    suggest_on_make: true, roof_angle_deg: 60, floor_angle_deg: 130 } };
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  byLabel(p, "Faces settings").listeners.click({});
+  var roof = byLabel(p, "Roof maximum tilt [deg]");
+  roof.value = "170"; roof.listeners.change({});
+  roof.blur();
+  click(tab(p, "Areas"));
+  var notice = p.context.document.querySelector(".phc-floating-notice");
+  assert.strictEqual(notice.hidden, false, "the held switch says why");
+  roof.listeners.keydown({ key: "Escape" });
+  click(tab(p, "Areas"));
+  assert.strictEqual(tab(p, "Areas").getAttribute("aria-selected"), "true");
+  assert.strictEqual(notice.hidden, true, "the refusal no longer holds");
+});
+
 test("a Zone filter on a column the next view does not show leaves with the view that shows it", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });

@@ -672,13 +672,15 @@ this foundation when their feature lands.
   Cancel as its action and Save as its primary.
 - `Subtabs` reports a refused tab by name (`refused(reason, nextId)`) and a click on the shown tab
   (`reselected(id)`), so an owner whose surface is covered can leave that session the way its Cancel
-  does.
+  does. A focused field in the shown surface holds a switch, except a search field, checkbox or radio,
+  whose value already applies.
 - One floating notice, the panel's (`panel.notify`). A feature view does not build its own. An
   information notice fades on the next interaction and never blocks the control beneath it.
   `panel.notify(message, tone, action)` may carry `{ label, run }`, the way out on the notice itself
-  (cancel the held draft). `panel.outcomeText(translate, { owner })` lets a view restate a refused or
-  failed outcome of its own request and returns a disposer; the host's message and code stay the
-  contract. Each translator gets a detached copy and answers a string or null; one that throws or
+  (cancel the held draft); `panel.withdraw(message)` takes it down once it no longer holds, such as a
+  refused tab change that has since gone through, and leaves a newer notice alone.
+  `panel.outcomeText(translate, { owner })` lets a view restate a refused or failed outcome of its own
+  request and returns a disposer; the host's message and code stay the contract. Each translator gets a detached copy and answers a string or null; one that throws or
   answers anything else is skipped and logged under its owner, so the result is always recorded and
   its requester settles.
 - No refusal leaves a screen behind an invisible draft. A refused choice that wrote nothing returns

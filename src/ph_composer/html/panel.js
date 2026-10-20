@@ -544,6 +544,13 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     state = withUI(state, { notice: { message: message, tone: tone || "info", action: action || null } });
     render();
   }
+  /* Takes down the page's own notice once what it reported no longer holds, such as a refused navigation that
+     has since gone through. Only while that message is still the one shown; a newer notice stays. */
+  function withdraw(message) {
+    if (!state.ui.notice || state.ui.notice.message !== message) return;
+    state = withUI(state, { notice: null });
+    render();
+  }
 
   /* A view may restate a refused or failed outcome of its own request in its users' words; the host's message
      and code stay the contract. Each translator answers text or null for a detached
@@ -604,7 +611,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
   api = { receive: receive, section: section, region: region, inspectorHeld: inspectorHeld, ready: ready,
     state: state, showTab: showTab, navigate: navigate,
     send: send,
-    setPreference: setPreference, repaint: repaint, notify: notify, outcomeText: outcomeText,
+    setPreference: setPreference, repaint: repaint, notify: notify, withdraw: withdraw, outcomeText: outcomeText,
     // `guard(tab)` answers why the tab may not change, or null; `refused`, when given, runs after a
     // refusal is shown, so a section can point the user at the work that holds the tab.
     navigationGuard: function (name, guard, refused) { navigationGuards[name] = { guard: guard, refused: refused }; },
