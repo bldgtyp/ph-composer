@@ -122,6 +122,7 @@ module PhComposer
 
     def overview(model, rows)
       { "zones" => rows, "make_zone" => make_target(model), "restorable" => Repair.orphans(model),
+        "findings" => Occurrences.component_findings(model),
         "units" => { "ground_depth_mm" => "mm", "face_area_m2" => "m2", "unclassified_face_area_m2" => "m2" } }
     end
 

@@ -693,6 +693,22 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     call(own, "prepare", [rows, state]);
     screenState.controls.filter.placeholder = own.view.placeholder || "Zone";
     paintTable(own, rows, screenState, profile);
+    paintFindings(root, zones.findings || []);
+  }
+
+  /* What belongs to no Zone row, such as a Zone made into a component, collects below the table with its way
+     back. It is the read's own words, so it says what to do without naming a code. */
+  function paintFindings(root, findings) {
+    var list = root.querySelector(".phc-zone-findings");
+    if (!list) {
+      list = ui.element("div", "phc-zone-findings");
+      list.setAttribute("role", "status");
+      root.appendChild(list);
+    }
+    list.replaceChildren.apply(list, findings.map(function (finding) {
+      return ui.element("p", "phc-zone-finding", finding.message);
+    }));
+    list.hidden = !findings.length;
   }
 
   /* The shown view's selection bar floats over the bottom of its table. */

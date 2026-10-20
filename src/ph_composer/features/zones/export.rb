@@ -49,6 +49,11 @@ module PhComposer
                           "message" => error.message, "blocks_export" => true }
           end
         end
+        Occurrences.component_findings(request.model).each do |finding|
+          findings << { "code" => finding.fetch("code"), "section" => SECTION,
+                        "object_id" => finding.dig("reference", "zone_id"), "message" => finding.fetch("message"),
+                        "blocks_export" => true }
+        end
         repair = { "id" => "#{FEATURE_ID}.solve_all", "label" => "Solve stale adjacencies before export",
                    "checked" => true, "action" => "#{FEATURE_ID}.solve_adjacency",
                    "params" => { "zones" => zones.map(&:reference) } }

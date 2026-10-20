@@ -422,6 +422,21 @@ test("a refused switch's notice goes once a switch goes through", function () {
   assert.strictEqual(notice.hidden, true, "the refusal no longer holds");
 });
 
+test("a finding that belongs to no Zone row shows below the table in the read's words", function () {
+  var p = page(), state = snapshot();
+  var message = "Zone \"Annex\" is now a component, so it is not read as a Zone.";
+  state.sections["ph_composer.zones.overview"].value.findings = [{ code: "zone.component", message: message,
+    reference: { zone_id: "zon_b", entity_path: [300] } }];
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  var list = p.section().querySelector(".phc-zone-findings");
+  assert.strictEqual(list.hidden, false);
+  assert.deepStrictEqual(list.children.map(function (line) { return line.textContent; }), [message]);
+  assert.deepStrictEqual(rowKinds(p).slice(0, 1), ["Zone"], "the other Zones stay listed");
+  state = snapshot();
+  p.panel.receive({ type: "panel.snapshot", payload: state });
+  assert.strictEqual(list.hidden, true, "it goes with the finding");
+});
+
 test("a Zone filter on a column the next view does not show leaves with the view that shows it", function () {
   var p = page();
   p.panel.receive({ type: "panel.snapshot", payload: snapshot() });

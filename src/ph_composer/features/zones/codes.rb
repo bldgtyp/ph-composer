@@ -46,6 +46,8 @@ module PhComposer
         "zone.option_export_conflict" => "Distinct Building Segments share one export identifier; map to a survivor.",
         "zone.options_conflict" => "Recovery or shared-storage choice evidence conflicts; explicit repair is required.",
         "zone.options_adoption_required" => "Adopt the legacy or copied choices before editing categories.",
+        "zone.component" => "A Zone record sits on a component, as Make Component leaves it, so it is not read " \
+                            "as a Zone; Undo, or explode the component and restore the Zone.",
         "zone.identity_in_use" => "The Zone being restored is already in the Model.",
         "zone.identity_unique" => "The Zone's identity is already unique; there is nothing to repair.",
         "zone.none" => "The Model has no Zone to export.",

@@ -86,12 +86,17 @@ module PhComposer
         "choice_record" => { "type" => "object" },
         "unrecoverable" => Shapes.list({ "type" => "string" }, :description => "Zone fields Restore cannot recover.")
       }, :optional => ["choice_record"], :description => "An exploded Zone whose stamped members Restore can regroup.")
+      FINDING = Shapes.object({
+        "code" => { "type" => "string", "enum" => ["zone.component"] }, "message" => { "type" => "string" },
+        "reference" => Shapes.object({ "zone_id" => Shapes::ID, "entity_path" => PATH })
+      }, :description => "A Zone record no read takes as a Zone, such as one on a component, with the way back.")
       ALL_RESULT = Shapes.object({
         "zones" => Shapes.list(ZONE_ROW, :description => "Every Zone occurrence, copies and nested Zones included."),
         "make_zone" => MAKE_TARGET.merge("type" => %w[object null],
                                          "description" => "The params Make Zone takes for the current selection, " \
                                                           "or null when the selection cannot become a Zone."),
         "restorable" => Shapes.list(RESTORABLE),
+        "findings" => Shapes.list(FINDING),
         "units" => Shapes.object({ "ground_depth_mm" => { "type" => "string", "enum" => ["mm"] },
                                    "face_area_m2" => { "type" => "string", "enum" => ["m2"] },
                                    "unclassified_face_area_m2" => { "type" => "string", "enum" => ["m2"] } })
