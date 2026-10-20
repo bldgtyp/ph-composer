@@ -1,7 +1,7 @@
 # Production support: acceptance
 
 DATE: 2026-10-19
-STATUS: In progress
+STATUS: Complete 2026-10-20, archived
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 

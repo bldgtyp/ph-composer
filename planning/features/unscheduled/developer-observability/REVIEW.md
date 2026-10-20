@@ -66,7 +66,7 @@ control and Undo acceptance still need their own observations.
 
 ### 3. Structured access to the shared diagnostic timeline
 
-After [PS-01](../production-support/PLAN.md), give development probes a bounded structured reader of the same event store. Filter
+After [PS-01](../../../archive/production-support/PLAN.md), give development probes a bounded structured reader of the same event store. Filter
 by incident/run/session, severity and a cursor. Include logger health and explicit history gaps.
 Join references to the existing acceptance/package receipt rather than building another
 provenance store or hashing every installed file on each read.
@@ -78,7 +78,7 @@ arbitrary log/file readers. Reuse PS-01 privacy and value validation.
 
 ### 4. Reusable named fault cases
 
-Turn the [production review's](../production-support/REVIEW.md) lost-response, silent-runtime and
+Turn the [production review's](../../../archive/production-support/REVIEW.md) lost-response, silent-runtime and
 failed-write probes into focused deterministic tests during PS-01/PS-02. For native PS-05 cases,
 supply small explicit arm/observe/restore helpers
 with restoration evidence. Keep them under development tooling and never active on load.

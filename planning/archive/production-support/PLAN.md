@@ -1,7 +1,7 @@
 # Production support: implementation sequence
 
 DATE: 2026-10-19
-STATUS: In progress
+STATUS: Complete 2026-10-20, archived
 AUTHOR: Ed May, BLDGTYP, with Codex and Claude
 ISSUE: https://github.com/bldgtyp/ph-composer/issues/245
 
@@ -66,7 +66,7 @@ The SketchUp 2023 and Windows packets retain their host proofs. Run this packet 
 candidate's declared supported host; add its cases to other platform acceptance only when that
 platform is scheduled.
 
-The [developer-observability packet](../developer-observability/PLAN.md) owns browser evidence
+The [developer-observability packet](../../features/unscheduled/developer-observability/PLAN.md) owns browser evidence
 collection, bounded bridge waits and reusable development fault helpers. Its DV-03 reader waits
 for PS-01's log fields and schema version and reads the same JSON-lines file through a filtered
 read; this packet owns those fields, their privacy and the product-behavior tests. Developer code

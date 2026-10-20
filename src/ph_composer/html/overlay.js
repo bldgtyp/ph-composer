@@ -304,7 +304,9 @@ PhComposerUI.define("overlay", ["dom", "icons"], function (dom, icons) {
     this.root = bubble.root; this.trigger = trigger; this.bubble = bubble; this.content = bubble.content;
   }
   ActionMenu.prototype.add = function (label, handler, options) {
-    var self = this, item = button(label, function () { self.bubble.close(false); handler(); });
+    // Focus goes back to the trigger before the handler runs, so a dialog it opens returns there, not to
+    // this item, which the closed menu has hidden.
+    var self = this, item = button(label, function () { self.bubble.close(true); handler(); });
     item.className = "phc-action-menu-item" + (options && options.destructive ? " phc-danger-action" : "");
     if (options && options.icon) item.replaceChildren(glyph(options.icon), element("span", "", label));
     this.content.appendChild(item); return item;

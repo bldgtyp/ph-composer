@@ -54,7 +54,7 @@ mutation failure, automatic retry, Model repair or cancellation of the underlyin
 
 ## Diagnostics and privacy
 
-Use [PS-01's schema](../production-support/CONTRACTS.md) and bounded read projection. Cursors are
+Use [PS-01's schema](../../../archive/production-support/CONTRACTS.md) and bounded read projection. Cursors are
 process/history-specific and cannot imply complete history after eviction or restart.
 Report capture degradation, missing intervals and an unavailable store.
 

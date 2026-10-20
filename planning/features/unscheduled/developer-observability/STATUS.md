@@ -24,7 +24,7 @@ run for this split. The original source-backed assessment is preserved in REVIEW
 
 Begin DV-01 or DV-02 in the assigned implementation chat and complete issue intake. Coordinate
 shared file ownership before concurrent edits. DV-03 needed
-[production PS-01](../production-support/STATUS.md), which merged on 2026-10-19 (#249): the log
+[production PS-01](../../../archive/production-support/STATUS.md), which merged on 2026-10-19 (#249): the log
 fields and schema 1 are in context/CONTRACTS.md "Diagnostic log".
 
 ## Verification

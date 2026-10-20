@@ -386,9 +386,9 @@
       "sha256": "19cda60de04b9f3f7c45f3e47ff744075536b6f20aa6cbc05f7a0fbb167f5f47"
     },
     "html/overlay.js": {
-      "bytes": 24498,
+      "bytes": 24655,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "5a59e9f6cefd4c16f1ba7ff0df629bb4e8791ec39b571e913dccb49f05f2c2cf"
+      "sha256": "da7c69025f462fb4de13806724fdfa4208e5b913c2ceb97f33c108e811160d21"
     },
     "html/page_header.js": {
       "bytes": 1658,
