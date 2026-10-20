@@ -31,7 +31,6 @@ from __future__ import annotations
 import argparse
 import contextlib
 import json
-import math
 import os
 import signal
 import socket
@@ -491,7 +490,7 @@ def run_wait_for(args: argparse.Namespace, version: str) -> int:
     )
     # Read within what is left of the deadline; never after a cancel, a refusal or a lost bridge.
     if args.diagnostics and result.ending not in ("invalid_condition", "bridge_unavailable", "cancelled"):
-        budget = args.deadline - result.elapsed_ms / 1000 if math.isfinite(args.deadline) else 0.0
+        budget = args.deadline - result.elapsed_ms / 1000
         result.diagnostics = host_diagnostics.for_wait(read, params, budget)
     if args.json:
         print(json.dumps(result.document(), indent=2, allow_nan=False))
@@ -508,6 +507,7 @@ def configure_diagnostics(parser: argparse.ArgumentParser) -> None:
     for name in ("session", "incident", "run-id", "severity", "cursor"):
         parser.add_argument(f"--{name}")
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--newest", action="store_true", help="the most recent matches instead of a page")
     parser.add_argument("--json", action="store_true", help="print the versioned read document")
 
 
@@ -518,6 +518,8 @@ def run_diagnostics(args: argparse.Namespace, version: str) -> int:
         filters["cursor"] = args.cursor
     if args.limit is not None:
         filters["limit"] = args.limit
+    if args.newest:
+        filters["newest"] = True
     try:
         document = host_diagnostics.read(bridge_read(version), filters, timeout=args.timeout)
     except host_wait.ReadError as error:

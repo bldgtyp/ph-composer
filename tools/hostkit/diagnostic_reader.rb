@@ -48,7 +48,7 @@ module PhComposerDiagnosticReader
       selected = if filters["newest"]
                    newest(filters, window)
                  else
-                   position = resume(filters["cursor"], window.fetch("first"))
+                   position = resume(filters["cursor"], window.fetch("first"), window.fetch("lines").length)
                    start = [position.fetch("from") - window.fetch("first"), 0].max
                    collect(filters, window.fetch("lines"), start, window.fetch("first"))
                      .merge("cursor_state" => position.fetch("state"), "gap" => position["gap"])
@@ -90,13 +90,16 @@ module PhComposerDiagnosticReader
     end
 
     # Where to resume, and why it is not exactly after the cursor when it cannot be.
-    def resume(cursor, first)
+    # A cursor past the tail's end means the log's numbering restarted under this reader (the extension was
+    # reloaded): that is a restart too, not an empty continuation.
+    def resume(cursor, first, length)
       return { "from" => first, "state" => "start" } unless cursor
 
       match = CURSOR.match(cursor)
-      return { "from" => first, "state" => "process_restarted", "gap" => "unknown" } if match[:process] != process
-
       from = match[:number].to_i
+      if match[:process] != process || from > first + length
+        return { "from" => first, "state" => "process_restarted", "gap" => "unknown" }
+      end
       return { "from" => from, "state" => "continued" } if from >= first
 
       { "from" => first, "state" => "evicted", "gap" => { "lines" => first - from } }
@@ -110,16 +113,19 @@ module PhComposerDiagnosticReader
       counts = { "matched" => 0, "unsupported_schema" => 0, "unreadable" => 0 }
       following = first + [start, lines.length].min
       truncated = false
+      # `matched` counts every match from the cursor on, returned or left for the next page.
       each_record(lines, start, first, counts) do |record, number|
         next unless selected?(record, filters, minimum)
 
         counts["matched"] += 1
+        next if truncated
+
         event = record.merge("line" => number)
         size = returned_bytes(event)
-        if events.length >= limit || bytes + size > MAX_EVENTS_BYTES
+        if events.length >= limit || (bytes + size > MAX_EVENTS_BYTES && events.any?)
           truncated = true
           following = number
-          break
+          next
         end
         events << event
         bytes += size
@@ -157,12 +163,19 @@ module PhComposerDiagnosticReader
     # `[INVALID]`, which the reduction drops) is counted as unreadable, not returned half-formed.
     def each_record(lines, start, first, counts)
       lines.each_with_index.drop(start).each do |line, index|
-        record = (text = PhComposer::Diagnostics.sanitized(line)) && JSON.parse(text)
+        record = readable(line)
         next counts["unreadable"] += 1 unless record.is_a?(Hash) && record["event"].is_a?(String)
         next counts["unsupported_schema"] += 1 unless SUPPORTED_LOG_SCHEMAS.include?(record["schema"])
 
         yield record, first + index
       end
+    end
+
+    # A line through the log's sanitizer, or nil when it cannot be read (not JSON, or not valid text).
+    def readable(line)
+      (text = PhComposer::Diagnostics.sanitized(line)) && JSON.parse(text)
+    rescue ArgumentError, EncodingError, JSON::JSONError
+      nil
     end
 
     # What one returned event adds to the events array as JSON, its separator included.

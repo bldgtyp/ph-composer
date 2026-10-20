@@ -60,7 +60,9 @@ class ReadTest(unittest.TestCase):
 
 class WaitEnrichmentTest(unittest.TestCase):
     def test_a_wait_gets_its_sessions_newest_warnings_within_its_remaining_budget(self) -> None:
-        host = Host({"status": "read", "events": [{"event": "x"}]})
+        host = Host(
+            {"status": "read", "events": [{"event": "x"}], "matched": 1, "health": {}, "cursor_state": "newest"}
+        )
         document = hd.for_wait(host.read, {"session": SESSION, "revision": "3"}, budget=2.5)
 
         self.assertEqual(document["events"], [{"event": "x"}])
@@ -93,6 +95,23 @@ class WaitEnrichmentTest(unittest.TestCase):
         }
 
         self.assertIn("  3 ? ? severity=error", hd.summary(document))
+
+    def test_a_reply_that_is_not_a_read_document_is_unavailable_not_a_crash(self) -> None:
+        for answer in ("text", [], {"status": "read", "events": "x"}, {"status": "read"}):
+            with self.subTest(answer=answer):
+                document = hd.for_wait(Host(answer).read, {"session": SESSION}, budget=1.0)
+                self.assertEqual(document["status"], "unavailable")
+                self.assertIn("unavailable", hd.summary(document))
+
+    def test_a_wait_naming_nothing_to_filter_by_reads_nothing(self) -> None:
+        host = Host({"status": "read"})
+        self.assertEqual(hd.for_wait(host.read, {}, budget=1.0)["status"], "skipped")
+        self.assertEqual(host.calls, [])
+
+    def test_the_helpers_path_reaches_ruby_without_interpolation(self) -> None:
+        literal = hd.ruby_string("/tmp/#{exit}/it's")
+
+        self.assertEqual(literal, "'/tmp/#{exit}/it\\'s'")
 
     def test_no_budget_left_means_no_read(self) -> None:
         host = Host({"status": "read"})

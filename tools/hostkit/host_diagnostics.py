@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Any
 
 HELPERS = Path(__file__).resolve().parent / "host_helpers.rb"
+# What a read document must carry for this client to use it.
+READ_SHAPE: dict[str, type | tuple[type, ...]] = {"events": list, "matched": int, "health": dict, "cursor_state": str}
 MAX_LIMIT = 100
 WAIT_LIMIT = 10
 
@@ -46,26 +48,44 @@ def validate(filters: dict[str, Any]) -> str | None:
     return None
 
 
+def ruby_string(text: str) -> str:
+    """A Ruby single-quoted literal: no interpolation, whatever the checkout path holds."""
+    return "'" + text.replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
 def ruby_call(filters: dict[str, Any]) -> str:
     """The host call for already validated filters; loads the helpers when this process has not."""
     literal = ", ".join(f"{json.dumps(name)} => {json.dumps(value)}" for name, value in filters.items())
     return (
-        f"load {json.dumps(str(HELPERS))} unless defined?(PhComposerHost) && "
+        f"load {ruby_string(str(HELPERS))} unless defined?(PhComposerHost) && "
         f"PhComposerHost.respond_to?(:diagnostics); PhComposerHost.diagnostics({{{literal}}})"
     )
 
 
 def read(evaluate: Callable[[str, float], Any], filters: dict[str, Any], timeout: float = 30.0) -> dict[str, Any]:
-    """One read. A refused filter answers a refusal document without calling the host."""
+    """One read. A refused filter answers a refusal document without calling the host; a reply that is not a
+    read document answers `unavailable`."""
     if problem := validate(filters):
         return {"schema": 1, "kind": "ph-composer.diagnostic-read", "status": "refused", "error": problem}
-    return evaluate(ruby_call(filters), timeout)
+    document = evaluate(ruby_call(filters), timeout)
+    if not isinstance(document, dict) or (
+        document.get("status") == "read"
+        and not all(isinstance(document.get(key), expected) for key, expected in READ_SHAPE.items())
+    ):
+        return {
+            "schema": 1,
+            "kind": "ph-composer.diagnostic-read",
+            "status": "unavailable",
+            "error": "the host's reply was not a diagnostic read",
+        }
+    return document
 
 
 def for_wait(evaluate: Callable[[str, float], Any], params: dict[str, str], budget: float) -> dict[str, Any]:
     """The newest warnings and errors for what a wait watched, to sit beside its ending, within what is left of
-    the wait's deadline: an export task's run (its records carry the run id, not always the session), else the
-    session. A wait's ending never depends on this: no budget, an interrupt or an unavailable reader is
+    the wait's deadline, so a wait that timed out has none (read `diagnostics` after it). An export wait reads
+    its task's run, since its runtime records carry the run id and not always the session; other waits read
+    their session. A wait's ending never depends on this: no budget, an interrupt or an unavailable reader is
     reported as such."""
     if budget <= 0:
         return {"status": "skipped", "error": "the wait's deadline left no time to read the log"}
@@ -74,6 +94,8 @@ def for_wait(evaluate: Callable[[str, float], Any], params: dict[str, str], budg
         filters["run_id"] = params["task"]
     elif FILTERS["session"].match(params.get("session", "")):
         filters["session"] = params["session"]
+    else:
+        return {"status": "skipped", "error": "the wait names no session or run to read the log for"}
     try:
         return read(evaluate, filters, timeout=budget)
     except KeyboardInterrupt:

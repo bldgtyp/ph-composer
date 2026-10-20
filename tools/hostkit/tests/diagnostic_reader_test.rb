@@ -150,6 +150,37 @@ class DiagnosticReaderTest < PhComposerTestCase
     assert_equal [0, 0, []], [second.fetch("unsupported_schema"), second.fetch("unreadable"), events(second)]
   end
 
+  def test_a_cursor_past_the_tail_after_a_numbering_reset_is_a_restart_not_an_empty_continuation
+    3.times { |index| log("before_#{index}") }
+    cursor = Reader.read.fetch("next_cursor")
+    PhComposer::Diagnostics.reset_for_test
+    PhComposer::Diagnostics.path_override = File.join(@directory, "ph-composer.log")
+    log("after_reset")
+
+    read = Reader.read("cursor" => cursor)
+    assert_equal "process_restarted", read.fetch("cursor_state")
+    assert_equal %w[after_reset], events(read)
+  end
+
+  def test_matched_counts_every_match_and_the_next_page_does_not_recount
+    4.times { |index| log("match_#{index}", "severity" => "error") }
+    page = Reader.read("severity" => "error", "limit" => 2)
+    rest = Reader.read("severity" => "error", "cursor" => page.fetch("next_cursor"))
+
+    assert_equal [4, 2], [page.fetch("matched"), page.fetch("events").length]
+    assert_equal [2, %w[match_2 match_3]], [rest.fetch("matched"), events(rest)]
+  end
+
+  def test_a_line_that_is_not_valid_text_is_unreadable_and_passed
+    log("before")
+    remember("{\"timestamp\":\"2026-10-20T00:00:00Z\",\"event\":\"\xff\"}\n".dup.force_encoding("UTF-8"))
+    log("after")
+    read = Reader.read
+
+    assert_equal %w[before after], events(read)
+    assert_equal 1, read.fetch("unreadable")
+  end
+
   def test_returned_events_fit_the_byte_bound_as_serialized
     150.times { |index| log("event_#{index}", "severity" => "error", "session" => SESSION, "code" => "c.#{'x' * 80}") }
     [Reader.read("limit" => 100), Reader.read("limit" => 100, "newest" => true)].each do |read|
