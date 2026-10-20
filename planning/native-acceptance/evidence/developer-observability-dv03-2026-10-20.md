@@ -2,19 +2,21 @@
 
 DATE: 2026-10-20
 CASE: DV3 (owning acceptance: `planning/features/unscheduled/developer-observability/ACCEPTANCE.md`, rows D05, D06 and D08)
-BUILD: branch `feat/developer-observability-dv-03` before its first commit; the installed RBZ was `dist/ph_composer.rbz` built from that tree, which adds `Diagnostics.tail_window` to the shipped log. The ledger row's source fingerprint matches the committed files.
+BUILD: branch `feat/developer-observability-dv-03`. Run 1 (`_private/host/dv03/`) observed the first implementation before its commit; run 2 (`dv03b/`, commit 649f6edb) the code after review (cursor names the next line, `newest` enrichment within the wait's budget, helpers load without the extension). The installed RBZ was `dist/ph_composer.rbz` from each tree; it adds `Diagnostics.tail_window` to the shipped log.
 HOST: SketchUp 2026 on macOS, fresh processes launched by `host_bridge.py launch`, synthetic copies of `blank-template.skp`.
 CONTROL: development bridge only (`host_bridge.py diagnostics`, `wait-for --diagnostics`). Raw JSON stays in `_private/host/dv03/`.
+
+Both runs passed every assertion; the table gives run 2.
 
 | Assertion | Result |
 | --- | --- |
 | Filters | Unfiltered: `extension_loaded` and the synthetic warning. Session and warning: the warning only |
-| Cursor continued | After the cursor: nothing until a second event, then exactly that event, `continued`, no gap |
+| Cursor continued | After the cursor: nothing until a second event, then exactly that event, `continued`, no gap; the cursor at the tail's end reads nothing |
 | Process restarted | The old cursor in a relaunched SketchUp: `process_restarted`, gap `unknown`, read from the new first line |
 | Refused filter | A Ruby-shaped session: refused with a reason, no records, exit status 1 |
 | Health and build | Every read: writing with no error, log schema 1, version, build digest, commit and manifest |
-| Wait enrichment | `wait-for session_settled --diagnostics` met, with the session's warning and error beside the ending |
-| Nothing written | Tail window, log size (7362 bytes) and the unmodified Model identical before and after a read |
+| Wait enrichment | `wait-for session_settled --diagnostics` met, with the session's newest warning and error beside the ending, in JSON and in the text output |
+| Nothing written | Tail window, log size (8189 bytes) and the unmodified Model identical before and after a read |
 
 ## Limits
 
