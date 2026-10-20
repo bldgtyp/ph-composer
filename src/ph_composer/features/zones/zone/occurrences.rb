@@ -37,6 +37,23 @@ module PhComposer
         found
       end
 
+      # A Zone record on a ComponentInstance, as native Make Component on a Zone Group leaves it, is no Zone
+      # occurrence: every read passes it by, and this names each one, with the way back, for the reads and
+      # export preflight to report. The other Zones stay readable.
+      def component_findings(model)
+        strays = []
+        walk_zones(model.entities, [], identity, [], :shared => false, :inside_zone => false, :locked => false,
+                                                     :strays => strays)
+        # One finding per Zone: the placements of a copied component share the one record.
+        strays.map { |entity, path| [Names.read(entity), path] }.uniq { |record, _path| record.fetch("id") }
+              .map do |record, path|
+          { "code" => "zone.component", "reference" => { "zone_id" => record.fetch("id"), "entity_path" => path },
+            "message" => "Zone \"#{record.fetch('name')}\" is now a component, so it is not read as a Zone. Undo " \
+                         "Make Component to get it back as it was. Or explode the component and restore the " \
+                         "Zone, which recovers its id, Building-Segment and Level only." }
+        end
+      end
+
       def resolve_zone(model, reference, mutable: false, index: nil)
         zone_id = reference.fetch("zone_id")
         path = integer_path(reference.fetch("zone_path"))
@@ -326,8 +343,9 @@ module PhComposer
       end
 
       # `shared`, `inside_zone` and `locked` are what the containers above `entities` pass down: shared
-      # storage, an enclosing Zone, and a lock.
-      def walk_zones(entities, path, transform, found, shared:, inside_zone:, locked:)
+      # storage, an enclosing Zone, and a lock. `strays`, when given, collects [entity, path] for each Zone
+      # record on a ComponentInstance (component_findings).
+      def walk_zones(entities, path, transform, found, shared:, inside_zone:, locked:, strays: nil)
         entities.each do |entity|
           next unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
           next if cutting_component?(entity)
@@ -336,19 +354,21 @@ module PhComposer
           child_transform = transform * entity.transformation
           record = Names.read(entity)
           child_shared = shared || shared_storage?(entity)
-          if record
+          if record && !entity.is_a?(Sketchup::Group)
             Schema.validate!(record)
-            unless entity.is_a?(Sketchup::Group)
-              raise_target("target.wrong_kind", "A Zone record is stored on a ComponentInstance.")
-            end
+            strays&.push([entity, child_path])
+          elsif record
+            Schema.validate!(record)
             found << ZoneOccurrence.new(:entity => entity, :path => child_path, :transform => child_transform,
                                         :record => record, :shared_definition => child_shared,
                                         :nested => inside_zone, :locked_parent => locked)
           end
           child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
+          # A stray record is no Zone, so a Zone Group inside it is not nested.
+          zone = record && entity.is_a?(Sketchup::Group)
           walk_zones(child_entities, child_path, child_transform, found,
-                     :shared => child_shared, :inside_zone => inside_zone || !record.nil?,
-                     :locked => locked || entity.locked?)
+                     :shared => child_shared, :inside_zone => inside_zone || zone,
+                     :locked => locked || entity.locked?, :strays => strays)
         end
       end
 

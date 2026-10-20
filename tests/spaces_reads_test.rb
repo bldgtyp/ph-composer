@@ -150,13 +150,11 @@ class SpacesReadsTest < PhComposerTestCase
   end
 
   def test_a_zone_read_refusal_reaches_the_caller_declared
-    instance = Sketchup::ComponentInstance.new(100, Sketchup::ComponentDefinition.new(Sketchup::Entities.new([])))
-    PhComposer::Zones::ZONE_STORE.write(instance, { "id" => "zon_ZZZZZZZZZZZZ", "schema_version" => 1,
-                                                    "name" => "Zone", "building_segment" => "B", "level" => nil,
-                                                    "ground_depth_mm" => 0.0 })
-    @model.entities << instance
+    group = Sketchup::Group.new(100, Sketchup::Entities.new([]))
+    group.set_attribute(PhComposer::Zones::ZONE_STORE.dictionary, PhComposer::Zones::ZONE_STORE.key, "{not json")
+    @model.entities << group
     result = API.query(:context => @context, :name => "ph_composer.spaces.all")
-    assert_equal %w[refused target.wrong_kind], result.values_at("status", "code")
+    assert_equal %w[refused record.unreadable], result.values_at("status", "code")
   end
 
   def test_reference_targets_list_every_occurrence

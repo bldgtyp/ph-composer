@@ -256,9 +256,9 @@
       "sha256": "d29df66f89aa13ccfabf7e501c2746015af715aeb0cb29612c12c986a38ee2ba"
     },
     "html/features/zones/overview.js": {
-      "bytes": 51146,
+      "bytes": 51827,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "134d316255a4b2bb301dfa1ba6e5ee91c6ea3ca463760536e4b209306affa4dd"
+      "sha256": "2e9807d5bdf0cc28fee9ac773941b509967a73bbacad117695e4a559e92e774d"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 3325,
@@ -281,9 +281,9 @@
       "sha256": "260284f4f31732e0639dda8579367b93bd13eaf7caa32dc984215663542b9f83"
     },
     "html/features/zones/zones.css": {
-      "bytes": 6259,
+      "bytes": 6553,
       "mime": "text/css; charset=utf-8",
-      "sha256": "8fbfa3d6c43970d7eb46caa3126b13853f72887ba49966931aa71802197ac32f"
+      "sha256": "bd452e04150e0f82a70c3cf03e7da2c8de465d71669b0904b458963785b260fe"
     },
     "html/fields.js": {
       "bytes": 1833,

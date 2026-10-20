@@ -14146,6 +14146,7 @@ Result:
     "zones",
     "make_zone",
     "restorable",
+    "findings",
     "units"
   ],
   "properties": {
@@ -14445,6 +14446,49 @@ Result:
           }
         },
         "description": "An exploded Zone whose stamped members Restore can regroup."
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "reference"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "zone.component"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "entity_path"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "description": "A Zone record no read takes as a Zone, such as one on a component, with the way back."
       }
     },
     "units": {
@@ -16187,6 +16231,7 @@ Result:
     "zones",
     "make_zone",
     "restorable",
+    "findings",
     "units",
     "next_cursor",
     "total"
@@ -16476,6 +16521,49 @@ Result:
           }
         },
         "description": "An exploded Zone whose stamped members Restore can regroup."
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "reference"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "zone.component"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "zone_id",
+              "entity_path"
+            ],
+            "properties": {
+              "zone_id": {
+                "type": "string"
+              },
+              "entity_path": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "description": "A Zone record no read takes as a Zone, such as one on a component, with the way back."
       }
     },
     "units": {
@@ -49531,6 +49619,7 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | `face.wrong_zone` | A Face is contained by more than one Zone. |
 | `gesture.retirement_conflict` | One gesture would retire the same Face's pair two different ways. |
 | `gesture.too_large` | The gesture selects more Faces than one edit may change. |
+| `zone.component` | A Zone record sits on a component, as Make Component leaves it, so it is not read as a Zone; Undo, or explode the component and restore the Zone. |
 | `zone.identity_in_use` | The Zone being restored is already in the Model. |
 | `zone.identity_unique` | The Zone's identity is already unique; there is nothing to repair. |
 | `zone.none` | The Model has no Zone to export. |

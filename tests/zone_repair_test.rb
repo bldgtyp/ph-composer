@@ -43,6 +43,26 @@ class ZoneRepairTest < PhComposerTestCase
     assert_equal %w[found found], zone_states
   end
 
+  def test_a_zone_made_into_a_component_is_a_finding_and_the_other_zones_stay_readable
+    kept = box_group(5000, 3)
+    converted = box_group(6000, 3)
+    @model.entities << kept << converted
+    make_zone(kept)
+    make_zone(converted)
+    # Native Make Component: the Zone Group becomes a component instance carrying its record.
+    component = Sketchup::ComponentInstance.new(6100, Sketchup::ComponentDefinition.new(converted.entities))
+    component.set_attribute("ph_composer.zone", "record", converted.get_attribute("ph_composer.zone", "record"))
+    @model.entities.erase_entities(converted)
+    @model.entities << component
+
+    value = API.query(:context => @context, :name => "ph_composer.zones.all").fetch("value")
+    assert_equal [[kept.persistent_id]], value.fetch("zones").map { |zone| zone.dig("reference", "zone_path") }
+    finding = value.fetch("findings").first
+    assert_equal ["zone.component", [6100]], [finding.fetch("code"), finding.dig("reference", "entity_path")]
+    preflight = API.query(:context => @context, :name => "ph_composer.zones.export_preflight").dig("value", "findings")
+    assert(preflight.any? { |row| row.fetch("code") == "zone.component" && row.fetch("blocks_export") })
+  end
+
   def test_repair_gives_every_copied_face_a_new_id_and_rewrites_its_stamp
     original, copy = copied_zone
     original_ids = original.entities.to_a.map { |face| FACE_STORE.read(face).fetch("id") }

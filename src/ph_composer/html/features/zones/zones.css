@@ -3,6 +3,10 @@
 .phc-overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-bottom: 24px; }
 /* The control row spans the work surface, so the pane's tools sit at its far end. */
 .phc-overview > .phc-inventory-controls { margin-right: 0; }
+/* Findings that belong to no Zone row, below the table: one square amber line each. */
+.phc-zone-findings { display: grid; gap: 4px; }
+.phc-zone-finding { margin: 0; padding: 6px 10px; border: 1px solid var(--warning-border);
+  background: var(--warning-surface); color: var(--warning-ink); }
 /* The shown view's tools in the controls row: its help, then what it binds there (Spaces' range-edit tools). */
 .phc-overview .phc-view-tools { display: flex; align-items: center; gap: 8px; }
 .phc-overview .phc-view-tools:empty { display: none; }
