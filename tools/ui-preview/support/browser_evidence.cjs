@@ -24,8 +24,9 @@ const SCHEMA = 1;
 const KIND = "ph-composer.browser-evidence";
 // Every string in a report is clipped and every list is capped; a report over `reportBytes` drops its last
 // events (after they were judged) until it fits, and a trace over `traceBytes` is deleted, each with a record.
+// Expectations are judged against each field as observed, up to `matchChars`, never against the clipped copy.
 const LIMITS = Object.freeze({ events: 200, message: 2000, url: 500, label: 200, stackLines: 12, steps: 50,
-  reportBytes: 512 * 1024, traceBytes: 50 * 1024 * 1024 });
+  matchChars: 64 * 1024, reportBytes: 512 * 1024, traceBytes: 50 * 1024 * 1024 });
 const TRACE_MODES = Object.freeze(["off", "on-failure", "always"]);
 
 function clip(text, limit = LIMITS.message) {
@@ -60,13 +61,17 @@ function stateless(pattern) {
   return pattern instanceof RegExp ? new RegExp(pattern.source, pattern.flags.replace(/[gy]/g, "")) : pattern;
 }
 
-/* Whether an expectation names this event: same kind, and its pattern (a RegExp or a substring) matches
-   the event's message or URL. */
-function matches(expectation, event) {
-  if (expectation.kind !== event.kind) return false;
-  const haystack = `${event.message || ""}\n${event.url || ""}`;
-  return expectation.pattern instanceof RegExp ? expectation.pattern.test(haystack)
-    : haystack.includes(String(expectation.pattern));
+/* Whether an expectation names this observation: same kind, and its pattern (a RegExp or a substring)
+   matches the observed message or the observed URL, each tested on its own. */
+function matches(expectation, observed) {
+  if (expectation.kind !== observed.kind) return false;
+  return [observed.message, observed.url].some(field => field != null && (expectation.pattern instanceof RegExp
+    ? expectation.pattern.test(field) : field.includes(String(expectation.pattern))));
+}
+
+/* Reads a property that may throw (an Error's stack getter can), so formatting never replaces a failure. */
+function read(object, key) {
+  try { return object == null ? null : object[key]; } catch (_error) { return null; }
 }
 
 /* The collector, free of Playwright: `attach` takes anything with `on(event, listener)` and `url()`, so the
@@ -74,13 +79,15 @@ function matches(expectation, event) {
 function createCollector({ check, clock = () => performance.now(), now = () => new Date() } = {}) {
   const started = clock();
   const startedAt = now().toISOString();
-  const events = [], expectations = [], pages = [], steps = [];
+  const events = [], observed = [], expectations = [], pages = [], steps = [];
   let omitted = 0, omittedSteps = 0, currentStep = null;
 
   // The page's URL, fixture and viewport are read when the event happens: checks navigate and resize one page.
-  function record(kind, pageId, page, fields) {
+  function record(kind, pageId, page, fields, raw) {
     if (events.length >= LIMITS.events) { omitted += 1; return; }
     const url = urlOf(page);
+    const field = value => (value == null ? null : String(value).slice(0, LIMITS.matchChars));
+    observed.push({ kind, message: field(raw.message), url: field(raw.url) });
     events.push({ kind, page: pageId, step: currentStep, at: now().toISOString(), t_ms: Math.round(clock() - started),
       page_url: url == null ? null : clip(url, LIMITS.url), fixture: fixtureOf(url), viewport: viewportOf(page),
       ...fields });
@@ -92,22 +99,26 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
     page.on("console", message => {
       if (message.type() !== "error") return;
       const location = typeof message.location === "function" ? message.location() : null;
-      record("console", pageId, page, { message: clip(message.text()),
-        source: location && location.url ? clip(`${location.url}:${location.lineNumber}`, LIMITS.url) : null });
+      const text = message.text();
+      record("console", pageId, page, { message: clip(text),
+        source: location && location.url ? clip(`${location.url}:${location.lineNumber}`, LIMITS.url) : null },
+      { message: text });
     });
     page.on("pageerror", error => record("pageerror", pageId, page,
-      { message: clip(error && error.message), stack: clipStack(error && error.stack) }));
+      { message: clip(read(error, "message")), stack: clipStack(read(error, "stack")) }, { message: read(error, "message") }));
     page.on("requestfailed", request => {
       const failure = typeof request.failure === "function" ? request.failure() : null;
+      const text = failure && failure.errorText ? failure.errorText : "request failed";
       record("requestfailed", pageId, page, { method: request.method(), url: clip(request.url(), LIMITS.url),
-        message: clip(failure && failure.errorText ? failure.errorText : "request failed") });
+        message: clip(text) }, { message: text, url: request.url() });
     });
     page.on("response", response => {
       const status = response.status();
       if (status < 400) return;
       const request = typeof response.request === "function" ? response.request() : null;
+      const text = `HTTP ${status} ${response.statusText()}`.trim();
       record("http", pageId, page, { status, method: request ? request.method() : null,
-        url: clip(response.url(), LIMITS.url), message: `HTTP ${status} ${clip(response.statusText(), 200)}`.trim() });
+        url: clip(response.url(), LIMITS.url), message: clip(text, LIMITS.label) }, { message: text, url: response.url() });
     });
     return pageId;
   }
@@ -131,9 +142,10 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
     /* The run's report: unexpected events, expectations that never matched, and the original failure. Events
        past the event bound were never kept, so they cannot be judged: the run fails rather than pass on them. */
     finish({ failure = null, browser = null, artifacts = {} } = {}) {
-      const unexpected = events.filter(event => !expectations.some(expectation => matches(expectation, event)));
-      const expected = expectations.map(expectation => ({ kind: expectation.kind, pattern: String(expectation.pattern),
-        matched: events.filter(event => matches(expectation, event)).length }));
+      const unexpected = observed.filter(entry => !expectations.some(expectation => matches(expectation, entry)));
+      const expected = expectations.map(expectation => ({ kind: expectation.kind,
+        pattern: clip(String(expectation.pattern), LIMITS.label),
+        matched: observed.filter(entry => matches(expectation, entry)).length }));
       const missing = expected.filter(expectation => expectation.matched === 0);
       const problems = [];
       if (unexpected.length) problems.push(`${unexpected.length} unexpected browser error(s)`);
@@ -144,7 +156,7 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
       const failed = Boolean(failure) || unexpected.length > 0 || missing.length > 0 || omitted > 0;
       const report = {
         schema: SCHEMA, kind: KIND, check: clip(check, LIMITS.label), status: failed ? "failed" : "passed",
-        failure: failure ? { message: clip(failure.message), stack: clipStack(failure.stack) } : null,
+        failure: failure ? { message: clip(read(failure, "message")), stack: clipStack(read(failure, "stack")) } : null,
         problems, started_at: startedAt, elapsed_ms: Math.round(clock() - started), browser,
         pages: pages.map(entry => ({ id: entry.id, viewport: entry.viewport, fixture: fixtureOf(urlOf(entry.page)) })),
         steps: steps.slice(), omitted_steps: omittedSteps, expected,
@@ -156,16 +168,24 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
   };
 }
 
-/* Drops the report's last events, already judged, until its JSON fits LIMITS.reportBytes, and says so. */
+function serialize(report) {
+  return `${JSON.stringify(report, null, 2)}\n`;
+}
+
+const TRIMMED = "judged event(s) left out to keep the report under";
+
+/* Drops the report's last events, already judged, until the file it is written as fits LIMITS.reportBytes,
+   and says so. Measured on the written form, so it is applied again once the evidence paths are added. */
 function withinBudget(report) {
-  const size = () => Buffer.byteLength(JSON.stringify(report));
-  if (size() <= LIMITS.reportBytes) return report;
+  const problems = report.problems.filter(problem => !problem.includes(TRIMMED));
+  const note = () => `${report.trimmed_events} ${TRIMMED} ${LIMITS.reportBytes} bytes`;
+  const size = () => Buffer.byteLength(serialize({ ...report, problems: problems.concat(note()) }));
+  if (Buffer.byteLength(serialize(report)) <= LIMITS.reportBytes) return report;
   while (report.events.length && size() > LIMITS.reportBytes) {
     report.events.pop();
     report.trimmed_events += 1;
   }
-  report.problems.push(`${report.trimmed_events} judged event(s) left out to keep the report under ` +
-    `${LIMITS.reportBytes} bytes`);
+  report.problems = problems.concat(note());
   return report;
 }
 
@@ -213,8 +233,9 @@ function writeEvidence(report, directory, { fileSystem = fs } = {}) {
   const written = [], errors = [];
   const base = path.join(directory, report.check);
   const json = `${base}.evidence.json`, text = `${base}.evidence.txt`;
-  const finalReport = { ...report, artifacts: { ...report.artifacts, evidence_json: json, evidence_txt: text } };
-  for (const [file, content] of [[json, `${JSON.stringify(finalReport, null, 2)}\n`], [text, summarize(finalReport)]]) {
+  const finalReport = withinBudget({ ...report, events: report.events.slice(), problems: report.problems.slice(),
+    artifacts: { ...report.artifacts, evidence_json: json, evidence_txt: text } });
+  for (const [file, content] of [[json, serialize(finalReport)], [text, summarize(finalReport)]]) {
     try {
       fileSystem.mkdirSync(directory, { recursive: true });
       fileSystem.writeFileSync(file, content);
@@ -281,9 +302,11 @@ async function runCheck(options, body) {
     threw = true;
     failure = asError(error);
   }
-  const preliminary = collector.finish({ failure, browser: browserInfo });
-  const failed = threw || preliminary.status === "failed";
+  // Whether to keep traces. A failure to judge the run must not skip the cleanup below, so it counts as failed.
   const cleanupErrors = [], traces = [], omittedTraces = [];
+  let failed = threw;
+  try { failed = failed || collector.finish({ failure, browser: browserInfo }).status === "failed"; }
+  catch (error) { failed = true; cleanupErrors.push(`judge run: ${read(error, "message")}`); }
   for (const [index, context] of contexts.entries()) {
     if (trace === "always" || (trace === "on-failure" && failed)) {
       const file = path.join(output, `${name}.trace-${index + 1}.zip`);

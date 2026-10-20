@@ -269,7 +269,10 @@ test("URLs, sources and fixtures are clipped and the whole report stays within i
       location: function () { return { url: "http://127.0.0.1/" + huge, lineNumber: 1 }; } });
   }
   var report = collector.finish();
-  assert.ok(Buffer.byteLength(JSON.stringify(report)) <= evidence.LIMITS.reportBytes);
+  var output = fs.mkdtempSync(path.join(os.tmpdir(), "phc-browser-evidence-budget-"));
+  var written = evidence.writeEvidence(report, output);
+  assert.ok(fs.statSync(written.written[0]).size <= evidence.LIMITS.reportBytes, "the written file fits the budget");
+  report = written.report;
   assert.ok(report.trimmed_events > 0);
   assert.ok(report.events[0].page_url.length < evidence.LIMITS.url + 50);
   assert.ok(report.events[0].source.length < evidence.LIMITS.url + 50);
@@ -311,4 +314,34 @@ test("a trace over the size budget is deleted and recorded; an unwritten trace i
   }
   assert.strictEqual(failing.ok, true);
   assert.ok(warnings.some(function (line) { return /warning: trace .*trace disk full/.test(line); }));
+});
+
+test("expectations are judged on each observed field, not on the clipped copy or its markers", function () {
+  var collector = collect();
+  var page = fakePage("about:blank");
+  collector.attach(page);
+  collector.expect("console", /^injected$/);
+  collector.expect("console", "injected fault");
+  collector.expect("console", "characters omitted");
+  page.emit("console", consoleMessage("error", "injected"));
+  page.emit("console", consoleMessage("error", new Array(evidence.LIMITS.message + 2).join("x") + "injected fault"));
+  var report = collector.finish();
+  assert.deepStrictEqual(report.expected.map(function (entry) { return entry.matched; }), [1, 1, 0]);
+  assert.match(report.events[1].message, /characters omitted\]$/, "the stored copy is still clipped");
+});
+
+test("an error whose stack cannot be read still fails the run and every resource closes", async function () {
+  var log = [];
+  var output = fs.mkdtempSync(path.join(os.tmpdir(), "phc-browser-evidence-getter-"));
+  var hostile = new Error("the original failure");
+  Object.defineProperty(hostile, "stack", { get: function () { throw new Error("stack unavailable"); } });
+  var result = await evidence.runCheck({ name: "getter", output: output, browserType: fakeBrowserType(log) },
+    async function (tools) {
+      await tools.newPage();
+      throw hostile;
+    });
+  assert.strictEqual(result.ok, false);
+  assert.strictEqual(result.error, hostile);
+  assert.strictEqual(result.report.failure.message, "the original failure");
+  assert.deepStrictEqual(log.slice(-2), ["close context", "close browser"]);
 });
