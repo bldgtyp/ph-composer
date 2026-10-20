@@ -42,6 +42,9 @@ accepted decisions, the existing independent reviewer and unchanged evidence wit
 6. Continue the authorized batch after checkpoints or human replies. Stop for a consequential
    decision, inaccessible native action or real scope frontier. Use focused checks during fixes;
    recheck affected cases against the new build and preserve required final suite/review gates.
+   When the case belongs to a PR still under review, record its ledger result only on the head that
+   goes to merge: every later fix to a dependency makes the row stale. Write the case's driver as an
+   sh script in its run folder from the first run, so the one recorded run is a single command.
 
 An agent client run (Claude Code, Codex) measures the product, so the client runs without the
 operator's personal setup: no user skills, memory, advisor, plugins or reference notes. Claude Code:
