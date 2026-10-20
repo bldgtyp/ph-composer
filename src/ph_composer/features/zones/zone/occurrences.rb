@@ -47,26 +47,10 @@ module PhComposer
         # One finding per Zone: the placements of a copied component share the one record.
         strays.map { |entity, path| [Names.read(entity), path] }.uniq { |record, _path| record.fetch("id") }
               .map do |record, path|
-          entity = strays.find { |_entity, stray_path| stray_path == path }.first
-          message = "Zone \"#{record.fetch('name')}\" is now a component, so it is not read as a Zone. Undo Make " \
-                    "Component to get it back as it was."
-          if stamped_member?(entity, record.fetch("id"))
-            message += " Or explode the component and restore the Zone, which recovers its id, Building-Segment " \
-                       "and Level only."
-          end
           { "code" => "zone.component", "reference" => { "zone_id" => record.fetch("id"), "entity_path" => path },
-            "message" => message }
-        end
-      end
-
-      # Restore regroups an exploded Zone's stamped members (Repair.orphans); a Zone whose Faces carry no stamp
-      # has nothing to restore from once its component is exploded, so only Undo is offered for it.
-      def stamped_member?(component, zone_id)
-        component.definition.entities.any? do |member|
-          (member.is_a?(Sketchup::Face) || member.is_a?(Sketchup::Group)) &&
-            STAMP_STORE.read(member)&.fetch("zone_id", nil) == zone_id
-        rescue CodedError
-          false
+            "message" => "Zone \"#{record.fetch('name')}\" is now a component, so it is not read as a Zone. Undo " \
+                         "Make Component to get it back as it was. Without Undo, explode the component: Restore is " \
+                         "then offered if its Faces can be regrouped, recovering its id, Building-Segment and Level." }
         end
       end
 
@@ -381,7 +365,7 @@ module PhComposer
           end
           child_entities = entity.is_a?(Sketchup::Group) ? entity.entities : entity.definition.entities
           # A stray record is no Zone, so a Zone Group inside it is not nested.
-          zone = record && entity.is_a?(Sketchup::Group)
+          zone = !record.nil? && entity.is_a?(Sketchup::Group)
           walk_zones(child_entities, child_path, child_transform, found,
                      :shared => child_shared, :inside_zone => inside_zone || zone,
                      :locked => locked || entity.locked?, :strays => strays)
