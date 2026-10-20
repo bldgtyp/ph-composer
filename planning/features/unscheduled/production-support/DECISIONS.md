@@ -24,6 +24,7 @@ stages; Ed accepted that revision on 2026-10-19. PS-01 to PS-04 are implemented;
 | PS-D08 | Defer centralized telemetry | Revisit only with a concrete support need, a data policy and separate authorization |
 | PS-D09 | Separate developer observability delivery | Developer tooling has its own packet and ledger; PS-01 owns the shared log fields; no circular acceptance dependency |
 | PS-D10 | Size the tooling to the actual support load | Five stages; one text report; no Run checks; correctness fixes go first; see "2026-10-19 revision" |
+| PS-D11 | Accept SketchUp's no-document menu restriction (Ed, 2026-10-20) | The native Help and Diagnostics menu needs a document open; the panel footer link covers the rest; A07's no-document menu route is not required |
 
 ## 2026-10-19 revision
 
