@@ -82,7 +82,10 @@ module PhComposer
           self
         end
 
+        # Only this tool: a stop arriving after another tool replaced it leaves that tool running.
         def stop
+          return self unless active?
+
           model = @session.model
           model.select_tool(nil) if model.respond_to?(:select_tool)
           self
@@ -147,6 +150,9 @@ module PhComposer
 
         def onMouseMove(flags, x, y, view)
           path = Pick.face_path(view, x, y)
+          # A move without the button down after a press means the host lost the release
+          # (context/SKETCHUP_HOST_BEHAVIOR.md: a held drag's every move carries MK_LBUTTON).
+          cancel_gesture if collecting? && (flags.to_i & MK_LBUTTON).zero?
           if collecting?
             collect(path, flags)
           else
@@ -189,9 +195,12 @@ module PhComposer
           report_exception(error, view)
         end
 
+        # A drawing failure ends the pending gesture, so the next release cannot commit what it collected.
         def draw(view)
           draw_occurrences(view, @collected ? @collected.values : [], COLLECTED_COLOUR)
           draw_occurrences(view, @hover ? [@hover] : [], HOVER_COLOUR) unless collecting?
+        rescue StandardError => error
+          report_exception(error, view)
         end
 
         # The active tool receives right-clicks itself. Build the current selection menu here too;
