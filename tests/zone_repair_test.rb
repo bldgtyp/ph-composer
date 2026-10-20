@@ -49,6 +49,8 @@ class ZoneRepairTest < PhComposerTestCase
     @model.entities << kept << converted
     make_zone(kept)
     make_zone(converted)
+    # As Make Zone leaves its Faces with Suggest on Make off: no membership stamp.
+    converted.entities.to_a.each { |face| face.delete_attribute(PhComposer::Zones::STAMP_DICTIONARY) }
     # Native Make Component: the Zone Group becomes a component instance carrying its record.
     component = Sketchup::ComponentInstance.new(6100, Sketchup::ComponentDefinition.new(converted.entities))
     component.set_attribute("ph_composer.zone", "record", converted.get_attribute("ph_composer.zone", "record"))
@@ -59,8 +61,23 @@ class ZoneRepairTest < PhComposerTestCase
     assert_equal [[kept.persistent_id]], value.fetch("zones").map { |zone| zone.dig("reference", "zone_path") }
     finding = value.fetch("findings").first
     assert_equal ["zone.component", [6100]], [finding.fetch("code"), finding.dig("reference", "entity_path")]
+    refute_includes finding.fetch("message"), "explode", "no stamped member, so nothing to restore after an explode"
     preflight = API.query(:context => @context, :name => "ph_composer.zones.export_preflight").dig("value", "findings")
     assert(preflight.any? { |row| row.fetch("code") == "zone.component" && row.fetch("blocks_export") })
+  end
+
+  def test_a_component_zone_with_stamped_members_offers_explode_and_restore_too
+    converted = box_group(7000, 3)
+    @model.entities << converted
+    make_zone(converted)
+    classify_all
+    component = Sketchup::ComponentInstance.new(7100, Sketchup::ComponentDefinition.new(converted.entities))
+    component.set_attribute("ph_composer.zone", "record", converted.get_attribute("ph_composer.zone", "record"))
+    @model.entities.erase_entities(converted)
+    @model.entities << component
+
+    message = API.query(:context => @context, :name => "ph_composer.zones.all").dig("value", "findings", 0, "message")
+    assert_includes message, "explode the component and restore the Zone"
   end
 
   def test_repair_gives_every_copied_face_a_new_id_and_rewrites_its_stamp

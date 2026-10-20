@@ -47,10 +47,26 @@ module PhComposer
         # One finding per Zone: the placements of a copied component share the one record.
         strays.map { |entity, path| [Names.read(entity), path] }.uniq { |record, _path| record.fetch("id") }
               .map do |record, path|
+          entity = strays.find { |_entity, stray_path| stray_path == path }.first
+          message = "Zone \"#{record.fetch('name')}\" is now a component, so it is not read as a Zone. Undo Make " \
+                    "Component to get it back as it was."
+          if stamped_member?(entity, record.fetch("id"))
+            message += " Or explode the component and restore the Zone, which recovers its id, Building-Segment " \
+                       "and Level only."
+          end
           { "code" => "zone.component", "reference" => { "zone_id" => record.fetch("id"), "entity_path" => path },
-            "message" => "Zone \"#{record.fetch('name')}\" is now a component, so it is not read as a Zone. Undo " \
-                         "Make Component to get it back as it was. Or explode the component and restore the " \
-                         "Zone, which recovers its id, Building-Segment and Level only." }
+            "message" => message }
+        end
+      end
+
+      # Restore regroups an exploded Zone's stamped members (Repair.orphans); a Zone whose Faces carry no stamp
+      # has nothing to restore from once its component is exploded, so only Undo is offered for it.
+      def stamped_member?(component, zone_id)
+        component.definition.entities.any? do |member|
+          (member.is_a?(Sketchup::Face) || member.is_a?(Sketchup::Group)) &&
+            STAMP_STORE.read(member)&.fetch("zone_id", nil) == zone_id
+        rescue CodedError
+          false
         end
       end
 
