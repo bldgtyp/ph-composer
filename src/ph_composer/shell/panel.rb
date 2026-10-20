@@ -171,6 +171,7 @@ module PhComposer
         when "panel.ready" then ready
         when "panel.diagnostic" then PanelDiagnostics.record(payload)
         when "panel.support" then SupportDialog.show(:incident => payload["incident"])
+        when "panel.undo", "panel.redo" then PanelHistory.step(type, payload["session"])
         when "action.invoke" then invoke(payload)
         when "action.status" then status(payload)
         when "view.invoke" then view(payload)

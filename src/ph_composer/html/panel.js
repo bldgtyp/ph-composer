@@ -326,6 +326,27 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
       return match && { file: "html/" + match[2], line: Number(match[3]), method: match[1] || "?" };
     }).filter(Boolean).slice(0, 20);
   }
+  /* Cmd+Z and Cmd+Shift+Z (Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y on Windows) step SketchUp's own Undo and Redo for the
+     shown Model, as they do in the model window. A text field being edited keeps the keys for its own text; a
+     grid cell at rest is read-only, so it passes them on. Nothing is sent while no Model is shown, or while a
+     dialog is open: a held form's draft stays on the revision it read. */
+  function textEditing(node) {
+    if (!node) return false;
+    if (node.isContentEditable) return true;
+    if (/^textarea$/i.test(node.tagName || "")) return !node.readOnly;
+    return /^input$/i.test(node.tagName || "") && !node.readOnly &&
+      !/^(checkbox|radio|button|submit|reset|range|color|file)$/i.test(node.type || "");
+  }
+  function historyKey(event) {
+    var key = String(event.key || "").toLowerCase();
+    if (!(event.metaKey || event.ctrlKey) || event.altKey || event.defaultPrevented) return;
+    var redo = (key === "z" && event.shiftKey) || (key === "y" && event.ctrlKey && !event.metaKey && !event.shiftKey);
+    if (!(key === "z" || redo) || state.session === null || textEditing(event.target) || openModal()) return;
+    if (event.preventDefault) event.preventDefault();
+    if (redo) send("panel.redo", { session: state.session });
+    else send("panel.undo", { session: state.session });
+  }
+  if (document.addEventListener) document.addEventListener("keydown", historyKey);
   if (window.addEventListener) {
     window.addEventListener("error", function (event) { report("panel_uncaught_error", null, event && event.error); });
     window.addEventListener("unhandledrejection", function (event) {

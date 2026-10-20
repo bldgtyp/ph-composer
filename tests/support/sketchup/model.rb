@@ -332,6 +332,11 @@ module Sketchup
       nil
     end
 
+    def redo
+      @active_model.redo
+      nil
+    end
+
     # SketchUp's status bar, which is where a modal tool's guidance goes when no panel is open.
     attr_reader :status_texts
 
