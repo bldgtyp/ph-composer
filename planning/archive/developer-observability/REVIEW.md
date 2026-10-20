@@ -1,9 +1,9 @@
 # Developer observability: baseline review
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Codex
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: [#254](https://github.com/bldgtyp/ph-composer/issues/254)
 
 Assessment split from the production-support packet at Ed's request on 2026-10-19. Ed accepted
 all recommended work and its phase sequence. [PLAN.md](PLAN.md) and [STATUS.md](STATUS.md) now
@@ -14,19 +14,19 @@ Source was inspected at main 522fe8a1 on 2026-10-19; no native host/tool run was
 
 | Need | Available tool and limit |
 | --- | --- |
-| Run code in the real host and see failures | [Bridge evaluation](../../../../tools/hostkit/host_bridge.rb#L194) returns structured success/value/stdout or error with up to 12 backtrace lines; [console tee](../../../../tools/hostkit/host_bridge.rb#L139) retains Ruby Console output. Development only |
-| Inspect the current host | [PhComposerHost.state](../../../../tools/hostkit/host_helpers.rb#L19) reports SketchUp/Ruby, extension version/features, Model modification state and edit-path depth. Its ordinary state does not hash the installed package |
-| See runtime progress and resource leaks | [Runtime probe](../../../../tools/hostkit/runtime_probe.rb#L21) reports elapsed time, runtime results, resources, request count, maximum pump duration and refusals; teardown reports released resources |
-| Verify evidence provenance and reuse | [Acceptance workflow](../../../../tools/hostkit/ACCEPTANCE_RUN.md#preflight-and-immutable-baseline) records observed host/session/fixture/source dependencies. [Package comparison](../../../../tools/hostkit/acceptance_run.py#L132) hashes the RBZ and compares installed bytes. This already solves build provenance for acceptance |
-| Observe panel behavior without SketchUp | [UI preview](../../../../tools/ui-preview/.index.md) loads the real panel against a synthetic host that records outgoing messages. Many checks collect pageerror and screenshots; [preview_checks](../../../../tools/ui-preview/preview_checks.cjs#L17) is one example |
-| Get feedback from public agent operations | [Agent interface](../../../../context/AGENT_INTERFACE.md#user-controlled-local-access) exposes structured outcomes; [CallLog](../../../../src/ph_composer/agent_access/call_log.rb#L12) retains recent status/code/duration, with latest-call feedback in Agent Access |
-| Measure offline verification | [Makefile](../../../../Makefile#L114) supplies Ruby/JS/Python coverage separately from CI. Browser/runtime and native checks remain separate gates |
+| Run code in the real host and see failures | [Bridge evaluation](../../../tools/hostkit/host_bridge.rb#L194) returns structured success/value/stdout or error with up to 12 backtrace lines; [console tee](../../../tools/hostkit/host_bridge.rb#L139) retains Ruby Console output. Development only |
+| Inspect the current host | [PhComposerHost.state](../../../tools/hostkit/host_helpers.rb#L19) reports SketchUp/Ruby, extension version/features, Model modification state and edit-path depth. Its ordinary state does not hash the installed package |
+| See runtime progress and resource leaks | [Runtime probe](../../../tools/hostkit/runtime_probe.rb#L21) reports elapsed time, runtime results, resources, request count, maximum pump duration and refusals; teardown reports released resources |
+| Verify evidence provenance and reuse | [Acceptance workflow](../../../tools/hostkit/ACCEPTANCE_RUN.md#preflight-and-immutable-baseline) records observed host/session/fixture/source dependencies. [Package comparison](../../../tools/hostkit/acceptance_run.py#L132) hashes the RBZ and compares installed bytes. This already solves build provenance for acceptance |
+| Observe panel behavior without SketchUp | [UI preview](../../../tools/ui-preview/.index.md) loads the real panel against a synthetic host that records outgoing messages. Many checks collect pageerror and screenshots; [preview_checks](../../../tools/ui-preview/preview_checks.cjs#L17) is one example |
+| Get feedback from public agent operations | [Agent interface](../../../context/AGENT_INTERFACE.md#user-controlled-local-access) exposes structured outcomes; [CallLog](../../../src/ph_composer/agent_access/call_log.rb#L12) retains recent status/code/duration, with latest-call feedback in Agent Access |
+| Measure offline verification | [Makefile](../../../Makefile#L114) supplies Ruby/JS/Python coverage separately from CI. Browser/runtime and native checks remain separate gates |
 
 The foundation is substantial. Developer feedback is split across tool outputs and files, and
 asynchronous work still needs coordinated reads. There is no evidence here that another logging
 backend would improve that.
 
-The bridge's existing [wait](../../../../tools/hostkit/host_bridge.py#L86) waits for bridge startup.
+The bridge's existing [wait](../../../tools/hostkit/host_bridge.py#L86) waits for bridge startup.
 It does not wait for a feature condition or an export outcome. Blocking inside a bridge eval
 prevents UI timers from advancing, so completion checks must remain separate host calls.
 
@@ -66,7 +66,7 @@ control and Undo acceptance still need their own observations.
 
 ### 3. Structured access to the shared diagnostic timeline
 
-After [PS-01](../../../archive/production-support/PLAN.md), give development probes a bounded structured reader of the same event store. Filter
+After [PS-01](../production-support/PLAN.md), give development probes a bounded structured reader of the same event store. Filter
 by incident/run/session, severity and a cursor. Include logger health and explicit history gaps.
 Join references to the existing acceptance/package receipt rather than building another
 provenance store or hashing every installed file on each read.
@@ -78,7 +78,7 @@ arbitrary log/file readers. Reuse PS-01 privacy and value validation.
 
 ### 4. Reusable named fault cases
 
-Turn the [production review's](../../../archive/production-support/REVIEW.md) lost-response, silent-runtime and
+Turn the [production review's](../production-support/REVIEW.md) lost-response, silent-runtime and
 failed-write probes into focused deterministic tests during PS-01/PS-02. For native PS-05 cases,
 supply small explicit arm/observe/restore helpers
 with restoration evidence. Keep them under development tooling and never active on load.

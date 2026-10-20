@@ -1,21 +1,17 @@
 /* One styled tooltip across table, toolbar, drawing and modal surfaces; no competing browser title hint. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "ph-composer-tooltips-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
 
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+check({ name: "tooltip", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1280, height: 900 } });
     page.setDefaultTimeout(5000);
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
     const tip = page.getByRole("tooltip");
     async function hint(target, text) {
       await target.hover();
@@ -29,6 +25,7 @@ fs.mkdirSync(output, { recursive: true });
         return document.elementFromPoint(box.left + 4, box.top + 4) === node;
       }), "tooltip is above the current work surface");
     }
+    step("open the authoring fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=authoring`);
     const type = page.locator(".phc-overview th.col-face_type");
     const palette = type.getByRole("button", { name: "Colour by Face type", exact: true });
@@ -50,6 +47,7 @@ fs.mkdirSync(output, { recursive: true });
     await page.locator("[data-tab='library']").click();
     assert.equal(await tip.isVisible(), false, "navigation withdraws a tip from the old pane");
 
+    step("open the inventories fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=inventories`);
     for (const pane of ["overview", "assemblies", "windows", "library", "export"]) {
       await page.locator(`[data-tab='${pane}']`).click();
@@ -66,9 +64,5 @@ fs.mkdirSync(output, { recursive: true });
     await dialog.getByRole("button", { name: "Close", exact: true }).click();
     assert.equal(await tip.isVisible(), false);
     assert.equal(await page.locator(".row-tooltip").count(), 1, "the dialog did not create a second layer");
-    assert.deepEqual(errors, []);
-    console.log(`Shared tooltip checks passed; evidence in ${output}`);
-  } finally {
-    await browser.close();
-  }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Shared tooltip checks passed; evidence in ${output}`;
+});

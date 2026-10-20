@@ -1,14 +1,13 @@
 "use strict";
 const assert = require("assert"), fs = require("fs"), os = require("os"), path = require("path");
-const { chromium } = require("playwright");
+const { check } = require("./support/browser_evidence.cjs");
 const port = process.env.UI_PREVIEW_PORT || "8765";
-(async function () {
-  const browser = await chromium.launch({ channel: "chrome", headless: true });
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "phc-windows-"));
-  console.log("Evidence: " + directory);
+const directory = fs.mkdtempSync(path.join(os.tmpdir(), "phc-windows-"));
+console.log("Evidence: " + directory);
+check({ name: "windows", output: directory }, async ({ newPage, step }) => {
   for (const width of [1280, 900, 420, 280]) {
-    const page = await browser.newPage({ viewport: { width: width, height: 900 } }), errors = [];
-    page.on("pageerror", error => errors.push(error.stack));
+    const page = await newPage({ viewport: { width: width, height: 900 } });
+    step(`windows: ${width}px`);
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=windows`);
     await page.getByRole("button", { name: "Window Types", exact: true }).click();
     const pane = page.locator("[data-pane=windows]");
@@ -113,10 +112,9 @@ const port = process.env.UI_PREVIEW_PORT || "8765";
     assert.strictEqual(await page.evaluate(() => previewHost.sent.filter(message =>
       message.type === "action.invoke").length), before + 2, "library export adds no Model action");
     assert.strictEqual(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
-    assert.deepStrictEqual(errors, []);
     await page.screenshot({ path: path.join(directory, "windows-" + width + ".png"), fullPage: true });
     await page.close();
     console.log("Window screens " + width + "px: pass");
   }
-  await browser.close(); console.log("Evidence: " + directory);
-}()).catch(error => { console.error(error); process.exit(1); });
+  return "Evidence: " + directory;
+});

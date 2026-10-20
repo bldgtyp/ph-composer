@@ -1,22 +1,23 @@
 /* Shared-control fixtures on the real kit. These browser checks supplement the offline DOM tests;
    SketchUp lifecycle acceptance remains the owning host gate. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "ph-composer-groundwork-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
 
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+check({ name: "groundwork", output }, async ({ newPage, step, expect }) => {
+    const page = await newPage({ viewport: { width: 1280, height: 800 } });
+    // The groundwork fixture replaces the page body with its own controls, so the panel's sections lose their
+    // panes; the unit switch then repaints them and each reports that it names no pane. A fixture artifact,
+    // declared so any other console error still fails the check.
+    expect("console", /panel section "[\w.]+" failed to render Error: panel section "[\w.]+" names no pane/);
+    step("open the groundwork fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=groundwork`);
     await page.getByRole("heading", { name: "Shared controls" }).waitFor();
     const width = page.getByRole("textbox", { name: "First part width", exact: true });
@@ -51,6 +52,7 @@ fs.mkdirSync(output, { recursive: true });
     }));
     await category.press("ArrowDown");
     assert.equal(await category.getAttribute("data-arrow-prevented"), "false", "native arrow handling is preserved");
+    step("select options");
     // Headless macOS Chrome does not operate its native option popup via arrow keys, even on a bare select.
     await category.selectOption("Second");
     assert.equal(await page.evaluate(() => window.groundworkPreview.rows[0].record.values.category), "Second");
@@ -76,18 +78,12 @@ fs.mkdirSync(output, { recursive: true });
     await first.press("Enter");
     assert.equal(await page.evaluate(() => window.groundworkPreview.rows[0].record.values.width_mm), 1016);
     assert.equal(await first.getAttribute("readonly"), "", "commit returns to grid selection mode");
+    step("grid layouts");
     for (const size of [{ width: 1280, height: 800 }, { width: 360, height: 520 }]) {
       await page.setViewportSize(size);
       assert(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `no page scroll at ${size.width}`);
       await page.screenshot({ path: path.join(output, `grid-${size.width}.png`) });
     }
-    assert.deepEqual(errors, []);
-    console.log(`PASS: shared controls, typed units, stale refusal, guarded navigation, range fill, ` +
-      `read-only cells, Enter editing, wide/narrow layouts; evidence in ${output}`);
-  } finally {
-    await browser.close();
-  }
-})().catch(error => {
-  console.error(error);
-  process.exit(1);
+    return `PASS: shared controls, typed units, stale refusal, guarded navigation, range fill, ` +
+      `read-only cells, Enter editing, wide/narrow layouts; evidence in ${output}`;
 });

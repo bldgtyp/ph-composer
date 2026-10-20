@@ -1,9 +1,9 @@
 # Developer observability: decisions
 
 DATE: 2026-10-19
-STATUS: Scoped
+STATUS: Complete
 AUTHOR: Ed May, BLDGTYP, with Codex
-ISSUE: none (local planning draft; issue intake remains)
+ISSUE: [#254](https://github.com/bldgtyp/ph-composer/issues/254)
 
 Ed accepted all recommended steps and phases on 2026-10-19 and requested separate feature packets
 for developer tooling and end-user production support. No code has started in this chat.

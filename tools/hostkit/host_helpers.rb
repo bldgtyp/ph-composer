@@ -4,9 +4,11 @@
 #
 # `host_bridge.py launch` loads this file after the bridge answers; every method is reachable as
 # `PhComposerHost.<name>` from `host_bridge.py eval`. Helpers read the host and the extension's
-# public state; none writes to the Model. Feature helpers arrive with their features.
+# public state; none writes to the Model. Feature helpers arrive with their features. `diagnostics` reads the
+# extension's log through the development diagnostic reader.
 
 require "fileutils"
+require_relative "diagnostic_reader"
 
 module PhComposerHost
   class << self
@@ -25,6 +27,11 @@ module PhComposerHost
         "extension" => extension_state,
         "model" => model_state
       }
+    end
+
+    # A bounded, filtered read of the diagnostic log (tools/hostkit/diagnostic_reader.rb).
+    def diagnostics(filters = {})
+      PhComposerDiagnosticReader.read(filters)
     end
 
     def shot(name, dir = evidence_dir)

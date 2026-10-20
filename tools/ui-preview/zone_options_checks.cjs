@@ -1,17 +1,16 @@
 /* Managed options layout and modal behavior in the real panel with synthetic data. This does not
    prove native Model transactions, recovery or adoption; those remain SketchUp acceptance gates. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const BASE = `http://127.0.0.1:${process.env.UI_PREVIEW_PORT || "8765"}/tools/ui-preview/`;
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE || fs.mkdtempSync(path.join(os.tmpdir(), "phc-zone-options-"));
 fs.mkdirSync(output, { recursive: true });
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  const errors = []; page.on("pageerror", error => errors.push(error.message));
+check({ name: "zone_options", output }, async ({ newPage, step }) => {
+  const page = await newPage({ viewport: { width: 1280, height: 800 } });
+  step("open the zone options fixture");
   await page.goto(`${BASE}?fixture=zoneoptions`);
   await page.getByRole("heading", { name: "Zones", exact: true }).waitFor();
   const menu = async () => {
@@ -20,6 +19,7 @@ fs.mkdirSync(output, { recursive: true });
   };
   await menu();
   const dialog = page.getByRole("dialog");
+  step("Zone options at panel widths");
   for (const width of [1280, 900, 420, 280]) {
     await page.setViewportSize({ width, height: 650 });
     assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth), `page width at ${width}`);
@@ -65,7 +65,5 @@ fs.mkdirSync(output, { recursive: true });
   await dialog.waitFor({ state: "detached" });
   assert.equal(await page.evaluate(() => window.previewHost.zoneOptions.default_segment_id), "bsg_annex");
   assert(await page.evaluate(() => window.previewHost.zones.every(zone => zone.values.building_segment_id === "bsg_annex")));
-  assert.deepEqual(errors, []);
-  await browser.close();
-  process.stdout.write(`Zone options browser checks passed; evidence: ${output}\n`);
-})().catch(error => { console.error(error); process.exit(1); });
+  return `Zone options browser checks passed; evidence: ${output}`;
+});

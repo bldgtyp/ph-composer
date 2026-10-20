@@ -1,19 +1,16 @@
 /* Pointer gestures reproduce the SVG-child flashing loop and verify one stable segment/edge hover state. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "ph-composer-assembly-hover-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+check({ name: "assembly_hover", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1600, height: 900 } });
+    step("open the builder fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=builder`);
     await page.locator("[data-tab='assemblies']").click();
     await page.getByRole("button", { name: "Open Wall", exact: true }).click();
@@ -55,6 +52,7 @@ fs.mkdirSync(output, { recursive: true });
     assert(await zIndex(line) > selectedZ, "insertion edge paints above selection");
     assert(await zIndex(control) > await zIndex(line), "plus control paints above its edge line");
     await page.screenshot({ path: path.join(output, "assembly-selected-hatch.png") });
+    step("plus circle edge hover");
     // Cross the shared side above the plus circle: edge proximity must never make the
     // unselected neighbor inherit the generic button's teal hover/focus outline.
     const neighbor = drawing.locator(".assembly-hit-target[data-segment-id='seg_stud_0']");
@@ -71,6 +69,7 @@ fs.mkdirSync(output, { recursive: true });
       assert.equal(await neighbor.getAttribute("aria-pressed"), "false");
       assert.equal(await wool.getAttribute("aria-pressed"), "true", "crossing never moves selection");
     }
+    step("edge sweeps");
     for (const edge of ["left", "right", "top", "bottom"]) {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       const x = edge === "left" ? box.x + 2 : edge === "right" ? box.x + box.width - 2 : box.x + box.width / 2;
@@ -122,7 +121,5 @@ fs.mkdirSync(output, { recursive: true });
     const writes = await page.evaluate(() => window.previewHost.sent.filter(message => message.type === "action.invoke"));
     assert.equal(writes.length, 1, "hover does not write; clicking inserts once");
     assert.equal(writes[0].payload.params.index, 1, "the shared-edge icon retains the intended insertion index");
-    assert.deepEqual(errors, []);
-    console.log(`Assembly hover checks passed; screenshots: ${output}`);
-  } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Assembly hover checks passed; screenshots: ${output}`;
+});

@@ -189,7 +189,10 @@ failure is described by the translation package from the exception's class and t
 `export_runtime_failed`; the outcome keeps a declared runtime
 code and a fixed message. A write failure is kept as the log's health (`Diagnostics.health`) and
 every line also enters a 256 KiB in-memory tail (`Diagnostics.tail`); neither is logged through the
-logger. Developer tools read the same file and never the logger's instance variables.
+logger. `Diagnostics.tail_window` is the tail with the number of its first line: lines remembered in a
+process are numbered from 0 and never renumbered, so a reader resuming after a line can tell when the lines
+after it were evicted or cleared. Developer tools read the same file or this projection, through
+`Diagnostics.sanitized`, and never the logger's instance variables.
 
 ## Outcomes and codes
 

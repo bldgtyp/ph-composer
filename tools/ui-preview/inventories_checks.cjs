@@ -1,20 +1,17 @@
 /* Material/Assembly browser flows supplement the record contracts; they are not native Undo evidence. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "ph-composer-inventories-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
 
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+check({ name: "inventories", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1280, height: 800 } });
+    step("open the inventories fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=inventories`);
     await page.locator("[data-tab='library']").click();
     const library = page.locator("[data-section='library']");
@@ -103,6 +100,7 @@ fs.mkdirSync(output, { recursive: true });
     await type.selectOption("RoofCeiling");
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.type === "RoofCeiling");
     await assemblies.getByRole("button", { name: "+ New Assembly", exact: true }).click();
+    step("New Assembly opens the Builder");
     // New acts at once: the Assembly exists under a free name and opens in the Builder, its title ready to rename.
     await assemblies.getByRole("button", { name: "Back to Assemblies", exact: true }).waitFor();
     assert.equal(await assemblies.locator(".assembly-name input").inputValue(), "Assembly 1");
@@ -118,6 +116,7 @@ fs.mkdirSync(output, { recursive: true });
     await deleteAssembly.waitFor({ state: "hidden" });
     assert.equal(await page.evaluate(() => window.previewHost.assemblies.records.length), 3);
 
+    step("panes at panel widths");
     for (const width of [1280, 900, 420, 280]) {
       await page.setViewportSize({ width, height: 800 });
       for (const pane of ["assemblies", "library"]) {
@@ -127,7 +126,5 @@ fs.mkdirSync(output, { recursive: true });
         await page.screenshot({ path: path.join(output, `${pane}-${width}.png`) });
       }
     }
-    assert.deepEqual(errors, []);
-    console.log(`inventories browser checks passed; screenshots: ${output}`);
-  } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `inventories browser checks passed; screenshots: ${output}`;
+});

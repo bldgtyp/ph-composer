@@ -1478,6 +1478,72 @@
         "src/ph_composer/core/build_identity.rb",
         "tools/rbz/build.py"
       ]
+    },
+    {
+      "authority": "planning/archive/developer-observability/ACCEPTANCE.md",
+      "id": "DV1",
+      "label": "Bounded wait: a named condition observes timer-driven host work through separate polls, targets the original session and mutates nothing",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "tools/hostkit/host_wait.py",
+        "tools/hostkit/host_bridge.py",
+        "tools/hostkit/runtime_probe.rb"
+      ]
+    },
+    {
+      "authority": "planning/archive/developer-observability/ACCEPTANCE.md",
+      "id": "DV2",
+      "label": "Wait endings: timeout, invalid condition, Model switch and session disposal end distinctly with the last observed state",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "tools/hostkit/host_wait.py",
+        "tools/hostkit/host_bridge.py"
+      ]
+    },
+    {
+      "authority": "planning/archive/developer-observability/ACCEPTANCE.md",
+      "id": "DV3",
+      "label": "Diagnostic read: session and severity filters, a continued cursor, a restarted process named, health and build, a refused filter, wait enrichment, nothing written",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "tools/hostkit/diagnostic_reader.rb",
+        "tools/hostkit/host_diagnostics.py",
+        "tools/hostkit/host_bridge.py",
+        "tools/hostkit/host_helpers.rb",
+        "src/ph_composer/core/diagnostics.rb"
+      ]
+    },
+    {
+      "authority": "planning/archive/developer-observability/ACCEPTANCE.md",
+      "id": "DV5",
+      "label": "Fault controls: loading arms nothing, failed_write and lost_reply arm, intercept and restore with read-back, a dirty baseline is refused",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "tools/hostkit/fault_controls.rb",
+        "tools/hostkit/host_faults.py",
+        "tools/hostkit/host_bridge.py"
+      ]
+    },
+    {
+      "authority": "planning/archive/developer-observability/ACCEPTANCE.md",
+      "id": "DV4",
+      "label": "Integrated fault case: a silent runtime ends an export; the wait, the log record and the acceptance receipt name the same run; restore read back and a fresh normal build",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "tools/hostkit/fault_controls.rb",
+        "tools/hostkit/host_faults.py",
+        "tools/hostkit/host_bridge.py",
+        "tools/hostkit/host_wait.py",
+        "tools/hostkit/diagnostic_reader.rb",
+        "tools/hostkit/host_diagnostics.py",
+        "src/ph_composer/export/task.rb",
+        "src/ph_composer/runtime/runtime_host.rb"
+      ]
     }
   ]
 }

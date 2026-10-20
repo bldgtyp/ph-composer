@@ -1,18 +1,15 @@
 /* Raster evidence: a centered highlight covers the base SVG stroke equally at shared and exterior edges. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE || fs.mkdtempSync(path.join(os.tmpdir(), "phc-perimeter-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+check({ name: "assembly_perimeter", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1600, height: 900 } });
+    step("open the builder fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=builder`);
     await page.locator("[data-tab='assemblies']").click();
     await page.getByRole("button", { name: "Open Wall", exact: true }).click();
@@ -28,6 +25,7 @@ fs.mkdirSync(output, { recursive: true });
       previewHost.snapshot();
     });
     const drawing = page.locator(".assembly-drawing");
+    step("perimeter sampling at widths");
     for (const width of [1600, 2200, 2800]) {
       await page.setViewportSize({ width, height: 900 });
       await page.getByRole("button", { name: "Fit drawing", exact: true }).click();
@@ -76,7 +74,5 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await drawing.locator("#phc-null-material-hatch path").getAttribute("d"),
       "M-2,2 L2,-2 M0,8 L8,0 M6,10 L10,6", "the unassigned hatch keeps its opposite slope");
     assert.equal(await page.evaluate(() => previewHost.sent.filter(message => message.type === "action.invoke").length), 0);
-    assert.deepEqual(errors, []);
-    console.log(`Assembly perimeter checks passed; screenshots: ${output}`);
-  } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Assembly perimeter checks passed; screenshots: ${output}`;
+});

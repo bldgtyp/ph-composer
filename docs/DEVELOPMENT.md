@@ -258,7 +258,11 @@ waiting on another display. `quit` saves every open document to a scratch path a
 documents opened after the first, so terminating meets no save prompt. A host the bridge cannot reach, or
 one still on a prompt after 30 seconds, is killed, and `quit` says so.
 From there `eval`, `state`, `save`, `shot`, `key`, `console` and `quit` cover the fresh-process
-loop. `tools/hostkit/.index.md` lists what each does. Every `eval` runs in one shared binding, so
+loop, and `wait-for` waits for a named host condition (a session settling, a revision changing, an
+export finishing) through separate polls under one deadline, printing a versioned JSON result with
+`--json`, and `diagnostics` reads the extension's recent log records filtered by session, incident, run
+and severity, paged by a cursor that says when history is missing. `tools/hostkit/.index.md` lists what
+each does. Every `eval` runs in one shared binding, so
 a local variable assigned in one call survives into the next and keeps its object alive. Set such
 locals to nil before checking that a closed Model's session was collected. The measured host facts
 the bridge depends on are in [`context/SKETCHUP_HOST_BEHAVIOR.md`](../context/SKETCHUP_HOST_BEHAVIOR.md).
@@ -321,7 +325,17 @@ make ui-checks UI_CHECKS=tools/ui-preview/spaces_checks.cjs
 `ui-checks` finds Playwright in `UI_DEPS` (`~/.cache/ph-composer-ui`, outside the repository) or in
 `NODE_PATH` when that is set, and prints a skip line without it. A check of a panel screen measures the
 panel's own scroller at real panel sizes through `tools/ui-preview/support/pane_fit.cjs`, not the page.
-`tools/ui-preview/.index.md` describes the page, its fixtures, the development sections it adds and the
+Every check runs through `tools/ui-preview/support/browser_evidence.cjs`, which fails the run on any
+console error, uncaught page error, failed request or HTTP error the check did not declare. A failed
+check writes `<check>.evidence.json` and `<check>.evidence.txt` beside its screenshots, naming each event
+with its step and time. To keep a Playwright trace of a failed check, then open it:
+
+```sh
+PH_COMPOSER_BROWSER_TRACE=on-failure make ui-checks UI_CHECKS=tools/ui-preview/spaces_checks.cjs
+~/.cache/ph-composer-ui/node_modules/.bin/playwright show-trace <check>.trace-1.zip
+```
+
+`always` keeps the trace for passing checks too. `tools/ui-preview/.index.md` describes the page, its fixtures, the development sections it adds and the
 checks.
 
 ## The development example

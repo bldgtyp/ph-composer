@@ -1,20 +1,17 @@
 /* Selection-scoped Solve on the real panel with synthetic Zones; geometry/Undo belong to the host. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { PANEL_SIZES, setPanelSize, paneFacts, assertPaneFits } = require("./support/pane_fit.cjs");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE || fs.mkdtempSync(path.join(os.tmpdir(), "phc-solve-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+check({ name: "selected_solve", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1280, height: 900 } });
     page.setDefaultTimeout(5000);
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+    step("open the authoring fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=authoring`);
     const solve = page.getByRole("button", { name: "Solve adjacencies for checked Zones", exact: true });
     assert.equal(await solve.isVisible(), false);
@@ -28,6 +25,7 @@ fs.mkdirSync(output, { recursive: true });
     await page.getByRole("checkbox", { name: "Uncheck Wall 1", exact: true }).uncheck();
     assert.equal(await solve.isEnabled(), false, "a mixed Zone does not qualify");
     await page.getByRole("checkbox", { name: "Check Living Zone", exact: true }).check();
+    step("Solve bar at panel widths");
     for (const width of [1280, 900, 420, 280]) {
       await page.setViewportSize({ width, height: 900 });
       assert(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `no page overflow at ${width}`);
@@ -41,6 +39,7 @@ fs.mkdirSync(output, { recursive: true });
       assert(bounds, `all selection controls fit the bar at ${width}`);
       await page.screenshot({ path: path.join(output, `selected-solve-${width}.png`) });
     }
+    step("Solve bar at real panel sizes");
     // Real panel sizes (#188), through the shared pane-fit facts: the bar never covers the table's header
     // and is always within reach of the pane's scroll; at the panel minimum it docks beneath the table. The
     // preview's development section after the overview takes 129 px the shipping panel lacks, so the case
@@ -66,7 +65,5 @@ fs.mkdirSync(output, { recursive: true });
       m.type === "action.invoke" && m.payload.name === "ph_composer.zones.solve_adjacency").pop());
     assert.deepEqual(request.payload.params.zones.map(z => z.zone_path).sort(), [[100], [200]],
       "fully checked hidden Zones remain in the explicit scope");
-    assert.deepEqual(errors, []);
-    console.log(`Selected Solve checks passed; evidence in ${output}`);
-  } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Selected Solve checks passed; evidence in ${output}`;
+});

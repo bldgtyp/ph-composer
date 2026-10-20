@@ -30,7 +30,7 @@ the internal users time first.
 6. [PLAN.md](PLAN.md): five stages and their dependencies.
 7. [ACCEPTANCE.md](ACCEPTANCE.md): offline and native checks, including unsuccessful endings.
 
-Developer tooling has its own [developer-observability packet](../../features/unscheduled/developer-observability/README.md)
+Developer tooling has its own [developer-observability packet](../developer-observability/README.md)
 and stage ledger. It reads PS-01's log and can otherwise proceed independently.
 
 ## Scope

@@ -1,25 +1,23 @@
 /* Column-header layout on the real panel: labels and actions keep separate baselines while the table
    resizes, scrolls, repaints and switches units. SketchUp pixels remain a separate acceptance check. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "ph-composer-headers-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
 
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+check({ name: "header", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1280, height: 900 } });
     page.setDefaultTimeout(5000);
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+    step("open the authoring fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=authoring`);
     const table = page.locator(".phc-overview .phc-table");
     await table.waitFor();
+    step("headers at panel widths");
     for (const width of [1559, 1280, 900, 420, 280]) {
       await page.setViewportSize({ width, height: 900 });
       const geometry = await table.locator("th").evaluateAll(headers => headers.filter(h => !h.hidden).map(h => {
@@ -68,6 +66,7 @@ fs.mkdirSync(output, { recursive: true });
       "Ground depth in");
     const resize = table.getByRole("separator", { name: "Resize Building-Segment column", exact: true });
     await resize.focus();
+    step("resize by keyboard");
     for (let count = 0; count < 8; count += 1) await resize.press("ArrowLeft");
     const actionsFit = await table.locator("th.col-building_segment").evaluate(h => {
       const right = h.getBoundingClientRect().right;
@@ -81,9 +80,5 @@ fs.mkdirSync(output, { recursive: true });
     const after = await table.locator("th.col-name").boundingBox();
     assert.equal(after.y, before.y, "both header bands stay sticky together");
     assert.equal(after.height, before.height);
-    assert.deepEqual(errors, []);
-    console.log(`Column header checks passed; evidence in ${output}`);
-  } finally {
-    await browser.close();
-  }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Column header checks passed; evidence in ${output}`;
+});

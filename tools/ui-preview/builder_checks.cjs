@@ -1,19 +1,16 @@
 /* Browser gesture/draft evidence only. Ruby and fresh SketchUp establish thermal and native Undo behavior. */
-const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { check } = require("./support/browser_evidence.cjs");
 const output = process.env.PH_COMPOSER_PREVIEW_EVIDENCE ||
   fs.mkdtempSync(path.join(os.tmpdir(), "ph-composer-builder-"));
 const port = process.env.UI_PREVIEW_PORT || "8765";
 fs.mkdirSync(output, { recursive: true });
-(async () => {
-  const browser = await chromium.launch({ headless: true, channel: "chrome" });
-  try {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-    const errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+check({ name: "builder", output }, async ({ newPage, step }) => {
+    const page = await newPage({ viewport: { width: 1280, height: 900 } });
+    step("open the builder fixture");
     await page.goto(`http://127.0.0.1:${port}/tools/ui-preview/?fixture=builder`);
     await page.locator("[data-tab='assemblies']").click();
     await page.getByRole("button", { name: "Open Wall", exact: true }).click();
@@ -36,6 +33,7 @@ fs.mkdirSync(output, { recursive: true });
     await editor.getByRole("button", { name: "Layer 2 thickness", exact: true }).click();
     const thickness = editor.getByRole("textbox", { name: "Layer 2 thickness", exact: true });
     await thickness.fill("160");
+    step("inline dimension draft");
     // An inline dimension applies its draft when the user leaves it, in the units it was typed in: switching
     // the display units is leaving it, and the value stays 160 mm.
     await page.getByRole("button", { name: "Set display units to IP", exact: true }).click();
@@ -73,6 +71,7 @@ fs.mkdirSync(output, { recursive: true });
     await page.mouse.move(insertBounds.x + insertBounds.width - 1, insertBounds.y + insertBounds.height / 2);
     await editor.getByRole("button", { name: "Insert Layer-Segment right", exact: true }).click();
     await page.waitForFunction(() => window.previewHost.assemblies.records[0].values.layers[1].segments.length === 3);
+    step("insert and delete");
     // What the insert made is selected; it has no Material, so deleting it needs no confirmation.
     const added = await page.evaluate(() => window.previewHost.assemblies.records[0].values.layers[1].segments
       .map(segment => segment.id));
@@ -94,6 +93,7 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.rse_m2k_w), 0.13);
     assert.equal(await page.evaluate(() => window.previewHost.assemblies.records[0].display.thermal.u_construction_w_m2k), 0.21);
     await page.keyboard.press("Escape");
+    step("builder at panel widths");
     for (const width of [1600, 1280, 900, 420, 280]) {
       await page.setViewportSize({ width, height: 900 });
       await editor.getByRole("button", { name: "Material Library", exact: true }).last().click();
@@ -119,7 +119,5 @@ fs.mkdirSync(output, { recursive: true });
     await page.getByRole("button", { name: "Open Incomplete roof", exact: true }).click();
     assert.equal(await page.locator(".assembly-editor [data-u-withheld]").count(), 2);
     await page.screenshot({ path: path.join(output, "builder-incomplete.png") });
-    assert.deepEqual(errors, []);
-    console.log(`Builder browser checks passed; screenshots: ${output}`);
-  } finally { await browser.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+    return `Builder browser checks passed; screenshots: ${output}`;
+});
