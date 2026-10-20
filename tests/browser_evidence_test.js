@@ -14,9 +14,12 @@ var path = require("path");
 var test = require("node:test");
 var evidence = require("../tools/ui-preview/support/browser_evidence.cjs");
 
-function fakePage(url) {
+function fakePage(url, viewport) {
   var page = new EventEmitter();
-  page.url = function () { return url; };
+  page.current = url;
+  page.size = viewport || null;
+  page.url = function () { return page.current; };
+  page.viewportSize = function () { return page.size; };
   return page;
 }
 
@@ -142,6 +145,10 @@ function fakeBrowserType(log, options) {
             tracing: { start: function () { log.push("trace start"); return Promise.resolve(); },
               stop: function (stopOptions) {
                 log.push(stopOptions && stopOptions.path ? "trace kept" : "trace dropped");
+                if (settings.traceStopFails) return Promise.reject(new Error("trace disk full"));
+                if (stopOptions && stopOptions.path) {
+                  fs.writeFileSync(stopOptions.path, "x".repeat(settings.traceBytes || 10));
+                }
                 return Promise.resolve();
               } },
             newPage: function () { return Promise.resolve(fakePage("http://127.0.0.1/?fixture=empty")); },
@@ -197,4 +204,111 @@ test("the trace mode is named; an unknown value is refused rather than ignored",
   assert.strictEqual(evidence.traceMode(undefined), "off");
   assert.strictEqual(evidence.traceMode("always"), "always");
   assert.throws(function () { evidence.traceMode("yes"); }, /must be one of off, on-failure, always/);
+});
+
+test("events past the bound cannot be judged, so the run fails even after an expected-error flood", function () {
+  var collector = collect();
+  var page = fakePage("about:blank");
+  collector.attach(page);
+  collector.expect("console", "flood");
+  for (var index = 0; index < evidence.LIMITS.events; index += 1) {
+    page.emit("console", consoleMessage("error", "flood " + index));
+  }
+  page.emit("console", consoleMessage("error", "the unexpected one"));
+  var report = collector.finish();
+  assert.strictEqual(report.unexpected_count, 0);
+  assert.strictEqual(report.omitted_events, 1);
+  assert.strictEqual(report.status, "failed");
+});
+
+test("a body that rejects with a value that is not an Error still fails the run", async function () {
+  for (var thrown of [null, 0, "", undefined]) {
+    var output = fs.mkdtempSync(path.join(os.tmpdir(), "phc-browser-evidence-thrown-"));
+    var result = await evidence.runCheck({ name: "thrown", output: output, browserType: fakeBrowserType([]) },
+      async function () { return Promise.reject(thrown); });
+    assert.strictEqual(result.ok, false, "rejected with " + String(thrown));
+    assert.strictEqual(result.report.status, "failed");
+    assert.match(result.report.failure.message, /threw a non-Error value/);
+  }
+});
+
+test("a global or sticky expectation matches every time it is asked", function () {
+  var collector = collect();
+  var page = fakePage("about:blank");
+  collector.attach(page);
+  collector.expect("console", /planned/g);
+  collector.expect("pageerror", /planned/y);
+  page.emit("console", consoleMessage("error", "planned"));
+  page.emit("pageerror", new Error("planned"));
+  var first = collector.finish(), second = collector.finish();
+  assert.deepStrictEqual(first.expected.map(function (entry) { return entry.matched; }), [1, 1]);
+  assert.deepStrictEqual(second.expected.map(function (entry) { return entry.matched; }), [1, 1]);
+  assert.strictEqual(second.status, "passed");
+});
+
+test("each event carries the fixture and viewport of the moment it happened", function () {
+  var collector = collect();
+  var page = fakePage("http://127.0.0.1/?fixture=parts", { width: 280, height: 520 });
+  collector.attach(page, { viewport: { width: 1280, height: 800 } });
+  page.emit("console", consoleMessage("error", "at the narrow size"));
+  page.current = "http://127.0.0.1/?fixture=empty";
+  page.size = { width: 1280, height: 800 };
+  var report = collector.finish();
+  assert.strictEqual(report.events[0].fixture, "parts");
+  assert.deepStrictEqual(report.events[0].viewport, { width: 280, height: 520 });
+  assert.match(evidence.summarize(report), /page-1 \[fixture parts, 280 x 520\] console/);
+});
+
+test("URLs, sources and fixtures are clipped and the whole report stays within its byte budget", function () {
+  var collector = collect();
+  var huge = new Array(1000001).join("f");
+  var page = fakePage("http://127.0.0.1/?fixture=" + huge);
+  collector.attach(page);
+  for (var index = 0; index < evidence.LIMITS.events; index += 1) {
+    page.emit("console", { type: function () { return "error"; }, text: function () { return huge; },
+      location: function () { return { url: "http://127.0.0.1/" + huge, lineNumber: 1 }; } });
+  }
+  var report = collector.finish();
+  assert.ok(Buffer.byteLength(JSON.stringify(report)) <= evidence.LIMITS.reportBytes);
+  assert.ok(report.trimmed_events > 0);
+  assert.ok(report.events[0].page_url.length < evidence.LIMITS.url + 50);
+  assert.ok(report.events[0].source.length < evidence.LIMITS.url + 50);
+  assert.ok(report.pages[0].fixture.length < evidence.LIMITS.label + 50);
+  assert.ok(report.problems.some(function (problem) { return /left out to keep the report under/.test(problem); }));
+});
+
+test("steps past the history bound are counted, not silently dropped", function () {
+  var collector = collect();
+  for (var index = 0; index < evidence.LIMITS.steps + 7; index += 1) collector.step("step " + index);
+  var report = collector.finish();
+  assert.strictEqual(report.steps.length, evidence.LIMITS.steps);
+  assert.strictEqual(report.omitted_steps, 7);
+  assert.match(evidence.summarize(report), /steps: 7 after the first 50 omitted/);
+});
+
+test("a trace over the size budget is deleted and recorded; an unwritten trace is surfaced", async function () {
+  var output = fs.mkdtempSync(path.join(os.tmpdir(), "phc-browser-evidence-trace-"));
+  var big = await evidence.runCheck({ name: "big", output: output, trace: "always",
+    browserType: fakeBrowserType([], { traceBytes: evidence.LIMITS.traceBytes + 1 }) }, async function (tools) {
+    await tools.newPage();
+  });
+  assert.strictEqual(big.ok, true);
+  assert.deepStrictEqual(big.report.artifacts.traces, []);
+  assert.strictEqual(big.report.artifacts.omitted_traces[0].bytes, evidence.LIMITS.traceBytes + 1);
+  assert.strictEqual(fs.existsSync(path.join(output, "big.trace-1.zip")), false);
+
+  var warnings = [];
+  var original = console.error;
+  console.error = function (line) { warnings.push(String(line)); };
+  try {
+    var failing = await evidence.check({ name: "unwritten", output: output, trace: "always",
+      browserType: fakeBrowserType([], { traceStopFails: true }) }, async function (tools) {
+      await tools.newPage();
+      return "PASS: unwritten";
+    });
+  } finally {
+    console.error = original;
+  }
+  assert.strictEqual(failing.ok, true);
+  assert.ok(warnings.some(function (line) { return /warning: trace .*trace disk full/.test(line); }));
 });

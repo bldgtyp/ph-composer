@@ -22,7 +22,10 @@ const { performance } = require("node:perf_hooks");
 
 const SCHEMA = 1;
 const KIND = "ph-composer.browser-evidence";
-const LIMITS = Object.freeze({ events: 200, message: 2000, stackLines: 12, steps: 50 });
+// Every string in a report is clipped and every list is capped; a report over `reportBytes` drops its last
+// events (after they were judged) until it fits, and a trace over `traceBytes` is deleted, each with a record.
+const LIMITS = Object.freeze({ events: 200, message: 2000, url: 500, label: 200, stackLines: 12, steps: 50,
+  reportBytes: 512 * 1024, traceBytes: 50 * 1024 * 1024 });
 const TRACE_MODES = Object.freeze(["off", "on-failure", "always"]);
 
 function clip(text, limit = LIMITS.message) {
@@ -43,7 +46,18 @@ function urlOf(page) {
 }
 
 function fixtureOf(url) {
-  try { return new URL(url).searchParams.get("fixture"); } catch (_error) { return null; }
+  let fixture = null;
+  try { fixture = new URL(url).searchParams.get("fixture"); } catch (_error) { fixture = null; }
+  return fixture == null ? null : clip(fixture, LIMITS.label);
+}
+
+function viewportOf(page) {
+  try { return typeof page.viewportSize === "function" ? page.viewportSize() : null; } catch (_error) { return null; }
+}
+
+/* A RegExp without the global and sticky flags, whose `test` would otherwise keep a position between calls. */
+function stateless(pattern) {
+  return pattern instanceof RegExp ? new RegExp(pattern.source, pattern.flags.replace(/[gy]/g, "")) : pattern;
 }
 
 /* Whether an expectation names this event: same kind, and its pattern (a RegExp or a substring) matches
@@ -61,13 +75,15 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
   const started = clock();
   const startedAt = now().toISOString();
   const events = [], expectations = [], pages = [], steps = [];
-  let omitted = 0, currentStep = null;
+  let omitted = 0, omittedSteps = 0, currentStep = null;
 
+  // The page's URL, fixture and viewport are read when the event happens: checks navigate and resize one page.
   function record(kind, pageId, page, fields) {
     if (events.length >= LIMITS.events) { omitted += 1; return; }
     const url = urlOf(page);
     events.push({ kind, page: pageId, step: currentStep, at: now().toISOString(), t_ms: Math.round(clock() - started),
-      page_url: url, ...fields });
+      page_url: url == null ? null : clip(url, LIMITS.url), fixture: fixtureOf(url), viewport: viewportOf(page),
+      ...fields });
   }
 
   function attach(page, { viewport = null } = {}) {
@@ -77,13 +93,13 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
       if (message.type() !== "error") return;
       const location = typeof message.location === "function" ? message.location() : null;
       record("console", pageId, page, { message: clip(message.text()),
-        source: location && location.url ? `${location.url}:${location.lineNumber}` : null });
+        source: location && location.url ? clip(`${location.url}:${location.lineNumber}`, LIMITS.url) : null });
     });
     page.on("pageerror", error => record("pageerror", pageId, page,
       { message: clip(error && error.message), stack: clipStack(error && error.stack) }));
     page.on("requestfailed", request => {
       const failure = typeof request.failure === "function" ? request.failure() : null;
-      record("requestfailed", pageId, page, { method: request.method(), url: clip(request.url(), 500),
+      record("requestfailed", pageId, page, { method: request.method(), url: clip(request.url(), LIMITS.url),
         message: clip(failure && failure.errorText ? failure.errorText : "request failed") });
     });
     page.on("response", response => {
@@ -91,7 +107,7 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
       if (status < 400) return;
       const request = typeof response.request === "function" ? response.request() : null;
       record("http", pageId, page, { status, method: request ? request.method() : null,
-        url: clip(response.url(), 500), message: `HTTP ${status} ${clip(response.statusText(), 200)}`.trim() });
+        url: clip(response.url(), LIMITS.url), message: `HTTP ${status} ${clip(response.statusText(), 200)}`.trim() });
     });
     return pageId;
   }
@@ -100,8 +116,9 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
     attach,
     /* Names the action under way; every later event carries it until the next step. */
     step(label) {
-      currentStep = clip(label, 200);
+      currentStep = clip(label, LIMITS.label);
       if (steps.length < LIMITS.steps) steps.push({ label: currentStep, t_ms: Math.round(clock() - started) });
+      else omittedSteps += 1;
     },
     /* Declares a browser error this case provokes on purpose. It must occur, and only matching events are
        exempt: an expected error is not a blanket console-error exemption. */
@@ -109,9 +126,10 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
       if (!["console", "pageerror", "requestfailed", "http"].includes(kind)) {
         throw new Error(`browser_evidence: unknown event kind ${kind}`);
       }
-      expectations.push({ kind, pattern });
+      expectations.push({ kind, pattern: stateless(pattern) });
     },
-    /* The run's report: unexpected events, expectations that never matched, and the original failure. */
+    /* The run's report: unexpected events, expectations that never matched, and the original failure. Events
+       past the event bound were never kept, so they cannot be judged: the run fails rather than pass on them. */
     finish({ failure = null, browser = null, artifacts = {} } = {}) {
       const unexpected = events.filter(event => !expectations.some(expectation => matches(expectation, event)));
       const expected = expectations.map(expectation => ({ kind: expectation.kind, pattern: String(expectation.pattern),
@@ -120,18 +138,35 @@ function createCollector({ check, clock = () => performance.now(), now = () => n
       const problems = [];
       if (unexpected.length) problems.push(`${unexpected.length} unexpected browser error(s)`);
       if (missing.length) problems.push(`${missing.length} expected browser error(s) did not occur`);
-      if (omitted) problems.push(`${omitted} later event(s) omitted at the ${LIMITS.events}-event bound`);
-      const failed = Boolean(failure) || unexpected.length > 0 || missing.length > 0;
-      return {
-        schema: SCHEMA, kind: KIND, check, status: failed ? "failed" : "passed",
-        failure: failure ? { message: clip(failure.message || failure), stack: clipStack(failure.stack) } : null,
+      if (omitted) {
+        problems.push(`${omitted} later event(s) omitted at the ${LIMITS.events}-event bound and so not judged`);
+      }
+      const failed = Boolean(failure) || unexpected.length > 0 || missing.length > 0 || omitted > 0;
+      const report = {
+        schema: SCHEMA, kind: KIND, check: clip(check, LIMITS.label), status: failed ? "failed" : "passed",
+        failure: failure ? { message: clip(failure.message), stack: clipStack(failure.stack) } : null,
         problems, started_at: startedAt, elapsed_ms: Math.round(clock() - started), browser,
-        pages: pages.map(entry => ({ id: entry.id, viewport: entry.viewport, fixture: fixtureOf(urlOf(entry.page)) })), steps: steps.slice(), expected,
-        unexpected_count: unexpected.length, events: events.slice(), omitted_events: omitted,
+        pages: pages.map(entry => ({ id: entry.id, viewport: entry.viewport, fixture: fixtureOf(urlOf(entry.page)) })),
+        steps: steps.slice(), omitted_steps: omittedSteps, expected,
+        unexpected_count: unexpected.length, events: events.slice(), omitted_events: omitted, trimmed_events: 0,
         limits: { ...LIMITS }, artifacts
       };
+      return withinBudget(report);
     }
   };
+}
+
+/* Drops the report's last events, already judged, until its JSON fits LIMITS.reportBytes, and says so. */
+function withinBudget(report) {
+  const size = () => Buffer.byteLength(JSON.stringify(report));
+  if (size() <= LIMITS.reportBytes) return report;
+  while (report.events.length && size() > LIMITS.reportBytes) {
+    report.events.pop();
+    report.trimmed_events += 1;
+  }
+  report.problems.push(`${report.trimmed_events} judged event(s) left out to keep the report under ` +
+    `${LIMITS.reportBytes} bytes`);
+  return report;
 }
 
 /* The readable account: a projection of the report, never extra data. */
@@ -154,11 +189,16 @@ function summarize(report) {
   if (report.events.length) {
     lines.push("", "browser events:");
     for (const event of report.events) {
-      lines.push(`  +${event.t_ms} ms ${event.page} ${event.kind}${event.step ? ` during "${event.step}"` : ""}: ` +
+      const where = [event.fixture && `fixture ${event.fixture}`,
+        event.viewport && `${event.viewport.width} x ${event.viewport.height}`].filter(Boolean).join(", ");
+      lines.push(`  +${event.t_ms} ms ${event.page}${where ? ` [${where}]` : ""} ${event.kind}` +
+        `${event.step ? ` during "${event.step}"` : ""}: ` +
         `${event.message}${event.url ? ` (${event.method || ""} ${event.url})`.replace("( ", "(") : ""}`);
     }
   }
   if (report.omitted_events) lines.push(`  … ${report.omitted_events} more omitted`);
+  if (report.trimmed_events) lines.push(`  … ${report.trimmed_events} more left out of the report`);
+  if (report.omitted_steps) lines.push(`steps: ${report.omitted_steps} after the first ${report.steps.length} omitted`);
   const files = Object.entries(report.artifacts).filter(([, value]) => value && (!Array.isArray(value) || value.length));
   if (files.length) {
     lines.push("", "artifacts:");
@@ -194,6 +234,27 @@ function traceMode(value = process.env.PH_COMPOSER_BROWSER_TRACE) {
   return mode;
 }
 
+/* A thrown or rejected value as an Error, so `throw null` or `Promise.reject("")` still fails the run. */
+function asError(value) {
+  if (value instanceof Error) return value;
+  let text;
+  try { text = JSON.stringify(value); } catch (_error) { text = String(value); }
+  return Object.assign(new Error(`the check threw a non-Error value: ${text === undefined ? String(value) : text}`),
+    { thrown: value });
+}
+
+/* A kept trace larger than LIMITS.traceBytes is deleted and recorded as omitted, not retained. */
+function keepTrace(file, traces, omittedTraces, problems) {
+  let bytes = 0;
+  try { bytes = fs.statSync(file).size; } catch (error) {
+    problems.push(`trace ${file}: ${error && error.message}`);
+    return;
+  }
+  if (bytes <= LIMITS.traceBytes) { traces.push(file); return; }
+  try { fs.unlinkSync(file); } catch (error) { problems.push(`trace ${file}: ${error && error.message}`); }
+  omittedTraces.push({ file, bytes, limit: LIMITS.traceBytes });
+}
+
 /* Runs one check and returns `{ ok, report, error, evidence }` without touching the process. `browserType`
    defaults to Playwright's chromium; the offline tests pass a double. */
 async function runCheck(options, body) {
@@ -202,7 +263,7 @@ async function runCheck(options, body) {
   if (!name || !output) throw new Error("browser_evidence: a check needs a name and an output directory");
   const collector = createCollector({ check: name, ...options.clocks });
   const contexts = [];
-  let browser = null, browserInfo = null, failure = null, summary = null;
+  let browser = null, browserInfo = null, failure = null, summary = null, threw = false;
   try {
     browser = await browserType.launch(launchOptions);
     browserInfo = { engine: "chromium", channel: launchOptions.channel || "bundled",
@@ -217,15 +278,16 @@ async function runCheck(options, body) {
     };
     summary = await body({ browser, newPage, step: collector.step, expect: collector.expect });
   } catch (error) {
-    failure = error;
+    threw = true;
+    failure = asError(error);
   }
   const preliminary = collector.finish({ failure, browser: browserInfo });
-  const failed = preliminary.status === "failed";
-  const cleanupErrors = [], traces = [];
+  const failed = threw || preliminary.status === "failed";
+  const cleanupErrors = [], traces = [], omittedTraces = [];
   for (const [index, context] of contexts.entries()) {
     if (trace === "always" || (trace === "on-failure" && failed)) {
       const file = path.join(output, `${name}.trace-${index + 1}.zip`);
-      try { await context.tracing.stop({ path: file }); traces.push(file); }
+      try { await context.tracing.stop({ path: file }); keepTrace(file, traces, omittedTraces, cleanupErrors); }
       catch (error) { cleanupErrors.push(`trace ${file}: ${error && error.message}`); }
     } else if (trace !== "off") {
       try { await context.tracing.stop(); } catch (_error) { /* the context is closing anyway */ }
@@ -236,23 +298,28 @@ async function runCheck(options, body) {
     try { await browser.close(); } catch (error) { cleanupErrors.push(`close browser: ${error && error.message}`); }
   }
   const report = collector.finish({ failure, browser: browserInfo,
-    artifacts: { screenshot_dir: output, traces, cleanup_errors: cleanupErrors } });
+    artifacts: { screenshot_dir: output, traces, omitted_traces: omittedTraces, cleanup_errors: cleanupErrors } });
   if (report.status === "passed") return { ok: true, report, error: null, evidence: null, summary };
   const evidence = writeEvidence(report, output, options);
   return { ok: false, report: evidence.report, error: failure, evidence, summary: null };
 }
 
 /* The entry a check script calls. A passing run prints the line the body returns, so nothing claims a pass
-   before the browser errors are judged. A failing run prints the original failure first, then the evidence
+   before the browser errors are judged, then any trace or cleanup problem as a warning. A failing run prints the original failure first, then the evidence
    account and any evidence-write error, and sets a failing exit status. */
 function check(options, body) {
   return runCheck(options, body).then(result => {
     if (result.ok) {
       if (result.summary) console.log(result.summary);
+      for (const problem of result.report.artifacts.cleanup_errors) console.error(`browser_evidence: warning: ${problem}`);
+      for (const omitted of result.report.artifacts.omitted_traces) {
+        console.error(`browser_evidence: warning: trace ${omitted.file} (${omitted.bytes} bytes) deleted over the ` +
+          `${omitted.limit}-byte limit`);
+      }
       return result;
     }
     process.exitCode = 1;
-    if (result.error) console.error(result.error);
+    if (result.error) console.error(result.error.thrown === undefined ? result.error : result.error.message);
     console.error(summarize(result.report));
     for (const error of result.evidence.errors) console.error(`browser_evidence: could not write ${error}`);
     if (result.evidence.written.length) console.error(`browser evidence: ${result.evidence.written.join(", ")}`);
