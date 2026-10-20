@@ -13,6 +13,9 @@ module PhComposer
       "panel.diagnostic" => %w[event section error_class frames],
       # Opens Help & Diagnostics, at the incident a failure notice named when there is one.
       "panel.support" => %w[incident],
+      # SketchUp's own Undo or Redo for the Model the panel showed, from the platform shortcut in the panel.
+      "panel.undo" => %w[session],
+      "panel.redo" => %w[session],
       # `session` names the Model session the panel showed; `expected_revision` the revision it rendered.
       "action.invoke" => %w[request_id session name params expected_revision],
       # What became of an earlier action.invoke whose result the page never received. It never runs the

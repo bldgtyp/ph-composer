@@ -325,6 +325,24 @@ class PanelTest < PhComposerTestCase
                  "and told why its change was not applied"
   end
 
+  def test_the_undo_shortcut_steps_native_undo_and_redo_for_the_shown_model_only
+    dialog = open_panel
+    steps = []
+    Sketchup.stub(:undo, -> { steps << :undo }) do
+      Sketchup.stub(:redo, -> { steps << :redo }) do
+        send_message(dialog, "panel.undo", "session" => "another-session")
+        send_message(dialog, "panel.undo", "session" => @session.id)
+        send_message(dialog, "panel.redo", "session" => @session.id)
+        @session.stub(:busy_reason, "Another change to this Model is still running.") do
+          send_message(dialog, "panel.undo", "session" => @session.id)
+        end
+        Sketchup.active_model = Sketchup::Model.new
+        send_message(dialog, "panel.undo", "session" => @session.id)
+      end
+    end
+    assert_equal %i[undo redo], steps, "an older page's, a busy session's or another Model's reaches nothing"
+  end
+
   def test_a_new_model_that_becomes_active_repaints_the_panel_without_an_activation_event
     dialog = open_panel
     other = Sketchup::Model.new

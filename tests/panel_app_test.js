@@ -97,6 +97,37 @@ test("an action names the shown session and the revision the panel last rendered
     expected_revision: 7 } }]);
 });
 
+test("Cmd+Z and Cmd+Shift+Z step SketchUp's Undo and Redo unless a text field is being edited", function () {
+  var p = page(), body = p.context.document.body;
+  function key(target, init) {
+    var event = Object.assign({ type: "keydown", target: target, prevented: false,
+      preventDefault: function () { this.prevented = true; } }, init);
+    p.context.document.dispatchEvent(event);
+    return event;
+  }
+  key(body, { key: "z", metaKey: true });
+  assert.deepStrictEqual(types(p.sent), [], "no Model shown, nothing sent");
+  p.receive("panel.snapshot", snapshot("session-a", 7));
+  assert.strictEqual(key(body, { key: "z", metaKey: true }).prevented, true);
+  key(body, { key: "z", metaKey: true, shiftKey: true });
+  key(body, { key: "y", ctrlKey: true });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.sent)), [
+    { type: "panel.undo", payload: { session: "session-a" } },
+    { type: "panel.redo", payload: { session: "session-a" } },
+    { type: "panel.redo", payload: { session: "session-a" } }]);
+  var field = p.context.document.createElement("input");
+  field.type = "text";
+  assert.strictEqual(key(field, { key: "z", metaKey: true }).prevented, false, "the field keeps its own undo");
+  field.readOnly = true;
+  key(field, { key: "z", metaKey: true });
+  assert.strictEqual(p.sent.length, 4, "a read-only cell at rest passes the shortcut on");
+  var modal = p.context.document.createElement("dialog");
+  modal.open = true;
+  body.appendChild(modal);
+  key(body, { key: "z", metaKey: true });
+  assert.strictEqual(p.sent.length, 4, "an open dialog's draft keeps the revision it read");
+});
+
 test("a refusal stays on screen as a warning and a failure as an error, until dismissed", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 7));
