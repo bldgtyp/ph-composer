@@ -28,6 +28,22 @@ class ColourByTest < PhComposerTestCase
     assert_equal "side", Registry.current.colour_modes.fetch("outside.probe.by_side").entity_kind
   end
 
+  def test_spread_gives_every_value_its_own_ramp_colour_up_to_the_ramp_length
+    palette = PhComposer::ColourBy::Palette
+    ids = (1..palette::RAMP.length).map { |n| format("spc_%012d", n) }
+    assert_equal ids.length, palette.spread(ids).values.uniq.length
+    assert_equal palette::RAMP.length, palette.spread(ids + ["spc_extra"]).values.uniq.length,
+                 "past the ramp's length colours repeat"
+  end
+
+  def test_spread_moves_the_later_of_two_clashing_values_to_the_next_free_slot
+    palette = PhComposer::ColourBy::Palette
+    # Both digests pick slot 8 of the ramp.
+    colours = palette.spread(%w[spc_000000000003 spc_000000000001])
+    assert_equal palette::RAMP[8], colours.fetch("spc_000000000001")
+    assert_equal palette::RAMP[9], colours.fetch("spc_000000000003")
+  end
+
   # The write channel for viewport state: a client turns a mode on and off through the view seam and
   # reads the legend back from the same answer. Nothing it does reaches the Model.
   def test_a_client_turns_a_mode_on_and_off_without_writing_to_the_model

@@ -6,8 +6,8 @@ module PhComposer
     # modes" and "Colour-by derived geometry"). Each draws the Volume preview prism (Prism) as its derived
     # geometry, so the prisms show while one of these modes is on and never otherwise.
     #
-    # - By Space: each Volume by its Space's id, on the categorical ramp, so a Space keeps its colour as
-    #   others come and go; the legend sums weighted area (iCFA).
+    # - By Space: each Volume by its Space's id, every Space a distinct hue on the categorical ramp, usually
+    #   kept as others come and go (Palette.spread); the legend sums weighted area (iCFA).
     # - By ventilation: each Volume by what its Space supplies or extracts under the any-set rule; the legend
     #   sums the rates the category is named for, supply and extract both for a Space with both, once per Space.
     # - By weighting factor: each Floor Segment by its factor, with its own prism, since one Volume may hold
@@ -110,11 +110,14 @@ module PhComposer
         found
       end
 
+      # Every Space a distinct hue up to the ramp's length (Palette.spread), as the entry's own colour.
       def by_space(views)
+        colours = ColourBy::Palette.spread(views.map { |view| view.space.record.fetch("id") })
         views.map do |view|
           record = view.space.record
           label = [record.fetch("number"), record.fetch("name")].map(&:to_s).reject(&:empty?).join(" ")
-          entry(view, record.fetch("id"), label, ["area", view.metrics.fetch("weighted_area_m2")])
+          entry(view, record.fetch("id"), label, ["area", view.metrics.fetch("weighted_area_m2")],
+                :colour => colours[record.fetch("id")])
         end
       end
 
@@ -176,10 +179,10 @@ module PhComposer
         [row.value.nil? ? 1 : 0, row.value.to_f]
       end
 
-      def entry(view, value, label, figure, incomplete: view.incomplete)
+      def entry(view, value, label, figure, incomplete: view.incomplete, colour: nil)
         volume = view.volume
         ColourBy::Entry.new(:entity => volume.entity, :transform => volume.transform, :path => volume.path,
-                            :value => value, :label => label, :figure => figure,
+                            :value => value, :label => label, :figure => figure, :colour => colour,
                             :state => incomplete ? :incomplete : nil,
                             :derived => derived(view.segments.flat_map(&:prism)))
       end
