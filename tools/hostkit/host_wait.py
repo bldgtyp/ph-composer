@@ -185,6 +185,8 @@ class WaitResult:
     observed_at: str | None = None
     error: str | None = None
     started_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    # Recent diagnostic records beside the ending, when asked for (host_diagnostics.for_wait); never decides it.
+    diagnostics: dict[str, Any] | None = None
 
     def document(self) -> dict[str, Any]:
         return {
@@ -203,7 +205,7 @@ class WaitResult:
             "observed_at": self.observed_at,
             "error": clip(self.error) if self.error is not None else None,
             "note": "An observation only: it applied, retried and cancelled nothing.",
-        }
+        } | ({} if self.diagnostics is None else {"diagnostics": self.diagnostics})
 
     def summary(self) -> str:
         line = f"{clip(self.condition)}: {self.ending} after {self.elapsed_ms} ms and {self.polls} poll(s)"

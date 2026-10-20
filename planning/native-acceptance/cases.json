@@ -1501,6 +1501,20 @@
         "tools/hostkit/host_wait.py",
         "tools/hostkit/host_bridge.py"
       ]
+    },
+    {
+      "authority": "planning/features/unscheduled/developer-observability/ACCEPTANCE.md",
+      "id": "DV3",
+      "label": "Diagnostic read: session and severity filters, a continued cursor, a restarted process named, health and build, a refused filter, wait enrichment, nothing written",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "tools/hostkit/diagnostic_reader.rb",
+        "tools/hostkit/host_diagnostics.py",
+        "tools/hostkit/host_bridge.py",
+        "tools/hostkit/host_helpers.rb",
+        "src/ph_composer/core/diagnostics.rb"
+      ]
     }
   ]
 }
