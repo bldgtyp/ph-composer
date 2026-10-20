@@ -282,12 +282,13 @@ class ReadSyntaxTest(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which(os.environ.get("RUBY", "ruby")), "needs Ruby to run the reads")
 class ReadBindingTest(unittest.TestCase):
-    """The bridge shares one binding across evals: a poll must not overwrite a case's locals."""
+    """The bridge shares one binding across evals: a poll must not overwrite a case's locals. The Ruby stubs
+    are written for Ruby 2.7, the floor host's version: no endless methods."""
 
     STUB = (
         "module PhComposer; module Sessions; Session = Struct.new(:model, :revision, :busy_reason); "
-        "def self.find(_id) = Session.new(:m, 4, nil); end; end; "
-        "module Sketchup; def self.active_model = :m; end; "
+        "def self.find(_id); Session.new(:m, 4, nil); end; end; end; "
+        "module Sketchup; def self.active_model; :m; end; end; "
     )
 
     def test_a_session_read_leaves_the_cases_own_variables_alone(self) -> None:
@@ -308,13 +309,13 @@ class ReadBindingTest(unittest.TestCase):
         stub = (
             "module PhComposer; end; require './src/ph_composer/shell/outcome'; "
             "module PhComposer; module Export; class Tasks; Task = Struct.new(:id, :snapshot); "
-            "def self.for(_session) = new; "
-            f"def owned_by(_handle) = [Task.new('{TASK}', {{'stage' => 'finished', 'count' => 2, "
+            "def self.for(_session); new; end; "
+            f"def owned_by(_handle); [Task.new('{TASK}', {{'stage' => 'finished', 'count' => 2, "
             "'cancellable' => false, 'outcome' => PhComposer::Outcome.build('completed', 'export.complete', "
-            "'Done.', 'none', 3)})]; end; end; "
+            "'Done.', 'none', 3)})]; end; end; end; "
             "module Sessions; Session = Struct.new(:id, :model, :revision, :busy_reason); "
-            f"def self.find(_id) = Session.new('{SESSION}', :m, 3, nil); end; end; "
-            "module Sketchup; def self.active_model = :m; end; require 'json'; "
+            f"def self.find(_id); Session.new('{SESSION}', :m, 3, nil); end; end; end; "
+            "module Sketchup; def self.active_model; :m; end; end; require 'json'; "
         )
         code = hw.CONDITIONS["export_finished"].read({"session": SESSION, "caller": CALLER, "task": TASK})
         done = subprocess.run(
