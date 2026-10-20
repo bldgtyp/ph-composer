@@ -1,9 +1,9 @@
 {
   "assets": {
     "html/agent_access/agent_access.css": {
-      "bytes": 2280,
+      "bytes": 2606,
       "mime": "text/css; charset=utf-8",
-      "sha256": "6817057c767ecaf3fc0098ba9abe14af677a65f45f2e2e44f198da4276bf176d"
+      "sha256": "a4bd2b3e0f236cb228ca9fc72d54c2aaad175872ea037de75a32d750d2f02637"
     },
     "html/agent_access/index.html": {
       "bytes": 840,
