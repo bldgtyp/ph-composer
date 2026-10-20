@@ -263,6 +263,41 @@ class ClassifyToolTest < PhComposerTestCase
     assert_empty values("face_type").compact
   end
 
+  def test_a_move_without_the_button_after_a_lost_release_cancels_the_gesture
+    zone(760, 3)
+    tool.choose("face_type", "Wall")
+    @faces.each_with_index { |face, index| point_at([index, 0], face) }
+
+    press([0, 0])
+    move([1, 0], 0) # the button is up: its release never arrived
+    move([2, 0], 0)
+    release
+
+    assert_empty values("face_type").compact
+  end
+
+  def test_a_draw_that_raises_cancels_the_pending_gesture
+    zone(780, 3)
+    tool.choose("face_type", "Wall")
+    point_at([0, 0], @faces.first)
+    press([0, 0])
+    @view.define_singleton_method(:draw) { |*_args| raise "drawing failed" }
+    tool.draw(@view)
+    release
+
+    assert_empty values("face_type").compact
+  ensure
+    @view.singleton_class.send(:remove_method, :draw) if @view.singleton_methods.include?(:draw)
+  end
+
+  def test_stop_leaves_another_tool_running
+    tool.start
+    tool.stop
+    mark = PhComposer::Spaces.mark_tool(@session).start(1.0)
+    tool.stop
+    assert mark.active?
+  end
+
   # The set stops one past the ceiling so the operation that owns the ceiling refuses the gesture,
   # rather than the tool quietly painting the first 250 of what the pointer crossed.
   def test_a_gesture_over_the_ceiling_is_refused_whole
@@ -843,7 +878,8 @@ class ClassifyToolTest < PhComposerTestCase
     tool.onLButtonDown(0, coordinates.fetch(0), coordinates.fetch(1), @view)
   end
 
-  def move(coordinates, flags = 0)
+  # A move during a drag carries MK_LBUTTON, as the host sends it; a hover passes 0.
+  def move(coordinates, flags = MK_LBUTTON)
     tool.onMouseMove(flags, coordinates.fetch(0), coordinates.fetch(1), @view)
   end
 
