@@ -426,6 +426,7 @@ class CommandRegistryTest(unittest.TestCase):
                 "console",
                 "wait-for",
                 "diagnostics",
+                "fault",
             },
         )
         for name, (configure, run) in hb.COMMANDS.items():
