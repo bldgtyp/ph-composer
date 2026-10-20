@@ -9,9 +9,13 @@ require "securerandom"
 # reduction the support report uses, so a read returns only the fields and values the log accepts: never log
 # file bytes, never the logger's state, never a path.
 #
-# A cursor names this process and the number of the last line returned (`<process>:<number>`). Reading after
-# it returns only later lines. A cursor from another process (SketchUp restarted) or one whose next lines
-# were evicted from the bounded tail, or cleared, says so instead of implying a complete history.
+# A cursor names this process and the number of the next line to read (`<process>:<number>`), so a read of
+# an empty tail still resumes at its first line. A cursor from another process (SketchUp restarted), or one
+# whose next lines were evicted from the bounded tail or cleared, says so instead of implying a complete
+# history. `newest` instead returns the most recent matching records, for a summary beside a wait.
+#
+# Loading this file needs nothing from the extension, so the helpers load even when PH-Composer did not;
+# a read then answers `unavailable`.
 module PhComposerDiagnosticReader
   SCHEMA = 1
   KIND = "ph-composer.diagnostic-read"
@@ -21,10 +25,7 @@ module PhComposerDiagnosticReader
   MAX_LIMIT = 100
   MAX_EVENTS_BYTES = 128 * 1024
   CURSOR = /\A(?<process>\h{8}):(?<number>\d{1,12})\z/.freeze
-  FILTERS = {
-    "session" => PhComposer::Diagnostics::SESSION, "incident" => PhComposer::Diagnostics::INCIDENT,
-    "run_id" => PhComposer::Diagnostics::RUN, "severity" => /\A(?:info|warning|error)\z/.freeze
-  }.freeze
+  SEVERITY = /\A(?:info|warning|error)\z/.freeze
 
   class << self
     # This process's identity for cursors: random, so a restarted SketchUp never matches an old cursor.
@@ -36,28 +37,43 @@ module PhComposerDiagnosticReader
     # a line without one is info), `cursor` and `limit`. Answers a detached Hash; nothing is mutated.
     def read(filters = {})
       filters = filters.transform_keys(&:to_s)
+      unless defined?(PhComposer::Diagnostics) && PhComposer::Diagnostics.respond_to?(:tail_window)
+        return { "schema" => SCHEMA, "kind" => KIND, "status" => "unavailable",
+                 "error" => "the extension's diagnostic log is not loaded in this process" }
+      end
       problem = refusal(filters)
       return document(filters, "refused", problem) if problem
 
       window = PhComposer::Diagnostics.tail_window
-      position = resume(filters["cursor"], window.fetch("first"))
-      lines = window.fetch("lines")
-      start = [position.fetch("from") - window.fetch("first"), 0].max
-      collect(filters, lines, start, window.fetch("first")).merge(
-        "cursor_state" => position.fetch("state"), "gap" => position["gap"], "history" => history(window)
-      ).then { |selected| document(filters, "read", nil).merge(selected) }
+      selected = if filters["newest"]
+                   newest(filters, window)
+                 else
+                   position = resume(filters["cursor"], window.fetch("first"))
+                   start = [position.fetch("from") - window.fetch("first"), 0].max
+                   collect(filters, window.fetch("lines"), start, window.fetch("first"))
+                     .merge("cursor_state" => position.fetch("state"), "gap" => position["gap"])
+                 end
+      document(filters, "read", nil).merge(selected).merge("history" => history(window))
     end
 
     private
 
+    def filters_accepted
+      { "session" => PhComposer::Diagnostics::SESSION, "incident" => PhComposer::Diagnostics::INCIDENT,
+        "run_id" => PhComposer::Diagnostics::RUN, "severity" => SEVERITY }
+    end
+
     def refusal(filters)
-      unknown = filters.keys - FILTERS.keys - %w[cursor limit]
+      unknown = filters.keys - filters_accepted.keys - %w[cursor limit newest]
       return "unknown filter #{unknown.first[0, 32]}" unless unknown.empty?
       unless SUPPORTED_LOG_SCHEMAS.include?(PhComposer::Diagnostics::SCHEMA)
         return "the log's schema #{PhComposer::Diagnostics::SCHEMA} is not one this reader supports"
       end
 
-      FILTERS.each do |name, pattern|
+      return "newest is true or absent, and takes no cursor" if filters.key?("newest") &&
+                                                                (filters["newest"] != true || filters.key?("cursor"))
+
+      filters_accepted.each do |name, pattern|
         next unless filters.key?(name)
         return "#{name} is not in the form the extension generates" unless pattern.match?(filters[name].to_s)
       end
@@ -74,10 +90,10 @@ module PhComposerDiagnosticReader
       match = CURSOR.match(cursor)
       return { "from" => first, "state" => "process_restarted", "gap" => "unknown" } if match[:process] != process
 
-      after = match[:number].to_i + 1
-      return { "from" => after, "state" => "continued" } if after >= first
+      from = match[:number].to_i
+      return { "from" => from, "state" => "continued" } if from >= first
 
-      { "from" => first, "state" => "evicted", "gap" => { "lines" => first - after } }
+      { "from" => first, "state" => "evicted", "gap" => { "lines" => first - from } }
     end
 
     def collect(filters, lines, start, first)
@@ -86,26 +102,55 @@ module PhComposerDiagnosticReader
       events = []
       bytes = 0
       counts = { "matched" => 0, "unsupported_schema" => 0, "unreadable" => 0 }
-      last = start + first - 1
+      following = first + [start, lines.length].min
       truncated = false
-      lines.each_with_index.drop(start).each do |line, index|
-        last = first + index
-        record = (text = PhComposer::Diagnostics.sanitized(line)) && JSON.parse(text)
-        next counts["unreadable"] += 1 unless record
-        next counts["unsupported_schema"] += 1 unless SUPPORTED_LOG_SCHEMAS.include?(record["schema"])
+      each_record(lines, start, first, counts) do |record, text, number|
+        following = number + 1
         next unless selected?(record, filters, minimum)
 
         counts["matched"] += 1
-        size = text.bytesize
-        if events.length >= limit || bytes + size > MAX_EVENTS_BYTES
+        if events.length >= limit || bytes + text.bytesize > MAX_EVENTS_BYTES
           truncated = true
-          last = first + index - 1
+          following = number
           break
         end
-        events << record.merge("line" => first + index)
+        events << record.merge("line" => number)
+        bytes += text.bytesize
+      end
+      counts.merge("events" => events, "truncated" => truncated, "next_cursor" => "#{process}:#{following}")
+    end
+
+    # The most recent matching records, oldest first, within the limit and byte bound; no cursor.
+    def newest(filters, window)
+      minimum = SEVERITIES.index(filters.fetch("severity", "info"))
+      counts = { "matched" => 0, "unsupported_schema" => 0, "unreadable" => 0 }
+      matched = []
+      each_record(window.fetch("lines"), 0, window.fetch("first"), counts) do |record, text, number|
+        next unless selected?(record, filters, minimum)
+
+        counts["matched"] += 1
+        matched << [record.merge("line" => number), text.bytesize]
+      end
+      kept = []
+      bytes = 0
+      matched.reverse_each do |record, size|
+        break if kept.length >= filters.fetch("limit", DEFAULT_LIMIT) || bytes + size > MAX_EVENTS_BYTES
+
+        kept.unshift(record)
         bytes += size
       end
-      counts.merge("events" => events, "truncated" => truncated, "next_cursor" => "#{process}:#{[last, 0].max}")
+      counts.merge("events" => kept, "truncated" => kept.length < matched.length, "cursor_state" => "newest")
+    end
+
+    # Each readable line of a supported schema from `start`, with its sanitized text and line number.
+    def each_record(lines, start, first, counts)
+      lines.each_with_index.drop(start).each do |line, index|
+        record = (text = PhComposer::Diagnostics.sanitized(line)) && JSON.parse(text)
+        next counts["unreadable"] += 1 unless record
+        next counts["unsupported_schema"] += 1 unless SUPPORTED_LOG_SCHEMAS.include?(record["schema"])
+
+        yield record, text, first + index
+      end
     end
 
     def selected?(record, filters, minimum)
@@ -123,7 +168,8 @@ module PhComposerDiagnosticReader
       identity = PhComposer::BuildIdentity
       {
         "schema" => SCHEMA, "kind" => KIND, "status" => status, "error" => problem,
-        "filters" => filters.slice(*FILTERS.keys, "cursor", "limit").transform_values { |value| value.to_s[0, 64] },
+        "filters" => filters.slice(*filters_accepted.keys, "cursor", "limit", "newest")
+                            .transform_values { |value| value.to_s[0, 64] },
         "log_schema" => PhComposer::Diagnostics::SCHEMA, "supported_log_schemas" => SUPPORTED_LOG_SCHEMAS,
         "health" => PhComposer::Diagnostics.health,
         "build" => { "extension_version" => PhComposer::VERSION, "build" => identity.build,

@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import json
+import math
 import os
 import signal
 import socket
@@ -488,9 +489,16 @@ def run_wait_for(args: argparse.Namespace, version: str) -> int:
     result = host_wait.wait_for(
         args.condition, params, read, refused=refused, deadline_s=args.deadline, interval_s=args.interval
     )
-    if args.diagnostics and result.ending not in ("invalid_condition", "bridge_unavailable"):
-        result.diagnostics = host_diagnostics.for_wait(read, params)
-    print(json.dumps(result.document(), indent=2, allow_nan=False) if args.json else result.summary())
+    # Read within what is left of the deadline; never after a cancel, a refusal or a lost bridge.
+    if args.diagnostics and result.ending not in ("invalid_condition", "bridge_unavailable", "cancelled"):
+        budget = args.deadline - result.elapsed_ms / 1000 if math.isfinite(args.deadline) else 0.0
+        result.diagnostics = host_diagnostics.for_wait(read, params, budget)
+    if args.json:
+        print(json.dumps(result.document(), indent=2, allow_nan=False))
+    else:
+        print(result.summary())
+        if result.diagnostics is not None:
+            print(host_diagnostics.summary(result.diagnostics))
     if result.ending == "met":
         return 0
     return 2 if result.ending == "bridge_unavailable" else 1
@@ -514,28 +522,8 @@ def run_diagnostics(args: argparse.Namespace, version: str) -> int:
         document = host_diagnostics.read(bridge_read(version), filters, timeout=args.timeout)
     except host_wait.ReadError as error:
         raise BridgeError(str(error)) from error
-    if args.json:
-        print(json.dumps(document, indent=2, allow_nan=False))
-    else:
-        print(diagnostics_summary(document))
+    print(json.dumps(document, indent=2, allow_nan=False) if args.json else host_diagnostics.summary(document))
     return 0 if document.get("status") == "read" else 1
-
-
-def diagnostics_summary(document: dict[str, Any]) -> str:
-    if document.get("status") != "read":
-        return f"diagnostics refused: {document.get('error')}"
-    lines = [
-        f"{len(document['events'])} of {document['matched']} matching record(s); cursor {document['cursor_state']}"
-        + (f", gap {json.dumps(document['gap'])}" if document.get("gap") else "")
-        + ("; truncated" if document.get("truncated") else "")
-        + f"; log writing {document['health']['writing']}; next cursor {document['next_cursor']}"
-    ]
-    for record in document["events"]:
-        fields = " ".join(
-            f"{key}={record[key]}" for key in ("severity", "session", "incident", "run_id", "code") if key in record
-        )
-        lines.append(f"  {record['line']} {record['timestamp']} {record['event']} {fields}".rstrip())
-    return "\n".join(lines)
 
 
 COMMANDS: dict[str, tuple[Callable[[argparse.ArgumentParser], None], Callable[..., Any]]] = {

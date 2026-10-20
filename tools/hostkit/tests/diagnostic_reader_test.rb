@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "open3"
 require "tmpdir"
 
 # The development diagnostic reader against the real log module in strict mode: filters, cursors across
@@ -62,12 +63,43 @@ class DiagnosticReaderTest < PhComposerTestCase
     assert_equal({ "lines" => 1 }, evicted.fetch("gap"))
     assert_equal %w[after], events(evicted)
 
-    restarted = Reader.read("cursor" => "00000000:#{cursor.split(':').last}")
+    other_process = Reader.process == "00000000" ? "00000001" : "00000000"
+    restarted = Reader.read("cursor" => "#{other_process}:#{cursor.split(':').last}")
     assert_equal "process_restarted", restarted.fetch("cursor_state")
     assert_equal "unknown", restarted.fetch("gap")
   end
 
-  def test_a_limit_truncates_and_the_cursor_points_at_the_last_line_returned
+  def test_a_cursor_from_an_empty_tail_resumes_at_the_first_line_logged
+    empty = Reader.read
+    log("first_ever")
+
+    assert_equal [], events(empty)
+    assert_equal %w[first_ever], events(Reader.read("cursor" => empty.fetch("next_cursor")))
+  end
+
+  def test_newest_returns_the_most_recent_matches_without_a_cursor
+    12.times { |index| log("warning_#{index}", "severity" => "warning", "session" => SESSION) }
+    log("the_failure", "severity" => "error", "session" => SESSION)
+    newest = Reader.read("session" => SESSION, "severity" => "warning", "limit" => 10, "newest" => true)
+
+    assert_equal "newest", newest.fetch("cursor_state")
+    assert_equal 10, newest.fetch("events").length
+    assert_equal "the_failure", newest.fetch("events").last.fetch("event"), "the newest failure is never cut"
+    assert newest.fetch("truncated")
+    refute newest.key?("next_cursor")
+    assert_equal "refused", Reader.read("newest" => true, "cursor" => "#{Reader.process}:0").fetch("status")
+  end
+
+  def test_the_helpers_load_without_the_extension_and_a_read_says_it_is_unavailable
+    script = "load #{File.expand_path('../host_helpers.rb', __dir__).inspect}; " \
+             "puts PhComposerHost.diagnostics.fetch('status')"
+    out, status = Open3.capture2e(RbConfig.ruby, "-e", script)
+
+    assert status.success?, out
+    assert_equal "unavailable", out.strip
+  end
+
+  def test_a_limit_truncates_and_the_cursor_points_past_the_last_line_returned
     5.times { |index| log("line_#{index}") }
     page = Reader.read("limit" => 2)
     rest = Reader.read("cursor" => page.fetch("next_cursor"))
