@@ -76,7 +76,7 @@ PARAMETERS: dict[str, re.Pattern[str]] = {
 # runs in a lambda whose variables are declared block-local: a case's own `s`, `t` or `p` survives a poll, and
 # no session or task stays referenced after it.
 SESSION_READ = (
-    "->(; s, t, p) {{ s = PhComposer::Sessions.find('{session}'); "
+    "->(; s, t, p, n) {{ s = PhComposer::Sessions.find('{session}'); "
     "if s.nil? then {{'session' => 'missing'}} else "
     "{{'session' => 'open', 'active' => s.model == Sketchup.active_model, 'revision' => s.revision, "
     "'busy' => s.busy_reason}}.merge({extra}) end }}.call"
@@ -99,16 +99,26 @@ class Condition:
     description: str
     read: Callable[[dict[str, str]], str]
     met: Callable[[dict[str, Any], dict[str, str]], bool]
-    session: bool = True
+
+
+def revision_of(observed: dict[str, Any]) -> int:
+    """The observed revision; raises when it is not an integer, so the read ends as failed, never as met."""
+    if not isinstance(revision := observed.get("revision"), int) or isinstance(revision, bool):
+        raise TypeError("the projection has no integer revision")
+    return revision
 
 
 def export_task_read() -> Callable[[dict[str, str]], str]:
-    # `owned_by` is the export tasks' public lookup by caller; the snapshot is taken without an asker, so it
-    # carries no artifact location.
+    # `owned_by` is the export tasks' public lookup by caller; one snapshot is taken, without an asker, so it
+    # carries no artifact location. The outcome is null until the task ends, then the standard outcome, whose
+    # `status` is completed, refused, failed or cancelled. Two effects are the tasks' own and not the wait's:
+    # the first read of a session builds its empty task list, and `owned_by` prunes finished tasks past their
+    # retention, as any status poll by the owner does.
     return session_read(
         "begin; t = PhComposer::Export::Tasks.for(s).owned_by('{caller}').find {{ |x| x.id == '{task}' }}; "
-        "t ? {{'task' => t.snapshot.slice('stage', 'count', 'cancellable')"
-        ".merge('state' => t.snapshot['outcome'] && t.snapshot['outcome']['state'])}} "
+        "n = t && t.snapshot; "
+        "n ? {{'task' => n.slice('stage', 'count', 'cancellable')"
+        ".merge('status' => n['outcome'] && n['outcome']['status'])}} "
         ": {{'task' => nil}}; end"
     )
 
@@ -121,6 +131,8 @@ def probe_read() -> Callable[[dict[str, str]], str]:
         "if p.nil? then {{'probe' => nil, 'probe_state' => 'not_loaded'}} "
         "elsif p['run'] != '{probe_run}' || p['session'] != s.id then "
         "{{'probe' => nil, 'probe_state' => 'another_run'}} "
+        "elsif p['state'] == 'stopped' && p['verdict'] == 'pending' then "
+        "{{'probe' => nil, 'probe_state' => 'stopped_before_results'}} "
         "else {{'probe' => p.slice('state', 'run', 'verdict', 'elapsed_ms', 'requests')}} end; end"
     )
 
@@ -140,23 +152,21 @@ CONDITIONS: dict[str, Condition] = {
             ("session", "revision"),
             "the session's revision differs from the one given (revisions compare for equality only)",
             session_read(),
-            lambda observed, params: observed.get("revision") != int(params["revision"]),
+            lambda observed, params: revision_of(observed) != int(params["revision"]),
         ),
         Condition(
             "export_finished",
             ("session", "caller", "task"),
             "the export task the caller started has an outcome",
             export_task_read(),
-            lambda observed, _params: bool(observed.get("task")) and observed["task"].get("state") is not None,
+            lambda observed, _params: observed["task"]["status"] is not None,
         ),
         Condition(
             "runtime_probe_finished",
             ("session", "probe_run"),
-            "the development runtime probe run (tools/hostkit/runtime_probe.rb) has both results or has stopped",
+            "the development runtime probe run (tools/hostkit/runtime_probe.rb) has both results",
             probe_read(),
-            lambda observed, _params: (
-                observed["probe"].get("verdict") not in (None, "pending") or observed["probe"].get("state") == "stopped"
-            ),
+            lambda observed, _params: observed["probe"]["verdict"] not in (None, "pending"),
         ),
     )
 }
@@ -229,6 +239,19 @@ def bounded(value: Any) -> Any:
     return {"truncated": True, "characters": len(text), "prefix": text[:MAX_OBSERVED_CHARS]}
 
 
+def parse_params(items: list[str]) -> tuple[dict[str, str], str | None]:
+    """`NAME=VALUE` items as a mapping, and why they are refused when a name repeats or has no `=`."""
+    params: dict[str, str] = {}
+    for item in items:
+        key, separator, value = item.partition("=")
+        if not separator:
+            return params, f"parameter {clip(key, 64)} has no value"
+        if key in params:
+            return params, f"parameter {clip(key, 64)} is given twice"
+        params[key] = value
+    return params, None
+
+
 def validate(name: str, params: dict[str, str]) -> str | None:
     """Why this condition and these parameters are refused, or None when they are accepted."""
     condition = CONDITIONS.get(name)
@@ -262,6 +285,7 @@ def wait_for(
     params: dict[str, str],
     read: Callable[[str, float], Any],
     *,
+    refused: str | None = None,
     deadline_s: float = DEFAULT_DEADLINE_S,
     interval_s: float = DEFAULT_INTERVAL_S,
     clock: Callable[[], float] = time.monotonic,
@@ -279,11 +303,11 @@ def wait_for(
         result.elapsed_ms = round((clock() - started) * 1000)
         return result
 
-    if problem := validate(name, params) or timing_problem(deadline_s, interval_s):
-        return end("invalid_condition", problem)
-    condition = CONDITIONS[name]
-    code = condition.read(params)
     try:
+        if problem := refused or validate(name, params) or timing_problem(deadline_s, interval_s):
+            return end("invalid_condition", problem)
+        condition = CONDITIONS[name]
+        code = condition.read(params)
         while True:
             remaining = deadline_s - (clock() - started)
             if remaining <= 0:
@@ -303,13 +327,19 @@ def wait_for(
                 return end("timed_out", "the last read answered after the deadline")
             if not isinstance(observed, dict):
                 return end("read_failed", "the read did not return a projection")
-            if condition.session and observed.get("session") == "missing":
+            if observed.get("session") == "missing":
                 return end("session_missing", "the session is not open; the wait does not follow another Model")
-            if condition.session and observed.get("active") is False:
+            if observed.get("session") != "open" or not isinstance(observed.get("active"), bool):
+                return end("read_failed", "the read did not return a session projection")
+            if observed["active"] is False:
                 return end("session_switched", "another Model is active; the wait does not follow it")
             if observed.get("task", True) is None or observed.get("probe", True) is None:
                 return end("target_missing", observed.get("probe_state"))
-            if condition.met(observed, params):
+            try:
+                met = condition.met(observed, params)
+            except (KeyError, TypeError, AttributeError, ValueError):
+                return end("read_failed", "the projection did not have the condition's shape")
+            if met:
                 return end("met")
             remaining = deadline_s - (clock() - started)
             if remaining <= 0:

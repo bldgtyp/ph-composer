@@ -105,6 +105,12 @@ class ReadStateTest(unittest.TestCase):
         self.write_state(2_000_000_000)
         self.assertIsNone(hb.read_state("2026"))
 
+    def test_a_state_file_naming_a_process_group_or_an_impossible_pid_is_not_a_live_bridge(self) -> None:
+        for pid in (0, -1, 99_999_999_999_999_999_999):
+            with self.subTest(pid=pid):
+                self.write_state(pid)
+                self.assertIsNone(hb.read_state("2026"))
+
     def test_a_state_file_for_a_live_process_is_returned(self) -> None:
         self.write_state(os.getpid())  # this process: alive, and signalable without privileges
         state = hb.read_state("2026")
@@ -200,6 +206,15 @@ class WaitReadTest(unittest.TestCase):
                 self.assertRaises(ConnectionError),
             ):
                 read(":x", 1.0)
+
+    def test_an_oversized_poll_reply_is_malformed_not_parsed(self) -> None:
+        big = [b'{"ok":true,"value":"', b"x" * (hb.MAX_WHOLE_REPLY_BYTES + 1), b'"}\n']
+        with (
+            patch.object(hb, "read_state", return_value={"port": 1, "token": "t"}),
+            patch.object(hb.socket, "create_connection", return_value=FakeSocket(big)),
+            self.assertRaises(ConnectionError),
+        ):
+            hb.bridge_read("2026")(":x", 1.0)
 
     def test_finding_the_bridge_counts_against_the_budget(self) -> None:
         def slow_state(_version: str) -> dict[str, object]:

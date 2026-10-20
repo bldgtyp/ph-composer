@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import unittest
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import host_wait as hw
@@ -139,8 +140,8 @@ class EndingsTest(unittest.TestCase):
 
     def test_an_export_task_ends_when_it_has_an_outcome_and_a_missing_task_is_named(self) -> None:
         params = {"session": SESSION, "caller": CALLER, "task": TASK}
-        running = session(task={"stage": "translating", "count": 2, "cancellable": True, "state": None})
-        done = session(task={"stage": "complete", "count": 2, "cancellable": False, "state": "complete"})
+        running = session(task={"stage": "translating", "count": 2, "cancellable": True, "status": None})
+        done = session(task={"stage": "finished", "count": 2, "cancellable": False, "status": "completed"})
         finished, _host, _clock = run("export_finished", params, [running, done])
         absent, _host, _clock = run("export_finished", params, [session(task=None)])
 
@@ -176,6 +177,35 @@ class EndingsTest(unittest.TestCase):
         self.assertIn("NameError", failed.error or "")
         self.assertEqual(lost.ending, "bridge_unavailable")
         self.assertEqual(lost.last_observed, session("x"), "the last observed state survives the lost bridge")
+
+    def test_a_projection_of_the_wrong_shape_is_a_failed_read_never_met(self) -> None:
+        cases = {
+            "session_settled": ({"session": SESSION}, [{}, {"x": 1}, {"session": "open"}]),
+            "revision_changed": ({"session": SESSION, "revision": "3"}, [{"session": "open", "active": True}]),
+            "runtime_probe_finished": ({"session": SESSION, "probe_run": RUN}, [session(probe="not a dict")]),
+            "export_finished": ({"session": SESSION, "caller": CALLER, "task": TASK}, [session(task={})]),
+        }
+        for name, (params, answers) in cases.items():
+            for answer in answers:
+                with self.subTest(name=name, answer=answer):
+                    result, _host, _clock = run(name, params, [answer])
+                    self.assertEqual(result.ending, "read_failed")
+
+    def test_a_probe_that_stopped_before_its_results_is_not_met(self) -> None:
+        params = {"session": SESSION, "probe_run": RUN}
+        result, _host, _clock = run(
+            "runtime_probe_finished", params, [session(probe=None, probe_state="stopped_before_results")]
+        )
+
+        self.assertEqual((result.ending, result.error), ("target_missing", "stopped_before_results"))
+
+    def test_a_repeated_or_valueless_parameter_is_refused(self) -> None:
+        for items in (["session=a", "session=b"], ["session"]):
+            with self.subTest(items=items):
+                params, refused = hw.parse_params(items)
+                result, host, _clock = run("session_settled", params, [session()], refused=refused)
+                self.assertEqual(result.ending, "invalid_condition")
+                self.assertEqual(host.calls, [])
 
     def test_an_interrupt_cancels_the_observation_only(self) -> None:
         result, _host, _clock = run("session_settled", {"session": SESSION}, [session("x"), KeyboardInterrupt()])
@@ -250,10 +280,6 @@ class ReadSyntaxTest(unittest.TestCase):
                 self.assertEqual(done.returncode, 0, done.stderr)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 @unittest.skipUnless(shutil.which(os.environ.get("RUBY", "ruby")), "needs Ruby to run the reads")
 class ReadBindingTest(unittest.TestCase):
     """The bridge shares one binding across evals: a poll must not overwrite a case's locals."""
@@ -274,3 +300,36 @@ class ReadBindingTest(unittest.TestCase):
         self.assertEqual(done.returncode, 0, done.stderr)
         self.assertIn(":case_value, :task", done.stdout)
         self.assertIn('"revision"=>4', done.stdout.replace(" => ", "=>"))
+
+    def test_the_export_read_reports_the_outcome_status_of_the_real_outcome_shape(self) -> None:
+        # The task snapshot carries the extension's own outcome (src/ph_composer/shell/outcome.rb); a read that
+        # projected another key would never be met.
+        root = Path(__file__).resolve().parents[3]
+        stub = (
+            "module PhComposer; end; require './src/ph_composer/shell/outcome'; "
+            "module PhComposer; module Export; class Tasks; Task = Struct.new(:id, :snapshot); "
+            "def self.for(_session) = new; "
+            f"def owned_by(_handle) = [Task.new('{TASK}', {{'stage' => 'finished', 'count' => 2, "
+            "'cancellable' => false, 'outcome' => PhComposer::Outcome.build('completed', 'export.complete', "
+            "'Done.', 'none', 3)})]; end; end; "
+            "module Sessions; Session = Struct.new(:id, :model, :revision, :busy_reason); "
+            f"def self.find(_id) = Session.new('{SESSION}', :m, 3, nil); end; end; "
+            "module Sketchup; def self.active_model = :m; end; require 'json'; "
+        )
+        code = hw.CONDITIONS["export_finished"].read({"session": SESSION, "caller": CALLER, "task": TASK})
+        done = subprocess.run(
+            [os.environ.get("RUBY", "ruby"), "-e", f"{stub} puts JSON.generate({code})"],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=root,
+        )
+        self.assertEqual(done.returncode, 0, done.stderr)
+        observed = json.loads(done.stdout)
+
+        self.assertEqual(observed["task"]["status"], "completed")
+        self.assertTrue(hw.CONDITIONS["export_finished"].met(observed, {}))
+
+
+if __name__ == "__main__":
+    unittest.main()

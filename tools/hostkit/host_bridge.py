@@ -48,6 +48,8 @@ SUPPORT = Path.home() / "Library" / "Application Support"
 APP = Path("/Applications/SketchUp {version}/SketchUp.app")
 HELPERS = Path(__file__).resolve().parent / "host_helpers.rb"
 ESCAPE_KEY_CODE = 53
+# A wait poll's reply is a small projection; anything larger is not one, and parsing it could outlast the budget.
+MAX_WHOLE_REPLY_BYTES = 1024 * 1024
 
 
 class BridgeError(RuntimeError):
@@ -67,8 +69,11 @@ def read_state(version: str) -> dict[str, Any] | None:
         return None
     state = json.loads(path.read_text())
     try:
-        os.kill(int(state["pid"]), 0)
-    except (OSError, ValueError):
+        pid = int(state["pid"])
+        if pid <= 0:  # 0 and negative pids signal process groups, and would look alive
+            return None
+        os.kill(pid, 0)
+    except (OSError, ValueError, OverflowError):
         return None
     return state
 
@@ -90,6 +95,7 @@ def request(state: dict[str, Any], payload: dict[str, Any], timeout: float, *, w
             sock.settimeout(remaining())
         sock.sendall((json.dumps(payload) + "\n").encode("utf-8"))
         chunks: list[bytes] = []
+        received = 0
         while True:
             if whole:
                 sock.settimeout(remaining())
@@ -97,6 +103,9 @@ def request(state: dict[str, Any], payload: dict[str, Any], timeout: float, *, w
             if not chunk:
                 break
             chunks.append(chunk)
+            received += len(chunk)
+            if whole and received > MAX_WHOLE_REPLY_BYTES:
+                raise ValueError(f"the reply exceeded {MAX_WHOLE_REPLY_BYTES} bytes")
     line = b"".join(chunks).decode("utf-8").strip()
     if not line:
         raise ConnectionError("empty reply from the bridge")
@@ -456,7 +465,7 @@ def bridge_read(version: str) -> Callable[[str, float], Any]:
             if left <= 0:
                 raise TimeoutError("finding the bridge used the whole remaining budget")
             answer = request(state, {"code": code}, timeout=left, whole=True)
-        except (ValueError, TypeError, KeyError, UnicodeDecodeError) as error:
+        except (ValueError, TypeError, KeyError, OverflowError, UnicodeDecodeError) as error:
             # Includes JSONDecodeError: a partial state file or reply, or one of the wrong shape.
             raise ConnectionError(f"the bridge's state file or reply was malformed: {error}") from error
         if not isinstance(answer, dict):
@@ -469,9 +478,14 @@ def bridge_read(version: str) -> Callable[[str, float], Any]:
 
 
 def run_wait_for(args: argparse.Namespace, version: str) -> int:
-    params = dict(item.partition("=")[::2] for item in args.param)
+    params, refused = host_wait.parse_params(args.param)
     result = host_wait.wait_for(
-        args.condition, params, bridge_read(version), deadline_s=args.deadline, interval_s=args.interval
+        args.condition,
+        params,
+        bridge_read(version),
+        refused=refused,
+        deadline_s=args.deadline,
+        interval_s=args.interval,
     )
     print(json.dumps(result.document(), indent=2, allow_nan=False) if args.json else result.summary())
     if result.ending == "met":
