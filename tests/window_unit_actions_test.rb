@@ -52,6 +52,31 @@ class WindowUnitActionsTest < PhComposerTestCase
     PhComposer::Records::Engine.new(@model, PhComposer::Registry.current.catalog).find(W::TYPE_KIND, @type_id)
   end
 
+  def test_host_extent_gives_the_face_size_and_each_unit_in_the_offsets_frame
+    extent = assignment_query("#{PREFIX}.units.host_extent", "host" => @face_reference)
+    assert_in_delta 25.4, extent.fetch("width_m"), 1e-9
+    assert_in_delta 25.4, extent.fetch("height_m"), 1e-9
+    corners = extent.fetch("outline_m").transpose.map(&:minmax).transpose
+    assert_equal [[0.0, 0.0], [25.4, 25.4]], corners.map { |pair| pair.map { |value| value.round(9) } }
+    assert_empty extent.fetch("units")
+    place(2.0)
+    unit = assignment_query("#{PREFIX}.units.host_extent", "host" => @face_reference).fetch("units").first
+    assert_equal units.first.fetch("reference"), unit.fetch("reference")
+    assert_in_delta 3.0, unit.fetch("y_m"), 1e-6, "a sill anchor sits at the outline's bottom"
+    assert_in_delta 2.0, unit.fetch("x_m") + (unit.fetch("width_m") / 2), 1e-6, "and a center anchor at its middle"
+    assert_operator unit.fetch("width_m"), :>, 0
+  end
+
+  def test_host_extent_pages_its_units_and_gives_the_extent_on_every_page
+    [2.0, 5.0, 8.0].each { |x| place(x) }
+    first = assignment_query("#{PREFIX}.units.host_extent", "host" => @face_reference, "limit" => 2)
+    assert_equal [2, 3], [first.fetch("units").length, first.fetch("total")]
+    rest = assignment_query("#{PREFIX}.units.host_extent", "host" => @face_reference,
+                                                           "cursor" => first.fetch("next_cursor"))
+    assert_equal [1, nil], [rest.fetch("units").length, rest.fetch("next_cursor")]
+    assert_in_delta 25.4, rest.fetch("width_m"), 1e-9, "the Face's extent comes on every page"
+  end
+
   def test_preview_changes_nothing_and_place_is_one_native_undo_with_public_readback
     before = U::MutationScope.new.capture(@model)
     preview = API.preview(:context => @context, :name => "#{PREFIX}.units.place", :params => params)

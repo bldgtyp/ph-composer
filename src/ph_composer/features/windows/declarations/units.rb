@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../units/actions"
+require_relative "../units/host_extent"
 require_relative "../units/repairs"
 require_relative "../units/update_step"
 
@@ -43,6 +44,7 @@ module PhComposer
         flip_repair(feature, reference)
         restore_repair(feature, face)
         place(feature, face)
+        host_extent(feature, face, reference)
       end
 
       def reads(feature, face, reference)
@@ -213,6 +215,38 @@ module PhComposer
                                  :host => request.params.fetch("host"),
                                  :type_id => request.params.fetch("type_id"),
                                  :pane_paths => request.params.fetch("pane_paths"))
+        end
+      end
+
+      def host_extent(feature, face, reference)
+        number = { "type" => "number", "x-unit" => "m" }
+        rectangle = { "x_m" => number, "y_m" => number, "width_m" => number, "height_m" => number }
+        feature.query("#{FEATURE_ID}.units.host_extent",
+                      :description => "A writable Zone Face's outline and bounding width and height in the frame " \
+                                      "units.place offsets use, with the holes and Window outlines on its plane " \
+                                      "to keep clear of.",
+                      :refuses => Refuses::HOST_EXTENT + Refuses::PAGE,
+                      :params => Shapes.object({ "host" => host(face, "The Zone Face a Window would be placed on."),
+                                                 "limit" => Pages::LIMIT, "cursor" => Pages::CURSOR },
+                                               :optional => %w[limit cursor]),
+                      :result => Shapes.object({
+                        "width_m" => number, "height_m" => number,
+                        "outline_m" => Shapes.list({ "type" => "array", "items" => number, "minItems" => 2,
+                                                     "maxItems" => 2 },
+                                                   :description => "The Face's outer loop as [x_m, y_m] offsets; " \
+                                                                   "a Face that is not a rectangle is narrower " \
+                                                                   "than width_m by height_m in places."),
+                        "holes" => Shapes.list(Shapes.object(rectangle),
+                                               :description => "Each hole's bounding rectangle, in offsets."),
+                        "units" => Shapes.list(Shapes.object({ "reference" => reference }.merge(rectangle)),
+                                               :description => "One page of the Window outlines on the Face's plane " \
+                                                               "that meet its bounding box, each as a bounding " \
+                                                               "rectangle in offsets."),
+                        "next_cursor" => Pages::NEXT_CURSOR, "total" => Pages::TOTAL
+                      }),
+                      :examples => [{ "host" => { "zone_id" => "zon_Ab12Cd34Ef56", "zone_path" => [1201],
+                                                  "entity_path" => [1202], "entity_id" => nil } }]) do |request|
+          Units::HostExtent.read(request, request.params.fetch("host"))
         end
       end
 
