@@ -114,6 +114,64 @@ class FaultControlsTest < PhComposerTestCase
     assert_equal ["the stored colour_by_mode differs from its baseline"], restore.fetch("problems")
   end
 
+  def test_a_failed_restore_keeps_its_baseline_until_the_target_is_repaired
+    Faults.arm("failed_write", "session" => @session.id, "key" => "colour_by_mode")
+    defaults = Sketchup.instance_variable_get(:@defaults) || Sketchup.instance_variable_set(:@defaults, {})
+    defaults[[PhComposer::Preferences::SECTION, "colour_by_mode"]] = "x"
+
+    refute Faults.restore("failed_write").dig("restore", "restored")
+    again = Faults.restore("failed_write")
+    refute again.dig("restore", "restored"), "a second restore cannot pass without a repair"
+    assert_equal "restore_failed", again.fetch("status")
+    assert_match(/restore failed/, Faults.arm("failed_write", "session" => @session.id, "key" => "colour_by_mode")
+                                         .fetch("error"))
+    assert_equal false, Faults.send(:armed).dig("failed_write", "live"), "interception stopped at the first restore"
+
+    defaults.delete([PhComposer::Preferences::SECTION, "colour_by_mode"])
+    repaired = Faults.restore("failed_write")
+    assert repaired.dig("restore", "restored")
+    assert_equal "inert", repaired.fetch("status")
+  end
+
+  def test_failed_write_leaves_another_models_writes_alone
+    Faults.arm("failed_write", "session" => @session.id, "key" => "unit_system")
+    Sketchup.active_model = Sketchup::Model.new
+
+    PhComposer::Preferences.set("unit_system", "IP")
+    assert_equal "IP", PhComposer::Preferences.unit_system
+    assert_equal 0, Faults.observe("failed_write").fetch("interceptions")
+  end
+
+  def test_a_stopped_runtime_that_still_holds_a_resource_is_residual
+    Faults.arm("silent_runtime", "session" => @session.id, "drop" => ["runtime.ready"])
+    @runtime = PhComposer::RuntimeHost.new(:session_id => @session.id).start
+    @runtime.define_singleton_method(:stopped?) { true }
+    @runtime.define_singleton_method(:resources) { { "dialog" => 1 } }
+
+    refute Faults.restore("silent_runtime").dig("restore", "restored")
+  ensure
+    @runtime&.singleton_class&.send(:remove_method, :stopped?)
+    @runtime&.singleton_class&.send(:remove_method, :resources)
+  end
+
+  def test_lost_reply_reads_back_the_panel_state
+    Faults.arm("lost_reply", "session" => @session.id, "request" => "#{@session.id}:panel:9")
+    PhComposer::Panel.stub(:open?, true) do
+      restore = Faults.restore("lost_reply").fetch("restore")
+      refute restore.fetch("restored")
+      assert_equal ["the panel's open state differs from its baseline"], restore.fetch("problems")
+    end
+  end
+
+  def test_interceptions_past_the_hit_log_are_counted
+    Faults.arm("failed_write", "session" => @session.id, "key" => "table_views")
+    25.times { Sketchup.write_default(PhComposer::Preferences::SECTION, "table_views", "x") }
+    observed = Faults.observe("failed_write")
+
+    assert_equal [25, Faults::MAX_HITS, 5],
+                 [observed.fetch("interceptions"), observed.fetch("hits").length, observed.fetch("omitted_hits")]
+  end
+
   def test_lost_reply_drops_one_result_for_its_request_only
     request = "#{@session.id}:panel:7"
     dialog = RecordingDialog.new

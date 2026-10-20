@@ -100,7 +100,9 @@ def succeeded(operation: str, document: dict[str, Any]) -> bool:
 def summary(operation: str, document: dict[str, Any]) -> str:
     if document.get("status") == "refused":
         return f"{document.get('fault')}: {operation} refused: {document.get('error')}"
-    line = f"{document['fault']}: {document['status']}; {len(document.get('hits', []))} interception(s)"
+    line = f"{document['fault']}: {document['status']}; {document.get('interceptions', 0)} interception(s)"
+    if document.get("omitted_hits"):
+        line += f" ({document['omitted_hits']} not kept in the hit log)"
     if restore := document.get("restore"):
         line += f"; restored {restore['restored']}"
         if restore.get("problems"):

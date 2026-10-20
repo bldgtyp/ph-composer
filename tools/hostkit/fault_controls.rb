@@ -6,7 +6,9 @@
 #   arm      checks a clean baseline on a synthetic target, records it, then makes the fault live
 #   observe  reports whether it is armed, its target and the bounded record of what it intercepted
 #   restore  makes it inert, reads the target back against the baseline and reports residual resources;
-#            `restored` is false when anything does not match, and a case must stop there
+#            `restored` is false when anything does not match, and a case must stop there. A failed restore
+#            keeps the original baseline: the fault cannot be re-armed, and a later restore passes only when
+#            the target reads back as that baseline
 #
 # Faults:
 #   lost_reply      the panel's next action.result for one request id is dropped (a reply lost in transit)
@@ -68,33 +70,37 @@ module PhComposerFaults
       return document(name, "refused", :error => problem) if problem
 
       install(name)
-      armed[name] = { "target" => target, "baseline" => baseline(name, target), "hits" => [], "spent" => false }
+      armed[name] = { "target" => target, "baseline" => baseline(name, target), "hits" => [], "count" => 0,
+                      "spent" => false, "live" => true }
       document(name, "armed")
     end
 
     def observe(name)
       return document(name, "refused", :error => "unknown fault") unless NAMES.include?(name)
 
-      document(name, armed.key?(name) ? "armed" : "inert")
+      document(name, status_of(name))
     end
 
     def restore(name)
       return document(name, "refused", :error => "unknown fault") unless NAMES.include?(name)
 
-      state = armed.delete(name)
+      state = armed[name]
       return document(name, "inert", :restore => { "restored" => true, "was_armed" => false }) unless state
 
+      state["live"] = false
       problems = residual(name, state)
       outcome = { "restored" => problems.empty?, "was_armed" => true, "problems" => problems,
-                  "hits" => state["hits"].length }
-      document(name, "inert", :restore => outcome)
+                  "interceptions" => state["count"] }
+      armed.delete(name) if problems.empty?
+      document(name, status_of(name), :restore => outcome)
     end
 
     # Called by an interceptor: true when `name` is armed for this call, after recording the hit.
     def intercept(name, call)
       state = armed[name]
-      return false unless state && !state["spent"] && matches?(name, state["target"], call)
+      return false unless state && state["live"] && !state["spent"] && matches?(name, state["target"], call)
 
+      state["count"] += 1
       state["hits"] << call.merge("at" => Process.clock_gettime(Process::CLOCK_MONOTONIC).round(3)) if
         state["hits"].length < MAX_HITS
       state["spent"] = true if name == "lost_reply"
@@ -107,13 +113,23 @@ module PhComposerFaults
       @armed ||= {}
     end
 
+    # armed, inert, or restore_failed: made inert but not yet read back as its baseline.
+    def status_of(name)
+      state = armed[name]
+      return "inert" unless state
+
+      state["live"] ? "armed" : "restore_failed"
+    end
+
     def installed
       @installed ||= {}
     end
 
     def refusal(name, target)
       return "unknown fault #{name.to_s[0, 32]}" unless NAMES.include?(name)
-      return "#{name} is already armed; restore it first" if armed.key?(name)
+      if armed.key?(name)
+        return "#{name} is #{status_of(name).tr('_', ' ')}; restore it until it reads back as its baseline first"
+      end
 
       session = target["session"].to_s
       unless PhComposer::Diagnostics::SESSION.match?(session)
@@ -152,8 +168,12 @@ module PhComposerFaults
       case name
       when "silent_runtime" then { "live_runtimes" => live_runtimes(target["session"]) }
       when "failed_write" then { "stored" => stored_preference(target["key"]) }
-      else { "panel_open" => PhComposer::Panel.open? }
+      else { "panel_open" => panel_open? }
       end
+    end
+
+    def panel_open?
+      PhComposer::Panel.open? ? true : false
     end
 
     # What restore checks against the baseline, as problems; empty when the target is as it was.
@@ -169,7 +189,8 @@ module PhComposerFaults
         else
           ["the stored #{target['key']} differs from its baseline"]
         end
-      else []
+      else
+        panel_open? == state.dig("baseline", "panel_open") ? [] : ["the panel's open state differs from its baseline"]
       end
     end
 
@@ -181,12 +202,22 @@ module PhComposerFaults
       case name
       when "lost_reply" then call["request"] == target["request"]
       when "silent_runtime" then call["session"] == target["session"] && Array(target["drop"]).include?(call["type"])
-      else call["key"] == target["key"]
+      else call["key"] == target["key"] && target_active?(target["session"])
       end
     end
 
+    # Preferences are machine-wide, so a failed write is confined to the moments the named synthetic Model is
+    # the active one: work in any other Model writes normally.
+    def target_active?(session)
+      model = PhComposer::Sessions.find(session)&.model
+      !model.nil? && model == Sketchup.active_model
+    end
+
+    # Runtimes for the session that are running or still hold a resource (a dialog or server a failed stop left).
     def live_runtimes(session)
-      ObjectSpace.each_object(PhComposer::RuntimeHost).count { |host| host.session_id == session && !host.stopped? }
+      ObjectSpace.each_object(PhComposer::RuntimeHost).count do |host|
+        host.session_id == session && (!host.stopped? || host.resources.values.any?(&:positive?))
+      end
     end
 
     def install(name)
@@ -205,7 +236,9 @@ module PhComposerFaults
       {
         "schema" => SCHEMA, "kind" => KIND, "fault" => name.to_s[0, 32], "status" => status, "error" => error,
         "armed" => !state.nil?, "target" => state && state["target"], "baseline" => state && state["baseline"],
-        "hits" => state ? state["hits"].dup : [], "spent" => state ? state["spent"] : nil,
+        "hits" => state ? state["hits"].dup : [], "interceptions" => state ? state["count"] : 0,
+        "omitted_hits" => state ? state["count"] - state["hits"].length : 0,
+        "spent" => state ? state["spent"] : nil,
         "interceptor_installed" => installed.fetch(name, false), "restore" => restore,
         "fresh_process_required" => installed.fetch(name, false)
       }.compact
