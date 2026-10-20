@@ -49,9 +49,9 @@ module PhComposer
     end
 
     # A request turned away before anything was written. `mutation` adds the sentence that tells a
-    # user the Model did not change.
+    # user the Model did not change, once: a message that already ends with it keeps one.
     def refused(code, message, revision:, status: "refused", mutation: false, findings: [], detail: nil)
-      text = mutation ? "#{message} #{NOTHING_WRITTEN}" : message
+      text = mutation && !message.end_with?(NOTHING_WRITTEN) ? "#{message} #{NOTHING_WRITTEN}" : message
       build(status, code, text, "none", revision, :findings => findings, :detail => detail)
     end
 
