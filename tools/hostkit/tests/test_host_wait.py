@@ -194,6 +194,7 @@ class EndingsTest(unittest.TestCase):
                 result, host, _clock = run(name, params, [session()])
                 self.assertEqual(result.ending, "invalid_condition")
                 self.assertEqual(host.calls, [])
+                json.dumps(result.document(), allow_nan=False)  # strict JSON, as JSON.parse would read it
         extra, _host, _clock = run("session_settled", {"session": SESSION, "task": TASK}, [session()])
         self.assertEqual(extra.error, "session_settled does not take task")
 
@@ -251,3 +252,25 @@ class ReadSyntaxTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(shutil.which(os.environ.get("RUBY", "ruby")), "needs Ruby to run the reads")
+class ReadBindingTest(unittest.TestCase):
+    """The bridge shares one binding across evals: a poll must not overwrite a case's locals."""
+
+    STUB = (
+        "module PhComposer; module Sessions; Session = Struct.new(:model, :revision, :busy_reason); "
+        "def self.find(_id) = Session.new(:m, 4, nil); end; end; "
+        "module Sketchup; def self.active_model = :m; end; "
+    )
+
+    def test_a_session_read_leaves_the_cases_own_variables_alone(self) -> None:
+        code = hw.CONDITIONS["session_settled"].read({"session": SESSION})
+        script = f"{self.STUB} s = :case_value; t = :task; value = {code}; p [s, t, value]"
+        done = subprocess.run(
+            [os.environ.get("RUBY", "ruby"), "-e", script], capture_output=True, text=True, check=False
+        )
+
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertIn(":case_value, :task", done.stdout)
+        self.assertIn('"revision"=>4', done.stdout.replace(" => ", "=>"))

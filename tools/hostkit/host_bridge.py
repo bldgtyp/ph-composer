@@ -445,12 +445,19 @@ def bridge_read(version: str) -> Callable[[str, float], Any]:
     budget. Malformed bridge data is a lost bridge, not a crash."""
 
     def read(code: str, timeout: float) -> Any:
+        deadline = time.monotonic() + timeout
         try:
             state = read_state(version)
             if state is None:
                 raise ConnectionError("host bridge is not running (no live state file)")
-            answer = request(state, {"code": code}, timeout=timeout, whole=True)
-        except (json.JSONDecodeError, UnicodeDecodeError, KeyError) as error:
+            if not (isinstance(state, dict) and isinstance(state.get("token"), str)):
+                raise ConnectionError("the bridge's state file is not a state document")
+            left = deadline - time.monotonic()
+            if left <= 0:
+                raise TimeoutError("finding the bridge used the whole remaining budget")
+            answer = request(state, {"code": code}, timeout=left, whole=True)
+        except (ValueError, TypeError, KeyError, UnicodeDecodeError) as error:
+            # Includes JSONDecodeError: a partial state file or reply, or one of the wrong shape.
             raise ConnectionError(f"the bridge's state file or reply was malformed: {error}") from error
         if not isinstance(answer, dict):
             raise ConnectionError("the bridge's reply was not a result document")
@@ -466,7 +473,7 @@ def run_wait_for(args: argparse.Namespace, version: str) -> int:
     result = host_wait.wait_for(
         args.condition, params, bridge_read(version), deadline_s=args.deadline, interval_s=args.interval
     )
-    print(json.dumps(result.document(), indent=2) if args.json else result.summary())
+    print(json.dumps(result.document(), indent=2, allow_nan=False) if args.json else result.summary())
     if result.ending == "met":
         return 0
     return 2 if result.ending == "bridge_unavailable" else 1

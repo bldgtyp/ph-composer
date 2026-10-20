@@ -170,7 +170,8 @@ class WaitReadTest(unittest.TestCase):
                 read(":x", 1.0)
             with patch.object(hb, "request", return_value={"ok": True, "value": {"busy": None}}) as sent:
                 self.assertEqual(read(":x", 2.5), {"busy": None})
-        self.assertEqual(sent.call_args.kwargs["timeout"], 2.5, "the socket gets the wait's remaining budget")
+        self.assertAlmostEqual(sent.call_args.kwargs["timeout"], 2.5, delta=0.1, msg="the request gets what is left")
+        self.assertLessEqual(sent.call_args.kwargs["timeout"], 2.5)
 
     def test_no_live_bridge_is_a_connection_error(self) -> None:
         with patch.object(hb, "read_state", return_value=None), self.assertRaises(ConnectionError):
@@ -189,6 +190,29 @@ class WaitReadTest(unittest.TestCase):
             self.assertRaises(ConnectionError),
         ):
             read(":x", 1.0)
+
+    def test_a_state_document_of_the_wrong_shape_is_a_lost_bridge(self) -> None:
+        read = hb.bridge_read("2026")
+        for state in ([], {"port": "invalid", "token": "t"}, {"port": 1}):
+            with (
+                self.subTest(state=state),
+                patch.object(hb, "read_state", return_value=state),
+                self.assertRaises(ConnectionError),
+            ):
+                read(":x", 1.0)
+
+    def test_finding_the_bridge_counts_against_the_budget(self) -> None:
+        def slow_state(_version: str) -> dict[str, object]:
+            time.sleep(0.15)
+            return {"port": 1, "token": "t"}
+
+        with (
+            patch.object(hb, "read_state", side_effect=slow_state),
+            patch.object(hb, "request") as sent,
+            self.assertRaises(TimeoutError),
+        ):
+            hb.bridge_read("2026")(":x", 0.1)
+        sent.assert_not_called()
 
     def test_a_whole_request_deadline_bounds_a_slow_multipart_reply(self) -> None:
         # A real loopback socket: the reply arrives in three parts 200 ms apart, so each recv alone would

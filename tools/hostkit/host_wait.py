@@ -72,12 +72,14 @@ PARAMETERS: dict[str, re.Pattern[str]] = {
 
 # The session part every session condition shares: the session by its id, never the active Model's, and
 # whether its Model is still the active one. `Sessions.find` drops closed sessions, as every registry read
-# does; nothing here creates a session.
+# does; nothing here creates a session. The bridge evaluates every call in one shared binding, so the read
+# runs in a lambda whose variables are declared block-local: a case's own `s`, `t` or `p` survives a poll, and
+# no session or task stays referenced after it.
 SESSION_READ = (
-    "s = PhComposer::Sessions.find('{session}'); "
+    "->(; s, t, p) {{ s = PhComposer::Sessions.find('{session}'); "
     "if s.nil? then {{'session' => 'missing'}} else "
     "{{'session' => 'open', 'active' => s.model == Sketchup.active_model, 'revision' => s.revision, "
-    "'busy' => s.busy_reason}}.merge({extra}) end"
+    "'busy' => s.busy_reason}}.merge({extra}) end }}.call"
 )
 
 
@@ -185,8 +187,8 @@ class WaitResult:
             "started_at": self.started_at,
             "elapsed_ms": self.elapsed_ms,
             "polls": self.polls,
-            "deadline_s": self.deadline_s,
-            "interval_s": self.interval_s,
+            "deadline_s": finite(self.deadline_s),
+            "interval_s": finite(self.interval_s),
             "last_observed": bounded(self.last_observed),
             "observed_at": self.observed_at,
             "error": clip(self.error) if self.error is not None else None,
@@ -200,6 +202,11 @@ class WaitResult:
         if self.last_observed is not None:
             line += f"; last observed {json.dumps(bounded(self.last_observed))}"
         return line
+
+
+def finite(value: float) -> float | None:
+    """A timing as JSON can carry it: a refused NaN or infinity becomes null, and the error names it."""
+    return value if math.isfinite(value) else None
 
 
 def clip(text: str, limit: int = MAX_TEXT_CHARS) -> str:
