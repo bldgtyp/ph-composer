@@ -36,6 +36,19 @@ class ColourByTest < PhComposerTestCase
                  "past the ramp's length colours repeat"
   end
 
+  def test_spread_entries_colours_the_uncoloured_and_keeps_an_entry_s_own
+    palette = PhComposer::ColourBy::Palette
+    entries = %w[spc_000000000001 spc_000000000003 spc_000000000005].map do |value|
+      PhComposer::ColourBy::Entry.new(:value => value)
+    end
+    entries.last.colour = [1, 2, 3]
+    entries << PhComposer::ColourBy::Entry.new(:value => nil)
+    palette.spread_entries(entries)
+    assert_equal palette.spread(%w[spc_000000000001 spc_000000000003]).values, entries.first(2).map(&:colour)
+    assert_equal [1, 2, 3], entries[2].colour, "a managed option's own colour stays"
+    assert_nil entries.last.colour, "an unclassified entry is painted as unclassified"
+  end
+
   def test_spread_moves_the_later_of_two_clashing_values_to_the_next_free_slot
     palette = PhComposer::ColourBy::Palette
     # Both digests pick slot 8 of the ramp.
@@ -540,11 +553,11 @@ class ColourByTest < PhComposerTestCase
   end
 
   def test_isolating_a_real_grey_value_keeps_its_fill_distinct_from_the_wash_without_painting_edges
-    # Level "a" selects the real grey in the categorical ramp: 97 modulo 10 is 7.
-    zone_group(720, ["Wall"], :level => "a")
+    # Level "g" selects the real grey in the categorical ramp: alone, it takes its digest's slot, 7.
+    zone_group(720, ["Wall"], :level => "g")
     zone_group(730, ["Wall"], :level => nil)
     service = activate("ph_composer.zones.by_level")
-    service.isolate(["a", "classified"])
+    service.isolate(["g", "classified"])
 
     @model.overlays.to_a.first.draw(@model.active_view)
 

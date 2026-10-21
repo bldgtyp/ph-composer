@@ -55,11 +55,11 @@ module PhComposer
         end
         feature.colour_mode(BY_WEIGHTING_FACTOR, :label => "Weighting factor", :entity_kind => "volume",
                                                  :colours => ColourBy::Palette.ramp) do |read|
-          by_weighting_factor(views(read))
+          ColourBy::Palette.spread_entries(by_weighting_factor(views(read)))
         end
         feature.colour_mode(BY_HEIGHT, :label => "Height", :entity_kind => "volume",
                                        :colours => ColourBy::Palette.ramp, :sort => method(:height_order)) do |read|
-          by_height(views(read))
+          ColourBy::Palette.spread_entries(by_height(views(read)))
         end
       end
 

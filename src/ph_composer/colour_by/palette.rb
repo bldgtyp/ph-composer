@@ -54,6 +54,16 @@ module PhComposer
         end.freeze
       end
 
+      # `entries` with each one that has a value but no colour of its own given its `spread` colour, so a
+      # ramp mode's values are told apart up to the ramp's length. An entry whose record names its colour
+      # (a managed option) keeps it. Answers `entries`.
+      def spread_entries(entries)
+        open = entries.select { |entry| entry.colour.nil? && !entry.value.nil? }
+        colours = spread(open.map(&:value))
+        open.each { |entry| entry.colour = colours.fetch(entry.value) }
+        entries
+      end
+
       # A digest, not `ramp`'s byte sum: ids differing only in order share a byte sum, and fewer clashes
       # means fewer values moved as others come and go.
       def slot(value)
