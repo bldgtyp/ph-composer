@@ -1,6 +1,7 @@
 /* The panel page's one state and its message loop. The host sends the shown Model's snapshot, action
- * results, preference results and notices; a reducer folds each into the state and every registered section
- * re-renders from it. Presentation-only changes (the active tab) never touch the host.
+ * results, preference results and notices; a reducer folds each into the state and, when the state or the
+ * display profile moved, every registered section re-renders from it. Presentation-only changes (the active
+ * tab) never touch the host.
  *
  * Sections register through section(name, render, options). A section whose mount node is not in the page
  * is created in its pane, so a feature, or a development script, adds a section without editing index.html.
@@ -18,6 +19,9 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
   var DEFAULT_ORDER = 100;
   var state = initialState();
   var preferenceSequence = 0;
+  // Preference choices the host has not confirmed yet, by name. Bookkeeping, not shown state: confirming one
+  // changes nothing on screen unless the display profile moves.
+  var pendingPreferences = {};
   var notice = null;
   var shownNotice = null;
   var api;
@@ -38,8 +42,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
   function initialState() {
     return { session: null, revision: null, sections: {},
       ui: { activeTab: "overview", actionResult: null, viewResults: {}, setupResults: {}, queryResults: {},
-        fileExportResults: {}, exportResult: null, notice: null,
-        preferencePending: {} } };
+        fileExportResults: {}, exportResult: null, notice: null } };
   }
 
   function copy(object) {
@@ -70,7 +73,7 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     }
     // A snapshot of no Model: the one shown closed and no other is active (PanelPresence).
     next.ui.noModel = next.session === null;
-    preferences.replace(next.preferences, next.ui.preferencePending);
+    preferences.replace(next.preferences, pendingPreferences);
     return next;
   }
 
@@ -132,21 +135,21 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     return withUI(previous, { exportResult: payload });
   }
 
+  /* A confirmation leaves the state as it was: it shows only if the host's stored preferences move the display
+     profile (receive). A refusal or failure restores the previous value and says why. */
   function reducePreferenceResult(previous, payload) {
-    var pending = copy(previous.ui.preferencePending);
-    var name = Object.keys(pending).filter(function (key) { return pending[key].requestId === payload.request_id; })[0];
+    var name = Object.keys(pendingPreferences).filter(function (key) {
+      return pendingPreferences[key].requestId === payload.request_id;
+    })[0];
     var item;
-    var changes;
     if (!name) return previous;
-    item = pending[name];
-    delete pending[name];
-    changes = { preferencePending: pending };
-    preferences.replace(payload.preferences, pending);
-    if (payload.status !== "completed") {
-      preferences.set(item.key, item.previous, item.extra);
-      changes.notice = { message: payload.message || "The display preference could not be saved.", tone: "error" };
-    }
-    return withUI(previous, changes);
+    item = pendingPreferences[name];
+    delete pendingPreferences[name];
+    preferences.replace(payload.preferences, pendingPreferences);
+    if (payload.status === "completed") return previous;
+    preferences.set(item.key, item.previous, item.extra);
+    return withUI(previous, { notice: { message: payload.message || "The display preference could not be saved.",
+      tone: "error" } });
   }
 
   function reduceNotice(previous, payload) {
@@ -166,12 +169,15 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     return kept;
   }
 
+  /* A message that leaves the state and the display profile as they were has nothing to show, so it renders
+     nothing: a confirmed preference, a result for another Model. */
   function receive(envelope) {
     var handler = envelope && HANDLERS[envelope.type], payload = (envelope && envelope.payload) || {};
-    var before = state;
+    var before = state, moved;
     if (!handler) return;
-    state = handler(state, payload);
+    moved = holdingProfileRepaint(function () { state = handler(state, payload); });
     offerHelp(before, payload);
+    if (state === before && !moved) return;
     render();
   }
 
@@ -507,7 +513,6 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     var details = extra || {};
     var name = key === "dimension_format" ? key + "." + details.scope + "." + details.system :
       key === "table_view" ? key + "." + details.scope : key;
-    var pending = copy(state.ui.preferencePending);
     var requestId = "preferences:" + String(preferenceSequence += 1);
     var payload = { request_id: requestId, key: key, value: value };
     if (key === "dimension_format") {
@@ -515,10 +520,10 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
       payload.system = details.system;
     }
     if (key === "table_view") payload.scope = details.scope;
-    pending[name] = { requestId: requestId, key: key, value: value, extra: details,
+    pendingPreferences[name] = { requestId: requestId, key: key, value: value, extra: details,
       previous: preferenceValue(key, details) };
-    state = withUI(state, { preferencePending: pending });
-    preferences.set(key, value, details);
+    // setPreference renders once, whether or not the choice moves the display profile (a table view does not).
+    holdingProfileRepaint(function () { preferences.set(key, value, details); });
     render();
     send("preferences.set", payload);
     return requestId;
@@ -660,6 +665,24 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
   /* A presentation-only change: a section that owns local view state (a selection, a filter, an open
      row) repaints every section from the state already in hand. It never reaches the host. */
   function repaint() { render(); }
+
+  /* The display profile (unit system, dimension formats, number format) has one repaint owner: the panel renders
+     every section once when it moves. A step that renders when it ends, a received message or a preference
+     chosen here, holds that render so the change shows in the step's own. Components that patch their own
+     nodes (record edits, unit fields) keep their own subscriptions. */
+  var profileHolds = 0, profileMoved = false;
+  preferences.subscribe(function () {
+    if (profileHolds) profileMoved = true;
+    else render();
+  });
+  /* Runs work with the profile's render held; answers whether the profile moved since the outermost hold
+     began. */
+  function holdingProfileRepaint(work) {
+    if (!profileHolds) profileMoved = false;
+    profileHolds += 1;
+    try { work(); } finally { profileHolds -= 1; }
+    return profileMoved;
+  }
 
   var worked = [];
   api = { receive: receive, section: section, region: region, inspectorHeld: inspectorHeld, ready: ready,

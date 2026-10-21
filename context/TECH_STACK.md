@@ -510,12 +510,17 @@ The panel is one client of `PhComposer::API`, not the owner of any Model behavio
 The page:
 
 1. `html/panel.js` keeps one state: the last snapshot, the active tab, the latest correlated action
-   result, one notice and the display preferences the host has not yet confirmed.
+   result and one notice. The display preferences the host has not yet confirmed are the page's own
+   bookkeeping beside it, not shown state.
 2. `receive(envelope)` folds each message into that state; a result or notice for another session
    is not painted, and a snapshot for another Model drops the previous Model's result and notice.
-3. Every message re-renders each registered section with `render(root, state, send)`, after the
-   notice, unit toggle and tabs; a section that throws is logged and the others still paint. Tab
-   changes only toggle panes and send nothing.
+3. A message that changes the state or the display profile re-renders each registered section once
+   with `render(root, state, send)`, after the notice, unit toggle and tabs; one that changes neither (a
+   confirmed preference, a result for another session) renders nothing. A section that throws is logged
+   and the others still paint. Tab changes only toggle panes and send nothing. The panel is the one
+   owner of the repaint a display preference change needs: a section does not subscribe to the
+   preference store to repaint the panel, and only components that patch their own nodes (record edits,
+   unit fields) subscribe.
 4. `panel.section(name, render, { pane })` registers a section. A section whose mount node is not in
    the page is created in its pane, so a feature adds one without editing `index.html`. A section
    owns its local drafts and resets them when `state.session` changes, and patches its nodes
