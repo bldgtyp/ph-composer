@@ -1,5 +1,7 @@
 /* The panel shell: the tab row, the panes under it, the notice layer and the status bar. */
 .live-panel .panel-panes { position: relative; flex: 1; min-height: 0; overflow: auto; padding: 0; }
+/* No Model active: one muted line where the panes were (panel.js renderNoModel). */
+.live-panel .phc-no-model { margin: 48px var(--page-gutter); color: var(--muted); text-align: center; }
 .live-panel section { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .live-panel button { width: auto; font-weight: 400; }
 .live-panel [data-pane] { min-height: 100%; padding: 0 var(--page-gutter); }

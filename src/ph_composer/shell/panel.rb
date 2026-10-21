@@ -167,6 +167,7 @@ module PhComposer
       # A request the page is waiting on is always answered in its own shape, so the view that asked can
       # settle; an unexpected error is logged under an incident reference the failed outcome carries.
       def route(type, payload)
+        PanelPresence.catch_up(type, method(:publish), method(:publish_snapshot))
         case type
         when "panel.ready" then ready
         when "panel.diagnostic" then PanelDiagnostics.record(payload)
@@ -203,7 +204,7 @@ module PhComposer
         @ready = true
         development_scripts.each { |path| run_development_script(path) }
         session = Sessions.current
-        return unless session
+        return publish("panel.snapshot", PanelPresence.empty_snapshot) unless session
 
         publish_snapshot(session)
         delivered, waiting = pending_notices.partition { |item| item["session"] == session.id }
@@ -213,13 +214,12 @@ module PhComposer
 
       # The active Model's session when the payload names it: the panel acts only on the Model it shows.
       def shown_session(payload)
-        session = Sessions.current
-        session if session && payload["session"] == session.id
+        Sessions.current.then { |session| session if session && payload["session"] == session.id }
       end
 
-      # The answer to a request for a Model the panel no longer shows.
-      def inactive_outcome
-        Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil)
+      # The answer to a request for a Model the panel no longer shows: it closed, or another is shown now.
+      def inactive_outcome(mutation: false)
+        Outcome.refused("session.inactive", PanelPresence.inactive_message, :revision => nil, :mutation => mutation)
       end
 
       # The panel acts only on the Model it shows. The result follows the authoritative snapshot, so
@@ -227,7 +227,7 @@ module PhComposer
       def invoke(payload)
         session = Sessions.current
         unless session && payload["session"] == session.id
-          outcome = Outcome.refused("session.inactive", SESSION_CHANGED, :revision => nil, :mutation => true)
+          outcome = inactive_outcome(:mutation => true)
           publish_result(payload, outcome)
           # The page was showing another Model than the active one: bring it up to date and say why the
           # change it sent was not applied.
@@ -380,7 +380,7 @@ module PhComposer
       # A snapshot that cannot be built is logged and skipped; the result that follows still settles the
       # request, and the next refresh tries again.
       def publish_snapshot(session)
-        publish("panel.snapshot", snapshot(session))
+        publish("panel.snapshot", snapshot(session).tap { PanelPresence.shown(session.id) })
       rescue StandardError => error
         Diagnostics.exception("panel_snapshot", error)
       end

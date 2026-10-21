@@ -451,7 +451,10 @@ locations and agent tokens alone.
 Implemented in P0-E and extended in Phase 1. `shell/panel_messages.rb` declares every message
 between the page and Ruby, with the payload keys each carries: `panel.ready`, `panel.diagnostic`,
 `panel.support`, `panel.undo`, `panel.redo` (the platform Undo and Redo shortcuts in the panel, stepping
-SketchUp's own Undo for the shown Model unless a text field being edited has focus), `action.invoke`, `action.status`, `view.invoke`, `setup.invoke`, `query.invoke`, `file_export.invoke`, `preferences.set` and the shell's Export command (`export.start`,
+SketchUp's own Undo for the shown Model unless a text field being edited has focus), `panel.focus` (the
+panel's window gained focus; since closing the active document fires no callback, the host then brings the
+panel to the active Model, or to a snapshot of no Model, as it also does on any request once no Model is
+active), `action.invoke`, `action.status`, `view.invoke`, `setup.invoke`, `query.invoke`, `file_export.invoke`, `preferences.set` and the shell's Export command (`export.start`,
 `export.preflight`, `export.status`, `export.cancel`, `export.latest`) inbound; `panel.snapshot`,
 `action.result`, `view.result`, `setup.result`, `query.result`, `file_export.result`,
 `preferences.result`, `export.result`, `panel.notice` and `panel.failure` outbound. Ruby refuses an inbound type or payload key the table does not declare and answers with
