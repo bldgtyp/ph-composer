@@ -46083,8 +46083,7 @@ Result:
     "height",
     "captured_at",
     "provenance",
-    "overlays",
-    "window_state"
+    "overlays"
   ],
   "properties": {
     "path": {
@@ -46116,13 +46115,6 @@ Result:
         "not_included"
       ],
       "description": "PH-Composer's overlays, tool drawing and panels are not in the image."
-    },
-    "window_state": {
-      "type": "string",
-      "enum": [
-        "unverified"
-      ],
-      "description": "SketchUp's Ruby API cannot tell whether its window is frontmost, hidden or minimized, and the image was measured only frontmost; compare it with the provenance before relying on it."
     }
   }
 }
@@ -49859,3 +49851,4 @@ The codes each feature raises under its own noun, as an outcome's `code` or a fi
 | 1.6 | 2026-10-18 | The Outcome schema gains an optional sequence, set only by the agent connection's invoke and outcome results. |
 | 1.7 | 2026-10-18 | export_status and latest_export give the caller that started a task its written pair's paths, SHA-256 and sizes as outcome.value.artifacts. |
 | 1.8 | 2026-10-18 | The capture capability and ph_composer.view.capture are new; describe names the grant a view command declares when it is not view. |
+| 1.9 | 2026-10-21 | ph_composer.view.capture no longer answers window_state: every window state measured gives the current view. |

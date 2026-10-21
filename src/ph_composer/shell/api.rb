@@ -18,7 +18,7 @@ module PhComposer
   # never live SketchUp objects.
   module API
     MAJOR = 1
-    MINOR = 8
+    MINOR = 9
     # One line per shape change under this major, newest last (context/CONTRACTS.md, "Public
     # interface"); the generated reference lists them.
     CHANGES = [
@@ -47,7 +47,10 @@ module PhComposer
                     "SHA-256 and sizes as outcome.value.artifacts." },
       { "minor" => 8, "date" => "2026-10-18",
         "change" => "The capture capability and ph_composer.view.capture are new; describe names the grant a view " \
-                    "command declares when it is not view." }
+                    "command declares when it is not view." },
+      { "minor" => 9, "date" => "2026-10-21",
+        "change" => "ph_composer.view.capture no longer answers window_state: every window state measured gives the " \
+                    "current view." }
     ].freeze
     # A mutation's `request` envelope.
     REQUEST_SCHEMA = {
