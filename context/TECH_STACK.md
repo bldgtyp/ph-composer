@@ -500,6 +500,16 @@ The panel is one client of `PhComposer::API`, not the owner of any Model behavio
   dialog, so a closed page's late message is ignored. The panel refreshes the shown Model's
   snapshot after committed changes, Undo, Redo, an edit-path change and activation, through the
   session's coalesced timer.
+- Every shipped page (the panel, Agent Access, Help & Diagnostics, the runtime page and the offline
+  help) declares a `Content-Security-Policy` meta, with `tests/page_csp_test.js` holding each page to its
+  policy: no inline script or event handler, and only the extension's own files. The panel and its two
+  dialogs reach no network; the runtime page reaches only its own loopback asset server and allows
+  `'unsafe-eval'` for Pyodide on the Chromium 88 floor. A page starts from `html/boot.js`, which names the
+  entry module on `<body data-phc-entry>`. Inline styles are allowed on the panel, because a blocked
+  run's report shows in a `srcdoc` frame that inherits the panel's policy, and on the generated help
+  page; nowhere else. The panel reports a blocked load as `panel_csp_violation`. Ruby's
+  `execute_script` runs under the policy; a script element it creates is held to it like any other
+  (host gate in [SKETCHUP_HOST_BEHAVIOR.md](SKETCHUP_HOST_BEHAVIOR.md)).
 - A session notice reaches the open panel if it shows that session and otherwise waits, bounded,
   for the panel to show it. Nothing a programmatic caller does opens or raises the panel; only the
   Extensions menu command does.

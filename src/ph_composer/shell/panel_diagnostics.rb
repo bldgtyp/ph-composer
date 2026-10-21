@@ -2,13 +2,15 @@
 
 module PhComposer
   # A failure the panel page reported (`panel.diagnostic`): a section that failed to render, an uncaught
-  # error or a rejected promise. Only the fixed events are recorded, the section only as the registered
-  # feature that owns it, and frames only in files the extension ships, so a page can neither choose a
-  # name nor put its own text in the log.
+  # error, a rejected promise or something its Content-Security-Policy blocked. Only the fixed events are
+  # recorded, the section only as the registered feature that owns it, and frames only in files the extension
+  # ships, so a page can neither choose a name nor put its own text in the log.
   module PanelDiagnostics
-    EVENTS = %w[panel_render_failed panel_uncaught_error panel_unhandled_rejection].freeze
-    # The page names only the language's own error types (html/panel.js); any other value is not kept.
-    ERROR_CLASSES = %w[Error TypeError RangeError ReferenceError SyntaxError URIError EvalError NotAnError].freeze
+    EVENTS = %w[panel_render_failed panel_uncaught_error panel_unhandled_rejection panel_csp_violation].freeze
+    # The page names only the language's own error types and the policy violation (html/panel.js); any other
+    # value is not kept.
+    ERROR_CLASSES = %w[Error TypeError RangeError ReferenceError SyntaxError URIError EvalError NotAnError
+                       SecurityPolicyViolation].freeze
 
     module_function
 

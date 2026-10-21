@@ -185,6 +185,18 @@ class PanelTest < PhComposerTestCase
     assert_empty messages(dialog, "panel.failure")
   end
 
+  def test_a_content_security_policy_violation_is_logged_as_its_fixed_event_and_class
+    dialog = open_panel
+    send_message(dialog, "panel.diagnostic", "event" => "panel_csp_violation", "section" => nil,
+                                             "error_class" => "SecurityPolicyViolation", "frames" => [])
+
+    logged = PhComposer::Diagnostics.tail.map { |line| JSON.parse(line) }.select do |line|
+      line.fetch("event") == "panel_csp_violation"
+    end
+    rows = logged.map { |line| line.values_at("stage", "error_class", "frames") }
+    assert_equal [[nil, "SecurityPolicyViolation", []]], rows
+  end
+
   # A view command carries no expected revision, because it changes no record. The snapshot still
   # follows it, so a section reading what it changed repaints.
   def test_a_query_answers_without_snapshot_or_model_operation_and_rejects_other_sessions

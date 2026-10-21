@@ -1,5 +1,5 @@
 "use strict";
-var assert = require("assert"), test = require("node:test"), fs = require("fs"), vm = require("vm"),
+var assert = require("assert"), test = require("node:test"), fs = require("fs"),
   dom = require("./support/dom_stub"), source = require("./support/panel_source"),
   manifest = require("../tools/panel_manifest");
 
@@ -176,12 +176,13 @@ test("the page lists its entry and the kit it needs, starts, and asks the host f
   var modules = manifest.graph(true);
   var expected = manifest.closure(modules.order, modules.definitions, page.entry);
   markup.replace(/<script src="\.\.\/([^"]+)"><\/script>/g, function (tag, src) { scripts.push(src); return tag; });
-  assert.deepStrictEqual(scripts, ["module.js"].concat(expected.map(function (name) { return name + ".js"; })));
+  assert.deepStrictEqual(scripts, ["module.js"].concat(expected.map(function (name) { return name + ".js"; }),
+    ["boot.js"]));
   assert.ok(expected.indexOf("workspace") === -1 && manifest.graph().order.indexOf(page.entry) === -1);
   var view = context();
   view.sketchup = { ph_composer_agent_access: function (message) { sent.push(JSON.parse(message)); } };
+  view.document.body.setAttribute("data-phc-entry", /<body[^>]* data-phc-entry="([^"]+)"/.exec(markup)[1]);
   scripts.forEach(function (src) { source.load(view, src); });
-  vm.runInNewContext(/<script>([\s\S]*?)<\/script>/.exec(markup)[1], view);
   assert.deepStrictEqual(sent.map(function (message) { return message.type; }), ["access.ready"]);
 });
 
