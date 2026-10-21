@@ -492,7 +492,8 @@ of the value (an Assembly's own colour), the entry supplies `colour: [r, g, b]` 
 it ahead of the mode's colour function; Zones' Assembly mode does this, with a colour function that
 answers nil. The ramp colours one value at a time, so two values can share a hue; a projection that
 must tell every value apart supplies each entry's `colour` from `ColourBy::Palette.spread(values)`,
-distinct up to the ramp's length, as Spaces' By Space mode does.
+distinct up to the ramp's length, or passes its entries through `ColourBy::Palette.spread_entries`,
+which colours those without a colour of their own. Every built-in ramp mode does one or the other.
 An entry's `label` may be a list of parts, as a readout line is (plain text or `[quantity, si_value]`), so
 a unit-bearing label ("2.5 m") follows the display units; and an entry may supply `figure`, one
 `[quantity, si_value]` the legend sums per row and shows beside the count, or a list of them summed

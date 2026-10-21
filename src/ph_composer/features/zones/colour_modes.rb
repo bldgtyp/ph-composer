@@ -3,7 +3,7 @@
 module PhComposer
   module Zones
     # This feature's Colour-by modes: Zone, Building-Segment and Level. Their values are open, so they
-    # take the shared categorical ramp rather than fixed hues.
+    # take the shared categorical ramp rather than fixed hues, spread so each value differs (Palette.spread).
     #
     # Each mode paints the Zone Group itself, which the shared service tessellates; nothing here draws.
     module ColourModes
@@ -16,15 +16,15 @@ module PhComposer
       def install(feature)
         feature.colour_mode(BY_ZONE, :label => "Zone", :entity_kind => "zone",
                                      :colours => ColourBy::Palette.ramp) do |read|
-          entries(read.model) { |record| [record.fetch("id"), record.fetch("name")] }
+          ColourBy::Palette.spread_entries(entries(read.model) { |record| [record.fetch("id"), record.fetch("name")] })
         end
         feature.colour_mode(BY_BUILDING_SEGMENT, :label => "Building-Segment", :entity_kind => "zone",
                                                  :colours => ColourBy::Palette.ramp) do |read|
-          option_entries(read, "building_segment")
+          ColourBy::Palette.spread_entries(option_entries(read, "building_segment"))
         end
         feature.colour_mode(BY_LEVEL, :label => "Level", :entity_kind => "zone",
                                       :colours => ColourBy::Palette.ramp) do |read|
-          option_entries(read, "level")
+          ColourBy::Palette.spread_entries(option_entries(read, "level"))
         end
       end
 

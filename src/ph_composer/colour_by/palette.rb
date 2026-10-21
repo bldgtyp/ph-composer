@@ -44,14 +44,26 @@ module PhComposer
       # Each value prefers a slot its digest picks; when two prefer one slot, the later in sorted order
       # takes the next free one. A value usually keeps its colour as others come and go; one that arrives
       # or leaves can move a value it clashes with, directly or along a run of occupied slots.
-      def spread(values)
-        taken = {}
+      # `reserved` are colours already on screen in the same pass (a managed option's own); their ramp slots
+      # are taken first, so no spread value repeats one.
+      def spread(values, reserved: [])
+        taken = reserved.filter_map { |colour| RAMP.index(colour) }.to_h { |index| [index, true] }
         values.compact.uniq.sort_by(&:to_s).each_with_object({}) do |value, colours|
           index = slot(value)
           index = (index + 1) % RAMP.length while taken.key?(index) && taken.length < RAMP.length
           taken[index] = true
           colours[value] = RAMP[index]
         end.freeze
+      end
+
+      # `entries` with each one that has a value but no colour of its own given its `spread` colour, so a
+      # ramp mode's values are told apart up to the ramp's length. An entry whose record names its colour
+      # (a managed option) keeps it, and its ramp slot is not given to another. Answers `entries`.
+      def spread_entries(entries)
+        open = entries.select { |entry| entry.colour.nil? && !entry.value.nil? }
+        colours = spread(open.map(&:value), :reserved => entries.filter_map(&:colour).uniq)
+        open.each { |entry| entry.colour = colours.fetch(entry.value) }
+        entries
       end
 
       # A digest, not `ramp`'s byte sum: ids differing only in order share a byte sum, and fewer clashes
