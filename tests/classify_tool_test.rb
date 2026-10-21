@@ -438,6 +438,19 @@ class ClassifyToolTest < PhComposerTestCase
     assert_equal PhComposer::Zones::ColourModes::BY_ZONE, ColourBy.for(@session).mode_name
   end
 
+  # Picking the tool's own mode again is still the user's choice, and it stays after the tool.
+  def test_the_tools_mode_picked_again_mid_run_survives_the_tool
+    zone(1_057)
+    ColourBy.for(@session).activate(PhComposer::Zones::ColourModes::BY_ZONE)
+    tool.choose("face_type", "Wall", :reset => true)
+    ColourBy.for(@session).activate(PhComposer::Zones::Faces::ColourModes::BY_BOUNDARY_CONDITION)
+    ColourBy.for(@session).activate(PhComposer::Zones::Faces::ColourModes::BY_FACE_TYPE)
+
+    tool.stop
+
+    assert_equal PhComposer::Zones::Faces::ColourModes::BY_FACE_TYPE, ColourBy.for(@session).mode_name
+  end
+
   # A reload detaches every session. The tool must not be left selected against one that is gone.
   def test_detaching_the_session_takes_the_tool_and_the_mode_it_forced_with_it
     zone(1_060)

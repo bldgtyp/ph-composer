@@ -11,6 +11,7 @@ module PhComposer
         @session = session
         @before = nil
         @taken = nil
+        @switches = nil
       end
 
       def held?
@@ -18,26 +19,28 @@ module PhComposer
       end
 
       # Turns `mode` on for the tool. The first take of a run records what was on before it, and so does a
-      # take after the user picked another mode meanwhile: that mode is the one to come back.
+      # take after the user picked a mode meanwhile: that mode is the one to come back.
       def take(mode)
         return false unless ColourBy.registered?(mode)
 
         service = ColourBy.for(@session)
-        @before = service.mode_name unless held? && service.mode_name == @taken
+        @before = service.mode_name unless held? && service.switches == @switches
         @taken = mode
         service.activate(mode, :remember => false) unless service.mode_name == mode
+        @switches = service.switches
         true
       end
 
-      # Puts back what was on before the first take, while the mode is still the one the tool last took.
+      # Puts back what was on before the first take, unless the mode has switched since the tool last took it.
       def release
         taken = @taken
         before = @before
+        switches = @switches
         forget
         return unless taken
 
         service = ColourBy.for(@session)
-        return if service.mode_name != taken || before == taken
+        return if service.switches != switches || before == taken
 
         if before && ColourBy.registered?(before)
           service.activate(before, :remember => false)
@@ -50,6 +53,7 @@ module PhComposer
       def forget
         @before = nil
         @taken = nil
+        @switches = nil
       end
     end
   end
