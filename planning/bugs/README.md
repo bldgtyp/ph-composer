@@ -9,4 +9,4 @@ Reproduced defects whose evidence is too long for a status row. One file per bug
 
 | Bug | State |
 | --- | --- |
-| [ci-needs-utf8-locale](ci-needs-utf8-locale.md) | Requested; reproduced, five tests read source files with no encoding |
+| [ci-needs-utf8-locale](ci-needs-utf8-locale.md) | Implemented on branch; the test helper sets UTF-8 as Ruby's default external encoding ([#290](https://github.com/bldgtyp/ph-composer/issues/290)) |

@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Source-scanning tests File.read UTF-8 files. Without this, Ruby takes the external encoding from the
+# locale, which is US-ASCII in a shell with none, and matching on what they read raises.
+Encoding.default_external = Encoding::UTF_8
+
 require "fileutils"
 require "json"
 require "minitest/autorun"

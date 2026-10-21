@@ -7,6 +7,10 @@
 # the one-process run, for coverage and for chasing an order-dependent failure; each shard prints its own
 # Minitest seed. One thing only a single process would catch, two files defining the same top-level class, is
 # checked here before anything runs.
+
+# The test files and the shards' output hold UTF-8; see the same line in test_helper.rb.
+Encoding.default_external = Encoding::UTF_8
+
 require "etc"
 require "rbconfig"
 require "tempfile"
