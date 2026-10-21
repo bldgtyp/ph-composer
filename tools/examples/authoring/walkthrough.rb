@@ -37,8 +37,11 @@ module AuthoringWalkthrough
     end
     zones = client.query("ph_composer.zones.all").dig("value", "zones")
     west = zones.find { |zone| zone.dig("values", "name") == "west" }
-    values = west.fetch("values").merge("name" => "West Zone", "building_segment" => "Walkthrough",
-                                        "level" => "L1", "ground_depth_mm" => 150.0)
+    # A Zone names its Building-Segment and Level by managed option id, created through their own action.
+    segment = option(client, "building_segment", "Walkthrough")
+    level = option(client, "level", "L1")
+    values = west.fetch("values").merge("name" => "West Zone", "building_segment_id" => segment,
+                                        "level_id" => level, "ground_depth_mm" => 150.0)
     edited = client.invoke("ph_composer.zones.update", {
       "reference" => west.fetch("reference"), "values" => values, "expected_values" => west.fetch("values")
     })
@@ -57,9 +60,22 @@ module AuthoringWalkthrough
     end
 
     result = verify
+    read_back = result.fetch("zone_values").find { |row| row["name"] == "West Zone" }
+    applied = edited["code"] == "ok" && !read_back.nil? && values.all? { |key, value| read_back[key] == value }
     result.merge("previewed" => made.all? { |row| row["effect"] == "committed" },
-                 "zone_edit" => edited.values_at("status", "effect"),
-                 "classification" => classified.map { |row| row.values_at("status", "effect") })
+                 "zone_edit" => edited.values_at("status", "effect"), "zone_edit_applied" => applied,
+                 "classification" => classified.map { |row| row.values_at("status", "effect") },
+                 "passed" => result.fetch("passed") && applied)
+  end
+
+  # A managed Building-Segment or Level option's id, created through the public action.
+  def option(client, collection, name)
+    created = client.invoke("ph_composer.zones.options.create", {
+      "collection" => collection, "values" => { "name" => name, "colour" => "#268589" }
+    })
+    raise "Creating the #{collection} option was refused: #{created['message']}" unless created["code"] == "ok"
+
+    created.dig("value", "id")
   end
 
   def undo
