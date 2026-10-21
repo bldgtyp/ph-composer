@@ -128,6 +128,35 @@ test("Cmd+Z and Cmd+Shift+Z step SketchUp's Undo and Redo unless a text field is
   assert.strictEqual(p.sent.length, 4, "an open dialog's draft keeps the revision it read");
 });
 
+test("a snapshot of no Model hides the panes behind one line, and window focus asks the host to catch up", function () {
+  var p = page();
+  p.receive("panel.snapshot", snapshot("session-a", 7, { edit_path: ["Zone 1"] }));
+  assert.strictEqual(p.query(".panel-panes").hidden, false);
+  p.receive("panel.snapshot", snapshot(null, null, { file_name: null }));
+  var note = p.query(".phc-no-model");
+  assert.strictEqual(note.hidden, false);
+  assert.strictEqual(note.textContent, "No Model is active. Click a SketchUp document window to show it here.");
+  assert.strictEqual(p.query(".panel-panes").hidden, true);
+  assert.deepStrictEqual(p.query("[data-section='footer']").children.map(function (span) { return span.textContent; })
+    .slice(1, 2), ["Editing: Model"], "the status bar no longer names the closed Model's open group");
+  p.receive("panel.snapshot", snapshot("session-b", 2));
+  assert.strictEqual(note.hidden, true);
+  assert.strictEqual(p.query(".panel-panes").hidden, false);
+  p.context.dispatchEvent({ type: "focus" });
+  assert.deepStrictEqual(types(p.sent).slice(-1), ["panel.focus"]);
+});
+
+test("a dialog the closed Model's screen held open closes when no Model is active", function () {
+  var p = page(["overlay"]);
+  p.receive("panel.snapshot", snapshot("session-a", 7));
+  var dialog = p.modules.overlay.formDialog("held-form", function () {});
+  p.context.document.body.appendChild(dialog);
+  dialog.openModal();
+  assert.strictEqual(dialog.hidden, false);
+  p.receive("panel.snapshot", snapshot(null, null, { file_name: null }));
+  assert.strictEqual(dialog.hidden, true, "its Save could only reach a session that is gone");
+});
+
 test("a refusal stays on screen as a warning and a failure as an error, until dismissed", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 7));

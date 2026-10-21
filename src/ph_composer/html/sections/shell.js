@@ -20,5 +20,5 @@ PhComposerUI.define("sections/shell", ["panel", "workspace"], function (panel, u
     });
   }
 
-  panel.section("footer", renderFooter);
+  panel.section("footer", renderFooter, { withoutModel: true });
 });

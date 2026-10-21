@@ -68,6 +68,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
       next.ui.exportResult = null;
       next.ui.notice = null;
     }
+    // A snapshot of no Model: the one shown closed and no other is active (PanelPresence).
+    next.ui.noModel = next.session === null;
     preferences.replace(next.preferences, next.ui.preferencePending);
     return next;
   }
@@ -347,6 +349,8 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     else send("panel.undo", { session: state.session });
   }
   if (document.addEventListener) document.addEventListener("keydown", historyKey);
+  // Closing the active document tells the host nothing; the panel's window gaining focus lets it catch up.
+  if (window.addEventListener) window.addEventListener("focus", function () { send("panel.focus", {}); });
   if (window.addEventListener) {
     window.addEventListener("error", function (event) { report("panel_uncaught_error", null, event && event.error); });
     window.addEventListener("unhandledrejection", function (event) {
@@ -360,9 +364,35 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     renderNotice();
     renderUnitToggle();
     applyTab();
+    renderNoModel();
     if (state.session !== null) { sections.forEach(renderSection); showInspectors(); }
+    else if (state.ui.noModel) sections.filter(function (entry) { return entry.withoutModel; }).forEach(renderSection);
     renderRecovery();
     document.body._checkTooltip();
+  }
+
+  /* With no Model active the panes would keep the closed Model's last screen; they hide behind one line that
+     says how to show a Model. The host sends such a snapshot when it learns the Model it showed has closed. */
+  var noModelNote = null;
+  function renderNoModel() {
+    var none = Boolean(state.ui.noModel), panes = document.querySelector(".panel-panes");
+    if (!panes) return;
+    // A dialog the closed Model's screen held open (a form, a review) can only send to a session that is gone,
+    // so it closes with it; a Model shown later is a new session and builds its screens afresh.
+    if (none && !panes.hidden) {
+      Array.prototype.forEach.call(document.querySelectorAll("dialog"), function (dialog) {
+        if (dialog.closeModal) dialog.closeModal();
+        else if (dialog.open && dialog.close) dialog.close();
+      });
+    }
+    if (none && !noModelNote) {
+      noModelNote = ui.element("p", "phc-no-model", "No Model is active. Click a SketchUp document window to show " +
+        "it here.");
+      noModelNote.setAttribute("role", "status");
+      panes.parentNode.insertBefore(noModelNote, panes);
+    }
+    if (noModelNote) noModelNote.hidden = !none;
+    panes.hidden = none;
   }
 
   /* One floating notice above the panes, so a late message never reflows the page. Warnings and errors stay
@@ -436,13 +466,16 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
      after it, and load order is decided by the module graph, so a section that cares says so.
      `options.onNavigate(root, intent)` receives the intent of a `navigate` to its pane.
      `options.region` places it in the pane's `inspector`, `tools` or `actions` region instead of `main`. An
-     inspector section names its `options.tier` and may give `options.when(state)`; see showInspectors. */
+     inspector section names its `options.tier` and may give `options.when(state)`; see showInspectors.
+     `options.withoutModel` keeps a section rendering while no Model is active (renderNoModel), as the status bar
+     does; every other section waits for a Model. */
   function section(name, renderFunction, options) {
     var entry = { name: name, render: renderFunction, pane: (options && options.pane) || "overview",
       region: (options && options.region) || "main", when: options && options.when,
       tier: options && options.tier,
       order: (options && options.order) !== undefined ? options.order : DEFAULT_ORDER,
-      onNavigate: options && options.onNavigate, registered: sections.length };
+      onNavigate: options && options.onNavigate, withoutModel: Boolean(options && options.withoutModel),
+      registered: sections.length };
     if (REGIONS.indexOf(entry.region) < 0) {
       throw new Error("panel section \"" + name + "\" names no region \"" + entry.region + "\"");
     }

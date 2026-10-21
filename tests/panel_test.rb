@@ -343,6 +343,30 @@ class PanelTest < PhComposerTestCase
     assert_equal %i[undo redo], steps, "an older page's, a busy session's or another Model's reaches nothing"
   end
 
+  # Closing the active document fires no callback, so the panel learns of it from the next request or focus.
+  def test_once_the_shown_model_closes_a_request_shows_no_model_and_focus_shows_the_next
+    dialog = open_panel
+    Sketchup.active_model = nil
+    create(dialog, "c1")
+    refused = messages(dialog, "action.result").last.fetch("outcome")
+    assert_equal ["session.inactive", "#{PhComposer::PanelPresence::CLOSED} Nothing was written."],
+                 refused.values_at("code", "message")
+    assert_nil messages(dialog, "panel.snapshot").last.fetch("session"), "the panel shows no Model"
+    before = messages(dialog, "panel.snapshot").length
+    dialog.fire("ph_composer_message", envelope("panel.focus", {}))
+    assert_equal before, messages(dialog, "panel.snapshot").length, "still none to show: nothing new"
+    other = Sketchup::Model.new
+    Sketchup.active_model = other
+    dialog.fire("ph_composer_message", envelope("panel.focus", {}))
+    assert_equal PhComposer::Sessions.for(other).id, messages(dialog, "panel.snapshot").last.fetch("session")
+    Sketchup.active_model = nil
+    dialog.fire("ph_composer_message", envelope("panel.focus", {}))
+    before = messages(dialog, "panel.snapshot").length
+    dialog.fire("ph_composer_message", envelope("panel.ready", {}))
+    assert_equal before + 1, messages(dialog, "panel.snapshot").length, "a reloaded page learns there is none"
+    assert_nil messages(dialog, "panel.snapshot").last.fetch("session")
+  end
+
   def test_a_new_model_that_becomes_active_repaints_the_panel_without_an_activation_event
     dialog = open_panel
     other = Sketchup::Model.new
