@@ -100,6 +100,24 @@ module PhComposer
         end
       end
 
+      # The findings of every Volume outside every Space and of its Floor Segments, each with its reference, for
+      # the model-wide findings read. `all` reports such a Volume by its stray finding alone and never measures
+      # it; a Volume that cannot be measured is left to that stray finding here too, never refusing the read.
+      def orphan_findings(request)
+        scan = Occurrences.scan(request.model)
+        counts = occurrence_counts(scan)
+        scan.orphan_volumes.sort_by(&:path).flat_map do |volume|
+          row = volume_row(volume, request.registry.catalog, request.model, counts, false)
+          referenced(row) + row.fetch("floor_segments").flat_map { |segment| referenced(segment) }
+        rescue CodedError
+          []
+        end
+      end
+
+      def referenced(row)
+        row.fetch("findings").map { |finding| finding.merge("reference" => row.fetch("reference")) }
+      end
+
       def occurrence_counts(scan)
         Resolve::TARGETS.transform_values do |target|
           target.occurrences_in(scan).map { |occurrence| occurrence.record.fetch("id") }.tally

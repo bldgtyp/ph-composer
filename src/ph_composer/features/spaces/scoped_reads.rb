@@ -102,7 +102,9 @@ module PhComposer
           space = located(rows, params["space"], "space_id", "Space")
           found = row_findings(space) + Summaries.inside(strays, PATH.call(space))
         else
-          found = rows.flat_map { |row| row_findings(row) } + zone_findings(zones) + strays
+          # An orphan Volume's stray finding is already among the strays; its own findings join it once.
+          orphans = Reads.orphan_findings(request).reject { |finding| strays.include?(finding) }
+          found = rows.flat_map { |row| row_findings(row) } + zone_findings(zones) + strays + orphans
         end
         found = found.select { |finding| params["codes"].include?(finding.fetch("code")) } if params.key?("codes")
         keyed = found.each_with_index.map { |finding, index| [finding_key(finding, index), finding] }.sort_by(&:first)

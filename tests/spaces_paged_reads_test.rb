@@ -132,6 +132,23 @@ class SpacesPagedReadsTest < PhComposerTestCase
     assert_equal %w[fsg_PPPPPPPPPPPP], segments.map { |row| row["id"] }
   end
 
+  def test_the_model_wide_findings_read_names_an_orphan_volumes_own_findings_once
+    reference_model
+    orphan = volume_group(2900, volume_record("O", :height => nil),
+                          [floor_face(2901, rectangle(20, 0, 1, 1), segment_record("P"))])
+    @model.entities.to_a.last.entities << orphan
+    path = [2000, 2900]
+
+    findings = read("findings.list", {}).fetch("findings")
+    on_orphan = findings.select { |finding| finding.dig("reference", "entity_path") == path }.map { |row| row["code"] }
+
+    assert_includes on_orphan, "space.volume_orphan"
+    assert_operator on_orphan.length, :>, 1, "its own findings join the stray one: #{on_orphan.inspect}"
+    assert_equal on_orphan.uniq, on_orphan, "each once"
+    in_all = query("all", {}).dig("value", "findings").select { |row| row.dig("reference", "entity_path") == path }
+    assert_equal ["space.volume_orphan"], in_all.map { |row| row["code"] }, "all still reports the stray alone"
+  end
+
   def test_an_orphan_volume_that_cannot_be_measured_leaves_all_and_list_reading
     reference_model
     tiny = Sketchup::Group.new(2900, Sketchup::Entities.new([floor_face(2901, rectangle(20, 0, 1, 1),
@@ -142,8 +159,10 @@ class SpacesPagedReadsTest < PhComposerTestCase
 
     whole = query("all", {})
     listed = query("list", {})
+    findings = query("findings.list", {})
 
-    assert_equal %w[completed completed], [whole, listed].map { |result| result["status"] }, whole.inspect
+    assert_equal %w[completed completed completed], [whole, listed, findings].map { |result| result["status"] },
+                 whole.inspect
     assert_equal 4, whole.dig("value", "spaces").length
   end
 

@@ -246,7 +246,9 @@ module PhComposer
         install_candidates(feature, refuses, example)
         feature.query(ScopedReads::FINDINGS,
                       :description => "One page of the findings of the Model, or of one Space and its children, " \
-                                      "each with the reference of what it is about; optionally only some codes.",
+                                      "each with the reference of what it is about; optionally only some codes. " \
+                                      "The Model's include those of Volumes outside every Space and their Floor " \
+                                      "Segments.",
                       :refuses => refuses, :examples => [{}, { "codes" => ["space.empty"] }],
                       :params => Shapes.object({ "space" => scope(SPACE_REFERENCE, "Space"),
                                                  "codes" => { "type" => "array", "items" => Shapes::TEXT,
