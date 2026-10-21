@@ -93,6 +93,10 @@ module AuthoringWalkthrough
     zones = client.query("ph_composer.zones.all").dig("value", "zones")
     faces = client.query("ph_composer.zones.faces.all").dig("value", "faces")
     classified = faces.select { |face| face.dig("reference", "entity_id") }
+    # With Suggest on Make on, Make Zone classifies every Face; without it, only the one Face per Zone `run`
+    # classifies has a record.
+    suggested = client.query("ph_composer.zones.settings.get").dig("value", "suggest_on_make")
+    expected = suggested ? faces.length : zones.length
     {
       "zones" => zones.length,
       "zone_values" => zones.map { |zone| zone.fetch("values") },
@@ -100,7 +104,8 @@ module AuthoringWalkthrough
       "faces" => faces.length,
       "classified_faces" => classified.length,
       "stamps_agree" => stamps_agree?,
-      "passed" => zones.length == 2 && classified.length == 2 && stamps_agree?
+      "expected_classified_faces" => expected,
+      "passed" => zones.length == 2 && classified.length == expected && stamps_agree?
     }
   end
 
