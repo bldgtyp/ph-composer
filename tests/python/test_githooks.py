@@ -84,7 +84,7 @@ def test_a_linter_config_change_lints_the_whole_tree() -> None:
     assert args([".rubocop.yml"], "rubocop") == ("lint-ruby",)
     assert args(["package.json"], "eslint") == ("lint-js",)
     assert names(["pyproject.toml"]) == ["ruff", "types", "home paths"]
-    assert args(["Makefile"], "home paths") == ("lint-paths",)
+    assert args(["Makefile"], "home paths") == ("lint-paths", "PATH_LINT_FLAGS=--cached")
     assert args(["pyproject.toml"], "ruff") == (
         "lint-python",
         "RUFF_ARGS=--force-exclude tools tests/python src/ph_composer/python",

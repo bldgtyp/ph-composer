@@ -141,8 +141,10 @@ def plan(present: Sequence[str], removed: Sequence[str] = ()) -> list[Check]:
             )
         )
     if public or "Makefile" in every:
+        # The index, never the working copy, even over the whole tree: a staged home path with an unstaged
+        # scrub beside it must still fail.
         path_args = (
-            ("lint-paths",)
+            ("lint-paths", "PATH_LINT_FLAGS=--cached")
             if "Makefile" in every
             else ("lint-paths", "PATH_LINT_FLAGS=--cached", f"PATH_LINT_PATHS={_make_words(public)}")
         )
