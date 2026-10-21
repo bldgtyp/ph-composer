@@ -109,6 +109,25 @@ macOS delivers the shortcut to the page, and SketchUp's menu key-equivalent does
 - The panel HtmlDialog captured blank while SketchUp was in the background, though its page had reported ready
   and kept receiving snapshots. A foreground capture showed it correctly.
 
+## Recheck of the #231 and #174 fixes
+
+An RBZ was built from `origin/main` merged with PR #281 (#231) and PR #283 (#174), SHA-256 prefix 9869c9d9. It ran
+on a fresh `_private/host/hostchecks-2026-10-21/b.skp` with the same walkthrough setup.
+
+**#231:**
+1. Unprotect, open, then `context.root`: the Volume is locked again.
+2. Native Undo: the path is back in the Volume, which is **unlocked**, with nothing pending.
+3. Second Undo: the path is at the root and the Volume is locked again. The Edit menu offers "Undo Unprotect
+   Volume".
+
+**#174:**
+1. With two documents open, closing the active one by its close button publishes nothing, as expected with no
+   callback.
+2. Raising the panel window (its page sends `panel.focus`) publishes a snapshot of no Model. The panel shows "No
+   Model is active. Click a SketchUp document window to show it here." and the status bar reads "Editing: Model"
+   (`174-no-model.jpg`).
+3. Raising `b.skp` publishes its snapshot, and the panel shows its Zones again (`174-model-again.jpg`).
+
 ## Teardown
 
 `host_bridge.py quit` closed the one document and SketchUp quit cleanly. No tokens, approved locations or
