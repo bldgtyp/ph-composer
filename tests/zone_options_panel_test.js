@@ -167,3 +167,14 @@ test("adoption source merge terminating at existing choice serializes no competi
   assert.strictEqual(mappings[0].target_id, null);
   assert.strictEqual(mappings[1].target_id, "lvl_a");
 });
+
+test("each collection's merge note offers what that collection allows", function () {
+  function note(collection) {
+    var p = page(); p.dialog.open(collection);
+    click(p.find("Merge / Delete"));
+    return p.dialog.list.querySelector(".phc-zone-option-help").textContent;
+  }
+  assert.strictEqual(note("building_segment"), "House: 1 live Zone · 2 recoverable. Choose a survivor to merge.");
+  assert.strictEqual(note("level"),
+    "Ground: 1 live Zone · 1 recoverable. Choose a survivor to merge, or clear the Level assignment.");
+});

@@ -185,8 +185,11 @@ function (ui, requests, options) {
     });
     remove.disabled = true;
     replacement.addEventListener("change", function () { remove.disabled = replacement.value === "pending"; });
+    // A Level can be cleared; a Building Segment only merges into another, so each says what it offers.
+    var next = this.collection === "level" ? "Choose a survivor to merge, or clear the Level assignment." :
+      "Choose a survivor to merge.";
     area.appendChild(ui.element("span", "phc-zone-option-help", choice.name + ": " +
-      (stored ? usage(stored) + ". " : "") + "Choose a survivor to merge, or clear a Level assignment."));
+      (stored ? usage(stored) + ". " : "") + next));
     area.appendChild(replacement); area.appendChild(remove); area.appendChild(ui.button("Keep", function () {
       self.fill(); }));
     // The decision stays in this dialog. Only one replacement surface is shown at a time.
