@@ -33,6 +33,10 @@ user's machine, not about PH-Composer's own handling of it:
 
 Everything else is informational. The register is [FINDINGS.md](FINDINGS.md).
 
+The implementation program for all eleven findings is the
+[security-hardening packet](../unscheduled/security-hardening/README.md): five stages, each one
+pull request, with the decisions each stage needs from Ed.
+
 ## Decision Ed needs to make
 
 Which of F01 to F11 become issues or packets now, and which wait for the public-distribution gate.

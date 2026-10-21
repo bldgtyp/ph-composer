@@ -97,7 +97,10 @@ consideration, not as a vulnerability report.
   (`git grep -lE '/Users/[a-z]+' -- planning`); five of them the maintainer's own account name,
   the sixth a synthetic `/Users/example` in `native-acceptance/results.jsonl`, which is fine. One
   of the five is a `.rbenv` interpreter path in
-  `planning/archive/agent-access-review/evidence/dispatch-original-results.log`.
+  `planning/archive/agent-access-review/evidence/dispatch-original-results.log`. Corrected
+  2026-10-21 while planning the fix: two comment lines in shipped source,
+  `src/ph_composer/core/diagnostics.rb` (the path-pattern explanation), carry the same account
+  name and ship in the RBZ; the review's first count missed them.
 - What: the repository has been public since 2026-10-15. These reveal the maintainer's macOS
   account name and a local layout, nothing more. Client names, project data and tokens were swept
   for and not found (EVIDENCE.md).
