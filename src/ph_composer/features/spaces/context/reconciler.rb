@@ -14,14 +14,22 @@ module PhComposer
     # is no longer exposed, so a later `volumes.unprotect` and its Undo and Redo are the user's to keep,
     # and so is one unprotected and not yet opened. The Zones copy watcher instead drops
     # its pass on Undo and Redo, because its repair must never follow a gesture the user took back.
+    #
+    # Spaces re-locks a Volume on the way out in a transparent operation, which joins the previous Ruby
+    # operation rather than SketchUp's own Close entry (context/SKETCHUP_HOST_BEHAVIOR.md). So an Undo of the
+    # Close puts the path back inside that Volume still locked. The reconciler remembers the Volumes it
+    # re-locked, and when an Undo or Redo leaves the path inside one that is locked, it unlocks it again: the
+    # user is back where they were, in the Volume as they left it.
     class Reconciler
       def initialize(session)
         @session = session
         @baseline = nil
         @open_path = []
         @exposed = []
+        @relocked = []
         @saving = false
         @work = DeferredWork.new { |jobs| jobs.each_value { |volume| protect_unless_open(volume) } }
+        @release = DeferredWork.new { |jobs| jobs.each_value { |volume| release_if_open(volume) } }
       end
 
       def self.for(session)
@@ -51,6 +59,10 @@ module PhComposer
           next if volume.locked? || path.any? { |entity| entity.equal?(volume) }
 
           @work.queue(volume.persistent_id, volume)
+        end
+        @relocked.select! { |volume| Protection.valid?(volume) }
+        @relocked.each do |volume|
+          @release.queue(volume.persistent_id, volume) if volume.locked? && path.any? { |entity| entity.equal?(volume) }
         end
       end
 
@@ -86,21 +98,25 @@ module PhComposer
       # Spaces protected `volume` itself, on a pass, at a save or at the EditContext boundary.
       def protected(volume)
         @exposed.reject! { |entity| entity.equal?(volume) }
+        @relocked << volume if @relocked.none? { |entity| entity.equal?(volume) }
       end
 
       def pending?
-        @work.pending?
+        @work.pending? || @release.pending?
       end
 
       def settle
         @work.settle
+        @release.settle
       end
 
       def detach
         @work.detach
+        @release.detach
         @baseline = nil
         @open_path = []
         @exposed = []
+        @relocked = []
       end
 
       private
@@ -120,6 +136,17 @@ module PhComposer
 
         Protection.protect(model, volume)
         protected(volume)
+        @session.changed(:spaces)
+      end
+
+      # The path is read again right before the write: a later Undo may already have taken it back out.
+      # Unlocked, the Volume is exposed again, so leaving it protects it as before.
+      def release_if_open(volume)
+        return unless path.any? { |entity| entity.equal?(volume) }
+        return unless Protection.release(model, volume)
+
+        @relocked.reject! { |entity| entity.equal?(volume) }
+        @exposed << volume if @exposed.none? { |entity| entity.equal?(volume) }
         @session.changed(:spaces)
       end
     end

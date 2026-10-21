@@ -78,6 +78,22 @@ module PhComposer
         true
       end
 
+      # Unlocks `volume` in one transparent operation, the converse of `protect`, for a Volume an Undo has put
+      # back on the edit path still locked. Answers whether it wrote.
+      def release(model, volume)
+        return false unless volume && valid?(volume) && volume.locked?
+
+        started = model.start_operation("Unprotect Volume", true, false, true)
+        begin
+          volume.locked = false
+        rescue StandardError => error
+          Diagnostics.exception("space_release", error)
+        ensure
+          model.commit_operation if started
+        end
+        !volume.locked?
+      end
+
       # The EditContext boundary: leaving a path that holds an open Volume for one that does not hold it
       # at the same place protects it first. Answers the Volume it left protected, or nil.
       def leaving(model, from, to)
