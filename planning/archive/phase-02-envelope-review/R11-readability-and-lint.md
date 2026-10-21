@@ -260,5 +260,5 @@ case `R11H`. Five UI findings, none a failure, are recorded in
   [agent-authorized-file-access](../agent-authorized-file-access/README.md), which
   redesigns the export params.
 - The `runtime_page_test.js` flake seen in this branch's `make ci`:
-  [planning/bugs/runtime-probe-test-flake.md](../../bugs/runtime-probe-test-flake.md).
+  [planning/archive/runtime-probe-test-flake.md](../runtime-probe-test-flake.md).
 - The carried host gate: step 3 of the packet README's Sequencing.

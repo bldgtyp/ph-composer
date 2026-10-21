@@ -1,7 +1,7 @@
 # Two browser checks fail because the preview host fell behind the panel
 
 DATE: 2026-10-15
-STATUS: Implemented on branch `fix/preview-host-contract-drift`. Reproduced at 87bdc62 and bisected 2026-10-15.
+STATUS: Complete. Merged to main through PR #131 (`ff72e2e`) on 2026-10-15; archived 2026-10-21. Reproduced at 87bdc62 and bisected 2026-10-15.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#130](https://github.com/bldgtyp/ph-composer/issues/130)
 

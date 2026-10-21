@@ -1,7 +1,7 @@
 # Runtime page test fails under CPU load
 
 DATE: 2026-10-02
-STATUS: Requested. Reproduced and root-caused 2026-10-02; not fixed.
+STATUS: Complete. Fixed on main through PR #127 (`87bdc62`); confirmed and archived 2026-10-21.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -38,3 +38,15 @@ uses `settle()`, since they share the pattern.
 
 The 24-way parallel run passes repeatedly, and the file's tests still fail when the loader is broken,
 for example with a refused asset.
+
+## Resolution
+
+PR #127 (`87bdc62`, 2026-10-15) fixed the race by another route than the one proposed above. The
+stand-in script now fires `onload` or `onerror` as a microtask instead of on a `setTimeout(..., 0)`,
+so the whole stand-in boot drains before `settle()`'s 5 ms timer can fire, however late the event
+loop runs. `settle()` itself still waits a fixed 5 ms; it no longer races anything the stand-in
+schedules.
+
+Confirmed 2026-10-21 on `main@02fde97`: the 24-way parallel run of `tests/runtime_page_test.js`
+under `tools/js_test_guard.js`, three rounds, 72 of 72 passed. The bug doc's reproduction failed 3
+of 24 before the fix.
