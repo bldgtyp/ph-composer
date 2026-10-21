@@ -8,7 +8,7 @@ require_relative "support/framing_camera"
 # face_gesture_test.rb tests what `ph_composer.zones.faces.classify` does with a set of references.
 # What these tests hold is the half the pointer owns: which Faces a click, a drag and a Shift-click
 # collect, that the palette is frozen when the button goes down, that every cancel route writes
-# nothing, and that explicit paint choices keep their matching Colour-by mode after Stop.
+# nothing, and that a paint choice shows its Colour-by mode until Stop puts back the one from before.
 class ClassifyToolTest < PhComposerTestCase
   API = PhComposer::API
   ColourBy = PhComposer::ColourBy
@@ -372,7 +372,7 @@ class ClassifyToolTest < PhComposerTestCase
     refute ColourBy.for(@session).active?
   end
 
-  def test_paint_choices_replace_an_existing_colour_mode_and_survive_stop
+  def test_paint_choices_show_their_colour_mode_and_stop_puts_back_the_one_before
     fields = {
       "face_type" => ["Wall", PhComposer::Zones::Faces::ColourModes::BY_FACE_TYPE],
       "boundary_condition" => ["Ground", PhComposer::Zones::Faces::ColourModes::BY_BOUNDARY_CONDITION],
@@ -388,21 +388,22 @@ class ClassifyToolTest < PhComposerTestCase
       tool.choose(field, value, :reset => true)
 
       assert_equal mode, ColourBy.for(@session).mode_name, field
-      assert_equal mode, ColourBy.remembered_mode, field
+      refute_equal mode, ColourBy.remembered_mode, field
       assert_equal revision, @session.revision
       assert_equal modified, @model.modified?
       assert_equal operations, @model.operations.length
       tool.stop
-      assert_equal mode, ColourBy.for(@session).mode_name, "Stop keeps #{field}'s view mode"
+      assert_equal PhComposer::Zones::ColourModes::BY_ZONE, ColourBy.for(@session).mode_name,
+                   "Stop puts back the mode from before #{field}'s"
     end
   end
 
-  def test_a_paint_choice_takes_ownership_of_the_tools_temporary_colour_mode
+  def test_a_paint_choice_made_with_no_mode_on_goes_off_with_the_tool
     tool.start
-    tool.choose("face_type", "Wall", :reset => true)
+    tool.choose("boundary_condition", "Ground", :reset => true)
     tool.stop
 
-    assert_equal PhComposer::Zones::Faces::ColourModes::BY_FACE_TYPE, ColourBy.for(@session).mode_name
+    refute ColourBy.for(@session).active?
   end
 
   def test_changing_paint_field_switches_colour_by_while_the_tool_is_active
@@ -419,6 +420,18 @@ class ClassifyToolTest < PhComposerTestCase
     zone(1_050)
     tool.start
     ColourBy.for(@session).activate(PhComposer::Zones::ColourModes::BY_ZONE)
+
+    tool.stop
+
+    assert_equal PhComposer::Zones::ColourModes::BY_ZONE, ColourBy.for(@session).mode_name
+  end
+
+  # A paint choice after the user picked a mode mid-run ends on the user's mode, not the one from before.
+  def test_a_paint_choice_after_a_mode_picked_mid_run_ends_on_that_mode
+    zone(1_055)
+    tool.start
+    ColourBy.for(@session).activate(PhComposer::Zones::ColourModes::BY_ZONE)
+    tool.choose("boundary_condition", "Ground", :reset => true)
 
     tool.stop
 

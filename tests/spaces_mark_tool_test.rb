@@ -5,7 +5,7 @@ require_relative "support/space_fixtures"
 
 # The Mark floor tool, the gesture rather than the operation: what a click and a drag collect, the factor
 # frozen at button-down, every cancel route writing nothing, the gesture limit, what each pick means, and
-# the Colour-by mode it turns on and leaves on.
+# the Colour-by mode it turns on until it stops.
 class SpacesMarkToolTest < PhComposerTestCase
   include SpaceFixtures
 
@@ -296,8 +296,22 @@ class SpacesMarkToolTest < PhComposerTestCase
     assert_equal MODE, service.mode_name
   end
 
-  def test_starting_turns_colour_by_weighting_factor_on_and_stopping_leaves_it_on
+  # Classify replacing Mark floor puts back the mode from before either tool, not Mark floor's.
+  def test_a_classify_paint_choice_replacing_the_tool_ends_on_the_mode_before_both
     service = PhComposer::ColourBy.for(@session)
+    service.activate(PhComposer::Zones::ColourModes::BY_ZONE)
+    tool.start(1.0)
+    classify = PhComposer::Zones::Faces.classify_tool(@session)
+    classify.choose("face_type", "Wall", :reset => true)
+    refute tool.active?
+    assert_equal PhComposer::Zones::Faces::ColourModes::BY_FACE_TYPE, service.mode_name
+    classify.stop
+    assert_equal PhComposer::Zones::ColourModes::BY_ZONE, service.mode_name
+  end
+
+  def test_starting_turns_colour_by_weighting_factor_on_and_stopping_puts_back_the_mode_before
+    service = PhComposer::ColourBy.for(@session)
+    service.activate(PhComposer::Zones::ColourModes::BY_ZONE)
     result = API.view(:context => @context, :name => "ph_composer.spaces.mark_tool.start",
                       :params => { "weighting_factor" => 0.6 })
     assert_equal "completed", result.fetch("status"), result.inspect
@@ -305,7 +319,7 @@ class SpacesMarkToolTest < PhComposerTestCase
     assert_equal MODE, service.mode_name
     API.view(:context => @context, :name => "ph_composer.spaces.mark_tool.stop", :params => {})
     refute tool.active?
-    assert_equal MODE, service.mode_name, "the mode stays on, as a concrete paint choice leaves its own"
+    assert_equal PhComposer::Zones::ColourModes::BY_ZONE, service.mode_name
   end
 
   def test_detach_with_the_tool_active_leaves_no_tool

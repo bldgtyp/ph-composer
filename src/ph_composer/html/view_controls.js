@@ -29,7 +29,10 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
      `options.columnSort: true` moves ordering and value filters into the table's column menus
      (column_menu.js): Order by and the direction toggle are hidden, `sortBy` and `filterColumn` set the
      state, and `project` applies a column filter through `config.columnMatch(record, filters)` for a
-     top-level record and `config.rowMatch(row, filters)` for a row beneath one. */
+     top-level record and `config.rowMatch(row, filters)` for a row beneath one.
+
+     `config.queryMatch(row, query, record)`, when given, says whether a row beneath the top-level `record`
+     the text filter matched still shows. */
   function ViewControls(options, changed) {
     var self = this, filtered = "";
     this.changed = changed;
@@ -148,10 +151,11 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
       return { key: JSON.stringify([groupField, raw]), label: info.label, tone: info.tone || "neutral",
         blank: blank(raw) };
     }
-    var matches = Object.create(null), retained = Object.create(null), groups = Object.create(null),
-      count = 0, retainedCount = 0;
+    var byId = Object.create(null), matches = Object.create(null), retained = Object.create(null),
+      groups = Object.create(null), count = 0, retainedCount = 0;
     records.forEach(function (record) {
       var key = id(record);
+      byId[key] = record;
       matches[key] = (!config.include || config.include(record)) &&
         (!query || config.search(record).toLocaleLowerCase().indexOf(query) >= 0) &&
         (!filterCount || !config.columnMatch || config.columnMatch(record, filters));
@@ -193,6 +197,7 @@ PhComposerUI.define("view_controls", ["dom", "icons"], function (dom, icons) {
       hidden: function (row) {
         var key = rowId(row);
         if (!matches[key] && !retained[key]) return true;
+        if (query && row.parent && config.queryMatch && !config.queryMatch(row, query, byId[key])) return true;
         return Boolean(filterCount && row.parent && config.rowMatch && !config.rowMatch(row, filters));
       },
       retained: function (row) { return row.depth === 0 ? retained[rowId(row)] : false; },

@@ -260,8 +260,18 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
 
   /* A Zone's Spaces as search text, so a search for a Space's number or name keeps its Zone. */
   function search(vs, record) {
-    return record.spaces.map(function (space) { return space.values.number + " " + space.values.name; }).join(" ");
+    return record.spaces.map(spaceText).join(" ");
   }
+
+  /* A row under a Zone the text filter matched through its Spaces shows while its Space matches. A query no
+     single Space matches (one spanning two Spaces' text, or the Zone's and a Space's) shows them all. */
+  function queryMatch(vs, row, query, zone) {
+    function matches(space) { return spaceText(space).toLocaleLowerCase().indexOf(query) >= 0; }
+    var space = row.record.space;
+    return !space || matches(space) || !zone.spaces.some(matches);
+  }
+
+  function spaceText(space) { return space.values.number + " " + space.values.name; }
 
   /* ---------------------------------------------------------------- the weighting factor filter */
 
@@ -391,7 +401,7 @@ function (panel, ui, snapshot, units, preferences, fields, tableViews, SpaceCell
     headerAction: function (vs, field, label) { return field === "weighting_factor" ? vs.paint.header(label) : null; },
     zoneRecord: zoneRecord, extraRows: extraRows, children: children,
     leadingColumns: leadingColumns, columns: columns, value: value, decorate: decorate, zoneMarker: marker,
-    sortValue: sortValue, sort: sort, search: search, count: count,
+    sortValue: sortValue, sort: sort, search: search, queryMatch: queryMatch, count: count,
     colourBy: COLOUR_BY,
     tableOptions: tableOptions,
     filteredFields: { weighting_factor: true },

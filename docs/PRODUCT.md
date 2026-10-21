@@ -106,9 +106,10 @@ The Classify tool also paints by click, drag or Shift-click across a connected p
 step per gesture. In the Faces view, Type, Boundary and Assembly column menus show visibility checkboxes
 and separate paint icons beside their values. A paint icon starts that field only, including values
 not yet used in the Model. An active header paint icon names the value and stops painting when
-clicked. Starting paint switches Colour by to the matching field; that view stays active after
-painting stops. Attached zone painting uses Boundary condition Colour by. The Boundary menu also
-offers Attached zone selection and a New attached zone route. Surface remains set by Solve adjacencies.
+clicked. Starting paint switches Colour by to the matching field while painting; when painting
+stops, the Colour by view from before it comes back, unless another one was picked meanwhile.
+Attached zone painting uses Boundary condition Colour by. The Boundary menu also offers Attached
+zone selection and a New attached zone route. Surface remains set by Solve adjacencies.
 Suggest classification proposes a face type and boundary condition for each face of a Zone that
 has no classification record yet, from its geometry.
 Make Zone runs Suggest by default in the same Undo step. The tab's gear control stores the switch
@@ -195,7 +196,8 @@ measured host contracts.
 Spaces are read in the Spaces view of the Zones tab. Beneath each Zone are its Spaces, beneath each
 Space its Volumes, and beneath each Volume its Floor Segments, with their floor area, weighting
 factor, weighted area (iCFA), height, net volume and airflows. A Space outside every Zone is listed
-after the Zones. Each Zone row shows its Spaces' sums and marks a Zone whose supply and extract
+after the Zones. A text filter that matches a Zone's name, Building-Segment or Level lists all its
+Spaces; one that matches only a Space's number or name lists just the Spaces it matches. Each Zone row shows its Spaces' sums and marks a Zone whose supply and extract
 differ by more than 10 percent of the larger; while any Space in a Zone inherits its airflow from the
 Zone, the Zone shows a dash instead. Cells edit in place, and a range fill or a paste from a
 spreadsheet is one Undo step. Checked rows edit together in the selection bar, and checked Zones
@@ -206,6 +208,8 @@ separate balance view; column widths last for the session.
 
 The Weighting factor column menu starts Mark floor: a paint icon beside 0, 1 and each factor in use
 turns it on with that factor, and a pressed paint glyph in the column header stops it, as Escape does.
+Colour by weighting factor shows while it runs, and the Colour by view from before comes back when
+it stops.
 In the viewport, a click or a drag over Faces inside a Volume marks them as Floor Segments in one Undo
 step; a click on a Face at a Space's root adds the next Volume. A Face in a Zone and in no Space is
 offered Create Space, and a classified Zone Face or a Face in no Zone is refused with the reason.

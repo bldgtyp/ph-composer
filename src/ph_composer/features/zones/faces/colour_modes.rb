@@ -31,14 +31,9 @@ module PhComposer
 
         module_function
 
-        # A concrete paint choice selects the matching view mode, across panel and native routes.
-        # Remember this view choice so the result remains visible after the user stops painting.
-        def activate_paint(session, field)
-          mode = PAINT_MODES[field]
-          return false unless mode && ColourBy.registered?(mode)
-
-          ColourBy.for(session).activate(mode)
-          true
+        # The view mode a concrete paint choice shows while the tool runs, across panel and native routes.
+        def paint_mode(field)
+          PAINT_MODES[field]
         end
 
         def install(feature)
