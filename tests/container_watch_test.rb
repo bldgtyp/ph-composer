@@ -71,6 +71,13 @@ class ContainerWatchTest < PhComposerTestCase
     assert_equal 1, observers.count { |observer| observer.is_a?(PhComposer::ContainerWatch::Observer) }
   end
 
+  def test_observer_type_errors_other_than_deleted_entities_are_not_suppressed
+    error = TypeError.new("wrong observer argument")
+    @model.entities.stub(:remove_observer, ->(_observer) { raise error }) do
+      assert_same error, assert_raises(TypeError) { PhComposer::ContainerWatch.for(@session).detach }
+    end
+  end
+
   def test_a_detached_session_reports_nothing
     PhComposer::Sessions.detach(@model)
     @model.entities << Sketchup::Group.new(50, Sketchup::Entities.new([]))

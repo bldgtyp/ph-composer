@@ -29,10 +29,13 @@ module PhComposer
         state(Sessions.for(model)).observe(group)
       end
 
+      # A Group added to any container arrives as the session's `container_added` host event
+      # (session/container_watch.rb); the copy watcher hears the same event.
       def install(feature)
         %i[session_created model_activated transaction_committed transaction_undone transaction_redone].each do |event|
           feature.on_host_event(event) { |session| state(session).schedule }
         end
+        feature.on_host_event(:container_added) { |session, entity| state(session).added(entity) }
         Sessions.all.each { |session| state(session).baseline }
       end
 
@@ -50,48 +53,31 @@ module PhComposer
         end
       end
 
-      class ContainersObserver < Sketchup::EntitiesObserver
-        def initialize(state)
-          @state = state
-        end
-
-        def onElementAdded(_entities, entity)
-          @state.added(entity)
-        end
-      end
-
+      # The deferred pass finds the Zone Groups again and restores any cleared name. Its policy is its own:
+      # only a cleared name waiting for restoration makes the session wait, because finding the Groups
+      # writes nothing, and the pass carries on through Undo and Redo.
       class State
         def initialize(session)
           @session = session
-          @timer = CoalescedTimer.new
+          @work = DeferredWork.new { |_jobs| pass }
           @observer = Observer.new(self)
-          @containers_observer = ContainersObserver.new(self)
-          @containers = []
           @groups = {}
           @last_valid = {}
           @seen_native = {}
           @blank = {}
           @restoring = false
-          @listeners = []
-        end
-
-        # Another Zones reconciler that needs to know a Group or ComponentInstance was added to an
-        # observed container (copy_watch.rb) subscribes here, so one set of container observers serves
-        # both. A listener answers `container_added(entity)`; it records and schedules, nothing more.
-        def subscribe(listener)
-          @listeners << listener unless @listeners.include?(listener)
         end
 
         def schedule
           return false if @restoring
 
-          @timer.schedule { settle }
+          @work.queue(:pass, true)
         end
 
         # Composition is outside a native observer callback; establish existing Groups here so
         # their first native rename is observed even when it is immediately followed by clearing.
         def baseline
-          @timer.cancel
+          @work.cancel
           discover
         end
 
@@ -115,9 +101,6 @@ module PhComposer
         # Native clipboard-pasted Groups carry their instance dictionary when added. Observing that
         # one new Group immediately preserves a subsequent rename/clear pair before discovery.
         def added(entity)
-          if entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
-            @listeners.each { |listener| notify(listener, entity) }
-          end
           record = stored_record(entity) if entity.is_a?(Sketchup::Group)
           if record && Names.valid?(record["name"])
             @last_valid[entity.persistent_id] ||= record.fetch("name")
@@ -143,8 +126,25 @@ module PhComposer
           schedule if @blank[id] && !@restoring
         end
 
+        # Brings names current now, whether or not a pass is queued: a read that settles the session sees
+        # every Zone Group observed and every cleared name restored.
         def settle
-          @timer.cancel
+          schedule
+          @work.settle
+        end
+
+        def detach
+          @work.detach
+          @groups.each_value { |group| unobserve(group) }
+          @groups.clear
+          @last_valid.clear
+          @seen_native.clear
+          @blank.clear
+        end
+
+        private
+
+        def pass
           discover
           return if @blank.empty?
 
@@ -154,27 +154,9 @@ module PhComposer
           @session.notice("The Zone name could not be restored. Enter a nonempty native name.", :tone => :warning)
         end
 
-        def detach
-          @timer.cancel
-          @groups.each_value { |group| unobserve(group) }
-          @containers.each { |entities| unobserve_container(entities) }
-          @containers.clear
-          @groups.clear
-          @last_valid.clear
-          @seen_native.clear
-          @blank.clear
-          @listeners.clear
-        end
-
-        private
-
         def discover
           found = []
-          containers = []
-          scan(@session.model.entities, found, containers)
-          (@containers - containers).each { |entities| unobserve_container(entities) }
-          (containers - @containers).each { |entities| entities.add_observer(@containers_observer) }
-          @containers = containers
+          scan(@session.model.entities, found, [])
           live = found.map(&:persistent_id)
           (@groups.keys - live).each do |id|
             unobserve(@groups.delete(id))
@@ -188,27 +170,20 @@ module PhComposer
           end
         end
 
-        def scan(entities, found, containers)
-          return if containers.include?(entities)
+        # `walked` holds the containers already scanned in this pass.
+        def scan(entities, found, walked)
+          return if walked.include?(entities)
 
-          containers << entities
+          walked << entities
           entities.each do |entity|
             if entity.is_a?(Sketchup::Group)
               record = stored_record(entity)
               found << entity if record && Names.valid?(record["name"])
-              scan(entity.entities, found, containers)
+              scan(entity.entities, found, walked)
             elsif entity.is_a?(Sketchup::ComponentInstance)
-              scan(entity.definition.entities, found, containers)
+              scan(entity.definition.entities, found, walked)
             end
           end
-        end
-
-        # A listener's failure is its own; it never stops name preservation. An addition the host has already
-        # deleted is no failure (ContainerWatch.deleted_reference?).
-        def notify(listener, entity)
-          listener.container_added(entity)
-        rescue StandardError => error
-          Diagnostics.exception("zone_container_listener", error) unless ContainerWatch.deleted_reference?(error)
         end
 
         def stored_record(entity)
@@ -220,14 +195,6 @@ module PhComposer
 
         def unobserve(group)
           group.remove_observer(@observer) unless group.respond_to?(:valid?) && !group.valid?
-        end
-
-        def unobserve_container(entities)
-          entities.remove_observer(@containers_observer)
-        rescue TypeError => error
-          # Entities has no valid? predicate. The host deletes its observer with the collection
-          # when a Model closes or a definition is removed; only that native refusal is harmless.
-          raise unless error.message == "reference to deleted Entities"
         end
 
         def restore

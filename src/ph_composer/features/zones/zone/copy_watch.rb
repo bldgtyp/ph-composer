@@ -8,8 +8,8 @@ module PhComposer
     # context/SKETCHUP_HOST_BEHAVIOR.md and the rule it applies in context/CONTRACTS.md, "Reconciliation".
     #
     # A native copy arrives as an added Group after its transaction commits, with its Zone record
-    # attached, so the addition schedules a deferred pass (and so does a commit that follows one). The
-    # watcher remembers which containers the gesture added. In the pass, every occurrence whose path
+    # attached, so the session's `container_added` event queues a deferred pass, which remembers which
+    # containers the gesture added. In the pass, every occurrence whose path
     # holds none of them is an original; an id held by exactly one original and by added occurrences
     # has copies, which are those added occurrences. A duplicate that was already there has two
     # originals and is left for the explicit command, as is anything in a file as it opens. Paths
@@ -35,29 +35,22 @@ module PhComposer
       end
 
       def install(feature)
-        feature.on_host_event(:session_created) { |session| state(session) }
-        feature.on_host_event(:transaction_committed) { |session| state(session).committed }
+        feature.on_host_event(:container_added) { |session, entity| state(session).container_added(entity) }
         feature.on_host_event(:transaction_undone) { |session| state(session).undone }
         feature.on_host_event(:transaction_redone) { |session| state(session).reset }
-        Sessions.all.each { |session| state(session) }
       end
 
       class State
         def initialize(session)
           @session = session
-          @timer = CoalescedTimer.new
-          @added = []
+          @work = DeferredWork.new { |jobs| run(jobs.fetch(:added)) }
           @running = false
           @repaired = {}
-          Names.state(session).subscribe(self)
         end
 
         # Everything in the Model is an original from here on; a pending pass is dropped.
         def reset
-          return if @running
-
-          @timer.cancel
-          @added = []
+          @work.cancel unless @running
         end
 
         # Undo and Redo: drop a pending pass, and say so if an Undo took back a repair but left its copy.
@@ -85,43 +78,35 @@ module PhComposer
         def container_added(entity)
           return if @running
           # A pass is already due and recomputes the copies itself: the rest of the gesture only adds ids.
-          return @added << entity.persistent_id if @added.any?
+          return queue(entity) if @work.pending?
 
           ids = zone_ids(entity)
           return if ids.empty?
           return unless occurrences.map(&:last).tally.any? { |id, count| count > 1 && ids.include?(id) }
 
-          @added << entity.persistent_id
-          schedule
-        end
-
-        def committed
-          schedule if @added.any? && !@running
+          queue(entity)
+        rescue StandardError => error
+          # A failure here is the watcher's own; the other subscribers to the addition still hear it.
+          Diagnostics.exception("zone_copy_watch_added", error) unless ContainerWatch.deleted_reference?(error)
         end
 
         def pending?
-          @running || @timer.pending?
+          @work.pending?
         end
 
         def settle
-          @timer.cancel
-          return if @added.empty?
-
-          added = @added
-          @added = []
-          run(added)
+          @work.settle
         end
 
         def detach
-          @timer.cancel
-          @added = []
+          @work.detach
           @repaired = {}
         end
 
         private
 
-        def schedule
-          @timer.schedule { settle }
+        def queue(entity)
+          @work.queue(:added, [entity.persistent_id]) { |queued, more| queued + more }
         end
 
         def zone_ids(entity, found = [])
