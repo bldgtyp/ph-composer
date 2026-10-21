@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import subprocess
 import unittest
@@ -190,6 +191,58 @@ class AcceptanceLedgerTest(unittest.TestCase):
                 (self.root / ledger.EVIDENCE_LOCATIONS).write_text(json.dumps(locations))
                 with self.assertRaises(ValueError):
                     ledger.read_results(self.root, self.cases)
+
+
+class CatalogPathsTest(unittest.TestCase):
+    """The repository's catalog names the files each case exercises, so a stale screen is a signal."""
+
+    ROOT = Path(__file__).resolve().parents[3]
+    FOUNDATION_FOLDERS = frozenset(
+        {
+            "src/ph_composer/core/*",
+            "src/ph_composer/session/*",
+            "src/ph_composer/shell/*",
+            "src/ph_composer/html/*",
+            "tests/support/*",
+        }
+    )
+    WHOLE_PRODUCT_CASES = frozenset({"A16", "E17"})
+
+    def setUp(self) -> None:
+        self.cases = ledger.read_catalog(self.ROOT)
+
+    def test_only_whole_product_cases_depend_on_a_foundation_folder(self) -> None:
+        broad = {
+            case_id: sorted(self.FOUNDATION_FOLDERS.intersection(case["paths"]))
+            for case_id, case in self.cases.items()
+            if case_id not in self.WHOLE_PRODUCT_CASES and self.FOUNDATION_FOLDERS.intersection(case["paths"])
+        }
+        self.assertEqual({}, broad)
+
+    def test_a_case_screens_what_it_reaches_without_naming_it(self) -> None:
+        # E01's register checks the real panel loads with Zones / Faces and Export unchanged; a record engine
+        # is handed its catalog; A12's runtime host loads the runtime page.
+        reached = [
+            ("E01", "src/ph_composer/html/features/zones/overview.js"),
+            ("E01", "src/ph_composer/html/sections/export.js"),
+            ("A10", "src/ph_composer/core/records/catalog.rb"),
+            ("A13", "src/ph_composer/core/records/catalog.rb"),
+            ("A12", "src/ph_composer/html/runtime/index.html"),
+            ("A12", "src/ph_composer/html/runtime/runtime.js"),
+        ]
+        for case_id, name in reached:
+            with self.subTest(case=case_id, name=name):
+                self.assertTrue(any(fnmatch.fnmatchcase(name, pattern) for pattern in self.cases[case_id]["paths"]))
+
+    def test_every_pattern_matches_a_source_file(self) -> None:
+        names = ledger.source_names(self.ROOT)
+        empty = [
+            (case_id, pattern)
+            for case_id, case in self.cases.items()
+            for pattern in case["paths"]
+            if not any(fnmatch.fnmatchcase(name, pattern) for name in names)
+        ]
+        self.assertEqual([], empty)
 
 
 if __name__ == "__main__":
