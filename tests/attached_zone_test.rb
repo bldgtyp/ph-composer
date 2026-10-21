@@ -227,7 +227,7 @@ class AttachedZoneTest < PhComposerTestCase
 
     assert_equal %w[refused reference.in_use none], result.values_at("status", "code", "effect")
     assert_equal %w[target.shared_definition], result.dig("detail", "faces").map { |face| face["reason"] }.uniq
-    assert_match(/Make Unique/, result.fetch("message"))
+    assert_match(/open its shared Group with Edit Group/, result.fetch("message"))
     assert_equal [garage], records.map { |row| row.fetch("id") }
   end
 

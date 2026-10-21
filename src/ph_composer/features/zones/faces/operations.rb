@@ -233,7 +233,7 @@ module PhComposer
       # inside a Zone carries the code its resolution refused.
       STRANDED_ROUTES = {
         "outside_zone" => "Restore its Zone, or remove it",
-        "target.shared_definition" => "make its Group unique (right-click, Make Unique)",
+        "target.shared_definition" => "open its shared Group with Edit Group and close it, or explode its component",
         "target.locked" => "unlock its Group or Zone"
       }.freeze
 

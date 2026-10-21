@@ -352,7 +352,7 @@ class ZoneFaceTest < PhComposerTestCase
     result = invoke("ph_composer.zones.faces.auto_classify", { "zone" => made.fetch("reference") })
 
     assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
-    assert_match(/Make Unique/, result.fetch("message"))
+    assert_match(/Open that Group with Edit Group/, result.fetch("message"))
     assert_equal operation_count, @model.operations.length
   end
 
@@ -416,7 +416,7 @@ class ZoneFaceTest < PhComposerTestCase
 
     results.each do |result|
       assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
-      assert_match(/Make Unique/, result.fetch("message"))
+      assert_match(/Open that Group with Edit Group/, result.fetch("message"))
     end
     assert_equal operation_count, @model.operations.length
     assert_equal [before], [PhComposer::Zones::Faces::FACE_STORE.read(@model.entities.to_a.first.entities.to_a

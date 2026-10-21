@@ -257,7 +257,7 @@ module PhComposer
       # carrying a Zone record, or a Group carrying a Zone stamp, owns what is inside it, so a path
       # through one names a Face this Zone does not own, for reads and writes alike. A Group whose
       # definition another Group shares is storage both placements write through, so a mutable path
-      # refuses it and asks for Make Unique.
+      # refuses it and asks for it to be opened, which gives that placement its own definition.
       def resolve_face_path(zone, path, mutable)
         current = zone.entity.entities
         transform = zone.transform
@@ -280,8 +280,8 @@ module PhComposer
             raise_target("target.locked", "The Face is inside a locked Group.") if mutable && entity.locked?
             if mutable && shared_storage?(entity)
               raise_target("target.shared_definition",
-                           "That Face is inside a Group shared with a copy. Make the Group unique " \
-                           "(right-click, Make Unique) and try again.")
+                           "That Face is inside a Group shared with a copy. Open that Group with Edit Group, or " \
+                           "double-click it, then close it, and try again.")
             end
             current = entity.entities
           else

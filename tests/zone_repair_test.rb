@@ -453,7 +453,8 @@ class ZoneRepairTest < PhComposerTestCase
     result = invoke(MAKE_INDEPENDENT, { "zone_path" => [795, 780] })
 
     assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
-    assert_match(/Make Unique first/, result.fetch("message"))
+    assert_match(/Open that Group with Edit Group/, result.fetch("message"),
+                 "SketchUp 2026's Group menu has no Make Unique; opening the Group makes it unique")
   end
 
   def test_make_independent_refuses_inside_a_component
@@ -467,7 +468,8 @@ class ZoneRepairTest < PhComposerTestCase
     result = invoke(MAKE_INDEPENDENT, { "zone_path" => [instance.persistent_id, group.persistent_id] })
 
     assert_equal %w[refused target.shared_definition none], result.values_at("status", "code", "effect")
-    assert_match(/component/, result.fetch("message"))
+    assert_match(/Explode that component first/, result.fetch("message"),
+                 "Make Unique leaves a component placement refused; Explode works")
   end
 
   # Faces inside a child Group: making only the Zone's Group unique leaves that child shared with the

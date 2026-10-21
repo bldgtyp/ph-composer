@@ -122,6 +122,10 @@ module PhComposer
       # it can. It acts on a Zone whose id another occurrence also holds, whether or not its own Group
       # still shares its Faces; it never isolates storage above the Zone, because a component is shared
       # by design and a shared parent Group would make Groups unique inside the original's contents.
+      # A shared Group's placement gets its own definition once opened for editing (context/SKETCHUP_HOST_BEHAVIOR.md);
+      # SketchUp 2026 offers no Make Unique on a Group's menu, and Make Unique leaves a component placement refused.
+      OPEN_GROUP = "Open that Group with Edit Group, or double-click it, then close it"
+
       def independence_refusal(model, zone, id_count: nil)
         ids = id_count || Occurrences.zones(model).count { |other| other.record.fetch("id") == zone.record.fetch("id") }
         ancestors = path_entities(model, zone.path)[0...-1]
@@ -130,18 +134,18 @@ module PhComposer
                          "This Zone is inside another Zone. Move it out of that Zone first.")
         elsif ancestors.any? { |entity| entity.is_a?(Sketchup::ComponentInstance) }
           CodedError.new("target.shared_definition",
-                         "This Zone is inside a component, whose placements share it by design. Make that " \
-                         "component unique in SketchUp first.")
+                         "This Zone is inside a component, whose placements share it by design. Explode that " \
+                         "component first.")
         elsif ancestors.any? { |entity| Occurrences.shared_storage?(entity) }
           CodedError.new("target.shared_definition",
-                         "This Zone is inside a copied Group that still shares its contents. Right-click that " \
-                         "Group and choose Make Unique first.")
+                         "This Zone is inside a copied Group that still shares its contents. #{OPEN_GROUP}, " \
+                         "then try again.")
         elsif zone.locked_parent || (zone.entity.respond_to?(:locked?) && zone.entity.locked?)
           CodedError.new("target.locked", "This Zone or a Group containing it is locked. Unlock it first.")
         elsif member_containers(zone).any? { |entity| entity.is_a?(Sketchup::ComponentInstance) }
           CodedError.new("target.shared_definition",
                          "Some of this Zone's Faces are inside a component, which its placements share by " \
-                         "design. Explode or make that component unique first.")
+                         "design. Explode that component first.")
         elsif member_containers(zone).any? { |entity| entity.respond_to?(:locked?) && entity.locked? }
           CodedError.new("target.locked", "A Group holding some of this Zone's Faces is locked. Unlock it first.")
         elsif (refusal = container_refusal(zone, :isolating => true))
@@ -163,7 +167,7 @@ module PhComposer
         if above.any? { |entity| entity.is_a?(Sketchup::ComponentInstance) }
           CodedError.new("target.shared_definition",
                          "A Group another feature keeps in this Zone is inside a component, which its placements " \
-                         "share by design. Explode or make that component unique first.")
+                         "share by design. Explode that component first.")
         elsif !isolating && above.any? { |entity| Occurrences.shared_storage?(entity) }
           CodedError.new("target.shared_definition",
                          "A Group another feature keeps in this Zone still shares its contents with the original. " \
