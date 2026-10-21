@@ -38,6 +38,7 @@ class CaptureCommandTest < PhComposerTestCase
 
     assert_equal [Digest::SHA256.hexdigest(bytes), bytes.bytesize], value.values_at("sha256", "bytes")
     assert_equal [800, 500, "not_included"], value.values_at("width", "height", "overlays")
+    refute value.key?("window_state"), "every window state measured gives the current view (#239)"
     assert_equal @session.view_generation, value.dig("provenance", "view_generation")
     assert value.dig("provenance", "camera", "eye_m")
     assert_equal before, [eye, @model.selection.to_a, @model.active_path,

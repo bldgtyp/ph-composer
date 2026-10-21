@@ -170,9 +170,9 @@ view generation, camera, edit path and a selection digest. The image is the Mode
 PH-Composer's overlays, tool drawing and panels are absent, which the result says as `overlays:
 "not_included"`. It moves nothing. A view or revision change during the write refuses
 (`capture.view_changed`). Each session keeps its four newest captures for 15 minutes in its own
-temporary folder. Measured on 26.1.188 with SketchUp frontmost; its behaviour with the window hidden,
-minimized, behind another application or under a modal is not measured. SketchUp's Ruby API exposes no
-window state to refuse on, so every result says `window_state: "unverified"`. A native modal stops
+temporary folder. Measured on 26.1.188 with SketchUp frontmost, behind another application, hidden and
+minimized, the last also with the camera moved: each wrote the current view
+([receipt](../planning/archive/phase-03a1/evidence/p3a1-16-integrated-acceptance.md)). A native modal stops
 Ruby entirely, workers included, so a call made under one is never captured and the client sees its own
 timeout rather than a refusal.
 
