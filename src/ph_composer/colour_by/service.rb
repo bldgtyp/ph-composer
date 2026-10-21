@@ -154,7 +154,9 @@ module PhComposer
         self
       end
 
+      # A detach counts as a switch, so a tool ending after it gives back no mode (ColourBy::Lease).
       def detach
+        @switches += 1
         clear
         @readouts_on = []
         @readout_drawings = {}

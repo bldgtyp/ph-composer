@@ -322,6 +322,17 @@ class SpacesMarkToolTest < PhComposerTestCase
     assert_equal PhComposer::Zones::ColourModes::BY_ZONE, service.mode_name
   end
 
+  # The service can detach before the tool does; the tool's end must not turn a mode back on in it.
+  def test_detaching_restores_no_mode_into_a_colour_by_that_detached_first
+    service = PhComposer::ColourBy.for(@session)
+    service.activate(PhComposer::Zones::ColourModes::BY_ZONE)
+    tool.start(1.0)
+    @session.detach
+    assert_nil @model.active_tool
+    refute service.active?
+    assert_empty @model.overlays.to_a
+  end
+
   def test_detach_with_the_tool_active_leaves_no_tool
     tool.start(1.0)
     assert tool.active?

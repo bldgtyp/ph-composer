@@ -462,6 +462,20 @@ class ClassifyToolTest < PhComposerTestCase
     refute ColourBy.for(@session).active?
   end
 
+  # The service can detach before the tool does; the tool's end must not turn a mode back on in it.
+  def test_detaching_restores_no_mode_into_a_colour_by_that_detached_first
+    zone(1_065)
+    service = ColourBy.for(@session)
+    service.activate(PhComposer::Zones::ColourModes::BY_ZONE)
+    tool.choose("face_type", "Wall", :reset => true)
+
+    @session.detach
+
+    assert_nil @model.active_tool
+    refute service.active?
+    assert_empty @model.overlays.to_a
+  end
+
   def test_a_mode_the_user_already_turned_on_survives_the_tool
     zone(1_100)
     ColourBy.for(@session).activate(PhComposer::Zones::ColourModes::BY_ZONE)
