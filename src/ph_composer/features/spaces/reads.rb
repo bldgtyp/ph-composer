@@ -7,6 +7,8 @@ module PhComposer
     module Reads
       ZONES_READ = "ph_composer.zones.all"
       UNITS = { "area" => "m2", "height" => "m", "volume" => "m3", "airflow" => "m3/h" }.freeze
+      # A stray Volume's own findings that its stray finding already covers or that do not apply to it.
+      ORPHAN_ASIDE = %w[space.duplicate_identity space.volume_nested].freeze
 
       module_function
 
@@ -108,8 +110,9 @@ module PhComposer
         counts = occurrence_counts(scan)
         scan.orphan_volumes.sort_by(&:path).flat_map do |volume|
           row = volume_row(volume, request.registry.catalog, request.model, counts, false)
-          # The stray finding already says when the Volume's identity is duplicated, in its own words.
-          own = referenced(row).reject { |finding| finding.fetch("code") == "space.duplicate_identity" }
+          # The stray finding already says when the Volume's identity is duplicated, in its own words, and a
+          # Volume outside every Space is not nested in one, whatever the scan's `nested` flag says.
+          own = referenced(row).reject { |finding| ORPHAN_ASIDE.include?(finding.fetch("code")) }
           own + row.fetch("floor_segments").flat_map { |segment| referenced(segment) }
         rescue CodedError
           []
