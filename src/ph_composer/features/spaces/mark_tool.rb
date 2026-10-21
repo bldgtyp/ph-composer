@@ -36,16 +36,17 @@ module PhComposer
         @collected = nil
         @pressed = false
         @offered = []
+        @colour_by = ColourBy::Lease.new(session)
       end
 
-      # Sets the factor and starts the tool, turning on Colour by weighting factor and leaving it on. The
-      # mode follows the tool change, so a tool giving up a mode it forced cannot take this one with it.
+      # Sets the factor and starts the tool, turning on Colour by weighting factor until the tool ends
+      # (ColourBy::Lease). The mode follows the tool change, so a tool giving back the mode it took cannot
+      # take this one with it.
       def start(weighting_factor)
         @weighting_factor = Float(weighting_factor)
         model = @session.model
         model.select_tool(self) if model.respond_to?(:select_tool)
-        mode = ColourModes::BY_WEIGHTING_FACTOR
-        ColourBy.for(@session).activate(mode) if ColourBy.registered?(mode)
+        @colour_by.take(ColourModes::BY_WEIGHTING_FACTOR)
         show_instructions
         @session.request_refresh
         self
@@ -83,6 +84,7 @@ module PhComposer
         @offered = []
         cancel_gesture
         @hover = nil
+        @colour_by.release
         view.invalidate if view.respond_to?(:invalidate)
         @session.request_refresh
       end
@@ -171,6 +173,7 @@ module PhComposer
 
         @active = false
         model = @session.model
+        @colour_by.forget unless model.respond_to?(:valid?) && model.valid?
         model.select_tool(nil) if model.respond_to?(:select_tool)
       end
 

@@ -674,7 +674,7 @@ so `tools/examples/zones/example_zone_view.js`, two columns and `value`, is a co
 | `columns`, `leadingColumns`, `value`, `cell(td, row, field)`, `decorate`, `zoneMarker(row)` (asked of every row, the host's Zone states first), `widths`, `hiddenColumns`, `optionalColumns` | The view's columns (`leadingColumns` sit before Name), their text or in-place control, a cell's flag, the Zone row's marker after the host's own, default widths, the columns hidden at first, and the `[field, label]` pairs Table options shows or hides |
 | `tableOptions(toggle)` | The view's own Table options choices after its columns, each through `toggle(text, pressed, run)` (Spaces adds its readouts and, while Space labels are on, their lines; `sections/colour_by.js` `readouts(state)` and `showReadout(state, name, on)` reach any feature's readouts without naming one) |
 | `colourBy`, `sorted`, `filteredFields`, `filterValues`, `filterLabel`, `headerAction`, `menuValueAction`, `menuExtra` | The view's columns' Colour-by bindings, sort and value filters, and anything its column header and menu add (Faces adds the Classify paint, Spaces the Mark floor paint); the host closes the menu once a value action has run |
-| `zoneMatch`, `rowMatch`, `search`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask (by default each Zone that passes `zoneMatch`, whole) |
+| `zoneMatch`, `rowMatch`, `search`, `queryMatch(row, query, zone)`, `sortValue(record, field)`, `sort(list, field, direction)`, `viewportPaths` | How the view's filters and sort reach Zone rows (`sortValue` gives a Zone row's value in the view's sorted columns), its own rows and the viewport mask (by default each Zone that passes `zoneMatch`, whole). When the text filter matches a Zone only through the view's `search` text, `queryMatch` says which of the view's rows still show (by default all) |
 | `actions(row)`, `zoneActions(row)`, `action(row, item, control)`, `inspect`, `locate(row)`, `clearLocate`, `selected(row)` | Row actions (`control` is the pressed button, to anchor what it opens), the Zone row's actions after Make independent, Locate (`clearLocate` answers whether it cleared anything), and which rows paint as selected (Spaces: the row open in the edit context) |
 | `checkedZones()`, `checkZones(keys)` | The Zone rows every row beneath which this view has checked, and checking everything beneath Zones another view handed over |
 | `check(context)`, `selectionBar(overview)`, `settings`, `navigate(intent)`, `count`, `placeholder` | Checkboxes for the rows it checks, a selection bar, a settings control for the page header, a navigation intent's `check`, what the control row's count adds after the Zones ("4 Spaces"), and the text filter's placeholder |
@@ -865,6 +865,10 @@ command. The thermal-bridge edge tool will share this shape. The rules below com
   down: a press whose release the host never delivered must not leave later hovers collecting. The
   tool is session feature state, so `detach` must take it, and anything it forced on, with a
   closing Model.
+- **Give the Colour-by mode back.** A tool that turns a mode on holds it through a
+  `ColourBy::Lease` (`colour_by/lease.rb`): `take` turns it on without remembering it, and `release` on
+  deactivation puts back the mode from before the first take, or none, unless the user picked another
+  meanwhile.
 - **Do not reach for gestures the host reserves.** A custom tool receives no
   double-click-to-enter-group; that belongs to the Select tool, as it does for every native drawing
   tool. Reach geometry inside a container through the picked path instead.

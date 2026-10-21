@@ -62,6 +62,9 @@ module PhComposer
       # How many times the drawing has been rebuilt for this Model. The host walkthrough reads it to
       # tell an invalidating event that fired from one that did not.
       attr_reader :rebuilds
+      # How many times a mode has been turned on or off, so a ColourBy::Lease tells a change since its own
+      # take from none, even when the user picked the same mode again.
+      attr_reader :switches
 
       def initialize(session)
         @session = session
@@ -70,6 +73,7 @@ module PhComposer
         @readouts_on = []
         @readout_drawings = {}
         @selection_generation = 0
+        @switches = 0
         clear
         # An extension action can receive SketchUp's commit callback before ModelSession#mutate
         # advances the revision. Its later change publication is the first safe rebuild point.
@@ -90,13 +94,13 @@ module PhComposer
       # Turns a mode on, remembering it as the one the user last chose. Nothing about the Model
       # changes: no record is written, no material is assigned and no operation opens.
       #
-      # `remember: false` turns a mode on without recording the choice. The Classify tool's
-      # empty-palette fallback forces Colour-by on while active. What it forced is not what the user chose, so it
-      # must not displace the remembered mode when the tool ends.
+      # `remember: false` turns a mode on without recording the choice. A viewport tool's mode
+      # (ColourBy::Lease) is not what the user chose, so it must not displace the remembered mode.
       def activate(name, remember: true)
         declaration = Registry.current.colour_modes[name]
         raise UserError, "There is no Colour-by mode named #{name}." unless declaration
 
+        @switches += 1
         @mode_name = name
         # A row belongs to the mode it came from, so a new mode starts showing everything.
         @isolated = nil
@@ -109,6 +113,7 @@ module PhComposer
       end
 
       def deactivate
+        @switches += 1
         clear
         detach_overlay if @readouts_on.empty?
         invalidate_view
@@ -149,7 +154,9 @@ module PhComposer
         self
       end
 
+      # A detach counts as a switch, so a tool ending after it gives back no mode (ColourBy::Lease).
       def detach
+        @switches += 1
         clear
         @readouts_on = []
         @readout_drawings = {}

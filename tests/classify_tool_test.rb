@@ -8,7 +8,7 @@ require_relative "support/framing_camera"
 # face_gesture_test.rb tests what `ph_composer.zones.faces.classify` does with a set of references.
 # What these tests hold is the half the pointer owns: which Faces a click, a drag and a Shift-click
 # collect, that the palette is frozen when the button goes down, that every cancel route writes
-# nothing, and that explicit paint choices keep their matching Colour-by mode after Stop.
+# nothing, and that a paint choice shows its Colour-by mode until Stop puts back the one from before.
 class ClassifyToolTest < PhComposerTestCase
   API = PhComposer::API
   ColourBy = PhComposer::ColourBy
@@ -372,7 +372,7 @@ class ClassifyToolTest < PhComposerTestCase
     refute ColourBy.for(@session).active?
   end
 
-  def test_paint_choices_replace_an_existing_colour_mode_and_survive_stop
+  def test_paint_choices_show_their_colour_mode_and_stop_puts_back_the_one_before
     fields = {
       "face_type" => ["Wall", PhComposer::Zones::Faces::ColourModes::BY_FACE_TYPE],
       "boundary_condition" => ["Ground", PhComposer::Zones::Faces::ColourModes::BY_BOUNDARY_CONDITION],
@@ -388,21 +388,22 @@ class ClassifyToolTest < PhComposerTestCase
       tool.choose(field, value, :reset => true)
 
       assert_equal mode, ColourBy.for(@session).mode_name, field
-      assert_equal mode, ColourBy.remembered_mode, field
+      refute_equal mode, ColourBy.remembered_mode, field
       assert_equal revision, @session.revision
       assert_equal modified, @model.modified?
       assert_equal operations, @model.operations.length
       tool.stop
-      assert_equal mode, ColourBy.for(@session).mode_name, "Stop keeps #{field}'s view mode"
+      assert_equal PhComposer::Zones::ColourModes::BY_ZONE, ColourBy.for(@session).mode_name,
+                   "Stop puts back the mode from before #{field}'s"
     end
   end
 
-  def test_a_paint_choice_takes_ownership_of_the_tools_temporary_colour_mode
+  def test_a_paint_choice_made_with_no_mode_on_goes_off_with_the_tool
     tool.start
-    tool.choose("face_type", "Wall", :reset => true)
+    tool.choose("boundary_condition", "Ground", :reset => true)
     tool.stop
 
-    assert_equal PhComposer::Zones::Faces::ColourModes::BY_FACE_TYPE, ColourBy.for(@session).mode_name
+    refute ColourBy.for(@session).active?
   end
 
   def test_changing_paint_field_switches_colour_by_while_the_tool_is_active
@@ -425,6 +426,31 @@ class ClassifyToolTest < PhComposerTestCase
     assert_equal PhComposer::Zones::ColourModes::BY_ZONE, ColourBy.for(@session).mode_name
   end
 
+  # A paint choice after the user picked a mode mid-run ends on the user's mode, not the one from before.
+  def test_a_paint_choice_after_a_mode_picked_mid_run_ends_on_that_mode
+    zone(1_055)
+    tool.start
+    ColourBy.for(@session).activate(PhComposer::Zones::ColourModes::BY_ZONE)
+    tool.choose("boundary_condition", "Ground", :reset => true)
+
+    tool.stop
+
+    assert_equal PhComposer::Zones::ColourModes::BY_ZONE, ColourBy.for(@session).mode_name
+  end
+
+  # Picking the tool's own mode again is still the user's choice, and it stays after the tool.
+  def test_the_tools_mode_picked_again_mid_run_survives_the_tool
+    zone(1_057)
+    ColourBy.for(@session).activate(PhComposer::Zones::ColourModes::BY_ZONE)
+    tool.choose("face_type", "Wall", :reset => true)
+    ColourBy.for(@session).activate(PhComposer::Zones::Faces::ColourModes::BY_BOUNDARY_CONDITION)
+    ColourBy.for(@session).activate(PhComposer::Zones::Faces::ColourModes::BY_FACE_TYPE)
+
+    tool.stop
+
+    assert_equal PhComposer::Zones::Faces::ColourModes::BY_FACE_TYPE, ColourBy.for(@session).mode_name
+  end
+
   # A reload detaches every session. The tool must not be left selected against one that is gone.
   def test_detaching_the_session_takes_the_tool_and_the_mode_it_forced_with_it
     zone(1_060)
@@ -434,6 +460,20 @@ class ClassifyToolTest < PhComposerTestCase
 
     assert_nil @model.active_tool
     refute ColourBy.for(@session).active?
+  end
+
+  # The service can detach before the tool does; the tool's end must not turn a mode back on in it.
+  def test_detaching_restores_no_mode_into_a_colour_by_that_detached_first
+    zone(1_065)
+    service = ColourBy.for(@session)
+    service.activate(PhComposer::Zones::ColourModes::BY_ZONE)
+    tool.choose("face_type", "Wall", :reset => true)
+
+    @session.detach
+
+    assert_nil @model.active_tool
+    refute service.active?
+    assert_empty @model.overlays.to_a
   end
 
   def test_a_mode_the_user_already_turned_on_survives_the_tool

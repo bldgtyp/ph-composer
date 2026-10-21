@@ -178,6 +178,25 @@ test("filtering, sorting, expansion and switching views send nothing to the Mode
   assert.deepStrictEqual(p.sent.map(function (message) { return message.payload.name || message.type; }), []);
 });
 
+test("a filter matching a Space lists only that Space; one matching the Zone lists all its Spaces", function () {
+  var p = page();
+  p.panel.receive({ type: "panel.snapshot", payload: snapshot() });
+  expandAll(p);
+  var text = p.section().querySelectorAll("input").filter(function (node) {
+    return node.getAttribute("aria-label") === "Filter Zones";
+  })[0];
+  function spaces() {
+    return table(p, []).filter(function (row) { return row[0] === "Space"; }).map(function (row) { return row[1]; });
+  }
+  text.value = "Hall"; text.listeners.input({});
+  assert.deepStrictEqual(spaces(), ["Hall"]);
+  assert.ok(table(p, []).some(function (row) { return row[0] === "Volume"; }), "Hall's Volumes stay beneath it");
+  text.value = "Zone A"; text.listeners.input({});
+  assert.deepStrictEqual(spaces().sort(), ["Bath", "Hall", "Living"]);
+  text.value = "Living 102"; text.listeners.input({});
+  assert.deepStrictEqual(spaces().sort(), ["Bath", "Hall", "Living"], "a query no single Space matches lists all");
+});
+
 /* ---------------------------------------------------------------- review (PR #150) */
 
 function button(p, text) {

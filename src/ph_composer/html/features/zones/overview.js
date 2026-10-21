@@ -776,6 +776,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
         return zoneMatches(own, record, filters) && call(own, "zoneMatch", [record, filters], true);
       },
       rowMatch: function (row, filters) { return call(own, "rowMatch", [row, filters], true); },
+      queryMatch: function (row, query, record) { return queryMatch(own, row, query, record, state); },
       rows: function () { return rows; }
     });
     var labels = Object.create(null), shownColumns = columns(own, profile);
@@ -842,12 +843,12 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
      filter and the view's column filters) for a view's group row and its rows, which the controls do not hold.
      `groupsShown` counts the group rows that show. */
   function groupedHidden(own, rows, groupRows, projection, state) {
-    var root = Object.create(null), shown = Object.create(null), groupsShown = 0;
+    var root = Object.create(null), shown = Object.create(null), records = Object.create(null), groupsShown = 0;
     var query = (state.controls.filter.value || "").trim().toLocaleLowerCase();
     var filters = state.controls.columnFilters, filterCount = state.controls.filterCount();
     rows.forEach(function (row) { root[row.key] = row.parent ? root[row.parent] : row.key; });
     groupRows.forEach(function (row) {
-      var record = row.record;
+      var record = records[row.key] = row.record;
       shown[row.key] = (!query || searchText(own, record, state).toLocaleLowerCase().indexOf(query) >= 0) &&
         (!filterCount || zoneMatches(own, record, filters) && call(own, "zoneMatch", [record, filters], true));
       if (shown[row.key]) groupsShown += 1;
@@ -856,6 +857,7 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
       var top = root[row.key];
       if (!Object.prototype.hasOwnProperty.call(shown, top)) return projection.hidden(row);
       if (!shown[top]) return true;
+      if (query && row.parent && !queryMatch(own, row, query, records[top], state)) return true;
       return Boolean(filterCount && row.parent && !call(own, "rowMatch", [row, filters], true));
     }
     hidden.groupsShown = groupsShown;
@@ -871,10 +873,20 @@ function (panel, ui, requests, snapshot, units, preferences, tables, viewControl
     });
   }
 
-  function searchText(own, record, state) {
+  /* A row beneath a Zone the text filter matched shows while the Zone's own text matches, or else while the
+     view says the row matches (a Zone matched only through one of its Spaces lists just that Space). */
+  function queryMatch(own, row, query, record, state) {
+    return searchText(own, record, state, false).toLocaleLowerCase().indexOf(query) >= 0 ||
+      call(own, "queryMatch", [row, query, record], true);
+  }
+
+  /* A Zone row's text for the filter: its own name, Building-Segment and Level, and unless `withView` is false,
+     what the view adds (`search`). */
+  function searchText(own, record, state, withView) {
     var options = zoneOptions.read(state.snapshot);
     return [record.name].concat(record.zone ? [zoneOptions.label(options, record.zone, "building_segment"),
-      zoneOptions.label(options, record.zone, "level")] : [], [call(own, "search", [record], "")]).join(" ");
+      zoneOptions.label(options, record.zone, "level")] : [],
+    withView === false ? [] : [call(own, "search", [record], "")]).join(" ");
   }
 
   /* The Zone order the controls settled on, each Zone followed by its own rows in the order the view gives

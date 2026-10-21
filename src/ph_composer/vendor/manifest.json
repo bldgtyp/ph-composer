@@ -136,9 +136,9 @@
       "sha256": "43aac700af82188b8aedfcdeab1af2d23a4664728221022282303a504181888d"
     },
     "html/features/spaces/view.js": {
-      "bytes": 20731,
+      "bytes": 21241,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "72c56ae77d3429d937687b527ff09578fc7e56f55558506c91faf9f226d69819"
+      "sha256": "478e0f90fedd22e881fcf8e21decdcdc211bd80d59b852b34346c36f874030d9"
     },
     "html/features/windows/audit.js": {
       "bytes": 3740,
@@ -256,9 +256,9 @@
       "sha256": "62d3612e39cea0e0e33eafa700951f35c605dd676248e6fd96fbb65709cf37fe"
     },
     "html/features/zones/overview.js": {
-      "bytes": 51827,
+      "bytes": 52696,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "2e9807d5bdf0cc28fee9ac773941b509967a73bbacad117695e4a559e92e774d"
+      "sha256": "10e1be5d69188308635308222555d40ed92f9bf80c2c79e39f5ae1b32ed2aae9"
     },
     "html/features/zones/selection_assignment.js": {
       "bytes": 3325,
@@ -521,9 +521,9 @@
       "sha256": "7e58d14a73d23e9258ae60148929f07625cdf2ecae15c80749e3d65086d57290"
     },
     "html/view_controls.js": {
-      "bytes": 12260,
+      "bytes": 12577,
       "mime": "text/javascript; charset=utf-8",
-      "sha256": "e18aec672de575215e7c8475726d242d3715c94b235cd1328645d9b1fb7ba63a"
+      "sha256": "5229c9ada6d9d6a286c9adf9651ab407eef3d87cf0ec4590eaa269029700e5ea"
     },
     "html/workspace.js": {
       "bytes": 1542,

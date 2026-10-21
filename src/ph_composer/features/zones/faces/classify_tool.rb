@@ -42,7 +42,7 @@ module PhComposer
           @intent = nil
           @hover = nil
           @pressed = false
-          @forced_colour_by = nil
+          @colour_by = ColourBy::Lease.new(session)
         end
 
         # Sets one palette field and starts the tool, which is what a native Classify menu item does.
@@ -58,8 +58,9 @@ module PhComposer
           set("boundary_condition", "AttachedZone") if attached && value
           set("boundary_condition", nil) if attached && value.nil? && chosen("boundary_condition") == "AttachedZone"
           set("attached_zone_id", nil) if field == "boundary_condition" && value != "AttachedZone"
-          @forced_colour_by = nil if value && ColourModes.activate_paint(@session, field)
           start
+          paint_mode = value && ColourModes.paint_mode(field)
+          @colour_by.take(paint_mode) if paint_mode
           show_instructions
           @session.request_refresh
           self
@@ -223,7 +224,7 @@ module PhComposer
 
           @active = false
           model = @session.model
-          @forced_colour_by = nil unless model.respond_to?(:valid?) && model.valid?
+          @colour_by.forget unless model.respond_to?(:valid?) && model.valid?
           model.select_tool(nil) if model.respond_to?(:select_tool)
         end
 
@@ -363,31 +364,17 @@ module PhComposer
           announce(CANCELLED, :warning) if pending
         end
 
-        # Colour-by is forced on while the tool is active, so the user sees what they are painting.
-        # What the tool forced is not what the user chose, so it is turned on without being remembered
-        # and turned off again when the tool ends. A mode the user already had on is left exactly as
-        # it was.
+        # Colour-by is on while the tool is active, so the user sees what they are painting: a mode the
+        # user already had on is left as it is, otherwise the remembered one or Face type. A paint choice
+        # then shows its own mode, and the tool's end puts back what was on before (ColourBy::Lease).
         def force_colour_by
-          service = ColourBy.for(@session)
-          return if service.active?
+          return if ColourBy.for(@session).active?
 
-          mode = ColourBy.remembered_mode || ColourModes::BY_FACE_TYPE
-          return unless ColourBy.registered?(mode)
-
-          service.activate(mode, :remember => false)
-          @forced_colour_by = mode
+          @colour_by.take(ColourBy.remembered_mode || ColourModes::BY_FACE_TYPE)
         end
 
-        # Only the mode this tool turned on, and only while it is still the active one. A user who
-        # picked a different mode from the Colour by menu while the tool was running chose it, and
-        # the tool has no business turning their choice off.
         def release_colour_by
-          forced = @forced_colour_by
-          @forced_colour_by = nil
-          return unless forced
-
-          service = ColourBy.for(@session)
-          service.deactivate if service.mode_name == forced
+          @colour_by.release
         end
 
         # A viewport tool is used with the panel closed, and the panel is the only thing that shows a
