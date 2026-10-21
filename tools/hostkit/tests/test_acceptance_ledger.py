@@ -219,6 +219,13 @@ class CatalogPathsTest(unittest.TestCase):
         }
         self.assertEqual({}, broad)
 
+    def test_a_case_screens_the_panels_its_authority_checks(self) -> None:
+        # E01's register checks that the real panel loads with Zones / Faces and Export unchanged.
+        paths = self.cases["E01"]["paths"]
+        for name in ("src/ph_composer/html/features/zones/overview.js", "src/ph_composer/html/sections/export.js"):
+            with self.subTest(name=name):
+                self.assertTrue(any(fnmatch.fnmatchcase(name, pattern) for pattern in paths))
+
     def test_every_pattern_matches_a_source_file(self) -> None:
         names = ledger.source_names(self.ROOT)
         empty = [

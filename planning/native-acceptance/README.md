@@ -84,12 +84,15 @@ and `shell/panel.rb` through objects it is handed, and a foundation query or act
 (`ph_composer.records.`, `.context.`, `.view.`, `.locations.`), so a case that reaches them names their
 files. Its `html/` files are its features' panel modules and their declared dependencies, the modules
 its tests start, the panel's boot files (`index.html`, `module.js`, `panel.js`, `sections/shell.js`)
-and the UI kit stylesheets. Its `tests/support/` files are the ones its tests load. Only the
-whole-product cases A16 and E17 keep folder patterns, so a new foundation file screens only those two
-until the catalog names it in the cases that reach it. The extension loads every foundation file and
-the panel loads every module, so a file that fails to load breaks every case; the offline gate loads
-both, and that failure is its to catch rather than a case's. Every pattern matches at least one source
-file; the ledger tests check both rules.
+and the UI kit stylesheets. Its `tests/support/` files are the ones its tests load. A subfolder whose
+every file a case reaches is one pattern (`core/operations/*`, `tests/support/sketchup/*`, a feature's
+panel folder) and also covers files added to it later. Only the whole-product cases A16 and E17 keep
+the top-level folder patterns, so a new file anywhere else in those folders screens only those two
+until the catalog names it in the cases that reach it. A case whose authority checks a screen its own
+paths do not name lists that screen as well: E01 keeps the Zones and Export panels it checks load
+unchanged. The extension loads every foundation file and the panel loads every module, so a file that
+fails to load breaks every case; the offline gate loads both, and that failure is its to catch rather
+than a case's. Every pattern matches at least one source file; the ledger tests check these rules.
 
 The catalog has no retired state, an indexed result keeps its case, and `deferred` refuses a case that
 has results. A case whose feature is gone therefore stays in the catalog with its history, its label
