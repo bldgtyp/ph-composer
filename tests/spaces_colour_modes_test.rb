@@ -31,7 +31,7 @@ class SpacesColourModesTest < PhComposerTestCase
   def test_by_ventilation_names_what_each_space_supplies_and_counts_a_spaces_rate_once
     reference_model
     assert_equal({ "Supply only" => [1, [60.0]], "Extract only" => [1, [40.0]], "Transfer only" => [2, [20.0]],
-                   "No airflow" => [1, nil] }, legend("by_ventilation"))
+                   "Zone ventilation" => [1, nil] }, legend("by_ventilation"))
     assert_equal "ventilation", registered("by_ventilation").group
   end
 

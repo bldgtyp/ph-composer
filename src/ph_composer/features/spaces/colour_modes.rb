@@ -33,7 +33,7 @@ module PhComposer
         "supply" => ["Supply only", [31, 119, 180], %w[v_sup_m3h]],
         "extract" => ["Extract only", [214, 39, 40], %w[v_eta_m3h]],
         "transfer" => ["Transfer only", [148, 103, 189], %w[v_tran_m3h]],
-        "none" => ["No airflow", [190, 190, 190], []]
+        "none" => ["Zone ventilation", [190, 190, 190], []]
       }.freeze
       VENTILATION_COLOURS = VENTILATION.transform_values { |row| row[1] }.freeze
       INCHES_PER_M = 1.0 / 0.0254

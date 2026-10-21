@@ -26468,7 +26468,7 @@ Example params:
 
 Give the named copy of a Space, Volume or Floor Segment, and every record inside it, new ids in one step. The named occurrence is the one rewritten; a Space takes the next free number in its Zone. Owner: `ph_composer.spaces`.
 
-Undo step: Make Space Independent. Gives the copy storage of its own and rewrites its records with new ids.
+Undo step: Make Independent. Gives the copy storage of its own and rewrites its records with new ids.
 
 Refuses: `copy.rule_missing`, `extension.invalid`, `identity.conflict`, `record.unreadable`, `reference.invalid`, `space.identity_unique`, `target.ambiguous`, `target.changed`, `target.locked`, `target.not_found`, `target.shared_definition`, `validation.failed`, and the `action` common set.
 
