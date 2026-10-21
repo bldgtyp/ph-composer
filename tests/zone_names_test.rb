@@ -209,6 +209,20 @@ class ZoneNamesTest < PhComposerTestCase
     assert_empty @state.instance_variable_get(:@groups)
   end
 
+  def test_an_addition_the_host_deleted_logs_nothing_and_raises_nothing
+    logged = []
+    listener = Object.new
+    listener.define_singleton_method(:container_added) { |_entity| raise TypeError, "reference to deleted Group" }
+    @state.subscribe(listener)
+    PhComposer::Diagnostics.stub(:exception, ->(event, *_rest) { logged << event }) do
+      @state.added(Sketchup::Group.new(500, Sketchup::Entities.new([])))
+      gone = Sketchup::Group.new(501, Sketchup::Entities.new([]))
+      gone.define_singleton_method(:get_attribute) { |*_args| raise TypeError, "reference to deleted Group" }
+      @state.added(gone) # its record cannot be read either, and nothing raises into the host
+    end
+    assert_empty logged
+  end
+
   def test_observer_type_errors_other_than_deleted_entities_are_not_suppressed
     error = TypeError.new("wrong observer argument")
     @model.entities.stub(:remove_observer, ->(_observer) { raise error }) do

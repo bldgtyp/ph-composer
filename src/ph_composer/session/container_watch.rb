@@ -29,6 +29,13 @@ module PhComposer
       session.feature_state(:container_watch) { new(session) }
     end
 
+    # The host's refusal to read a container it deleted after reporting it added, as when the copy is undone
+    # or erased within the same operation. There is then nothing to observe or reconcile, so a callback walking
+    # the addition passes it by; any other error is still a defect to log.
+    def self.deleted_reference?(error)
+      error.is_a?(TypeError) && error.message.start_with?("reference to deleted")
+    end
+
     def initialize(session)
       @session = session
       @observer = Observer.new(self)
@@ -52,7 +59,7 @@ module PhComposer
       @session.host_event(:container_added, entity)
     rescue StandardError => error
       # An observer callback must not raise into SketchUp; a subscriber's failure is its own.
-      Diagnostics.exception("container_added", error)
+      Diagnostics.exception("container_added", error) unless self.class.deleted_reference?(error)
     end
 
     # Observes every container now in the Model and stops observing those gone. Each collection is keyed

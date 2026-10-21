@@ -124,6 +124,9 @@ module PhComposer
             observe(entity)
           end
           schedule if entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+        rescue StandardError => error
+          # An observer callback must not raise into SketchUp. An addition already deleted has no name to keep.
+          Diagnostics.exception("zone_name_added", error) unless ContainerWatch.deleted_reference?(error)
         end
 
         # One entity property is recorded in the callback, including intermediate valid renames
@@ -200,11 +203,12 @@ module PhComposer
           end
         end
 
-        # A listener's failure is its own; it never stops name preservation.
+        # A listener's failure is its own; it never stops name preservation. An addition the host has already
+        # deleted is no failure (ContainerWatch.deleted_reference?).
         def notify(listener, entity)
           listener.container_added(entity)
         rescue StandardError => error
-          Diagnostics.exception("zone_container_listener", error)
+          Diagnostics.exception("zone_container_listener", error) unless ContainerWatch.deleted_reference?(error)
         end
 
         def stored_record(entity)

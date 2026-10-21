@@ -32,6 +32,21 @@ class ContainerWatchTest < PhComposerTestCase
     assert_equal [20, 31, 32], @added.map(&:persistent_id)
   end
 
+  def test_an_addition_the_host_deleted_before_the_walk_is_passed_by_and_other_errors_are_logged
+    logged = []
+    watch = PhComposer::ContainerWatch.for(@session)
+    PhComposer::Diagnostics.stub(:exception, ->(event, error, *_rest) { logged << [event, error.message] }) do
+      gone = Sketchup::Group.new(40, Sketchup::Entities.new([]))
+      gone.define_singleton_method(:entities) { raise TypeError, "reference to deleted Entities" }
+      watch.added(gone)
+      assert_empty logged, "a copy undone before its callback ran is nothing to report"
+      broken = Sketchup::Group.new(41, Sketchup::Entities.new([]))
+      broken.define_singleton_method(:entities) { raise TypeError, "wrong argument type" }
+      watch.added(broken)
+    end
+    assert_equal [["container_added", "wrong argument type"]], logged
+  end
+
   def test_a_container_that_appears_without_an_addition_is_observed_after_the_next_commit
     later = Sketchup::Group.new(40, Sketchup::Entities.new([]))
     @nested.entities.instance_variable_get(:@values) << later
