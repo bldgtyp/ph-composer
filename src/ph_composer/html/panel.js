@@ -377,6 +377,14 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
   function renderNoModel() {
     var none = Boolean(state.ui.noModel), panes = document.querySelector(".panel-panes");
     if (!panes) return;
+    // A dialog the closed Model's screen held open (a form, a review) can only send to a session that is gone,
+    // so it closes with it; a Model shown later is a new session and builds its screens afresh.
+    if (none && !panes.hidden) {
+      Array.prototype.forEach.call(document.querySelectorAll("dialog"), function (dialog) {
+        if (dialog.closeModal) dialog.closeModal();
+        else if (dialog.open && dialog.close) dialog.close();
+      });
+    }
     if (none && !noModelNote) {
       noModelNote = ui.element("p", "phc-no-model", "No Model is active. Click a SketchUp document window to show " +
         "it here.");

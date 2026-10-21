@@ -146,6 +146,17 @@ test("a snapshot of no Model hides the panes behind one line, and window focus a
   assert.deepStrictEqual(types(p.sent).slice(-1), ["panel.focus"]);
 });
 
+test("a dialog the closed Model's screen held open closes when no Model is active", function () {
+  var p = page(["overlay"]);
+  p.receive("panel.snapshot", snapshot("session-a", 7));
+  var dialog = p.modules.overlay.formDialog("held-form", function () {});
+  p.context.document.body.appendChild(dialog);
+  dialog.openModal();
+  assert.strictEqual(dialog.hidden, false);
+  p.receive("panel.snapshot", snapshot(null, null, { file_name: null }));
+  assert.strictEqual(dialog.hidden, true, "its Save could only reach a session that is gone");
+});
+
 test("a refusal stays on screen as a warning and a failure as an error, until dismissed", function () {
   var p = page();
   p.receive("panel.snapshot", snapshot("session-a", 7));
