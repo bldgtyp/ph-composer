@@ -44,6 +44,16 @@ class SpacesColourModesTest < PhComposerTestCase
     assert(entries.all? { |entry| entry.entity.is_a?(Sketchup::Face) && entry.derived.polygons.length == 6 })
   end
 
+  # "0.25" and "0.52" share a byte sum, so the ramp alone gave the two bands one colour.
+  def test_weighting_factor_bands_draw_in_different_colours
+    segments = [floor_face(1311, rectangle(0, 0, 2, 2), segment_record("A", :weighting_factor => 0.25)),
+                floor_face(1312, rectangle(2, 0, 2, 2), segment_record("B", :weighting_factor => 0.52))]
+    volume = volume_group(1310, volume_record("V"), segments)
+    @model.entities << zone_group(1000, "Z", [space_group(1300, space_record("S", :number => "1"), [volume])])
+    colours = activate("by_weighting_factor").rows.to_h { |row| [row.value, row.colour] }
+    refute_equal colours.fetch("0.25"), colours.fetch("0.52")
+  end
+
   def test_by_height_bands_volumes_to_a_tenth_of_a_metre_lowest_first_and_sums_net_volume
     reference_model
     service = activate("by_height")

@@ -47,6 +47,20 @@ class ColourByTest < PhComposerTestCase
     assert_equal palette.spread(%w[spc_000000000001 spc_000000000003]).values, entries.first(2).map(&:colour)
     assert_equal [1, 2, 3], entries[2].colour, "a managed option's own colour stays"
     assert_nil entries.last.colour, "an unclassified entry is painted as unclassified"
+    managed = PhComposer::ColourBy::Entry.new(:value => "lvl_managed", :colour => palette::RAMP[7])
+    legacy = PhComposer::ColourBy::Entry.new(:value => "g") # alone, "g" takes slot 7
+    palette.spread_entries([managed, legacy])
+    refute_equal palette::RAMP[7], legacy.colour, "a managed option's slot is not given to another value"
+  end
+
+  # Ids and names whose characters are the same in another order share a byte sum, so the ramp alone gave
+  # them one colour.
+  def test_every_zone_mode_gives_each_value_its_own_colour
+    zone_group(70, ["Wall"], :level => "L12")
+    zone_group(700, ["Wall"], :level => "L21")
+    zone_group(7000, ["Wall"], :level => "L12")
+    assert_equal 3, activate("ph_composer.zones.by_zone").rows.map(&:colour).uniq.length
+    assert_equal 2, activate("ph_composer.zones.by_level").rows.map(&:colour).uniq.length
   end
 
   def test_spread_moves_the_later_of_two_clashing_values_to_the_next_free_slot
