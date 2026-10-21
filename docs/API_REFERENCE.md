@@ -7586,7 +7586,7 @@ Example params:
 
 ### `ph_composer.spaces.findings.list`
 
-One page of the findings of the Model, or of one Space and its children, each with the reference of what it is about; optionally only some codes. Owner: `ph_composer.spaces`.
+One page of the findings of the Model, or of one Space and its children, each with the reference of what it is about; optionally only some codes. The Model's include those of Volumes outside every Space and their Floor Segments. Owner: `ph_composer.spaces`.
 
 Refuses: `geometry.invalid`, `query.cursor_expired`, `query.limit_invalid`, `record.unreadable`, `target.changed`, `target.not_found`, `target.wrong_kind`, `validation.failed`, and the `query` common set.
 

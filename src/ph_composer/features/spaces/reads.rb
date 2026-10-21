@@ -7,6 +7,8 @@ module PhComposer
     module Reads
       ZONES_READ = "ph_composer.zones.all"
       UNITS = { "area" => "m2", "height" => "m", "volume" => "m3", "airflow" => "m3/h" }.freeze
+      # A stray Volume's own findings that its stray finding already covers or that do not apply to it.
+      ORPHAN_ASIDE = %w[space.duplicate_identity space.volume_nested].freeze
 
       module_function
 
@@ -98,6 +100,27 @@ module PhComposer
         scan.orphan_volumes.select { |volume| volume.path == path }.map do |volume|
           volume_row(volume, request.registry.catalog, request.model, counts, false)
         end
+      end
+
+      # The findings of every Volume outside every Space and of its Floor Segments, each with its reference, for
+      # the model-wide findings read. `all` reports such a Volume by its stray finding alone and never measures
+      # it; a Volume that cannot be measured is left to that stray finding here too, never refusing the read.
+      def orphan_findings(request)
+        scan = Occurrences.scan(request.model)
+        counts = occurrence_counts(scan)
+        scan.orphan_volumes.sort_by(&:path).flat_map do |volume|
+          row = volume_row(volume, request.registry.catalog, request.model, counts, false)
+          # The stray finding already says when the Volume's identity is duplicated, in its own words, and a
+          # Volume outside every Space is not nested in one, whatever the scan's `nested` flag says.
+          own = referenced(row).reject { |finding| ORPHAN_ASIDE.include?(finding.fetch("code")) }
+          own + row.fetch("floor_segments").flat_map { |segment| referenced(segment) }
+        rescue CodedError
+          []
+        end
+      end
+
+      def referenced(row)
+        row.fetch("findings").map { |finding| finding.merge("reference" => row.fetch("reference")) }
       end
 
       def occurrence_counts(scan)
