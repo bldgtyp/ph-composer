@@ -32,6 +32,8 @@ class SpacesColourModesTest < PhComposerTestCase
     reference_model
     assert_equal({ "Supply only" => [1, [60.0]], "Extract only" => [1, [40.0]], "Transfer only" => [2, [20.0]],
                    "Zone ventilation" => [1, nil] }, legend("by_ventilation"))
+    explicit = PhComposer::Spaces::ColourModes.ventilation("v_sup_m3h" => 0.0)
+    assert_equal "none", explicit, "a rate set to zero is no airflow, not the Zone's"
     assert_equal "ventilation", registered("by_ventilation").group
   end
 

@@ -33,7 +33,9 @@ module PhComposer
         "supply" => ["Supply only", [31, 119, 180], %w[v_sup_m3h]],
         "extract" => ["Extract only", [214, 39, 40], %w[v_eta_m3h]],
         "transfer" => ["Transfer only", [148, 103, 189], %w[v_tran_m3h]],
-        "none" => ["Zone ventilation", [190, 190, 190], []]
+        "none" => ["No airflow", [190, 190, 190], []],
+        # Every rate unset: the Space uses its Zone's ventilation load, as the Spaces view's "Zone" says.
+        "zone" => ["Zone ventilation", [196, 176, 150], []]
       }.freeze
       VENTILATION_COLOURS = VENTILATION.transform_values { |row| row[1] }.freeze
       INCHES_PER_M = 1.0 / 0.0254
@@ -136,9 +138,11 @@ module PhComposer
         end
       end
 
-      # The any-set rule's rates: supply, extract, both, transfer alone, or none, including a Space that
-      # inherits its Zone's airflow.
+      # The any-set rule's rates: supply, extract, both, transfer alone, or none set above zero; a Space with
+      # no rate set at all inherits its Zone's airflow.
       def ventilation(record)
+        return "zone" if Metrics.airflow_mode(record) == "inheriting"
+
         rates = Metrics.airflows(record)
         supply, extract, transfer = rates.values_at("v_sup_m3h", "v_eta_m3h", "v_tran_m3h").map(&:to_f)
         return "both" if supply.positive? && extract.positive?
