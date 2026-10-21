@@ -8,6 +8,10 @@ module PhComposer
     # methods.
     extend self
 
+    # A colour as six-digit hex, `#a1b2c3`. A stored value reaches the panel's style attributes, so the
+    # pattern is what keeps anything else out of them.
+    HEX_COLOUR = { "type" => "string", "pattern" => "^#[0-9A-Fa-f]{6}$" }.freeze
+
     # A closed object; every property is required unless `optional` names it.
     def object(properties, optional: [], description: nil)
       schema = { "type" => "object", "additionalProperties" => false,

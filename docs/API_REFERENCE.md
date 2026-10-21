@@ -497,7 +497,8 @@ Values:
               "maximum": 1
             },
             "color": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$"
             }
           }
         }
@@ -555,7 +556,8 @@ Values:
       "maximum": 1
     },
     "color": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
     }
   }
 }
@@ -3749,7 +3751,8 @@ Result:
                         "maximum": 1
                       },
                       "color": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^#[0-9A-Fa-f]{6}$"
                       }
                     }
                   }
@@ -3807,7 +3810,8 @@ Result:
                 "maximum": 1
               },
               "color": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
               }
             }
           },
@@ -4142,7 +4146,8 @@ Result:
                         "maximum": 1
                       },
                       "color": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^#[0-9A-Fa-f]{6}$"
                       }
                     }
                   }
@@ -4200,7 +4205,8 @@ Result:
                 "maximum": 1
               },
               "color": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
               }
             }
           },
@@ -24847,7 +24853,8 @@ Params:
                   "maximum": 1
                 },
                 "color": {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^#[0-9A-Fa-f]{6}$"
                 }
               }
             }
@@ -24889,7 +24896,8 @@ Params:
           "maximum": 1
         },
         "color": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
         }
       },
       "description": "The new Material's values; name is required and every other value takes its default."
@@ -25080,7 +25088,8 @@ Params:
                   "maximum": 1
                 },
                 "color": {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^#[0-9A-Fa-f]{6}$"
                 }
               }
             }
@@ -25145,7 +25154,8 @@ Params:
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}$"
         }
       },
       "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."
@@ -25338,7 +25348,8 @@ Params:
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}$"
         }
       },
       "description": "The values to change; any not given stay."
@@ -25471,7 +25482,8 @@ Params:
                   "maximum": 1
                 },
                 "color": {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^#[0-9A-Fa-f]{6}$"
                 }
               }
             }
@@ -25536,7 +25548,8 @@ Params:
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}$"
         }
       },
       "description": "Any of the record's values as last read; if one changed since, the edit is refused as target.changed. {} skips the check."

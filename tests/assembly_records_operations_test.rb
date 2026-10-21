@@ -58,6 +58,18 @@ class AssemblyRecordsOperationsTest < PhComposerTestCase
     assert_equal original, record(Assemblies::MATERIAL_KIND, id)
   end
 
+  def test_a_material_colour_is_written_only_as_six_digit_hex
+    id = create("materials", "name" => "Brick")
+    refused = invoke("materials.update", "id" => id, "values" => { "color" => "red; background-image: url(x)" },
+                                         "expected_values" => { "color" => "#ffffff" })
+    assert_equal %w[refused none], refused.values_at("status", "effect")
+    assert_includes %w[params.invalid validation.failed], refused["code"]
+    accepted = invoke("materials.update", "id" => id, "values" => { "color" => "#A1b2C3" },
+                                          "expected_values" => { "color" => "#ffffff" })
+    assert_equal "committed", accepted["effect"]
+    assert_equal "#A1b2C3", record(Assemblies::MATERIAL_KIND, id)["color"]
+  end
+
   def test_material_delete_rewrites_every_occurrence_in_one_undo_step
     old, replacement, ids = seed_repeated_uses
     refused = invoke("materials.delete", "id" => old)

@@ -338,7 +338,10 @@ function (RecordForm, request, snapshot, ui) {
       td.replaceChildren(td._color);
     }
     td._record = record;
-    var color = record.values.color || (record.display || {}).color || "#ffffff";
+    var raw = record.values.color || (record.display || {}).color;
+    /* Only six-digit hex reaches the style: the schema enforces it on write, and this keeps a value that
+       arrived some other way out of the attribute. */
+    var color = /^#[0-9A-Fa-f]{6}$/.test(raw) ? raw : "#ffffff";
     td._color.style.backgroundColor = color;
     td._color.setAttribute("aria-label", "Color for " + record.values.name + ": " + color);
     td._color.disabled = !form.enabled || form.requests.busy();

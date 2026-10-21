@@ -192,7 +192,7 @@ class LibraryCoordinatorTest < PhComposerTestCase
     loaded = load_catalog
     @generation = loaded.dig("value", "generation")
     assert_equal "empty", loaded.dig("value", "state"), loaded.inspect
-    assert_equal "library.row_semantic_invalid", loaded.dig("value", "warnings", -1, "code")
+    assert_equal "library.row_optional_invalid", loaded.dig("value", "warnings", -1, "code")
     assert_empty in_file.fetch("rows")
     result = invoke("#{PREFIX}.copy", params("create"))
     assert_equal "library.row_unavailable", result["code"]

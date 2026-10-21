@@ -30,11 +30,12 @@ class LibraryAdmissionTest < PhComposerTestCase
     assert result.rows.frozen?
   end
 
-  def test_semantically_invalid_color_is_skipped_before_a_catalog_row_is_published
+  # The wire schema declares the colour as six-digit hex, so a bad one fails the row's schema check.
+  def test_an_invalid_color_is_skipped_before_a_catalog_row_is_published
     result = admit([row("invalid", "first", 1, "color" => "not-hex"),
                     row("valid", "first", 1, "color" => "#ABCDEF")])
     assert_equal ["valid"], result.rows.map { |entry| entry.fetch("record_id") }
-    warning = result.warnings.find { |row| row["code"] == "library.row_semantic_invalid" }
+    warning = result.warnings.find { |row| row["code"] == "library.row_optional_invalid" }
     refute_nil warning
     assert_equal "invalid", warning.fetch("record_id")
   end
