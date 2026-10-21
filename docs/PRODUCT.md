@@ -211,7 +211,9 @@ step; a click on a Face at a Space's root adds the next Volume. A Face in a Zone
 offered Create Space, and a classified Zone Face or a Face in no Zone is refused with the reason.
 Create Space is in SketchUp's context menu on a Face selection, inside an open Zone: it shows which
 Faces become the new Space and why it leaves out the others, and Create makes the Space, its Volume
-and its Floor Segments in one Undo step.
+and its Floor Segments in one Undo step. Draw a room's floor outline just below the Zone's floor, or
+inset from its walls, so that it touches no envelope Face. An outline drawn with its edges on the
+walls splits them, and Create Space leaves it out, saying to Undo it and draw it below or inset.
 
 Colour by Space, Ventilation, Weighting factor and Height colour each Space's Floor Segments and the
 preview prism that its height draws over them, with a legend. Space labels and the totals of the
