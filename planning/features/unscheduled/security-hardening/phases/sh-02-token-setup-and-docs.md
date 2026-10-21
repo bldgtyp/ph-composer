@@ -3,7 +3,7 @@
 DATE: 2026-10-21
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 FINDINGS: F01, F02 (documentation only), the privacy section's recommendation on paths
 DEPENDS ON: nothing
 ONE PR: yes

@@ -3,7 +3,7 @@
 DATE: 2026-10-21
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 FINDINGS: F03, F04, F08
 DEPENDS ON: nothing. Ends with a native host gate (SH-03-A8) before merge.
 ONE PR: yes, with three commits (colour, escaping, CSP) so a revert can take one.

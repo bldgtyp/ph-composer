@@ -1,8 +1,8 @@
 # Security hardening: plan
 
 DATE: 2026-10-21
-STATUS: Scoped
-ISSUE: none (local planning draft)
+STATUS: In progress
+ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 BASELINE: source at `9e52821`, checked 2026-10-21
 
 ## Verified at the baseline

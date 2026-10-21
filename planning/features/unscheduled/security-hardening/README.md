@@ -1,9 +1,9 @@
 # Security hardening
 
 DATE: 2026-10-21
-STATUS: Scoped. Five stages planned from the security and privacy review; none authorized.
+STATUS: In progress. Five stages planned from the security and privacy review; SH-01 to SH-04 authorized 2026-10-21.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 BASELINE: `main` at `0a41c0b7` (the review packet's commit; source unchanged since `9e52821`)
 SOURCE: [planning/features/code-review/](../../code-review/README.md), findings F01 to F11
 
