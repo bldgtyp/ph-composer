@@ -25,6 +25,8 @@ module PhComposer
         [claude_code(port, token), codex(port, token)]
       end
 
+      # Each client leads with the form that keeps the token out of the client's settings and ends with the
+      # one that writes it there; each title says where the token is kept.
       # The environment-variable form expands `${PH_COMPOSER_TOKEN}` when Claude Code connects, so the
       # token stays out of ~/.claude.json (checked against 2.1.300: connected with the variable set, failed
       # without it).
@@ -33,21 +35,25 @@ module PhComposer
                                "headers" => { "Authorization" => "Bearer ${#{TOKEN_VARIABLE}}" })
         { "client" => "Claude Code",
           "forms" => [
-            { "title" => "Run in a terminal",
-              "text" => "claude mcp add --transport http --scope user #{SERVER_NAME} #{url(port)} " \
-                        "--header \"Authorization: Bearer #{token}\"" },
-            { "title" => "Or, to keep the token out of Claude Code's settings, run this",
+            { "title" => "Run in a terminal. This keeps the token out of Claude Code's settings; it reads the " \
+                         "variable set next.",
               "text" => "claude mcp add-json --scope user #{SERVER_NAME} '#{server}'" },
-            export_form(token)
+            export_form(token),
+            { "title" => "Or, one command, with the token kept in Claude Code's settings file and your " \
+                         "shell history.",
+              "text" => "claude mcp add --transport http --scope user #{SERVER_NAME} #{url(port)} " \
+                        "--header \"Authorization: Bearer #{token}\"" }
           ],
           "check" => "claude mcp get #{SERVER_NAME}",
           "remove" => "claude mcp remove --scope user #{SERVER_NAME}" }
       end
 
-      # The variable both clients' environment forms read. A shell profile only reaches terminals opened
-      # after it is edited, so the line is also run once where the client will start.
+      # The variable both clients' environment forms read, set where the client will start. A shell profile
+      # would set it in every later terminal, at the cost of keeping the token in that file; the shell's
+      # history keeps the line either way.
       def export_form(token)
-        { "title" => "and add this to your shell profile, such as ~/.zshrc, then run it in this terminal too",
+        { "title" => "Then set the variable in the terminal you start the client from. Your shell history " \
+                     "keeps the token, and so does your shell profile if you add the line there.",
           "text" => "export #{TOKEN_VARIABLE}=#{token}" }
       end
 
@@ -57,10 +63,10 @@ module PhComposer
         block = "[mcp_servers.#{SERVER_NAME}]\nurl = \"#{url(port)}\"\n"
         { "client" => "Codex",
           "forms" => [
-            { "title" => "Add to ~/.codex/config.toml",
+            { "title" => "Add to ~/.codex/config.toml. This names the variable, not the token.",
               "text" => "#{block}bearer_token_env_var = \"#{TOKEN_VARIABLE}\"" },
             export_form(token),
-            { "title" => "Or instead of both, this block with the token in it",
+            { "title" => "Or this block instead of both, with the token kept in ~/.codex/config.toml.",
               "text" => "#{block}http_headers = { Authorization = \"Bearer #{token}\" }" }
           ],
           "check" => "codex mcp get #{SERVER_NAME}",

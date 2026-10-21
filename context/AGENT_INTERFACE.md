@@ -437,12 +437,14 @@ recent calls (tool, operation name, session, status, code, time; no params, valu
 is flushed to the diagnostics log.
 
 Implemented: client configuration, `agent_access/client_config.rb`. When a token is issued the
-dialog shows, with the token in it, `claude mcp add --transport http --scope user ph-composer <url>
---header "Authorization: Bearer <token>"` for Claude Code, and for Codex a `[mcp_servers.ph-composer]`
-block for `~/.codex/config.toml` with `bearer_token_env_var = "PH_COMPOSER_TOKEN"` plus the
-`export` line, or the same block with the token inline in `http_headers`. Claude Code also gets a
-`claude mcp add-json` form whose header reads `${PH_COMPOSER_TOKEN}`, expanded when it connects
-(2.1.300: connected with the variable set, failed without). Codex's own `codex mcp
+dialog shows three forms per client, with the token in them, ordered so the first keeps the token out
+of the client's settings, the second sets the variable it reads and the last writes the token into the
+client's settings; each title says where the token is kept. Claude Code: a `claude mcp add-json` form whose header reads `${PH_COMPOSER_TOKEN}`, expanded
+when it connects (2.1.300: connected with the variable set, failed without), then the `export` line,
+then `claude mcp add --transport http --scope user ph-composer <url> --header "Authorization: Bearer
+<token>"`. Codex: a `[mcp_servers.ph-composer]` block for `~/.codex/config.toml` with
+`bearer_token_env_var = "PH_COMPOSER_TOKEN"`, then the `export` line, then the same block with the
+token inline in `http_headers`. Codex's own `codex mcp
 add` and `remove` rewrite the whole config file, dropping comments and reordering tables (0.163.0),
 so the block is pasted by hand. Both clients connected from these snippets alone and ran a
 `discover` and a `query` headless (`claude -p`, `codex exec`) on the proving host. The

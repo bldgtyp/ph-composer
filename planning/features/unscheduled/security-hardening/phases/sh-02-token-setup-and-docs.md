@@ -1,7 +1,7 @@
 # SH-02 Token setup forms and the agent docs
 
 DATE: 2026-10-21
-STATUS: Scoped
+STATUS: Implemented on branch `feat/security-hardening-sh-02`
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 FINDINGS: F01, F02 (documentation only), the privacy section's recommendation on paths

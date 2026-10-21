@@ -233,6 +233,8 @@ PhComposerUI.define("agent_access/page", ["dom", "icons", "overlay", "page_heade
       this.issuedDialog.appendChild(this.issuedTitle);
       this.issuedDialog.appendChild(el("p", "", "Copy this token now and give it to the agent. It is not shown " +
         "again; if it is lost, revoke it and create another."));
+      this.issuedDialog.appendChild(el("p", "muted", "Each setup says where the token is kept. Choose the first two " +
+        "unless your client cannot read an environment variable."));
       var field = this.copyField("token", "input");
       this.secret = field.value; this.copy = field.copy;
       this.issuedDialog.appendChild(field.root);
