@@ -53,6 +53,10 @@ module PhComposer
 
       private
 
+      # A child that is a symlink to a regular file is read like any other: the parse and size bounds
+      # apply to it, and a file that is not a library fails the envelope check with none of its text
+      # leaving. The writer refuses a symlinked destination: it commits by renaming over the path, which
+      # would replace the link itself rather than the file the user chose.
       def candidate_files
         return [@path] if File.file?(@path)
 

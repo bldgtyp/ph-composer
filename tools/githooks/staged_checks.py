@@ -36,6 +36,9 @@ PANEL_ROOT = "src/ph_composer/html/"
 RUNTIME_ROOTS = ("src/ph_composer/html/", "src/ph_composer/python/", "src/ph_composer/vendor/")
 # `make lint-citations` covers shipped code and tests.
 CITATION_ROOTS = ("src/", "tests/")
+# `make lint-paths` covers every file outside the tests, whose synthetic home paths are deliberate. The
+# Makefile's own pathspec exclusions still apply to the staged paths named here.
+PATH_UNLINTED = ("tests/", "tools/hostkit/tests/")
 # A change to a linter's configuration can change its verdict on files nobody staged, so it re-runs that
 # linter over the whole tree. The Makefile defines every target, so a change to it re-runs them all.
 PYTHON_CONFIG = ("pyproject.toml", "uv.lock", "Makefile")
@@ -73,7 +76,7 @@ def plan(present: Sequence[str], removed: Sequence[str] = ()) -> list[Check]:
     `present` are the staged paths that exist after the commit (added, copied, modified, or the new name
     of a rename); linters read those. `removed` are deleted paths and the old names of renames; they can
     only break whole-set checks, the type check and the two manifests. Paths are repository-relative. A
-    commit that touches no code, such as a planning or docs edit, needs none.
+    commit that touches no code, such as a planning or docs edit, needs only the home-path check.
     """
     every = [*present, *removed]
     full_python = any(p in PYTHON_CONFIG for p in every)
@@ -83,6 +86,7 @@ def plan(present: Sequence[str], removed: Sequence[str] = ()) -> list[Check]:
     ruby = [p for p in present if p.endswith(".rb") and _under(p, RUBY_ROOTS)]
     js = [p for p in present if p.endswith(JS_SUFFIXES)]
     cited = [p for p in present if _under(p, CITATION_ROOTS)]
+    public = [p for p in present if not _under(p, PATH_UNLINTED)]
     checks: list[Check] = []
     if full_python or ruff:
         scope = ["tools", "tests/python", "src/ph_composer/python"] if full_python else ruff
@@ -134,6 +138,21 @@ def plan(present: Sequence[str], removed: Sequence[str] = ()) -> list[Check]:
                 "citations",
                 ("lint-citations", "CITATION_FLAGS=--cached", f"CITATION_PATHS={_make_words(cited)}"),
                 "cite context/ instead of a planning document or id (context/CODING_STANDARDS.md)",
+            )
+        )
+    if public or "Makefile" in every:
+        # The index, never the working copy, even over the whole tree: a staged home path with an unstaged
+        # scrub beside it must still fail.
+        path_args = (
+            ("lint-paths", "PATH_LINT_FLAGS=--cached")
+            if "Makefile" in every
+            else ("lint-paths", "PATH_LINT_FLAGS=--cached", f"PATH_LINT_PATHS={_make_words(public)}")
+        )
+        checks.append(
+            Check(
+                "home paths",
+                path_args,
+                "replace the home path with ~ or <repo>",
             )
         )
     return checks

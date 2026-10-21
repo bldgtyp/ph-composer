@@ -39,6 +39,25 @@ class HostBridgeTest < PhComposerTestCase
     assert_equal "ArgumentError: boom", failed.fetch("error")
   end
 
+  def test_the_state_file_is_readable_by_its_owner_only
+    skip "file modes are POSIX" if Gem.win_platform?
+
+    assert_equal 0o600, File.stat(@server.state_path).mode & 0o777
+  end
+
+  def test_a_console_log_removed_while_running_comes_back_owner_only
+    skip "file modes are POSIX" if Gem.win_platform?
+
+    teed = Bridge::Server.new(:state_path => File.join(@directory, "teed.json"), :tee_console => true).start
+    assert_equal 0o600, File.stat(teed.console_path).mode & 0o777
+    File.delete(teed.console_path)
+    reply = exchange("token" => teed.token, "code" => "puts 'again'", :server => teed)
+    assert reply.fetch("ok")
+    assert_equal 0o600, File.stat(teed.console_path).mode & 0o777
+  ensure
+    teed&.stop
+  end
+
   def test_stop_removes_the_state_file
     @server.stop
     refute File.exist?(@server.state_path)
@@ -47,7 +66,8 @@ class HostBridgeTest < PhComposerTestCase
   private
 
   def exchange(payload)
-    socket = TCPSocket.new("127.0.0.1", @server.port)
+    server = payload.delete(:server) || @server
+    socket = TCPSocket.new("127.0.0.1", server.port)
     socket.write(JSON.generate(payload) + "\n")
     deadline = Time.now + 5
     until IO.select([socket], nil, nil, 0.05)

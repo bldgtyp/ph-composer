@@ -96,7 +96,7 @@ After implementation is authorized, give the next agent this packet and the auth
 
 Before code work, apply the repository architecture skill. Before panel work, apply the UI-polish
 skill and reference. Before host work, read the SketchUp section of
-`/Users/em/.codex/references/machine-workflows.md`. No host process is launched by this planning pass.
+`~/.codex/references/machine-workflows.md`. No host process is launched by this planning pass.
 
 ## Completion
 

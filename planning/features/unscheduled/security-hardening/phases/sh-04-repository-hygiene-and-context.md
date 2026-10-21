@@ -1,7 +1,7 @@
 # SH-04 Repository hygiene and the context fold
 
 DATE: 2026-10-21
-STATUS: Scoped
+STATUS: Implemented on branch `chore/security-hardening-sh-04`
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 FINDINGS: F07, F09, F10, F11, and the review's "Accepted by design" table
@@ -16,7 +16,7 @@ planning packets can archive without losing them.
 
 ## Verified at the baseline
 
-- `git grep -lE '/Users/em' -- planning` lists five files:
+- `git grep -lE '/Users/<account>' -- planning` (the maintainer's account name) listed five files:
   `planning/archive/agent-access-review/evidence/dispatch-original-results.log`,
   `planning/archive/phase-00-foundation/PLAN.md`,
   `planning/archive/phase-01-faces-and-zones-refactor/review/MODEL-REVIEW.md`,

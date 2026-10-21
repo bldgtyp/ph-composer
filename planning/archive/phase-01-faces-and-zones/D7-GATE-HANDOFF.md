@@ -23,13 +23,13 @@ terminal for the bridge.
 ## Setup
 
 Run everything from the repo root,
-`/Users/em/Dropbox/bldgtyp-00/00_PH_Tools/ph-composer`.
+`~/Dropbox/bldgtyp-00/00_PH_Tools/ph-composer`.
 
 The bridge client is invoked as `uv run tools/hostkit/host_bridge.py <subcommand>`. If your shell
 is zsh, do not hold that in a variable — zsh will not word-split it. Write a wrapper instead:
 
 ```sh
-printf '#!/bin/sh\ncd /Users/em/Dropbox/bldgtyp-00/00_PH_Tools/ph-composer\nexec uv run tools/hostkit/host_bridge.py "$@"\n' > /tmp/b
+printf '#!/bin/sh\ncd ~/Dropbox/bldgtyp-00/00_PH_Tools/ph-composer\nexec uv run tools/hostkit/host_bridge.py "$@"\n' > /tmp/b
 chmod +x /tmp/b
 ```
 
@@ -47,7 +47,7 @@ Check with `/tmp/b state`.
 make install
 make bridge-install
 /tmp/b launch _private/host/p1d-overview.skp --fresh-from _private/host/blank-template.skp
-/tmp/b eval 'load "/Users/em/Dropbox/bldgtyp-00/00_PH_Tools/ph-composer/tools/examples/authoring/overview_walkthrough.rb"; OverviewWalkthrough.setup'
+/tmp/b eval 'load "~/Dropbox/bldgtyp-00/00_PH_Tools/ph-composer/tools/examples/authoring/overview_walkthrough.rb"; OverviewWalkthrough.setup'
 /tmp/b eval 'PhComposer::Panel.show'
 ```
 

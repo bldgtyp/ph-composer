@@ -1,4 +1,4 @@
-.PHONY: ci syntax lint lint-ruby lint-js lint-python lint-citations test fixtures fixtures-check coverage hostkit-test python-check \
+.PHONY: ci syntax lint lint-ruby lint-js lint-python lint-citations lint-paths test fixtures fixtures-check coverage hostkit-test python-check \
         panel-manifest panel-manifest-check ui-preview ui-deps ui-checks rbz rbz-check install clean bridge-install \
         bridge-uninstall runtime-check runtime-pin-check runtime-manifest runtime-browser-check phase-one-proof \
         hooks hooks-auto help help-check
@@ -20,6 +20,8 @@ ESLINT_ARGS = .
 RUFF_ARGS = tools tests/python src/ph_composer/python
 CITATION_FLAGS = --untracked
 CITATION_PATHS = src tests
+PATH_LINT_FLAGS = --untracked
+PATH_LINT_PATHS = .
 JS_TESTS := $(wildcard tests/*_test.js)
 # Rubocop is reached through the bundler that belongs to $(RUBY), never whatever `bundle` is first
 # on PATH: on macOS that is the system Ruby's, which cannot read this lock.
@@ -57,7 +59,7 @@ test: hooks-auto
 # Three rule sets, one target. Rubocop and eslint are developer tools the extension does not
 # need, so each prints a named skip when absent and `make test` keeps working on a checkout with
 # neither. CI installs both, so nothing skips there; a local skip is not gate evidence.
-lint: hooks-auto lint-ruby lint-js lint-python lint-citations
+lint: hooks-auto lint-ruby lint-js lint-python lint-citations lint-paths
 
 lint-ruby:
 	@if [ -x "$(BUNDLE)" ] && $(BUNDLE) check >/dev/null 2>&1; then \
@@ -86,6 +88,17 @@ lint-citations:
 	else \
 	  echo "lint-citations: ok"; \
 	fi
+
+# A home path names a person and a machine; neither belongs in a public tree. /Users/example is the
+# synthetic account evidence uses. tests/ and the host kit's tests are not linted: their synthetic home
+# paths are what the redaction they test removes. git grep answers 1 for no match; anything else but a
+# match (0) is an error, which fails the lint rather than passing it.
+lint-paths:
+	@git grep $(PATH_LINT_FLAGS) -InP '(?i)(?:/Users/|[a-z]:\\+Users\\+)(?!example(?![\w-]))[a-z0-9_]' -- \
+	    $(PATH_LINT_PATHS) ':!tests' ':!tools/hostkit/tests' ':!src/ph_composer/vendor'; status=$$?; \
+	if [ $$status -eq 1 ]; then echo "lint-paths: ok"; \
+	elif [ $$status -eq 0 ]; then echo "lint-paths: replace the home path with ~ or <repo>"; exit 1; \
+	else echo "lint-paths: git grep failed ($$status)"; exit 1; fi
 
 # No skip: `test` and `python-check` already require `uv`.
 lint-python:

@@ -23,34 +23,56 @@ def args(paths: list[str], name: str, removed: list[str] | None = None) -> tuple
     return next(check.make_args for check in plan(paths, removed or []) if check.name == name)
 
 
-def test_a_docs_only_commit_runs_no_check() -> None:
-    assert plan(["README.md", "docs/DEVELOPMENT.md", "context/CONTRACTS.md"]) == []
+def test_a_docs_only_commit_runs_only_the_home_path_check() -> None:
+    paths = ["README.md", "docs/DEVELOPMENT.md", "context/CONTRACTS.md"]
+    assert names(paths) == ["home paths"]
+    assert args(paths, "home paths") == (
+        "lint-paths",
+        "PATH_LINT_FLAGS=--cached",
+        "PATH_LINT_PATHS=README.md docs/DEVELOPMENT.md context/CONTRACTS.md",
+    )
+
+
+def test_tests_keep_their_synthetic_home_paths_unlinted() -> None:
+    assert "home paths" not in names(["tests/diagnostics_test.rb", "tools/hostkit/tests/fault_controls_test.rb"])
+    assert "home paths" in names(["starter-library/materials.json", ".agents/skills/x/SKILL.md"])
 
 
 def test_a_tool_script_is_linted_by_name_and_type_checked_whole() -> None:
     paths = ["tools/hostkit/host_bridge.py", "tools/hostkit/tests/test_host_bridge_client.py"]
-    assert names(paths) == ["ruff", "types"]
+    assert names(paths) == ["ruff", "types", "home paths"]
     assert args(paths, "ruff") == ("lint-python", "RUFF_ARGS=--force-exclude " + " ".join(paths))
     assert args(paths, "types") == ("python-check",)
 
 
 def test_python_outside_the_ruff_roots_is_still_type_checked() -> None:
-    assert names(["scratch.py"]) == ["types"]
+    assert names(["scratch.py"]) == ["types", "home paths"]
 
 
 def test_ruby_gets_syntax_and_rubocop_on_the_staged_files_and_citations_for_src() -> None:
     paths = ["src/ph_composer/extension.rb"]
-    assert names(paths) == ["ruby syntax", "rubocop", "citations"]
+    assert names(paths) == ["ruby syntax", "rubocop", "citations", "home paths"]
     assert args(paths, "ruby syntax") == ("syntax", "RB_FILES=src/ph_composer/extension.rb")
     assert args(paths, "rubocop") == ("lint-ruby", "RUBOCOP_ARGS=--force-exclusion src/ph_composer/extension.rb")
 
 
 def test_a_panel_module_needs_eslint_and_both_manifests() -> None:
-    assert names(["src/ph_composer/html/table.js"]) == ["eslint", "panel manifest", "runtime manifest", "citations"]
+    assert names(["src/ph_composer/html/table.js"]) == [
+        "eslint",
+        "panel manifest",
+        "runtime manifest",
+        "citations",
+        "home paths",
+    ]
 
 
 def test_a_panel_stylesheet_or_page_needs_both_manifests() -> None:
-    assert names(["src/ph_composer/html/table.css"]) == ["panel manifest", "runtime manifest", "citations"]
+    assert names(["src/ph_composer/html/table.css"]) == [
+        "panel manifest",
+        "runtime manifest",
+        "citations",
+        "home paths",
+    ]
 
 
 def test_a_removed_file_runs_only_the_whole_set_checks() -> None:
@@ -61,7 +83,8 @@ def test_a_removed_file_runs_only_the_whole_set_checks() -> None:
 def test_a_linter_config_change_lints_the_whole_tree() -> None:
     assert args([".rubocop.yml"], "rubocop") == ("lint-ruby",)
     assert args(["package.json"], "eslint") == ("lint-js",)
-    assert names(["pyproject.toml"]) == ["ruff", "types"]
+    assert names(["pyproject.toml"]) == ["ruff", "types", "home paths"]
+    assert args(["Makefile"], "home paths") == ("lint-paths", "PATH_LINT_FLAGS=--cached")
     assert args(["pyproject.toml"], "ruff") == (
         "lint-python",
         "RUFF_ARGS=--force-exclude tools tests/python src/ph_composer/python",
@@ -88,7 +111,7 @@ def test_citations_read_the_index_for_shipped_code_and_tests_only() -> None:
 
 def test_every_planned_target_and_variable_exists_in_the_makefile() -> None:
     makefile = MAKEFILE.read_text(encoding="utf-8")
-    staged = ["tools/a.py", "src/ph_composer/html/a.js", "src/b.rb"]
+    staged = ["tools/a.py", "src/ph_composer/html/a.js", "src/b.rb", "docs/a.md"]
     for check in plan(staged):
         target, *assignments = check.make_args
         assert re.search(rf"^{re.escape(target)}:", makefile, re.MULTILINE), target
@@ -127,8 +150,8 @@ def test_commit_msg_lets_a_merge_conclude_unsigned(tmp_path: Path, monkeypatch: 
     assert staged_checks.main(["commit-msg", str(message)]) == 0
 
 
-def test_pre_commit_runs_nothing_for_a_docs_only_commit(monkeypatch: pytest.MonkeyPatch) -> None:
-    staged = {"--diff-filter=ACM": ["docs/DEVELOPMENT.md"], "--diff-filter=D": []}
+def test_pre_commit_runs_nothing_for_a_commit_no_check_covers(monkeypatch: pytest.MonkeyPatch) -> None:
+    staged = {"--diff-filter=ACM": ["tools/hostkit/tests/notes.md"], "--diff-filter=D": []}
     monkeypatch.setattr(staged_checks, "_git", lambda *a: staged.get(a[-1], []))
 
     def refuse(*_args: object, **_kwargs: object) -> None:
@@ -154,7 +177,7 @@ def test_pre_commit_reports_each_failure_and_its_fix(
     monkeypatch.setattr(staged_checks.subprocess, "run", run)
     assert staged_checks.pre_commit() == 1
     out = capsys.readouterr().out
-    assert [c[2] for c in calls] == ["lint-python", "python-check"]
+    assert [c[2] for c in calls] == ["lint-python", "python-check", "lint-paths"]
     assert "ruff failed" in out and "E501 Line too long" in out and "uv run ruff format tools/a.py" in out
     assert "Nothing was committed." in out
 
