@@ -49,13 +49,13 @@ class AssemblyAssignmentRetargetTest < PhComposerTestCase
     assert_equal "target.locked", result.dig("detail", "faces", 0, "reason")
   end
 
-  def test_shared_reference_names_make_unique_route_and_refuses_all
+  def test_shared_reference_names_the_open_group_route_and_refuses_all
     zone = @model.entities.to_a.last
     zone.entities << Sketchup::Group.new(299, zone.entities.to_a.first.entities)
     result = delete
     assert_equal %w[refused reference.in_use none], result.values_at("status", "code", "effect")
     assert result.dig("detail", "faces").all? { |row| row["reason"] == "target.shared_definition" }
-    assert_includes result.fetch("message"), "Make Unique"
+    assert_includes result.fetch("message"), "open its shared Group with Edit Group"
     assert assignment_faces.all? { |row| row.dig("values", "assembly_id") == @old }
   end
 
