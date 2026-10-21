@@ -21,7 +21,7 @@ jobs:
         # host. Ruby 3 keyword separation is invisible to a loop that runs on only one of them.
         ruby-version: ["2.7.2", "3.2.2"]
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: ruby/setup-ruby@824c0e29fdfc7d689c191c27acc969d2d04b7dd8 # v1.331.0
         with:
