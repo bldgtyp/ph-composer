@@ -1,9 +1,9 @@
 # SH-01 Release gates: pinned Actions, security policy, release checklist
 
 DATE: 2026-10-21
-STATUS: Scoped
+STATUS: Implemented on branch `ci/security-hardening-sh-01`
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 FINDINGS: F05, F06, and the checklist line of F10
 DEPENDS ON: nothing
 ONE PR: yes

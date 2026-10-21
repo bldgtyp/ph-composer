@@ -214,8 +214,16 @@ log was being written, and the incident the user selected. Its body is the newes
 5. Fix it with the test that reproduces it, link the issue in the pull request, and record in the
    issue which build carries the fix and how it was verified: offline, or on which host.
 
-Publishing a release updates "Current release" in `docs/HELP.md` (then `make help`) in the same
-change, so the shipped help names it.
+Before publishing a release, check each of these on the release commit:
+
+1. `make bridge-uninstall` on the machine that builds the release candidate, then a fresh SketchUp
+   launch to confirm no `ph_composer_host_bridge.json` reappears.
+2. `make ci` and `make rbz-check` pass, and `build.json` records a commit without `-dirty`.
+3. "Current release" in `docs/HELP.md` names the release, then `make help`, in the same change, so
+   the shipped help names it.
+4. The supported versions line in `SECURITY.md` names the release.
+5. Every action in `.github/workflows/ci.yml` is pinned to a commit. CI does not check this;
+   Dependabot proposes the bumps that keep the pins current.
 
 A report says nothing about certification or energy-model validity. Answer those questions
 separately from installation and runtime faults.

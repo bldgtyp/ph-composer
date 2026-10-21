@@ -1,8 +1,8 @@
 # Security hardening: acceptance
 
 DATE: 2026-10-21
-STATUS: Scoped
-ISSUE: none (local planning draft)
+STATUS: In progress
+ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 
 Case ids are stable. A row a later simplification makes moot is marked withdrawn, not renumbered.
 `Evidence` is what the PR records: a command and its output, a test name, or a native acceptance

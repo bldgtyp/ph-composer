@@ -1,15 +1,15 @@
 # Security hardening: status
 
 DATE: 2026-10-21
-STATUS: Scoped; no stage authorized.
-ISSUE: none (local planning draft)
+STATUS: In progress; authorized by Ed on 2026-10-21 (implement-loop through pr-loop, merge on green CI with every review comment addressed).
+ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 
 The phases live in [phases/](phases/), one file per stage. Each is one pull request. `implement`
 reads the first `Scoped` row below.
 
 | Stage | Title | Findings | State | PR | Notes |
 | --- | --- | --- | --- | --- | --- |
-| SH-01 | Release gates: pinned Actions, security policy, release checklist | F05, F06, F10 (checklist line) | Scoped | | Needs Ed for the contact address and the repository setting |
+| SH-01 | Release gates: pinned Actions, security policy, release checklist | F05, F06, F10 (checklist line) | Implemented on branch | | Five actions pinned to the newest release under their major (checkout v4.4.0, setup-ruby v1.331.0, pnpm/action-setup v4.4.0, setup-node v4.4.0, setup-uv v5.4.2); Dependabot for `github-actions`; `SECURITY.md` with GitHub private reporting only and a seven-day acknowledgement (defaults); release checklist in `docs/DEVELOPMENT.md`; `make ci` green. Enabling private reporting (SH-01-A4) is Ed's, command in the PR |
 | SH-02 | Token setup forms and the agent docs | F01, F02 (documentation), privacy note | Scoped | | |
 | SH-03 | Panel and report hardening: colour pattern, report escaping, CSP | F03, F04, F08 | Scoped | | Ends with a native host gate before merge |
 | SH-04 | Repository hygiene and the context fold | F07, F09, F10, F11, accepted-by-design record | Scoped | | |

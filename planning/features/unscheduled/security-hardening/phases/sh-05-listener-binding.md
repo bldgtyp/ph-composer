@@ -3,7 +3,7 @@
 DATE: 2026-10-21
 STATUS: Deferred
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 FINDINGS: F02 (structural)
 DEPENDS ON: the agent connection and access-grant packet named in `context/AGENT_INTERFACE.md`
 ("binding an approval to a named connection waits for the unscheduled agent connection and

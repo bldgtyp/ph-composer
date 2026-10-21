@@ -3,7 +3,7 @@
 DATE: 2026-10-21
 STATUS: Scoped
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 FINDINGS: F07, F09, F10, F11, and the review's "Accepted by design" table
 DEPENDS ON: nothing. Touches `docs/DEVELOPMENT.md` beside SH-01's edit; rebase whichever lands second.
 ONE PR: yes
