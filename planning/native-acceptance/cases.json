@@ -4133,6 +4133,40 @@
         "src/ph_composer/export/task.rb",
         "src/ph_composer/runtime/runtime_host.rb"
       ]
+    },
+    {
+      "authority": "planning/features/unscheduled/security-hardening/ACCEPTANCE.md",
+      "id": "SH3-A8P",
+      "label": "SH-03-A8, panel and dialogs under their Content-Security-Policy: the panel renders a snapshot, applies one action and shows a blocked-run report; Agent Access issues and revokes a token; Help & Diagnostics previews a report; no panel_csp_violation",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "src/ph_composer/html/index.html",
+        "src/ph_composer/html/boot.js",
+        "src/ph_composer/html/panel.js",
+        "src/ph_composer/html/sections/export.js",
+        "src/ph_composer/html/agent_access/index.html",
+        "src/ph_composer/html/agent_access/page.js",
+        "src/ph_composer/html/support/index.html",
+        "src/ph_composer/html/support/page.js",
+        "src/ph_composer/shell/panel.rb",
+        "src/ph_composer/shell/panel_diagnostics.rb"
+      ]
+    },
+    {
+      "authority": "planning/features/unscheduled/security-hardening/ACCEPTANCE.md",
+      "id": "SH3-A8E",
+      "label": "SH-03-A8, an HBJSON export completes through the runtime page under its Content-Security-Policy",
+      "mode": "native",
+      "native_control_required": false,
+      "paths": [
+        "src/ph_composer/html/runtime/index.html",
+        "src/ph_composer/html/runtime/runtime.js",
+        "src/ph_composer/runtime/runtime_host.rb",
+        "src/ph_composer/export/task.rb",
+        "src/ph_composer/html/index.html",
+        "src/ph_composer/html/boot.js"
+      ]
     }
   ]
 }
