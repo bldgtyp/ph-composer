@@ -154,6 +154,52 @@ class SpacesContextTest < PhComposerTestCase
     refute @first.locked?
   end
 
+  # The host undoes its own Close entry but not the protection joined to an earlier Ruby step, so the path
+  # returns into the Volume still locked; the reconciler unlocks it, and leaving again protects it.
+  def test_an_undo_back_into_a_volume_spaces_relocked_restores_it_unprotected
+    enter(@first)
+    view("ph_composer.spaces.context.close")
+    assert @first.locked?
+    @model.instance_variable_set(:@active_path, [@zone, @space, @first])
+    @session.host_event(:transaction_undone)
+    assert reconciler.pending?
+    UI.run_timers
+    refute @first.locked?, "back where the user was: inside the Volume, unprotected"
+    assert_equal({ "path" => [100, 110] }, view("ph_composer.spaces.context.close"))
+    assert @first.locked?, "leaving again protects it"
+  end
+
+  def test_a_release_taken_back_out_by_a_second_undo_before_it_runs_keeps_the_volume_protected
+    enter(@first)
+    view("ph_composer.spaces.context.close")
+    @model.instance_variable_set(:@active_path, [@zone, @space, @first])
+    @session.host_event(:transaction_undone)
+    @model.instance_variable_set(:@active_path, [@zone, @space])
+    @session.host_event(:transaction_undone)
+    UI.run_timers
+    assert @first.locked?
+  end
+
+  # The host reports an empty path inside onPreSaveModel; a release still queued runs on the path last seen.
+  def test_a_save_between_the_undo_and_its_release_leaves_the_volume_open_and_unprotected
+    enter(@first)
+    view("ph_composer.spaces.context.close")
+    @model.instance_variable_set(:@active_path, [@zone, @space, @first])
+    @session.host_event(:transaction_undone)
+    @model.instance_variable_set(:@active_path, [])
+    reconciler.pre_save
+    refute @first.locked?
+    refute reconciler.pending?
+  end
+
+  def test_an_undo_that_leaves_the_path_outside_a_relocked_volume_keeps_it_protected
+    enter(@first)
+    view("ph_composer.spaces.context.close")
+    @session.host_event(:transaction_undone)
+    refute reconciler.pending?
+    assert @first.locked?
+  end
+
   def test_an_unprotected_volume_not_yet_opened_survives_an_ordinary_commit
     invoke("ph_composer.spaces.volumes.unprotect", "volume" => reference(@first))
     @session.host_event(:transaction_committed)
