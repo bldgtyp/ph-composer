@@ -65,12 +65,19 @@ test("the created token comes with each client's setup to copy, and none of it o
   var o = setup(), commands = [];
   o.page.document.execCommand = function (name) { commands.push(name); return true; };
   var clients = [{ client: "Claude Code",
-    forms: [{ title: "Run in a terminal", text: "claude mcp add ... " + "ab".repeat(24) }],
+    forms: [{ title: "Run in a terminal", text: "claude mcp add-json ..." },
+      { title: "Then set the variable", text: "export PH_COMPOSER_TOKEN=" + "ab".repeat(24) },
+      { title: "Or, one command", text: "claude mcp add ... " + "ab".repeat(24) }],
     check: "claude mcp get ph-composer", remove: "claude mcp remove ph-composer" }];
   o.view.receive({ type: "access.issued", payload: { token: "ab".repeat(24), row: TOKEN, clients: clients } });
-  var setupField = o.view.clients.querySelectorAll("textarea")[0];
-  assert.ok(setupField.value.includes("ab".repeat(24)));
+  var fields = o.view.clients.querySelectorAll("textarea");
+  assert.deepStrictEqual(Array.prototype.map.call(fields, function (field) { return field.value; }),
+    clients[0].forms.map(function (form) { return form.text; }));
+  var text = allText(o.view.clients), at = clients[0].forms.map(function (form) { return text.indexOf(form.title); });
+  assert.ok(at[0] >= 0 && at[0] < at[1] && at[1] < at[2], "the titles show in the forms' order");
   assert.ok(allText(o.view.clients).includes("claude mcp get ph-composer"));
+  assert.ok(allText(o.view.issuedDialog).includes("Each setup says where the token is kept. Choose the first two " +
+    "unless your client cannot read an environment variable."));
   named(o.view.clients, "Copy Claude Code setup").dispatchEvent({ type: "click" });
   assert.deepStrictEqual(commands, ["copy"]);
   assert.strictEqual(o.view.copyStatus.textContent, "Claude Code setup copied.");

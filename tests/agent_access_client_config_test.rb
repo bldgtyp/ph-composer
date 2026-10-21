@@ -9,16 +9,22 @@ class AgentAccessClientConfigTest < PhComposerTestCase
   ClientConfig = PhComposer::AgentAccess::ClientConfig
   TOKEN = "0123456789abcdef0123456789abcdef0123456789abcdef"
 
-  def test_claude_code_takes_the_token_in_its_command_or_from_an_environment_variable
+  def test_claude_code_reads_the_token_from_an_environment_variable_first_and_from_its_command_last
     claude = ClientConfig.for(:port => 46_110, :token => TOKEN).first
 
     assert_equal "Claude Code", claude.fetch("client")
-    assert_equal ["claude mcp add --transport http --scope user ph-composer http://127.0.0.1:46110/mcp " \
-                  "--header \"Authorization: Bearer #{TOKEN}\"",
-                  "claude mcp add-json --scope user ph-composer '{\"type\":\"http\"," \
+    assert_equal ["claude mcp add-json --scope user ph-composer '{\"type\":\"http\"," \
                   "\"url\":\"http://127.0.0.1:46110/mcp\"," \
                   "\"headers\":{\"Authorization\":\"Bearer ${PH_COMPOSER_TOKEN}\"}}'",
-                  "export PH_COMPOSER_TOKEN=#{TOKEN}"], claude.fetch("forms").map { |form| form["text"] }
+                  "export PH_COMPOSER_TOKEN=#{TOKEN}",
+                  "claude mcp add --transport http --scope user ph-composer http://127.0.0.1:46110/mcp " \
+                  "--header \"Authorization: Bearer #{TOKEN}\""], claude.fetch("forms").map { |form| form["text"] }
+    assert_equal ["Run in a terminal. This keeps the token out of Claude Code's settings; it reads the variable " \
+                  "set next.",
+                  "Then set the variable in the terminal you start the client from. Your shell history keeps the " \
+                  "token, and so does your shell profile if you add the line there.",
+                  "Or, one command, with the token kept in Claude Code's settings file and your shell history."],
+                 claude.fetch("forms").map { |form| form["title"] }
     assert_equal ["claude mcp get ph-composer", "claude mcp remove --scope user ph-composer"],
                  claude.values_at("check", "remove")
   end
@@ -31,9 +37,20 @@ class AgentAccessClientConfigTest < PhComposerTestCase
     assert_equal ["#{block}bearer_token_env_var = \"PH_COMPOSER_TOKEN\"", "export PH_COMPOSER_TOKEN=#{TOKEN}",
                   "#{block}http_headers = { Authorization = \"Bearer #{TOKEN}\" }"],
                  codex.fetch("forms").map { |form| form["text"] }
+    assert_equal ["Add to ~/.codex/config.toml. This names the variable, not the token.",
+                  "Or this block instead of both, with the token kept in ~/.codex/config.toml."],
+                 codex.fetch("forms").values_at(0, 2).map { |form| form["title"] }
     assert_equal ["codex mcp get ph-composer",
                   "Delete the [mcp_servers.ph-composer] block from ~/.codex/config.toml"],
                  codex.values_at("check", "remove")
+  end
+
+  def test_each_client_leads_with_a_form_that_names_the_variable_and_not_the_token
+    ClientConfig.for(:port => 46_110, :token => TOKEN).each do |client|
+      first = client.fetch("forms").first.fetch("text")
+      assert_includes first, "PH_COMPOSER_TOKEN", client.fetch("client")
+      refute_includes first, TOKEN, client.fetch("client")
+    end
   end
 
   def test_a_changed_port_reaches_every_form
