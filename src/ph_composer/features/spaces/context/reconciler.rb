@@ -76,6 +76,9 @@ module PhComposer
       def pre_save
         @saving = true
         @work.settle
+        # An Undo back into a re-locked Volume just before the save: unlock it now, or the save leaves it
+        # locked and the host drops the context it is in.
+        @release.settle
       rescue StandardError => error
         Diagnostics.exception("space_pre_save", error)
         @session.notice("Save could not protect a Volume.", :tone => :error)
@@ -140,9 +143,10 @@ module PhComposer
       end
 
       # The path is read again right before the write: a later Undo may already have taken it back out.
-      # Unlocked, the Volume is exposed again, so leaving it protects it as before.
+      # During a save the host reports an empty path, so the path last observed is read instead. Unlocked,
+      # the Volume is exposed again, so leaving it protects it as before.
       def release_if_open(volume)
-        return unless path.any? { |entity| entity.equal?(volume) }
+        return unless (@saving ? @open_path : path).any? { |entity| entity.equal?(volume) }
         return unless Protection.release(model, volume)
 
         @relocked.reject! { |entity| entity.equal?(volume) }

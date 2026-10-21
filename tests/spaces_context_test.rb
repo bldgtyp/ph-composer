@@ -180,6 +180,18 @@ class SpacesContextTest < PhComposerTestCase
     assert @first.locked?
   end
 
+  # The host reports an empty path inside onPreSaveModel; a release still queued runs on the path last seen.
+  def test_a_save_between_the_undo_and_its_release_leaves_the_volume_open_and_unprotected
+    enter(@first)
+    view("ph_composer.spaces.context.close")
+    @model.instance_variable_set(:@active_path, [@zone, @space, @first])
+    @session.host_event(:transaction_undone)
+    @model.instance_variable_set(:@active_path, [])
+    reconciler.pre_save
+    refute @first.locked?
+    refute reconciler.pending?
+  end
+
   def test_an_undo_that_leaves_the_path_outside_a_relocked_volume_keeps_it_protected
     enter(@first)
     view("ph_composer.spaces.context.close")
