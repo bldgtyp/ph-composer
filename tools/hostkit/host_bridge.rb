@@ -75,7 +75,7 @@ module PhComposerHostBridge
     private
 
     def append(text)
-      File.open(@path, "a") { |file| file.write(text) }
+      File.open(@path, "a", 0o600) { |file| file.write(text) }
     rescue StandardError
       nil
     end
@@ -138,7 +138,7 @@ module PhComposerHostBridge
 
     def install_console_tee
       banner = "--- bridge started #{Time.now.utc.iso8601} pid #{Process.pid}\n"
-      File.open(@console_path, "a") { |file| file.write(banner) }
+      owner_only(@console_path, "a") { |file| file.write(banner) }
       @original_stdout = $stdout
       @original_stderr = $stderr
       $stdout = ConsoleTee.new(@original_stdout, @console_path, "out")
@@ -151,10 +151,22 @@ module PhComposerHostBridge
     end
 
     def write_state
-      File.write(@state_path, JSON.generate(
-        "port" => @port, "token" => @token, "pid" => Process.pid,
-        "started_at" => Time.now.utc.iso8601, "console_log" => @console_path
-      ))
+      owner_only(@state_path, "w") do |file|
+        file.write(JSON.generate(
+          "port" => @port, "token" => @token, "pid" => Process.pid,
+          "started_at" => Time.now.utc.iso8601, "console_log" => @console_path
+        ))
+      end
+    end
+
+    # The state file holds the token and the console log holds whatever the evaluated code printed, so
+    # both are readable by this account only. The mode is set before anything is written, and again on a
+    # file an earlier run left with a wider one.
+    def owner_only(path, mode, &block)
+      File.open(path, mode, 0o600) do |file|
+        file.chmod(0o600)
+        block.call(file)
+      end
     end
 
     def accept_loop
@@ -185,10 +197,19 @@ module PhComposerHostBridge
 
     def handle(request)
       return { "ok" => false, "error" => "bad request" } unless request.is_a?(Hash)
-      return { "ok" => false, "error" => "forbidden" } unless request["token"] == @token
+      return { "ok" => false, "error" => "forbidden" } unless request["token"].is_a?(String) &&
+                                                              same?(request["token"], @token)
       return { "ok" => true, "result" => "pong", "stdout" => "" } if request["ping"]
 
       evaluate(request["code"].to_s)
+    end
+
+    # Compares every byte whatever the first difference, so a reply's timing says nothing about the token.
+    # The same comparison as the extension's listener, copied because the bridge never loads the extension.
+    def same?(left, right)
+      return false unless left.bytesize == right.bytesize
+
+      left.bytes.zip(right.bytes).reduce(0) { |sum, (a, b)| sum | (a ^ b) }.zero?
     end
 
     def evaluate(code)

@@ -68,9 +68,9 @@ module PhComposer
     # Where the slash sits decides what it is. A value that *starts* at the filesystem root is a
     # path however short, so `/tmp` and `/Users` redact. A slash that appears after whitespace is
     # user text in a record name until it carries two or more segments, so `North /Facade` survives
-    # and `plan /Users/em` does not.
+    # and `plan /Users/example` does not.
     # A drive letter takes either slash (Ruby writes `C:/Users`), a UNC share starts `\\`, a home path
-    # starts `~/`, and a path may follow punctuation as well as a space (`saved to:/Users/em/x`).
+    # starts `~/`, and a path may follow punctuation as well as a space (`saved to:/Users/example/x`).
     ABSOLUTE_PATH_PATTERNS = [
       %r{\A/[^/\s]+}, %r{[\s(=:,;"'\[](?:/[^/\s]+){2,}}, %r{(?:\A|[^A-Za-z0-9])[A-Za-z]:[\\/]},
       %r{(?:\A|\s)\\\\[^\\\s]+}, %r{(?:\A|\s)~/}, %r{file://}

@@ -456,6 +456,31 @@ Keep a bounded operation history with caller identity, action, target references
 revision for diagnosis. Avoid full payload or secret logging. Exact retention and user-visible
 controls remain design choices.
 
+### Security posture
+
+Decided and implemented; a change to any of these is a security decision, not a refactor.
+
+- The listener binds 127.0.0.1 only. There is no TLS: loopback traffic cannot be read without root,
+  and a certificate would add handling for no gain.
+- Every request carrying an `Origin` header is refused, and the `Host` must name the loopback
+  address or `localhost` with the listener's port. No browser-based client can connect and no
+  cross-site or rebound request reaches the endpoint; the supported clients are native processes.
+- The store keeps only each token's SHA-256. PH-Composer shows the secret once, in the issuing
+  dialog; a copy the user makes for a client is the user's. Tokens do not expire; revocation is
+  explicit, and the most recently revoked tokens stay listed with their dates.
+- The port is fixed per preference. On a computer with several accounts, another account can bind it
+  while SketchUp is not listening and receive the token from an agent that connects then. The user
+  documentation tells users of such a computer to revoke tokens when they finish. Binding a grant to
+  a named connection is the agent connection and access-grant work's, and needs a client-side
+  component neither supported client has.
+- Any caller holding a grant may use any approved location. A path reaches a caller only as the
+  written export pair, and only the caller that started the task.
+- The Model's own file path is answered by the context read. It is the user's document, not an
+  approved destination.
+- The development bridge in `tools/hostkit/` never ships. Its state file, which holds its token, and
+  its console log are readable by their owner only, and the release checklist in
+  `docs/DEVELOPMENT.md` removes it from the build machine.
+
 ## Documentation and contributor obligations
 
 Maintain one vendor-neutral quickstart, generated API/schema reference and synthetic examples.

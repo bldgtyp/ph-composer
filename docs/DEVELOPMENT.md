@@ -69,6 +69,10 @@ installs both. A local skip is not gate evidence.
 - `lint-citations` fails if shipped code or a test cites a planning document or a planning
   identifier (a phase stage, question, decision or acceptance number). Comments cite `context/`
   instead, because planning documents move when they are archived.
+- `lint-paths` fails if a file outside `tests/` and `tools/hostkit/tests/` names a home folder,
+  such as `/Users/<name>/` or `C:\Users\<name>\`. Write `~` or `<repo>` instead; `/Users/example`
+  is the synthetic account examples use. The tests keep their synthetic home paths, because those
+  are what the redaction they test removes.
 
 The line ceiling is 120 characters in every language. What the linters cannot express is in
 [`context/CODING_STANDARDS.md`](../context/CODING_STANDARDS.md).
@@ -83,12 +87,13 @@ alone, with a line saying so.
 - `pre-commit` runs, on the staged files only, the checks they can affect: ruff lint and format
   for Python, ty over its whole configured set when any Python file is staged, `ruby -c` and
   rubocop for Ruby, eslint for JavaScript, the panel and runtime manifest checks when panel or
-  translation assets change, and the planning-citation check for shipped code and tests. Each is
-  the Makefile target CI runs, given the staged file list. A deleted or renamed file runs the
-  checks that read the whole set, and a change to a linter's configuration (`pyproject.toml`,
-  `.rubocop.yml`, `package.json`, the `Makefile`) runs that linter over the whole tree. A commit
-  that touches only documentation runs nothing. A failure prints the tool's output and the command
-  that fixes it, and nothing is committed. The hook never edits or re-stages a file.
+  translation assets change, the planning-citation check for shipped code and tests, and the
+  home-path check for every file outside `tests/` and `tools/hostkit/tests/`. Each is the Makefile target CI runs, given the
+  staged file list. A deleted or renamed file runs the checks that read the whole set, and a change
+  to a linter's configuration (`pyproject.toml`, `.rubocop.yml`, `package.json`, the `Makefile`)
+  runs that linter over the whole tree. A commit that touches only documentation runs only the
+  home-path check. A failure prints the tool's output and the command that fixes it, and nothing is
+  committed. The hook never edits or re-stages a file.
 - `commit-msg` refuses a message without a `Signed-off-by:` line ([DCO.md](DCO.md)). The message
   git writes to conclude a merge is left alone.
 
@@ -190,6 +195,10 @@ Every archive carries `ph_composer/build.json`: `build`, twelve hex characters o
 shipped file, and `commit`, the source commit it was built from, marked `-dirty` when `src/` had
 uncommitted changes. Help & Diagnostics, each log line and every support report name that build. A
 source checkout has no `build.json` and reports itself as a development build.
+
+The identity is informational. Nothing verifies the installed files against it when SketchUp loads
+the extension: a file changed or added under the extension folder runs as the extension, with the
+user's own permissions, as any extension in the Plugins folder does.
 
 ## Answering a support report
 

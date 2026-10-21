@@ -114,7 +114,7 @@ models only, and write no tracked source. Minitest runs the existing loaded suit
 M1 and M4:
 
 ```sh
-/Users/em/.rbenv/versions/3.2.2/bin/ruby -Itests - <<'RUBY'
+~/.rbenv/versions/3.2.2/bin/ruby -Itests - <<'RUBY'
 require './tests/zone_solve_scope_test'
 probe = ZoneSolveScopeTest.new('review_probe')
 probe.setup
@@ -160,7 +160,7 @@ Existing suite: 60 runs, 301 assertions, zero failures/errors/skips.
 M3 and M2:
 
 ```sh
-/Users/em/.rbenv/versions/3.2.2/bin/ruby -Itests - <<'RUBY'
+~/.rbenv/versions/3.2.2/bin/ruby -Itests - <<'RUBY'
 require './tests/attached_zone_test'
 probe = AttachedZoneTest.new('review_probe')
 probe.setup

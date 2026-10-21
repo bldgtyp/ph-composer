@@ -39,6 +39,12 @@ class HostBridgeTest < PhComposerTestCase
     assert_equal "ArgumentError: boom", failed.fetch("error")
   end
 
+  def test_the_state_file_is_readable_by_its_owner_only
+    skip "file modes are POSIX" if Gem.win_platform?
+
+    assert_equal 0o600, File.stat(@server.state_path).mode & 0o777
+  end
+
   def test_stop_removes_the_state_file
     @server.stop
     refute File.exist?(@server.state_path)

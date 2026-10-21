@@ -1,4 +1,4 @@
-$ /Users/em/.rbenv/versions/3.2.2/bin/ruby -Itests /tmp/phc-dispatch-probes.rb
+$ <ruby 3.2.2> -Itests /tmp/phc-dispatch-probes.rb
 Run options: --seed 62517
 
 CAPABILITY_ALIAS ["completed", "ok", "committed"]
@@ -13,7 +13,7 @@ Expected contract assertions that failed:
 2. session authority should retain original UUID; actual caller-edited-id.
 3. differing pending payload should refuse request.sequence_conflict; actual request.pending.
 
-$ /Users/em/.rbenv/versions/3.2.2/bin/ruby -Itests -rapi_test -rapi_client_test -rsessions_test -rhandler_request_test -rregistry_test -e ''
+$ <ruby 3.2.2> -Itests -rapi_test -rapi_client_test -rsessions_test -rhandler_request_test -rregistry_test -e ''
 Run options: --seed 50590
 102 runs, 619 assertions, 0 failures, 0 errors, 0 skips (8.059821s).
 
