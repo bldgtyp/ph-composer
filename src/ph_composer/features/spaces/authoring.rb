@@ -37,6 +37,11 @@ module PhComposer
         end
       end
 
+      # A floor outline drawn on the Zone's walls splits them and shares their Edges, so Create Space leaves
+      # it out; the way out is to draw it where it touches no other Face.
+      SHARES_EDGE = "The Face shares an Edge with an unselected Face; grouping it would split that Face. Undo " \
+                    "the outline, then draw it just below the floor or inset from the walls, touching no other Face."
+
       module_function
 
       # Which Faces Create Space would take and which it leaves out, and why. Writes nothing.
@@ -305,8 +310,7 @@ module PhComposer
         end
         eligible = without_edge_sharing(request.locate(ZONE_KIND, zone, :mutable => false), candidates)
         left_out.concat((candidates - eligible).map do |face|
-          { "reference" => face.reference, "reason" => "shares_edge",
-            "message" => "The Face shares an Edge with an unselected Face; grouping it would split that Face." }
+          { "reference" => face.reference, "reason" => "shares_edge", "message" => SHARES_EDGE }
         end)
         [eligible, left_out]
       end

@@ -265,6 +265,8 @@ class SpacesOperationsTest < PhComposerTestCase
                                                          "faces" => [face_reference(a), face_reference(b)])
     assert_empty preview.fetch("accepted")
     assert_equal %w[shares_edge shares_edge], preview.fetch("left_out").map { |row| row["reason"] }
+    assert_match(/Undo the outline, then draw it just below the floor or inset from the walls/,
+                 preview.dig("left_out", 0, "message"), "the refusal says how to recover")
   end
 
   def test_a_new_volume_refuses_faces_that_share_an_edge_with_an_unselected_face
