@@ -4,8 +4,8 @@ DATE: 2026-10-07
 STATUS: Development tooling implemented. Historical Phase 1 acceptance remains with its packet.
 ISSUE: none (local tooling work)
 
-[`cases.json`](cases.json) holds case identities, owning authorities, deferred scope and conservative
-source dependency patterns. [`results.jsonl`](results.jsonl) is an append-only result index with
+[`cases.json`](cases.json) holds case identities, owning authorities, deferred scope and source
+dependency patterns. [`results.jsonl`](results.jsonl) is an append-only result index with
 15 historical evidence pointers and 59 observed results. Historical pointers are not reconstructed host runs. Detailed case requirements
 and closure remain in [the owning acceptance register](../archive/phase-01-faces-and-zones/ACCEPTANCE.md). Add finer case IDs
 when a gate needs independent reruns; a partial subcase does not close its parent.
@@ -76,6 +76,20 @@ current list names are unchanged since the result's commit, read from git's obje
 reproduces the result's recorded fingerprint (a result captured on uncommitted changes does not qualify). Narrowing drops
 files the result never needed; widening adds files that have not changed since it was observed. When the
 commit is not available locally, the result reads `needs_recheck`.
+
+A case names the foundation files its feature reaches, not the foundation folders. Its `core/`,
+`session/` and `shell/` files are the ones its feature, walkthrough and test files name by constant,
+followed through those folders. Feature code reaches `session/model_session.rb`, `shell/dispatch.rb`
+and `shell/panel.rb` through objects it is handed, and a foundation query or action by its id
+(`ph_composer.records.`, `.context.`, `.view.`, `.locations.`), so a case that reaches them names their
+files. Its `html/` files are its features' panel modules and their declared dependencies, the modules
+its tests start, the panel's boot files (`index.html`, `module.js`, `panel.js`, `sections/shell.js`)
+and the UI kit stylesheets. Its `tests/support/` files are the ones its tests load. Only the
+whole-product cases A16 and E17 keep folder patterns, so a new foundation file screens only those two
+until the catalog names it in the cases that reach it. The extension loads every foundation file and
+the panel loads every module, so a file that fails to load breaks every case; the offline gate loads
+both, and that failure is its to catch rather than a case's. Every pattern matches at least one source
+file; the ledger tests check both rules.
 
 The catalog has no retired state, an indexed result keeps its case, and `deferred` refuses a case that
 has results. A case whose feature is gone therefore stays in the catalog with its history, its label
