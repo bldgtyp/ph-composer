@@ -96,6 +96,12 @@ test("a review opens in the shared dialog, saying what is accepted and why each 
   assert.strictEqual(p.input("Number").getAttribute("placeholder"), "Next free");
 });
 
+test("one accepted Face becomes one Space, in the singular", function () {
+  var p = page();
+  p.receive(snapshot(review([face(1200)])));
+  assert.match(p.text(), /1 Face in Living Zone becomes one Space with one Volume/);
+});
+
 test("Create sends create with the accepted Faces at the review's revision, and Enter does the same", function () {
   var p = page();
   p.receive(snapshot(review()));

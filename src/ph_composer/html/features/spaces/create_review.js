@@ -66,8 +66,9 @@ function (panel, requests, snapshot, ui) {
     var dialog = this.dialog || (this.dialog = ui.formDialog("phc-create-space", function () { self.cancel(); }));
     if (!dialog.parentNode) document.body.appendChild(dialog);
     var zone = review.zone_name || "the Zone";
-    var summary = accepted ? faces(accepted) + " in " + zone + " become one Space with one Volume, each Face a " +
-      "Floor Segment." : "None of the selected Faces can become a Space in " + zone + ".";
+    var summary = accepted ? faces(accepted) + " in " + zone + (accepted === 1 ? " becomes" : " become") +
+      " one Space with one Volume, each Face a Floor Segment." :
+      "None of the selected Faces can become a Space in " + zone + ".";
     // The shared form layout spaces the text and sets the two fields side by side.
     var form = ui.element("form");
     form.addEventListener("submit", function (event) { event.preventDefault(); self.submit(); });

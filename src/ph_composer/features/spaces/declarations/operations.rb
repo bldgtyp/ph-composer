@@ -170,7 +170,7 @@ module PhComposer
           :result => Shapes.object({ "ids" => Shapes.list(Shapes.object({ "kind" => Shapes::TEXT,
                                                                           "before" => Shapes::TEXT,
                                                                           "after" => Shapes::TEXT })) }),
-          :undo_name => "Make Space Independent",
+          :undo_name => "Make Independent",
           :side_effects => "Gives the copy storage of its own and rewrites its records with new ids.",
           :examples => [{ "reference" => EXAMPLE_SPACE }]
         }, lambda { |request, proposal, params|

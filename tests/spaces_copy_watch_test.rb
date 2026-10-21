@@ -67,7 +67,7 @@ class SpacesCopyWatchTest < PhComposerTestCase
     refute_equal "spc_SSSSSSSSSSSS", copy["id"]
     assert_equal "2", copy.dig("values", "number")
     refute_equal "vol_AAAAAAAAAAAA", copy.dig("volumes", 0, "id")
-    assert_equal ["Make Space Independent", true, false, true], @model.operation_starts.last
+    assert_equal ["Make Independent", true, false, true], @model.operation_starts.last
     assert_equal [[:success, "Made the copied Space independent."]], @notices
   end
 
