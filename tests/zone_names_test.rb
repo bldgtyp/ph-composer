@@ -193,7 +193,6 @@ class ZoneNamesTest < PhComposerTestCase
     @model.close
 
     assert_nil PhComposer::Sessions.find(@session.id)
-    assert_empty @state.instance_variable_get(:@containers)
     assert_empty @state.instance_variable_get(:@groups)
     refute @state.pending?
   end
@@ -205,29 +204,44 @@ class ZoneNamesTest < PhComposerTestCase
     @model.entities.delete(@group)
     @state.settle
 
-    assert_equal [@model.entities], @state.instance_variable_get(:@containers)
     assert_empty @state.instance_variable_get(:@groups)
   end
 
+  # Both Zones watchers hear an addition through the session's `container_added` event; a copy the host
+  # deleted before the callback read it is nothing to report to either.
   def test_an_addition_the_host_deleted_logs_nothing_and_raises_nothing
     logged = []
-    listener = Object.new
-    listener.define_singleton_method(:container_added) { |_entity| raise TypeError, "reference to deleted Group" }
-    @state.subscribe(listener)
     PhComposer::Diagnostics.stub(:exception, ->(event, *_rest) { logged << event }) do
-      @state.added(Sketchup::Group.new(500, Sketchup::Entities.new([])))
       gone = Sketchup::Group.new(501, Sketchup::Entities.new([]))
       gone.define_singleton_method(:get_attribute) { |*_args| raise TypeError, "reference to deleted Group" }
-      @state.added(gone) # its record cannot be read either, and nothing raises into the host
+      @state.added(gone)
+      ZONES::CopyWatch.state(@session).container_added(gone)
     end
     assert_empty logged
   end
 
-  def test_observer_type_errors_other_than_deleted_entities_are_not_suppressed
-    error = TypeError.new("wrong observer argument")
-    @model.entities.stub(:remove_observer, ->(_observer) { raise error }) do
-      assert_same error, assert_raises(TypeError) { @state.detach }
+  # A Zones watcher's own failure on an addition is logged as its own, and the subscribers after it still hear it.
+  def test_a_copy_watcher_failure_on_an_addition_does_not_stop_later_subscribers
+    logged = []
+    heard = []
+    broken = Sketchup::Group.new(502, Sketchup::Entities.new([]))
+    broken.define_singleton_method(:entities) { raise TypeError, "wrong argument type" }
+    spaces = PhComposer::Spaces::CopyWatch.state(@session)
+    PhComposer::Diagnostics.stub(:exception, ->(event, *_rest) { logged << event }) do
+      spaces.stub(:added, ->(entity) { heard << entity }) { @session.host_event(:container_added, broken) }
     end
+
+    assert_equal ["zone_copy_watch_added"], logged
+    assert_equal [broken], heard
+  end
+
+  # The session's one container watch serves name preservation; Zones adds no container observer of its own.
+  def test_each_container_carries_only_the_session_container_observer
+    observers = [@model.entities, @group.entities].map do |entities|
+      entities.instance_variable_get(:@observers).grep(Sketchup::EntitiesObserver).map(&:class)
+    end
+
+    assert_equal [[PhComposer::ContainerWatch::Observer]] * 2, observers
   end
 
   def test_restoration_failure_closes_transparent_operation_without_aborting_the_source

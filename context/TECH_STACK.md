@@ -99,7 +99,8 @@ transition created and entered automatically, and the explicit mark removed that
 file is `model_opened`, reported even to a session created before the file loaded), and
 `session/container_watch.rb` adds one: `container_added`, with the Group or ComponentInstance added to
 any container, observed through one EntitiesObserver per container and found again after each commit,
-Undo, Redo and activation. Zones' name state still keeps its own container observers (issue #143).
+Undo, Redo and activation. Zones' name preservation and copy watcher and the Spaces copy watcher all
+hear additions through it, and each keeps its own `DeferredWork` pass and policy.
 Each feature subscribes in its `install`, subscribers run in install order, and a feature subscribes
 once per process so a reloaded `install` does not subscribe twice.
 

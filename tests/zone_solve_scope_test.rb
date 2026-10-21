@@ -1146,6 +1146,9 @@ class ZoneSolveScopeTest < PhComposerTestCase
     assert_equal %w[failed rolled_back], result.values_at("status", "effect")
     assert_equal "reference.in_use", result.dig("detail", "cause")
     assert_equal before, faces
+  ensure
+    # The second registry's host-event subscriptions would otherwise outlive the test.
+    alternate&.unsubscribe_all
   end
 
   def test_no_survivor_with_entity_incoming_reference_rolls_back_all_native_cuts
