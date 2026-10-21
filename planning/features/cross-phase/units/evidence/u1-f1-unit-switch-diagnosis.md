@@ -70,8 +70,9 @@ The count agrees with the style recalculations: 113 in a baseline switch is 22 f
 text plus 13 for each of the seven that do not, and B, which leaves two renders, measures 35. With every row
 open each redundant render costs about 95 ms. The count grows with every screen that builds an inventory, so the
 cost is not specific to Spaces: every unit system or dimension format change pays it, on every tab. (A table
-view choice does not: `set` stores it without notifying listeners, `unit_preferences.js:99`, so it pays the
-`setPreference` render and the confirmation render only.)
+view choice does not: `set` stores it without notifying listeners, `unit_preferences.js:99`, so the preference
+flow renders twice, `setPreference`'s render and the confirmation's. Its caller adds a third: the Zones table's
+view switch calls `panel.repaint()` after `setPreference`, `features/zones/overview.js:260`.)
 
 A profile change that arrives in a host snapshot takes the same path: `preferences.replace` runs inside the
 reducer (`panel.js:73`), its listeners render six times on the state before the snapshot, and `receive` renders
