@@ -1,7 +1,7 @@
 # The Ruby suite errors without a UTF-8 locale
 
 DATE: 2026-10-03
-STATUS: Implemented on branch `fix/ci-needs-utf8-locale`. Reproduced 2026-10-03 and again 2026-10-21.
+STATUS: Complete. Merged to main through PR #291 (`1e9e9ba`) on 2026-10-21; archived. Reproduced 2026-10-03 and again 2026-10-21.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#290](https://github.com/bldgtyp/ph-composer/issues/290)
 

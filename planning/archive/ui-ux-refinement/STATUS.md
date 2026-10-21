@@ -129,7 +129,7 @@ Moved to their own documents on 2026-10-03:
 
 | Follow-up | Now in |
 | --- | --- |
-| `make ci` needs a UTF-8 locale | [bugs/ci-needs-utf8-locale.md](../../bugs/ci-needs-utf8-locale.md) |
+| `make ci` needs a UTF-8 locale | [archive/ci-needs-utf8-locale.md](../ci-needs-utf8-locale.md) |
 | Faces located from outside their Zone do not reach the selection inspector; Locate on more than 250 Faces passes its ceiling | [archive/locate-outside-zone-selection.md](../locate-outside-zone-selection.md) (Superseded 2026-10-04) |
 | Keyboard focus lost on repaint (Export header, Assembly Builder, anchor re-arm, refused New Assembly, "Show all"); the sort toggle and non-`Inventory` Library counts unannounced | [features/unscheduled/panel-keyboard-focus/](../../features/unscheduled/panel-keyboard-focus/README.md) |
 
