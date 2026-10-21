@@ -1,7 +1,7 @@
 # SH-03 Panel and report hardening: colour pattern, report escaping, CSP
 
 DATE: 2026-10-21
-STATUS: Implemented on branch `feat/security-hardening-sh-03`; host gate SH-03-A8 recorded pass (`SH3-A8P`, `SH3-A8E`)
+STATUS: Merged to main (PR #300); host gate SH-03-A8 recorded pass (`SH3-A8P`, `SH3-A8E`)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 FINDINGS: F03, F04, F08

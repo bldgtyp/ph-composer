@@ -1,7 +1,7 @@
 # Security hardening: plan
 
 DATE: 2026-10-21
-STATUS: In progress
+STATUS: Complete
 ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 BASELINE: source at `9e52821`, checked 2026-10-21
 

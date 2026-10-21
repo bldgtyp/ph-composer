@@ -1,7 +1,7 @@
 # Security and privacy review
 
 DATE: 2026-10-21
-STATUS: In review
+STATUS: Complete. Every finding was delivered or recorded by the security-hardening packet (#292). Archived.
 AUTHOR: Claude (Fable 5.1), requested by Ed May
 ISSUE: none (local review requested by Ed)
 BASELINE: `main` at `9e5282171e133229be44e20d408f0037596183b6`
@@ -34,7 +34,7 @@ user's machine, not about PH-Composer's own handling of it:
 Everything else is informational. The register is [FINDINGS.md](FINDINGS.md).
 
 The implementation program for all eleven findings is the
-[security-hardening packet](../unscheduled/security-hardening/README.md): five stages, each one
+[security-hardening packet](../security-hardening/README.md): five stages, each one
 pull request, with the decisions each stage needs from Ed.
 
 ## Decision Ed needs to make

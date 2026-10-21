@@ -1,11 +1,11 @@
 # Security hardening
 
 DATE: 2026-10-21
-STATUS: In progress. Five stages planned from the security and privacy review; SH-01 to SH-04 authorized 2026-10-21.
+STATUS: Complete. SH-01 to SH-04 merged to main on 2026-10-21 (#293, #294, #299, #300); SH-05 deferred. Archived.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 BASELINE: `main` at `0a41c0b7` (the review packet's commit; source unchanged since `9e52821`)
-SOURCE: [planning/features/code-review/](../../code-review/README.md), findings F01 to F11
+SOURCE: [the security and privacy review](../security-review-2026-10/README.md), findings F01 to F11
 
 The implementation program for the eleven findings of the October 2026 security and privacy
 review. The review found no high-confidence vulnerability; every stage here is hardening, release

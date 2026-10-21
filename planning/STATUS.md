@@ -36,8 +36,6 @@ reconcile them at each packet's intake rather than treating the old reason as a 
 | none | Windows support verification | feature, host gate | Requested | none (local planning draft) | [features/unscheduled/windows-support/](features/unscheduled/windows-support/README.md); first release candidate is macOS-only |
 | none | Legend hover-to-highlight | feature | Requested | none (local planning draft) | [features/unscheduled/legend-hover-highlight/](features/unscheduled/legend-hover-highlight/README.md); fourth Q18 legend affordance, deferred from Phase 1 D7 on cost |
 | none | Panel keyboard focus and announcements | feature | Requested; seven items carried from the UI and UX refinement on 2026-10-03 | none (local planning draft) | [features/unscheduled/panel-keyboard-focus/](features/unscheduled/panel-keyboard-focus/README.md) |
-| n/a | Security and privacy review | review | In review; whole-tree reading review at `9e52821`, no high-confidence vulnerability, eleven low or informational findings, each planned in the security-hardening packet | none (local review requested by Ed) | [features/code-review/](features/code-review/README.md); register in [FINDINGS.md](features/code-review/FINDINGS.md) |
-| none | Security hardening | hardening program | In progress; SH-01, SH-02 and SH-04 merged (#293, #294, #299), SH-03 implemented on branch (PR #300) with its host gate recorded; SH-05 deferred | [#292](https://github.com/bldgtyp/ph-composer/issues/292) | [features/unscheduled/security-hardening/](features/unscheduled/security-hardening/README.md); ledger in its [STATUS.md](features/unscheduled/security-hardening/STATUS.md) |
 | n/a | GitHub issue delivery queue | workflow | Complete; all eleven issues closed, review and CI passed, branches cleaned; no manual steps | [receipt](archive/github-issue-sweep.md) | [archive/github-issue-sweep.md](archive/github-issue-sweep.md) |
 | n/a | A copied Zone cannot be edited and the refusal locks Zones / Faces | bug | Complete 2026-10-12 on `fix/copied-zone-edit-refusal`, archived; merges with PR #97 after review and CI | [PR #97](https://github.com/bldgtyp/ph-composer/pull/97) | [archive/copied-zone-edit-refusal/](archive/copied-zone-edit-refusal/README.md) |
 | n/a | Native acceptance tooling | workflow | Implemented; historical evidence indexed, observed-result validation and dependency screening | none (local tooling work) | [native-acceptance/](native-acceptance/README.md); tools and skills remain development-only |
@@ -72,7 +70,9 @@ Agent-authorized file access merged to main on 2026-10-03 through
 [#36](https://github.com/bldgtyp/ph-composer/issues/36) closed, and is
 [archived](archive/agent-authorized-file-access/README.md). Agents can now export and add libraries
 through locations the user approved; binding an approval to a named connection waits for the
-unscheduled agent connection and access-grant packet.
+unscheduled agent connection and access-grant packet. That packet also owns the listener's port-squatting
+fix; the options are recorded in the archived
+[SH-05](archive/security-hardening/phases/sh-05-listener-binding.md).
 
 Phase 2 envelope is [accepted and archived](archive/phase-02-envelope/STATUS.md), issue
 [#14](https://github.com/bldgtyp/ph-composer/issues/14) closed. [PR #15](https://github.com/bldgtyp/ph-composer/pull/15)

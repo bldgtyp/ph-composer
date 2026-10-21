@@ -1,7 +1,7 @@
 # Security hardening: acceptance
 
 DATE: 2026-10-21
-STATUS: In progress
+STATUS: Complete; SH-05 deferred
 ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 
 Case ids are stable. A row a later simplification makes moot is marked withdrawn, not renumbered.

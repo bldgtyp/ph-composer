@@ -1,6 +1,6 @@
 # Unscheduled packets
 
-DATE: 2026-10-20
+DATE: 2026-10-21
 STATUS: Active index.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
@@ -15,5 +15,4 @@ requests. A packet moves into a phase directory when it is scheduled.
 | [windows-support](windows-support/README.md) | host gate | Requested |
 | [legend-hover-highlight](legend-hover-highlight/README.md) | feature | Requested |
 | [zones-entry-points](zones-entry-points/README.md) | feature | Requested |
-| [security-hardening](security-hardening/README.md) | hardening program | Scoped; five stages from the security and privacy review, none authorized |
 | [panel-keyboard-focus](panel-keyboard-focus/README.md) | feature | Requested |
