@@ -39,7 +39,8 @@ function (request, snapshot, ui, tables, viewControls, RecordEdits, Grid, units,
     this.disposed = true;
     this.withdraw();
   };
-  // Inventory owns the shared mechanics; the feature supplies every record value, label and action.
+  // Inventory owns the shared mechanics; the feature supplies every record value, label and action. A display
+  // preference change reaches it through the panel's one repaint, so it holds no preference subscription.
   function Inventory(root, session, send, notice, changed, config) {
     var self = this;
     this.root = root;
@@ -76,7 +77,6 @@ function (request, snapshot, ui, tables, viewControls, RecordEdits, Grid, units,
     }
     root.appendChild(this.controls.root);
     root.appendChild(this.scroll);
-    this.unsubscribe = preferences.subscribe(changed);
   }
   Inventory.prototype.columnLabel = function (field) {
     return this.config.columns.filter(function (entry) { return entry[0] === field; })[0][1];
@@ -164,7 +164,6 @@ function (request, snapshot, ui, tables, viewControls, RecordEdits, Grid, units,
   };
   Inventory.prototype.dispose = function () {
     this.disposed = true;
-    this.unsubscribe();
     this.edits.dispose();
     this.grid.dispose();
     this.ranges.dispose();

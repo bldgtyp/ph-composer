@@ -7,6 +7,7 @@ var assert = require("assert");
 var test = require("node:test");
 var dom = require("./support/dom_stub");
 var panelSource = require("./support/panel_source");
+var fixtures = require("./support/inventory_fixtures");
 
 function page(extra) {
   var sent = [];
@@ -333,6 +334,65 @@ test("a refused preference restores the previous value and says why", function (
   assert.strictEqual(p.modules.unit_preferences.dimensionFormat("example.editor", "SI"), "mm");
   assert.strictEqual(p.notice().message.textContent, "Too many dimension formats are remembered.");
   assert.strictEqual(p.notice().getAttribute("data-tone"), "error");
+});
+
+test("a display profile change renders every section once, however many inventories the screens hold", function () {
+  var p = page(["library/section", "features/assemblies/section", "features/assemblies/materials",
+    "features/zones/attached_zones"]);
+  var seen = [];
+  p.receive("panel.snapshot", snapshot("session-a", 7, { sections: fixtures.state("session-a").sections }));
+  assert.strictEqual(p.query(".phc-inventory-table") !== null, true, "the inventory screens are built");
+  // Each render records the unit system it paints with, so a render before the change would show as SI.
+  p.panel.section("example.counter", function () { seen.push(p.modules.unit_preferences.current().unitSystem); });
+
+  seen = [];
+  p.query("[data-unit-system='IP']").listeners.click({});
+  assert.deepStrictEqual(seen, ["IP"], "a unit switch");
+  p.receive("preferences.result", { request_id: "preferences:1", status: "completed",
+    preferences: { unit_system: "IP", dimension_formats: {}, number_format: { decimal: ".", locale: "en-US" } } });
+
+  seen = [];
+  p.receive("panel.snapshot", snapshot("session-a", 8));
+  assert.deepStrictEqual(seen, ["SI"], "a snapshot whose stored preferences move the profile back to SI");
+});
+
+test("a preference answer renders only when it moves the display or says why it was refused", function () {
+  var p = page();
+  var seen = [];
+  p.receive("panel.snapshot", snapshot("session-a", 7));
+  p.panel.section("example.counter", function () { seen.push(p.modules.unit_preferences.current().unitSystem); });
+  function stored(system, decimal, locale) {
+    return { unit_system: system, dimension_formats: {}, number_format: { decimal: decimal || ".",
+      locale: locale || "en-US" } };
+  }
+
+  p.panel.setPreference("unit_system", "IP");
+  seen = [];
+  p.receive("preferences.result", { request_id: "preferences:1", status: "completed", preferences: stored("IP") });
+  assert.deepStrictEqual(seen, [], "the confirmation of what is shown changes nothing");
+
+  p.panel.setPreference("unit_system", "SI");
+  p.panel.setPreference("unit_system", "IP");
+  seen = [];
+  p.receive("preferences.result", { request_id: "preferences:2", status: "completed", preferences: stored("SI") });
+  assert.deepStrictEqual(seen, [], "an answer to a superseded choice is ignored");
+  assert.strictEqual(p.modules.unit_preferences.current().unitSystem, "IP", "the later choice stays shown");
+  p.receive("preferences.result", { request_id: "preferences:3", status: "completed", preferences: stored("IP") });
+  assert.deepStrictEqual(seen, []);
+
+  p.panel.setPreference("unit_system", "SI");
+  seen = [];
+  p.receive("preferences.result", { request_id: "preferences:4", status: "completed",
+    preferences: stored("SI", ",", "de-DE") });
+  assert.deepStrictEqual(seen, ["SI"], "stored preferences that differ from the shown ones repaint once");
+  assert.strictEqual(p.modules.unit_preferences.current().numberFormat.decimal, ",");
+
+  p.panel.setPreference("unit_system", "IP");
+  seen = [];
+  p.receive("preferences.result", { request_id: "preferences:5", status: "refused", message: "Not saved.",
+    preferences: stored("SI", ",", "de-DE") });
+  assert.deepStrictEqual(seen, ["SI"], "a refusal restores the previous system in one render");
+  assert.strictEqual(p.notice().message.textContent, "Not saved.");
 });
 
 test("a section registered after start mounts itself in its pane and renders from the current state", function () {

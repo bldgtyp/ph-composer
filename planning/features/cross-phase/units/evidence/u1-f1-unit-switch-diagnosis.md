@@ -1,7 +1,9 @@
 # U1-F1: why a unit switch repaints slowly
 
 DATE: 2026-10-21
-STATUS: Diagnosis only. No shipping code changed. The fix and its target wait for Ed's decision.
+STATUS: Diagnosed. Ed authorized F1 and F2 on 2026-10-21 with a target of under 200 ms with every row open;
+both implemented on branch `perf/unit-switch-repaint-154` (see "Implementation" below). F3 and F4 are not
+authorized.
 ISSUE: [#154](https://github.com/bldgtyp/ph-composer/issues/154)
 
 ## Outcome
@@ -157,6 +159,27 @@ Each fix needs a focused test: a unit switch causes one render of each section (
 result causes none (F2). The browser check keeps printing the median; a stated target could become an
 assertion with headroom, but timing assertions in CI flake, so the proposal is to keep it a printed figure
 and check it at the host gate.
+
+## Implementation
+
+Ed authorized F1 and F2 on 2026-10-21, with the target set at under 200 ms per unit switch with every row
+open. Both use the one-owner design:
+
+- `src/ph_composer/html/panel.js` subscribes to the preference store once and renders when the display profile
+  moves. `receive` and `setPreference` hold that render while they apply a change and render once afterwards.
+  `src/ph_composer/html/inventory.js` no longer subscribes.
+- Pending preference choices moved out of `state.ui` into the panel's own bookkeeping. `receive` renders
+  nothing for a message that leaves the state and the display profile as they were, such as a confirmation of
+  what is shown, an answer to a superseded choice, or a result for another session. A refusal still renders
+  once, with the previous value restored and the notice shown.
+- `context/TECH_STACK.md` ("The page") records the rule.
+
+| Check | Result |
+| --- | --- |
+| `tools/ui-preview/spaces_checks.cjs` (300 Spaces) | Median 85 ms with the Zones open (80 to 89), 161 ms with every row open (157 to 168) |
+| Profiling script, as in "Method" | Median 97 ms and 171 ms; 22 style recalculations per switch, down from 113 |
+| `tests/panel_app_test.js`, two new cases | Fail on `main` with 4 renders where 1 is expected and 1 where 0 is expected; pass on the branch |
+| `make ui-checks` | Every browser check passes |
 
 ## Not verified
 
