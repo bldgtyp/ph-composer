@@ -419,6 +419,8 @@ class WindowExportTest < PhComposerTestCase
     assert_includes html, "7.00"
     assert_includes html, "authors no Window shading"
     assert_includes html, "authored g-value 0 is retained exactly"
+    hostile = result.merge("window_schema_exceptions" => [{ "construction_id" => "<b>x</b>", "g_value" => "<i>0</i>" }])
+    assert_includes X.report(hostile, "si").join, "<p>&lt;b&gt;x&lt;/b&gt;: authored g-value &lt;i&gt;0&lt;/i&gt; is"
     assert_includes X.report(result, "ip").join, "75.35"
     assert_empty X.report({}, "si")
   end

@@ -68,14 +68,16 @@ module PhComposer
             }
           }
           body << total_row("Zone total", zone_totals.fetch(zone_id, {}), spaces, display_units)
-          "<h3>#{Export::ReportHtml.h(name)}</h3>" + Export::ReportHtml.table(headings, body)
+          Export::ReportHtml.heading(3, name) + Export::ReportHtml.table(headings, body)
         end.join
         by_segment = rows.group_by { |row| row["building_segment"] }
         segments = result.fetch("space_segment_totals", []).map do |row|
           total_row(row.fetch("building_segment"), row, by_segment.fetch(row.fetch("building_segment"), []),
                     display_units)
         end
-        html += "<h3>Building-Segments</h3>" + Export::ReportHtml.table(headings, segments) unless segments.empty?
+        unless segments.empty?
+          html += Export::ReportHtml.heading(3, "Building-Segments") + Export::ReportHtml.table(headings, segments)
+        end
         offset = rows.select { |row| row["offset_from_zone"] }
         unless offset.empty?
           names = offset.map { |row|
