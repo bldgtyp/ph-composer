@@ -55,7 +55,8 @@ function graph(withPages) {
   var registry = context.window.PhComposerUI;
   panelFiles.panelFiles().forEach(function (file) {
     var name = moduleName(file);
-    if (name === "module" || (!withPages && pageModule(name))) return;
+    // module.js is the registry and boot.js the starter each page loads after the list; neither is a module.
+    if (name === "module" || name === "boot" || (!withPages && pageModule(name))) return;
     var declared = [];
     context.PhComposerUI = {
       define: function (defined, dependencies, factory) {

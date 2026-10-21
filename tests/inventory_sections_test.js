@@ -483,3 +483,14 @@ test("a feature's settings end the inventory action bar, and omitting them adds 
   assert.strictEqual(group.className, "phc-inventory-settings"); assert.strictEqual(group.children[0], setting);
   assert.strictEqual(build().controls.root.querySelector(".phc-inventory-settings"), null);
 });
+
+test("a record color outside #rrggbb paints white and never reaches the style as written", function () {
+  var o = setup(), colorCell = o.modules.inventory_forms.colorCell, td = dom.element("td");
+  var form = { enabled: true, requests: { busy: function () { return false; } }, open: function () {} };
+  var hostile = "red; background-image: url(x)";
+  colorCell(td, { values: { name: "Brick", color: hostile } }, form, function () { return true; });
+  assert.strictEqual(td._color.style.backgroundColor, "#ffffff");
+  assert.ok(!td._color.getAttribute("aria-label").includes("url("));
+  colorCell(td, { values: { name: "Brick", color: "#A1b2C3" } }, form, function () { return true; });
+  assert.strictEqual(td._color.style.backgroundColor, "#A1b2C3");
+});

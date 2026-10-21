@@ -63,7 +63,7 @@ module PhComposer
           Fields.field("density_kg_m3", Fields.number("kg/m3", :nullable => true)),
           Fields.field("specific_heat_j_kgk", Fields.number("J/kgK", :nullable => true)),
           Fields.field("emissivity", { "type" => %w[number null], "minimum" => 0, "maximum" => 1 }),
-          Fields.field("color", { "type" => "string" })
+          Fields.field("color", SchemaShapes::HEX_COLOUR)
         ]
         # The original provider category remains attribution even when its authored local category
         # falls back to Uncategorized. This does not widen the authored category vocabulary.

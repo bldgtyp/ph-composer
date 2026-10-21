@@ -26,6 +26,7 @@ PAGE = """<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PH-Composer help</title>
     <!-- Generated from docs/HELP.md by tools/help/help_page.py; edit that file instead. -->

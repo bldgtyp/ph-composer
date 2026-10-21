@@ -117,12 +117,15 @@ module PhComposer
         unit = PhComposer::Units.label(:quantity => "area", :system => display_units)
         html += Export::ReportHtml.table(["Host Face", "Gross area (#{unit})", "Glazed area (#{unit})",
                                           "Net opaque area (#{unit})"], areas)
-        html += "<p>PH-Composer authors no Window shading factors. Honeybee serializes its own shading defaults. " \
-                "Psi-install values are carried on the construction Frames; Aperture install types remain empty.</p>"
+        html += Export::ReportHtml.paragraph(
+          "PH-Composer authors no Window shading factors. Honeybee serializes its own shading defaults. " \
+          "Psi-install values are carried on the construction Frames; Aperture install types remain empty."
+        )
         result.fetch("window_schema_exceptions", []).each do |row|
-          html += "<p>#{Export::ReportHtml.h(row.fetch('construction_id'))}: authored g-value " \
-                  "#{row.fetch('g_value')} is retained exactly; Honeybee's simple glazing schema normally " \
-                  "requires a value strictly between 0 and 1.</p>"
+          html += Export::ReportHtml.paragraph(
+            "#{row.fetch('construction_id')}: authored g-value #{row.fetch('g_value')} is retained exactly; " \
+            "Honeybee's simple glazing schema normally requires a value strictly between 0 and 1."
+          )
         end
         [Export::ReportHtml.section("Windows", html)]
       end

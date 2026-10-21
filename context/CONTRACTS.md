@@ -182,7 +182,8 @@ tool and operation; a panel section as the registered feature that owns it; a pa
 as one of the language's own error types, else `Error` or `NotAnError`). Panel messages log
 under the session and request they served (`Diagnostics.with_context`); an export carries that
 context and its `run_id` into every later timer and runtime callback. The panel reports a section
-that failed to render, an uncaught error and a rejected promise as `panel.diagnostic`, at most 20
+that failed to render, an uncaught error, a rejected promise and a load its Content-Security-Policy
+blocked (class `SecurityPolicyViolation`, no frames) as `panel.diagnostic`, at most 20
 per page load, with frames read only from stack lines after the error's own message. A runtime
 failure is described by the translation package from the exception's class and traceback
 (`entry.failure_report`), never its message, and keeps its stage, code, class and package frames in

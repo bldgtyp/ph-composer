@@ -429,6 +429,14 @@ test("a section that fails to render reports its class and panel frames to the h
   assert.ok(JSON.stringify(p.sent).indexOf("Zone North") < 0);
 });
 
+test("a blocked load under the page's policy is reported once as a fixed class with no frames", function () {
+  var p = page();
+  p.context.dispatchEvent({ type: "securitypolicyviolation", violatedDirective: "script-src", blockedURI: "inline" });
+  var reported = p.sent.filter(function (message) { return message.type === "panel.diagnostic"; });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(reported)), [{ type: "panel.diagnostic", payload: {
+    event: "panel_csp_violation", section: null, error_class: "SecurityPolicyViolation", frames: [] } }]);
+});
+
 test("a rejection's own name is never reported as an error class", function () {
   var p = page(), named = new Error("x");
   named.name = "SecretClientHouse";

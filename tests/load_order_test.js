@@ -62,7 +62,7 @@ test("index.html's script list is the generated order of every declared module",
   assert.strictEqual(manifest.render(markup, graph.order), markup, "run 'make panel-manifest' after a define changes");
   assert.deepStrictEqual(scripts, ["module.js"].concat(Array.from(graph.order).map(function (name) {
     return name + ".js";
-  })));
+  }), ["boot.js"]));
 });
 
 test("the page's scripts, run in their listed order, start every module and announce the panel", function () {
@@ -73,8 +73,9 @@ test("the page's scripts, run in their listed order, start every module and anno
   };
   context.window = context;
   dom.attachEvents(context);
+  // The stub's body is not the page's <body>, so it is given the entry the page names there.
+  context.document.body.setAttribute("data-phc-entry", /<body[^>]* data-phc-entry="([^"]+)"/.exec(markup)[1]);
   scripts.forEach(function (src) { panelSource.load(context, src); });
-  require("vm").runInNewContext(/<script>([\s\S]*?)<\/script>/.exec(markup)[1], context);
   assert.deepStrictEqual(Object.keys(context.PhComposerUI.start()).sort(),
     Object.keys(manifest.graph().definitions).sort());
   assert.deepStrictEqual(sent.map(function (message) { return message.type; }), ["panel.ready"]);

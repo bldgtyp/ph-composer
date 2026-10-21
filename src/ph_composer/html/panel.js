@@ -309,12 +309,14 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
      reports its first MAX_REPORTS and then stays quiet. Reporting never throws. */
   var MAX_REPORTS = 20, reports = 0;
   var JS_FRAME = /^\s+at (?:(\S+) \()?\S*?\/html\/([\w\/.-]+\.js):(\d+):\d+\)?$/;
-  function report(event, sectionName, error) {
+  /* `fixedClass`, when given, is the class to name in place of the error's, with no frames: an event that is
+     not an error, such as a Content-Security-Policy violation. */
+  function report(event, sectionName, error, fixedClass) {
     if (reports >= MAX_REPORTS) return;
     reports += 1;
     try {
       send("panel.diagnostic", { event: event, section: sectionName || null,
-        error_class: errorClass(error), frames: stackFrames(error) });
+        error_class: fixedClass || errorClass(error), frames: fixedClass ? [] : stackFrames(error) });
     } catch (ignored) { /* the report itself failed; the page carries on */ }
   }
   /* A rejection can be any value and an error's name can be set by anyone, so only the language's own error
@@ -361,6 +363,11 @@ PhComposerUI.define("panel", ["unit_preferences", "workspace", "table_views", "r
     window.addEventListener("error", function (event) { report("panel_uncaught_error", null, event && event.error); });
     window.addEventListener("unhandledrejection", function (event) {
       report("panel_unhandled_rejection", null, event && event.reason);
+    });
+    /* Something the page's Content-Security-Policy blocked. The violated directive and URL stay in the page:
+       the log takes no free text. */
+    window.addEventListener("securitypolicyviolation", function () {
+      report("panel_csp_violation", null, null, "SecurityPolicyViolation");
     });
   }
 

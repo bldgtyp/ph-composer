@@ -1,7 +1,7 @@
 # SH-04 Repository hygiene and the context fold
 
 DATE: 2026-10-21
-STATUS: Implemented on branch `chore/security-hardening-sh-04`
+STATUS: Merged to main (PR #299)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#292](https://github.com/bldgtyp/ph-composer/issues/292)
 FINDINGS: F07, F09, F10, F11, and the review's "Accepted by design" table

@@ -23,6 +23,13 @@ module PhComposer
         "<p>#{h(text)}</p>"
       end
 
+      # A heading inside a section, whose own title is the h2: `level` is 3 to 6.
+      def heading(level, text)
+        raise ArgumentError, "heading level #{level} is not 3 to 6" unless (3..6).cover?(level)
+
+        "<h#{level}>#{h(text)}</h#{level}>"
+      end
+
       def h(value)
         CGI.escapeHTML(value.to_s)
       end

@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <!-- Only this server's own files and data. 'unsafe-eval' is for Pyodide's WebAssembly on the Chromium 88
+       floor; 'wasm-unsafe-eval' replaces it from Chromium 97, at a floor bump. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-eval'; connect-src 'self'; img-src data:; worker-src 'self' blob:; base-uri 'none'; form-action 'none'">
   <title>PH-Composer runtime</title>
   <!-- No favicon request: the browser would ask for /favicon.ico outside the token path. -->
   <link rel="icon" href="data:,">

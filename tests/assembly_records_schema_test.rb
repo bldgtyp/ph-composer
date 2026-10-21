@@ -26,6 +26,16 @@ class AssemblyRecordsSchemaTest < PhComposerTestCase
     assert Assemblies::Materials::Schema.membrane?(fixture_materials.fetch(material_id("membrane")))
   end
 
+  def test_material_colour_is_declared_as_six_digit_hex_for_callers_and_library_files
+    kind = Assemblies::Materials::Schema::KIND
+    [kind.values_schema, Assemblies::MaterialsLibrary.schema].each do |schema|
+      assert_equal PhComposer::SchemaShapes::HEX_COLOUR, schema.dig("properties", "color")
+    end
+    material = fixture_materials.values.first
+    refute_empty kind.problems(material.merge("color" => "red; background-image: url(x)"))
+    assert_empty kind.problems(material.merge("color" => "#A1b2C3"))
+  end
+
   def test_nested_identity_geometry_hints_and_air_barrier_are_validated
     mutations = [
       ->(row) { row["layers"] = [] },

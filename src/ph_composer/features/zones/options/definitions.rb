@@ -12,7 +12,7 @@ module PhComposer
       SETTINGS_KIND = "#{FEATURE_ID}.option_settings"
       SETTINGS_ID = "zop_AAAAAAAAAAAA"
       STAMP_KIND = "#{FEATURE_ID}.membership_stamp"
-      COLOUR = { "type" => "string", "pattern" => "^#[0-9A-Fa-f]{6}$" }.freeze
+      COLOUR = SchemaShapes::HEX_COLOUR
       NAME = { "type" => "string", "minLength" => 1 }.freeze
       FIELDS = [Records::Field.new(:key => "name", :schema => NAME, :required => true),
                 Records::Field.new(:key => "colour", :schema => COLOUR, :required => true)].freeze
