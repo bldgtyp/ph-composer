@@ -236,7 +236,7 @@ module PhComposerHostBridge
     def log_eval_output(text)
       return if text.empty? || !@tee_console
 
-      File.open(@console_path, "a") { |file| file.write(text.end_with?("\n") ? text : text + "\n") }
+      File.open(@console_path, "a", 0o600) { |file| file.write(text.end_with?("\n") ? text : text + "\n") }
     rescue StandardError
       nil
     end
