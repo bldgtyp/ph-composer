@@ -1,9 +1,9 @@
 # The Ruby suite errors without a UTF-8 locale
 
 DATE: 2026-10-03
-STATUS: Requested. Reproduced 2026-10-03; not fixed.
+STATUS: Implemented on branch `fix/ci-needs-utf8-locale`. Reproduced 2026-10-03 and again 2026-10-21.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#290](https://github.com/bldgtyp/ph-composer/issues/290)
 
 ## Defect
 
@@ -45,3 +45,32 @@ Either of these, not both:
 ## Regression test
 
 The reproduction command above is the check: it must report 0 errors.
+
+## Recheck 2026-10-21
+
+On `main@bfee7cf`, Ruby 3.2.2, `env -u LANG -u LC_ALL -u LC_CTYPE ruby -Itests tests/all_tests.rb`:
+2107 runs, 0 failures, 10 errors. The five above, plus five source-scanning tests added since:
+
+| Test | Raises at |
+| --- | --- |
+| `AgentAccessTokensTest#test_the_page_sends_and_handles_exactly_the_declared_messages` | `tests/agent_access_tokens_test.rb:244`, `scan` |
+| `OutcomeCodesTest#test_every_raised_literal_code_can_be_declared_as_an_operation_refusal` | `tests/outcome_codes_test.rb:63`, `scan` |
+| `SpacesWalkthroughTest#test_the_walkthrough_names_no_feature_module` | `tests/spaces_walkthrough_test.rb:58` |
+| `SpacesWalkthroughTest#test_the_client_moves_the_edit_path_only_through_the_public_commands` | `tests/spaces_walkthrough_test.rb:63` |
+| `SupportDialogTest#test_the_page_sends_exactly_the_messages_the_dialog_accepts` | `tests/support_dialog_test.rb:300`, `scan` |
+
+## Correction
+
+`tests/test_helper.rb` sets `Encoding.default_external = Encoding::UTF_8` before anything else
+loads, and `tests/parallel_tests.rb`, the runner `make test` uses, sets it too: it reads every test
+file and each shard's output before any test loads the helper. This is the shared-helper form of the second option: one line covers every read, so the next
+source-scanning test cannot reintroduce the defect, where per-read `encoding:` arguments would have
+grown from five sites to ten and on. The `Makefile` is unchanged. CI runs on GitHub's Ubuntu image,
+whose locale is already UTF-8, so CI behaviour does not change.
+
+## Verification
+
+`env -u LANG -u LC_ALL -u LC_CTYPE ruby -Itests tests/all_tests.rb` on the branch: 2107 runs,
+0 failures, 0 errors on both Ruby 2.7.2 and 3.2.2. A single file run alone
+(`tests/outcome_codes_test.rb`) and the parallel runner also pass with no locale, and
+`env -u LANG -u LC_ALL make ci` passes.
