@@ -33,13 +33,15 @@ module CorrectionsWalkthrough
                 "Edit > Paste In Place, then close the Group." }
   end
 
-  def r01_check
+  # `placements` is how many child Groups the setup and the native copies left, when the caller knows it.
+  def r01_check(placements: nil)
     client = Client.new
     zone = zone_group("#{PREFIX}r01")
     children = zone.entities.grep(Sketchup::Group)
-    # Two placements of one definition. Each `Group#entities` call returns a fresh wrapper, so compare
-    # definitions, never wrapper object ids.
-    shared = children.length == 2 && children.map(&:definition).uniq.length == 1
+    # Every placement shares one definition, however many copies were pasted. Each `Group#entities` call
+    # returns a fresh wrapper, so compare definitions, never wrapper object ids.
+    shared = children.length > 1 && children.map(&:definition).uniq.length == 1 &&
+             (placements.nil? || children.length == placements)
     rows = client.faces.select { |row|
       row.dig("reference", "zone_path") == [zone.persistent_id] &&
         row.dig("reference", "entity_path").length == 2
