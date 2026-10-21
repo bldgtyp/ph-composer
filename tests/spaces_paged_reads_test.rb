@@ -147,6 +147,10 @@ class SpacesPagedReadsTest < PhComposerTestCase
     assert_equal on_orphan.uniq, on_orphan, "each once"
     in_all = query("all", {}).dig("value", "findings").select { |row| row.dig("reference", "entity_path") == path }
     assert_equal ["space.volume_orphan"], in_all.map { |row| row["code"] }, "all still reports the stray alone"
+
+    @model.entities.to_a.last.entities << volume_group(2950, volume_record("O", :height => nil), [])
+    twice = read("findings.list", {}).fetch("findings").select { |row| row.dig("reference", "entity_path") == path }
+    assert_equal 1, twice.count { |row| row["code"] == "space.duplicate_identity" }, "a duplicated id once"
   end
 
   def test_an_orphan_volume_that_cannot_be_measured_leaves_all_and_list_reading

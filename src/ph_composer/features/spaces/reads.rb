@@ -108,7 +108,9 @@ module PhComposer
         counts = occurrence_counts(scan)
         scan.orphan_volumes.sort_by(&:path).flat_map do |volume|
           row = volume_row(volume, request.registry.catalog, request.model, counts, false)
-          referenced(row) + row.fetch("floor_segments").flat_map { |segment| referenced(segment) }
+          # The stray finding already says when the Volume's identity is duplicated, in its own words.
+          own = referenced(row).reject { |finding| finding.fetch("code") == "space.duplicate_identity" }
+          own + row.fetch("floor_segments").flat_map { |segment| referenced(segment) }
         rescue CodedError
           []
         end
