@@ -1,9 +1,9 @@
 # Equipment
 
-DATE: 2026-09-18
-STATUS: Requested. Draft, not interviewed.
+DATE: 2026-10-21
+STATUS: Requested. Draft, not interviewed. Re-baselined against `main` at `420c783a` on 2026-10-21.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
 
 ## Problem
 
@@ -13,15 +13,30 @@ hand, again for every variant. The data is small, tabular and has no geometry. W
 adds is the Zone: the consultant can say "this ERV serves these two Zones" against the thing
 they can see.
 
-## Port disposition
+## What main supplies today
 
-| Part | Disposition | Note |
+Read on 2026-10-21 at `420c783a`. Paths are relative to `src/ph_composer/`. This replaces the
+2026-09-18 port disposition, which assumed the foundation transplant was still ahead.
+
+| Need | State | Where |
 | --- | --- | --- |
-| Predecessor Q1 brief | Adapt | Roster kept. "Interview one family at a time" kept. "No data sheet hosting, no spec status" kept |
-| Predecessor B4 brief | Adapt | The single-Room problem it describes is gone. Its proof is still owed, see STATUS |
-| Record engine, inventory table, inline edit, usage scan | Port | From the foundation transplant |
-| Unit fields | Port | From units. New quantity rows are listed there |
-| All equipment records, the Zone assignment, the translation | New | |
+| Catalog record kinds with the common authored fields (`name`, `notes`, `datasheet_links`, `source`), validation, references and referrer handlers | Exists | `core/records/` (`RecordKind`, `Engine`, `Catalog`, `AuthoringFields.common`); `context/CONTRACTS.md`, "Records and extension data" and "Handler-side dependency reads". Records carry no timestamps; `id`, `schema_version`, `user_data` and `extension_data` are reserved |
+| Entity-owned records and reference targets, for an assignment that lives on a Zone Group | Exists | `core/records/entity_store.rb`, `reference_target.rb`; `context/EXTENSIBILITY.md`, "Records inside a Zone occurrence"; Windows and Spaces are the two shipped children |
+| Inventory table, in-place cell drafts, record forms, unit fields | Exists | `html/inventory.js`, `inventory_grid.js`, `record_edits.js`, `record_form.js`, `unit_field.js`; the Assemblies Materials table and Window Types are the shipped examples |
+| A primary tab with subtabs | Partly | `html/subtabs.js` is the shared subtabs nav (Window Types / U-Values / Schedule). The Systems tab D4 confirmed does not exist: the tab row in `html/index.html` is Zones, Assemblies, Window Types, Library, Export, and a new tab is one button plus one pane there |
+| Per-Zone rows on the Zones tab | Exists | Zone views, `html/table_views.js` (`context/EXTENSIBILITY.md`, "Zone views"): a view registers under `"ph_composer.zones"` with its own columns and child rows; a view with no child rows is admitted |
+| Per-Zone airflow sums | Exists | `ph_composer.spaces.all` Zone rows: supply, extract and transfer summed over user-specified Spaces, null while any Space inherits, `imbalanced` at 10 percent of the larger (D3a-12). There is no balance view and no grouping function: D3a-8 was superseded on 2026-10-15 |
+| Colour-by modes, derived geometry, readouts | Exists | `colour_by/`; `context/EXTENSIBILITY.md`, "Colour-by modes", "Colour-by derived geometry", "Colour-by readouts" |
+| Export contributor, preflight, translation sections that attach to a Room, result fields, conformance | Exists | `export/`; `python/ph_composer_translation/sections.py`, `assembly.py`; Spaces is the shipped Room-attaching section (`features/spaces/export.rb`, `space_sections.py`) |
+| honeybee-ph's mechanical classes in the pinned runtime | Partly | The pinned wheel `honeybee_ph-1.33.65` ships `honeybee_phhvac` and `honeybee_energy_ph`. `python/ph_composer_translation/stack.py` lists the packages its `load` serves and `honeybee_phhvac` is not among them, so the first mechanical section adds it there and to `tests/python/test_imports.py` |
+| Display units for equipment quantities | Partly | Panel: 18 quantities; Ruby report: 10, including `volume` and `airflow` (PR #84). Litres, capacity in kBtu/h and ventilator efficiency in W/cfm are [units Q3](../../cross-phase/units/PRD.md), still proposals |
+| Agent access | Exists | Every registered query and action is an agent-facing surface (Phase 3a1): a query declares `response:` and `while_busy:`, an action `preconditions:`, and a new feature bumps `API::MINOR` in `shell/api.rb` with one `API::CHANGES` row. A list read that can grow with the Model is paged, as `ph_composer.spaces.list` is |
+| METr | Deferred | PHX is not in the pinned wheels. [metr-export](../../unscheduled/metr-export/README.md) owns conversion and import; every METr row below is checked there |
+
+The predecessor's Q1 and B4 briefs (`../ph-navigator-sketchup/planning/phases/`) still apply as
+read on 2026-09-18: roster kept, one family per interview, no data sheet hosting, no spec status.
+B4's single-Room problem is gone: PH-Composer exports one honeybee Room per Zone
+(`model_sections.py`, `ZoneSection`).
 
 ## Vocabulary
 
@@ -41,53 +56,79 @@ Every family follows this. The family sections add only fields.
 ### Records
 
 ```
-<Family item>   id, name, <family fields with SI unit suffixes>, quantity,
-                in_conditioned_space, notes, datasheet_links, source,
-                schema_version, created_at, updated_at
+<Family item>   id, name, notes, datasheet_links, source,          (the common set)
+                <family fields with SI unit suffixes>, quantity,
+                in_conditioned_space, schema_version
 
-Zone            gains  ventilator_id, hot_water_system_id,
-                       heat_pump_ids[], heater_ids[], pump_ids[], fan_ids[]
+Serves          one assignment relation per (item, Zone), owned by this feature
 ```
 
-Assignment is stored on the Zone as ids. [spaces](../../../archive/phase-03a-spaces/PRD.md) already fixed that
-equipment belongs to the Zone and a Space inherits it. Appliances are the exception, see
-family 7.
+`created_at` and `updated_at` from the first draft are gone: no shipped record carries them and
+D3b-05 dropped them from Thermal Bridge Types for the same reason.
+
+The first draft stored assignment as id fields on the Zone record (`ventilator_id`,
+`heat_pump_ids[]`, ...). That is no longer the recommendation. Zones names no feature, and the
+accepted [Zone child pattern](../../../archive/code-review-refactoring/ZONE_CHILD_PATTERN.md) keeps
+"equipment schema branches" out of the parent owner. Two shapes stay open for Q3:
+
+- **An entity-owned record on the Zone Group** in this feature's own dictionary
+  (`ph_composer.equipment_assignment` or similar), as a Window Unit's record sits on its instance
+  and a Space's on its Group. A copied Zone carries its served items; this feature contributes to
+  `ph_composer.zones.occurrence_independent` to decide what the copy keeps.
+- **A Model-level assignment record** keyed by item id and `zone_id`, resolved through Zones'
+  reference target. A copied Zone serves nothing until assigned.
+
+[spaces](../../../archive/phase-03a-spaces/PRD.md) fixed that equipment belongs to the Zone and
+a Space inherits it. Appliances are the exception, see family 7.
 
 ### Behaviors
 
-- The Equipment subtab under the primary Systems tab has a family selector. Each family is an inventory table with inline edit, Add,
-  Duplicate and Delete with a usage warning.
-- A "Serves" column lists Zones as chips. Editing it opens a Zone picker. The Zone's row in the
-  Overview tree shows the same links from the other side.
-- Delete of an item in use asks, then clears the ids from the Zones. One Undo step.
-- An item that serves no Zone is a warning and is not exported, since honeybee-ph has nowhere
-  to put it.
-- Registers Colour-by modes `By ventilator` and `By hot water system`, and owns airflow balance
-  by ventilator. Since 2026-10-15 the Spaces packet has no separate balance view: balance by Zone
-  sits on the Spaces view's Zone rows (spaces D3a-8). Ventilation and Heat pump assignments are
-  planned as views of the Zones tab or, as Ed may prefer, Systems tabs listing the Zones each unit
-  serves (spaces D3a-16); this packet decides.
+- The Equipment subtab under the primary Systems tab (D4) has a family selector. Each family is
+  an inventory table with inline edit, Add, Duplicate and Delete.
+- A "Serves" column lists Zones as chips. Editing it opens a Zone picker.
+- The other side of the relation, which items serve a Zone, is either a view of the Zones tab
+  (the shipped Zone views contract) or the Systems table itself, listing the Zones each unit
+  serves. Spaces deferred that choice to this packet (Spaces STATUS, "Deferred out of this
+  plan"). Q10.
+- Delete of an item in use follows the Assembly delete contract (`context/CONTRACTS.md`,
+  "Geometry records and occurrence references"): refuse while in use, or name a replacement, or
+  pass null to clear every reference through the registered referrer handlers, in one Undo step.
+  Registration admits no confirmation policy but `none`, so the first draft's "asks, then clears"
+  is not available to an action.
+- An item that serves no Zone is a non-blocking finding and is not exported, since honeybee-ph
+  has nowhere to put it.
+- Registers Colour-by modes `By ventilator` and `By hot water system`.
+- Owns the airflow balance by ventilator: the served Zones' supply and extract sums from
+  `ph_composer.spaces.all`, per Ventilator, with the same 10 percent marker. Where it is shown
+  is Q11. The assignment half of this feature therefore requires `ph_composer.spaces` as well as
+  `ph_composer.zones`; the definitions never do.
 
 ### Export
 
-honeybee-ph attaches mechanical equipment per Room through `room.properties.ph_hvac`:
-one ventilation system, one hot water system, and sets of heating systems, heat pump systems,
-exhaust devices, supportive devices and renewable devices. A PH-Composer Zone is one Room,
-so the Zone's ids map straight onto those slots. An item serving three Zones is the same
-honeybee-ph object, same identifier, set on three Rooms. Whether PHX then writes one METr
-device or three is part of the round trip proof in STATUS.
+honeybee-ph attaches mechanical equipment per Room through `room.properties.ph_hvac`. Verified
+at 1.33.65 on 2026-10-21: `set_ventilation_system`, `set_hot_water_system`,
+`add_heating_system`, `add_heat_pump_system`, `add_supportive_device`, `add_exhaust_vent_device`
+and `add_renewable_device`; one ventilation system and one hot water system per Room, sets of the
+rest. A PH-Composer Zone is one Room, so each item maps onto the slots of the Rooms it serves.
 
-Field units below are read from the honeybee-ph class docstrings where they state one.
-Fields with no stated unit are confirmed at the family's interview.
+Open plan item: a translation section's `Attachment.key` names one host per translated object
+(`sections.py`). An item serving three Zones is therefore either one translated object per
+(item, Zone) pair sharing the item's identifier, or a new attachment shape. Decide at planning,
+with the shipped Spaces section as the pattern. Whether PHX then writes one METr device or three
+is a [metr-export](../../unscheduled/metr-export/README.md) row.
+
+Field units below are read from the honeybee-ph class docstrings where they state one. Fields
+with no stated unit are confirmed at the family's interview. Class and field names were
+re-read against the pinned wheel, 1.33.65, on 2026-10-21.
 
 ## Family 1: Ventilators
 
 `Ventilator`: `display_name`, `quantity`, `sensible_heat_recovery`, `latent_heat_recovery`,
 `electric_efficiency` (Wh/m³, default 0.55), `frost_protection_reqd`,
-`temperature_below_defrost_used` (°C, default -5), `in_conditioned_space`, and two optional
-fields for subsoil heat exchange and preheated intake temperature. It sits inside a
-`PhVentilationSystem` with `sys_type` (default 1, balanced with heat recovery) and the two duct
-lists. A Room holds one ventilation system.
+`temperature_below_defrost_used` (°C, default -5), `in_conditioned_space`,
+`subsoil_heat_exchange_efficiency` and `preheated_intake_temperature_c` (both optional). It sits
+inside a `PhVentilationSystem` with `sys_type` (default 1, balanced with heat recovery), the unit
+and the two duct lists. A Room holds one ventilation system.
 
 PH-Composer records one Ventilator and builds the system around it at export. The user never
 sees a separate "system" record.
@@ -122,7 +163,7 @@ variants. Boilers and district are rare on Phius projects and can follow.
 `ambient_temp_2` 8.333 °C, which are 17 °F and 47 °F), and Combined. Cooling parameters hold
 four sub-blocks, each with a `used` flag: Ventilation, Recirculation, Dehumidification, Panel.
 Recirculation carries `capacity`, `min_coil_temp`, `flow_rate_m3_hr`, `flow_rate_variable`,
-`single_speed` and an annual COP.
+`single_speed` and `annual_COP`.
 
 Open: whether the editor shows all four cooling sub-blocks or only Recirculation, which is the
 mini-split case and nearly every project.
@@ -137,7 +178,7 @@ leaves out. See Q7.
 
 `PhSupportiveDevice`: `device_type` (4 heat circulation pump, 6 DHW circulation pump, 7 DHW
 storage load pump, 10 other), `quantity`, `in_conditioned_space`, `norm_energy_demand_W`,
-`annual_period_operation_khrs` (default 8.760), `ihg_utilization_factor`, `ihg_usage_profile`.
+`annual_period_operation_khrs` (default 8.76), `ihg_utilization_factor`, `ihg_usage_profile`.
 
 ## Family 6: Fans
 
@@ -154,10 +195,15 @@ exterior and garage lighting, three custom annual entries, and three elevator ty
 fields: `quantity`, `in_conditioned_space`, `reference_quantity`, `reference_energy_norm`,
 `energy_demand` (kWh), `energy_demand_per_use`, `comment`.
 
-These are a Room load, held on the Room's electric equipment properties, not on `ph_hvac`.
-honeybee-ph also ships Phius residential and multifamily default sets
+These are a Room load, carried on the Room's honeybee-energy `electric_equipment` through
+`honeybee_energy_ph/properties/load/equipment.py` (`ElectricEquipmentPhProperties`), not on
+`ph_hvac`. honeybee-ph also ships Phius residential and multifamily default sets
 (`phius_residential.py`, `phius_mf.py`), which compute the standard appliance list from
 bedroom and dwelling counts.
+
+Spaces deferred "Occupancy, Electric loads and appliances, Lighting and Hot water" Zone views to
+a Zone loads packet that is not drafted. The Room load this family writes to is that packet's
+carrier, so the boundary between the two is open: Q12.
 
 Open: whether appliances are authored per item, or the user picks "Phius residential defaults"
 for a Zone and edits only the exceptions. Recommendation: the default set first. It is what
@@ -165,19 +211,23 @@ most Phius models use and needs dwelling count and bedroom count per Zone, nothi
 
 ## Decisions for the interview
 
-Shared shape first. Each family gets its own round later.
+Shared shape first. Each family gets its own round later. Recommendations changed on 2026-10-21
+are marked; Ed has answered none of them.
 
 | # | Question | Recommendation |
 | --- | --- | --- |
 | Q1 | One packet with seven family phases, or seven packets? | One packet, one PRD section and one phase per family. The shape is shared and the families are small |
 | Q2 | Family order? | Ventilators, hot water, heat pumps, electric heaters, pumps, appliances, fans |
-| Q3 | Is assignment stored on the Zone as ids? | Yes. It matches honeybee-ph's per-Room slots and the spaces decision |
+| Q3 | Code. Where is assignment stored? | Changed 2026-10-21. Not on the Zone record: Zones names no feature. An entity-owned record on the Zone Group in this feature's dictionary, following Windows and Spaces, so a copied Zone keeps what serves it; the Model-level alternative is recorded above |
 | Q4 | A product definition reused with different installed quantities: two records, or a type and instances? | One record with a `quantity`. No type and instance split. Duplicate covers the rest. Q1 of the predecessor asked this and the honeybee-ph classes answer it |
 | Q5 | Is equipment placed in the model as geometry? | No. Records only. A Ventilator has no position. Ducts and pipes give the lengths that matter |
 | Q6 | Fans: exhaust ventilators, supportive devices, or both under one tab? | Exhaust ventilators under "Fans", since kitchen hoods and dryers are what Phius asks for. Anything else is a Pump-tab "Other" device |
 | Q7 | Boilers, wood boilers, district heat and PV are in honeybee-ph and not on the list. In or out? | Out for MVP, recorded as later. PV waits for the climate and site packet |
-| Q8 | Are equipment items a library kind? | Later. The libraries interview named Ventilators and Heat Pumps as likely future kinds |
-| Q9 | One Equipment tab with sub-tabs, or the predecessor's reserved "HVAC" tab plus others? | Confirmed in D4: one Systems primary tab, with Equipment, ERV ducting and Hot-water piping as peer subtabs. Equipment owns the seven family views |
+| Q8 | Are equipment items a library kind? | Later. The libraries interview named Ventilators and Heat Pumps as likely future kinds (libraries Q2; roadmap 5.4) |
+| Q9 | One Equipment tab with sub-tabs, or the predecessor's reserved "HVAC" tab plus others? | Confirmed in D4: one Systems primary tab, with Equipment, ERV ducting and Hot-water piping as peer subtabs. Equipment owns the seven family views. The tab is new in `index.html` |
+| Q10 | UI. Added 2026-10-21. Where does a Zone show what serves it: a Ventilation view and a Heat pump view of the Zones tab, or only the Systems table listing the Zones each unit serves? | The Systems table alone, first. A Zone view costs a module per family and the shipped Zone views contract admits it later without touching Zones |
+| Q11 | UI. Added 2026-10-21. Where is the balance by ventilator shown? | On the Ventilator's row in the Systems table: served Zones' supply and extract sums and the 10 percent marker, a dash while any served Space inherits. Spaces keeps balance by Zone |
+| Q12 | Code. Added 2026-10-21. Does family 7 own the Room's electric equipment load, or does the undrafted Zone loads packet? | This packet owns the appliance records and their default set; the Zone loads packet, when drafted, owns occupancy, lighting and the non-appliance loads and reuses the same Room-load section |
 
 ## Non-goals
 
@@ -187,16 +237,22 @@ schedules. No equipment geometry.
 ## Acceptance shape
 
 Per family, on a synthetic two-Zone model: create two items, serve one Zone with one and both
-Zones with the other, export, and find each object once in HBJSON on the right Rooms and once in
-METr JSON with the right values. Delete an item in use and Undo it. Save and reopen. The
-ventilator family also closes B4's proof: two Zones, two ventilators, both distinct in METr.
+Zones with the other, export, reload the exact HBJSON in the pinned honeybee stack and find each
+object once on the right Rooms with the right values, through the section's `conformance` check
+as Spaces does. Delete an item in use and Undo it. Save and reopen. The ventilator family also
+closes the HBJSON half of B4's proof: two Zones, two ventilators, distinct on two Rooms. The METr
+half, that PHX keeps them distinct, is a metr-export row.
 
 ## Prior art and evidence
 
-- Predecessor `planning/phases/Q1_equipment.md`, `B4_ventilation-units.md`.
+- Predecessor `planning/phases/Q1_equipment.md`, `B4_ventilation-units.md`
+  (`../ph-navigator-sketchup/`).
 - honeybee-ph `honeybee_phhvac/`: `ventilation.py`, `heat_pumps.py`, `heating.py`,
   `hot_water_devices.py`, `hot_water_system.py`, `supportive_device.py`,
-  `properties/room.py`.
+  `properties/room.py`. Re-read at 1.33.65 on 2026-10-21.
 - honeybee-ph `honeybee_energy_ph/load/`: `ph_equipment.py`, `phius_residential.py`,
-  `phius_mf.py`.
-- PHX `model/enums/hvac.py`, `to_METr_JSON/metr_schemas.py`.
+  `phius_mf.py`; `honeybee_energy_ph/properties/load/equipment.py`.
+- PHX `model/enums/hvac.py`, `to_METr_JSON/metr_schemas.py`: not re-read; PHX is not in the
+  pinned runtime.
+- The shipped Room-attaching section: `src/ph_composer/features/spaces/export.rb` and
+  `python/ph_composer_translation/space_sections.py`.

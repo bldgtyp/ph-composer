@@ -1,6 +1,6 @@
 # Roadmap
 
-DATE: 2026-10-19
+DATE: 2026-10-21
 STATUS: Phase 0 and Phase 1 merged to main; Phase 1 archived 2026-09-30. Phase 2 merged to main through PR #15 on 2026-10-01 and archived; its eleven review refactors merged by 2026-10-02 and are archived.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
@@ -116,7 +116,7 @@ library file. METr conversion stays deferred.
 | --- | --- | --- | --- |
 | 3.1 | [Spaces](archive/phase-03a-spaces/README.md) | Complete 2026-10-17, archived; P3a-01 to P3a-12 merged (#135 to #171); S01 to S11 pass with ledger results; the #179 and #188 regressions fixed and rechecked | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
 | 3a1 | [Agent access after Spaces](archive/phase-03a1/README.md) | Complete 2026-10-18, archived; P3a1-01 to P3a1-16 merged (#222 to #243); both CLIs through the integrated scenario; open follow-ups #239, #244 | API corrections, an MCP connection served from Ruby for the Codex and Claude Code CLIs, token grants and host execution, semantic Spaces access, artifact disclosure and visual context. Owns all 14 post-Spaces review findings |
-| 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09, none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
+| 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09; re-baselined on `main` at `420c783a` on 2026-10-21, D3b-22 and D3b-23 open; none authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
 
 Ed originally split Phase 3 on 2026-10-03 into two envelope-feature sub-phases:
 [3a Spaces](archive/phase-03a-spaces/README.md) and
@@ -132,12 +132,12 @@ concurrent work. External-agent support and public distribution remain distinct 
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 4.1 | [Equipment](features/phase-04-mechanical/equipment/README.md): shared shape and Ventilators | Requested, PRD drafted | Closes the two-Zone, two-ventilator proof. Regroups the Spaces airflow balance |
-| 4.2 | [ERV ducting](features/phase-04-mechanical/erv-ducting/README.md) | Requested, PRD drafted | Needs 4.1 and 3.2's edge tools; lives under Systems per D4 |
-| 4.3 | Equipment: hot water system, tanks, heaters | Requested, PRD drafted | |
-| 4.4 | [Hot water piping](features/phase-04-mechanical/hot-water-piping/README.md) | Requested, PRD drafted | Needs 4.3; lives under Systems per D4 |
-| 4.5 | Equipment: heat pumps, electric heaters | Requested, PRD drafted | |
-| 4.6 | Equipment: pumps, fans, appliances | Requested, PRD drafted | Appliances may be the Phius default set only |
+| 4.1 | [Equipment](features/phase-04-mechanical/equipment/README.md): shared shape and Ventilators | Requested, PRD drafted, re-baselined 2026-10-21 | Closes the HBJSON half of the two-Zone, two-ventilator proof; the PHX half is metr-export's. Owns the balance by ventilator (Spaces shows balance by Zone only). No Phase 3b dependency |
+| 4.2 | [ERV ducting](features/phase-04-mechanical/erv-ducting/README.md) | Requested, PRD drafted, re-baselined 2026-10-21 | Needs 4.1 and Phase 3b's P3b-03, P3b-06, P3b-07 and P3b-08; lives under Systems per D4 |
+| 4.3 | Equipment: hot water system, tanks, heaters | Requested, PRD drafted, re-baselined 2026-10-21 | |
+| 4.4 | [Hot water piping](features/phase-04-mechanical/hot-water-piping/README.md) | Requested, PRD drafted, re-baselined 2026-10-21 | Needs 4.3 and Phase 3b's P3b-03, P3b-04, P3b-06, P3b-07 and P3b-08; lives under Systems per D4 |
+| 4.5 | Equipment: heat pumps, electric heaters | Requested, PRD drafted, re-baselined 2026-10-21 | |
+| 4.6 | Equipment: pumps, fans, appliances | Requested, PRD drafted, re-baselined 2026-10-21 | Appliances may be the Phius default set only; boundary with the undrafted Zone loads packet open (equipment Q12) |
 
 ## Phase 5: post-MVP
 
@@ -232,3 +232,5 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-16 | #179 fixed through #187 and rechecked on the host: A09 passes; UXR-PAINT's narrow clause fails on #188 (the selection bar crowds the table: Solve under the footer at 420 px, header covered at 360 x 520). Phase 3a closure is Ed's call on #188. |
 | 2026-10-17 | #188 fixed through #190 and rechecked on the host: A09, UXR-SOLVE and UXR-PAINT pass. No acceptance case blocks Phase 3a closure; closing is Ed's call (ZO-O7 fails on #181 as a follow-up). |
 | 2026-10-17 | Ed closed Phase 3a (Spaces); its packet is archived as `phase-03a-spaces`. Phase 3 stays open for 3b, thermal bridges. |
+| 2026-10-21 | Thermal bridges re-baselined against `main` at `420c783a`: findings re-read (F27 to F36 added), CONTRACTS answered from code where it could be, stages corrected, D3b-22 and D3b-23 added for Ed. No implementation authorized. |
+| 2026-10-21 | Phase 4 packets re-baselined against `main` at `420c783a`: stale foundation and remote blockers removed, each PRD opens with what `main` supplies, piping and ducting dependencies named per Phase 3b stage, METr acceptance moved to metr-export. No interview, no implementation authorized. |
