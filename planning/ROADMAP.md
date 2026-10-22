@@ -132,7 +132,7 @@ concurrent work. External-agent support and public distribution remain distinct 
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 4.1 | [Equipment](features/phase-04-mechanical/equipment/README.md): shared shape and Ventilators | Requested, PRD drafted, re-baselined 2026-10-21 | Closes the HBJSON half of the two-Zone, two-ventilator proof; the PHX half is metr-export's. Owns the balance by ventilator (Spaces shows balance by Zone only). No Phase 3b dependency |
+| 4.1 | [Equipment](features/phase-04-mechanical/equipment/README.md): shared shape and Ventilators | Scoped: shared shape interviewed 2026-10-21; Ventilators not | Closes the HBJSON half of the two-Zone, two-ventilator proof; the PHX half is metr-export's. Owns the balance by ventilator (Spaces shows balance by Zone only). No Phase 3b dependency |
 | 4.2 | [ERV ducting](features/phase-04-mechanical/erv-ducting/README.md) | Requested, PRD drafted, re-baselined 2026-10-21 | Needs 4.1 and Phase 3b's P3b-03, P3b-06, P3b-07 and P3b-08; lives under Systems per D4 |
 | 4.3 | Equipment: hot water system, tanks, heaters | Requested, PRD drafted, re-baselined 2026-10-21 | |
 | 4.4 | [Hot water piping](features/phase-04-mechanical/hot-water-piping/README.md) | Requested, PRD drafted, re-baselined 2026-10-21 | Needs 4.3 and Phase 3b's P3b-03, P3b-04, P3b-06, P3b-07 and P3b-08; lives under Systems per D4 |
@@ -234,4 +234,5 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-17 | Ed closed Phase 3a (Spaces); its packet is archived as `phase-03a-spaces`. Phase 3 stays open for 3b, thermal bridges. |
 | 2026-10-21 | Thermal bridges phase issue [#301](https://github.com/bldgtyp/ph-composer/issues/301) created after the re-baseline and the D3b-22, D3b-23 answers; waits on Ed's go for P3b-01. |
 | 2026-10-21 | Thermal bridges re-baselined against `main` at `420c783a`: findings re-read (F27 to F36 added), CONTRACTS answered from code where it could be, stages corrected, D3b-22 and D3b-23 added for Ed. No implementation authorized. |
-| 2026-10-21 | Phase 4 packets re-baselined against `main` at `420c783a`: stale foundation and remote blockers removed, each PRD opens with what `main` supplies, piping and ducting dependencies named per Phase 3b stage, METr acceptance moved to metr-export. No interview, no implementation authorized. |
+| 2026-10-21 | Phase 4 packets re-baselined against `main` at `420c783a`: stale foundation and remote blockers removed, each PRD opens with what `main` supplies, piping and ducting dependencies named per Phase 3b stage, METr acceptance moved to metr-export. No implementation authorized. |
+| 2026-10-21 | Equipment shared shape interviewed: Q1 to Q12 answered as recommended; fans and appliances traced through PHX. Families not interviewed; no implementation authorized. |

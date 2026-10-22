@@ -13,7 +13,7 @@ against the current code on 2026-10-21; each PRD opens with a table of what `mai
 
 | Packet | Roadmap | State | Can start after |
 | --- | --- | --- | --- |
-| [equipment](equipment/README.md) | 4.1, 4.3, 4.5, 4.6 | Requested, PRD drafted, re-baselined | Ed's interview of the shared shape. No Phase 3b dependency |
+| [equipment](equipment/README.md) | 4.1, 4.3, 4.5, 4.6 | Scoped: shared shape interviewed 2026-10-21, families not | The Ventilators family interview. No Phase 3b dependency |
 | [hot-water-piping](hot-water-piping/README.md) | 4.4 | Requested, PRD drafted, re-baselined | Equipment family 2 and Phase 3b's P3b-03, P3b-04, P3b-06, P3b-07, P3b-08 |
 | [erv-ducting](erv-ducting/README.md) | 4.2 | Requested, PRD drafted, re-baselined | Equipment family 1 and the same Phase 3b stages, without P3b-04 |
 
@@ -41,7 +41,7 @@ interviewed, with no stage authorized. For this phase that means:
 
 ## Order
 
-Equipment first, interviewed one family at a time, Ventilators and hot water before the rest so
+Equipment first, its shared shape settled on 2026-10-21 and its families interviewed one at a time, Ventilators and hot water before the rest so
 the two drawn packets have something to export into. Piping before ducting, since ducting reuses
 piping's draw and assign answers. Piping is not planned in detail before Phase 3b's P3b-04 has merged, since it reuses the
 chain rule; ducting follows piping and needs P3b-03 and P3b-06 to P3b-08 only.
