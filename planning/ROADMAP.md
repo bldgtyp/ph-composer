@@ -132,9 +132,9 @@ concurrent work. External-agent support and public distribution remain distinct 
 
 | # | Item | State | Note |
 | --- | --- | --- | --- |
-| 4.1 | [Equipment](features/phase-04-mechanical/equipment/README.md): shared shape and Ventilators | Scoped: shared shape and Ventilators interviewed 2026-10-21 | Closes the HBJSON half of the two-Zone, two-ventilator proof; the PHX half is metr-export's. Owns the balance by ventilator (Spaces shows balance by Zone only). No Phase 3b dependency |
+| 4.1 | [Equipment](features/phase-04-mechanical/equipment/README.md): shared shape and Ventilators | Scoped: shared shape, Ventilators and hot water interviewed 2026-10-21 | Closes the HBJSON half of the two-Zone, two-ventilator proof; the PHX half is metr-export's. Owns the balance by ventilator (Spaces shows balance by Zone only). No Phase 3b dependency |
 | 4.2 | [ERV ducting](features/phase-04-mechanical/erv-ducting/README.md) | Requested, PRD drafted, re-baselined 2026-10-21 | Needs 4.1 and Phase 3b's P3b-03, P3b-06, P3b-07 and P3b-08; lives under Systems per D4 |
-| 4.3 | Equipment: hot water system, tanks, heaters | Requested, PRD drafted, re-baselined 2026-10-21 | |
+| 4.3 | Equipment: hot water system, tanks, heaters | Scoped: interviewed 2026-10-21 (H1 to H7) | The simplified piping methods wait on a honeybee-ph field (H5) |
 | 4.4 | [Hot water piping](features/phase-04-mechanical/hot-water-piping/README.md) | Requested, PRD drafted, re-baselined 2026-10-21 | Needs 4.3 and Phase 3b's P3b-03, P3b-04, P3b-06, P3b-07 and P3b-08; lives under Systems per D4 |
 | 4.5 | Equipment: heat pumps, electric heaters | Requested, PRD drafted, re-baselined 2026-10-21 | |
 | 4.6 | Equipment: pumps, fans, appliances | Requested, PRD drafted, re-baselined 2026-10-21 | Appliances may be the Phius default set only; boundary with the undrafted Zone loads packet open (equipment Q12) |
@@ -237,3 +237,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-21 | Phase 4 packets re-baselined against `main` at `420c783a`: stale foundation and remote blockers removed, each PRD opens with what `main` supplies, piping and ducting dependencies named per Phase 3b stage, METr acceptance moved to metr-export. No implementation authorized. |
 | 2026-10-21 | Equipment shared shape interviewed: Q1 to Q12 answered as recommended; fans and appliances traced through PHX. Families not interviewed; no implementation authorized. |
 | 2026-10-21 | Equipment Ventilators interviewed: V1 to V6 answered as recommended. Families 2 to 7 not interviewed; no implementation authorized. |
+| 2026-10-21 | Equipment hot water interviewed: H1 to H7, as recommended except H3. Families 3 to 7 not interviewed; no implementation authorized. |

@@ -81,8 +81,9 @@ are checked in metr-export.
   coefficient in W/(m K) that PHX computes from diameter and insulation, daily recirculation
   hours, water temperature, air temperature, and an "all pipes insulated" flag.
 - PHX's enum has four calculation methods: simplified individual pipes, simplified hot water
-  calculator, unit method and floor method. Which of them read the drawn tree and which need
-  only counts is not yet checked. The interview needs that before Q5.
+  calculator, unit method and floor method. honeybee-ph's `PhHotWaterSystem` carries no method
+  field, so HBJSON cannot name one today (equipment H5). Which methods read the drawn tree and
+  which need only counts is not yet checked. The interview needs that before Q5.
 
 ## Records
 
@@ -197,7 +198,7 @@ Recommendations changed on 2026-10-21 are marked; Ed has answered none of them.
 | Q2 | Draw with the native Line tool in a Piping group, or a custom Draw Pipe tool? | Native Line in a Piping group. M1's boundary was no new drawing tool, and inference snapping to the model is what makes tracing fast |
 | Q3 | Is "pipe type" the specification only, with role set separately? | Yes. The same 3/4 in PEX is a branch in one place and a fixture run in another |
 | Q4 | Diameter entry: free mm, or METr's nominal size list? | The nominal list, stored as `diameter_mm`. A free value METr rounds is false precision. Confirm with units Q2 |
-| Q5 | Support the simplified methods, with no drawn pipes? | Yes, as a choice on the Hot Water System. A single-family model should not need a drawn tree |
+| Q5 | Support the simplified methods, with no drawn pipes? | Yes, as a choice on the Hot Water System. A single-family model should not need a drawn tree. Equipment H5 (2026-10-21) found honeybee-ph's `PhHotWaterSystem` has no field for the method: it is added upstream first, and until the pinned wheel carries it only drawn pipes export |
 | Q6 | The trunk multiplier: expose it? | Yes. One drawn riser times twelve identical risers is the multifamily case |
 | Q7 | One Piping group per Hot Water System, or many? | Many. A group per floor or riser is how people organise. The system link is on each group |
 | Q8 | Do Pipes belong to a Zone? | No. They belong to a Hot Water System, which serves Zones. Pipes cross Zone boundaries |

@@ -1,7 +1,7 @@
 # Equipment
 
 DATE: 2026-10-21
-STATUS: Scoped. Shared shape (Q1 to Q12) and Ventilators (V1 to V6) interviewed 2026-10-21; families 2 to 7 not yet interviewed. Re-baselined against `main` at `420c783a` the same day.
+STATUS: Scoped. Shared shape (Q1 to Q12), Ventilators (V1 to V6) and hot water (H1 to H7) interviewed 2026-10-21; families 3 to 7 not yet interviewed. Re-baselined against `main` at `420c783a` the same day.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -158,11 +158,25 @@ condensing, efficiencies, return and boiler temperatures); Wood boiler; District
 monthly (two COPs at two ambient temperatures); Heat pump annual (`total_system_perf_ratio`);
 Heat pump inside (`annual_energy_factor`).
 
+The system also carries `number_tap_points`, `recirc_temp` and `recirc_hours`. PHX keys tanks
+and heaters by identity across Rooms, takes tap points, recirculation temperature and hours once
+per variant and falls back to 60 °C and 24 h when systems disagree, and has a four-value piping
+calculation method enum (`PhxHotWaterPipingCalcMethod`) that `PhHotWaterSystem` has no field for.
+
 PH-Composer records a Hot Water System with tanks and heaters as child rows. The piping
 packet links its Piping groups to it.
 
-Open: which heater variants ship first. Recommendation: Electric and the three heat pump
-variants. Boilers and district are rare on Phius projects and can follow.
+Interviewed 2026-10-21; Ed answered each as recommended except H3:
+
+| # | Question | Answer, 2026-10-21 |
+| --- | --- | --- |
+| H1 | Code. One system record with children, or separate Tank and Heater records? | One Hot Water System record; tanks and heaters are its children. One id to assign, copy and delete |
+| H2 | Scope. Which heater variants first? | Electric and the three heat pump variants (annual, monthly, inside). Boilers and district stay out, as Q7 says |
+| H3 | Code. Keep honeybee-ph's four fixed tank slots? | No: a free list of tanks on the system, slotted into `tank_1`, `tank_2`, `tank_buffer`, `tank_solar` at export in list order, with a warning past four. Departs from the recommendation; the slot each tank lands in is decided at planning (by tank type, or by order) |
+| H4 | Code. Where do tap points, recirculation temperature and hours live? | On the system record; the piping packet reads them for the recirculation loop. Two systems that disagree get a warning naming PHX's fallback |
+| H5 | Code. Piping Q5 wants the simplified methods as a choice on the system, and honeybee-ph has no field for it | Add the field upstream first: an issue on honeybee-ph for a calculation-method field on `PhHotWaterSystem`, read by PHX. PH-Composer stores the choice and exports it once the pinned wheel carries it; until then only drawn pipes export |
+| H6 | Code. One system per Zone | Yes, the Ventilator rules: a second assignment replaces the first after a refusal names it; an unserved Zone warns and does not block |
+| H7 | UI. How are tanks and heaters edited? | Child rows under the system row, opened by its chevron, edited in place, with Add tank and Add heater on the system row |
 
 ## Family 3: Heat pumps
 
