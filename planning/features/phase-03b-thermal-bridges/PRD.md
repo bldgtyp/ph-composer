@@ -1,9 +1,9 @@
 # Thermal bridges
 
 DATE: 2026-09-18
-STATUS: Scoped. Interviewed 2026-10-03; answers recorded in [DECISIONS.md](DECISIONS.md) and folded in below.
+STATUS: Scoped. Interviewed 2026-10-03; answers recorded in [DECISIONS.md](DECISIONS.md) and folded in below. Corrected to the code on `main` at `420c783a` on 2026-10-21 (the assignment id and the HUD label shape).
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (no remote)
+ISSUE: none (local planning draft)
 
 ## Problem
 
@@ -59,14 +59,16 @@ and PHX `to_METr_JSON/metr_schemas.py`.
 ThermalBridgeType  id (tbt_), name, psi_w_mk, group, color, notes, datasheet_links, source,
                    schema_version
 
-edge assignment    thermal_bridge_type_id, quantity, schema_version, user_data
+edge assignment    id (tbe_), thermal_bridge_type_id, quantity, schema_version, user_data
 (on the Edge)
 ```
 
 `group` is required, one of `15-Ambient`, `16-Perimeter` or `17-FS/BC`, and a new type starts at
 `15-Ambient` (D3b-03, D3b-04). `psi_w_mk` may be negative and may be left empty while a type is
 being entered. `quantity` is a positive number, default 1 (D3b-08). There are no timestamps
-(D3b-05). The assignment is an attribute on the SketchUp edge and carries no id of its own (D3b-02).
+(D3b-05). The assignment is an attribute on the SketchUp edge. It carries a `tbe_` id because the
+record engine requires one on anything a reference target lists (D3b-02's fallback, confirmed from
+code on 2026-10-21); a split or copied edge carries the same id, and what that means is D3b-22.
 There is no separate thermal bridge record and no Model-level registry of tagged edges (D3b-01).
 The schedule and the export both build the list of thermal bridges by scanning edges.
 
@@ -115,9 +117,10 @@ measurement in P3b-04 says otherwise (D3b-13).
 ### Colour-by mode
 
 A `Thermal bridges` mode registered with the shared Colour-by component. Assigned edges draw
-thick in the type's colour. The HUD legend lists each type with its total length and edge count,
-as "Parapet, 26.0 m (12)" (D3b-12). Unassigned edges draw nothing, since most edges in a model are
-not thermal bridges.
+thick in the type's colour. The HUD legend lists each type with its edge count and total length in
+the display units, in the legend's own shape, as "Parapet (12) 26.0 m" (D3b-12, corrected
+2026-10-21 to the shipped legend format). Unassigned edges draw nothing, since most edges in a
+model are not thermal bridges.
 
 ### Validation rows
 
@@ -157,9 +160,10 @@ These apply to this packet, to hot-water-piping and to erv-ducting. They are pro
 spike measures them.
 
 1. The assignment is an attribute dictionary on the `Sketchup::Edge`. No separate index keyed by
-   `persistent_id`, so a copied edge carries its assignment and a deleted edge takes it away. A
-   feature whose assignments carry identity that other records point at, as piping's parent
-   references do, decides for itself whether it needs B4's registry (D3b-01).
+   `persistent_id`, so a copied edge carries its assignment and a deleted edge takes it away. The
+   dictionary carries an id because the record engine requires one, and nothing points at that
+   id (D3b-02, D3b-22). A feature whose assignments carry identity that other records point at,
+   as piping's parent references do, decides for itself whether it needs B4's registry (D3b-01).
 2. SketchUp splits an edge when another edge crosses it or a face is cut. B4 measured that every
    piece keeps the full dictionary, so a split is harmless and needs no repair. P3b-01 measures the
    cases B4 did not run, including the heal when the crossing edge is erased.

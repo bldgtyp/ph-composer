@@ -1,7 +1,7 @@
 # P3b-02: Thermal Bridge Type records and operations
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: Scoped. Corrected to `main` at `420c783a` on 2026-10-21 (DECISIONS Part 1b)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -34,19 +34,23 @@ Paths are relative to `src/ph_composer/`.
    type. `duplicate` names the copy and records `source` `derived`.
 4. **Declarations.** `declarations/types.rb` registers `types.all`, the `types` snapshot section
    and the four actions with params and results built from `SchemaShapes` and the feature's own
-   `Shapes`, hand-written descriptions, Undo names and side effects, and examples that validate.
-   `types.all` rows carry `export_ready` and `export_blockers` (`thermal_bridge.psi_missing`).
+   `Shapes`, hand-written descriptions, Undo names, side effects and `preconditions`, and examples
+   that validate; the query declares `response:` where its rows are bounded. `types.all` rows
+   carry `export_ready` and `export_blockers` (`thermal_bridge.psi_missing`). Bump `API::MINOR`
+   once with one `API::CHANGES` row naming the kind and its operations (CONTRACTS section 3).
 5. **Layer test.** A test that nothing under `features/thermal_bridges/type/` references Zones,
    Windows, `Sketchup::Edge` or `runs/`, and that no other feature folder names thermal bridges.
 6. **Generated artifacts.** Regenerate `docs/API_REFERENCE.md` and its fixture through
    `make fixtures`. Add the panel-closed walkthrough
-   `tools/examples/authoring/thermal_bridge_types_walkthrough.rb`.
+   `tools/examples/authoring/thermal_bridge_types_walkthrough.rb`, and a "Thermal Bridge Types"
+   recipe to `docs/AGENT_GUIDE.md`, which `tests/agent_guide_test.rb` checks against the registry.
 
 ## Source
 
 | PH-Composer file | Disposition |
 | --- | --- |
 | `features/windows/products/schema.rb`, `products/operations.rb`, `declarations/records.rb` | Pattern for kind, operations and declarations |
+| `features/spaces/declarations/operations.rb` | The newest declarations: `preconditions`, `side_effects` and bounded `response:` as the agent-access phase left them |
 | `features/assemblies/assembly/schema.rb` | Pattern for the colour ramp |
 | `core/records/authoring_fields.rb` | Reuse `Fields.common` unchanged |
 
@@ -60,13 +64,14 @@ Paths are relative to `src/ph_composer/`.
 5. Delete of an unused type succeeds and Undo restores it with its `user_data` and extension data.
 6. `types.all` reports `export_ready: false` with `thermal_bridge.psi_missing` for a null psi.
 7. The layer test in step 5.
-8. The API reference golden includes every new declaration and the reference test passes.
+8. The API reference golden includes every new declaration and the change row; the reference test
+   and the agent-guide test pass.
 
 ## Host gate
 
 Fresh process: the walkthrough creates three types, edits one, duplicates one and deletes one
 through `API.invoke` with the panel closed; Undo and Redo each step natively; save, reopen and read
-back the same values through `types.all`.
+back the same values through `types.all`. Observe the host with the development tooling: `host_bridge.py wait-for` for deferred work, `host_bridge.py diagnostics` for what happened, `acceptance_case.py begin` and `finish` for the ledger row (`tools/hostkit/.index.md`).
 
 ## Out of scope
 

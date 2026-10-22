@@ -1,7 +1,7 @@
 # Phase 3 contract bindings: thermal bridges
 
 DATE: 2026-10-03
-STATUS: Scoped. Proposed bindings, drafted from source at `08c4807` and updated to Ed's answers of 2026-10-03. P3b-01 confirms or corrects every table against the code with the architecture review before any feature stage starts.
+STATUS: Scoped. Proposed bindings, drafted from source at `08c4807`, updated to Ed's answers of 2026-10-03 and re-read against `main` at `420c783a` on 2026-10-21 (DECISIONS Part 1b; section 8 below). P3b-01 confirms the two questions still open in section 7 and runs the architecture review before any feature stage starts.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -16,8 +16,10 @@ answered on 2026-10-03.
 public interface, outcomes, revisions, retries, records and translation sections. Read it first.
 Paths below are relative to `src/ph_composer/`.
 
-Rows marked **new** do not exist yet. Rows marked **exists** were read in source. Names are
-proposals until P3b-01 closes; a stage may rename one only by editing this file in the same change.
+Rows marked **new** do not exist yet. Rows marked **exists** were read in source at `420c783a`.
+Names are proposals until P3b-01 closes; a stage may rename one only by editing this file in the
+same change. Two rows wait on open decisions: the assignment's copy rule (D3b-22) and the run
+builder's join rule (D3b-23).
 
 ## 1. Feature and composition
 
@@ -48,10 +50,11 @@ python/ph_composer_translation/
   thermal_bridge_sections.py
 ```
 
-`runs/` is pure: it takes detached edge facts (Zone id, type id, quantity, world endpoints in
-metres, occurrence path) and returns runs, lengths and findings, so the schedule and the export
-contributor compute runs with one function and offline tests need no stub. It moves to `core/`
-only when piping or ducting arrives as its second user and needs the same chain rule.
+`runs/` is pure: it takes detached edge facts (Zone id, type id, quantity, occurrence path, world
+endpoints in metres and the snapshot's `vertex_ids`, keyed with the container path, D3b-23) and returns runs, lengths and
+findings, so the schedule and the export contributor compute runs with one function and offline
+tests need no stub. It moves to `core/` only when piping or ducting arrives as its second user and
+needs the same chain rule.
 
 ## 2. Records
 
@@ -76,11 +79,12 @@ fields.
 
 | Dictionary | Entity | Key | Identity |
 | --- | --- | --- | --- |
-| `ph_composer.thermal_bridge` (new) | The `Sketchup::Edge` | `record`, through `Records::EntityStore` (exists) | None under D3b-02; `tbe_` with copy re-issue if P3b-01 finds the descriptor contract needs one |
+| `ph_composer.thermal_bridge` (new) | The `Sketchup::Edge` | `record`, through `Records::EntityStore` (exists) | `tbe_` id. The engine requires one on every reference-target record (section 8, question 1), which settles D3b-02's fallback. A split or a native copy duplicates it (B4); what a duplicate means is D3b-22, recommended: reads mark it `copied`, nothing re-issues it |
 
 | Field | Shape | Required | Note |
 | --- | --- | --- | --- |
-| `thermal_bridge_type_id` | core `Records::Reference` to `ph_composer.thermal_bridges.type`, cardinality one | yes | A dangling id is a read state, not a repair |
+| `id` | `tbe_` plus twelve characters, `Identity.fresh` | yes | Proves identity in a reference, as `fac_` does; it is not a run's identity (D3b-07) |
+| `thermal_bridge_type_id` | core `Records::Reference` to `ph_composer.thermal_bridges.type`, cardinality one | yes | A dangling id is a read state, not a repair. Because it is required, "clear" means removing the dictionary: `edges.clear`, and `types.delete` with an explicit null replacement, both remove the record rather than null the field |
 | `quantity` | number, exclusive minimum 0 | yes, default 1 | D3b-08 |
 | `schema_version`, `user_data`, `extension_data` | engine reserved | | `user_data` follows the EXTENSIBILITY copy policy; a native copy carries it verbatim |
 
@@ -88,13 +92,18 @@ fields.
 
 | Target id | Occurrence reference | Records provider | `locate:` |
 | --- | --- | --- | --- |
-| `ph_composer.thermal_bridges.edge` (new) | `{ "entity_path": [pid, ...] }`, root to Edge, as a Window unit's | A whole-Model walk for tagged Edges, every Group and ComponentInstance including shared definitions and cutting instances, so an orphaned or shared tag still blocks deleting its type | The owner's resolver; refuses a stale or ambiguous path with `target.*` codes and never searches by geometry |
+| `ph_composer.thermal_bridges.edge` (new) | `{ "zone_id", "zone_path", "entity_path", "entity_id" }`, the Face reference shape (`context/CONTRACTS.md`, "Geometry records and occurrence references"): `zone_path` root to the holding Zone, `entity_path` from inside the Zone to the Edge, `entity_id` the `tbe_` id or null for an unassigned Edge | A whole-Model walk for tagged Edges, every Group and ComponentInstance including shared definitions and cutting instances, so an orphaned or shared tag still blocks deleting its type; entries are `Records::ReferenceEntry(kind, key: path, record)` as `Zones::Faces::ReferenceTargets.entries` builds them | The owner's resolver over Zones' path resolution (H11): refuses a stale or ambiguous path with `target.*` codes, a path whose Edge gained or changed its record as `target.changed`, and never searches by geometry. `locate_index:` builds the read-phase index |
 
 The target declares `references: [thermal_bridge_type_id]` so the engine's incoming-reference
 scan refuses deleting a Thermal Bridge Type while an Edge names it, exactly as a Face naming an
 Assembly does. Delete with replacement passes the rewritten occurrences to `propose_delete` as a
 `reference_plan`. Because the type and its referrer are one feature, the delete calls its own
 rewrite step directly; it registers no retargeter.
+
+The Face shape is chosen over the Window unit's root-only `entity_path` because an Edge is
+assignable only inside a Zone (PRD, "Assign") and the Zone's path is what `zones.containment`
+answers; an orphaned tag outside every Zone is still found by the records provider, with an empty
+`zone_path`, so it blocks the type's deletion and reads as `thermal_bridge.outside_zone`.
 
 ## 3. Operations
 
@@ -107,13 +116,13 @@ test covers it. Id params carry the prefix pattern, for example `^tbt_[A-Za-z0-9
 | `types.all` | query | P3b-02 | Every type with its values, `export_ready` and `export_blockers`, and used length once P3b-04 lands |
 | `types` | snapshot section | P3b-02 | The same projection for the panel |
 | `types.create`, `types.update`, `types.duplicate` | action | P3b-02 | Values with `expected_values`; `user_data` |
-| `types.delete` | action | P3b-02; replacement from P3b-03 | Guarded delete; with `replacement_id`, or explicit null to clear, every assigned Edge is rewritten in the same proposal and Undo step |
+| `types.delete` | action | P3b-02; replacement from P3b-03 | Guarded delete; with `replacement_id` every assigned Edge is rewritten to it, and with an explicit null every assigned Edge's dictionary is removed, in the same proposal and Undo step |
 | `edges.assign` | action | P3b-03 | Explicit Edge references, a type id, a quantity, and each target's `expected_values`. Assign and reassign. One Undo step |
 | `edges.clear` | action | P3b-03 | Explicit Edge references. Removes the assignment dictionary |
 | `edges.selection` | query | P3b-03 | The current native selection as Edge references, each with its Zone containment, current assignment and write refusal |
 | `edges.selected` | snapshot section | P3b-03 | The same for the panel's assign bar |
 | `schedule` | query, snapshot section | P3b-04 | Runs with Zone, Building-Segment, type, length in metres, psi, quantity and psi times length times quantity in W/K; totals by type and by group; findings per run. Bounded |
-| `runs.locate` | view command | P3b-04 | Select a run's Edges and zoom to them. Refuses hidden targets |
+| `runs.locate` | view command | P3b-04 | Select a run's Edges and zoom to them. Refuses hidden targets. A run inside a nested Zone opens its context through the foundation's `ph_composer.context.open` (D3a1-04), never a Zones or thermal-bridge navigation of its own |
 | `assign_menu` | `menu_entries` | P3b-05 | "Thermal bridge" submenu on a selection of Edges: one item per type, then Clear |
 | `by_type` | colour mode | P3b-06 | Assigned Edges in their type's colour at the mode's stroke weight; label carries total length (D3b-12) |
 | `edge_tool.choose`, `edge_tool.stop` | view command | P3b-07 | Start the tool armed with a type, or stop it |
@@ -123,6 +132,20 @@ test covers it. Id params carry the prefix pattern, for example `^tbt_[A-Za-z0-9
 Codes are declared once with `feature.code` in `features/thermal_bridges/codes.rb` under the noun
 `thermal_bridge`. Refusals that Zones owns keep Zones' `target.*` codes.
 
+Every registration is an agent-facing surface (DECISIONS F27). A stage that adds a name:
+
+- declares the keywords the registry now takes: `response:` and `while_busy:` on a query,
+  `preconditions:` and `transitions:` on an action, `side_effects:`, `preconditions:` and
+  `capability:` on a view command (`view` for `runs.locate` and the edge tool's commands);
+- bumps `API::MINOR` once and adds one `API::CHANGES` row naming the new or changed shapes
+  (`context/CONTRACTS.md`, "API changes"), which the generated reference lists;
+- adds or extends the thermal-bridge recipe in `docs/AGENT_GUIDE.md`, which
+  `tests/agent_guide_test.rb` checks against the registry;
+- states, for any pointer route, its explicit-reference equivalent (`context/AGENT_INTERFACE.md`,
+  "Documentation and contributor obligations"): the edge tool's is `edges.assign`.
+
+The MCP connection serves a fixed verb table over these registrations; no feature adds a tool.
+
 ## 4. Cross-feature seams
 
 | From | To | Mechanism | Used for |
@@ -131,6 +154,7 @@ Codes are declared once with `feature.code` in `features/thermal_bridges/codes.r
 | Thermal bridges | Zones | `request.query("ph_composer.zones.faces.host_context", ...)` (exists) on each assigned Edge's Faces | Whether the Edge bounds a classified envelope Face, and their boundary conditions, for the stray-line and interior-junction findings |
 | Thermal bridges | Windows | `request.query("ph_composer.windows.units.outlines", ...)` (new, H16) (D3b-15) | World outline of each placed Unit, for the window-perimeter warning |
 | Edge tool | Thermal bridges actions | `API.invoke` with its own caller handle | One gesture, one `edges.assign`, one Undo step |
+| `runs.locate` | Foundation `ContextCommands` | `ph_composer.context.open(path)` (exists, D3a1-04) through `EditContext.enter` | Opening a nested Zone's context before selecting a run's Edges |
 | `by_type` mode | `colour_by/` | `colour_mode` entries carrying the Edge as `entity` and its world segment as `derived` (P3a-05), with the stroke weight from H14 | The viewport colouring |
 | Thermal-bridge contributor | Zones contributor | `requires: ["ph_composer.zones.export.zones"]`, read with `reader.section` | Zone id, Building-Segment and omission state per Zone occurrence path |
 | Thermal-bridge section (Python) | Zone section | `Requirement` on `ph_composer.zones.export.zones` and `Attachment(ROOM)` keyed by the Zone's Room identifier | Adds each run to the Room's shared `BldgSegment` |
@@ -145,17 +169,19 @@ the stage listed with its own tests.
 
 | # | Addition | Where | Stage |
 | --- | --- | --- | --- |
-| H11 | `ph_composer.zones.containment`: for native root-to-entity paths, the Zone occurrence that holds each (`zone_id`, `zone_path`, `building_segment`, `level`), or none with a reason (outside every Zone, inside a cutting instance, inside a nested authoring container under D3a-1), and the `write_refusal` a write through that path meets. Walks only along each path, like `faces.host_context` | `features/zones/declarations/`, `features/zones/zone/` | P3b-03 |
-| H12 | `Pick.edge_path(view, x, y)`: the first pick path ending in a `Sketchup::Edge`, with the same rules as `face_path` | `core/pick.rb` | P3b-03 |
+| H11 | `ph_composer.zones.containment` (new): for native root-to-entity paths, the Zone occurrence that holds each (`zone_id`, `zone_path`, `building_segment`, `level`), or none with a reason (`outside_zone`, `cutting_instance`, `nested_container` under D3a-1, `not_a_drawing_element`), and the `write_refusal` a write through that path meets. Built on what exists: `Zones::Occurrences.occurrence_at` and `occurrence_for_path` already resolve a path along its own collections to the innermost Zone and answer nil for those reasons without naming them, and accept a Face leaf only (DECISIONS F7). H11 generalises the leaf to any drawing element, returns the reason, and `host_context` keeps its Face-only shape over the same code | `features/zones/zone/occurrences.rb`, `features/zones/declarations/` | P3b-03 |
+| H12 | `Pick.edge_path(view, x, y)` (new): the first pick path ending in a `Sketchup::Edge`, with the same rules as `face_path` | `core/pick.rb` | P3b-03 |
 | H13 | Not needed. An Edge is drawn through P3a-05's `derived` segments (D3b-11); `colour_by/tessellation.rb` is unchanged. The number is kept so later references stay stable | none | none |
-| H14 | A stroke weight for `derived` segments, declared per mode (`colour_mode(..., stroke:)`), on P3a-05's draw path | `shell/registry.rb`, `shell/declarations.rb`, `colour_by/overlay.rb` | P3b-06 |
-| H15 | `GeometrySnapshot` records an `edge` entry, with world endpoints in metres and its dictionaries, for an Edge that carries a registered dictionary, under the same cutting-instance rule as Faces | `export/geometry_snapshot.rb` | P3b-08 |
-| H16 | `ph_composer.windows.units.outlines`: for each placed Unit, its reference, host Face reference and world outline polygon in metres (D3b-15) | `features/windows/declarations/`, `features/windows/units/` | P3b-08 |
-| H17 | `PLANNING_IDS` covers the Phase 3 stage, acceptance and finding ids | `Makefile` | P3b-01 |
-| H18 | Optional attaching sections (R05 item 4, D3b-20). `Section.required_for_export` exists (`sections.py:125`) and already makes a translate failure non-blocking, but `assembly.py`'s `_attach` marks the model incomplete on any refusal, so an optional section's refusal still withholds the canonical model. Change: a refusal from a section with `required_for_export = False` emits its non-blocking `object.unavailable` findings and does not withhold the model; a required section keeps today's rule | `python/ph_composer_translation/assembly.py`; `context/CONTRACTS.md`, "Translation sections and artifacts" | P3b-08 |
+| H14 | A stroke weight for `derived` segments, declared per mode (`colour_mode(..., stroke:)`) (new), drawn on the per-colour line batch P3a-05 built (`colour_by/drawing.rb`, `@lines`; `overlay.rb`, `LINE_WIDTH`). One mode is active at a time, so one width per mode costs no extra pass (section 8, question 7) | `shell/registry.rb`, `shell/declarations.rb`, `colour_by/overlay.rb` | P3b-06 |
+| H15 | Exists (G-02, PR #119). `GeometrySnapshot` records an `edge` entry for every Edge occurrence outside a cutting component: `path`, `transform`, `dictionaries`, `points_m` in world metres, `vertex_ids` and `face_ids` within its container. The contributor filters on its own dictionary. P3b-08 only measures the snapshot on the 50,000 Edge Model | `export/geometry_snapshot.rb` | done |
+| H16 | `ph_composer.windows.units.outlines` (new): for each placed Unit, its reference, host Face reference and world outline polygon in metres (D3b-15). The nearest existing read, `units.host_extent`, gives the same outlines as bounding rectangles in a Face's own offsets for one host Face; H16 projects the same geometry Model-wide in world coordinates | `features/windows/declarations/`, `features/windows/units/` | P3b-08 |
+| H17 | `PLANNING_IDS` already matches `P3b-01` and `D3b-02` (DECISIONS F15). Remaining: the acceptance ids (`T01`; `S01` for the archived Spaces register) and two-digit finding ids (`F26`) | `Makefile` | P3b-01 |
+| H18 | Optional attaching sections (R05 item 4, D3b-20). `Section.required_for_export` exists (`sections.py:125`), and `_attach` already writes each refused object's `object.unavailable` finding with `blocks_export = required_for_export` (`assembly.py:77`). The one remaining gate: `assemble` sets `translation.canonical` only when every `_attach` returned complete (`assembly.py:40-47`), so an optional section's refusal still withholds the canonical model. Change: a refusal from a section with `required_for_export = False` does not withhold the model; a required section keeps today's rule | `python/ph_composer_translation/assembly.py`; `context/CONTRACTS.md`, "Translation sections and artifacts" | P3b-08 |
 
-`tools/ui-preview/host.js` knows a fixed list of section names. Every stage that adds a panel
-section adds its preview fixture there and a check in `tools/ui-preview/`.
+`tools/ui-preview/host.js` publishes a fixed map of section names in its synthetic snapshot. Every
+stage that adds a panel section adds its preview fixture there and a `*_checks.cjs` under
+`tools/ui-preview/` through the shared browser-evidence collector, and regenerates the panel script
+list with `make panel-manifest`.
 
 ## 6. Findings and export
 
@@ -185,20 +211,25 @@ an Edge holds one assignment dictionary.
 The extraction contract is pinned by a fixture both Ruby and Python read
 (`tests/fixtures/thermal_bridges/`), as the other sections are.
 
-## 7. Questions P3b-01 answers from code
+## 7. Questions P3b-01 still answers from code
 
-1. Does a `Records::ReferenceTarget`'s records provider or `Records::Descriptor` require an `id`
-   on each record? Read `core/records/` and the Face and Window unit targets. The answer settles
-   D3b-02.
+Five of the seven questions drafted on 2026-10-03 were answered by reading `420c783a` on
+2026-10-21 (section 8). These two need a focused test rather than a read:
+
 2. Does `Records::EntityStore` accept a `Sketchup::Edge` in the stub and on the host with no
-   change, and does `Dictionaries.register` add `ph_composer.thermal_bridge` to the export
-   attribute guard?
-3. Can `faces.host_context` take the Faces of an Edge reached by a path, or does H11 need to
-   answer the Edge's Faces itself?
-4. Does `request.query` from a thermal-bridge handler reach a Zones read with the occurrence path
-   intact, and a Windows read when the feature requires Windows?
-5. Does `Attachment(ROOM)` hand `attach` the Room the Zone section built, after the `MODEL` attach
-   that shares the segment? Confirm with a focused Python test that two Rooms of one
-   Building-Segment and one run each produce one segment carrying both runs after reload.
-6. Can Ruby read the display-unit preference for the HUD label (D3b-12)?
-7. Does the overlay batch segments by colour so a stroke weight per mode costs no extra pass?
+   change (the stub's `Edge` answers `faces`, `start`, `end` and `persistent_id` since G-02; its
+   attribute dictionaries are the open part), and does `Dictionaries.register` add
+   `ph_composer.thermal_bridge` to the export attribute guard?
+3. Can `faces.host_context` take the Faces of an Edge reached by a path (the Edge's path with each
+   `face_ids` entry appended, as the snapshot's comment describes), or does H11 need to answer the
+   Edge's Faces itself?
+
+## 8. Contract answers read from `420c783a`, 2026-10-21
+
+| Q | Answer | Evidence |
+| --- | --- | --- |
+| 1 | Yes. `reference_identity` refuses an entry whose `record["id"]` is not a non-empty String as `record.unreadable`, and `check_identity_removal!` names the referrer by `record.fetch("id")`. D3b-02's fallback applies: the assignment carries a `tbe_` id (section 2); the copy rule is D3b-22 | `core/records/reference_resolution.rb:70-72`, `:77-83` |
+| 4 | Yes, by precedent. Spaces requires Zones and reads `ph_composer.zones.faces.host_context` with native paths through `request.query` (`features/spaces/create_route.rb:13`, `mark_placement.rb:12`); the handler-side read validates params and result and detaches the result (`tests/feature_composition_test.rb`, `test_handler_read_uses_declared_dependency_and_validates_nested_params`). A Windows read behaves the same once `ph_composer.windows` is in `requires:` | `features/spaces/create_route.rb`; `shell/handler_request.rb` |
+| 5 | Yes. Spaces attaches at `ROOM` keyed by the Zone id, which is the Room's identifier, after the Zone section's `MODEL` attach shares the segment; `test_room_attachment.py` reloads the result. The two-Rooms-one-segment test for runs is still P3b-08's | `python/ph_composer_translation/space_sections.py:50-55`; `assembly.py:40-47`; `tests/python/test_room_attachment.py:95` |
+| 6 | Yes. `Preferences.unit_system` is read in Ruby, and the Colour-by service formats an entry's `figure` in the display units when it sums legend rows and draws the HUD. D3b-12 is met by giving each entry `figure: ["length", metres]`; the row reads "Parapet (12) 26.0 m" | `shell/preferences.rb`; `colour_by/legend.rb:19-41`; `colour_by/overlay.rb:142-146` |
+| 7 | Yes. `Drawing` keeps one line batch per colour for derived outlines and segments, and the overlay sets `line_width` once before drawing them. A stroke per mode is one `line_width` value | `colour_by/drawing.rb:117-120`; `colour_by/overlay.rb:51-60` |

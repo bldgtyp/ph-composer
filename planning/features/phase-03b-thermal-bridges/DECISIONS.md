@@ -1,8 +1,8 @@
 # Phase 3, thermal bridges: findings from source, and the decisions that follow
 
 DATE: 2026-10-03
-STATUS: Scoped. Part 1 is findings read from source on `main` at `08c4807`. Part 2 was answered by Ed
-on 2026-10-03, every row as recommended except D3b-20; see "Ed's answers". The interview is complete.
+STATUS: Scoped. Part 1 is findings read from source on `main` at `08c4807`, re-verified against `420c783a` in Part 1b on 2026-10-21. Part 2 was answered by Ed
+on 2026-10-03, every row as recommended except D3b-20; see "Ed's answers". D3b-22 and D3b-23, added by the re-baseline, are open.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -13,7 +13,7 @@ honeybee stack actually say. Part 2 lists the choices those facts force, each wi
 recommendation. The bindings that follow from the recommendations are in
 [CONTRACTS.md](CONTRACTS.md); they change when an answer differs.
 
-These are Phase 3b's decisions, D3b-01 to D3b-21, with findings F1 to F26. Phase 3a (Spaces) has
+These are Phase 3b's decisions, D3b-01 to D3b-23, with findings F1 to F36. Phase 3a (Spaces) has
 its own [DECISIONS.md](../../archive/phase-03a-spaces/DECISIONS.md), D3a-1 to D3a-12 with its own F1 to F22;
 a reference to one of those always says Phase 3a. Stages are P3b-01 to P3b-09, tracked in
 [STATUS.md](STATUS.md). The ids were renumbered on 2026-10-03 when Phase 3 split into 3a and 3b
@@ -77,6 +77,54 @@ honeybee-ph files cited are byte-identical between the wheel and the repository.
 | F25 | The Spaces plan builds the Colour-by extension in P3a-05: an `Entry` may carry `derived` world-space polygons and segments that the service fills and outlines in the entry's colour (D3a-5). That is the first draw path for coloured segments | Thermal bridges need coloured, heavy segments over live Edges. They are a third user of P3a-05's `derived` segments, not a reason for a second draw path. See D3b-11 |
 | F26 | Assemblies' preflight reports an incomplete Assembly as a non-blocking row (`features/assemblies/export.rb:53-58`, `blocks_export` false); the blocking row comes from the Face that uses it. The PRD's "type has no psi-value" row says only "blocks export" | An unused incomplete Thermal Bridge Type would block export under a literal reading. See D3b-21 |
 
+## Part 1b: re-verification against `main` at `420c783a`, 2026-10-21
+
+385 commits landed between `08c4807` and `420c783a`: Phase 3a Spaces (PRs #135 to #190), the
+agent-access phase 3a1 (PRs #222 to #243), G-02 of the geometry contribution contracts (PR #119),
+the Ruby readability program (PR #208 among others), security hardening, production support
+(PRs #246 to #253) and developer observability. Every finding was read again from source; nothing
+was reproduced. Part 1 above is kept as written at `08c4807`; this table is the current reading.
+Line numbers are those of `420c783a`.
+
+| # | Now | Current state and consequence | Evidence on `420c783a` |
+| --- | --- | --- | --- |
+| F1 | Holds | B4's facts are in `context/SKETCHUP_HOST_BEHAVIOR.md`, "Components, glue and edge attributes"; the registry question was answered by D3b-01 | `context/SKETCHUP_HOST_BEHAVIOR.md:137-147` |
+| F2 | Holds | The spike still runs split, API weld, move, a face push-pull, window cut and window explode; native Divide, the Weld menu command, `intersect_with`, a push-pull that deletes the tagged edge and the heal are unrun | `tools/spikes/edge/edge_spike.rb:41-49` |
+| F3 | Holds | No Model edge is a window edge; see F13 and F34 | |
+| F4 | Holds | `Pick` answers `face_path` and `face_point` only, and its comment still says an Edge pick is skipped; Mark floor is its second user. H12 stands | `core/pick.rb:19`, `:31-42`, `:47` |
+| F5 | Holds | `EntityStore.new` registers its dictionary; the registry registers every prepared dictionary. The export attribute guard reads `Dictionaries.names` | `core/records/entity_store.rb:13`; `shell/registry.rb:157`; `core/dictionaries.rb` |
+| F6 | Settled | A reference target's records must carry an id: `reference_identity` refuses an entry whose `record["id"]` is not a non-empty String as `record.unreadable`, and `check_identity_removal!` names the referrer by `record.fetch("id")`. D3b-02's fallback applies: the assignment carries a `tbe_` id. What follows for copies is D3b-22 | `core/records/reference_resolution.rb:70-72`, `:77-83` |
+| F7 | Changed | Still no published containment read. Zones now resolves an arbitrary native root-to-leaf path in one place: `Occurrences.occurrence_at(model, path)` walks only the collections along the path and `occurrence_for_path` answers the innermost Zone's `FaceOccurrence`, or nil for four reasons it does not distinguish (the leaf is not a Face, a cutting instance on the path, no Zone on the path, a container between the Zone and the leaf, which is the D3a-1 nested-container rule); `write_refusal(occurrence)` answers the `target.*` refusal; `host_context` is a thin read over the two. `occurrences.rb` was refactored by PR #208, so P3b-03 reads it afresh. H11 generalises `occurrence_for_path` to an Edge leaf and reports the reason instead of nil | `features/zones/zone/occurrences.rb:124`, `:184-243`; `features/zones/faces/operations.rb:87-99` |
+| F8 | Superseded | P3a-05 shipped `derived` geometry: segments are tessellated into one per-colour line batch and drawn at the overlay's `LINE_WIDTH`; the Window Type operation marks are the second user. `colour_mode` takes `label:`, `entity_kind:`, `colours:`, `sort:` and `group:` and no stroke, so H14 stands. New: an `Entry#figure` (`[quantity, si_value]` pairs) is summed per legend row and shown in the display units as "label (count) figure", which is what D3b-12 asked for, in the service's own format | `colour_by/drawing.rb:101-120`; `colour_by/overlay.rb:51-60`, `:142-146`; `colour_by/legend.rb:19-41`; `shell/registry.rb:444`; `features/windows/colour_modes.rb:32-42` |
+| F9 | Superseded | G-02 (PR #119) added `edge` entries to `GeometrySnapshot`: `points_m` in world metres, `vertex_ids` and `face_ids` within the Edge's container, dictionaries, under the Face rule for cutting components. H15 exists; P3b-08 adds a contributor only | `export/geometry_snapshot.rb:34-56`, `:111-116` |
+| F10 | Changed | Spaces is the first `ROOM` attaching section, keyed by the Zone id that is the Room identifier, and `test_room_attachment.py` proves the hand-off. `assemble` still sets the canonical model only when every `_attach` returned complete, whatever `required_for_export` says; the finding it writes already carries `blocks_export = required_for_export`. H18 is narrowed to that one gate | `python/ph_composer_translation/space_sections.py:50-55`; `assembly.py:40-47`, `:60-80`; `tests/python/test_room_attachment.py:95` |
+| F11 | Holds | `linear_psi` and `length` unchanged | `core/units.rb:49`; `html/fields.js:9`, `:19`; `html/unit_tables.js:56` |
+| F12 | Holds | | `core/records/authoring_fields.rb`; `features/assemblies/assembly/schema.rb` |
+| F13 | Holds | | `features/windows/products/schema.rb`; `features/windows/types/thermal.rb` |
+| F14 | Changed | P3a-06 landed: the tab row is Zones, Assemblies, Window Types, Library, Export, then Thermal Bridges and Systems disabled with `data-tooltip="Planned"` and an aria-label; panes `overview`, `windows`, `assemblies`, `library`, `export`. The panel script list between the `panel-modules` markers is generated by `tools/panel_manifest.js` (`make panel-manifest`, checked by `panel-manifest-check`) | `html/index.html:24-30`, `:39-43`, `:48` |
+| F15 | Changed | `PLANNING_IDS` now matches a lettered stage (`P3b-01`) and decision (`D3b-02`) through `P\d+[a-z]\d*-\d+` and `D\d+[a-z]\d*-\d+`; `F\d` matches one digit only. Planted `T01`, `S01` and `F26` pass the lint. H17 narrows to the T ids and two-digit F ids | `Makefile:81` |
+| F16 to F21 | Hold | honeybee-ph is still pinned at 1.33.65; no PHX wheel | `vendor/wheels/`; `vendor/manifest.json` |
+| F22 | Holds | | |
+| F23 | Holds | | `context/TECH_STACK.md:592-640` |
+| F24 | Changed | R05 items 1 (P3a-01), 2 (PR #122) and 3 (P3a-10 slice B) are delivered. Item 4 alone remains, with P3b-08 | [validation-and-export STATUS](../cross-phase/validation-and-export/STATUS.md), "Owed from the Phase 2 review" |
+| F25 | Settled | P3a-05 shipped `derived`, and D3a-5 settled one line primitive: an Edge entry carries the Edge as `entity` and its world segment in `derived`; a mode that needs a heavier stroke declares it on the mode (thermal bridges) | `context/EXTENSIBILITY.md`, "Colour-by derived geometry", "One line primitive" |
+| F26 | Holds | | `features/assemblies/export.rb` |
+
+### New since `08c4807`, not covered by F1 to F26
+
+| # | Finding | Consequence for thermal bridges |
+| --- | --- | --- |
+| F27 | The agent-access phase made every registration an agent-facing surface. `query` takes `response:` and `while_busy:`; `action` takes `preconditions:` and `transitions:`; `view_command` takes `side_effects:`, `preconditions:` and a `capability:` from `read`, `view`, `model_write`, `setup`, `export`, `capture`. Every shape change bumps `API::MINOR` once and adds one `API::CHANGES` row, listed in the generated reference under "API changes". `docs/AGENT_GUIDE.md` holds one recipe per feature and `tests/agent_guide_test.rb` checks every operation it names is registered. The MCP connection serves a fixed verb table, so a feature adds no tool of its own | Each stage that adds an operation declares those keywords, bumps the API minor with a change row, and extends the agent guide. Bound in CONTRACTS section 3 and the stage documents (`shell/registry.rb:364-400`; `context/CONTRACTS.md:87-88`; `agent_access/tools.rb:119`) |
+| F28 | D3a1-04 gave the foundation edit-context navigation: `ph_composer.context.open(path)` and `ph_composer.context.root`, view commands run through `EditContext.enter` so every registered boundary fires, refusing a locked entity as `target.locked`. The decision names P3b-03 as needing the same step and rejects Zones-owned navigation | `runs.locate` into a nested Zone opens the context through the foundation command; thermal bridges adds no navigation of its own (`planning/archive/phase-03a1/DECISIONS.md`, D3a1-04; `session/edit_context.rb`) |
+| F29 | Mark floor (`features/spaces/mark_tool.rb`) is the newest viewport tool and the Phase 3a handoff names it as the shape to reuse: no operation of its own, one `invoke` per gesture, `Pick.face_path`, `DragSet`, `ColourBy::Lease`, a move without `MK_LBUTTON` cancels. `context/EXTENSIBILITY.md`, "Viewport tools", already names the thermal-bridge edge tool as the next user | P3b-07 adapts Mark floor rather than Classify; the rules are unchanged |
+| F30 | The host kit grew bounded waits (`host_bridge.py wait-for`), a diagnostic reader (`diagnostics`), named fault controls (`fault arm|observe|restore` for `lost_reply`, `silent_runtime`, `failed_write` on a synthetic fixture) and `acceptance_case.py begin|finish`; browser checks run through `tools/ui-preview/support/browser_evidence.cjs`. AGENTS.md makes them the way a host is observed | Every host gate names them. T08's "force one run's attach to refuse" is not one of the three named faults: P3b-08 proves it offline through the Python section's test seam, or adds a named fault, and says which (`tools/hostkit/.index.md`) |
+| F31 | D3a-20 landed in `tools/runtime/vendor.py`: `installed_target_bytes` 24,000,000, `installed_ceiling_bytes` 26,000,000, `installed_baseline_bytes` 23,994,083 (the Phase 3a close), `installed_growth_bytes` 1,500,000; `vendor.py --check` enforces them | T09 reads the numbers from there and resets the baseline at the phase close by a recorded decision (`tools/runtime/vendor.py:147-160`) |
+| F32 | Native-acceptance case prefixes in use are `A`, `E`, `S`, `R`, `UXR`, `PS`, `DV`, `ZO`, `GH`, `SH`, `UXK`, `HGUI` and `PTAB`; a case row carries `authority`, `id`, `label`, `mode`, `native_control_required` and `paths` | `T` is free for T01 to T09 (`planning/native-acceptance/cases.json`) |
+| F33 | The Spaces export contributor is the closest precedent for P3b-08's: `export_contributor(SECTION, section_version: 1, preflight:, requires: [ZONES_SECTION])` with a registered `export_preflight` query, reading the Zones section with `reader.section`; its Python section attaches at `ROOM` with a `Requirement` on the Zones section | P3b-08's Source table points at `features/spaces/export.rb` and `space_sections.py` beside the Windows pair |
+| F34 | Windows publishes `units.host_extent`: a Zone Face's outline and the Window outlines on its plane, as bounding rectangles in the Face's own offsets, for `units.place` | The nearest existing read to H16, but in Face-plane offsets. H16 (world outlines per placed Unit, in metres) is still new and projects the same geometry (`features/windows/declarations/units.rb:224-245`) |
+| F35 | `Preferences.unit_system` is readable in Ruby and the overlay already formats HUD readouts and legend figures with it | CONTRACTS section 7 question 6 is answered; D3b-12 needs no fallback (`shell/preferences.rb`; `colour_by/overlay.rb:68`, `:144`) |
+| F36 | The units packet measured the Zones repaint at 161 ms with every row open against a 200 ms target (PR #289, 2026-10-21). The UI baseline has no Thermal Bridges screen, only the tab row; `docs/PRODUCT.md` already describes thermal bridges as proposed | D3b-13's refresh budget is that 200 ms target. P3b-05 reads the Assemblies and Window Types rows of the baseline, not a Thermal Bridges row |
+
 ## Part 2: decisions for Ed
 
 The PRD's eleven questions are listed first with their state. The plan decisions follow. Each row
@@ -123,6 +171,8 @@ names the stages it blocks. A stage does not start until every row it names has 
 | D3b-19 | Where does this plan live? | Stage documents with the Spaces stages in one phase folder, one phase tracker, feature records in the packet. Superseded the same day: Ed split Phase 3 into two flat packets, `phase-03a-spaces/` and `phase-03b-thermal-bridges/`, each with its own stages, tracker and records | none |
 | D3b-20 | Is the thermal-bridge export section required for export? (F24) | Yes, as D3a-9 rules for Spaces. A run that fails to translate or to attach blocks the canonical pair. Ruby filters what is not exportable before translation, with its own findings (an edge outside every Zone, an edge of an omitted Zone), so a translation failure is a real fault. R05 item 4 therefore stays owed with validation-and-export | P3b-08 |
 | D3b-21 | Does a type with no psi-value block export when nothing uses it? (F26) | No. It blocks only when an Edge is assigned to it, following the Assemblies precedent: a definition reports its own incompleteness without blocking, and the use blocks. `types.all` still shows it as not export-ready | P3b-04, P3b-08 |
+| D3b-22 | Added 2026-10-21. The engine requires an id on every reference-target record (F6), so the assignment carries a `tbe_` id. Does a copied or split Edge's duplicated id need the Window-unit re-issue, which D3b-02's fallback named? | No re-issue. B4 says every split and copy carries the dictionary, id included, so duplicates are routine, not a fault. Nothing points at an assignment: runs are derived (D3b-07) and the type is the only reference, so a duplicated `tbe_` breaks no lookup. The id proves identity in a reference (`entity_id`, as `fac_` does for a Face: a path that gained or changed its record refuses `target.changed`), reads mark an id held by more than one Edge as `copied`, and no action re-issues ids and no repair operation exists. The alternative, Windows' rule (every action re-issues copies first, a `copy_id_pending` finding and a repair action), buys nothing here and adds a write to every gesture after a split | P3b-03 |
+| D3b-23 | Added 2026-10-21, G-01's question. How does the run builder decide two Edges connect, now that the snapshot carries `vertex_ids` (F9)? | By a shared vertex keyed on the Edge's container path plus the vertex id, within one Zone occurrence. SketchUp merges endpoints within 0.0254 mm inside one Entities collection, so inside one container the vertex-id rule and D3b-06's tolerance rule agree, and the id is exact where a float comparison is not. The container path is part of the key because vertex ids belong to a definition: two placements of one component carry identical `vertex_ids` and must not join (the `shared_definition` case in ACCEPTANCE). World points within the tolerance are used only where no vertex can be shared: the `counted_twice` finding across Zones (D3b-16) and the window-perimeter check (D3b-15). D3b-06's semantics are unchanged; this fixes the mechanism | P3b-04 |
 
 ## Ed's answers
 
@@ -154,6 +204,8 @@ Part 2. The PRD and `context/UBIQUITOUS_LANGUAGE.md` were amended the same day.
 | D3b-18 | As recommended: the edge tool stays as P3b-07, the last authoring stage | 2026-10-03 |
 | Q8 | As recommended: not a library kind now; first candidate for roadmap 5.4 | 2026-10-03 |
 | D3b-19 | As recommended, then superseded the same day by the split into two flat packets with ids restarted per sub-phase | 2026-10-03 |
+| D3b-22 | Open. Added by the re-baseline of 2026-10-21 | |
+| D3b-23 | Open. Added by the re-baseline of 2026-10-21 | |
 
 ## PRD amendments that follow
 
@@ -174,6 +226,8 @@ Applied to [PRD.md](PRD.md) only after Ed answers, one change per decision. The 
 | D3b-21 | Validation rows: "type has no psi-value" blocks only when assigned |
 | D3b-17 | Types tab: two subtabs |
 | F22 | Export mapping and Acceptance shape: METr rows point at metr-export |
+| F6, D3b-22 (2026-10-21) | Records and edge tagging rule 1: the assignment carries a `tbe_` id; what a duplicate means waits on D3b-22 |
+| F8 (2026-10-21) | Colour-by mode: the HUD row reads "Parapet (12) 26.0 m", the service's own "label (count) figure" shape, not "Parapet, 26.0 m (12)" |
 
 ## Ledger
 
@@ -182,3 +236,4 @@ Applied to [PRD.md](PRD.md) only after Ed answers, one change per decision. The 
 | 2026-10-03 | Drafted from source at `08c4807`, the B4 and B3 spikes, the vendored honeybee-ph 1.33.65 wheel and PHX. No answer recorded yet. |
 | 2026-10-03 | Ed answered every row, one at a time. All as recommended except D3b-20: the thermal-bridge section is optional, and only failed runs are omitted and disclosed, which settles R05 item 4 in P3b-08. PRD and glossary amended. |
 | 2026-10-03 | Phase 3 split into `phase-03a-spaces/` and `phase-03b-thermal-bridges/`; this file moved here and its ids were renumbered (see the introduction). D3b-19 superseded. |
+| 2026-10-21 | Re-verified F1 to F26 against `main` at `420c783a` (Part 1b): F6 and F25 settled; F7, F10, F14, F15 and F24 changed; F8 and F9 superseded by P3a-05 and G-02; the rest hold. Added F27 to F36. Added D3b-22 (no re-issue of duplicated `tbe_` ids) and D3b-23 (runs join by vertex id), both open. CONTRACTS section 7 questions 1, 4, 5, 6 and 7 answered from code in section 8. The D3b-12 label shape corrected to the service's. No decision answered, no stage authorized. |

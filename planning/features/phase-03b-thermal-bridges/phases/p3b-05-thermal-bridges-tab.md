@@ -1,7 +1,7 @@
 # P3b-05: the Thermal Bridges tab
 
 DATE: 2026-10-03
-STATUS: Scoped
+STATUS: Scoped. Corrected to `main` at `420c783a` on 2026-10-21 (DECISIONS Part 1b)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -14,24 +14,27 @@ stage authoring is complete on screen: milestone T-M2, the first point worth a h
 Ed.
 
 Behavior owner: the [thermal-bridges PRD](../PRD.md), "Types tab", "Assign" and
-"Schedule". Load `.agents/skills/ph-composer-ui-polish/SKILL.md` first and read the Thermal
-Bridges row of the [UI baseline](../../../ui-baseline/README.md).
+"Schedule". Load `.agents/skills/ph-composer-ui-polish/SKILL.md` first. The
+[UI baseline](../../../ui-baseline/README.md) has no Thermal Bridges screen, only the tab row;
+read its Assemblies and Window Types rows, whose inventory and subtab patterns this tab follows.
 
 Paths are relative to `src/ph_composer/`.
 
 ## Steps
 
-1. **The pane.** Enable the reserved tab in `html/index.html`: a `data-tab` and a
-   `data-pane="thermal_bridges"`. This is the composition-root edit the rules permit. Coordinate
-   with P3a-06, which edits the same file to rename Zones / Faces to Zones and remove the reserved
-   Spaces tab (Spaces became a view of the Zones tab on 2026-10-15); whichever lands second
-   rebases.
+1. **The pane.** Enable the reserved tab in `html/index.html`: the disabled "Thermal Bridges"
+   button (`data-tooltip="Planned"`, an aria-label) becomes `data-tab="thermal_bridges"` beside
+   Zones, Assemblies, Window Types, Library and Export, with a `data-pane="thermal_bridges"`
+   among the panes. This is the composition-root edit the rules permit. The panel script list
+   between the `panel-modules` markers is generated: add the new modules and run
+   `make panel-manifest` (`panel-manifest-check` is in the gate).
 2. **Types subtab.** `html/features/thermal_bridges/types.js` on `html/inventory.js`: name,
    psi-value (`LINEAR_PSI` field, signed), group (a chip showing METr's word, storing honeybee-ph's
    string), colour swatch through `inventory_forms.js`, used length (`LENGTH_M`), notes and a
    datasheet link. Add, duplicate, delete with the `ReplacementForm`, in-place and range edits
-   through `record_edits` and `inventory_grid`. Group words: confirm METr's third word on its
-   screen and record it (D3b-03).
+   through `record_edits` and `inventory_grid`, column sort and value filters through
+   `column_menu.js`, and a `tableId` so `table_contributions.js` can add columns later. Group
+   words: confirm METr's third word on its screen and record it (D3b-03).
 3. **Assign bar.** In the Types subtab: the current selection's count from `edges.selected`, how
    many are assignable and why the rest are not, a type picker, a quantity field, Assign and Clear.
    Assign with nothing assignable is disabled with its reason.
@@ -42,14 +45,16 @@ Paths are relative to `src/ph_composer/`.
 5. **Right-click menu.** `assign_menu` through `feature.menu_entries`: "Thermal bridge" with one
    item per type and Clear, available only when the selection holds an assignable Edge. Each item
    invokes `edges.assign` through the selection client with the read revision.
-6. **Preview and manifests.** A preview fixture in `tools/ui-preview/host.js` and a check under
-   `tools/ui-preview/`; regenerate the panel manifest and the vendor manifest.
+6. **Preview and manifests.** A preview fixture in `tools/ui-preview/host.js`'s snapshot section
+   map and a `thermal_bridges_checks.cjs` under `tools/ui-preview/` through the shared
+   `support/browser_evidence.cjs` collector, declaring with `expect` any error it provokes;
+   regenerate the panel manifest and the vendor manifest.
 
 ## Source
 
 | PH-Composer file | Disposition |
 | --- | --- |
-| `html/features/windows/section.js`, `inventory.js` | Pattern for a pane with subtabs and an inventory |
+| `html/features/windows/section.js`, `inventory.js`, `schedule.js` | Pattern for a pane with subtabs, an inventory and a schedule |
 | `html/features/zones/assembly_assignment.js`, `classify.js` | Pattern for acting on the native selection from the panel |
 | `features/zones/faces/classify_menu.rb` | Pattern for the right-click submenu |
 
@@ -68,7 +73,8 @@ Paths are relative to `src/ph_composer/`.
 Fresh process, Ed at the mouse for the gesture checks: create, edit, duplicate and delete with
 replacement in Types; select the roof perimeter natively and assign from the bar and from the
 right-click menu; switch display units with a draft open; Locate from the Schedule into a nested
-Zone; the UI polish review with native window captures.
+Zone; the UI polish review with native window captures (by window id, never a full-screen
+capture). Observe the host with the development tooling: `host_bridge.py wait-for` for deferred work, `host_bridge.py diagnostics` for what happened, `acceptance_case.py begin` and `finish` for the ledger row (`tools/hostkit/.index.md`).
 
 ## Out of scope
 
