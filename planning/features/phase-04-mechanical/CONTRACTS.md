@@ -9,8 +9,8 @@ The [equipment PRD](equipment/PRD.md) defers exact names and schemas to its plan
 that binding, the counterpart of Phase 3b's [thermal-bridge bindings](../phase-03b-thermal-bridges/CONTRACTS.md)
 and Phase 3a's [Spaces bindings](../../archive/phase-03a-spaces/CONTRACTS.md). It restates no
 behavior. Where a row and the PRD disagree about behavior, the PRD wins and this file is corrected.
-Where a row follows a decision in [DECISIONS.md](DECISIONS.md), it names the decision; none is
-answered yet. Interview answers are cited as the PRD numbers them: Q1 to Q12 (shared shape), V1 to
+Where a row follows a decision in [DECISIONS.md](DECISIONS.md), it names the decision; all were
+answered as recommended on 2026-10-21. Interview answers are cited as the PRD numbers them: Q1 to Q12 (shared shape), V1 to
 V6 (Ventilators) and hot water H1 to H7. A bare `H` number below with "hot water" in front is the
 interview; the foundation additions of this packet are numbered A1 onward to avoid the clash with
 the Spaces and thermal-bridge H1 to H18.

@@ -1,7 +1,7 @@
 # Phase 4: mechanical, tracking ledger
 
 DATE: 2026-10-21
-STATUS: Scoped. Interviewed (shared shape, Ventilators, hot water) and planned as P4-01 to P4-15 on 2026-10-21; D4-01 to D4-12 open; nothing authorized or implemented.
+STATUS: Scoped. Interviewed (shared shape, Ventilators, hot water) and planned as P4-01 to P4-15 on 2026-10-21; D4-01 to D4-12 answered as recommended the same day; nothing authorized or implemented.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -24,15 +24,15 @@ gate stubs until families 3 to 7, piping and ducting are interviewed.
 
 ## Next step
 
-Ed answers D4-01 to D4-12, one at a time; creates the phase issue; and says go on P4-01, which
-waits for Phase 3b's P3b-01 to merge its `Makefile` edit.
+Ed creates the phase issue and says go on P4-01, which waits for Phase 3b's P3b-01 to merge its
+`Makefile` edit.
 
 ## Entry gates
 
 | Gate | State |
 | --- | --- |
 | The equipment shared shape, Ventilators and hot water interviewed | Done 2026-10-21 |
-| Ed answers D4-01 to D4-12 | Open |
+| Ed answers D4-01 to D4-12 | Done 2026-10-21, all as recommended |
 | A Phase 4 issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Open. Create on Ed's say |
 | Ed authorizes implementation, stage by stage or for a run of stages | Open |
 | P3b-01 merged before P4-01 (both edit the `PLANNING_IDS` line) | Open; Phase 3b P3b-01 in progress since 2026-10-21 |
@@ -49,12 +49,12 @@ only when all three are done and its evidence file exists.
 | Stage | Title | State | Blocked by | Branch / PR | Offline | Host | Review | Evidence | Register |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [P4-01](phases/p4-01-equipment-contracts-and-seams.md) | Equipment contracts, lint and the Pyodide seam | Scoped | Ed's go; P3b-01 | | | | architecture review | | M01 |
-| [P4-02](phases/p4-02-equipment-feature-and-ventilator-kind.md) | The equipment feature and the Ventilator kind | Scoped | P4-01; D4-02, D4-05 | | | | ordinary | | M02 |
-| [P4-03](phases/p4-03-serves-assignment.md) | Serves: the assignment record and target | Scoped | P4-02; D4-03, D4-04, D4-05 | | | | strong | | M03 |
-| [P4-04](phases/p4-04-ventilator-export.md) | Ventilator export | Scoped | P4-03; D4-01, D4-06, D4-09 | | | | strong | | M04 |
-| [P4-05](phases/p4-05-systems-tab-and-ventilators-view.md) | The Systems tab and the Ventilators view | Scoped | P4-04; D4-08, D4-10, D4-11 | | | | ordinary, UI | | M05 |
-| [P4-06](phases/p4-06-hot-water-records-and-export.md) | Hot Water System records and export | Scoped | P4-03; D4-01, D4-06, D4-07, D4-12 | | | | strong | | M06 |
-| [P4-07](phases/p4-07-hot-water-view.md) | The Hot water view | Scoped | P4-05, P4-06; D4-11 | | | | ordinary, UI | | M07 |
+| [P4-02](phases/p4-02-equipment-feature-and-ventilator-kind.md) | The equipment feature and the Ventilator kind | Scoped | P4-01 | | | | ordinary | | M02 |
+| [P4-03](phases/p4-03-serves-assignment.md) | Serves: the assignment record and target | Scoped | P4-02 | | | | strong | | M03 |
+| [P4-04](phases/p4-04-ventilator-export.md) | Ventilator export | Scoped | P4-03 | | | | strong | | M04 |
+| [P4-05](phases/p4-05-systems-tab-and-ventilators-view.md) | The Systems tab and the Ventilators view | Scoped | P4-04 | | | | ordinary, UI | | M05 |
+| [P4-06](phases/p4-06-hot-water-records-and-export.md) | Hot Water System records and export | Scoped | P4-03 | | | | strong | | M06 |
+| [P4-07](phases/p4-07-hot-water-view.md) | The Hot water view | Scoped | P4-05, P4-06 | | | | ordinary, UI | | M07 |
 | [P4-08](phases/p4-08-heat-pumps.md) | Heat pumps | Requested | P4-07; the interview | | | | | | M08 |
 | [P4-09](phases/p4-09-electric-heaters.md) | Electric heaters | Requested | P4-07; the interview | | | | | | M09 |
 | [P4-10](phases/p4-10-pumps.md) | Pumps | Requested | P4-07; the interview | | | | | | M10 |
@@ -76,18 +76,18 @@ only when all three are done and its evidence file exists.
 
 | ID | Kind | Subject | Blocks | State |
 | --- | --- | --- | --- | --- |
-| D4-01 | Code | One translated object per (item, served Zone) pair | P4-04, P4-06 | Open |
-| D4-02 | Code | One feature for seven families | P4-02 | Open |
-| D4-03 | Code | The Serves record: one dictionary per Zone with a slot per family, `eqa_` id | P4-03 | Open |
-| D4-04 | Code | A copied Zone keeps its Serves record, id re-issued | P4-03 | Open |
-| D4-05 | Code | Delete in use per slot: refuse, replace or clear | P4-02, P4-03 | Open |
-| D4-06 | Code | Equipment sections required for export | P4-04, P4-06 | Open |
-| D4-07 | Code | Tank slotting by role | P4-06 | Open |
-| D4-08 | UI | The Systems tab: one subtabs row, a family selector in the page header | P4-05 | Open |
-| D4-09 | Code | Piping and ducting add to equipment's objects before attach | P4-04, P4-13, P4-14 | Open |
-| D4-10 | Code | Balance by ventilator as a pure Ruby read over Spaces' rows | P4-05 | Open |
-| D4-11 | Code | Unit rows: electric efficiency, litres, temperature | P4-05, P4-07 | Open |
-| D4-12 | Code | The calculation method field, written only when the wheel accepts it | P4-06 | Open |
+| D4-01 | Code | One translated object per (item, served Zone) pair | P4-04, P4-06 | Answered 2026-10-21 |
+| D4-02 | Code | One feature for seven families | P4-02 | Answered 2026-10-21 |
+| D4-03 | Code | The Serves record: one dictionary per Zone with a slot per family, `eqa_` id | P4-03 | Answered 2026-10-21 |
+| D4-04 | Code | A copied Zone keeps its Serves record, id re-issued | P4-03 | Answered 2026-10-21 |
+| D4-05 | Code | Delete in use per slot: refuse, replace or clear | P4-02, P4-03 | Answered 2026-10-21 |
+| D4-06 | Code | Equipment sections required for export | P4-04, P4-06 | Answered 2026-10-21 |
+| D4-07 | Code | Tank slotting by role | P4-06 | Answered 2026-10-21 |
+| D4-08 | UI | The Systems tab: one subtabs row, a family selector in the page header | P4-05 | Answered 2026-10-21 |
+| D4-09 | Code | Piping and ducting add to equipment's objects before attach | P4-04, P4-13, P4-14 | Answered 2026-10-21 |
+| D4-10 | Code | Balance by ventilator as a pure Ruby read over Spaces' rows | P4-05 | Answered 2026-10-21 |
+| D4-11 | Code | Unit rows: electric efficiency, litres, temperature | P4-05, P4-07 | Answered 2026-10-21 |
+| D4-12 | Code | The calculation method field, written only when the wheel accepts it | P4-06 | Answered 2026-10-21 |
 
 ## Owed from elsewhere, allocated here
 
@@ -132,3 +132,4 @@ reproduces what the stages depend on.
 | 2026-10-21 | PRDs re-baselined against `main` at `420c783a`. |
 | 2026-10-21 | Equipment interviewed: the shared shape Q1 to Q12, Ventilators V1 to V6, hot water H1 to H7; honeybee_ph#135 filed for the calculation-method field. |
 | 2026-10-21 | Planned in detail: fourteen findings, twelve decisions D4-01 to D4-12, bindings with additions A1 to A5, stages P4-01 to P4-15 (P4-08 to P4-14 as gate stubs), register M01 to M15 with a hand-calculated reference model. No decision answered, no stage authorized. |
+| 2026-10-21 | Ed answered D4-01 to D4-12, all as recommended; P4-02 to P4-07 lose their decision blockers. Waiting on the phase issue and the go on P4-01. |

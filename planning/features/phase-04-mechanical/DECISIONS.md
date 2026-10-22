@@ -1,7 +1,7 @@
 # Phase 4, mechanical: findings from source, and the decisions that follow
 
 DATE: 2026-10-21
-STATUS: Scoped. Part 1 is findings read from source on `main` at `420c783a` and the honeybee-ph and PHX checkouts on 2026-10-21. Part 2 is open: Ed has answered none of D4-01 to D4-12. The interviews (Q1 to Q12, V1 to V6, hot water H1 to H7) are answered and live in the equipment PRD.
+STATUS: Scoped. Part 1 is findings read from source on `main` at `420c783a` and the honeybee-ph and PHX checkouts on 2026-10-21. Part 2 was answered by Ed on 2026-10-21, every row as recommended; see "Ed's answers". The interviews (Q1 to Q12, V1 to V6, hot water H1 to H7) are answered and live in the equipment PRD.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -65,14 +65,27 @@ answer. Kind: Code, UI or Scope.
 
 ## Ed's answers
 
-None yet. Answer one at a time; a row here supersedes the recommendation in Part 2, and
-[CONTRACTS.md](CONTRACTS.md) is corrected in the same change.
+Ed answered D4-01 on its own and then accepted every remaining recommendation on 2026-10-21.
+A row here supersedes the recommendation in Part 2; none differs.
 
 | ID | Answer | Date |
 | --- | --- | --- |
+| D4-01 | As recommended: One translated object per (item, served Zone) pair with equal identifiers | 2026-10-21 |
+| D4-02 | As recommended: One feature, `ph_composer.equipment` | 2026-10-21 |
+| D4-03 | As recommended: One `ph_composer.equipment_serves` dictionary per Zone Group, a slot per family, `eqa_` id | 2026-10-21 |
+| D4-04 | As recommended: A copied Zone keeps its Serves record; only the id is re-issued | 2026-10-21 |
+| D4-05 | As recommended: Refuse in use, rewrite with a replacement, clear with null | 2026-10-21 |
+| D4-06 | As recommended: `required_for_export = True` | 2026-10-21 |
+| D4-07 | As recommended: Slot by role: storage to tank 1 and 2 in order, buffer, solar; the rest unslotted | 2026-10-21 |
+| D4-08 | As recommended: Enable the reserved tab; one subtabs row; a family select in the page header | 2026-10-21 |
+| D4-09 | As recommended: The later section requires the equipment section and adds to its object before attach | 2026-10-21 |
+| D4-10 | As recommended: A pure Ruby read in `serves/balance.rb` over Spaces' Zone rows; the feature requires Spaces | 2026-10-21 |
+| D4-11 | As recommended: `electric_efficiency`, `volume_l`, `temperature` | 2026-10-21 |
+| D4-12 | As recommended: A nullable record field, written only when the loaded class accepts it | 2026-10-21 |
 
 ## Ledger
 
 | Date | Event |
 | --- | --- |
 | 2026-10-21 | Drafted from `420c783a` and the three interviews of the same day: fourteen findings, twelve decisions. None answered. |
+| 2026-10-21 | Ed answered D4-01 to D4-12, all as recommended. The bindings in CONTRACTS stand as drafted. |
