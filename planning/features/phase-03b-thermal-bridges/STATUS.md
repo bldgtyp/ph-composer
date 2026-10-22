@@ -30,7 +30,7 @@ recommended the same day; no stage authorized.
 
 ## Next step
 
-P3b-01 is in progress on `feature/thermal-bridges-p3b-01` (Ed's go, 2026-10-21): the offline work and the architecture review are done on [PR #302](https://github.com/bldgtyp/ph-composer/pull/302); its host gate (the five B4 cases) still has to run before T01 closes and the stage is `Implemented on branch`. Ed merges.
+P3b-01 is in progress on `feature/thermal-bridges-p3b-01` (Ed's go, 2026-10-21): offline work, architecture review and host gate are done on [PR #302](https://github.com/bldgtyp/ph-composer/pull/302); T01 passes and the stage is `Implemented on branch`. Ed merges; P3b-02 is the next `Scoped` stage.
 
 ## Entry gates
 
@@ -50,7 +50,7 @@ only when all three are done and its evidence file exists.
 
 | Stage | Title | State | Blocked by | Branch / PR | Offline | Host | Review | Evidence | Register |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [P3b-01](phases/p3b-01-thermal-bridge-contracts-and-edge-host-facts.md) | Thermal-bridge contracts and edge host facts | In review | | `feature/thermal-bridges-p3b-01`, [PR #302](https://github.com/bldgtyp/ph-composer/pull/302) | `make ci` green at `b013f330` (Ruby 3.2.2); the new test also on 2.7.2 | pending: the five B4 cases | architecture review done: Codex gpt-6-astra with the architecture and Ruby rubrics, two cycles (2 P2 + 1 P3, then 3 P2), all six fixed in `31ddfb03` and `b013f330` | | T01 |
+| [P3b-01](phases/p3b-01-thermal-bridge-contracts-and-edge-host-facts.md) | Thermal-bridge contracts and edge host facts | Implemented on branch | | `feature/thermal-bridges-p3b-01`, [PR #302](https://github.com/bldgtyp/ph-composer/pull/302) | `make ci` green at `b013f330` and on the evidence head (Ruby 3.2.2); the new test also on 2.7.2 | T01 run 2026-10-21 on 26.1.188 at `bec31a4c`: the five B4 cases with native Undo, Redo, save and fresh-process reopen, eight assertions pass | architecture review done: Codex gpt-6-astra with the architecture and Ruby rubrics, two cycles (2 P2 + 1 P3, then 3 P2), all six fixed in `31ddfb03` and `b013f330` | | [evidence](evidence/p3b-01-edge-host-facts.md) | T01 |
 | [P3b-02](phases/p3b-02-thermal-bridge-type-records.md) | Thermal Bridge Type records and operations | Scoped | P3b-01 | | | | ordinary | | T02 |
 | [P3b-03](phases/p3b-03-edge-assignment.md) | Edge assignment, Zone containment and edge picking | Scoped | P3b-02 | | | | strong | | T03 |
 | [P3b-04](phases/p3b-04-runs-and-schedule.md) | Runs, the schedule read and findings | Scoped | P3b-03 | | | | ordinary | | T04 |
@@ -170,3 +170,4 @@ reproduced; P3b-01 reproduces what the stages depend on.
 | 2026-10-21 | Phase issue [#301](https://github.com/bldgtyp/ph-composer/issues/301) created; every header in the packet points at it. Waiting on the go on P3b-01. |
 | 2026-10-21 | Ed authorized P3b-01 as its own pull request through the loop. Branch `feature/thermal-bridges-p3b-01`: `tests/edge_record_contract_test.rb` answers CONTRACTS section 7 questions 2 and 3; `PLANNING_IDS` fails `S01`, `T01` and `F26`; T01 added to the native-acceptance cases; the edge spike gained the five open cases; G-01 answered in both packets. Host gate pending. |
 | 2026-10-21 | PR #302 opened; Codex gpt-6-astra reviewed twice with the architecture rubric. Fixed: the retag case shared no operation with its registry write; the scan dropped dictionaries; the PRD's Runs rule still said tolerance; run identifiers collided for coincident placements, so they now digest the container path (D3b-07 under D3b-23); the "export attribute guard" claim was false and is corrected in F5, CONTRACTS section 8 and `core/dictionaries.rb`; the spike setup refuses a reused Model. `make ci` green at `b013f330`. State `In review`; the host gate is the one open item of T01. |
+| 2026-10-21 | T01 host gate run on the PR head: the five B4 cases with native Undo, Redo, save and fresh-process reopen, eight assertions pass; results folded into `context/SKETCHUP_HOST_BEHAVIOR.md` and the heal consequence into D3b-22's row. P3b-01 `Implemented on branch`. |

@@ -4175,7 +4175,6 @@
       "authority": "planning/features/phase-03b-thermal-bridges/ACCEPTANCE.md",
       "paths": [
         "tools/spikes/edge/edge_spike.rb",
-        "context/SKETCHUP_HOST_BEHAVIOR.md",
         "src/ph_composer/core/records/entity_store.rb",
         "tests/edge_record_contract_test.rb"
       ],

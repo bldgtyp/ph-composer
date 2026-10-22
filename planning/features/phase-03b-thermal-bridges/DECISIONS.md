@@ -204,7 +204,7 @@ Part 2. The PRD and `context/UBIQUITOUS_LANGUAGE.md` were amended the same day.
 | D3b-18 | As recommended: the edge tool stays as P3b-07, the last authoring stage | 2026-10-03 |
 | Q8 | As recommended: not a library kind now; first candidate for roadmap 5.4 | 2026-10-03 |
 | D3b-19 | As recommended, then superseded the same day by the split into two flat packets with ids restarted per sub-phase | 2026-10-03 |
-| D3b-22 | As recommended: the `tbe_` id is not re-issued after a split or copy; reads mark an id held by more than one Edge as `copied`; no repair operation | 2026-10-21 |
+| D3b-22 | As recommended: the `tbe_` id is not re-issued after a split or copy; reads mark an id held by more than one Edge as `copied`; no repair operation. Consequence recorded by P3b-01's host gate (T01, 2026-10-21) for D3b-01: when two collinear halves carry different records and the crossing edge between them is erased, SketchUp heals them into the edge that kept the original persistent id and drops the other record silently. The edge stays the record; a reassigned half that is later healed loses its assignment, and the live schedule shows the result. No repair exists because nothing points at the lost record | 2026-10-21 |
 | D3b-23 | As recommended: runs join by a shared vertex keyed on container path plus vertex id within one Zone occurrence; the 0.0254 mm tolerance serves only the cross-Zone and window-perimeter checks. Consequence for D3b-07 (P3b-01, 2026-10-21): the run identifier digests the container path with the Zone, type and endpoints, since two coincident placements of one component are two runs and the translation refuses duplicate ids | 2026-10-21 |
 
 ## PRD amendments that follow
