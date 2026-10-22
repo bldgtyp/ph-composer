@@ -116,7 +116,7 @@ library file. METr conversion stays deferred.
 | --- | --- | --- | --- |
 | 3.1 | [Spaces](archive/phase-03a-spaces/README.md) | Complete 2026-10-17, archived; P3a-01 to P3a-12 merged (#135 to #171); S01 to S11 pass with ledger results; the #179 and #188 regressions fixed and rechecked | Built as planned: records, edit contexts and protection, copies, the Spaces view, Mark floor, the four modes, export and Height from solid. Phase 3a, its own packet |
 | 3a1 | [Agent access after Spaces](archive/phase-03a1/README.md) | Complete 2026-10-18, archived; P3a1-01 to P3a1-16 merged (#222 to #243); both CLIs through the integrated scenario; open follow-ups #239, #244 | API corrections, an MCP connection served from Ruby for the Codex and Claude Code CLIs, token grants and host execution, semantic Spaces access, artifact disclosure and visual context. Owns all 14 post-Spaces review findings |
-| 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09; re-baselined on `main` at `420c783a` on 2026-10-21, D3b-22 and D3b-23 answered; P3b-01 implemented on branch, PR #302, T01 pass 2026-10-21 | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
+| 3.2 | [Thermal bridges](features/phase-03b-thermal-bridges/README.md) | Scoped, interviewed; planned as P3b-01 to P3b-09; re-baselined on `main` at `420c783a` on 2026-10-21, D3b-22 and D3b-23 answered; P3b-01 merged to main 2026-10-22 (PR #302, T01 pass); P3b-02 next, not authorized | New. Depends on spike 0.6. Brings the edge tool that phase 4 reuses. Phase 3b, its own packet |
 
 Ed originally split Phase 3 on 2026-10-03 into two envelope-feature sub-phases:
 [3a Spaces](archive/phase-03a-spaces/README.md) and
@@ -236,6 +236,7 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-16 | #179 fixed through #187 and rechecked on the host: A09 passes; UXR-PAINT's narrow clause fails on #188 (the selection bar crowds the table: Solve under the footer at 420 px, header covered at 360 x 520). Phase 3a closure is Ed's call on #188. |
 | 2026-10-17 | #188 fixed through #190 and rechecked on the host: A09, UXR-SOLVE and UXR-PAINT pass. No acceptance case blocks Phase 3a closure; closing is Ed's call (ZO-O7 fails on #181 as a follow-up). |
 | 2026-10-17 | Ed closed Phase 3a (Spaces); its packet is archived as `phase-03a-spaces`. Phase 3 stays open for 3b, thermal bridges. |
+| 2026-10-22 | Thermal bridges P3b-01 merged to main through PR #302 after its T01 host gate; P3b-02 waits for Ed's go. |
 | 2026-10-21 | Thermal bridges phase issue [#301](https://github.com/bldgtyp/ph-composer/issues/301) created after the re-baseline and the D3b-22, D3b-23 answers; waits on Ed's go for P3b-01. |
 | 2026-10-21 | Thermal bridges re-baselined against `main` at `420c783a`: findings re-read (F27 to F36 added), CONTRACTS answered from code where it could be, stages corrected, D3b-22 and D3b-23 added for Ed. No implementation authorized. |
 | 2026-10-21 | Phase 4 packets re-baselined against `main` at `420c783a`: stale foundation and remote blockers removed, each PRD opens with what `main` supplies, piping and ducting dependencies named per Phase 3b stage, METr acceptance moved to metr-export. No implementation authorized. |
