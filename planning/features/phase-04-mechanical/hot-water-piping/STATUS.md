@@ -30,7 +30,7 @@ Planning in detail waits for Phase 3b's P3b-04 at least, so the chain rule it re
   the edge store, chain rule, edge tool or edge contributor exists on `main`.
 - The Hot Water System record, which the equipment packet owns; its family was interviewed on
   2026-10-21 (H1 to H7): operating values sit on the system record, and the simplified methods
-  wait on a honeybee-ph field (H5).
+  wait on a honeybee-ph field (H5, [honeybee_ph#135](https://github.com/PH-Tools/honeybee_ph/issues/135)).
 - None from the edge identity spike: it passed on 2026-09-18 ([B4](../../../archive/phase-00-foundation/evidence/spike-edge.md));
   its open cases close in P3b-01.
 

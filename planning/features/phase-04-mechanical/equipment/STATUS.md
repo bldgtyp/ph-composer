@@ -45,7 +45,7 @@ coordinating packet now: PLAN, CONTRACTS, DECISIONS, ACCEPTANCE and the stage do
 
 - The remaining family interviews (3 to 7), each before its stage.
 - H5: a calculation-method field on honeybee-ph's `PhHotWaterSystem`, read by PHX, before the
-  simplified hot water methods can export. The issue is not yet filed. Nothing in the code blocks a start: the foundation,
+  simplified hot water methods can export: [honeybee_ph#135](https://github.com/PH-Tools/honeybee_ph/issues/135), filed 2026-10-21, open. Nothing in the code blocks a start: the foundation,
   record engine, inventory table, Zone views and the Room-attaching export section all exist
   (see the PRD's table).
 - Two foundation touches the first stage makes: the Systems tab in `html/index.html` (D4), and
@@ -74,3 +74,4 @@ None. Nothing is implemented. The fan and appliance routes were read in source (
 | 2026-10-21 | Shared shape interviewed: Q1 to Q12 answered as recommended. Fans traced through PHX to WUFI and METr (exhaust ventilator plus supportive device); appliances move to the Process-load route. No implementation. |
 | 2026-10-21 | Ventilators interviewed: V1 to V6 answered as recommended. PHX keys a system by identity, requires a unit and skips a Room without one. No implementation. |
 | 2026-10-21 | Hot water interviewed: H1 to H7, as recommended except H3 (free tank list, slotted at export). H5 found honeybee-ph has no calculation-method field; upstream issue to file. No implementation. |
+| 2026-10-21 | H5 upstream issue filed: [honeybee_ph#135](https://github.com/PH-Tools/honeybee_ph/issues/135). |
