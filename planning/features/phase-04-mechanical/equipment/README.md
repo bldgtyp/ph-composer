@@ -8,8 +8,8 @@ the predecessor held this as two discovery briefs, Q1 and B4.
 
 1. [PRD.md](PRD.md): what `main` supplies today, the shared shape every family follows, then one
    section per family with its honeybee-ph class and fields, then the decisions.
-2. [STATUS.md](STATUS.md). The shared shape was interviewed on 2026-10-21; the PRD's decisions
-   table holds Ed's answers.
+2. [STATUS.md](STATUS.md). The shared shape and Ventilators were interviewed on 2026-10-21; the
+   PRD's decisions table and family 1 hold Ed's answers.
 
 ## Family map
 
@@ -34,7 +34,7 @@ The order is a proposal. Families 1 and 2 go first because two other packets wai
 ## What this packet needs from elsewhere
 
 - Nothing from Phase 3b. Equipment has no edges; it can be planned and started before thermal
-  bridges, once the Ventilators family is interviewed.
+  bridges; Ventilators is interviewed, hot water is next.
 - [metr-export](../../unscheduled/metr-export/README.md) for every METr claim: PHX is not in the
   pinned runtime, so acceptance here is HBJSON reloaded in the pinned stack.
 - [units](../../cross-phase/units/STATUS.md) Q3 for litres, kBtu/h capacity and W/cfm.

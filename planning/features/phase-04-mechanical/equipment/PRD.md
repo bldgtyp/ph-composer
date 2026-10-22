@@ -1,7 +1,7 @@
 # Equipment
 
 DATE: 2026-10-21
-STATUS: Scoped. Shared shape interviewed 2026-10-21, Q1 to Q12 answered; families not yet interviewed. Re-baselined against `main` at `420c783a` the same day.
+STATUS: Scoped. Shared shape (Q1 to Q12) and Ventilators (V1 to V6) interviewed 2026-10-21; families 2 to 7 not yet interviewed. Re-baselined against `main` at `420c783a` the same day.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -129,10 +129,20 @@ inside a `PhVentilationSystem` with `sys_type` (default 1, balanced with heat re
 and the two duct lists. A Room holds one ventilation system.
 
 PH-Composer records one Ventilator and builds the system around it at export. The user never
-sees a separate "system" record.
+sees a separate "system" record. PHX requires a unit on every system (`validate_ventilation_system_source`),
+keys the system by identity so one record serving several Zones becomes one METr device, and
+skips a Room with no system without error.
 
-Open for this family's interview: the one-ventilator-per-Zone limit and what a Zone with two
-units does; whether `sys_type` values other than 1 are offered.
+Interviewed 2026-10-21; Ed answered each as recommended:
+
+| # | Question | Answer, 2026-10-21 |
+| --- | --- | --- |
+| V1 | Code. One ventilation system per Room: what does a Zone with two units do? | One Ventilator per Zone, enforced: assigning a second replaces the first after a refusal names it. Identical units are the record's `quantity`; two different units mean the Zone is split |
+| V2 | Code. Offer `sys_type` values other than 1? | No. Fixed at 1, balanced with heat recovery, not shown |
+| V3 | UI. Which fields are on the row? | The seven core fields as columns; `subsoil_heat_exchange_efficiency` and `preheated_intake_temperature_c` behind a per-row disclosure, blank by default |
+| V4 | UI. Electric efficiency in IP? | W/cfm, stored Wh/m³; a new quantity row for the units packet (its Q3). Recovery efficiencies stay unitless |
+| V5 | Code. A Zone with no Ventilator | A warning, not blocking: the preflight names each unventilated Zone and export proceeds |
+| V6 | UI and code. Does the record carry a rated flow? | No. The row shows supply and extract summed from the served Zones' Spaces (Q11), read-only; nothing stored, since honeybee-ph has no field for it |
 
 ## Family 2: Hot water, tanks and heaters
 

@@ -13,7 +13,7 @@ against the current code on 2026-10-21; each PRD opens with a table of what `mai
 
 | Packet | Roadmap | State | Can start after |
 | --- | --- | --- | --- |
-| [equipment](equipment/README.md) | 4.1, 4.3, 4.5, 4.6 | Scoped: shared shape interviewed 2026-10-21, families not | The Ventilators family interview. No Phase 3b dependency |
+| [equipment](equipment/README.md) | 4.1, 4.3, 4.5, 4.6 | Scoped: shared shape and Ventilators interviewed 2026-10-21, families 2 to 7 not | The hot water family interview. No Phase 3b dependency |
 | [hot-water-piping](hot-water-piping/README.md) | 4.4 | Requested, PRD drafted, re-baselined | Equipment family 2 and Phase 3b's P3b-03, P3b-04, P3b-06, P3b-07, P3b-08 |
 | [erv-ducting](erv-ducting/README.md) | 4.2 | Requested, PRD drafted, re-baselined | Equipment family 1 and the same Phase 3b stages, without P3b-04 |
 

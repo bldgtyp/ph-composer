@@ -1,7 +1,7 @@
 # Equipment: status
 
 DATE: 2026-10-21
-STATUS: Scoped. Shared shape interviewed 2026-10-21; families not interviewed; nothing authorized.
+STATUS: Scoped. Shared shape and Ventilators interviewed 2026-10-21; families 2 to 7 not interviewed; nothing authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -25,16 +25,21 @@ the interview record. Two findings from the trace changed the PRD: a Fan is an e
 with an optional electric block exported as a linked supportive device, and appliances export as
 Process loads, since honeybee-ph marks the electric-equipment route for deprecation.
 
+Ventilators interviewed the same day, V1 to V6, each as recommended: one per Zone enforced,
+`sys_type` fixed at 1, two optional fields disclosed, W/cfm in IP, an unventilated Zone warns,
+no stored rated flow.
+
 ## Next step
 
-Interview Ventilators (family 1): the one-ventilator-per-Zone limit, a Zone with two units,
-`sys_type` values beyond 1. One family per interview, per the predecessor's Q1 rule. Then plan in
-detail: this phase has no PLAN, CONTRACTS, DECISIONS or ACCEPTANCE yet
-(`planning/.instructions.md`).
+Interview hot water, tanks and heaters (family 2): which heater variants ship first, and the
+simplified-method choice piping Q5 puts on the Hot Water System. One family per interview, per
+the predecessor's Q1 rule. Families 1 and 2 are enough to plan the phase in detail, since the
+two drawn packets export into them; this phase has no PLAN, CONTRACTS, DECISIONS or ACCEPTANCE
+yet (`planning/.instructions.md`).
 
 ## Blockers
 
-- The family interviews, Ventilators first. Nothing in the code blocks a start: the foundation,
+- The family interviews, hot water next. Nothing in the code blocks a start: the foundation,
   record engine, inventory table, Zone views and the Room-attaching export section all exist
   (see the PRD's table).
 - Two foundation touches the first stage makes: the Systems tab in `html/index.html` (D4), and
@@ -61,3 +66,4 @@ None. Nothing is implemented. The fan and appliance routes were read in source (
 | 2026-09-18 | PRD drafted. |
 | 2026-10-21 | Re-baselined against `main` at `420c783a`: foundation and remote blockers removed, assignment and delete recommendations changed, METr acceptance moved to metr-export, Q10 to Q12 added. |
 | 2026-10-21 | Shared shape interviewed: Q1 to Q12 answered as recommended. Fans traced through PHX to WUFI and METr (exhaust ventilator plus supportive device); appliances move to the Process-load route. No implementation. |
+| 2026-10-21 | Ventilators interviewed: V1 to V6 answered as recommended. PHX keys a system by identity, requires a unit and skips a Room without one. No implementation. |
