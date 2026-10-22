@@ -17,6 +17,9 @@ substance: `PhDuctSegment` lengths are metres, so the translation converts from 
 from a ducting contribution, not from equipment naming ducting (Q9); acceptance is an HBJSON
 reload, METr rows go to metr-export. honeybee-ph fields re-read at the pinned 1.33.65.
 
+This packet's stage is [P4-14](../phases/p4-14-erv-ducting.md) in the
+[phase ledger](../STATUS.md), a gate stub until Phase 3b's edge stages merge and this interview runs.
+
 ## Next step
 
 Interview, after hot-water-piping, since most draw and assign answers carry over, and after
@@ -39,4 +42,5 @@ None. Nothing is implemented.
 | Date | Event |
 | --- | --- |
 | 2026-09-18 | PRD drafted. |
+| 2026-10-21 | Phase 4 planned in detail; this packet's stage is a gate stub in the phase ledger. |
 | 2026-10-21 | Re-baselined against `main` at `420c783a`: foundation and remote blockers removed, Phase 3b dependencies named, metre conversion and records corrected, Q9 added. No interview, no implementation. |

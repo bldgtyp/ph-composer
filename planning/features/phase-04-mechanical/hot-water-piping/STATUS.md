@@ -19,6 +19,9 @@ tree needs no parent reference and no edge registry; the section's attachment to
 Water System is an open plan item; acceptance is an HBJSON reload, METr rows go to metr-export;
 Q13 added. honeybee-ph fields re-read at the pinned 1.33.65.
 
+This packet's stage is [P4-13](../phases/p4-13-hot-water-piping.md) in the
+[phase ledger](../STATUS.md), a gate stub until Phase 3b's edge stages merge and this interview runs.
+
 ## Next step
 
 Interview. Q1, how the trunk, branch and fixture tree is authored, decides most of the rest.
@@ -50,4 +53,5 @@ None. Nothing is implemented.
 | Date | Event |
 | --- | --- |
 | 2026-09-18 | PRD drafted. |
+| 2026-10-21 | Phase 4 planned in detail; this packet's stage is a gate stub in the phase ledger. |
 | 2026-10-21 | Re-baselined against `main` at `420c783a`: foundation and remote blockers removed, Phase 3b dependencies named stage by stage, records and export mapping corrected, Q13 added. No interview, no implementation. |

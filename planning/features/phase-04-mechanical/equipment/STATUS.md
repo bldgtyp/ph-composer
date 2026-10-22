@@ -1,7 +1,7 @@
 # Equipment: status
 
 DATE: 2026-10-21
-STATUS: Scoped. Shared shape, Ventilators and hot water interviewed 2026-10-21; families 3 to 7 not interviewed; nothing authorized.
+STATUS: Scoped. Shared shape, Ventilators and hot water interviewed 2026-10-21; families 3 to 7 not interviewed; stages tracked in the phase ledger; nothing authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -34,12 +34,14 @@ Electric and three heat pump heaters, a free tank list slotted at export (H3, no
 operating values on the system, the calculation method waits on a honeybee-ph field, the
 Ventilator per-Zone rules, child rows for editing.
 
+The phase was planned in detail the same day: stages P4-01 to P4-15, decisions D4-01 to D4-12
+and register M01 to M15 live in the [phase packet](../STATUS.md), the one ledger. This file keeps
+the interview state only.
+
 ## Next step
 
-Families 1 and 2 are interviewed, which is enough to plan the phase in detail, since the two
-drawn packets export into them. Either interview heat pumps (family 3) next, or write the
-coordinating packet now: PLAN, CONTRACTS, DECISIONS, ACCEPTANCE and the stage documents
-(`planning/.instructions.md`), with families 3 to 7 interviewed before their stages.
+Ed answers D4-01 to D4-12 in the [phase DECISIONS](../DECISIONS.md); families 3 to 7 are
+interviewed each before its stage (P4-08 to P4-12).
 
 ## Blockers
 
@@ -75,3 +77,4 @@ None. Nothing is implemented. The fan and appliance routes were read in source (
 | 2026-10-21 | Ventilators interviewed: V1 to V6 answered as recommended. PHX keys a system by identity, requires a unit and skips a Room without one. No implementation. |
 | 2026-10-21 | Hot water interviewed: H1 to H7, as recommended except H3 (free tank list, slotted at export). H5 found honeybee-ph has no calculation-method field; upstream issue to file. No implementation. |
 | 2026-10-21 | H5 upstream issue filed: [honeybee_ph#135](https://github.com/PH-Tools/honeybee_ph/issues/135). |
+| 2026-10-21 | Phase 4 planned in detail; stages, decisions and acceptance moved to the [phase ledger](../STATUS.md). |
