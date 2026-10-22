@@ -7,8 +7,8 @@ ISSUE: none (local planning draft)
 
 ## Entry and scope
 
-Requires P3b-02, Ed's answer to D3b-22 (what a duplicated `tbe_` id means), and D3b-01, D3b-02,
-D3b-08, D3b-09, D3b-10 and D3b-14, with PRD Q1 and Q6. P3a-01's nested-container rule, which
+Requires P3b-02 and D3b-01, D3b-02, D3b-08, D3b-09, D3b-10, D3b-14 and D3b-22 (answered
+2026-10-21), with PRD Q1 and Q6. P3a-01's nested-container rule, which
 `zones.containment` must honor, is on `main`. Owns the assignment record on an
 Edge, its reference target, assign and clear, the native-selection read, delete with replacement,
 and the two shared additions every later stage relies on: Zones' containment read (H11) and
@@ -66,12 +66,10 @@ Paths are relative to `src/ph_composer/`.
    clear, rewrites every assigned Edge occurrence through the store in the same proposal and passes
    them as the `reference_plan`. Repeated shared storage refuses the whole delete atomically, as
    Assembly delete does (`context/CONTRACTS.md`, "Geometry records and occurrence references").
-7. **Copies.** Apply T01's measured outcomes and Ed's D3b-22 answer: a split and a copy each yield
-   independently tagged Edges whose assignments are already correct and share one `tbe_` id. As
-   recommended, reads mark an id held by more than one Edge as `copied`, nothing re-issues it and
-   no repair operation exists; if Ed chooses the Window-unit rule instead, the next thermal-bridge
-   action re-issues copied ids inside its own proposal, first in path order keeping the original,
-   and a `thermal_bridge.copy_id_pending` finding names the repair.
+7. **Copies.** Apply T01's measured outcomes and D3b-22: a split and a copy each yield
+   independently tagged Edges whose assignments are already correct and share one `tbe_` id.
+   Reads mark an id held by more than one Edge as `copied`; nothing re-issues it and no repair
+   operation exists.
 8. **Context and walkthrough.** Fold the edge tagging rules as answered into
    `context/CONTRACTS.md` (storage table row) and `context/TECH_STACK.md` (rules for edge-owned
    assignments, written for piping and ducting to reuse). Extend the walkthrough and the agent

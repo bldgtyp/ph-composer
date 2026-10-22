@@ -7,8 +7,8 @@ ISSUE: none (local planning draft)
 
 ## Entry and scope
 
-Requires P3b-03, Ed's answer to D3b-23 (how Edges join), and D3b-06, D3b-07, D3b-10, D3b-13,
-D3b-16 and D3b-21, with PRD Q5 and Q7. Owns the pure run
+Requires P3b-03 and D3b-06, D3b-07, D3b-10, D3b-13, D3b-16, D3b-21 and D3b-23 (answered
+2026-10-21), with PRD Q5 and Q7. Owns the pure run
 builder, the schedule read and snapshot section, the findings that need no Windows read, and
 `runs.locate`. Panel closed. After this stage the feature is complete as data: milestone T-M1.
 
@@ -22,13 +22,11 @@ Paths are relative to `src/ph_composer/`.
 1. **Run builder.** `runs/chains.rb`, pure Ruby with no SketchUp: input is detached edge facts
    (occurrence path, Zone id, Building-Segment, type id, quantity, world endpoints in metres and
    the two vertex ids the snapshot already carries); output is runs. Group by Zone, type and
-   quantity; join Edges that share a vertex keyed on container path plus vertex id (D3b-23 as
-   recommended; SketchUp merges endpoints within 0.0254 mm inside one Entities collection,
+   quantity; join Edges that share a vertex keyed on container path plus vertex id (D3b-23; SketchUp merges endpoints within 0.0254 mm inside one Entities collection,
    `context/SKETCHUP_HOST_BEHAVIOR.md`, "Zone grouping and face topology", so inside one container
    the two rules agree and the id is exact, while two placements of one component carry the same
    vertex ids and must not join); split at free ends and at vertices where the group's degree is
-   not two; a closed chain is one closed run. If Ed chooses the tolerance rule instead, join world
-   endpoints within 0.0254 mm and keep the keyed vertex ids as a check. Each run carries its ordered points, its edge paths, its length in metres, and the D3b-07
+   not two; a closed chain is one closed run. Each run carries its ordered points, its edge paths, its length in metres, and the D3b-07
    name and identifier. Order is deterministic so goldens are stable.
 2. **Schedule.** `runs/schedule.rb`: rows per run with Zone, Building-Segment, type, length, psi,
    quantity and psi times length times quantity in W/K; totals by type and by group; used length

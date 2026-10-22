@@ -2,7 +2,7 @@
 
 DATE: 2026-10-03
 STATUS: Scoped. Part 1 is findings read from source on `main` at `08c4807`, re-verified against `420c783a` in Part 1b on 2026-10-21. Part 2 was answered by Ed
-on 2026-10-03, every row as recommended except D3b-20; see "Ed's answers". D3b-22 and D3b-23, added by the re-baseline, are open.
+on 2026-10-03, every row as recommended except D3b-20; see "Ed's answers". D3b-22 and D3b-23, added by the re-baseline, were answered as recommended on 2026-10-21. The interview is complete.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -204,8 +204,8 @@ Part 2. The PRD and `context/UBIQUITOUS_LANGUAGE.md` were amended the same day.
 | D3b-18 | As recommended: the edge tool stays as P3b-07, the last authoring stage | 2026-10-03 |
 | Q8 | As recommended: not a library kind now; first candidate for roadmap 5.4 | 2026-10-03 |
 | D3b-19 | As recommended, then superseded the same day by the split into two flat packets with ids restarted per sub-phase | 2026-10-03 |
-| D3b-22 | Open. Added by the re-baseline of 2026-10-21 | |
-| D3b-23 | Open. Added by the re-baseline of 2026-10-21 | |
+| D3b-22 | As recommended: the `tbe_` id is not re-issued after a split or copy; reads mark an id held by more than one Edge as `copied`; no repair operation | 2026-10-21 |
+| D3b-23 | As recommended: runs join by a shared vertex keyed on container path plus vertex id within one Zone occurrence; the 0.0254 mm tolerance serves only the cross-Zone and window-perimeter checks | 2026-10-21 |
 
 ## PRD amendments that follow
 
@@ -226,7 +226,7 @@ Applied to [PRD.md](PRD.md) only after Ed answers, one change per decision. The 
 | D3b-21 | Validation rows: "type has no psi-value" blocks only when assigned |
 | D3b-17 | Types tab: two subtabs |
 | F22 | Export mapping and Acceptance shape: METr rows point at metr-export |
-| F6, D3b-22 (2026-10-21) | Records and edge tagging rule 1: the assignment carries a `tbe_` id; what a duplicate means waits on D3b-22 |
+| F6, D3b-22 (2026-10-21) | Records and edge tagging rule 1: the assignment carries a `tbe_` id; a duplicate after a split or copy is routine, marked `copied`, never re-issued |
 | F8 (2026-10-21) | Colour-by mode: the HUD row reads "Parapet (12) 26.0 m", the service's own "label (count) figure" shape, not "Parapet, 26.0 m (12)" |
 
 ## Ledger
@@ -237,3 +237,4 @@ Applied to [PRD.md](PRD.md) only after Ed answers, one change per decision. The 
 | 2026-10-03 | Ed answered every row, one at a time. All as recommended except D3b-20: the thermal-bridge section is optional, and only failed runs are omitted and disclosed, which settles R05 item 4 in P3b-08. PRD and glossary amended. |
 | 2026-10-03 | Phase 3 split into `phase-03a-spaces/` and `phase-03b-thermal-bridges/`; this file moved here and its ids were renumbered (see the introduction). D3b-19 superseded. |
 | 2026-10-21 | Re-verified F1 to F26 against `main` at `420c783a` (Part 1b): F6 and F25 settled; F7, F10, F14, F15 and F24 changed; F8 and F9 superseded by P3a-05 and G-02; the rest hold. Added F27 to F36. Added D3b-22 (no re-issue of duplicated `tbe_` ids) and D3b-23 (runs join by vertex id), both open. CONTRACTS section 7 questions 1, 4, 5, 6 and 7 answered from code in section 8. The D3b-12 label shape corrected to the service's. No decision answered, no stage authorized. |
+| 2026-10-21 | Ed answered D3b-22 and D3b-23 as recommended. The interview is complete again; no stage authorized. |

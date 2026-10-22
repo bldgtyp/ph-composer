@@ -85,7 +85,7 @@ stays clean.
 | Force one run's attach to refuse (test fault) | That run omitted with a non-blocking `object.unavailable`; the other four export |
 | Split one Parapet 1 Edge with a crossing line, then erase the line | Parapet 1 is unchanged in length and stays one run, if T01 shows the healed edge keeps the dictionary |
 | Make Component from the Balcony line and place it twice in Zone B | Two runs, `thermal_bridge.shared_definition` on each |
-| Split one Parapet 1 Edge, then read both pieces' assignments | Both carry the same `tbe_` id and read as `copied`; the schedule is unchanged; no finding and no repair (D3b-22, once answered) |
+| Split one Parapet 1 Edge, then read both pieces' assignments | Both carry the same `tbe_` id and read as `copied`; the schedule is unchanged; no finding and no repair (D3b-22) |
 
 Keep the hand calculation beside the fixture. Compare actual identifiers and reference targets
 after save, reopen and HBJSON reload; matching counts alone do not prove a round trip.

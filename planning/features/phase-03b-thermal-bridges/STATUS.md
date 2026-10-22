@@ -1,7 +1,7 @@
 # Phase 3b: thermal bridges, tracking ledger
 
 DATE: 2026-10-03
-STATUS: Scoped. Interviewed 2026-10-03; planned as P3b-01 to P3b-09; re-baselined on `main` at `420c783a` on 2026-10-21; D3b-22 and D3b-23 open; nothing authorized or implemented.
+STATUS: Scoped. Interviewed 2026-10-03; planned as P3b-01 to P3b-09; re-baselined on `main` at `420c783a` on 2026-10-21 and D3b-22, D3b-23 answered the same day; nothing authorized or implemented.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -25,12 +25,12 @@ figures are on `main`; G-02's Edge entries are in the snapshot; Spaces is the fi
 every registration is now an agent surface with an API change row; the foundation owns
 `context.open`; the host kit has bounded waits, diagnostics and fault controls. CONTRACTS, PLAN,
 ACCEPTANCE, the PRD and every stage are corrected. Two decisions added, D3b-22 (no re-issue of
-duplicated `tbe_` ids) and D3b-23 (runs join by vertex id); no decision answered, no stage
-authorized.
+duplicated `tbe_` ids) and D3b-23 (runs join by container path plus vertex id), and answered as
+recommended the same day; no stage authorized.
 
 ## Next step
 
-Ed answers D3b-22 and D3b-23, creates the phase issue, and says go on P3b-01. Phase 3a's gates are
+Ed creates the phase issue and says go on P3b-01. Phase 3a's gates are
 met, so nothing outside this packet blocks any stage.
 
 ## Entry gates
@@ -38,7 +38,7 @@ met, so nothing outside this packet blocks any stage.
 | Gate | State |
 | --- | --- |
 | Ed answers PRD Q1 to Q11 (the interview) and D3b-01 to D3b-21 | Done 2026-10-03 |
-| Ed answers D3b-22 (before P3b-03) and D3b-23 (before P3b-04) | Open since 2026-10-21 |
+| Ed answers D3b-22 (before P3b-03) and D3b-23 (before P3b-04) | Done 2026-10-21 |
 | A Phase 3 issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Open. Create on Ed's say |
 | Ed authorizes implementation, stage by stage or for a run of stages | Open |
 | P3a-01 merged before P3b-03 and P3b-08 start; P3a-05 merged before P3b-06 starts | Closed: P3a-01 merged through PR #135, P3a-05 through PRs #147 and #148; Phase 3a closed 2026-10-17 |
@@ -53,8 +53,8 @@ only when all three are done and its evidence file exists.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [P3b-01](phases/p3b-01-thermal-bridge-contracts-and-edge-host-facts.md) | Thermal-bridge contracts and edge host facts | Scoped | Ed's go | | | | architecture review | | T01 |
 | [P3b-02](phases/p3b-02-thermal-bridge-type-records.md) | Thermal Bridge Type records and operations | Scoped | P3b-01 | | | | ordinary | | T02 |
-| [P3b-03](phases/p3b-03-edge-assignment.md) | Edge assignment, Zone containment and edge picking | Scoped | P3b-02, D3b-22 | | | | strong | | T03 |
-| [P3b-04](phases/p3b-04-runs-and-schedule.md) | Runs, the schedule read and findings | Scoped | P3b-03, D3b-23 | | | | ordinary | | T04 |
+| [P3b-03](phases/p3b-03-edge-assignment.md) | Edge assignment, Zone containment and edge picking | Scoped | P3b-02 | | | | strong | | T03 |
+| [P3b-04](phases/p3b-04-runs-and-schedule.md) | Runs, the schedule read and findings | Scoped | P3b-03 | | | | ordinary | | T04 |
 | [P3b-05](phases/p3b-05-thermal-bridges-tab.md) | The Thermal Bridges tab | Scoped | P3b-04 | | | | ordinary, UI | | T05 |
 | [P3b-06](phases/p3b-06-thermal-bridge-colour-by.md) | The thermal-bridge Colour-by mode | Scoped | P3b-04 | | | | strong | | T06 |
 | [P3b-07](phases/p3b-07-edge-tool.md) | The edge tool | Scoped | P3b-05, P3b-06 | | | | ordinary, UI | | T07 |
@@ -71,7 +71,7 @@ that packet; this ledger owns when they run.
 
 | Stage | Scope | State | Picked up by | Note |
 | --- | --- | --- | --- | --- |
-| G-01 | Confirm the Edge facts (`vertex_ids`, `face_ids`, visibility), per-segment versus whole-run filtering, legend counting through `member`, line width | Deferred | P3b-01 | Document stage. The line primitive is settled (D3a-5, 2026-10-15): Edges draw as `derived` segments with a per-mode stroke (H14). The re-baseline of 2026-10-21 proposes the rest: `vertex_ids` and `face_ids`, keyed with the container path, are enough for run formation (D3b-23, open); an Edge entry carries its path, so visibility is the service's path walk and needs no fact; filtering is per entry, one Edge each, and the legend counts entries, so no `member` key; the line width is the mode's `stroke:`. P3b-01 records the answers in both packets once D3b-23 is answered |
+| G-01 | Confirm the Edge facts (`vertex_ids`, `face_ids`, visibility), per-segment versus whole-run filtering, legend counting through `member`, line width | Deferred | P3b-01 | Document stage. The line primitive is settled (D3a-5, 2026-10-15): Edges draw as `derived` segments with a per-mode stroke (H14). The re-baseline of 2026-10-21 proposes the rest: `vertex_ids` and `face_ids`, keyed with the container path, are enough for run formation (D3b-23, answered); an Edge entry carries its path, so visibility is the service's path walk and needs no fact; filtering is per entry, one Edge each, and the legend counts entries, so no `member` key; the line width is the mode's `stroke:`. P3b-01 records the answers in both packets |
 | G-03 | `ColourBy::LineEntry`, the service branch, the overlay line pass | Superseded 2026-10-15 | P3b-06, after G-01 | Not built: P3a-05's design note settled one line primitive, `derived` segments on an ordinary entry (`context/EXTENSIBILITY.md`, "Colour-by derived geometry"). An Edge entry carries the Edge as `entity` and its segment in `derived`; P3b-06 adds only a mode-level stroke weight |
 | G-04 | Thermal-bridge adoption: native drawing proof, export of runs, the 50,000 Edge measurement | Deferred | P3b-06 and P3b-08 | Closes F06 once G-02 and G-03 both have this adopter in use |
 
@@ -92,7 +92,7 @@ the snapshot on the 50,000 Edge Model.
 ## Decisions
 
 D3b-01 to D3b-21 answered on 2026-10-03; the answers are in [DECISIONS.md](DECISIONS.md), "Ed's
-answers". D3b-22 and D3b-23 were added by the re-baseline of 2026-10-21 and are open.
+answers". D3b-22 and D3b-23 were added by the re-baseline of 2026-10-21 and answered the same day.
 
 | ID | Kind | Subject | Blocks | State |
 | --- | --- | --- | --- | --- |
@@ -118,8 +118,8 @@ answers". D3b-22 and D3b-23 were added by the re-baseline of 2026-10-21 and are 
 | D3b-19 | Planning | Where the plan lives; superseded the same day by the split into Phase 3a and 3b | none | Answered 2026-10-03; superseded |
 | D3b-20 | Code | The thermal-bridge export section is optional; only failed runs are omitted (differs from the recommendation) | P3b-08 | Answered 2026-10-03 |
 | D3b-21 | Code | A type with no psi-value blocks export only when assigned | P3b-04, P3b-08 | Answered 2026-10-03 |
-| D3b-22 | Code | The assignment's `tbe_` id, required by the engine, is not re-issued after a split or copy; reads mark it `copied` | P3b-03 | Open, added 2026-10-21 |
-| D3b-23 | Code | Runs join by a shared vertex keyed on container path plus vertex id; the 0.0254 mm tolerance serves only the cross-Zone and window-perimeter checks | P3b-04 | Open, added 2026-10-21 |
+| D3b-22 | Code | The assignment's `tbe_` id, required by the engine, is not re-issued after a split or copy; reads mark it `copied` | P3b-03 | Answered 2026-10-21 |
+| D3b-23 | Code | Runs join by a shared vertex keyed on container path plus vertex id; the 0.0254 mm tolerance serves only the cross-Zone and window-perimeter checks | P3b-04 | Answered 2026-10-21 |
 
 ## Owed from elsewhere, allocated here
 
@@ -166,4 +166,5 @@ reproduced; P3b-01 reproduces what the stages depend on.
 | 2026-10-03 | Interview complete: Ed answered Q1 to Q11 and every plan decision one at a time, all as recommended except D3b-20 (the export section is optional; only failed runs are omitted). R05 item 4 moved to P3b-08. PRD, glossary, CONTRACTS, P3b-01, P3b-08 and the register updated. |
 | 2026-10-03 | Ed split Phase 3 into two flat packets, `phase-03a-spaces/` and `phase-03b-thermal-bridges/`, and the ids restarted per sub-phase. Thermal-bridge stages P3-13 to P3-21 became P3b-01 to P3b-09, decisions D3-13 to D3-33 became D3b-01 to D3b-21, findings TF1 to TF26 became F1 to F26; S and T acceptance ids and H numbers are unchanged. |
 | 2026-10-21 | Re-baselined against `main` at `420c783a` (DECISIONS Part 1b, F27 to F36): F6 settled (records need an id), F7, F10, F14, F15, F24 changed, F8, F9, F25 superseded by P3a-05 and G-02. CONTRACTS section 8 answers five of section 7's questions from code; H15 done; H17 and H18 narrowed; the assignment reference takes the Face shape. D3b-22 and D3b-23 added, open. The D3b-12 HUD label takes the service's "label (count) figure" shape. PLAN, ACCEPTANCE, the PRD and every stage document corrected; the Phase 3a gates recorded as met. No decision answered, no stage authorized. |
+| 2026-10-21 | Ed answered D3b-22 and D3b-23 as recommended; P3b-03 and P3b-04 lose their decision blockers. Waiting on the phase issue and the go on P3b-01. |
 | 2026-10-16 | Handoff from Phase 3a (P3a-12 step 9). Built and observed on the host (P3a-12), ready to reuse: the viewport-tool shape in `features/spaces/mark_tool.rb` (no operation of its own; each completed gesture is one public `invoke` and one Undo step; picks through `Pick.face_path`, drags through `core/` `DragSet`; a move without `MK_LBUTTON` cancels the gesture, and macOS sets that flag on every held move, `context/SKETCHUP_HOST_BEHAVIOR.md`). Also: Colour-by `derived` polygons and segments as P3a-05 shipped them (`ColourBy::Derived.new(polygons:, segments:)`, segments drawn at the overlay's outline weight, so H14's per-mode stroke weight is still P3b-06's), and the container rule (a stamped Group's Faces leave Zone inventories, CONTRACTS section 8). The `derived` shape is the one this packet's CONTRACTS assume for `by_type`. |

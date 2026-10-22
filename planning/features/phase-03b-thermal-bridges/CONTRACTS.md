@@ -18,8 +18,8 @@ Paths below are relative to `src/ph_composer/`.
 
 Rows marked **new** do not exist yet. Rows marked **exists** were read in source at `420c783a`.
 Names are proposals until P3b-01 closes; a stage may rename one only by editing this file in the
-same change. Two rows wait on open decisions: the assignment's copy rule (D3b-22) and the run
-builder's join rule (D3b-23).
+same change. The assignment's copy rule (D3b-22) and the run builder's join rule (D3b-23) were
+answered as recommended on 2026-10-21 and are bound below.
 
 ## 1. Feature and composition
 
@@ -79,7 +79,7 @@ fields.
 
 | Dictionary | Entity | Key | Identity |
 | --- | --- | --- | --- |
-| `ph_composer.thermal_bridge` (new) | The `Sketchup::Edge` | `record`, through `Records::EntityStore` (exists) | `tbe_` id. The engine requires one on every reference-target record (section 8, question 1), which settles D3b-02's fallback. A split or a native copy duplicates it (B4); what a duplicate means is D3b-22, recommended: reads mark it `copied`, nothing re-issues it |
+| `ph_composer.thermal_bridge` (new) | The `Sketchup::Edge` | `record`, through `Records::EntityStore` (exists) | `tbe_` id. The engine requires one on every reference-target record (section 8, question 1), which settles D3b-02's fallback. A split or a native copy duplicates it (B4); reads mark an id held by more than one Edge as `copied`, nothing re-issues it and no repair exists (D3b-22, answered 2026-10-21) |
 
 | Field | Shape | Required | Note |
 | --- | --- | --- | --- |

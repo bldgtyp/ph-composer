@@ -1,7 +1,7 @@
 # Phase 3b: thermal bridges
 
 DATE: 2026-10-03
-STATUS: Scoped. Interviewed 2026-10-03; planned in detail as stages P3b-01 to P3b-09; re-baselined on `main` at `420c783a` on 2026-10-21 (D3b-22 and D3b-23 open); no stage authorized.
+STATUS: Scoped. Interviewed 2026-10-03; planned in detail as stages P3b-01 to P3b-09; re-baselined on `main` at `420c783a` on 2026-10-21 and D3b-22, D3b-23 answered the same day; no stage authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -25,8 +25,8 @@ both close. That is the first internal envelope-model release candidate (D1).
    and what each stage still owes. The one place completeness is read from.
 3. [DECISIONS.md](DECISIONS.md): what the code, the B4 spike and the honeybee stack say (F1 to
    F26 at `08c4807`, re-read with F27 to F36 at `420c783a` in Part 1b), the PRD questions and
-   plan decisions D3b-01 to D3b-23, and Ed's answers of 2026-10-03, which are the interview
-   record. D3b-22 and D3b-23 wait for his answer.
+   plan decisions D3b-01 to D3b-23, and Ed's answers of 2026-10-03 and 2026-10-21, which are the
+   interview record.
 4. [PLAN.md](PLAN.md): the stages, their order, owners, gates and the files shared with Phase 3a.
 5. [CONTRACTS.md](CONTRACTS.md): feature id, records, operations, seams, foundation additions H11
    to H18, findings and the export section. Re-read against code on 2026-10-21 (section 8); two

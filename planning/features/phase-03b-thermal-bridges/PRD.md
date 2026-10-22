@@ -68,7 +68,7 @@ edge assignment    id (tbe_), thermal_bridge_type_id, quantity, schema_version, 
 being entered. `quantity` is a positive number, default 1 (D3b-08). There are no timestamps
 (D3b-05). The assignment is an attribute on the SketchUp edge. It carries a `tbe_` id because the
 record engine requires one on anything a reference target lists (D3b-02's fallback, confirmed from
-code on 2026-10-21); a split or copied edge carries the same id, and what that means is D3b-22.
+code on 2026-10-21); a split or copied edge carries the same id, which reads mark as copied and nothing re-issues (D3b-22).
 There is no separate thermal bridge record and no Model-level registry of tagged edges (D3b-01).
 The schedule and the export both build the list of thermal bridges by scanning edges.
 

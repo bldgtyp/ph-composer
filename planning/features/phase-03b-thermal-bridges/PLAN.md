@@ -1,7 +1,7 @@
 # Phase 3b delivery plan: thermal bridges
 
 DATE: 2026-10-03
-STATUS: Scoped. Stages P3b-01 to P3b-09 planned; interview complete 2026-10-03; re-baselined on `main` at `420c783a` on 2026-10-21; none authorized.
+STATUS: Scoped. Stages P3b-01 to P3b-09 planned; interview complete 2026-10-03; re-baselined on `main` at `420c783a` on 2026-10-21, D3b-22 and D3b-23 answered the same day; none authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
@@ -15,7 +15,7 @@ honeybee-ph `PhThermalBridge` on its Building-Segment.
 Re-baseline, 2026-10-21: [DECISIONS](DECISIONS.md), Part 1b, re-reads every finding on
 `420c783a` (385 commits after the plan was drafted: Phase 3a, agent access 3a1, G-02, production
 support and developer observability), and every stage below is corrected to it. Two decisions were
-added and are open, D3b-22 and D3b-23; nothing else changed hands.
+added, D3b-22 and D3b-23, and answered as recommended the same day; nothing else changed hands.
 
 In this plan: thermal bridges, roadmap 3.2, as the [PRD](PRD.md) scopes it after the interview
 of 2026-10-03. The findings, decisions, bindings and register are this folder's
@@ -55,8 +55,8 @@ write first, the host gate and the done condition.
 | --- | --- | --- | --- | --- |
 | [P3b-01](phases/p3b-01-thermal-bridge-contracts-and-edge-host-facts.md) | The two contract questions still open confirmed by test; B4's open edge cases closed on the host; citation lint for the T and two-digit F ids | Ed's go | shared | Divide, Weld, push-pull removal, intersect and heal on a tagged edge, each with Undo, Redo and reopen |
 | [P3b-02](phases/p3b-02-thermal-bridge-type-records.md) | The feature; the Thermal Bridge Type kind, operations and reads | P3b-01 | thermal_bridges | Panel-closed script, Undo/Redo, reopen |
-| [P3b-03](phases/p3b-03-edge-assignment.md) | Edge assignment record and target; assign, clear, selection; delete with replacement; `zones.containment`; `Pick.edge_path` | P3b-02, D3b-22 | thermal_bridges, zones, core | Assign by native selection, nested and refused paths, split, reopen |
-| [P3b-04](phases/p3b-04-runs-and-schedule.md) | Runs, lengths, the schedule read, findings, `runs.locate` | P3b-03, D3b-23 | thermal_bridges | Schedule equals the hand calculation; 50,000 Edge measurement |
+| [P3b-03](phases/p3b-03-edge-assignment.md) | Edge assignment record and target; assign, clear, selection; delete with replacement; `zones.containment`; `Pick.edge_path` | P3b-02 | thermal_bridges, zones, core | Assign by native selection, nested and refused paths, split, reopen |
+| [P3b-04](phases/p3b-04-runs-and-schedule.md) | Runs, lengths, the schedule read, findings, `runs.locate` | P3b-03 | thermal_bridges | Schedule equals the hand calculation; 50,000 Edge measurement |
 | [P3b-05](phases/p3b-05-thermal-bridges-tab.md) | The Thermal Bridges tab, assign bar, Schedule, right-click menu | P3b-04 | thermal_bridges, UI | Panel and menu gestures with Ed |
 | [P3b-06](phases/p3b-06-thermal-bridge-colour-by.md) | A stroke weight for `derived` segments, the `by_type` mode | P3b-04 | colour_by, thermal_bridges | Thick coloured edges, depth, tags, HUD lengths |
 | [P3b-07](phases/p3b-07-edge-tool.md) | The edge tool, the secondary route | P3b-05, P3b-06 | thermal_bridges | Click and drag with Ed; every cancel route |
@@ -65,8 +65,8 @@ write first, the host gate and the done condition.
 
 ```
 P3b-01 ── P3b-02 ── P3b-03 ── P3b-04 ═ T-M1 ─┬─ P3b-05 ═ T-M2 ─┬─ P3b-07 ─┐
-                       │          │          ├─ P3b-06 ─────────┘          ├─ P3b-09
-             D3b-22 ───┘  D3b-23 ─┘          └─ P3b-08 ═ T-M3 ─────────────┘
+                                             ├─ P3b-06 ─────────┘          ├─ P3b-09
+                                             └─ P3b-08 ═ T-M3 ─────────────┘
 ```
 
 The Phase 3a gates (P3a-01 before P3b-03 and P3b-08, P3a-05 before P3b-06) closed with Phase 3a
@@ -81,8 +81,8 @@ on 2026-10-17.
 
 ## Order and parallel work
 
-The default is one branch at a time in stage order. Phase 3a is closed, so this track has no
-external stage gate left; P3b-03 waits on D3b-22 and P3b-04 on D3b-23, both Ed's. Within this
+The default is one branch at a time in stage order. Phase 3a is closed and every decision is
+answered, so this track has no external gate left but the phase issue and Ed's go. Within this
 track, P3b-05, P3b-06 and P3b-08 can proceed in parallel after P3b-04.
 
 No other feature packet is being implemented beside this one on 2026-10-21. The cross-phase
