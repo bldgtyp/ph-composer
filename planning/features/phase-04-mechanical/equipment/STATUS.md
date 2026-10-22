@@ -45,6 +45,9 @@ detail: this phase has no PLAN, CONTRACTS, DECISIONS or ACCEPTANCE yet
   [metr-export](../../unscheduled/metr-export/README.md).
 - The attachment shape for an item serving several Zones (PRD, "Export"): settled at planning, not
   at the interview.
+- For [metr-export](../../unscheduled/metr-export/README.md), not this packet: PHX reads exhaust
+  ventilators and supportive devices through a Room's Spaces, so a Zone with no Space loses them
+  in METr (PRD, family 6).
 
 ## Verification
 

@@ -40,7 +40,8 @@ B4's single-Room problem is gone: PH-Composer exports one honeybee Room per Zone
 
 ## Vocabulary
 
-Proposed. `context/UBIQUITOUS_LANGUAGE.md` is not changed until the interview.
+Proposed. `context/UBIQUITOUS_LANGUAGE.md` carries the shared-shape answer (one record per item,
+no definition and instance split) and is extended at each family's interview.
 
 | Term | Meaning |
 | --- | --- |
@@ -191,6 +192,10 @@ honeybee-ph has no "Fan" class, and the stack writes a fan as two different thin
 - **Fan electricity** is a `PhSupportiveDevice` type 10 (watts, khrs, in conditioned space) on
   `ph_hvac.supportive_devices`. PHX merges duplicates into the variant's mech collection; WUFI
   writes it as auxiliary energy, METr as `lSuppDev`.
+
+One consequence for metr-export: both PHX readers walk `room.properties.ph.spaces` and read each
+device through the Space's host Room, so a Room with no Spaces contributes no exhaust ventilators
+and no supportive devices to the METr model, whatever its `ph_hvac` holds. HBJSON is unaffected.
 
 Ed chose on 2026-10-21 (Q6): a Fan record is an exhaust ventilator (kind, flow, runtime,
 quantity) with an optional electric block (W, khrs, in conditioned space). One row on screen; at
