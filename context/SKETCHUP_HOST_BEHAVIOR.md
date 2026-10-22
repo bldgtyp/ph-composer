@@ -145,6 +145,17 @@ Measured in PH-Composer on 26.1.188, 2026-09-18 ([B3](../planning/archive/phase-
 | `no_scale_mask` hides the Scale tool's handles; `Transformation` scaling from Ruby applies anyway. | Detect scaling from `xscale`/`yscale`; a mirror from a negative determinant. |
 | `Edge#split`, an explode that splits edges, and native cut, copy and paste all put the source edge's full attribute dictionary on the new edges. `Entities#weld`, moves and push-pull keep edge persistent ids. Undo, Redo and save and reopen restore dictionaries and ids exactly. | Edge tags multiply rather than vanish; a Model-level registry and a scan tell a split from a copy or a replacement. |
 
+Measured in PH-Composer on 26.1.188, 2026-10-21 ([T01](../planning/features/phase-03b-thermal-bridges/evidence/p3b-01-edge-host-facts.md)),
+the cases B4 left open, each with native Undo, Redo, save and a fresh-process reopen:
+
+| Fact | Consequence |
+| --- | --- |
+| Native Divide (context menu, 2 segments), a crossing line drawn onto the edge's face, and `Entities#intersect_with` across the edge all split it the way `Edge#split` does: the original persistent id stays on one half, the other half gets a new id, and both carry the full dictionary. | A tagged edge's record survives every split route; nothing to repair. |
+| Erasing the crossing line heals the two collinear halves back into one edge. The healed edge is the one that kept the original persistent id, and it keeps that half's dictionary whole: when both halves carry the same record the Model reads exactly as before the split; when the halves carry different records, the other half's record is dropped without a merge or a notice. | A heal is a geometry edit that can silently remove one of two differing edge records. A feature whose edge records differ on adjacent collinear edges cannot rely on the host to keep both; nothing reads the loss but a rescan. |
+| A push-pull that removes the tagged edge (the roof pushed down onto the floor, collapsing the box) deletes the edge and its dictionary with it; the loose edges elsewhere are untouched. | A deleted edge takes its record away, as PRD rule 1 expects; no orphan is left to find. |
+| Native Weld Edges on a three-edge chain keeps every edge's persistent id and dictionary and joins them in one `Sketchup::Curve`. | A welded run is still three tagged edges; chaining reads edges, not curves. |
+| Native Undo restores the pre-step ids and dictionaries exactly in every case, Redo re-applies them, and a saved copy of each state reopens in a fresh process reading the same ids, endpoints and dictionaries. | Undo, Redo and reopen need no feature code for edge records. |
+
 ## Zone grouping and face topology
 
 Measured in PH-Composer on 26.1.188, 2026-09-20

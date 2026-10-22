@@ -146,7 +146,7 @@ fixture the thermal-bridge plan already names before changing any cache structur
 
 | Earlier default | Now | Reason |
 | --- | --- | --- |
-| Whole-run versus per-segment mask decided at G-01 | Per segment by default; `member` carries the run identity for counting | A segment is the unit that has one occurrence path; a run is a legend grouping |
+| Whole-run versus per-segment mask decided at G-01 | Per segment, one Edge per entry; no `member` key. G-01 answered on 2026-10-21 (thermal bridges D3b-23): the legend counts entries, so a type's row counts its Edges, and runs are a schedule and export grouping, not a legend one | A segment is the unit that has one occurrence path; the `LineEntry` that carried `member` was superseded by `derived` segments (G-03) |
 | Polygon surface primitive for Spaces | Not until Spaces asks | No adopter |
 
 The coding agent decides struct names and whether `EdgeGeometry` lives in `core/` beside

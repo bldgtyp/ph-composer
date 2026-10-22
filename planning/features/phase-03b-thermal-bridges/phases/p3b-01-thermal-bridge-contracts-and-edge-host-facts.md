@@ -1,7 +1,7 @@
 # P3b-01: thermal-bridge contracts and edge host facts
 
 DATE: 2026-10-03
-STATUS: Scoped. Corrected to `main` at `420c783a` on 2026-10-21 (DECISIONS Part 1b)
+STATUS: In progress on `feature/thermal-bridges-p3b-01` since 2026-10-21; host gate pending. Corrected to `main` at `420c783a` on 2026-10-21 (DECISIONS Part 1b)
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: [#301](https://github.com/bldgtyp/ph-composer/issues/301)
 

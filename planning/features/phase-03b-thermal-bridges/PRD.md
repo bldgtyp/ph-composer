@@ -100,11 +100,15 @@ gesture reaches at most 250 edges; one more refuses the whole gesture (D3b-14).
 ### Runs
 
 Connected edges that carry the same type and quantity, in the same Zone, export as one thermal
-bridge (D3b-06). Edges connect where their endpoints meet within 0.0254 mm. A run ends at a free
+bridge (D3b-06). Edges connect where they share a vertex in one container (D3b-23); SketchUp merges
+endpoints within 0.0254 mm inside one container, and two placements of one component never
+connect. The 0.0254 mm tolerance is used only across Zones, for the counted-twice warning, and for
+the window-perimeter warning. A run ends at a free
 end or at a junction where three or more such edges meet, so a T is three runs. A closed loop is
 one closed polyline; a single edge is a line segment. A run is named from the type plus a counter,
-numbered by Building-Segment, Zone name and position, and identified by a digest of its Zone, type
-and endpoints (D3b-07). Both can change when the geometry does; nothing points at a run. The
+numbered by Building-Segment, Zone name and position, and identified by a digest of its Zone, type,
+container path and endpoints (D3b-07, with the container path added by D3b-23 so two coincident
+placements of one component are two runs with two identifiers). Both can change when the geometry does; nothing points at a run. The
 schedule shows the same grouping so the list matches what METr will show.
 
 ### Schedule
