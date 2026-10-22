@@ -23,7 +23,8 @@
 #   Native Divide: right-click the tagged base edge, Divide, 2 segments. Native Weld: select the three edges
 #   of `asg_run`, right-click, Weld Edges. Both are menu commands with no API; drive them with native
 #   controls (context/NATIVE_CONTROL_CAPABILITIES.md) or by hand, then `EdgeSpike.scan`.
-#   Run each case from a fresh `setup`; `:crossing` then `:heal` is the one two-step sequence.
+#   Run each case from `setup` in a new, empty Model (`setup` refuses a Model that already holds its
+#   fixture); `:crossing` then `:heal` is the one two-step sequence.
 require "json"
 
 module EdgeSpike
@@ -36,6 +37,8 @@ module EdgeSpike
     end
 
     def setup
+      raise "EdgeSpike.setup needs an empty Model: this one already holds the B4 fixture." if container("zone")
+
       operation("B4 setup") do
         zone = box
         tag(zone.entities.grep(Sketchup::Edge).find { |e| south_bottom?(e) }, "asg_wall_base", "b4_type_base")

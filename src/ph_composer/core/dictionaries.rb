@@ -6,7 +6,8 @@ module PhComposer
   DICTIONARY_PREFIX = "ph_composer"
 
   # The attribute dictionaries the extension owns. The module that owns a dictionary registers it
-  # where it names it, so this list names no feature. The Export attribute guard reads it.
+  # where it names it, so this list names no feature. It is an inventory of owned names; the export
+  # snapshot captures every dictionary under the prefix and does not filter on it.
   module Dictionaries
     # Whether `name` may be an extension dictionary: a String under the prefix with a name after it.
     # Registration checks this before it publishes, so `register` never raises while publishing.

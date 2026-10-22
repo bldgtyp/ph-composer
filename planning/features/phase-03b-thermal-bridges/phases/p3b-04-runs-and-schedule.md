@@ -27,7 +27,8 @@ Paths are relative to `src/ph_composer/`.
    the two rules agree and the id is exact, while two placements of one component carry the same
    vertex ids and must not join); split at free ends and at vertices where the group's degree is
    not two; a closed chain is one closed run. Each run carries its ordered points, its edge paths, its length in metres, and the D3b-07
-   name and identifier. Order is deterministic so goldens are stable.
+   name and identifier, the identifier digesting the container path with the Zone, type and
+   endpoints so two coincident placements of one component get two identifiers. Order is deterministic so goldens are stable.
 2. **Schedule.** `runs/schedule.rb`: rows per run with Zone, Building-Segment, type, length, psi,
    quantity and psi times length times quantity in W/K; totals by type and by group; used length
    per type, which `types.all` now reports. All arithmetic in Ruby (`context/CODING_STANDARDS.md`,
@@ -68,7 +69,8 @@ Paths are relative to `src/ph_composer/`.
    Zone share vertex ids and do not join (D3b-23); two quantities on one chain give two runs.
 2. Lengths and totals on the reference model's facts equal ACCEPTANCE's hand calculation to
    0.001 m and 0.001 W/K, including the negative Footing and the quantity-2 Balcony.
-3. Names and identifiers are deterministic across two scans and change only with geometry.
+3. Names and identifiers are deterministic across two scans and change only with geometry; two
+   coincident placements of one component in one Zone give two runs with distinct identifiers.
 4. Each finding fires on its case and on no other.
 5. A tag in a component placed twice yields two runs, each marked shared.
 6. The scan opens no operation and writes nothing.

@@ -106,8 +106,9 @@ connect. The 0.0254 mm tolerance is used only across Zones, for the counted-twic
 the window-perimeter warning. A run ends at a free
 end or at a junction where three or more such edges meet, so a T is three runs. A closed loop is
 one closed polyline; a single edge is a line segment. A run is named from the type plus a counter,
-numbered by Building-Segment, Zone name and position, and identified by a digest of its Zone, type
-and endpoints (D3b-07). Both can change when the geometry does; nothing points at a run. The
+numbered by Building-Segment, Zone name and position, and identified by a digest of its Zone, type,
+container path and endpoints (D3b-07, with the container path added by D3b-23 so two coincident
+placements of one component are two runs with two identifiers). Both can change when the geometry does; nothing points at a run. The
 schedule shows the same grouping so the list matches what METr will show.
 
 ### Schedule
