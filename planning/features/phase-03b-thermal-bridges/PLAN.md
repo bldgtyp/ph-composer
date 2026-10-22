@@ -3,7 +3,7 @@
 DATE: 2026-10-03
 STATUS: Scoped. Stages P3b-01 to P3b-09 planned; interview complete 2026-10-03; re-baselined on `main` at `420c783a` on 2026-10-21, D3b-22 and D3b-23 answered the same day; none authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#301](https://github.com/bldgtyp/ph-composer/issues/301)
 
 ## Outcome and scope
 
@@ -82,7 +82,7 @@ on 2026-10-17.
 ## Order and parallel work
 
 The default is one branch at a time in stage order. Phase 3a is closed and every decision is
-answered, so this track has no external gate left but the phase issue and Ed's go. Within this
+answered, so this track has no external gate left but Ed's go. Within this
 track, P3b-05, P3b-06 and P3b-08 can proceed in parallel after P3b-04.
 
 No other feature packet is being implemented beside this one on 2026-10-21. The cross-phase
@@ -100,7 +100,7 @@ shared files, which must not be changed by two open branches at once:
 | `python/ph_composer_translation/composition.py`, `assembly.py` | P3b-08 | none |
 | `tools/runtime/vendor.py` footprint keys | P3b-09 | none |
 
-Each stage is one pull request against `main`, with `Refs` to the phase issue once it exists. A
+Each stage is one pull request against `main`, with `Refs [#301](https://github.com/bldgtyp/ph-composer/issues/301)`. A
 stage that grows past one coherent review splits along the slices its document names; it does not
 merge half a gate.
 

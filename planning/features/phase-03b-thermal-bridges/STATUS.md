@@ -3,7 +3,7 @@
 DATE: 2026-10-03
 STATUS: Scoped. Interviewed 2026-10-03; planned as P3b-01 to P3b-09; re-baselined on `main` at `420c783a` on 2026-10-21 and D3b-22, D3b-23 answered the same day; nothing authorized or implemented.
 AUTHOR: Ed May, BLDGTYP, with Claude
-ISSUE: none (local planning draft)
+ISSUE: [#301](https://github.com/bldgtyp/ph-composer/issues/301)
 
 This is the one place Phase 3b completeness is read from. Update it in the same change as any
 stage's state. States use the canon vocabulary: `Requested`, `Scoped`, `In progress`, `Blocked`,
@@ -30,7 +30,7 @@ recommended the same day; no stage authorized.
 
 ## Next step
 
-Ed creates the phase issue and says go on P3b-01. Phase 3a's gates are
+Ed says go on P3b-01. Phase 3a's gates are
 met, so nothing outside this packet blocks any stage.
 
 ## Entry gates
@@ -39,7 +39,7 @@ met, so nothing outside this packet blocks any stage.
 | --- | --- |
 | Ed answers PRD Q1 to Q11 (the interview) and D3b-01 to D3b-21 | Done 2026-10-03 |
 | Ed answers D3b-22 (before P3b-03) and D3b-23 (before P3b-04) | Done 2026-10-21 |
-| A Phase 3 issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Open. Create on Ed's say |
+| A Phase 3 issue exists on `bldgtyp/ph-composer`, and every header's `ISSUE` line points at it | Done 2026-10-21: [#301](https://github.com/bldgtyp/ph-composer/issues/301) |
 | Ed authorizes implementation, stage by stage or for a run of stages | Open |
 | P3a-01 merged before P3b-03 and P3b-08 start; P3a-05 merged before P3b-06 starts | Closed: P3a-01 merged through PR #135, P3a-05 through PRs #147 and #148; Phase 3a closed 2026-10-17 |
 
@@ -167,4 +167,5 @@ reproduced; P3b-01 reproduces what the stages depend on.
 | 2026-10-03 | Ed split Phase 3 into two flat packets, `phase-03a-spaces/` and `phase-03b-thermal-bridges/`, and the ids restarted per sub-phase. Thermal-bridge stages P3-13 to P3-21 became P3b-01 to P3b-09, decisions D3-13 to D3-33 became D3b-01 to D3b-21, findings TF1 to TF26 became F1 to F26; S and T acceptance ids and H numbers are unchanged. |
 | 2026-10-21 | Re-baselined against `main` at `420c783a` (DECISIONS Part 1b, F27 to F36): F6 settled (records need an id), F7, F10, F14, F15, F24 changed, F8, F9, F25 superseded by P3a-05 and G-02. CONTRACTS section 8 answers five of section 7's questions from code; H15 done; H17 and H18 narrowed; the assignment reference takes the Face shape. D3b-22 and D3b-23 added, open. The D3b-12 HUD label takes the service's "label (count) figure" shape. PLAN, ACCEPTANCE, the PRD and every stage document corrected; the Phase 3a gates recorded as met. No decision answered, no stage authorized. |
 | 2026-10-21 | Ed answered D3b-22 and D3b-23 as recommended; P3b-03 and P3b-04 lose their decision blockers. Waiting on the phase issue and the go on P3b-01. |
+| 2026-10-21 | Phase issue [#301](https://github.com/bldgtyp/ph-composer/issues/301) created; every header in the packet points at it. Waiting on the go on P3b-01. |
 | 2026-10-16 | Handoff from Phase 3a (P3a-12 step 9). Built and observed on the host (P3a-12), ready to reuse: the viewport-tool shape in `features/spaces/mark_tool.rb` (no operation of its own; each completed gesture is one public `invoke` and one Undo step; picks through `Pick.face_path`, drags through `core/` `DragSet`; a move without `MK_LBUTTON` cancels the gesture, and macOS sets that flag on every held move, `context/SKETCHUP_HOST_BEHAVIOR.md`). Also: Colour-by `derived` polygons and segments as P3a-05 shipped them (`ColourBy::Derived.new(polygons:, segments:)`, segments drawn at the overlay's outline weight, so H14's per-mode stroke weight is still P3b-06's), and the container rule (a stamped Group's Faces leave Zone inventories, CONTRACTS section 8). The `derived` shape is the one this packet's CONTRACTS assume for `by_type`. |
