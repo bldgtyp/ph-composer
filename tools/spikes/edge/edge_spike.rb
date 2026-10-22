@@ -65,10 +65,11 @@ module EdgeSpike
       # The cases B4 left open.
       :crossing => ->(s) { s.container("zone").entities.add_line([2500.mm, 0, 0], [2500.mm, 0, 1000.mm]) },
       :heal => ->(s) { s.container("zone").entities.erase_entities(s.crossing_edge || raise("run :crossing first")) },
-      # Re-registers so the scan reads both halves under their own ids before the heal.
+      # Re-registers in the same operation, so one Undo restores the tag and the registry together and the
+      # scan reads both halves under their own ids before the heal.
       :retag_half => lambda { |s|
         s.tag(s.east_half("asg_wall_base"), "asg_wall_base_b", "b4_type_base_b")
-        s.register
+        s.write_registry
       },
       # The blade lives in its own Group so erasing it afterwards removes nothing of the box; only the
       # intersection edges stay, in the zone's own entities.
@@ -101,7 +102,9 @@ module EdgeSpike
       registry = JSON.parse(model.get_attribute(REGISTRY, "assignments", "{}"))
       registry.to_h do |id, pids|
         found = now.select { |e| e["assignment_id"] == id }
-        edges = found.map { |e| e.slice("pid", "path", "length_mm", "start", "end") }
+        # The full dictionary travels with each edge, so a before-and-after comparison can show a merged or
+        # partly kept record, not only that a tag is present.
+        edges = found.map { |e| e.slice("pid", "path", "length_mm", "start", "end", "faces", "attributes") }
         targets = pids.map { |pid| target(pid, id) }
         [id, classify(pids, found).merge("edges" => edges, "registry_targets" => targets)]
       end
@@ -164,9 +167,14 @@ module EdgeSpike
     end
 
     def register
+      operation("B4 register") { write_registry }
+    end
+
+    # The registry write alone, for a caller that already owns the operation.
+    def write_registry
       grouped = snapshot.group_by { |e| e["assignment_id"] }
       assignments = grouped.transform_values { |list| list.map { |e| e["pid"] }.uniq }
-      operation("B4 register") { model.set_attribute(REGISTRY, "assignments", JSON.generate(assignments)) }
+      model.set_attribute(REGISTRY, "assignments", JSON.generate(assignments))
     end
 
     private
