@@ -11,6 +11,19 @@
 #
 # Tags are synthetic: a type id, an assignment id and a namespaced JSON payload on each edge. The registry
 # is what a feature record would hold: assignment id to the edge persistent ids it was made on.
+#
+# The cases B4 left open (planning/features/phase-03b-thermal-bridges, stage P3b-01), each followed by
+# native Undo, Redo, save and a fresh-process reopen, read with `EdgeSpike.scan` after every step:
+#
+#   EdgeSpike.run(:crossing)        # a line drawn up the south wall splits the tagged base edge in two
+#   EdgeSpike.run(:heal)            # erasing that line heals the halves; which dictionary survives is the question
+#   EdgeSpike.run(:crossing); EdgeSpike.run(:retag_half); EdgeSpike.run(:heal)   # halves tagged differently
+#   EdgeSpike.run(:intersect)       # Entities#intersect_with of a crossing face through the base edge
+#   EdgeSpike.run(:collapse)        # a push-pull that deletes the tagged corner edge (roof pushed to the floor)
+#   Native Divide: right-click the tagged base edge, Divide, 2 segments. Native Weld: select the three edges
+#   of `asg_run`, right-click, Weld Edges. Both are menu commands with no API; drive them with native
+#   controls (context/NATIVE_CONTROL_CAPABILITIES.md) or by hand, then `EdgeSpike.scan`.
+#   Run each case from a fresh `setup`; `:crossing` then `:heal` is the one two-step sequence.
 require "json"
 
 module EdgeSpike
@@ -26,6 +39,7 @@ module EdgeSpike
       operation("B4 setup") do
         zone = box
         tag(zone.entities.grep(Sketchup::Edge).find { |e| south_bottom?(e) }, "asg_wall_base", "b4_type_base")
+        tag(zone.entities.grep(Sketchup::Edge).find { |e| south_west_corner?(e) }, "asg_wall_corner", "b4_type_corner")
         runs = group("runs", [0, 6000.mm, 0])
         chain = [[0, 0, 0], [1000.mm, 0, 0], [2000.mm, 500.mm, 0], [3000.mm, 500.mm, 0]]
         chain.each_cons(2) { |a, b| tag(runs.entities.add_line(a, b), "asg_run", "b4_type_run") }
@@ -47,7 +61,26 @@ module EdgeSpike
       },
       :pushpull => ->(s) { s.south_wall.pushpull(-200.mm) },
       :window_cut => ->(s) { s.place_window },
-      :window_explode => ->(s) { s.window_unit.explode }
+      :window_explode => ->(s) { s.window_unit.explode },
+      # The cases B4 left open.
+      :crossing => ->(s) { s.container("zone").entities.add_line([2500.mm, 0, 0], [2500.mm, 0, 1000.mm]) },
+      :heal => ->(s) { s.container("zone").entities.erase_entities(s.crossing_edge || raise("run :crossing first")) },
+      # Re-registers so the scan reads both halves under their own ids before the heal.
+      :retag_half => lambda { |s|
+        s.tag(s.east_half("asg_wall_base"), "asg_wall_base_b", "b4_type_base_b")
+        s.register
+      },
+      # The blade lives in its own Group so erasing it afterwards removes nothing of the box; only the
+      # intersection edges stay, in the zone's own entities.
+      :intersect => lambda { |s|
+        zone = s.container("zone")
+        blade = s.model.entities.add_group
+        blade.entities.add_face([2500.mm, -500.mm, -500.mm], [2500.mm, 500.mm, -500.mm],
+                                [2500.mm, 500.mm, 500.mm], [2500.mm, -500.mm, 500.mm])
+        zone.entities.intersect_with(false, zone.transformation, zone.entities, zone.transformation, true, [blade])
+        blade.erase!
+      },
+      :collapse => ->(s) { s.roof.pushpull(-3000.mm) }
     }.freeze
 
     def run(name)
@@ -90,6 +123,24 @@ module EdgeSpike
       container("zone").entities.grep(Sketchup::Face).find { |f| f.normal.y < -0.99 }
     end
 
+    def roof
+      container("zone").entities.grep(Sketchup::Face).find { |f| f.normal.z > 0.99 }
+    end
+
+    # Of a split edge's halves, the one further along x.
+    def east_half(id)
+      edges(id).max_by { |e| e.start.position.x + e.end.position.x }
+    end
+
+    # The vertical line :crossing drew on the south wall, found by its own geometry (top at z = 1000 mm, which
+    # no intersection edge shares) so a reopened Model still answers.
+    def crossing_edge
+      container("zone").entities.grep(Sketchup::Edge).find do |e|
+        [e.start, e.end].all? { |v| (v.position.x - 2500.mm).abs < 0.001 && v.position.y.abs < 0.001 } &&
+          ([e.start, e.end].map { |v| v.position.z }.max - 1000.mm).abs < 0.001
+      end
+    end
+
     # A B3 unit whose sill sits on the tagged base edge.
     def place_window
       zone = container("zone")
@@ -105,6 +156,19 @@ module EdgeSpike
       container("zone").entities.grep(Sketchup::ComponentInstance).find { |i| i.name == "b4_window" }
     end
 
+    def tag(edge, assignment_id, type_id)
+      edge.set_attribute(DICT, "type_id", type_id)
+      edge.set_attribute(DICT, "assignment_id", assignment_id)
+      edge.set_attribute(DICT, "payload", JSON.generate("example.ns" => { "note" => assignment_id, "rank" => 1 }))
+      edge
+    end
+
+    def register
+      grouped = snapshot.group_by { |e| e["assignment_id"] }
+      assignments = grouped.transform_values { |list| list.map { |e| e["pid"] }.uniq }
+      operation("B4 register") { model.set_attribute(REGISTRY, "assignments", JSON.generate(assignments)) }
+    end
+
     private
 
     def operation(name)
@@ -114,13 +178,6 @@ module EdgeSpike
     rescue StandardError
       model.abort_operation
       raise
-    end
-
-    def tag(edge, assignment_id, type_id)
-      edge.set_attribute(DICT, "type_id", type_id)
-      edge.set_attribute(DICT, "assignment_id", assignment_id)
-      edge.set_attribute(DICT, "payload", JSON.generate("example.ns" => { "note" => assignment_id, "rank" => 1 }))
-      edge
     end
 
     def box
@@ -134,6 +191,11 @@ module EdgeSpike
     def south_bottom?(edge)
       edge.start.position.y.abs < 0.001 && edge.end.position.y.abs < 0.001 &&
         edge.start.position.z.abs < 0.001 && edge.end.position.z.abs < 0.001
+    end
+
+    def south_west_corner?(edge)
+      [edge.start, edge.end].all? { |v| v.position.x.abs < 0.001 && v.position.y.abs < 0.001 } &&
+        [edge.start, edge.end].map { |v| v.position.z }.max > 1.mm
     end
 
     def group(name, origin)
@@ -153,12 +215,6 @@ module EdgeSpike
       systems = group("systems", [7000.mm, 6000.mm, 0])
       systems.entities.add_instance(definition, Geom::Transformation.new([0, 0, 0]))
       systems.entities.add_instance(definition, Geom::Transformation.new([0, 2000.mm, 0]))
-    end
-
-    def register
-      grouped = snapshot.group_by { |e| e["assignment_id"] }
-      assignments = grouped.transform_values { |list| list.map { |e| e["pid"] }.uniq }
-      operation("B4 register") { model.set_attribute(REGISTRY, "assignments", JSON.generate(assignments)) }
     end
 
     def all_entities(entities = model.entities, found = [])
@@ -188,7 +244,8 @@ module EdgeSpike
         "assignment_id" => id, "pid" => edge.persistent_id, "path" => path,
         "start" => edge.start.position.transform(transformation).to_a.map { |v| v.to_mm.round(1) },
         "end" => edge.end.position.transform(transformation).to_a.map { |v| v.to_mm.round(1) },
-        "length_mm" => edge.length.to_mm.round(1), "attributes" => edge.attribute_dictionary(DICT).to_h
+        "length_mm" => edge.length.to_mm.round(1), "faces" => edge.faces.length,
+        "attributes" => edge.attribute_dictionary(DICT).to_h
       }
     end
 

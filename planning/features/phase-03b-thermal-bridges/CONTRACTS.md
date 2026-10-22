@@ -211,24 +211,20 @@ an Edge holds one assignment dictionary.
 The extraction contract is pinned by a fixture both Ruby and Python read
 (`tests/fixtures/thermal_bridges/`), as the other sections are.
 
-## 7. Questions P3b-01 still answers from code
+## 7. Questions P3b-01 answers
 
 Five of the seven questions drafted on 2026-10-03 were answered by reading `420c783a` on
-2026-10-21 (section 8). These two need a focused test rather than a read:
+2026-10-21; the other two by a focused test in P3b-01 the same day. All seven are in section 8.
+The host half of question 2 (the real `Sketchup::Edge` carrying a dictionary through Undo, save and
+reopen) is B4's measured fact and T01's host gate, not the test's.
 
-2. Does `Records::EntityStore` accept a `Sketchup::Edge` in the stub and on the host with no
-   change (the stub's `Edge` answers `faces`, `start`, `end` and `persistent_id` since G-02; its
-   attribute dictionaries are the open part), and does `Dictionaries.register` add
-   `ph_composer.thermal_bridge` to the export attribute guard?
-3. Can `faces.host_context` take the Faces of an Edge reached by a path (the Edge's path with each
-   `face_ids` entry appended, as the snapshot's comment describes), or does H11 need to answer the
-   Edge's Faces itself?
-
-## 8. Contract answers read from `420c783a`, 2026-10-21
+## 8. Contract answers, 2026-10-21
 
 | Q | Answer | Evidence |
 | --- | --- | --- |
 | 1 | Yes. `reference_identity` refuses an entry whose `record["id"]` is not a non-empty String as `record.unreadable`, and `check_identity_removal!` names the referrer by `record.fetch("id")`. D3b-02's fallback applies: the assignment carries a `tbe_` id (section 2); the copy rule is D3b-22 | `core/records/reference_resolution.rb:70-72`, `:77-83` |
+| 2 | Yes, with no change. `EntityStore` writes, reads and deletes a record on a stub Edge through the same `get_attribute`, `set_attribute` and `delete_attribute` every entity answers; `EntityStore.new` registers the dictionary in `Dictionaries.names`, and the export snapshot's `edge` entry for that Edge, inside a Group, carries the record beside its `vertex_ids` and `face_ids`, which is how a registered dictionary reaches export | `tests/edge_record_contract_test.rb`, `test_an_entity_store_round_trips_a_record_on_an_edge_and_the_snapshot_reads_it`; `core/records/entity_store.rb:13` |
+| 3 | Yes. `faces.host_context` answers each of an Edge's Faces by the Edge's path with the Face's id in place of the Edge's, with the Zone reference and the write refusal, and answers nothing for the Edge's own path. H11 therefore answers containment and the refusal for the Edge, and the Edge's Faces come from `faces.host_context` over the snapshot's `face_ids` | `tests/edge_record_contract_test.rb`, `test_host_context_answers_an_edges_faces_by_their_paths_and_nothing_for_the_edge_itself`; `features/zones/faces/operations.rb:87-99` |
 | 4 | Yes, by precedent. Spaces requires Zones and reads `ph_composer.zones.faces.host_context` with native paths through `request.query` (`features/spaces/create_route.rb:13`, `mark_placement.rb:12`); the handler-side read validates params and result and detaches the result (`tests/feature_composition_test.rb`, `test_handler_read_uses_declared_dependency_and_validates_nested_params`). A Windows read behaves the same once `ph_composer.windows` is in `requires:` | `features/spaces/create_route.rb`; `shell/handler_request.rb` |
 | 5 | Yes. Spaces attaches at `ROOM` keyed by the Zone id, which is the Room's identifier, after the Zone section's `MODEL` attach shares the segment; `test_room_attachment.py` reloads the result. The two-Rooms-one-segment test for runs is still P3b-08's | `python/ph_composer_translation/space_sections.py:50-55`; `assembly.py:40-47`; `tests/python/test_room_attachment.py:95` |
 | 6 | Yes. `Preferences.unit_system` is read in Ruby, and the Colour-by service formats an entry's `figure` in the display units when it sums legend rows and draws the HUD. D3b-12 is met by giving each entry `figure: ["length", metres]`; the row reads "Parapet (12) 26.0 m" | `shell/preferences.rb`; `colour_by/legend.rb:19-41`; `colour_by/overlay.rb:142-146` |

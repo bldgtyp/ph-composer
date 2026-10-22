@@ -4167,6 +4167,19 @@
         "src/ph_composer/html/index.html",
         "src/ph_composer/html/boot.js"
       ]
+    },
+    {
+      "id": "T01",
+      "label": "Thermal-bridge edge host facts: a tagged edge inside a Zone-like Group under native Divide, native Weld, a push-pull that deletes it, intersect_with across it, and the heal when a crossing edge is erased, each with Undo, Redo, save and fresh-process reopen",
+      "mode": "mixed",
+      "authority": "planning/features/phase-03b-thermal-bridges/ACCEPTANCE.md",
+      "paths": [
+        "tools/spikes/edge/edge_spike.rb",
+        "context/SKETCHUP_HOST_BEHAVIOR.md",
+        "src/ph_composer/core/records/entity_store.rb",
+        "tests/edge_record_contract_test.rb"
+      ],
+      "native_control_required": true
     }
   ]
 }
