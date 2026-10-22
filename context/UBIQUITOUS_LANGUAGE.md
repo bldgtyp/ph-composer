@@ -151,7 +151,7 @@ not coin a third vocabulary between SketchUp and honeybee. Faces belong to a Zon
 
 | Term | Meaning |
 | --- | --- |
-| Equipment | Product definitions and installed equipment records; their exact distinction awaits the equipment interview |
+| Equipment | Model-local records of the ventilators, hot water systems, heat pumps, heaters, pumps, fans and appliances a Phius model needs. One record per item with a quantity; there is no separate product definition. An item serves one or more Zones |
 | Piping / Ducting | Authored runs, segments and system relationships guided by honeybee-ph; details await interviews |
 
 ## Site and climate

@@ -19,6 +19,9 @@ tree needs no parent reference and no edge registry; the section's attachment to
 Water System is an open plan item; acceptance is an HBJSON reload, METr rows go to metr-export;
 Q13 added. honeybee-ph fields re-read at the pinned 1.33.65.
 
+This packet's stage is [P4-13](../phases/p4-13-hot-water-piping.md) in the
+[phase ledger](../STATUS.md), a gate stub until Phase 3b's edge stages merge and this interview runs.
+
 ## Next step
 
 Interview. Q1, how the trunk, branch and fixture tree is authored, decides most of the rest.
@@ -28,7 +31,9 @@ Planning in detail waits for Phase 3b's P3b-04 at least, so the chain rule it re
 
 - Phase 3b: P3b-03, P3b-04, P3b-06, P3b-07 and P3b-08 are scoped and unauthorized. Nothing of
   the edge store, chain rule, edge tool or edge contributor exists on `main`.
-- The Hot Water System record, which the equipment packet owns; equipment is not interviewed.
+- The Hot Water System record, which the equipment packet owns; its family was interviewed on
+  2026-10-21 (H1 to H7): operating values sit on the system record, and the simplified methods
+  wait on a honeybee-ph field (H5, [honeybee_ph#135](https://github.com/PH-Tools/honeybee_ph/issues/135)).
 - None from the edge identity spike: it passed on 2026-09-18 ([B4](../../../archive/phase-00-foundation/evidence/spike-edge.md));
   its open cases close in P3b-01.
 
@@ -48,4 +53,5 @@ None. Nothing is implemented.
 | Date | Event |
 | --- | --- |
 | 2026-09-18 | PRD drafted. |
+| 2026-10-21 | Phase 4 planned in detail; this packet's stage is a gate stub in the phase ledger. |
 | 2026-10-21 | Re-baselined against `main` at `420c783a`: foundation and remote blockers removed, Phase 3b dependencies named stage by stage, records and export mapping corrected, Q13 added. No interview, no implementation. |
