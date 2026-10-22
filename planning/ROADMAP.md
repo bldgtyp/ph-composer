@@ -131,7 +131,7 @@ concurrent work. External-agent support and public distribution remain distinct 
 ## Phase 4: mechanical
 
 The [Phase 4 coordinating packet](features/phase-04-mechanical/README.md) was planned in detail on
-2026-10-21: stages P4-01 to P4-15, decisions D4-01 to D4-12 open, register M01 to M15. Families 3
+2026-10-21: stages P4-01 to P4-15, decisions D4-01 to D4-12 answered as recommended, register M01 to M15. Families 3
 to 7, piping and ducting are gate stubs until their interviews. No stage authorized.
 
 | # | Item | State | Note |
@@ -243,3 +243,4 @@ prerequisites and carried B1/B2 conditions into the next phase.
 | 2026-10-21 | Equipment Ventilators interviewed: V1 to V6 answered as recommended. Families 2 to 7 not interviewed; no implementation authorized. |
 | 2026-10-21 | Equipment hot water interviewed: H1 to H7, as recommended except H3. Families 3 to 7 not interviewed; no implementation authorized. |
 | 2026-10-21 | Phase 4 planned in detail in its coordinating packet: fifteen stages, twelve decisions for Ed, register M01 to M15 with a reference model. P4-08 to P4-14 are gate stubs. No decision answered, no stage authorized. |
+| 2026-10-21 | Ed answered D4-01 to D4-12, all as recommended. Phase 4 waits on its issue and the go on P4-01. |

@@ -1,7 +1,7 @@
 # Phase 4 delivery plan: mechanical
 
 DATE: 2026-10-21
-STATUS: Scoped. Stages P4-01 to P4-15 planned from the equipment shared-shape, Ventilators and hot water interviews of 2026-10-21; families 3 to 7, piping and ducting are gate stubs until their interviews; none authorized.
+STATUS: Scoped. Stages P4-01 to P4-15 planned from the equipment shared-shape, Ventilators and hot water interviews of 2026-10-21; families 3 to 7, piping and ducting are gate stubs until their interviews; D4-01 to D4-12 answered as recommended the same day; none authorized.
 AUTHOR: Ed May, BLDGTYP, with Claude
 ISSUE: none (local planning draft)
 
